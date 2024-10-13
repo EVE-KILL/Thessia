@@ -1,0 +1,32 @@
+#!/usr/bin/env bun
+
+import { defineCommand, runMain } from 'citty';
+import fs from 'fs';
+import path from 'path';
+
+const tasksDir = path.resolve(__dirname, '../tasks');
+
+const subCommands = {};
+
+fs.readdirSync(tasksDir).forEach(file => {
+    if (file.endsWith('.ts')) { // Adjust extension if necessary
+        // Command name is the file name without the .ts extension
+        const commandPath = path.join(tasksDir, file);
+        // Open the file and read the name return
+        const command = require(commandPath);
+        const commandName = command.default.name;
+
+        subCommands[commandName] = () => import(commandPath).then((r) => r.default);
+    }
+});
+
+const main = defineCommand({
+    meta: {
+        name: 'EVE-KILL Console',
+        version: '1.0.0',
+        description: 'EVE-KILL console tasks',
+    },
+    subCommands: subCommands
+});
+
+runMain(main);

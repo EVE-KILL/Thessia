@@ -6,8 +6,8 @@ export default defineEventHandler(() => {
     upSince: startTime,
     localTime: new Date(),
     service: {
-      name: 'Eve Killboard',
-      description: 'A killboard for EVE Online',
+      name: 'EVE-KILL',
+      description: 'A Killboard for EVE Online',
       version: '1.0.0',
     },
     env: {
