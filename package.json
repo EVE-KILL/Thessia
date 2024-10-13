@@ -10,7 +10,8 @@
   "dependencies": {
     "@nuxt/content": "latest",
     "nuxt": "latest",
-    "nuxt-mongoose": "latest"
+    "nuxt-mongoose": "latest",
+    "server-health": "^5.3.0"
   },
   "devDependencies": {
     "@nuxt/image": "^1.8.1",
