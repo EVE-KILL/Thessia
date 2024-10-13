@@ -12,7 +12,7 @@ export default defineEventHandler(async () => {
     {
       sort: { last_modified: -1 },
       limit: 10000,
-    }
+    },
   ).hint({ last_modified: -1 });
 
   const result: { [key: string]: string } = {};

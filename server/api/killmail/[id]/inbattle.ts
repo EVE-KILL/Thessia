@@ -5,7 +5,9 @@ import { Killmails } from "../../../models/Killmails";
 export default defineEventHandler(async (event) => {
   let killmail_id = event.context.params?.id;
 
-  let killmail: Killmail | null = await Killmails.findOne({ killmail_id: killmail_id }, { _id: 0, system_id: 1, kill_time: 1 });
+  let killmail: Killmail | null = await Killmails.findOne({
+    killmail_id: killmail_id,
+  }, { _id: 0, system_id: 1, kill_time: 1 });
   if (!killmail) {
     throw createError({
       statusCode: 400,
@@ -20,30 +22,30 @@ export default defineEventHandler(async (event) => {
 
   let pipeline: PipelineStage[] = [
     {
-      '$match': {
+      "$match": {
         system_id: systemId,
-        kill_time: { $gte: killTimeStart, $lt: killTimeEnd }
+        kill_time: { $gte: killTimeStart, $lt: killTimeEnd },
       },
     },
     {
-      '$group': {
+      "$group": {
         _id: "$system_id",
-        count: { $sum: 1 }
+        count: { $sum: 1 },
       },
     },
     {
-      '$match': {
-        count: { $gt: 25 }
+      "$match": {
+        count: { $gt: 25 },
       },
     },
     {
-      '$sort': {
-        count: -1
+      "$sort": {
+        count: -1,
       },
     },
     {
-      '$limit': 1
-    }
+      "$limit": 1,
+    },
   ];
 
   let result = await Killmails.aggregate(pipeline);

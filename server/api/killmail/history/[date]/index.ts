@@ -10,7 +10,7 @@ export default defineEventHandler(async (event) => {
   }
 
   const startDate = new Date(
-    `${date.slice(0, 4)}-${date.slice(4, 6)}-${date.slice(6, 8)}`
+    `${date.slice(0, 4)}-${date.slice(4, 6)}-${date.slice(6, 8)}`,
   );
   const endDate = new Date(startDate);
   endDate.setDate(endDate.getDate() + 1);
@@ -25,7 +25,7 @@ export default defineEventHandler(async (event) => {
     {
       kill_time: { $gte: new Date(startUnixTime), $lt: new Date(endUnixTime) },
     },
-    { killmail_id: 1, hash: 1 }
+    { killmail_id: 1, hash: 1 },
   );
 
   const result: { [key: string]: string } = {};

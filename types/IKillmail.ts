@@ -25,7 +25,7 @@ interface IKillmail {
       final_blow: Boolean;
       weapon_type_id: Number;
       weapon_type_name: String;
-    }
+    },
   ];
   dna: String;
   fitting_value: Number;
@@ -44,7 +44,7 @@ interface IKillmail {
       qty_destroyed: Number;
       singleton: Boolean;
       value: Number;
-    }
+    },
   ];
   kill_time: Date;
   kill_time_str: String;

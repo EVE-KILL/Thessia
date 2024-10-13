@@ -17,4 +17,3 @@ export const Alliances = defineMongooseModel({
     last_modified: Date,
   },
 });
-

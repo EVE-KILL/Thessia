@@ -21,7 +21,6 @@ export const Celestials = defineMongooseModel({
     type_name: String,
     x: Number,
     y: Number,
-    z: Number
+    z: Number,
   },
 });
-

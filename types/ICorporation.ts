@@ -20,8 +20,8 @@ interface ICorporation {
       record_id: Number;
       alliance_id: Number;
       start_date: Date;
-    }
-  ],
+    },
+  ];
   last_modified: Date;
 }
 

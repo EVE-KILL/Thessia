@@ -22,4 +22,3 @@ export const Characters = defineMongooseModel({
     last_modified: Date,
   },
 });
-

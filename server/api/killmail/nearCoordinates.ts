@@ -16,8 +16,8 @@ export default defineEventHandler(async (event) => {
         x: { $gt: x - distanceInMeters, $lt: x + distanceInMeters },
         y: { $gt: y - distanceInMeters, $lt: y + distanceInMeters },
         z: { $gt: z - distanceInMeters, $lt: z + distanceInMeters },
-        kill_time: { $gte: new Date(Date.now() - days * 86400 * 1000) }
-      }
+        kill_time: { $gte: new Date(Date.now() - days * 86400 * 1000) },
+      },
     },
     {
       $project: {
@@ -27,17 +27,16 @@ export default defineEventHandler(async (event) => {
             $add: [
               { $pow: [{ $subtract: ["$x", x] }, 2] },
               { $pow: [{ $subtract: ["$y", y] }, 2] },
-              { $pow: [{ $subtract: ["$z", z] }, 2] }
-            ]
-          }
-        }
-      }
+              { $pow: [{ $subtract: ["$z", z] }, 2] },
+            ],
+          },
+        },
+      },
     },
     { $match: { distance: { $lt: distanceInMeters } } },
     { $sort: { distance: -1 } },
-    { $limit: 10 }
+    { $limit: 10 },
   ]);
 
   return results;
 });
-

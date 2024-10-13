@@ -6,12 +6,15 @@ export default defineEventHandler(async (event) => {
 
   let killmail: Killmail | null = await Killmails.findOne(
     { killmail_id: killmail_id },
-    { _id: 0 }
+    { _id: 0 },
   );
   let capsuleIds = [670, 33328];
 
   // If the victim ship_id isn't a capsule, we can't find siblings
-  if (!killmail?.victim?.ship_id || !capsuleIds.includes(Number(killmail.victim.ship_id))) {
+  if (
+    !killmail?.victim?.ship_id ||
+    !capsuleIds.includes(Number(killmail.victim.ship_id))
+  ) {
     throw createError({
       statusCode: 400,
       statusMessage: "Victim ship is not a capsule",
@@ -33,7 +36,7 @@ export default defineEventHandler(async (event) => {
   };
 
   let sibling = await Killmails.findOne(query, { _id: 0, killmail_id: 1 }, {
-    sort: { kill_time: -1 }
+    sort: { kill_time: -1 },
   });
 
   if (!sibling?.killmail_id) {

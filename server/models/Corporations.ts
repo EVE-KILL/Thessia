@@ -34,4 +34,3 @@ export const Corporations = defineMongooseModel({
     last_modified: Date,
   },
 });
-

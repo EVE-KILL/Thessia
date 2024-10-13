@@ -15,7 +15,7 @@ interface IESIKillmail {
       security_status: Number;
       ship_type_id: Number;
       weapon_type_id: Number;
-    }
+    },
   ];
   victim: {
     character_id: Number;
@@ -30,7 +30,7 @@ interface IESIKillmail {
         quantity_dropped: Number;
         flag: Number;
         singleton: Number;
-      }
+      },
     ];
   };
 }

@@ -18,7 +18,7 @@ export default defineEventHandler(async (event) => {
 
   let killmails: Killmail[] | null = await Killmails.find(
     { killmail_id: { $in: killmailIds } },
-    { _id: 0 }
+    { _id: 0 },
   );
   return killmails;
 });
