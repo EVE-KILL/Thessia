@@ -1,0 +1,20 @@
+{
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "nuxt build",
+    "dev": "nuxt dev",
+    "generate": "nuxt generate",
+    "preview": "nuxt preview"
+  },
+  "dependencies": {
+    "@nuxt/content": "latest",
+    "nuxt": "latest",
+    "nuxt-mongoose": "latest"
+  },
+  "devDependencies": {
+    "@nuxt/image": "^1.8.1",
+    "@nuxtjs/tailwindcss": "^6.12.1",
+    "nuxt-security": "^2.0.0"
+  }
+}
