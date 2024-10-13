@@ -3,9 +3,9 @@ import { Killmail } from "../../../../types/IKillmail";
 import { Killmails } from "../../../models/Killmails";
 
 export default defineEventHandler(async (event) => {
-  let killmail_id = event.context.params?.id;
+  const killmail_id = event.context.params?.id;
 
-  let killmail: Killmail | null = await Killmails.findOne({
+  const killmail: Killmail | null = await Killmails.findOne({
     killmail_id: killmail_id,
   }, { _id: 0, system_id: 1, kill_time: 1 });
   if (!killmail) {
@@ -15,12 +15,12 @@ export default defineEventHandler(async (event) => {
     });
   }
 
-  let systemId = killmail?.system_id;
-  let unixTime = Math.floor(Number(killmail?.kill_time));
-  let killTimeStart = new Date(unixTime - 3600 * 1000);
-  let killTimeEnd = new Date(unixTime + 3600 * 1000);
+  const systemId = killmail?.system_id;
+  const unixTime = Math.floor(Number(killmail?.kill_time));
+  const killTimeStart = new Date(unixTime - 3600 * 1000);
+  const killTimeEnd = new Date(unixTime + 3600 * 1000);
 
-  let pipeline: PipelineStage[] = [
+  const pipeline: PipelineStage[] = [
     {
       "$match": {
         system_id: systemId,
@@ -48,7 +48,7 @@ export default defineEventHandler(async (event) => {
     },
   ];
 
-  let result = await Killmails.aggregate(pipeline);
+  const result = await Killmails.aggregate(pipeline);
 
   console.log(result);
 

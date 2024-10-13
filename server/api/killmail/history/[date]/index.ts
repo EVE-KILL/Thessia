@@ -2,7 +2,7 @@ import { Killmails } from "../../../../models/Killmails";
 import { Killmail } from "../../../../../types/IKillmail";
 
 export default defineEventHandler(async (event) => {
-  let date = event.context.params?.date as string;
+  const date = event.context.params?.date as string;
 
   const dateRegex = /^\d{8}$/;
   if (!dateRegex.test(date)) {

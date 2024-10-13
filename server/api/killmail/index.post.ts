@@ -2,7 +2,7 @@ import { Killmails } from "../../models/Killmails";
 import { Killmail } from "../../../types/IKillmail";
 
 export default defineEventHandler(async (event) => {
-  let killmailIds = await readBody(event);
+  const killmailIds = await readBody(event);
 
   // Verify killmailIds is an array, and it contains only numbers, and is not empty
   if (
@@ -16,7 +16,7 @@ export default defineEventHandler(async (event) => {
     });
   }
 
-  let killmails: Killmail[] | null = await Killmails.find(
+  const killmails: Killmail[] | null = await Killmails.find(
     { killmail_id: { $in: killmailIds } },
     { _id: 0 },
   );

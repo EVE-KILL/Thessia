@@ -2,7 +2,7 @@ import { Killmail } from "../../../types/IKillmail";
 import { Killmails } from "../../models/Killmails";
 
 export default defineEventHandler(async (event) => {
-  let killmailData = await readBody(event);
+  const killmailData = await readBody(event);
 
   // Ensure the killmailData is an object, and that it contains the required fields (killmail_id, hash)
   if (
@@ -18,7 +18,7 @@ export default defineEventHandler(async (event) => {
   }
 
   // Find out if we already know the killmail
-  let existingKillmail: Killmail | null = await Killmails.findOne(
+  const existingKillmail: Killmail | null = await Killmails.findOne(
     { killmail_id: killmailData.killmail_id },
     { _id: 0 },
   );
@@ -33,7 +33,7 @@ export default defineEventHandler(async (event) => {
   await new Promise((resolve) => setTimeout(resolve, 5000));
 
   // Check if the killmail was processed
-  let processedKillmail: Killmail | null = await Killmails.findOne(
+  const processedKillmail: Killmail | null = await Killmails.findOne(
     { killmail_id: killmailData.killmail_id },
     { _id: 0 },
   );

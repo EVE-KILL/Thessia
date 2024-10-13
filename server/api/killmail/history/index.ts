@@ -17,7 +17,7 @@ export default defineEventHandler(async () => {
     const uniqueDates = [];
 
     for (
-      let d = new Date(startDate);
+      const d = new Date(startDate);
       d <= endDate;
       d.setDate(d.getDate() + 1)
     ) {
