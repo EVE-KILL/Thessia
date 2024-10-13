@@ -7,3 +7,5 @@ interface IAlliance {
   executor_corporation_id: Number;
   last_modified: Date; // Unixtime
 }
+
+export type { IAlliance as Alliance };

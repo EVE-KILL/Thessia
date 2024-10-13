@@ -84,3 +84,5 @@ interface IKillmail {
   z: Number;
   emitted: Boolean;
 }
+
+export type { IKillmail as Killmail };

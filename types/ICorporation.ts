@@ -21,6 +21,8 @@ interface ICorporation {
       alliance_id: Number;
       start_date: Date;
     }
-  ]
+  ],
   last_modified: Date;
 }
+
+export type { ICorporation as Corporation };

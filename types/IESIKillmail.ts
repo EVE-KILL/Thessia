@@ -34,3 +34,5 @@ interface IESIKillmail {
     ];
   };
 }
+
+export type { IESIKillmail as Killmail };

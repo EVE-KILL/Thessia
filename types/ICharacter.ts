@@ -12,3 +12,5 @@ interface ICharacter {
   faction_id: Number;
   last_modified: Date;
 }
+
+export type { ICharacter as Character };

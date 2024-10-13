@@ -46,3 +46,5 @@ export const KillmailsESI = defineMongooseModel({
         }
     }
 });
+
+export type { KillmailsESI as ESIKillmail };
