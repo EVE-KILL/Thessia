@@ -9,7 +9,7 @@ export default defineNuxtConfig({
     "nuxt-mongoose",
     "@nuxtjs/tailwindcss",
     "@nuxt/image",
-    "nuxt-security",
+    "nuxt-security"
   ],
 
   image: {
