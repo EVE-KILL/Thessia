@@ -1,0 +1,18 @@
+version: '3.8'
+
+services:
+  redis:
+    image: "redis:latest"
+    container_name: redis
+    ports:
+      - "127.0.0.1:6379:6379"
+    volumes:
+      - ./.container/redis:/data
+
+  mongodb:
+    image: "mongo:latest"
+    container_name: mongodb
+    ports:
+      - "127.0.0.1:27017:27017"
+    volumes:
+      - ./.container/mongodb:/data/db

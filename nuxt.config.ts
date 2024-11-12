@@ -19,7 +19,7 @@ export default defineNuxtConfig({
   },
 
   mongoose: {
-    uri: process.env.MONGO_URI,
+    uri: process.env.NODE_ENV === 'production' ? process.env.MONGO_URI_PROD : process.env.MONGO_URI_DEV,
     options: {},
     modelsDir: "models",
     devtools: true,
@@ -62,7 +62,7 @@ export default defineNuxtConfig({
     storage: {
       redis: {
         driver: "redis",
-        url: process.env.REDIS_URI,
+        url: process.env.NODE_ENV === 'production' ? process.env.REDIS_URI_PROD : process.env.REDIS_URI_DEV,
       },
     },
   },

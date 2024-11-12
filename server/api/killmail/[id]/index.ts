@@ -7,5 +7,6 @@ export default defineEventHandler(async (event) => {
     { killmail_id: killmail_id },
     { _id: 0 },
   );
-  return killmail;
+
+  return killmail || { error: "Killmail not found" };
 });
