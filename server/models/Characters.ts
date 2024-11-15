@@ -5,8 +5,10 @@ export const Characters = defineMongooseModel({
   name: "characters",
   options: {
     collection: "characters",
+    timestamps: true,
   },
-  hooks(schema: Schema) {},
+  hooks(schema: Schema) {
+  },
   schema: {
     character_id: Number,
     name: String,
@@ -19,6 +21,5 @@ export const Characters = defineMongooseModel({
     corporation_id: Number,
     alliance_id: Number,
     faction_id: Number,
-    last_modified: Date,
   },
 });

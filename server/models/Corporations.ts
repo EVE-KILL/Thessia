@@ -5,8 +5,10 @@ export const Corporations = defineMongooseModel({
   name: "corporations",
   options: {
     collection: "corporations",
+    timestamps: true,
   },
-  hooks(schema: Schema) {},
+  hooks(schema: Schema) {
+  },
   schema: {
     corporation_id: Number,
     name: String,
@@ -31,6 +33,5 @@ export const Corporations = defineMongooseModel({
         start_date: Date,
       },
     ],
-    last_modified: Date,
   },
 });

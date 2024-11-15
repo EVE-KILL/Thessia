@@ -9,13 +9,18 @@
   },
   "dependencies": {
     "@nuxt/content": "latest",
-    "nuxt": "latest",
+    "@nuxt/devtools": "^1.6.0",
+    "nuxt": "^3.14.159",
     "nuxt-mongoose": "latest",
-    "server-health": "^5.3.0"
+    "server-health": "^5.3.0",
+    "sqlite": "^5.1.1",
+    "sqlite3": "^5.1.7",
+    "tar-stream": "^3.1.7",
+    "unbzip2-stream": "^1.4.3"
   },
   "devDependencies": {
     "@nuxt/image": "^1.8.1",
     "@nuxtjs/tailwindcss": "^6.12.2",
-    "nuxt-security": "^2.0.0"
+    "nuxt-security": "^2.1.1"
   }
 }

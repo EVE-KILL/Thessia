@@ -14,7 +14,6 @@ export const KillmailsESI = defineMongooseModel({
     killmail_hash: String,
     killmail_time: Date,
     killmail_time_str: String,
-    last_modified: Date,
     solar_system_id: Number,
     attackers: [
       {

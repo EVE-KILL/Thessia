@@ -43,7 +43,7 @@ export default defineNuxtConfig({
     experimental: {
       websocket: true,
       tasks: true,
-      openAPI: true,
+      openAPI: false, // Currently broken in 3.14
     },
 
     openAPI: {

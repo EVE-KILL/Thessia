@@ -5,8 +5,10 @@ export const Alliances = defineMongooseModel({
   name: "alliances",
   options: {
     collection: "alliances",
+    timestamps: true,
   },
-  hooks(schema: Schema) {},
+  hooks(schema: Schema) {
+  },
   schema: {
     alliance_id: Number,
     name: String,
@@ -14,6 +16,5 @@ export const Alliances = defineMongooseModel({
     creator_id: Number,
     creator_corporation_id: Number,
     executor_corporation_id: Number,
-    last_modified: Date,
   },
 });

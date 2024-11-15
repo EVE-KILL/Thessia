@@ -5,13 +5,18 @@ export const Celestials = defineMongooseModel({
   name: "celestials",
   options: {
     collection: "celestials",
+    timestamps: true,
   },
-  hooks(schema: Schema) {},
+  hooks(schema: Schema) {
+    schema.index({ item_id: 1 }, { unique: true});
+    schema.index({ solar_system_id: 1 }, { sparse: true});
+    schema.index({ region_id: 1 }, { sparse: true});
+    schema.index({ x: 1, y: 1, z: 1 }, { name: "x_y_z" });
+  },
   schema: {
     item_id: Number,
     constellation_id: Number,
     item_name: String,
-    last_modified: Date,
     orbit_id: Number,
     region_id: Number,
     region_name: String,

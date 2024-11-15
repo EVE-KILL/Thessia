@@ -35,4 +35,4 @@ interface IESIKillmail {
   };
 }
 
-export type { IESIKillmail as Killmail };
+export type { IESIKillmail as ESIKillmail };

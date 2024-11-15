@@ -5,8 +5,10 @@ export const Killmails = defineMongooseModel({
   name: "killmails",
   options: {
     collection: "killmails",
+    timestamps: true,
   },
-  hooks(schema: Schema) {},
+  hooks(schema: Schema) {
+  },
   schema: {
     hash: String,
     killmail_id: Number,
@@ -57,7 +59,6 @@ export const Killmails = defineMongooseModel({
     ],
     kill_time: Date,
     kill_time_str: String,
-    last_modified: Date,
     near: String,
     point_value: Number,
     region_id: Number,
