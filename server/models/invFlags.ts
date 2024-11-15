@@ -4,11 +4,11 @@ import { Schema } from "mongoose";
 export const InvFlags = defineMongooseModel({
   name: "invflags",
   options: {
-    collection: "invflags",
+    collection: "invFlags",
     timestamps: true,
   },
   hooks(schema: Schema) {
-    schema.index({ flag_id: 1 }, { unique: true});
+    schema.index({ flag_id: 1 }, { unique: true });
   },
   schema: {
     flag_id: Number,

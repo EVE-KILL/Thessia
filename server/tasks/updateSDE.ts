@@ -9,15 +9,15 @@ import { open } from "sqlite";
 
 // Import Models
 import { Celestials } from "../models/Celestials";
-import { invFlags } from "../models/InvFlags";
-import { invTypes } from "../models/InvTypes";
+import { InvFlags } from "../models/InvFlags";
+import { InvTypes } from "../models/InvTypes";
 import { Factions } from "../models/Factions";
 
 const pipe = promisify(pipeline);
 
 export default defineTask({
     meta: {
-        name: "sde:update",
+        name: "update:sde",
         description: "Update the SDE",
     },
     async run({ payload, context }) {
@@ -74,7 +74,7 @@ export default defineTask({
 
 async function invTypes() {
     const db = await connectToDatabase();
-    let result = await db.all(`
+    let results = await db.all(`
         SELECT
         invTypes.typeID AS type_id,
         invTypes.groupID AS group_id,
@@ -90,7 +90,7 @@ async function invTypes() {
         invTypes.marketGroupID AS market_group_id,
         invTypes.iconID AS icon_id,
         invTypes.soundID AS sound_id,
-        invTypes.graphicID AS graphic_id,
+        invTypes.graphicID AS graphic_id
         FROM invTypes
     `);
 
@@ -107,7 +107,7 @@ async function invTypes() {
 
 async function factions() {
     const db = await connectToDatabase();
-    let result = await db.all(`
+    let results = await db.all(`
         SELECT
         chrFactions.factionID AS faction_id,
         chrFactions.factionName AS name,
@@ -136,7 +136,7 @@ async function factions() {
 
 async function invFlags() {
     const db = await connectToDatabase();
-    let result = await db.all(`
+    let results = await db.all(`
         SELECT
         invFlags.flagID AS flag_id,
         invFlags.flagName AS flag_name,
@@ -148,7 +148,7 @@ async function invFlags() {
     // Emit the count of found results
     console.log(`Found ${results.length} invFlags`);
     for (let result of results) {
-        await invFlags.updateOne(
+        await InvFlags.updateOne(
             { flag_id: result.flag_id },
             result,
             { upsert: true }

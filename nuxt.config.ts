@@ -46,6 +46,10 @@ export default defineNuxtConfig({
       openAPI: false, // Currently broken in 3.14
     },
 
+    scheduledTasks: {
+      '0 0 * * *': ['updatePrices']
+    },
+
     openAPI: {
       meta: {
         title: "EVE-KILL API",
