@@ -60,7 +60,7 @@ export default defineNuxtConfig({
     storage: {
       redis: {
         driver: "redis",
-        url: process.env.NODE_ENV === 'production' ? process.env.REDIS_URI_PROD : process.env.REDIS_URI_DEV,
+        url: 'redis://' + process.env.NODE_ENV === 'production' ? process.env.REDIS_URI_PROD : process.env.REDIS_URI_DEV + ':6379',
       },
     },
   },
