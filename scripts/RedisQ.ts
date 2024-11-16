@@ -1,3 +1,4 @@
+import { addKillmail } from '../server/queue/Killmail';
 
 const queueUrl = 'https://redisq.zkillboard.com/listen.php?queueID=evekill_js';
 const queueName = 'killmails';
@@ -15,6 +16,7 @@ async function startListener() {
             const killmailHash = data.package.zkb.hash;
 
             console.log(`New killmail: ${killmailId} - ${killmailHash}`);
+            await addKillmail(killmailId, killmailHash);
         }
     }
 }
