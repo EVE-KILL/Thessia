@@ -1,4 +1,4 @@
-interface IPrices {
+interface IPrice {
     date: Date;
     region_id: Number;
     type_id: Number;
@@ -11,4 +11,4 @@ interface IPrices {
     createdAt?: Date;
 }
 
-export type { IPrices as Prices };
+export type { IPrice as Price };

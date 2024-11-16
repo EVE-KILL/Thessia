@@ -17,6 +17,7 @@ interface ICharacter {
   alliance_id: Number;
   faction_id: Number;
   history: ICharacterHistory[];
+  deleted?: Boolean;
   updatedAt?: Date;
   createdAt?: Date;
 }

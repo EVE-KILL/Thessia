@@ -1,10 +1,10 @@
-interface IPositions {
+interface IPosition {
     x: Number;
     y: Number;
     z: Number;
 }
 
-interface IStations {
+interface IStation {
     station_id: Number;
     max_dockable_ship_volume: Number;
     name: String;
@@ -15,10 +15,10 @@ interface IStations {
     reprocessing_stations_take: Number;
     system_id: Number;
     type_id: Number;
-    position: IPositions;
+    position: IPosition;
     services: String[];
     updatedAt?: Date;
     createdAt?: Date;
 }
 
-export type { IStations as Stations };
+export type { IStation as Station };

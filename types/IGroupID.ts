@@ -1,4 +1,4 @@
-interface IGroupIDs {
+interface IGroupID {
     group_id: Number;
     category_id: Number;
     name: String;
@@ -8,4 +8,4 @@ interface IGroupIDs {
     createdAt?: Date;
 }
 
-export type { IGroupIDs as GroupIDs };
+export type { IGroupID as GroupID };

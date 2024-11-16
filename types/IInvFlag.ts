@@ -1,4 +1,4 @@
-interface IInvFlags {
+interface IInvFlag {
     flag_id: Number;
     flag_name: String;
     flag_text: String;
@@ -7,4 +7,4 @@ interface IInvFlags {
     createdAt?: Date;
 }
 
-export type { IInvFlags as InvFlags };
+export type { IInvFlag as InvFlag };

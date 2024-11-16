@@ -1,4 +1,4 @@
-interface IRegions {
+interface IRegion {
     region_id: Number;
     constellations: Number[];
     description: String;
@@ -7,4 +7,4 @@ interface IRegions {
     createdAt?: Date;
 }
 
-export type { IRegions as Regions };
+export type { IRegion as Region };

@@ -1,4 +1,4 @@
-interface IInvGroups {
+interface IInvGroup {
     group_id: Number;
     category_id: Number;
     group_name: String;
@@ -12,4 +12,4 @@ interface IInvGroups {
     createdAt?: Date;
 }
 
-export type { IInvGroups as InvGroups };
+export type { IInvGroup as InvGroup };

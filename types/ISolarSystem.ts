@@ -8,7 +8,7 @@ interface IPosition {
     z: Number;
 }
 
-interface ISolarSystems {
+interface ISolarSystem {
     system_id: Number;
     constellation_id: Number;
     constelaltion_name: String;
@@ -25,4 +25,4 @@ interface ISolarSystems {
     createdAt?: Date;
 }
 
-export type { ISolarSystems as SolarSystems };
+export type { ISolarSystem as SolarSystem };

@@ -1,4 +1,4 @@
-interface IFactions {
+interface IFaction {
     faction_id: Number;
     corporation_id: Number;
     description: String;
@@ -17,4 +17,4 @@ interface IFactions {
     createdAt?: Date;
 }
 
-export type { IFactions as Factions };
+export type { IFaction as Faction };

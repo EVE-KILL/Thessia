@@ -4,7 +4,7 @@ interface IPosition {
     z: Number;
 };
 
-interface IConstellations {
+interface IConstellation {
     constellation_id: Number;
     name: String;
     position: IPosition;
@@ -16,5 +16,4 @@ interface IConstellations {
 }
 
 export type { IPosition as Position };
-export type { ISystems as Systems };
-export type { IConstellations as Constellations };
+export type { IConstellation as Constellation };

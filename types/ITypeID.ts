@@ -8,7 +8,7 @@ interface IDogmaEffects {
     is_default: Boolean;
 }
 
-interface ITypeIDs {
+interface ITypeID {
     type_id: Number;
     capacity: Number;
     description: String;
@@ -28,4 +28,4 @@ interface ITypeIDs {
     createdAt?: Date;
 }
 
-export type { ITypeIDs as TypeIDs };
+export type { ITypeID as TypeID };

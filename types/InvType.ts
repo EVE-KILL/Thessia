@@ -1,4 +1,4 @@
-interface IInvTypes {
+interface IInvType {
     type_id: Number;
     group_id: Number;
     type_name: String;
@@ -18,4 +18,4 @@ interface IInvTypes {
     createdAt?: Date;
 }
 
-export type { IInvTypes as InvTypes };
+export type { IInvType as InvType };
