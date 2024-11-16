@@ -8,6 +8,13 @@ export const Corporations = defineMongooseModel({
     timestamps: true,
   },
   hooks(schema: Schema) {
+    schema.index({ corporation_id: 1 }, { unique: true });
+    schema.index({ name: 1 }, { sparse: true });
+    schema.index({ ticker: 1 }, { sparse: true });
+    schema.index({ alliance_id: 1 }, { sparse: true });
+    schema.index({ faction_id: 1 }, { sparse: true });
+    schema.index({ createdAt: 1 }, { sparse: true });
+    schema.index({ updatedAt: 1 }, { sparse: true });
   },
   schema: {
     corporation_id: Number,

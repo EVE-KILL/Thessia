@@ -13,6 +13,8 @@ export const Characters = defineMongooseModel({
     schema.index({ corporation_id: 1 }, { sparse: true });
     schema.index({ alliance_id: 1 }, { sparse: true });
     schema.index({ faction_id: 1 }, { sparse: true });
+    schema.index({ createdAt: 1 }, { sparse: true });
+    schema.index({ updatedAt: 1 }, { sparse: true });
   },
   schema: {
     character_id: Number,

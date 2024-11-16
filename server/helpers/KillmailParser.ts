@@ -1,8 +1,10 @@
 import { Character } from "~/types/ICharacter";
 import { ESIKillmail, ESIVictim } from "~/types/IESIKillmail";
 import { Killmail, Victim } from "~/types/IKillmail";
-import { InvGroups } from "~/types/InvGroups";
-import { InvTypes } from "~/types/InvTypes";
+import { InvGroups } from "~/types/InvGroup";
+import { InvTypes } from "~/types/InvType";
+
+import { getCharacter } from "./ESIData";
 
 
 
@@ -23,22 +25,15 @@ async function processVictim(victim: ESIVictim ): Promise<Victim> {
     if (!shipGroup) {
         throw new Error(`Group not found for group_id: ${ship.group_id}`);
     }
-    let character: Character | null = await Characters.findOne({ character_id: victim.character_id });
-    if (!character) {
-        throw new Error(`Character not found for character_id: ${victim.character_id}`);
+    let character: Character = await getCharacter(victim.character_id);
+    let corporation: Corporation = await getCorporation(victim.corporation_id);
+    if (victim.alliance_id > 0) {
+        let alliance: Alliance = await getAlliance(victim.alliance_id);
     }
-    let corporation = await Corporations.findOne({ corporation_id: victim.corporation_id });
-    if (!corporation) {
-        throw new Error(`Corporation not found for corporation_id: ${victim.corporation_id}`);
+    if (victim.faction_id > 0) {
+        let faction: Faction = await getFaction(victim.faction_id);
     }
-    let alliance = await Alliances.findOne({ alliance_id: victim.alliance_id });
-    if (!alliance) {
-        throw new Error(`Alliance not found for alliance_id: ${victim.alliance_id}`);
-    }
-    let faction = await Factions.findOne({ faction_id: victim.faction_id });
-    if (!faction) {
-        throw new Error(`Faction not found for faction_id: ${victim.faction_id}`);
-    }
+
 
     return {
         ship_id: victim.ship_type_id,
@@ -50,10 +45,10 @@ async function processVictim(victim: ESIVictim ): Promise<Victim> {
         character_name: character.name,
         corporation_id: victim.corporation_id,
         corporation_name: corporation.corporation_name,
-        alliance_id: victim.alliance_id,
-        alliance_name: alliance.alliance_name,
-        faction_id: victim.faction_id,
-        faction_name: faction.faction_name
+        alliance_id: victim?.alliance_id || 0,
+        alliance_name: alliance?.alliance_name || '',
+        faction_id: victim?.faction_id || 0,
+        faction_name: faction?.faction_name || ''
     }
 }
 
