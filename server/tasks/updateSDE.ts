@@ -12,6 +12,7 @@ import { Celestials } from "../models/Celestials";
 import { InvFlags } from "../models/InvFlags";
 import { InvTypes } from "../models/InvTypes";
 import { Factions } from "../models/Factions";
+import { InvGroups } from "../models/InvGroups";
 
 const pipe = promisify(pipeline);
 
@@ -59,6 +60,7 @@ export default defineTask({
         await invTypes();
         await factions();
         await invFlags();
+        await invGroups();
 
         // Update the local MD5 checksum
         await Config.updateOne(
@@ -156,6 +158,32 @@ async function invFlags() {
     }
 }
 
+async function invGroups() {
+    const db = await connectToDatabase();
+    let results = await db.all(`
+        SELECT
+        invGroups.groupID AS group_id,
+        invGroups.categoryID AS category_id,
+        invGroups.groupName AS group_name,
+        invGroups.iconID AS icon_id,
+        invGroups.useBasePrice AS use_base_price,
+        invGroups.anchored AS anchored,
+        invGroups.anchorable AS anchorable,
+        invGroups.fittableNonSingleton AS fittable_non_singleton,
+        invGroups.published AS published
+        FROM invGroups
+    `);
+
+    // Emit the count of found results
+    console.log(`Found ${results.length} invGroups`);
+    for (let result of results) {
+        await InvGroups.updateOne(
+            { group_id: result.group_id },
+            result,
+            { upsert: true }
+        );
+    }
+}
 async function updateCelestials() {
     const db = await connectToDatabase();
 

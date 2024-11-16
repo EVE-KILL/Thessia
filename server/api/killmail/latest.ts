@@ -10,10 +10,10 @@ export default defineEventHandler(async () => {
       hash: 1,
     },
     {
-      sort: { last_modified: -1 },
+      sort: { createdAt: -1 },
       limit: 10000,
     },
-  ).hint({ last_modified: -1 });
+  ).hint({ createdAt: -1 });
 
   const result: { [key: string]: string } = {};
   if (latestKillmails) {

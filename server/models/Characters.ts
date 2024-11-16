@@ -8,6 +8,11 @@ export const Characters = defineMongooseModel({
     timestamps: true,
   },
   hooks(schema: Schema) {
+    schema.index({ character_id: 1 }, { unique: true });
+    schema.index({ name: 1 }, { sparse: true });
+    schema.index({ corporation_id: 1 }, { sparse: true });
+    schema.index({ alliance_id: 1 }, { sparse: true });
+    schema.index({ faction_id: 1 }, { sparse: true });
   },
   schema: {
     character_id: Number,
@@ -21,5 +26,6 @@ export const Characters = defineMongooseModel({
     corporation_id: Number,
     alliance_id: Number,
     faction_id: Number,
+    history: Array<Object>
   },
 });
