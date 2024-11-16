@@ -17,6 +17,8 @@ interface IStations {
     type_id: Number;
     position: IPositions;
     services: String[];
+    updatedAt?: Date;
+    createdAt?: Date;
 }
 
 export type { IStations as Stations };

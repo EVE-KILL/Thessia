@@ -21,6 +21,8 @@ interface ISolarSystems {
     planets: IPlanets[];
     position: IPosition;
     stargates: Number[];
+    updatedAt?: Date;
+    createdAt?: Date;
 }
 
 export type { ISolarSystems as SolarSystems };

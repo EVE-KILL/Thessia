@@ -2,7 +2,6 @@ interface ICelestial {
   item_id: Number;
   constellation_id: Number;
   item_name: String;
-  last_modified: Date;
   orbit_id: Number;
   region_id: Number;
   region_name: String;
@@ -13,6 +12,8 @@ interface ICelestial {
   x: Number;
   y: Number;
   z: Number;
+  updatedAt?: Date;
+  createdAt?: Date;
 }
 
 export type { ICelestial as Celestial };

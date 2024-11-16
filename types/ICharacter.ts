@@ -1,3 +1,9 @@
+interface ICharacterHistory {
+  record_id: Number;
+  corporation_id: Number;
+  start_date: Date;
+}
+
 interface ICharacter {
   character_id: Number;
   name: String;
@@ -10,7 +16,10 @@ interface ICharacter {
   corporation_id: Number;
   alliance_id: Number;
   faction_id: Number;
-  last_modified: Date;
+  history: ICharacterHistory[];
+  updatedAt?: Date;
+  createdAt?: Date;
 }
 
 export type { ICharacter as Character };
+export type { ICharacterHistory as CharacterHistory };

@@ -22,7 +22,8 @@ interface ICorporation {
       start_date: Date;
     },
   ];
-  last_modified: Date;
+  updatedAt?: Date;
+  createdAt?: Date;
 }
 
 export type { ICorporation as Corporation };

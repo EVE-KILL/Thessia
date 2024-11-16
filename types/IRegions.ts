@@ -3,7 +3,8 @@ interface IRegions {
     constellations: Number[];
     description: String;
     name: String;
-    last_modified: Date;
+    updatedAt?: Date;
+    createdAt?: Date;
 }
 
 export type { IRegions as Regions };

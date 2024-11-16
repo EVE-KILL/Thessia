@@ -11,7 +11,8 @@ interface IConstellations {
     region_id: Number;
     region_name: String;
     systems: Number[];
-    last_modified: Date;
+    updatedAt?: Date;
+    createdAt?: Date;
 }
 
 export type { IPosition as Position };

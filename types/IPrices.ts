@@ -7,6 +7,8 @@ interface IPrices {
     lowest: Number;
     order_count: Number;
     volume: Number;
+    updatedAt?: Date;
+    createdAt?: Date;
 }
 
 export type { IPrices as Prices };

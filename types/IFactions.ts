@@ -13,7 +13,8 @@ interface IFactions {
     ceo_id: Number;
     creator_id: Number;
     home_station_id: Number;
-    last_modified: Date;
+    updatedAt?: Date;
+    createdAt?: Date;
 }
 
 export type { IFactions as Factions };

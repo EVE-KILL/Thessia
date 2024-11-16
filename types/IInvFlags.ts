@@ -3,7 +3,8 @@ interface IInvFlags {
     flag_name: String;
     flag_text: String;
     order_id: Number;
-    last_modified: Date;
+    updatedAt?: Date;
+    createdAt?: Date;
 }
 
 export type { IInvFlags as InvFlags };

@@ -5,7 +5,8 @@ interface IAlliance {
   creator_id: Number;
   creator_corporation_id: Number;
   executor_corporation_id: Number;
-  last_modified: Date; // Unixtime
+  updatedAt?: Date;
+  createdAt?: Date;
 }
 
 export type { IAlliance as Alliance };

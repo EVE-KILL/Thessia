@@ -24,6 +24,8 @@ interface ITypeIDs {
     volume: Number;
     dogma_attributes: IDogmaAttributes[];
     dogma_effects: IDogmaEffects[];
+    updatedAt?: Date;
+    createdAt?: Date;
 }
 
 export type { ITypeIDs as TypeIDs };

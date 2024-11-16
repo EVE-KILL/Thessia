@@ -12,7 +12,8 @@ interface ICelestials {
     x: Number;
     y: Number;
     z: Number;
-    last_modified: Date;
+    updatedAt?: Date;
+    createdAt?: Date;
 };
 
 export type { ICelestials as Celestials };

@@ -4,7 +4,8 @@ interface IGroupIDs {
     name: String;
     published: Boolean;
     types: Number[];
-    last_modified: Date;
+    updatedAt?: Date;
+    createdAt?: Date;
 }
 
 export type { IGroupIDs as GroupIDs };
