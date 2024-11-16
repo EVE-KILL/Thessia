@@ -3,7 +3,7 @@ import type { IPrices } from "../../../../types/IPrices";
 
 export default defineEventHandler(async (event) => {
     const query = getQuery(event);
-    const regionId = event.context.params?.id;
+    const typeId = event.context.params?.id;
     const days = new Date(Date.now() - 1000 * 60 * 60 * (parseInt(query?.days as string) || 1) * 24);
     const dateQuery = query?.date;
     // dateQuery will be unixtime, it needs to be converted to a date object
@@ -14,7 +14,7 @@ export default defineEventHandler(async (event) => {
     }
 
     let mongoQuery = {
-        region_id: regionId,
+        type_id: typeId,
         date: { $gte: date || days },
     };
 
