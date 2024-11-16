@@ -19,6 +19,6 @@ export default defineNitroPlugin((nitroApp) => {
         }
     };
 
-    console.log('Starting RedisQ poller');
-    pollRedisQ();
+    //console.log('Starting RedisQ poller');
+    //pollRedisQ();
 });
