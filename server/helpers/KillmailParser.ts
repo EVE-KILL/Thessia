@@ -153,61 +153,54 @@ async function processVictim(victim: ESIVictim): Promise<Victim> {
 }
 
 async function getNear(x: number, y: number, z: number, solarSystemId: number): Promise<string> {
-    // Use fuzzworks api
-    let fuzzworkUrl = `https://www.fuzzwork.co.uk/api/nearestCelestial.php?x=${x}&y=${y}&z=${z}&solarsystemid=${solarSystemId}`;
-    let request = await fetch(fuzzworkUrl);
-    let response = await request.json();
+    // Return an empty string if all coordinates are zero
+    if (x === 0 && y === 0 && z === 0) {
+        return '';
+    }
 
-    return response.itemName || '';
+    // Define distance limit: 1000 AU in meters
+    const distance = 1000 * 3.086e16;
 
-    // // Return an empty string if all coordinates are zero
-    // if (x === 0 && y === 0 && z === 0) {
-    //     return '';
-    // }
+    // Query the Celestials collection for objects near the coordinates
+    const celestials = await Celestials.aggregate([
+        {
+            $match: {
+                solar_system_id: solarSystemId,
+                x: { $gt: x - distance, $lt: x + distance },
+                y: { $gt: y - distance, $lt: y + distance },
+                z: { $gt: z - distance, $lt: z + distance },
+            },
+        },
+        {
+            $project: {
+                item_id: 1,
+                item_name: 1,
+                constellation_id: 1,
+                solar_system_id: 1,
+                solar_system_name: 1,
+                region_id: 1,
+                region_name: 1,
+                distance: {
+                    $sqrt: {
+                        $add: [
+                            { $pow: [{ $subtract: ['$x', x] }, 2] },
+                            { $pow: [{ $subtract: ['$y', y] }, 2] },
+                            { $pow: [{ $subtract: ['$z', z] }, 2] },
+                        ],
+                    },
+                },
+            },
+        },
+        { $sort: { distance: 1 } },
+        { $limit: 1 },
+    ]);
 
-    // // Define distance limit: 1000 AU in meters
-    // const distance = 1000 * 3.086e16;
+    // Return the closest celestial's item_name or an empty string if none found
+    if (!celestials || celestials.length === 0) {
+        return '';
+    }
 
-    // // Query the Celestials collection for objects near the coordinates
-    // const celestials = await Celestials.aggregate([
-    //     {
-    //         $match: {
-    //             solar_system_id: solarSystemId,
-    //             x: { $gt: x - distance, $lt: x + distance },
-    //             y: { $gt: y - distance, $lt: y + distance },
-    //             z: { $gt: z - distance, $lt: z + distance },
-    //         },
-    //     },
-    //     {
-    //         $project: {
-    //             item_id: 1,
-    //             item_name: 1,
-    //             constellation_id: 1,
-    //             solar_system_id: 1,
-    //             solar_system_name: 1,
-    //             region_id: 1,
-    //             region_name: 1,
-    //             distance: {
-    //                 $sqrt: {
-    //                     $add: [
-    //                         { $pow: [{ $subtract: ['$x', x] }, 2] },
-    //                         { $pow: [{ $subtract: ['$y', y] }, 2] },
-    //                         { $pow: [{ $subtract: ['$z', z] }, 2] },
-    //                     ],
-    //                 },
-    //             },
-    //         },
-    //     },
-    //     { $sort: { distance: 1 } },
-    //     { $limit: 1 },
-    // ]);
-
-    // // Return the closest celestial's item_name or an empty string if none found
-    // if (!celestials || celestials.length === 0) {
-    //     return '';
-    // }
-
-    // return celestials[0].item_name || '';
+    return celestials[0].item_name || '';
 }
 
 async function isNPC(killmail: ESIKillmail): Promise<boolean> {

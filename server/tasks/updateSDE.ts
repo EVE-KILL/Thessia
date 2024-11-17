@@ -82,7 +82,7 @@ export default defineTask({
 
 async function invTypes() {
     const db = await connectToDatabase();
-    let results = await db?.all(`
+    const results = await db?.all(`
         SELECT
         invTypes.typeID AS type_id,
         invTypes.groupID AS group_id,
@@ -102,20 +102,25 @@ async function invTypes() {
         FROM invTypes
     `);
 
-    // Emit the count of found results
     console.log(`Found ${results.length} invTypes`);
-    for (let result of results) {
-        await InvTypes.updateOne(
-            { type_id: result.type_id },
-            result,
-            { upsert: true }
-        );
+
+    const bulkOps = results.map((result) => ({
+        updateOne: {
+            filter: { type_id: result.type_id },
+            update: { $set: result },
+            upsert: true,
+        },
+    }));
+
+    if (bulkOps.length > 0) {
+        const response = await InvTypes.bulkWrite(bulkOps);
+        console.log(`Bulk operation complete. Matched: ${response.matchedCount}, Modified: ${response.modifiedCount}, Upserts: ${response.upsertedCount}`);
     }
 }
 
 async function factions() {
     const db = await connectToDatabase();
-    let results = await db?.all(`
+    const results = await db?.all(`
         SELECT
         chrFactions.factionID AS faction_id,
         chrFactions.factionName AS name,
@@ -131,20 +136,25 @@ async function factions() {
         FROM chrFactions
     `);
 
-    // Emit the count of found results
     console.log(`Found ${results.length} factions`);
-    for (let result of results) {
-        await Factions.updateOne(
-            { faction_id: result.faction_id },
-            result,
-            { upsert: true }
-        );
+
+    const bulkOps = results.map((result) => ({
+        updateOne: {
+            filter: { faction_id: result.faction_id },
+            update: { $set: result },
+            upsert: true,
+        },
+    }));
+
+    if (bulkOps.length > 0) {
+        const response = await Factions.bulkWrite(bulkOps);
+        console.log(`Bulk operation complete. Matched: ${response.matchedCount}, Modified: ${response.modifiedCount}, Upserts: ${response.upsertedCount}`);
     }
 }
 
 async function invFlags() {
     const db = await connectToDatabase();
-    let results = await db?.all(`
+    const results = await db?.all(`
         SELECT
         invFlags.flagID AS flag_id,
         invFlags.flagName AS flag_name,
@@ -153,20 +163,26 @@ async function invFlags() {
         FROM invFlags
     `);
 
-    // Emit the count of found results
     console.log(`Found ${results.length} invFlags`);
-    for (let result of results) {
-        await InvFlags.updateOne(
-            { flag_id: result.flag_id },
-            result,
-            { upsert: true }
-        );
+
+    const bulkOps = results.map((result) => ({
+        updateOne: {
+            filter: { flag_id: result.flag_id },
+            update: { $set: result },
+            upsert: true,
+        },
+    }));
+
+    if (bulkOps.length > 0) {
+        const response = await InvFlags.bulkWrite(bulkOps);
+        console.log(`Bulk operation complete. Matched: ${response.matchedCount}, Modified: ${response.modifiedCount}, Upserts: ${response.upsertedCount}`);
     }
 }
 
+
 async function invGroups() {
     const db = await connectToDatabase();
-    let results = await db?.all(`
+    const results = await db?.all(`
         SELECT
         invGroups.groupID AS group_id,
         invGroups.categoryID AS category_id,
@@ -180,24 +196,29 @@ async function invGroups() {
         FROM invGroups
     `);
 
-    // Emit the count of found results
     console.log(`Found ${results.length} invGroups`);
-    for (let result of results) {
-        await InvGroups.updateOne(
-            { group_id: result.group_id },
-            result,
-            { upsert: true }
-        );
+
+    const bulkOps = results.map((result) => ({
+        updateOne: {
+            filter: { group_id: result.group_id },
+            update: { $set: result },
+            upsert: true,
+        },
+    }));
+
+    if (bulkOps.length > 0) {
+        const response = await InvGroups.bulkWrite(bulkOps);
+        console.log(`Bulk operation complete. Matched: ${response.matchedCount}, Modified: ${response.modifiedCount}, Upserts: ${response.upsertedCount}`);
     }
 }
 
 async function updateCelestials() {
     const db = await connectToDatabase();
 
-    let results = await db?.all(`
+    const results = await db?.all(`
         SELECT
             mapDenormalize.itemID AS item_id,
-            mapDenormalize.itemName AS item_name,
+            invNames.itemName AS item_name,
             invTypes.typeName AS type_name,
             mapDenormalize.typeID AS type_id,
             mapSolarSystems.solarSystemName AS solar_system_name,
@@ -212,6 +233,7 @@ async function updateCelestials() {
         FROM
             mapDenormalize
             JOIN invTypes ON mapDenormalize.typeID = invTypes.typeID
+            JOIN invNames on mapDenormalize.itemID = invNames.itemID
             JOIN mapSolarSystems ON mapSolarSystems.solarSystemID = mapDenormalize.solarSystemID
             JOIN mapRegions ON mapDenormalize.regionID = mapRegions.regionID
             JOIN mapConstellations ON mapDenormalize.constellationID = mapConstellations.constellationID
@@ -219,18 +241,26 @@ async function updateCelestials() {
 
     // Emit the count of found results
     console.log(`Found ${results.length} Celestials`);
-    for (let result of results) {
-        await Celestials.updateOne(
-            { item_id: result.item_id },
-            result,
-            { upsert: true }
-        );
+
+    // Prepare bulk operations
+    const bulkOps = results.map((result) => ({
+        updateOne: {
+            filter: { item_id: result.item_id }, // Match document by item_id
+            update: { $set: result },           // Set the fields from the result
+            upsert: true,                       // Insert if not found
+        },
+    }));
+
+    // Perform bulk operation
+    if (bulkOps.length > 0) {
+        const response = await Celestials.bulkWrite(bulkOps);
+        console.log(`Bulk operation complete. Matched: ${response.matchedCount}, Modified: ${response.modifiedCount}, Upserts: ${response.upsertedCount}`);
     }
 }
 
 async function updateSolarSystems() {
     const db = await connectToDatabase();
-    let results = await db?.all(`
+    const results = await db?.all(`
         SELECT
         mapSolarSystems.regionID AS region_id,
         mapSolarSystems.constellationID AS constellation_id,
@@ -261,20 +291,26 @@ async function updateSolarSystems() {
         FROM mapSolarSystems
     `);
 
-    // Emit the count of found results
     console.log(`Found ${results.length} SolarSystems`);
-    for (let result of results) {
-        await SolarSystems.updateOne(
-            { system_id: result.system_id },
-            result,
-            { upsert: true }
-        );
+
+    const bulkOps = results.map((result) => ({
+        updateOne: {
+            filter: { system_id: result.system_id },
+            update: { $set: result },
+            upsert: true,
+        },
+    }));
+
+    if (bulkOps.length > 0) {
+        const response = await SolarSystems.bulkWrite(bulkOps);
+        console.log(`Bulk operation complete. Matched: ${response.matchedCount}, Modified: ${response.modifiedCount}, Upserts: ${response.upsertedCount}`);
     }
 }
 
+
 async function updateRegions() {
     const db = await connectToDatabase();
-    let results = await db?.all(`
+    const results = await db?.all(`
         SELECT
         mapRegions.regionID AS region_id,
         mapRegions.regionName AS region_name,
@@ -293,20 +329,25 @@ async function updateRegions() {
         FROM mapRegions
     `);
 
-    // Emit the count of found results
     console.log(`Found ${results.length} Regions`);
-    for (let result of results) {
-        await Regions.updateOne(
-            { region_id: result.region_id },
-            result,
-            { upsert: true }
-        );
+
+    const bulkOps = results.map((result) => ({
+        updateOne: {
+            filter: { region_id: result.region_id },
+            update: { $set: result },
+            upsert: true,
+        },
+    }));
+
+    if (bulkOps.length > 0) {
+        const response = await Regions.bulkWrite(bulkOps);
+        console.log(`Bulk operation complete. Matched: ${response.matchedCount}, Modified: ${response.modifiedCount}, Upserts: ${response.upsertedCount}`);
     }
 }
 
 async function updateConstellations() {
     const db = await connectToDatabase();
-    let results = await db?.all(`
+    const results = await db?.all(`
         SELECT
         mapConstellations.regionID AS region_id,
         mapConstellations.constellationID AS constellation_id,
@@ -325,14 +366,19 @@ async function updateConstellations() {
         FROM mapConstellations
     `);
 
-    // Emit the count of found results
     console.log(`Found ${results.length} Constellations`);
-    for (let result of results) {
-        await Constellations.updateOne(
-            { constellation_id: result.constellation_id },
-            result,
-            { upsert: true }
-        );
+
+    const bulkOps = results.map((result) => ({
+        updateOne: {
+            filter: { constellation_id: result.constellation_id },
+            update: { $set: result },
+            upsert: true,
+        },
+    }));
+
+    if (bulkOps.length > 0) {
+        const response = await Constellations.bulkWrite(bulkOps);
+        console.log(`Bulk operation complete. Matched: ${response.matchedCount}, Modified: ${response.modifiedCount}, Upserts: ${response.upsertedCount}`);
     }
 }
 
