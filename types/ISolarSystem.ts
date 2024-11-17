@@ -1,28 +1,30 @@
-interface IPlanets {
-    planet_id: Number;
-}
-
-interface IPosition {
+interface ISolarSystem {
+    region_id: Number;
+    constellation_id: Number;
+    system_id: Number;
+    system_name: String;
     x: Number;
     y: Number;
     z: Number;
-}
-
-interface ISolarSystem {
-    system_id: Number;
-    constellation_id: Number;
-    constelaltion_name: String;
-    name: String;
-    region_id: Number;
-    region_name: String;
+    x_min: Number;
+    x_max: Number;
+    y_min: Number;
+    y_max: Number;
+    z_min: Number;
+    z_max: Number;
+    luminosity: Number;
+    border: Boolean;
+    fringe: Boolean;
+    corridor: Boolean;
+    hub: Boolean;
+    international: Boolean;
+    regional: Boolean;
+    constellation: Number;
+    security: Number;
+    faction_id: Number;
+    radius: Number;
+    sun_type_id: Number;
     security_class: String;
-    security_status: Number;
-    star_id: Number;
-    planets: IPlanets[];
-    position: IPosition;
-    stargates: Number[];
-    updatedAt?: Date;
-    createdAt?: Date;
 }
 
 export type { ISolarSystem as SolarSystem };

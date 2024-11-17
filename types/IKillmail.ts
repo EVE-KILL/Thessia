@@ -27,8 +27,9 @@ interface IItem {
   flag: Number;
   qty_dropped: Number;
   qty_destroyed: Number;
-  singleton: Boolean;
+  singleton: Number;
   value: Number;
+  items?: IItem[];
 }
 
 interface IVictim {
@@ -48,18 +49,15 @@ interface IVictim {
 }
 
 interface IKillmail {
-  hash: String;
+  killmail_hash: String;
   killmail_id: Number;
   attackers: IAttacker[];
-  dna: String;
   fitting_value: Number;
   is_npc: Boolean;
   is_solo: Boolean;
   items: IItem[];
   kill_time: Date;
-  kill_time_str: String;
   near: String;
-  point_value: Number;
   region_id: Number;
   region_name: String;
   ship_value: Number;
@@ -72,7 +70,7 @@ interface IKillmail {
   x: Number;
   y: Number;
   z: Number;
-  emitted: Boolean;
+  emitted?: Boolean;
   updatedAt?: Date;
   createdAt?: Date;
 }

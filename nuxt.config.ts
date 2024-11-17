@@ -4,7 +4,18 @@ export default defineNuxtConfig({
     enabled: true,
   },
 
-  modules: ["@nuxt/content", "nuxt-mongoose", "@nuxtjs/tailwindcss", "@nuxt/image", "nuxt-security", "@nuxt/eslint"],
+  sourcemap: {
+    server: true,
+    client: true
+  },
+
+  modules: [
+    "@nuxt/content",
+    "nuxt-mongoose",
+    "@nuxtjs/tailwindcss",
+    "@nuxt/image",
+    "nuxt-security"
+  ],
 
   image: {
     quality: 80,

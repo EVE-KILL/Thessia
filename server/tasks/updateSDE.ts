@@ -13,6 +13,9 @@ import { InvFlags } from "../models/InvFlags";
 import { InvTypes } from "../models/InvTypes";
 import { Factions } from "../models/Factions";
 import { InvGroups } from "../models/InvGroups";
+import { SolarSystems } from "../models/SolarSystems";
+import { Regions } from "../models/Regions";
+import { Constellations } from "../models/Constellations";
 
 const pipe = promisify(pipeline);
 
@@ -57,6 +60,9 @@ export default defineTask({
         await pipe(nodeStream, bz2(), writeStream);
 
         await updateCelestials();
+        await updateSolarSystems();
+        await updateRegions();
+        await updateConstellations();
         await invTypes();
         await factions();
         await invFlags();
@@ -76,7 +82,7 @@ export default defineTask({
 
 async function invTypes() {
     const db = await connectToDatabase();
-    let results = await db.all(`
+    let results = await db?.all(`
         SELECT
         invTypes.typeID AS type_id,
         invTypes.groupID AS group_id,
@@ -109,7 +115,7 @@ async function invTypes() {
 
 async function factions() {
     const db = await connectToDatabase();
-    let results = await db.all(`
+    let results = await db?.all(`
         SELECT
         chrFactions.factionID AS faction_id,
         chrFactions.factionName AS name,
@@ -138,7 +144,7 @@ async function factions() {
 
 async function invFlags() {
     const db = await connectToDatabase();
-    let results = await db.all(`
+    let results = await db?.all(`
         SELECT
         invFlags.flagID AS flag_id,
         invFlags.flagName AS flag_name,
@@ -160,7 +166,7 @@ async function invFlags() {
 
 async function invGroups() {
     const db = await connectToDatabase();
-    let results = await db.all(`
+    let results = await db?.all(`
         SELECT
         invGroups.groupID AS group_id,
         invGroups.categoryID AS category_id,
@@ -184,10 +190,11 @@ async function invGroups() {
         );
     }
 }
+
 async function updateCelestials() {
     const db = await connectToDatabase();
 
-    let results = await db.all(`
+    let results = await db?.all(`
         SELECT
             mapDenormalize.itemID AS item_id,
             mapDenormalize.itemName AS item_name,
@@ -215,6 +222,114 @@ async function updateCelestials() {
     for (let result of results) {
         await Celestials.updateOne(
             { item_id: result.item_id },
+            result,
+            { upsert: true }
+        );
+    }
+}
+
+async function updateSolarSystems() {
+    const db = await connectToDatabase();
+    let results = await db?.all(`
+        SELECT
+        mapSolarSystems.regionID AS region_id,
+        mapSolarSystems.constellationID AS constellation_id,
+        mapSolarSystems.solarSystemID AS system_id,
+        mapSolarSystems.solarSystemName AS system_name,
+        mapSolarSystems.x AS x,
+        mapSolarSystems.y AS y,
+        mapSolarSystems.z AS z,
+        mapSolarSystems.xMin AS x_min,
+        mapSolarSystems.xMax AS x_max,
+        mapSolarSystems.yMin AS y_min,
+        mapSolarSystems.yMax AS y_max,
+        mapSolarSystems.zMin AS z_min,
+        mapSolarSystems.zMax AS z_max,
+        mapSolarSystems.luminosity AS luminosity,
+        mapSolarSystems.border AS border,
+        mapSolarSystems.fringe AS fringe,
+        mapSolarSystems.corridor AS corridor,
+        mapSolarSystems.hub AS hub,
+        mapSolarSystems.international AS international,
+        mapSolarSystems.regional AS regional,
+        mapSolarSystems.constellation AS constellation,
+        mapSolarSystems.security AS security,
+        mapSolarSystems.factionID AS faction_id,
+        mapSolarSystems.radius AS radius,
+        mapSolarSystems.sunTypeID AS sun_type_id,
+        mapSolarSystems.securityClass AS security_class
+        FROM mapSolarSystems
+    `);
+
+    // Emit the count of found results
+    console.log(`Found ${results.length} SolarSystems`);
+    for (let result of results) {
+        await SolarSystems.updateOne(
+            { system_id: result.system_id },
+            result,
+            { upsert: true }
+        );
+    }
+}
+
+async function updateRegions() {
+    const db = await connectToDatabase();
+    let results = await db?.all(`
+        SELECT
+        mapRegions.regionID AS region_id,
+        mapRegions.regionName AS region_name,
+        mapRegions.x AS x,
+        mapRegions.y AS y,
+        mapRegions.z AS z,
+        mapRegions.xMin AS x_min,
+        mapRegions.xMax AS x_max,
+        mapRegions.yMin AS y_min,
+        mapRegions.yMax AS y_max,
+        mapRegions.zMin AS z_min,
+        mapRegions.zMax AS z_max,
+        mapRegions.factionID AS faction_id,
+        mapRegions.nebula AS nebula,
+        mapRegions.radius AS radius
+        FROM mapRegions
+    `);
+
+    // Emit the count of found results
+    console.log(`Found ${results.length} Regions`);
+    for (let result of results) {
+        await Regions.updateOne(
+            { region_id: result.region_id },
+            result,
+            { upsert: true }
+        );
+    }
+}
+
+async function updateConstellations() {
+    const db = await connectToDatabase();
+    let results = await db?.all(`
+        SELECT
+        mapConstellations.regionID AS region_id,
+        mapConstellations.constellationID AS constellation_id,
+        mapConstellations.constellationName AS constellation_name,
+        mapConstellations.x AS x,
+        mapConstellations.y AS y,
+        mapConstellations.z AS z,
+        mapConstellations.xMin AS x_min,
+        mapConstellations.xMax AS x_max,
+        mapConstellations.yMin AS y_min,
+        mapConstellations.yMax AS y_max,
+        mapConstellations.zMin AS z_min,
+        mapConstellations.zMax AS z_max,
+        mapConstellations.factionID AS faction_id,
+        mapConstellations.radius AS radius
+        FROM mapConstellations
+    `);
+
+    // Emit the count of found results
+    console.log(`Found ${results.length} Constellations`);
+    for (let result of results) {
+        await Constellations.updateOne(
+            { constellation_id: result.constellation_id },
             result,
             { upsert: true }
         );

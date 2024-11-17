@@ -24,7 +24,7 @@ export default defineEventHandler(async (event) => {
   // Find out if we already know the killmail by querying the database
   const existingKillmail: Killmail | null = await Killmails.findOne(
     { killmail_id: killmailData.killmail_id },
-    { _id: 0 },
+    { _id: 0 }
   );
   // If the killmail already exists, return a message indicating so
   if (existingKillmail) {
@@ -40,7 +40,7 @@ export default defineEventHandler(async (event) => {
   // Check if the killmail was processed by querying the database again
   const processedKillmail: Killmail | null = await Killmails.findOne(
     { killmail_id: killmailData.killmail_id },
-    { _id: 0 },
+    { _id: 0 }
   );
 
   // If the killmail was processed, redirect to /kill/<killmail_id>

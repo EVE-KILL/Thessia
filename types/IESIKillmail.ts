@@ -1,7 +1,8 @@
-interface IAttackers {
+interface IAttacker {
   character_id: Number;
   corporation_id: Number;
   alliance_id: Number;
+  faction_id?: Number;
   damage_done: Number;
   final_blow: Boolean;
   security_status: Number;
@@ -9,12 +10,13 @@ interface IAttackers {
   weapon_type_id: Number;
 }
 
-interface IVictimItems {
+interface IVictimItem {
   item_type_id: Number;
   quantity_destroyed: Number;
   quantity_dropped: Number;
   flag: Number;
   singleton: Number;
+  items?: IVictimItem[];
 }
 
 interface IVictim {
@@ -24,7 +26,12 @@ interface IVictim {
   faction_id: Number;
   damage_taken: Number;
   ship_type_id: Number;
-  items: IVictimItems[];
+  items: IVictimItem[];
+  position: {
+    x: Number;
+    y: Number;
+    z: Number;
+  };
 }
 
 interface IESIKillmail {
@@ -37,9 +44,10 @@ interface IESIKillmail {
   victim: IVictim;
   updatedAt?: Date;
   createdAt?: Date;
+  error?: String;
 }
 
 export type { IESIKillmail as ESIKillmail };
-export type { IAttackers as ESIAttackers };
+export type { IAttacker as ESIAttacker };
 export type { IVictim as ESIVictim };
-export type { IVictimItems as ESIVictimItems };
+export type { IVictimItem as ESIVictimItem };
