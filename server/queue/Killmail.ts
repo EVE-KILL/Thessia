@@ -10,10 +10,10 @@ async function addKillmail(killmailId: number, killmailHash: string, priority: n
         { killmailId: killmailId, killmailHash: killmailHash },
         {
             priority: priority,
-            attempts: 3,
+            attempts: 10,
             backoff: {
                 type: 'fixed',
-                delay: 5000
+                delay: 10000
             },
             removeOnComplete: true,
         }

@@ -3,8 +3,6 @@ import { Attacker, Item, Killmail, Victim } from "~/types/IKillmail";
 
 import { getCharacter, getCorporation, getAlliance, getFaction } from "./ESIData";
 import { getPrice } from "./Prices";
-import { InvType } from "~/types/InvType";
-import { InvGroup } from "~/types/InvGroup";
 
 async function parseKillmail(killmail: ESIKillmail): Promise<Killmail> {
     const top = await generateTop(killmail);
@@ -170,17 +168,22 @@ async function getNear(x: number, y: number, z: number, solarSystemId: number): 
 
 async function isNPC(killmail: ESIKillmail): Promise<boolean> {
     const attackerCount = killmail.attackers.length;
-    // If the ship_type_id of the attacker is in a group, that is in the category_id 11, then it's a safe bet it's an NPC
-    const npcCount = killmail.attackers.filter(
-        async (attacker) => {
-            let ship: InvType | null = attacker.ship_type_id ? await InvTypes.findOne({ type_id: attacker.ship_type_id }) : null;
-            let shipGroup: InvGroup | null = ship ? await InvGroups.findOne({ group_id: ship.group_id }) : null;
 
+    const npcStatuses = await Promise.all(
+        killmail.attackers.map(async (attacker) => {
+            if (!attacker.ship_type_id) return false;
+
+            const ship = await InvTypes.findOne({ type_id: attacker.ship_type_id });
+            if (!ship) return false;
+
+            const shipGroup = await InvGroups.findOne({ group_id: ship.group_id });
             return shipGroup?.category_id === 11;
-        }
-    ).length;
+        })
+    );
 
-    return attackerCount > 0 && npcCount > 0 && attackerCount / npcCount === 1;
+    // Count NPC attackers based on resolved statuses
+    const npcCount = npcStatuses.filter((isNpc) => isNpc).length;
+    return attackerCount > 0 && npcCount > 0 && attackerCount === npcCount;
 }
 
 async function isSolo(killmail: ESIKillmail): Promise<boolean> {

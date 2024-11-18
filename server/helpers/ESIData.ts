@@ -15,11 +15,14 @@ async function fetchESIKillmail(killmailId: number, killmailHash: string): Promi
     return dbKillmail;
   }
 
-  let request = await fetch(`https://esi.evetech.net/latest/killmails/${killmailId}/${killmailHash}/`);
-  let esiKillmail: ESIKillmail = await request.json();
-  esiKillmail.killmail_hash = killmailHash;
-
-  return esiKillmail;
+  try {
+    let request = await fetch(`https://esi.evetech.net/latest/killmails/${killmailId}/${killmailHash}/`);
+    let esiKillmail: ESIKillmail = await request.json();
+    esiKillmail.killmail_hash = killmailHash;
+    return esiKillmail;
+  } catch (error) {
+    throw new Error(`error: ${error.message} | response: ${error.response}`);
+  }
 }
 
 async function getCharacter(character_id: Number): Promise<Character> {
