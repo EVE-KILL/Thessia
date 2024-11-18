@@ -27,13 +27,13 @@ async function processKillmail(killmailId: number, killmailHash: string) {
         throw new Error(`Error fetching killmail: ${killmail.error}`);
     }
 
-    // Insert the killmail into the esi killmails table
-    let esiKillmail = new KillmailsESI(killmail);
-    await esiKillmail.save();
-
     let processedKillmail = await parseKillmail(killmail);
     let model = new Killmails(processedKillmail);
-    await model.save();
+    try {
+        await model.save();
+    } catch (error) {
+        Killmails.updateOne({ killmail_id: killmailId }, processedKillmail);
+    }
 }
 
 export { addKillmail, processKillmail, fetchESIKillmail };

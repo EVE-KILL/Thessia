@@ -12,7 +12,6 @@ async function fetchESIKillmail(killmailId: number, killmailHash: string): Promi
   // Check if the killmail is in the KillmailESI model first
   let dbKillmail: ESIKillmail | null = await KillmailsESI.findOne({ killmail_id: killmailId }, { _id: 0, __v: 0, createdAt: 0, updatedAt: 0 });
   if (dbKillmail) {
-    console.log("Killmail found in database", dbKillmail);
     return dbKillmail;
   }
 
@@ -20,6 +19,11 @@ async function fetchESIKillmail(killmailId: number, killmailHash: string): Promi
     let request = await fetch(`https://esi.evetech.net/latest/killmails/${killmailId}/${killmailHash}/`);
     let esiKillmail: ESIKillmail = await request.json();
     esiKillmail.killmail_hash = killmailHash;
+
+    // Insert the killmail into the esi killmails table
+    let km = new KillmailsESI(esiKillmail);
+    await km.save();
+
     return esiKillmail;
   } catch (error) {
     throw new Error(`error: ${error.message} | response: ${error.response}`);

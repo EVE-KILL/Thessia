@@ -12,7 +12,7 @@ export default defineNitroPlugin((nitroApp) => {
                 const killmailId = data.package.killID;
                 const killmailHash = data.package.zkb.hash;
 
-                console.log('ℹ️  New killmail:', killmailId, '-', killmailHash);
+                //console.log('ℹ️  New killmail:', killmailId, '-', killmailHash);
                 await addKillmail(killmailId, killmailHash);
             }
         } catch (error) {
