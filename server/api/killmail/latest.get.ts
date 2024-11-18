@@ -2,7 +2,7 @@ import { Killmails } from "../../models/Killmails";
 import { Killmail } from "../../../types/IKillmail";
 
 export default defineEventHandler(async () => {
-  const latestKillmails = await Killmails.find(
+  const latestKillmails: Killmail[] = await Killmails.find(
     {},
     {
       _id: 0,
@@ -13,14 +13,7 @@ export default defineEventHandler(async () => {
       sort: { createdAt: -1 },
       limit: 10000,
     },
-  ).hint({ createdAt: -1 });
+  );
 
-  const result: { [key: string]: string } = {};
-  if (latestKillmails) {
-    latestKillmails.forEach((killmail: Killmail) => {
-      result[killmail.killmail_id] = killmail.hash;
-    });
-  }
-
-  return result;
+  return latestKillmails.map((km) => km.killmail_id);
 });
