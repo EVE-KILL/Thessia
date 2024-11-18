@@ -32,12 +32,12 @@ async function processKillmail(killmailId: number, killmailHash: string) {
     let model = new Killmails(processedKillmail);
     try {
         await model.save();
+        // Send the new killmail to the killmail websocket
+        await sendKillmailMessage(processedKillmail);
     } catch (error) {
         Killmails.updateOne({ killmail_id: killmailId }, processedKillmail);
     }
 
-    // Send killmail to websocket
-    await sendKillmailMessage(processedKillmail);
 }
 
 export { addKillmail, processKillmail, fetchESIKillmail };
