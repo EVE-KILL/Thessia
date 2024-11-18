@@ -23,13 +23,13 @@ async function getCharacter(character_id: Number): Promise<Character> {
   let character: Character | null = await Characters.findOne(
     {
       character_id: character_id,
-      updatedAt: { $gte: thirtyDaysAgo }, // Fetch only if updatedAt is within 30 days
+      updatedAt: { $gte: thirtyDaysAgo },
     },
-    { _id: 0, __v: 0, createdAt: 0, updatedAt: 0 } // Exclude fields, including updatedAt
+    { _id: 0, __v: 0, createdAt: 0, updatedAt: 0 }
   );
 
   if (character) {
-    return character; // Return the character directly if it exists
+    return character;
   }
 
   // Fetch character from external API if not found or outdated
@@ -47,7 +47,7 @@ async function getCharacter(character_id: Number): Promise<Character> {
       case "Character not found":
         return { error: "Character not found" };
       default:
-        throw new Error(data.error);
+        throw new Error(`ESI Error: ${data.error} | URL: https://esi.evetech.net/latest/characters/${character_id}/?datasource=tranquility`);
     }
   }
 
@@ -60,7 +60,11 @@ async function getCharacter(character_id: Number): Promise<Character> {
 
   // Save character to database
   let characterModel = new Characters(data);
-  await characterModel.save();
+  try {
+    await characterModel.save();
+  } catch (error) {
+    await Characters.updateOne({ character_id: character_id }, data);
+  }
 
   // Return character
   return data;
@@ -105,13 +109,13 @@ async function getCorporation(corporation_id: Number): Promise<Corporation> {
   let corporation: Corporation | null = await Corporations.findOne(
     {
       corporation_id: corporation_id,
-      updatedAt: { $gte: thirtyDaysAgo }, // Fetch only if updatedAt is within 30 days
+      updatedAt: { $gte: thirtyDaysAgo },
     },
-    { _id: 0, __v: 0, createdAt: 0, updatedAt: 0 } // Exclude fields, including updatedAt
+    { _id: 0, __v: 0, createdAt: 0, updatedAt: 0 }
   );
 
   if (corporation) {
-    return corporation; // Return the corporation directly if it exists
+    return corporation;
   }
 
   // Fetch corporation from external API if not found or outdated
@@ -129,7 +133,11 @@ async function getCorporation(corporation_id: Number): Promise<Corporation> {
 
   // Save corporation to database
   let corporationModel = new Corporations(data);
-  await corporationModel.save();
+  try {
+    await corporationModel.save();
+  } catch (error) {
+    await Corporations.updateOne({ corporation_id: corporation_id }, data);
+  }
 
   // Return corporation
   return data;
@@ -153,13 +161,13 @@ async function getAlliance(alliance_id: Number): Promise<Alliance> {
   let alliance: Alliance | null = await Alliances.findOne(
     {
       alliance_id: alliance_id,
-      updatedAt: { $gte: thirtyDaysAgo }, // Fetch only if updatedAt is within 30 days
+      updatedAt: { $gte: thirtyDaysAgo },
     },
-    { _id: 0, __v: 0, createdAt: 0, updatedAt: 0 } // Exclude fields, including updatedAt
+    { _id: 0, __v: 0, createdAt: 0, updatedAt: 0 }
   );
 
   if (alliance) {
-    return alliance; // Return the alliance directly if it exists
+    return alliance;
   }
 
   // Fetch alliance from external API if not found or outdated
@@ -173,7 +181,11 @@ async function getAlliance(alliance_id: Number): Promise<Alliance> {
 
   // Save alliance to database
   let allianceModel = new Alliances(data);
-  await allianceModel.save();
+  try {
+    await allianceModel.save();
+  } catch (error) {
+    await Alliances.updateOne({ alliance_id: alliance_id }, data);
+  }
 
   // Return alliance
   return data;

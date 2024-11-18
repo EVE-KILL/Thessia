@@ -6,6 +6,12 @@ export const InvTypes = defineMongooseModel({
   options: {
     collection: "invTypes",
     timestamps: true,
+    toJSON: {
+      transform: (doc, ret) => {
+        delete ret._id;
+        delete ret.__v;
+      }
+    },
   },
   hooks(schema: Schema) {
     schema.index({ type_id: 1 }, { unique: true});

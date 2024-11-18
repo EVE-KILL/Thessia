@@ -6,6 +6,12 @@ export const Killmails = defineMongooseModel({
   options: {
     collection: "killmails",
     timestamps: true,
+    toJSON: {
+      transform: (doc, ret) => {
+        delete ret._id;
+        delete ret.__v;
+      }
+    },
   },
   hooks(schema: Schema) {
     schema.index({ killmail_id: 1, hash: 1 }, { unique: true });
@@ -56,7 +62,7 @@ export const Killmails = defineMongooseModel({
         flag: Number,
         qty_dropped: Number,
         qty_destroyed: Number,
-        singleton: Boolean,
+        singleton: Number,
         value: Number,
       },
     ],

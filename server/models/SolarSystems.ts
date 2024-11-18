@@ -6,6 +6,12 @@ export const SolarSystems = defineMongooseModel({
   options: {
     collection: "solarSystems",
     timestamps: true,
+    toJSON: {
+      transform: (doc, ret) => {
+        delete ret._id;
+        delete ret.__v;
+      }
+    },
   },
   hooks(schema: Schema) {
     schema.index({ system_id: 1 }, { unique: true });

@@ -6,6 +6,12 @@ export const InvFlags = defineMongooseModel({
   options: {
     collection: "invFlags",
     timestamps: true,
+    toJSON: {
+      transform: (doc, ret) => {
+        delete ret._id;
+        delete ret.__v;
+      }
+    },
   },
   hooks(schema: Schema) {
     schema.index({ flag_id: 1 }, { unique: true });

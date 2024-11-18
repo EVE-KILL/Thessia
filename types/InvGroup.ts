@@ -6,7 +6,7 @@ interface IInvGroup {
     use_base_price: Boolean;
     anchored: Boolean;
     anchorable: Boolean;
-    fittable_non_singleton: Boolean;
+    fittable_non_singleton: Number;
     published: Boolean;
     updatedAt?: Date;
     createdAt?: Date;

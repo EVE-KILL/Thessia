@@ -6,6 +6,12 @@ export const CustomPrices = defineMongooseModel({
   options: {
     collection: "customPrices",
     timestamps: true,
+    toJSON: {
+      transform: (doc, ret) => {
+        delete ret._id;
+        delete ret.__v;
+      }
+    },
   },
   hooks(schema: Schema) {
     schema.index({ type_id: 1, date: 1 }, { unique: true });

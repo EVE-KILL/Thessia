@@ -40,7 +40,7 @@ interface IESIKillmail {
   killmail_time: Date;
   killmail_time_str: String;
   solar_system_id: Number;
-  attackers: IAttackers[];
+  attackers: IAttacker[];
   victim: IVictim;
   updatedAt?: Date;
   createdAt?: Date;

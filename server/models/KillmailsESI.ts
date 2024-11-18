@@ -6,6 +6,12 @@ export const KillmailsESI = defineMongooseModel({
   options: {
     collection: "killmails_esi",
     timestamps: true,
+    toJSON: {
+      transform: (doc, ret) => {
+        delete ret._id;
+        delete ret.__v;
+      }
+    },
   },
   hooks(schema: Schema) {
   },

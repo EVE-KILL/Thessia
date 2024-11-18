@@ -20,6 +20,7 @@ interface ICharacter {
   deleted?: Boolean;
   updatedAt?: Date;
   createdAt?: Date;
+  error?: String;
 }
 
 export type { ICharacter as Character };

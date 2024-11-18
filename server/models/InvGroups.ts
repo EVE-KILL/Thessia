@@ -6,6 +6,12 @@ export const InvGroups = defineMongooseModel({
   options: {
     collection: "invGroups",
     timestamps: true,
+    toJSON: {
+      transform: (doc, ret) => {
+        delete ret._id;
+        delete ret.__v;
+      }
+    },
   },
   hooks(schema: Schema) {
     schema.index({ group_id: 1 }, { unique: true });
@@ -18,7 +24,7 @@ export const InvGroups = defineMongooseModel({
     use_base_price: Boolean,
     anchored: Boolean,
     anchorable: Boolean,
-    fittable_non_singleton: Boolean,
+    fittable_non_singleton: Number,
     published: Boolean,
   },
 });

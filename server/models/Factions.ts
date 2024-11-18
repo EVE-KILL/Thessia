@@ -6,6 +6,12 @@ export const Factions = defineMongooseModel({
   options: {
     collection: "factions",
     timestamps: true,
+    toJSON: {
+      transform: (doc, ret) => {
+        delete ret._id;
+        delete ret.__v;
+      }
+    },
   },
   hooks(schema: Schema) {
     schema.index({ faction_id: 1 }, { unique: true });

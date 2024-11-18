@@ -6,6 +6,12 @@ export const Constellations = defineMongooseModel({
   options: {
     collection: "constellations",
     timestamps: true,
+    toJSON: {
+      transform: (doc, ret) => {
+        delete ret._id;
+        delete ret.__v;
+      }
+    },
   },
   hooks(schema: Schema) {
     schema.index({ constellation_id: 1 }, { unique: true });

@@ -1,18 +1,18 @@
 import { fetchESIKillmail } from '../helpers/ESIData';
+import { parseKillmail } from '../helpers/KillmailParser';
 import { createQueue } from '../helpers/Queue';
-//import { parseKillmail } from '../helpers/KillmailParser';
 
 const killmailQueue = createQueue('killmail');
 
-async function addKillmail(killmailId: number, killmailHash: string) {
+async function addKillmail(killmailId: number, killmailHash: string, priority: number = 1) {
     await killmailQueue.add(
         'killmail',
-        { killmailId, killmailHash },
+        { killmailId: killmailId, killmailHash: killmailHash },
         {
-            priority: 10,
+            priority: priority,
             attempts: 3,
             backoff: {
-                type: 'exponential',
+                type: 'fixed',
                 delay: 5000
             },
             removeOnComplete: true,
@@ -31,9 +31,9 @@ async function processKillmail(killmailId: number, killmailHash: string) {
     let esiKillmail = new KillmailsESI(killmail);
     await esiKillmail.save();
 
-    //let processedKillmail = await parseKillmail(killmail);
-    //let model = new Killmails(processedKillmail);
-    //await model.save();
+    let processedKillmail = await parseKillmail(killmail);
+    let model = new Killmails(processedKillmail);
+    await model.save();
 }
 
 export { addKillmail, processKillmail, fetchESIKillmail };
