@@ -37,7 +37,7 @@ async function processKillmail(killmailId: number, killmailHash: string) {
     }
 
     // Send killmail to websocket
-    sendKillmailMessage(JSON.stringify(processedKillmail));
+    await sendKillmailMessage(processedKillmail);
 }
 
 export { addKillmail, processKillmail, fetchESIKillmail };
