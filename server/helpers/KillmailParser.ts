@@ -246,7 +246,7 @@ async function processItems(items: ESIVictimItem[], killmail_date: Date): Promis
 
         const nestedItems = item.items ? await processItems(item.items, killmail_date) : [];
 
-        processedItems.push({
+        let innerItem = {
             type_id: item.item_type_id,
             type_name: type.type_name || "",
             group_id: type.group_id,
@@ -256,9 +256,14 @@ async function processItems(items: ESIVictimItem[], killmail_date: Date): Promis
             qty_dropped: Number(item.quantity_dropped || 0),
             qty_destroyed: Number(item.quantity_destroyed || 0),
             singleton: item.singleton,
-            value: await getPrice(Number(item.item_type_id), killmail_date),
-            items: nestedItems,
-        });
+            value: await getPrice(Number(item.item_type_id), killmail_date)
+        };
+
+        if (nestedItems.length > 0) {
+            innerItem.items = nestedItems;
+        }
+
+        processedItems.push(innerItem);
     }
 
     return processedItems;

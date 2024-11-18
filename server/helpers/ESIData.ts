@@ -9,11 +9,17 @@ import { Faction } from "../../types/IFaction";
 import { ESIKillmail } from "~/types/IESIKillmail";
 
 async function fetchESIKillmail(killmailId: number, killmailHash: string): Promise<ESIKillmail> {
-    let request = await fetch(`https://esi.evetech.net/latest/killmails/${killmailId}/${killmailHash}/`);
-    let killmail: ESIKillmail = await request.json();
-    killmail.killmail_hash = killmailHash;
+  // Check if the killmail is in the KillmailESI model first
+  let dbKillmail: ESIKillmail | null = await KillmailsESI.findOne({ killmail_id: killmailId, killmail_hash: killmailHash }, { _id: 0, __v: 0, createdAt: 0, updatedAt: 0 });
+  if (dbKillmail) {
+    return dbKillmail;
+  }
 
-    return killmail;
+  let request = await fetch(`https://esi.evetech.net/latest/killmails/${killmailId}/${killmailHash}/`);
+  let esiKillmail: ESIKillmail = await request.json();
+  esiKillmail.killmail_hash = killmailHash;
+
+  return esiKillmail;
 }
 
 async function getCharacter(character_id: Number): Promise<Character> {
