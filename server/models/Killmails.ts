@@ -15,6 +15,7 @@ export const Killmails = defineMongooseModel({
   },
   hooks(schema: Schema) {
     schema.index({ killmail_id: 1, hash: 1 }, { unique: true });
+    schema.index({ kill_time: 1 }, { sparse: true });
     schema.index({ createdAt: 1 }, { sparse: true });
     schema.index({ updatedAt: 1 }, { sparse: true });
   },
