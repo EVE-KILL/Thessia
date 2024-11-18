@@ -1,6 +1,7 @@
 import { fetchESIKillmail } from '../helpers/ESIData';
 import { parseKillmail } from '../helpers/KillmailParser';
 import { createQueue } from '../helpers/Queue';
+import { sendKillmailMessage } from '../routes/killmails';
 
 const killmailQueue = createQueue('killmail');
 
@@ -34,6 +35,9 @@ async function processKillmail(killmailId: number, killmailHash: string) {
     } catch (error) {
         Killmails.updateOne({ killmail_id: killmailId }, processedKillmail);
     }
+
+    // Send killmail to websocket
+    sendKillmailMessage(JSON.stringify(processedKillmail));
 }
 
 export { addKillmail, processKillmail, fetchESIKillmail };
