@@ -3,11 +3,6 @@ import { Attacker, Item, Killmail, Victim } from "~/types/IKillmail";
 
 import { getCharacter, getCorporation, getAlliance, getFaction } from "./ESIData";
 import { getPrice } from "./Prices";
-import { Celestials } from "../models/Celestials";
-import { SolarSystems } from "../models/SolarSystems";
-import { Regions } from "../models/Regions";
-import { InvTypes } from "../models/InvTypes";
-import { InvGroups } from "../models/InvGroups";
 
 async function parseKillmail(killmail: ESIKillmail): Promise<Killmail> {
     const top = await generateTop(killmail);
@@ -78,9 +73,9 @@ async function generateTop(killmail: ESIKillmail, warId: number = 0): Promise<Ki
     const region = solarSystem ? await Regions.findOne({ region_id: solarSystem.region_id }) : null;
     const killValue = await calculateKillValue(killmail);
 
-    const x = killmail.victim.position.x;
-    const y = killmail.victim.position.y;
-    const z = killmail.victim.position.z;
+    const x = killmail.victim?.position?.x || 0;
+    const y = killmail.victim?.position?.y || 0;
+    const z = killmail.victim?.position?.z || 0;
 
     return {
         killmail_id: killmail.killmail_id,

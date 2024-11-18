@@ -70,7 +70,6 @@ interface IKillmail {
   x: Number;
   y: Number;
   z: Number;
-  emitted?: Boolean;
   updatedAt?: Date;
   createdAt?: Date;
 }
