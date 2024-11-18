@@ -45,13 +45,22 @@ export default defineWebSocketHandler({
 // Function to send killmail messages to all connected clients
 export async function sendKillmailMessage(killmail: Killmail) {
     const routingKeys = determineRoutingKeys(killmail);
-    for (const [client, subscribedTopics] of clients.entries()) {
+    const sendPromises = [];
+
+    clients.forEach((subscribedTopics, client) => {
         if (subscribedTopics.some(topic => routingKeys.includes(topic))) {
-            await client.send(JSON.stringify({
+            const message = JSON.stringify({
                 type: 'killmail',
                 data: killmail
-            }));
+            });
+            sendPromises.push(client.send(message));
         }
+    });
+
+    try {
+        await Promise.all(sendPromises);
+    } catch (error) {
+        console.error('Error sending messages to clients:', error);
     }
 }
 
