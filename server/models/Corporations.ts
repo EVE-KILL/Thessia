@@ -44,6 +44,7 @@ export const Corporations = defineMongooseModel({
         record_id: Number,
         alliance_id: Number,
         start_date: Date,
+        _id: false
       },
     ],
   },

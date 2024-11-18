@@ -34,6 +34,13 @@ export const Characters = defineMongooseModel({
     corporation_id: Number,
     alliance_id: Number,
     faction_id: Number,
-    history: Array<Object>
+    history: [
+      {
+        corporation_id: Number,
+        record_id: Number,
+        start_date: Date,
+        _id: false
+      }
+    ]
   },
 });

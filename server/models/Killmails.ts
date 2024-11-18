@@ -45,6 +45,7 @@ export const Killmails = defineMongooseModel({
         final_blow: Boolean,
         weapon_type_id: Number,
         weapon_type_name: String,
+        _id: false
       },
     ],
     dna: String,
@@ -64,6 +65,7 @@ export const Killmails = defineMongooseModel({
         qty_destroyed: Number,
         singleton: Number,
         value: Number,
+        _id: false
       },
     ],
     kill_time: Date,
@@ -96,6 +98,7 @@ export const Killmails = defineMongooseModel({
       faction_id: Number,
       faction_name: String,
       faction_image_url: String,
+      _id: false
     },
     war_id: Number,
     x: Number,

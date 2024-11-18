@@ -31,6 +31,7 @@ export const KillmailsESI = defineMongooseModel({
         security_status: Number,
         ship_type_id: Number,
         weapon_type_id: Number,
+        _id: false,
       },
     ],
     victim: {
@@ -46,6 +47,7 @@ export const KillmailsESI = defineMongooseModel({
           quantity_dropped: Number,
           flag: Number,
           singleton: Number,
+          _id: false,
         },
       ],
     },

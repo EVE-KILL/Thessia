@@ -10,8 +10,9 @@ import { ESIKillmail } from "~/types/IESIKillmail";
 
 async function fetchESIKillmail(killmailId: number, killmailHash: string): Promise<ESIKillmail> {
   // Check if the killmail is in the KillmailESI model first
-  let dbKillmail: ESIKillmail | null = await KillmailsESI.findOne({ killmail_id: killmailId, killmail_hash: killmailHash }, { _id: 0, __v: 0, createdAt: 0, updatedAt: 0 });
+  let dbKillmail: ESIKillmail | null = await KillmailsESI.findOne({ killmail_id: killmailId }, { _id: 0, __v: 0, createdAt: 0, updatedAt: 0 });
   if (dbKillmail) {
+    console.log("Killmail found in database", dbKillmail);
     return dbKillmail;
   }
 
