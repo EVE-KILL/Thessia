@@ -11,12 +11,13 @@
   },
   "dependencies": {
     "@nuxt/content": "latest",
-    "@nuxt/devtools": "^1.6.0",
-    "@nuxt/kit": "^3.14.159",
-    "amqplib": "^0.10.4",
-    "bullmq": "^5.26.2",
+    "@nuxt/devtools": "^1.6.1",
+    "@nuxt/kit": "^3.14.1592",
+    "amqplib": "^0.10.5",
+    "bullmq": "^5.29.1",
     "csv-parser": "^3.0.0",
-    "nuxt": "^3.14.159",
+    "node-gyp": "^10.2.0",
+    "nuxt": "^3.14.1592",
     "nuxt-mongoose": "latest",
     "server-health": "^5.3.0",
     "sqlite": "^5.1.1",
@@ -27,7 +28,7 @@
   "devDependencies": {
     "@nuxt/image": "^1.8.1",
     "@nuxtjs/tailwindcss": "^6.12.2",
-    "nuxt-security": "^2.1.1",
-    "typescript": "^5.6.3"
+    "nuxt-security": "^2.1.4",
+    "typescript": "^5.7.2"
   }
 }
