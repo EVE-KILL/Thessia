@@ -82,9 +82,14 @@ export async function fetchSubredditImages(subreddit: string, limit: number = 10
  */
 function isImageUrl(url: string): boolean {
   const imageExtensions = ['.jpg', '.jpeg', '.png', '.gif', '.webp'];
-  return imageExtensions.some(ext => url.toLowerCase().endsWith(ext)) ||
-         url.includes('i.redd.it') ||
-         url.includes('i.imgur.com');
+  try {
+    const parsedUrl = new URL(url);
+    const allowedHosts = ['i.redd.it', 'i.imgur.com'];
+    return imageExtensions.some(ext => url.toLowerCase().endsWith(ext)) ||
+           allowedHosts.includes(parsedUrl.host);
+  } catch (e) {
+    return false;
+  }
 }
 
 /**
@@ -124,8 +129,8 @@ export async function getRandomSubredditImage(subreddit: string): Promise<Reddit
         url.endsWith('.jpeg') ||
         url.endsWith('.png') ||
         url.endsWith('.gif') ||
-        url.includes('i.imgur.com') ||
-        url.includes('i.redd.it')
+        new URL(url).host === 'i.imgur.com' ||
+        new URL(url).host === 'i.redd.it'
       )
     })
 
