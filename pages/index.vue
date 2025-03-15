@@ -8,7 +8,7 @@
   <div>
     <!-- Hero Section -->
     <section class="py-8 md:py-16 px-4">
-      <div class="max-w-6xl mx-auto">
+      <div class="mx-auto">
         <div class="bg-mode-dynamic rounded-lg shadow-lg p-8">
           <h1 class="text-4xl md:text-6xl font-bold mb-6">Welcome to EVE-KILL</h1>
           <p class="text-lg md:text-xl mb-8">The premier killboard for EVE Online. Track kills, analyze statistics, and stay on top of PVP activities across New Eden.</p>
@@ -23,7 +23,7 @@
 
     <!-- Features Section -->
     <section class="py-8 px-4">
-      <div class="max-w-6xl mx-auto">
+      <div class="mx-auto">
         <h2 class="text-2xl md:text-3xl font-bold mb-8 text-center">Key Features</h2>
 
         <div class="grid md:grid-cols-3 gap-6">
@@ -53,7 +53,7 @@
 
     <!-- Recent Activity Section -->
     <section class="py-8 px-4 mb-8">
-      <div class="max-w-6xl mx-auto">
+      <div class="mx-auto">
         <h2 class="text-2xl md:text-3xl font-bold mb-8 text-center">Recent Activity</h2>
 
         <div class="bg-mode-dynamic rounded-lg shadow p-6">

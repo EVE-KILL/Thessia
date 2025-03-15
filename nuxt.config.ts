@@ -3,6 +3,8 @@ export default defineNuxtConfig({
   nitro: {
     preset: "bun",
     srcDir: "server",
+    minify: true,
+    sourceMap: true,
 
     runtimeConfig: {
       enabledRunTimeCache: true,
@@ -72,7 +74,7 @@ export default defineNuxtConfig({
   // CSS imports with proper path
   css: ['~/app.css'],
 
-  // Image optimization settings
+  // Image optimization settings - Fixed configuration
   image: {
     format: ['webp'],
     quality: 80,
@@ -85,12 +87,21 @@ export default defineNuxtConfig({
       xxl: 1536,
       '2xl': 1536
     },
+    // Updated providers configuration
+    domains: ['i.redd.it', 'i.imgur.com', 'preview.redd.it'],
+    // Use ipx as default provider - it handles both local and remote images
+    provider: 'ipx',
+    providers: {
+      // Remove the custom proxy provider and use ipx's built-in remote image handling
+    },
     presets: {
       background: {
         modifiers: {
           format: 'webp',
           width: 1920,
-          quality: 80,
+          height: 1080,
+          fit: 'cover',
+          quality: 80
         }
       }
     }
@@ -102,7 +113,7 @@ export default defineNuxtConfig({
       title: 'EVE-KILL - EVE Online Killboard',
       meta: [
         { charset: 'utf-8' },
-        { name: 'viewport', content: 'width=device-width, initial-scale=1' },
+        { name: 'viewport', content: 'width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no' },
         { name: 'description', content: 'EVE Online killboard tracking kills and losses across New Eden' }
       ],
       link: [

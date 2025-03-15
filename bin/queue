@@ -1,0 +1,42 @@
+#!/usr/bin/env bun
+
+import { Command } from 'commander';
+import path from 'node:path';
+import fs from 'node:fs/promises';
+import { initMongooseConnection } from '../server/helpers/Mongoose';
+import * as Sentry from "@sentry/bun";
+
+const program = new Command();
+await initMongooseConnection();
+
+// If we are bun, we can use Sentry
+if (process.versions.bun !== undefined && process.env.SENTRY_DSN !== undefined) {
+    console.log('✔ Sentry initialized');
+    Sentry.init({
+        dsn: process.env.SENTRY_DSN,
+        tracesSampleRate: 1.0,
+    });
+}
+
+async function main() {
+    const cliPath = path.join(__dirname, '../queue');
+    const files = await fs.readdir(cliPath);
+
+    for (const file of files) {
+        const { default: commandModule } = await import(path.join(cliPath, file));
+        program
+            .command(commandModule.name)
+            .description(commandModule.description)
+            .action((...args) => commandModule.run(args));
+    }
+
+    program.parse(process.argv);
+    program.exitOverride((error) => {
+        console.log(error);
+    });
+}
+
+main().catch((error) => {
+    console.error(error);
+    process.exit(1);
+});

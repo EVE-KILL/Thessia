@@ -1,11 +1,32 @@
 <script lang="ts" setup>
 // Import the theme and background handlers
 const { themeIcon, themeAriaLabel, toggleTheme } = useThemeMode()
-const { availableBackgrounds, setBackground, isCurrentBackground } = useBackgroundImage()
+const { availableBackgrounds, setBackground, isCurrentBackground, setRandomRedditBackground } = useBackgroundImage()
 
 // Mobile menu state
 const isMobileMenuOpen = ref(false)
 const isSearchVisible = ref(false)
+const isLoadingRandomBg = ref(false)
+
+// Additional state for mobile background selector
+const isMobileBgSelectorOpen = ref(false)
+
+// Function to open mobile background selector
+const openMobileBgSelector = () => {
+  isMobileBgSelectorOpen.value = true
+}
+
+// Function to close mobile background selector
+const closeMobileBgSelector = () => {
+  isMobileBgSelectorOpen.value = false
+}
+
+// Function to check if path is a video file
+const isVideoFile = (path: string): boolean => {
+  return path.toLowerCase().endsWith('.mp4') ||
+         path.toLowerCase().endsWith('.webm') ||
+         path.toLowerCase().endsWith('.ogg')
+}
 
 // Toggle search visibility
 const toggleSearch = () => {
@@ -30,13 +51,32 @@ const changeBackground = (path) => {
   }
 }
 
-// Create background items for the dropdown menu
+// Create background items for the dropdown menu with thumbnails
 const backgroundItems = computed(() => {
-  return availableBackgrounds.map(bg => ({
+  const items = availableBackgrounds.map(bg => ({
     label: bg.name,
+    // Add thumbnail component as a custom slot
+    slot: 'custom',
+    // Add props for the custom slot
+    bgPath: bg.path,
+    isVideo: isVideoFile(bg.path),
     onSelect: () => changeBackground(bg.path),
     trailing: isCurrentBackground(bg.path) ? { name: 'i-heroicons-check', color: 'primary' } : undefined
-  }))
+  }));
+
+  // Add divider and Random EVEPorn option
+  items.push({ type: 'divider' });
+  items.push({
+    label: 'EVEPorn',
+    icon: 'i-heroicons-photo',
+    onSelect: async () => {
+      isLoadingRandomBg.value = true;
+      await setRandomRedditBackground();
+      isLoadingRandomBg.value = false;
+    }
+  });
+
+  return items;
 })
 
 // Define dropdown menu items
@@ -87,10 +127,6 @@ const navigationItems = [
   {
     label: 'Kills',
     children: userDropdown
-  },
-  {
-    label: 'Example Page',
-    to: '/example'
   },
   {
     label: 'About',
@@ -155,7 +191,7 @@ onUnmounted(() => {
               variant="outline"
               trailing
               size="sm"
-              class="w-[320px]"
+              class="w-[320px] no-zoom-input"
             />
           </div>
 
@@ -170,16 +206,71 @@ onUnmounted(() => {
               @click="toggleSearch"
             />
 
-            <!-- Background selector dropdown -->
-            <UDropdownMenu :items="backgroundItems">
-              <UButton
-                icon="i-heroicons-photo"
-                color="gray"
-                variant="ghost"
-                class="text-black dark:text-white hover:bg-black hover:bg-opacity-10 dark:hover:bg-white dark:hover:bg-opacity-10"
-                aria-label="Change background image"
-              />
-            </UDropdownMenu>
+            <!-- Background selector - desktop: dropdown with thumbnails / mobile: fullscreen -->
+            <div class="hidden md:block">
+              <UDropdownMenu :items="backgroundItems" class="background-dropdown">
+                <UButton
+                  icon="i-heroicons-photo"
+                  color="gray"
+                  variant="ghost"
+                  class="text-black dark:text-white hover:bg-black hover:bg-opacity-10 dark:hover:bg-white dark:hover:bg-opacity-10"
+                  aria-label="Change background image"
+                />
+
+                <!-- Custom template for background items with thumbnails -->
+                <template #custom="{ item }">
+                  <button
+                    @click="item.onSelect"
+                    class="w-full flex flex-col border-0 bg-transparent cursor-pointer p-1 hover:opacity-90"
+                    :class="{'ring-1 ring-primary-500': isCurrentBackground(item.bgPath)}"
+                  >
+                    <!-- Thumbnail container -->
+                    <div class="w-full max-w-[160px] mx-auto aspect-video rounded overflow-hidden relative">
+                      <!-- For images -->
+                      <template v-if="!item.isVideo">
+                        <NuxtImg
+                          :src="item.bgPath"
+                          width="160"
+                          height="90"
+                          loading="lazy"
+                          format="webp"
+                          fit="cover"
+                          quality="80"
+                          class="w-full h-full object-cover"
+                        />
+                      </template>
+
+                      <!-- For videos -->
+                      <template v-else>
+                        <div class="w-full h-full flex items-center justify-center bg-black/20 dark:bg-white/10">
+                          <UIcon name="i-heroicons-film" class="text-lg" />
+                        </div>
+                      </template>
+
+                      <!-- Background name overlay at bottom - text smaller to match -->
+                      <div class="absolute bottom-0 left-0 right-0 bg-black/40 py-0.5 px-2 text-white text-xs flex justify-between items-center">
+                        <span class="text-xs">{{ item.label }}</span>
+                        <UIcon
+                          v-if="isCurrentBackground(item.bgPath)"
+                          name="i-heroicons-check"
+                          class="text-primary-500 text-xs"
+                        />
+                      </div>
+                    </div>
+                  </button>
+                </template>
+              </UDropdownMenu>
+            </div>
+
+            <!-- Mobile background button - opens full-screen selector -->
+            <UButton
+              icon="i-heroicons-photo"
+              color="gray"
+              variant="ghost"
+              class="md:hidden text-black dark:text-white hover:bg-black hover:bg-opacity-10 dark:hover:bg-white dark:hover:bg-opacity-10"
+              @click="openMobileBgSelector"
+              aria-label="Change background image"
+            />
 
             <!-- Theme toggle button -->
             <ClientOnly>
@@ -236,7 +327,7 @@ onUnmounted(() => {
             variant="outline"
             trailing
             size="sm"
-            class="w-full"
+            class="w-full no-zoom-input"
           />
         </div>
       </nav>
@@ -303,26 +394,6 @@ onUnmounted(() => {
             </div>
           </div>
 
-          <!-- Background selector -->
-          <div class="mb-8">
-            <h3 class="text-xl font-bold mb-2 text-black dark:text-white">Background</h3>
-            <div class="border-b border-gray-200 dark:border-gray-700 mb-4"></div>
-            <div class="space-y-4">
-              <button
-                v-for="bg in availableBackgrounds"
-                :key="bg.path"
-                @click="changeBackground(bg.path)"
-                class="flex items-center justify-between px-4 py-2 text-black dark:text-white hover:bg-black hover:bg-opacity-10 dark:hover:bg-white dark:hover:bg-opacity-10 rounded-md w-full text-left"
-              >
-                <div class="flex items-center">
-                  <UIcon name="i-heroicons-photo" class="mr-3 flex-shrink-0" />
-                  <span>{{ bg.name }}</span>
-                </div>
-                <UIcon v-if="isCurrentBackground(bg.path)" name="i-heroicons-check" class="text-primary-500" />
-              </button>
-            </div>
-          </div>
-
           <!-- User Account section -->
           <div class="mb-20">
             <h3 class="text-xl font-bold mb-2 text-black dark:text-white">User Account</h3>
@@ -349,6 +420,96 @@ onUnmounted(() => {
                 <span>Logout</span>
               </NuxtLink>
             </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </Teleport>
+
+  <!-- Mobile Background Selector - Full Screen -->
+  <Teleport to="body">
+    <div
+      v-if="isMobileBgSelectorOpen"
+      class="fixed inset-0 w-full h-full z-[9999] md:hidden flex flex-col"
+    >
+      <!-- Background layers with improved opacity -->
+      <div class="absolute inset-0 bg-white bg-opacity-85 dark:bg-black dark:bg-opacity-85 backdrop-blur-md"></div>
+
+      <!-- Content container -->
+      <div class="relative z-10 flex-1 overflow-y-auto">
+        <div class="container mx-auto px-4 py-8">
+          <!-- Header with close button -->
+          <div class="flex justify-between items-center mb-6 sticky top-0 bg-transparent backdrop-blur-md py-4">
+            <h2 class="text-2xl font-bold text-black dark:text-white">Background Images</h2>
+            <UButton
+              icon="i-heroicons-x-mark"
+              color="gray"
+              variant="ghost"
+              class="text-black dark:text-white hover:bg-black hover:bg-opacity-10 dark:hover:bg-white dark:hover:bg-opacity-10"
+              @click="closeMobileBgSelector"
+            />
+          </div>
+
+          <!-- Background Grid -->
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <button
+              v-for="bg in availableBackgrounds"
+              :key="bg.path"
+              @click="changeBackground(bg.path); closeMobileBgSelector();"
+              class="flex flex-col bg-transparent cursor-pointer hover:opacity-90 rounded-md overflow-hidden"
+              :class="{'ring-2 ring-primary-500': isCurrentBackground(bg.path)}"
+            >
+              <!-- Thumbnail with NuxtImg -->
+              <div class="w-full aspect-video relative">
+                <!-- For images -->
+                <template v-if="!isVideoFile(bg.path)">
+                  <NuxtImg
+                    :src="bg.path"
+                    width="400"
+                    height="225"
+                    loading="lazy"
+                    format="webp"
+                    fit="cover"
+                    quality="80"
+                    class="w-full h-full object-cover"
+                  />
+                </template>
+
+                <!-- For videos -->
+                <template v-else>
+                  <div class="w-full h-full flex items-center justify-center bg-black/20 dark:bg-white/10">
+                    <UIcon name="i-heroicons-film" class="text-3xl" />
+                  </div>
+                </template>
+
+                <!-- Image name overlay -->
+                <div class="absolute bottom-0 left-0 right-0 bg-black/50 py-2 px-3 text-white">
+                  <div class="flex items-center justify-between">
+                    <span class="font-medium">{{ bg.name }}</span>
+                    <UIcon v-if="isCurrentBackground(bg.path)" name="i-heroicons-check" class="text-primary-500" />
+                  </div>
+                </div>
+              </div>
+            </button>
+
+            <!-- Random EVEPorn button -->
+            <button
+              @click="async () => { isLoadingRandomBg = true; await setRandomRedditBackground(); isLoadingRandomBg = false; closeMobileBgSelector(); }"
+              class="flex flex-col items-center justify-center bg-transparent relative aspect-video rounded-md overflow-hidden"
+              :class="{'opacity-50': isLoadingRandomBg}"
+              :disabled="isLoadingRandomBg"
+            >
+              <div class="w-full h-full flex items-center justify-center bg-black/20 dark:bg-white/10">
+                <UIcon
+                  :name="isLoadingRandomBg ? 'i-heroicons-arrow-path' : 'i-heroicons-photo'"
+                  class="text-white text-3xl"
+                  :class="{'animate-spin': isLoadingRandomBg}"
+                />
+              </div>
+              <div class="absolute bottom-0 left-0 right-0 bg-black/50 py-2 px-3 text-white">
+                <span class="font-medium">{{ isLoadingRandomBg ? 'Loading...' : 'Random EVEPorn' }}</span>
+              </div>
+            </button>
           </div>
         </div>
       </div>
@@ -385,5 +546,25 @@ onUnmounted(() => {
   display: flex;
   align-items: center;
   justify-content: center;
+}
+
+/* Aspect ratio class for thumbnails */
+.aspect-video {
+  aspect-ratio: 16/9;
+}
+
+/* Prevent iOS zoom on input focus */
+.no-zoom-input :deep(input) {
+  font-size: 16px !important; /* Minimum font size to prevent iOS zoom */
+}
+
+/* Fix the search box height to maintain consistency */
+.no-zoom-input :deep(.UInput) {
+  min-height: 40px;
+}
+
+/* Ensure consistency in button and input sizes */
+:deep(.UButton), :deep(.UInput) {
+  touch-action: manipulation;
 }
 </style>

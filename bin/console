@@ -1,0 +1,61 @@
+#!/usr/bin/env bun
+
+import { Command } from 'commander';
+import path from 'node:path';
+import fs from 'node:fs/promises';
+import mongoose from 'mongoose';
+import { initMongooseConnection } from '../server/helpers/Mongoose';
+import * as Sentry from "@sentry/bun";
+
+const program = new Command();
+await initMongooseConnection();
+
+// If we are bun, we can use Sentry
+if (process.versions.bun !== undefined && process.env.SENTRY_DSN !== undefined) {
+    console.log('✔ Sentry initialized');
+    Sentry.init({
+        dsn: process.env.SENTRY_DSN,
+        tracesSampleRate: 1.0,
+    });
+}
+
+async function main() {
+    const cliPath = path.join(__dirname, '../console');
+    const files = await fs.readdir(cliPath);
+
+    // Keep track of command metadata
+    const commands: { name: string; longRunning: boolean }[] = [];
+
+    for (const file of files) {
+        const { default: commandModule } = await import(path.join(cliPath, file));
+        program
+            .command(commandModule.name)
+            .description(commandModule.description)
+            .action(async (...args) => {
+                const result = await commandModule.run({ args });
+                return result;
+            });
+
+        commands.push({
+            name: commandModule.name,
+            longRunning: !!commandModule.longRunning,
+        });
+    }
+
+    await program.parseAsync(process.argv);
+
+    // Determine which command was invoked
+    const invokedCommandName = program.args[0];
+    const invokedCommand = commands.find(cmd => cmd.name === invokedCommandName);
+
+    // If it's not a long-running command, clean up and exit
+    if (!invokedCommand?.longRunning) {
+        await mongoose.disconnect();
+        process.exit(0);
+    }
+}
+
+main().catch((error) => {
+    console.error(error);
+    process.exit(1);
+});

@@ -1,6 +1,6 @@
 <template>
   <div class="py-8 px-4">
-    <div class="max-w-4xl mx-auto">
+    <div class="mx-auto">
       <div class="bg-white bg-opacity-60 dark:bg-black dark:bg-opacity-40 backdrop-blur-sm rounded-lg shadow-lg p-6 md:p-8">
         <h1 class="text-3xl md:text-4xl font-bold mb-6">About EVE-KILL</h1>
 

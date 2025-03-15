@@ -62,6 +62,7 @@ body.overflow-hidden {
   --bg-opacity-light: rgba(255, 255, 255, 0.6);
   --bg-opacity-dark: rgba(21, 21, 21, 0.4);
   --border-color: #e5e5e5;
+  color-scheme: light;
 }
 
 .dark {
@@ -69,6 +70,7 @@ body.overflow-hidden {
   --bg-opacity-light: rgba(255, 255, 255, 0.6);
   --bg-opacity-dark: rgba(21, 21, 21, 0.4);
   --border-color: #252525;
+  color-scheme: dark;
 }
 
 /* Theme-aware styles */
@@ -137,4 +139,41 @@ body[style*="padding-right"] {
 /* Backdrop blur utility */
 .backdrop-blur-custom {
   backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+}
+
+/* Prevent iOS zoom on inputs */
+input[type="text"],
+input[type="search"],
+input[type="email"],
+input[type="password"],
+input[type="number"],
+input[type="tel"],
+input[type="url"],
+textarea {
+  font-size: 16px !important; /* Minimum font size to prevent iOS zoom */
+  touch-action: manipulation;
+}
+
+/* Form elements with proper touch handling */
+button, a, input, select, textarea {
+  touch-action: manipulation;
+}
+
+/* Ensure consistent text sizing in different contexts */
+.text-base, .text-sm, .text-xs {
+  font-size: revert;
+}
+
+/* Override UI framework input styles */
+.UInput input,
+.UInput textarea {
+  font-size: 16px !important;
+}
+
+/* Fix for inputs in iOS */
+@supports (-webkit-touch-callout: none) {
+  input, textarea, select {
+    font-size: 16px !important;
+  }
 }

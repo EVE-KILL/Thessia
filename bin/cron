@@ -1,0 +1,80 @@
+#!/usr/bin/env bun
+import path from "node:path";
+import fs from "node:fs/promises";
+import { CronExpressionParser } from "cron-parser";
+import { cliLogger } from "../server/helpers/Logger";
+import { initMongooseConnection } from "../server/helpers/Mongoose";
+
+await initMongooseConnection();
+
+const cliPath = path.join(__dirname, "../cron");
+const files = await fs.readdir(cliPath);
+
+const cronjobs: CronJob[] = [];
+interface CronJob {
+  name: string;
+  description: string;
+  schedule: string;
+  run: (args: any) => Promise<void>;
+}
+
+// Load cron jobs from files
+for (const file of files) {
+  const jobModule = await import(path.join(cliPath, file));
+  const job: CronJob = jobModule.default || jobModule;
+  cronjobs.push(job);
+}
+
+// Emit table listing cronjob details
+console.table(
+  cronjobs.map((job) => ({
+    Name: job.name,
+    Description: job.description,
+    Schedule: job.schedule,
+  })),
+);
+
+// New: Immediate run mode based on CLI argument
+if (process.argv[2]) {
+  const jobName = process.argv[2];
+  const job = cronjobs.find((job) => job.name === jobName);
+  if (job) {
+    console.log(`Running job "${jobName}" immediately.`);
+    job
+      .run({ args: [] })
+      .catch((err: any) => cliLogger.error(`Error executing job "${jobName}": ${err}`))
+      .finally(() => process.exit(0));
+  } else {
+    console.error(`Job "${jobName}" not found.`);
+    process.exit(1);
+  }
+} else {
+  // Single-run scheduled mode: run only jobs that are due now
+  const now = Date.now();
+  const tolerance = 60000; // 60 seconds tolerance
+  const runningJobs: Promise<any>[] = [];
+  for (const job of cronjobs) {
+    try {
+      // Parse expression and get the previous occurrence
+      const interval = CronExpressionParser.parse(job.schedule);
+      const prev = interval.prev();
+      if (Math.abs(now - prev.getTime()) <= tolerance) {
+        cliLogger.info(`Running job "${job.name}" on schedule: ${job.schedule}`);
+        runningJobs.push(
+          job
+            .run({ args: [] })
+            .catch((err: any) => {
+                cliLogger.error(`Error in job "${job.name}": ${err}`);
+                process.exit(1);
+              })
+        );
+      }
+    } catch (e) {
+      cliLogger.error(`Job "${job.name}" schedule error: ${job.schedule} - ${e}`);
+    }
+  }
+
+  Promise.all(runningJobs)
+    .then(() => process.exit(0))
+    .catch(() => process.exit(1));
+}

@@ -18,11 +18,22 @@
       <slot />
     </div>
   </UContainer>
+
+  <!-- Add Reddit source attribution without debugging elements -->
+  <ClientOnly>
+    <RedditSourceLink />
+  </ClientOnly>
 </template>
 
 <script setup lang="ts">
 // Get background image handling functionality
-const { currentOptimizedUrl, getOptimizedBackgroundUrl, isVideoBackground } = useBackgroundImage()
+const {
+  currentOptimizedUrl,
+  getOptimizedBackgroundUrl,
+  isVideoBackground,
+  isRedditBackground,
+  currentRedditSource
+} = useBackgroundImage()
 
 // Get theme mode functionality
 const { currentTheme } = useThemeMode()
