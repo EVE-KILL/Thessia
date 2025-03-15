@@ -82,9 +82,14 @@ export async function fetchSubredditImages(subreddit: string, limit: number = 10
  */
 function isImageUrl(url: string): boolean {
   const imageExtensions = ['.jpg', '.jpeg', '.png', '.gif', '.webp'];
-  return imageExtensions.some(ext => url.toLowerCase().endsWith(ext)) ||
-         url.includes('i.redd.it') ||
-         url.includes('i.imgur.com');
+  const allowedHosts = ['i.redd.it', 'i.imgur.com'];
+  try {
+    const parsedUrl = new URL(url);
+    return imageExtensions.some(ext => url.toLowerCase().endsWith(ext)) ||
+           allowedHosts.includes(parsedUrl.host);
+  } catch (e) {
+    return false;
+  }
 }
 
 /**
