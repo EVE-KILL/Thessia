@@ -59,5 +59,6 @@ export default defineNuxtConfig({
       enabled: true,
     },
   },
-  modules: ["@nuxtjs/tailwindcss"],
+  modules: ["@nuxt/ui", "@nuxt/icon", "@nuxt/image", "@vueuse/nuxt"],
+  css: ['/app.css']
 });

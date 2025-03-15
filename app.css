@@ -1,0 +1,97 @@
+@import "tailwindcss" theme(static);
+@import "@nuxt/ui";
+
+/* Additional overrides for transparency and full height */
+#__nuxt {
+  min-height: 100vh;
+  background-color: transparent !important;
+}
+
+body, html {
+  min-height: 100vh;
+}
+
+/* Force all app layers to be transparent by default */
+.bg-white,
+.bg-gray-50,
+.bg-gray-100 {
+  background-color: transparent !important;
+}
+
+.dark .bg-gray-900,
+.dark .bg-gray-950,
+.dark .bg-black {
+  background-color: transparent !important;
+}
+
+/* Ensure content expands with its container */
+.nuxt-page {
+  min-height: 100%;
+}
+
+/* Prevent background shift when dropdown opens */
+html {
+  overflow-y: scroll !important; /* Force scrollbar to always be visible */
+  scrollbar-gutter: stable !important;
+}
+
+/* Prevent UI framework from changing overflow settings */
+body {
+  overflow-y: auto !important;
+  padding-right: 0 !important; /* Prevent auto-padding that some UI frameworks add */
+}
+
+/* Ensure dropdown doesn't affect body padding */
+body.u-overflow-hidden {
+  padding-right: 0 !important;
+  overflow-y: scroll !important;
+}
+
+/* Light mode specific overrides */
+:root {
+  --text-color: #121212;
+  --bg-opacity: rgba(255, 255, 255, 0.7);
+  --border-color: #e5e5e5;
+}
+
+/* Dark mode specific overrides */
+.dark {
+  --text-color: white;
+  --bg-opacity: rgba(21, 21, 21, 0.7);
+  --border-color: #252525;
+}
+
+/* Additional color mode specific styles */
+.text-mode-dynamic {
+  color: var(--text-color);
+}
+
+.bg-mode-dynamic {
+  background-color: var(--bg-opacity);
+}
+
+.border-mode-dynamic {
+  border-color: var(--border-color);
+}
+
+/* === Merged from no-shift.css === */
+
+/* Override any inline styles that might add padding */
+html[style*="padding-right"],
+body[style*="padding-right"] {
+  padding-right: 0 !important;
+}
+
+/* Fix for body classes that might be added by UI components */
+body.overflow-hidden,
+body.u-overflow-hidden {
+  padding-right: 0 !important;
+  overflow-y: scroll !important;
+}
+
+/* Ensure the page doesn't jump when opening modals */
+.fixed.inset-0,
+.fixed.inset-x-0,
+.fixed.inset-y-0 {
+  padding-right: 0 !important;
+}

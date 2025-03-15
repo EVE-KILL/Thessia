@@ -1,114 +1,170 @@
 <template>
-    <div id="content" class="content flex flex-col mx-auto">
-        <div id="inner-content" class="inner-content">
-            <Navbar />
-            <slot />
-        </div>
+  <UContainer id="content" class="content flex flex-col mx-auto">
+    <div id="inner-content" class="inner-content h-full">
+      <Navbar />
+      <slot />
     </div>
+  </UContainer>
 </template>
 
-<style>
-    @tailwind base;
-    @tailwind components;
-    @tailwind utilities;
+<script setup lang="ts">
+const { optimizedBackground, currentOptimizedUrl, getOptimizedBackgroundUrl } = useBackgroundImage()
 
-    @layer base {
-        :root {
-            --background: 0 0% 100%;
-            --foreground: 222.2 84% 4.9%;
+// Get the background from cookie which is available during SSR
+const backgroundCookie = useCookie('selected-background', {
+  default: () => '/images/bg2.png'
+})
 
-            --muted: 210 40% 96.1%;
-            --muted-foreground: 215.4 16.3% 46.9%;
+// Always optimize the initial background
+const initialOptimizedUrl = getOptimizedBackgroundUrl(backgroundCookie.value)
 
-            --popover: 0 0% 100%;
-            --popover-foreground: 222.2 84% 4.9%;
-
-            --card: 0 0% 100%;
-            --card-foreground: 222.2 84% 4.9%;
-
-            --border: 214.3 31.8% 91.4%;
-            --input: 214.3 31.8% 91.4%;
-
-            --primary: 222.2 47.4% 11.2%;
-            --primary-foreground: 210 40% 98%;
-
-            --secondary: 210 40% 96.1%;
-            --secondary-foreground: 222.2 47.4% 11.2%;
-
-            --accent: 210 40% 96.1%;
-            --accent-foreground: 222.2 47.4% 11.2%;
-
-            --destructive: 0 72.2% 50.6%;
-            --destructive-foreground: 210 40% 98%;
-
-            --ring: 222.2 84% 4.9%;
-
-            --radius: 0.5rem;
+// Apply the background style during SSR with optimized image
+useHead({
+  htmlAttrs: {
+    style: `background-color: black; background-image: url('${initialOptimizedUrl}'); background-repeat: no-repeat; background-position: center; background-attachment: fixed; background-size: cover;`
+  },
+  style: [
+    {
+      children: `
+        html {
+          background-color: black !important;
+          background-image: url('${currentOptimizedUrl.value}') !important;
+          background-repeat: no-repeat !important;
+          background-position: center !important;
+          background-attachment: fixed !important;
+          background-size: cover !important;
         }
+      `,
+      key: 'background-style'
     }
+  ]
+})
+</script>
 
-    html,
-    body {
-        height: 100%;
-        margin: 0;
-        margin-top: 10px;
-        font-family: 'Shentox', sans-serif;
-        font-size: 1.1em;
-        color: white;
-    }
+<style>
+:root {
+  --bg-image-url: none;
+}
 
-    html {
-        background:
-            /* top, transparent black, faked with gradient */
-            linear-gradient(rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.5));
-            background: url('/files/images/bg.png') no-repeat center fixed, radial-gradient(circle, transparent, black 80%);
-            background-size: cover;
-            background-color: black;
-    }
+html,
+body {
+  height: 100%;
+  margin: 0;
+  font-family: 'Shentox', sans-serif;
+  font-size: 1.1em;
+  color: black;
+}
 
-    /* Vignette effect */
-    html::before {
-        content: '';
-        position: fixed;
-        inset: 0;
-        background: radial-gradient(circle, transparent, black 90%);
-        pointer-events: none;
-        z-index: -1;
-    }
+html.dark,
+html.dark body {
+  color: white;
+}
 
-    body {
-        display: flex;
-        flex-direction: column;
-        min-height: 100%;
-    }
+/* Base background styles */
+html {
+  background-color: black !important;
+  position: relative;
+  min-height: 100%;
+  overflow-y: scroll;
+  scrollbar-gutter: stable;
 
-    *::-webkit-scrollbar {
-        width: 10px;
-    }
+  /* Use the CSS variable as a backup method */
+  background-image: var(--bg-image-url);
+  background-repeat: no-repeat;
+  background-position: center;
+  background-attachment: fixed;
+  background-size: cover;
+}
 
-    *::-webkit-scrollbar-track {
-        background-color: transparent;
-    }
+/* Dark mode background */
+html.dark {
+  background-color: black;
+}
 
-    *::-webkit-scrollbar-thumb {
-        background-color: var(--color-primary-400);
-        border-radius: 10px;
-        /* border: 2px solid #2c2c35; */
-    }
+/* Vignette effect - Light mode version */
+html::before {
+  content: '';
+  position: fixed;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  background: radial-gradient(circle, transparent, white 95%);
+  pointer-events: none;
+  z-index: 0;
+}
 
-	.content {
-		max-width: 90rem;
-		background-color: rgba(21, 21, 21, 0.5);
-		border: 2px solid #252525;
-		padding: 5px;
-		border-radius: 10px;
-	}
+/* Dark mode vignette */
+html.dark::before {
+  background: radial-gradient(circle, transparent, black 95%);
+}
 
-	#content > #inner-content {
-		display: block;
-		border: 5px solid rgba(0, 0, 0, 0.5);
-		padding: 0px 20px 20px 20px;
-		background: rgba(0, 0, 0, 0.65);
-		margin-bottom: 5px;
-	}
+body {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  position: relative;
+  z-index: 1;
+  background-color: transparent;
+  padding-right: 0 !important;
+}
+
+*::-webkit-scrollbar {
+  width: 10px;
+}
+
+*::-webkit-scrollbar-track {
+  background-color: transparent;
+}
+
+*::-webkit-scrollbar-thumb {
+  background-color: var(--color-primary-400);
+  border-radius: 10px;
+}
+
+.content {
+  max-width: 90rem;
+  background-color: rgba(245, 245, 245, 0.7) !important;
+  border-left: 2px solid #e5e5e5;
+  border-right: 2px solid #e5e5e5;
+  padding: 5px 5px 0px 5px;
+  min-height: 100vh;
+  width: 100%;
+}
+
+html.dark .content {
+  background-color: rgba(21, 21, 21, 0.7) !important;
+  border-left: 2px solid #252525;
+  border-right: 2px solid #252525;
+}
+
+#content>#inner-content {
+  display: block;
+  padding: 5px 5px 25px 5px;
+  background: rgba(255, 255, 255, 0.25);
+  min-height: 100vh;
+}
+
+@media (min-width: 768px) {
+  #content>#inner-content {
+    padding: 5px 5px 25px 25px;
+  }
+}
+
+html.dark #content>#inner-content {
+  background: rgba(0, 0, 0, 0.25);
+}
+
+/* Mobile-specific adjustments */
+@media (max-width: 767px) {
+  .content {
+    border-left: none;
+    border-right: none;
+  }
+
+  html.dark .content {
+    border-left: none;
+    border-right: none;
+  }
+}
 </style>
