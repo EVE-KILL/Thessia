@@ -6,10 +6,6 @@ export default defineNuxtConfig({
     minify: true,
     sourceMap: true,
 
-    runtimeConfig: {
-      enabledRunTimeCache: true,
-    },
-
     esbuild: {
       options: {
         target: "esnext",
@@ -52,6 +48,9 @@ export default defineNuxtConfig({
     }
   },
 
+  runtimeConfig: {
+    enabledRunTimeCache: true,
+  },
   // Ensure modern compatibility mode
   compatibilityDate: "2024-11-01",
 
@@ -68,8 +67,74 @@ export default defineNuxtConfig({
     "@nuxt/ui",
     "@nuxt/icon",
     "@nuxt/image",
+    "@nuxtjs/i18n",
     "@vueuse/nuxt"
   ],
+
+  // UI configuration
+  ui: {
+    global: true,
+    icons: ['heroicons', 'simple-icons'],
+    // Add i18n configuration for UI components
+    safelistColors: ['primary', 'gray'],
+  },
+
+  // i18n configuration
+  i18n: {
+    vueI18n: 'i18n.config.ts', // No need to change this, it knows it's supposed to look in the ./i18n directory for it
+    locales: [
+      {
+        code: 'en',
+        name: 'English',
+        file: 'en.json'
+      },
+      {
+        code: 'de',
+        name: 'Deutsch',
+        file: 'de.json'
+      },
+      {
+        code: 'es',
+        name: 'Español',
+        file: 'es.json'
+      },
+      {
+        code: 'fr',
+        name: 'Français',
+        file: 'fr.json'
+      },
+      {
+        code: 'ja',
+        name: '日本語',
+        file: 'ja.json'
+      },
+      {
+        code: 'ko',
+        name: '한국어',
+        file: 'ko.json'
+      },
+      {
+        code: 'ru',
+        name: 'Русский',
+        file: 'ru.json'
+      },
+      {
+        code: 'zh',
+        name: '中文',
+        file: 'zh.json'
+      }
+    ],
+    defaultLocale: 'en',
+    strategy: 'no_prefix',
+    lazy: true,
+    langDir: 'locales/',
+    detectBrowserLanguage: {
+      useCookie: true,
+      cookieKey: 'i18n_locale',
+      redirectOn: 'root',
+      alwaysRedirect: false
+    }
+  },
 
   // CSS imports with proper path
   css: ['~/app.css'],

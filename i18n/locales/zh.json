@@ -1,0 +1,155 @@
+{
+  "welcome": "欢迎来到 Thessia",
+  "language": "语言",
+  "navbar": {
+    "home": "首页",
+    "kills": "击杀",
+    "about": "关于",
+    "search": "搜索击杀、玩家、公司...",
+    "background": "更换背景图片",
+    "menu": "菜单",
+    "user": "用户账户",
+    "documentation": "文档",
+    "apiAccess": "API 访问",
+    "discord": "Discord",
+    "faq": "常见问题",
+    "status": "系统状态",
+    "information": "信息"
+  },
+  "user": {
+    "profile": "个人资料",
+    "settings": "设置",
+    "documentation": "文档",
+    "apiAccess": "API 访问",
+    "discord": "Discord",
+    "logout": "退出登录"
+  },
+  "menu": {
+    "menu": "菜单",
+    "navigation": "导航",
+    "userAccount": "用户账户",
+    "information": "信息",
+    "kills": "击杀",
+    "language": "语言"
+  },
+  "background": {
+    "title": "背景图片",
+    "random": "随机 EVE 图片",
+    "loading": "加载中..."
+  },
+  "ui": {
+    "search": {
+      "placeholder": "搜索..."
+    },
+    "notifications": {
+      "title": "通知",
+      "clear": "清除全部"
+    },
+    "selectMenu": {
+      "empty": "未找到结果",
+      "emptyItems": "没有项目",
+      "all": "全部",
+      "selected": "已选择 {count} 项"
+    },
+    "pagination": {
+      "next": "下一页",
+      "previous": "上一页",
+      "page": "第 {page} 页",
+      "navigate": "跳转到第 {page} 页",
+      "current": "第 {page} 页，当前页"
+    }
+  },
+  "common": {
+    "loading": "加载中...",
+    "retry": "重试",
+    "navigation": "导航",
+    "logout": "退出登录",
+    "profile": "个人资料",
+    "settings": "设置"
+  },
+  "status": {
+    "title": "系统状态",
+    "loading": "加载中...",
+    "retry": "重试",
+    "refreshNow": "立即刷新",
+    "autoRefresh": "自动刷新 {seconds}秒",
+    "autoRefreshing": "每 {seconds} 秒自动刷新",
+    "lastUpdated": "最后更新时间: {time}",
+    "processedItems": "已处理项目 ({period})",
+    "queueCounts": {
+      "title": "队列数量",
+      "queue": "队列",
+      "count": "数量"
+    },
+    "processingStatistics": {
+      "title": "处理统计"
+    },
+    "timePeriod": "时间段",
+    "databaseCounts": {
+      "title": "数据库计数",
+      "collection": "集合",
+      "count": "数量"
+    },
+    "cacheSizes": {
+      "title": "缓存大小",
+      "cache": "缓存",
+      "size": "大小"
+    },
+    "cacheHits": {
+      "title": "缓存命中",
+      "cache": "缓存",
+      "hits": "命中"
+    },
+    "timePeriods": {
+      "1min": "1 分钟",
+      "5min": "5 分钟",
+      "15min": "15 分钟",
+      "1hour": "1 小时",
+      "6hours": "6 小时",
+      "12hours": "12 小时",
+      "24hours": "24 小时",
+      "1week": "1 周",
+      "1month": "1 个月"
+    },
+    "uptime": {
+      "title": "运行时间",
+      "format": "{days}天 {hours}时 {minutes}分 {seconds}秒",
+      "since": "运行开始时间",
+      "localTime": "本地时间"
+    },
+    "environment": {
+      "title": "环境",
+      "nodeEnv": "Node 环境",
+      "nodeVersion": "Node 版本",
+      "process": "进程"
+    },
+    "operatingSystem": {
+      "title": "操作系统",
+      "platform": "平台",
+      "architecture": "架构",
+      "loadAverage": "平均负载",
+      "totalCPUs": "CPU 总数",
+      "memory": "内存 (GB)"
+    },
+    "queues": {
+      "title": "队列数量",
+      "queue": "队列",
+      "count": "数量"
+    },
+    "processing": {
+      "title": "处理统计",
+      "timePeriod": "时间段"
+    },
+    "database": {
+      "title": "数据库计数",
+      "collection": "集合",
+      "count": "数量"
+    },
+    "cache": {
+      "sizes": "缓存大小",
+      "hits": "缓存命中",
+      "cache": "缓存",
+      "size": "大小"
+    }
+  }
+}

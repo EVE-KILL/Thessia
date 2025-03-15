@@ -6,9 +6,12 @@
  * Type definition for Reddit post info
  */
 export interface RedditPostInfo {
-  imageUrl: string;
-  permalink: string;
   title: string;
+  permalink: string;
+  imageUrl: string;
+  author: string;
+  score: number;
+  createdAt: number;
 }
 
 /**
@@ -39,7 +42,10 @@ export async function fetchSubredditImages(subreddit: string, limit: number = 10
           imageInfos.push({
             imageUrl: postData.url,
             permalink,
-            title
+            title,
+            author: postData.author,
+            score: postData.score,
+            createdAt: postData.created_utc * 1000
           });
         }
         // Handle gallery posts
@@ -53,7 +59,10 @@ export async function fetchSubredditImages(subreddit: string, limit: number = 10
               imageInfos.push({
                 imageUrl: `https://i.redd.it/${imageId}.${mimeType}`,
                 permalink,
-                title
+                title,
+                author: postData.author,
+                score: postData.score,
+                createdAt: postData.created_utc * 1000
               });
             }
           });
@@ -79,16 +88,66 @@ function isImageUrl(url: string): boolean {
 }
 
 /**
- * Gets a random image from the specified subreddit
+ * Fetch random image from a subreddit
  */
-export async function getRandomSubredditImage(subreddit: string = 'eveporn'): Promise<RedditPostInfo | null> {
-  const images = await fetchSubredditImages(subreddit);
+export async function getRandomSubredditImage(subreddit: string): Promise<RedditPostInfo | null> {
+  try {
+    // Use the JSON API to get top posts from the subreddit
+    const url = `https://www.reddit.com/r/${subreddit}/top.json?sort=top&t=month&limit=25`
 
-  if (images.length === 0) {
-    return null;
+    // Fetch with a user agent to avoid 429 errors
+    const response = await fetch(url, {
+      headers: {
+        'User-Agent': 'EVE-KILL/1.0 (https://eve-kill.net)'
+      }
+    })
+
+    if (!response.ok) {
+      throw new Error(`Reddit API error: ${response.status}`)
+    }
+
+    const data = await response.json()
+
+    if (!data?.data?.children || !Array.isArray(data.data.children)) {
+      throw new Error('Invalid Reddit API response format')
+    }
+
+    // Filter posts to only include images (not videos or links)
+    const imagePosts = data.data.children.filter(post => {
+      const url = post.data?.url || ''
+      const hint = post.data?.post_hint || ''
+
+      // Check if it's an image by extension or hint
+      return (
+        hint === 'image' ||
+        url.endsWith('.jpg') ||
+        url.endsWith('.jpeg') ||
+        url.endsWith('.png') ||
+        url.endsWith('.gif') ||
+        url.includes('i.imgur.com') ||
+        url.includes('i.redd.it')
+      )
+    })
+
+    if (imagePosts.length === 0) {
+      return null
+    }
+
+    // Select a random post from the filtered list
+    const randomPost = imagePosts[Math.floor(Math.random() * imagePosts.length)]
+    const postData = randomPost.data
+
+    // Create a normalized post info object
+    return {
+      title: postData.title,
+      permalink: `https://www.reddit.com${postData.permalink}`,
+      imageUrl: postData.url,
+      author: postData.author,
+      score: postData.score,
+      createdAt: postData.created_utc * 1000 // Convert to milliseconds
+    }
+  } catch (error) {
+    console.error(`Error fetching from Reddit r/${subreddit}:`, error)
+    return null
   }
-
-  // Select a random image
-  const randomIndex = Math.floor(Math.random() * images.length);
-  return images[randomIndex];
 }

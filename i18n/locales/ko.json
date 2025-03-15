@@ -1,0 +1,155 @@
+{
+  "welcome": "Thessia에 오신 것을 환영합니다",
+  "language": "언어",
+  "navbar": {
+    "home": "홈",
+    "kills": "킬",
+    "about": "소개",
+    "search": "킬, 플레이어, 기업 검색...",
+    "background": "배경 이미지 변경",
+    "menu": "메뉴",
+    "user": "사용자 계정",
+    "documentation": "문서",
+    "apiAccess": "API 액세스",
+    "discord": "디스코드",
+    "faq": "자주 묻는 질문",
+    "status": "시스템 상태",
+    "information": "정보"
+  },
+  "user": {
+    "profile": "프로필",
+    "settings": "설정",
+    "documentation": "문서",
+    "apiAccess": "API 액세스",
+    "discord": "디스코드",
+    "logout": "로그아웃"
+  },
+  "menu": {
+    "menu": "메뉴",
+    "navigation": "탐색",
+    "userAccount": "사용자 계정",
+    "information": "정보",
+    "kills": "킬",
+    "language": "언어"
+  },
+  "background": {
+    "title": "배경 이미지",
+    "random": "랜덤 EVE 이미지",
+    "loading": "로딩 중..."
+  },
+  "ui": {
+    "search": {
+      "placeholder": "검색..."
+    },
+    "notifications": {
+      "title": "알림",
+      "clear": "모두 지우기"
+    },
+    "selectMenu": {
+      "empty": "결과를 찾을 수 없습니다",
+      "emptyItems": "항목 없음",
+      "all": "모두",
+      "selected": "{count}개 선택됨"
+    },
+    "pagination": {
+      "next": "다음",
+      "previous": "이전",
+      "page": "페이지 {page}",
+      "navigate": "페이지 {page}로 이동",
+      "current": "페이지 {page}, 현재 페이지"
+    }
+  },
+  "common": {
+    "loading": "로딩 중...",
+    "retry": "재시도",
+    "navigation": "탐색",
+    "logout": "로그아웃",
+    "profile": "프로필",
+    "settings": "설정"
+  },
+  "status": {
+    "title": "시스템 상태",
+    "loading": "로딩 중...",
+    "retry": "재시도",
+    "refreshNow": "지금 새로고침",
+    "autoRefresh": "자동 새로고침 {seconds}초",
+    "autoRefreshing": "{seconds}초마다 자동 새로고침",
+    "lastUpdated": "마지막 업데이트: {time}",
+    "processedItems": "처리된 항목 ({period})",
+    "queueCounts": {
+      "title": "대기열 수",
+      "queue": "대기열",
+      "count": "수"
+    },
+    "processingStatistics": {
+      "title": "처리 통계"
+    },
+    "timePeriod": "기간",
+    "databaseCounts": {
+      "title": "데이터베이스 수",
+      "collection": "컬렉션",
+      "count": "수"
+    },
+    "cacheSizes": {
+      "title": "캐시 크기",
+      "cache": "캐시",
+      "size": "크기"
+    },
+    "cacheHits": {
+      "title": "캐시 히트",
+      "cache": "캐시",
+      "hits": "히트"
+    },
+    "timePeriods": {
+      "1min": "1분",
+      "5min": "5분",
+      "15min": "15분",
+      "1hour": "1시간",
+      "6hours": "6시간",
+      "12hours": "12시간",
+      "24hours": "24시간",
+      "1week": "1주일",
+      "1month": "1개월"
+    },
+    "uptime": {
+      "title": "가동 시간",
+      "format": "{days}일 {hours}시간 {minutes}분 {seconds}초",
+      "since": "가동 시작일",
+      "localTime": "현지 시간"
+    },
+    "environment": {
+      "title": "환경",
+      "nodeEnv": "Node 환경",
+      "nodeVersion": "Node 버전",
+      "process": "프로세스"
+    },
+    "operatingSystem": {
+      "title": "운영 체제",
+      "platform": "플랫폼",
+      "architecture": "아키텍처",
+      "loadAverage": "평균 부하",
+      "totalCPUs": "총 CPU",
+      "memory": "메모리 (GB)"
+    },
+    "queues": {
+      "title": "대기열 수",
+      "queue": "대기열",
+      "count": "수"
+    },
+    "processing": {
+      "title": "처리 통계",
+      "timePeriod": "기간"
+    },
+    "database": {
+      "title": "데이터베이스 수",
+      "collection": "컬렉션",
+      "count": "수"
+    },
+    "cache": {
+      "sizes": "캐시 크기",
+      "hits": "캐시 히트",
+      "cache": "캐시",
+      "size": "크기"
+    }
+  }
+}

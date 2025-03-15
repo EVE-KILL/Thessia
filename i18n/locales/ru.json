@@ -1,0 +1,155 @@
+{
+  "welcome": "Добро пожаловать в Thessia",
+  "language": "Язык",
+  "navbar": {
+    "home": "Главная",
+    "kills": "Уничтожения",
+    "about": "О нас",
+    "search": "Поиск уничтожений, игроков, корпораций...",
+    "background": "Изменить фоновое изображение",
+    "menu": "Меню",
+    "user": "Учетная запись",
+    "documentation": "Документация",
+    "apiAccess": "Доступ к API",
+    "discord": "Discord",
+    "faq": "ЧЗВ",
+    "status": "Состояние системы",
+    "information": "Информация"
+  },
+  "user": {
+    "profile": "Профиль",
+    "settings": "Настройки",
+    "documentation": "Документация",
+    "apiAccess": "Доступ к API",
+    "discord": "Discord",
+    "logout": "Выход"
+  },
+  "menu": {
+    "menu": "Меню",
+    "navigation": "Навигация",
+    "userAccount": "Учетная запись",
+    "information": "Информация",
+    "kills": "Уничтожения",
+    "language": "Язык"
+  },
+  "background": {
+    "title": "Фоновые изображения",
+    "random": "Случайное изображение EVE",
+    "loading": "Загрузка..."
+  },
+  "ui": {
+    "search": {
+      "placeholder": "Поиск..."
+    },
+    "notifications": {
+      "title": "Уведомления",
+      "clear": "Очистить все"
+    },
+    "selectMenu": {
+      "empty": "Результаты не найдены",
+      "emptyItems": "Нет элементов",
+      "all": "Все",
+      "selected": "Выбрано: {count}"
+    },
+    "pagination": {
+      "next": "Следующая",
+      "previous": "Предыдущая",
+      "page": "Страница {page}",
+      "navigate": "Перейти на страницу {page}",
+      "current": "Страница {page}, текущая страница"
+    }
+  },
+  "common": {
+    "loading": "Загрузка...",
+    "retry": "Повторить",
+    "navigation": "Навигация",
+    "logout": "Выход",
+    "profile": "Профиль",
+    "settings": "Настройки"
+  },
+  "status": {
+    "title": "Состояние системы",
+    "loading": "Загрузка...",
+    "retry": "Повторить",
+    "refreshNow": "Обновить сейчас",
+    "autoRefresh": "Автообновление {seconds} с",
+    "autoRefreshing": "Автоматическое обновление каждые {seconds} секунд",
+    "lastUpdated": "Последнее обновление: {time}",
+    "processedItems": "Обработанные элементы ({period})",
+    "queueCounts": {
+      "title": "Количество в очередях",
+      "queue": "Очередь",
+      "count": "Количество"
+    },
+    "processingStatistics": {
+      "title": "Статистика обработки"
+    },
+    "timePeriod": "Период времени",
+    "databaseCounts": {
+      "title": "Количество в базе данных",
+      "collection": "Коллекция",
+      "count": "Количество"
+    },
+    "cacheSizes": {
+      "title": "Размеры кэша",
+      "cache": "Кэш",
+      "size": "Размер"
+    },
+    "cacheHits": {
+      "title": "Попадания в кэш",
+      "cache": "Кэш",
+      "hits": "Попадания"
+    },
+    "timePeriods": {
+      "1min": "1 минута",
+      "5min": "5 минут",
+      "15min": "15 минут",
+      "1hour": "1 час",
+      "6hours": "6 часов",
+      "12hours": "12 часов",
+      "24hours": "24 часа",
+      "1week": "1 неделя",
+      "1month": "1 месяц"
+    },
+    "uptime": {
+      "title": "Время работы",
+      "format": "{days}д {hours}ч {minutes}м {seconds}с",
+      "since": "Работает с",
+      "localTime": "Местное время"
+    },
+    "environment": {
+      "title": "Окружение",
+      "nodeEnv": "Окружение Node",
+      "nodeVersion": "Версия Node",
+      "process": "Процесс"
+    },
+    "operatingSystem": {
+      "title": "Операционная система",
+      "platform": "Платформа",
+      "architecture": "Архитектура",
+      "loadAverage": "Средняя нагрузка",
+      "totalCPUs": "Всего CPU",
+      "memory": "Память (ГБ)"
+    },
+    "queues": {
+      "title": "Количество в очередях",
+      "queue": "Очередь",
+      "count": "Количество"
+    },
+    "processing": {
+      "title": "Статистика обработки",
+      "timePeriod": "Период времени"
+    },
+    "database": {
+      "title": "Количество в базе данных",
+      "collection": "Коллекция",
+      "count": "Количество"
+    },
+    "cache": {
+      "sizes": "Размеры кэша",
+      "hits": "Попадания в кэш",
+      "cache": "Кэш",
+      "size": "Размер"
+    }
+  }
+}

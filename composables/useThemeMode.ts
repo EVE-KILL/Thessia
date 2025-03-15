@@ -1,13 +1,13 @@
 import { ref, computed } from 'vue'
 
-// Module scope references to maintain state across components
-const currentThemeRef = ref('system') // Default to system
+// Module scope reference for theme preference
+const currentThemeRef = ref('system')
 
 export function useThemeMode() {
   // Get the built-in color mode from Nuxt
   const colorMode = useColorMode()
 
-  // Use cookie with consistent naming across the app
+  // Use cookie with consistent format
   const colorModeCookie = useCookie('nuxt-color-mode', {
     default: () => JSON.stringify({ value: 'system', userSelected: false }),
     watch: true,
@@ -15,106 +15,75 @@ export function useThemeMode() {
     path: '/'
   })
 
-  // Parse cookie data - handle both old string format and new object format
+  // Parse cookie data efficiently
   const parseCookieData = () => {
     try {
       if (!colorModeCookie.value) return { value: 'system', userSelected: false }
 
-      // If it's already an object with the right structure
+      // Handle object format
       if (typeof colorModeCookie.value === 'object' && 'value' in colorModeCookie.value) {
         return colorModeCookie.value
       }
 
-      // If it's a stringified object
+      // Handle stringified object
       if (typeof colorModeCookie.value === 'string' && colorModeCookie.value.startsWith('{')) {
         return JSON.parse(colorModeCookie.value)
       }
 
-      // Legacy format - just the theme value as a string
+      // Handle legacy string format
       return { value: colorModeCookie.value, userSelected: true }
-    } catch (e) {
-      console.error('Error parsing theme cookie:', e)
+    } catch {
       return { value: 'system', userSelected: false }
     }
   }
 
-  // Get current cookie data
+  // Initialize from cookie
   const cookieData = parseCookieData()
-
-  // Initialize the current theme based on cookie data
-  if (cookieData.userSelected) {
-    // User has made an explicit choice, use it
+  if (cookieData.userSelected && currentThemeRef.value !== cookieData.value) {
     currentThemeRef.value = cookieData.value
     colorMode.preference = cookieData.value
-  } else {
-    // No user choice, default to system
-    currentThemeRef.value = 'system'
-    colorMode.preference = 'system'
   }
 
-  // Update cookie with the structured format
-  const updateCookie = (value, userSelected = true) => {
+  // Update cookie helper
+  const updateCookie = (value: string, userSelected = true) => {
     colorModeCookie.value = JSON.stringify({ value, userSelected })
   }
 
-  // Toggle theme with improved reliability
+  // Toggle theme with improved efficiency
   const toggleTheme = () => {
-    try {
-      const newMode = currentThemeRef.value === 'dark' ? 'light' : 'dark'
+    const newMode = currentThemeRef.value === 'dark' ? 'light' : 'dark'
 
-      // Update all references for consistency
-      currentThemeRef.value = newMode
-      colorMode.preference = newMode
+    // Update state
+    currentThemeRef.value = newMode
+    colorMode.preference = newMode
+    updateCookie(newMode, true)
 
-      // Mark this as a user selection and update cookie
-      updateCookie(newMode, true)
-
-      // Direct DOM manipulation for immediate feedback
-      if (process.client) {
-        if (newMode === 'dark') {
-          document.documentElement.classList.add('dark')
-        } else {
-          document.documentElement.classList.remove('dark')
-        }
-
-        // Force CSS re-evaluation
-        const scrollPos = window.scrollY
-        document.body.style.display = 'none'
-        void document.body.offsetHeight
-        document.body.style.display = ''
-        window.scrollTo(0, scrollPos)
-      }
-
-      return true
-    } catch (error) {
-      console.error('Error toggling theme:', error)
-      return false
+    // Apply DOM changes immediately if on client
+    if (process.client) {
+      document.documentElement.classList.toggle('dark', newMode === 'dark')
     }
+
+    return true
   }
 
-  // Computed properties for theme state
-  const currentTheme = computed(() => {
-    return currentThemeRef.value || 'system' // Fallback to system if undefined
-  })
+  // Computed properties
+  const currentTheme = computed(() => currentThemeRef.value || 'system')
 
   const themeIcon = computed(() => {
-    const theme = currentTheme.value === 'system'
+    const effectiveTheme = currentTheme.value === 'system'
       ? (colorMode.value === 'dark' ? 'dark' : 'light')
       : currentTheme.value
-    return theme === 'dark' ? 'i-heroicons-sun' : 'i-heroicons-moon'
+    return effectiveTheme === 'dark' ? 'i-heroicons-sun' : 'i-heroicons-moon'
   })
 
   const themeAriaLabel = computed(() => {
-    const theme = currentTheme.value === 'system'
+    const effectiveTheme = currentTheme.value === 'system'
       ? (colorMode.value === 'dark' ? 'dark' : 'light')
       : currentTheme.value
-    return theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'
+    return effectiveTheme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'
   })
 
-  // Whether the user has explicitly chosen a theme
-  const isUserSelected = computed(() => {
-    return parseCookieData().userSelected
-  })
+  const isUserSelected = computed(() => parseCookieData().userSelected)
 
   return {
     currentTheme,

@@ -25,7 +25,7 @@ export default {
     },
   },
   plugins: [],
-  // Ensure core plugins are explicitly enabled
+  // Ensure core plugins are enabled
   corePlugins: {
     opacity: true,
     backgroundColor: true,
@@ -33,13 +33,20 @@ export default {
     textOpacity: true,
     borderOpacity: true,
   },
-  // Use a more specific safelist format
+  // More specific safelist patterns
   safelist: [
+    // Background opacity classes
     {
-      pattern: /bg-(white|black|gray|opacity)-(10|20|30|40|50|60|70|80|85|90)/,
+      pattern: /bg-(white|black|gray)-(10|20|30|40|50|60|70|80|85|90)/,
+      variants: ['hover'],
     },
-    {
-      pattern: /hover:bg-(white|black|gray|opacity)-(10|20|30|40|50|60|70|80|85|90)/,
-    }
+    // Custom opacity utility classes
+    'custom-bg-white-60',
+    'custom-bg-black-40',
+    'custom-bg-white-85',
+    'custom-bg-black-85',
+    // Backdrop classes
+    'backdrop-blur-custom',
+    'backdrop-blur-sm',
   ],
 }

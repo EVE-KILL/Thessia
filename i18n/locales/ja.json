@@ -1,0 +1,155 @@
+{
+  "welcome": "Thessiaへようこそ",
+  "language": "言語",
+  "navbar": {
+    "home": "ホーム",
+    "kills": "キル",
+    "about": "概要",
+    "search": "キル、プレイヤー、企業を検索...",
+    "background": "背景画像の変更",
+    "menu": "メニュー",
+    "user": "ユーザーアカウント",
+    "documentation": "ドキュメント",
+    "apiAccess": "APIアクセス",
+    "discord": "Discord",
+    "faq": "よくある質問",
+    "status": "システムステータス",
+    "information": "情報"
+  },
+  "user": {
+    "profile": "プロフィール",
+    "settings": "設定",
+    "documentation": "ドキュメント",
+    "apiAccess": "APIアクセス",
+    "discord": "Discord",
+    "logout": "ログアウト"
+  },
+  "menu": {
+    "menu": "メニュー",
+    "navigation": "ナビゲーション",
+    "userAccount": "ユーザーアカウント",
+    "information": "情報",
+    "kills": "キル",
+    "language": "言語"
+  },
+  "background": {
+    "title": "背景画像",
+    "random": "ランダムEVE画像",
+    "loading": "読み込み中..."
+  },
+  "ui": {
+    "search": {
+      "placeholder": "検索..."
+    },
+    "notifications": {
+      "title": "通知",
+      "clear": "すべてクリア"
+    },
+    "selectMenu": {
+      "empty": "結果が見つかりません",
+      "emptyItems": "アイテムがありません",
+      "all": "すべて",
+      "selected": "{count}個選択済み"
+    },
+    "pagination": {
+      "next": "次へ",
+      "previous": "前へ",
+      "page": "ページ {page}",
+      "navigate": "ページ{page}に移動",
+      "current": "ページ{page}、現在のページ"
+    }
+  },
+  "common": {
+    "loading": "読み込み中...",
+    "retry": "再試行",
+    "navigation": "ナビゲーション",
+    "logout": "ログアウト",
+    "profile": "プロフィール",
+    "settings": "設定"
+  },
+  "status": {
+    "title": "システムステータス",
+    "loading": "読み込み中...",
+    "retry": "再試行",
+    "refreshNow": "今すぐ更新",
+    "autoRefresh": "自動更新 {seconds}秒",
+    "autoRefreshing": "{seconds}秒ごとに自動更新",
+    "lastUpdated": "最終更新: {time}",
+    "processedItems": "処理済みアイテム ({period})",
+    "queueCounts": {
+      "title": "キューカウント",
+      "queue": "キュー",
+      "count": "カウント"
+    },
+    "processingStatistics": {
+      "title": "処理統計"
+    },
+    "timePeriod": "期間",
+    "databaseCounts": {
+      "title": "データベースカウント",
+      "collection": "コレクション",
+      "count": "カウント"
+    },
+    "cacheSizes": {
+      "title": "キャッシュサイズ",
+      "cache": "キャッシュ",
+      "size": "サイズ"
+    },
+    "cacheHits": {
+      "title": "キャッシュヒット",
+      "cache": "キャッシュ",
+      "hits": "ヒット"
+    },
+    "timePeriods": {
+      "1min": "1分",
+      "5min": "5分",
+      "15min": "15分",
+      "1hour": "1時間",
+      "6hours": "6時間",
+      "12hours": "12時間",
+      "24hours": "24時間",
+      "1week": "1週間",
+      "1month": "1ヶ月"
+    },
+    "uptime": {
+      "title": "稼働時間",
+      "format": "{days}日 {hours}時間 {minutes}分 {seconds}秒",
+      "since": "稼働開始",
+      "localTime": "現地時間"
+    },
+    "environment": {
+      "title": "環境",
+      "nodeEnv": "Node環境",
+      "nodeVersion": "Nodeバージョン",
+      "process": "プロセス"
+    },
+    "operatingSystem": {
+      "title": "オペレーティングシステム",
+      "platform": "プラットフォーム",
+      "architecture": "アーキテクチャ",
+      "loadAverage": "平均負荷",
+      "totalCPUs": "CPU合計",
+      "memory": "メモリ (GB)"
+    },
+    "queues": {
+      "title": "キューカウント",
+      "queue": "キュー",
+      "count": "カウント"
+    },
+    "processing": {
+      "title": "処理統計",
+      "timePeriod": "期間"
+    },
+    "database": {
+      "title": "データベースカウント",
+      "collection": "コレクション",
+      "count": "カウント"
+    },
+    "cache": {
+      "sizes": "キャッシュサイズ",
+      "hits": "キャッシュヒット",
+      "cache": "キャッシュ",
+      "size": "サイズ"
+    }
+  }
+}

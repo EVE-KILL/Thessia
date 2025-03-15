@@ -93,6 +93,11 @@ body.overflow-hidden {
 }
 
 /* Scrollbar styling */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-primary-400) transparent;
+}
+
 *::-webkit-scrollbar {
   width: 10px;
 }
@@ -106,7 +111,7 @@ body.overflow-hidden {
   border-radius: 10px;
 }
 
-/* Override any inline padding styles */
+/* Fix padding issues */
 html[style*="padding-right"],
 body[style*="padding-right"] {
   padding-right: 0 !important;
@@ -119,7 +124,7 @@ body[style*="padding-right"] {
   padding-right: 0 !important;
 }
 
-/* Custom opacity utility classes using CSS variables */
+/* Custom opacity utility classes */
 .custom-bg-white-60 {
   background-color: rgba(255, 255, 255, 0.6);
 }

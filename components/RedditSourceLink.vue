@@ -28,7 +28,7 @@ const sourceTitle = computed(() => {
   if (!currentRedditSource.value) {
     return 'View on Reddit';
   }
-  return `View source: ${currentRedditSource.value.title}`;
+  return `Source: ${currentRedditSource.value.title}`;
 })
 </script>
 
@@ -38,40 +38,45 @@ const sourceTitle = computed(() => {
   bottom: 15px;
   right: 15px;
   z-index: 100;
-  pointer-events: auto;
 }
 
 .source-button {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 48px;
-  height: 48px;
-  background-color: rgba(255, 69, 0, 0.9);
+  width: 40px;
+  height: 40px;
+  background-color: rgba(255, 69, 0, 0.85);
   border-radius: 50%;
-  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.3);
-  transition: all 0.3s ease;
-}
-
-.dark .source-button {
-  background-color: rgba(255, 69, 0, 0.8);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
 .source-button:hover {
-  transform: translateY(-3px) scale(1.05);
-  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.5);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
 }
 
 .reddit-icon {
-  width: 26px;
-  height: 26px;
+  width: 24px;
+  height: 24px;
   color: white;
 }
 
 @media (max-width: 640px) {
   .reddit-source-link {
-    bottom: 20px;
-    right: 20px;
+    bottom: 10px;
+    right: 10px;
+  }
+
+  .source-button {
+    width: 36px;
+    height: 36px;
+  }
+
+  .reddit-icon {
+    width: 20px;
+    height: 20px;
   }
 }
 </style>

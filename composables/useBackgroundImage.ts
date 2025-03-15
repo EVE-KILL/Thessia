@@ -66,65 +66,6 @@ export const useBackgroundImage = () => {
     }
   }
 
-  // Clean up any invalid background values and reset to default
-  const resetToDefaultIfInvalid = () => {
-    if (!backgroundCookie.value || !isValidBackground(backgroundCookie.value)) {
-      backgroundCookie.value = DEFAULT_BACKGROUND
-      sharedBackgroundRef.value = DEFAULT_BACKGROUND
-
-      // Clear any Reddit source data that might be incorrect
-      if (process.client) {
-        localStorage.removeItem(REDDIT_SOURCE_STORAGE_KEY)
-        currentRedditSource.value = null
-      }
-
-      // Apply the default background immediately
-      if (process.client) {
-        const optimizedUrl = getOptimizedBackgroundUrl(DEFAULT_BACKGROUND)
-        document.documentElement.style.setProperty('background-image', `url('${optimizedUrl}')`, 'important')
-      }
-    }
-  }
-
-  // Initialize the shared reference from cookie, with validation
-  if (!backgroundCookie.value || backgroundCookie.value !== sharedBackgroundRef.value) {
-    // Ensure we have a valid background
-    resetToDefaultIfInvalid()
-    sharedBackgroundRef.value = backgroundCookie.value || DEFAULT_BACKGROUND
-  }
-
-  // Apply default background immediately on first load
-  if (process.client && document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', () => {
-      // Force apply the current background to ensure it's set correctly
-      applyBackground(sharedBackgroundRef.value)
-    })
-  } else if (process.client) {
-    // If document already loaded, apply background now
-    applyBackground(sharedBackgroundRef.value)
-  }
-
-  // Initialize Reddit source from localStorage on load
-  if (process.client && !currentRedditSource.value) {
-    try {
-      const storedData = localStorage.getItem(REDDIT_SOURCE_STORAGE_KEY)
-      if (storedData) {
-        const parsedSource = JSON.parse(storedData) as RedditPostInfo
-        if (parsedSource && parsedSource.imageUrl) {
-          // Check if the current background is from the saved Reddit source
-          if (backgroundCookie.value === parsedSource.imageUrl) {
-            currentRedditSource.value = parsedSource
-          } else {
-            // If background doesn't match, clear the Reddit source in localStorage
-            localStorage.removeItem(REDDIT_SOURCE_STORAGE_KEY)
-          }
-        }
-      }
-    } catch (error) {
-      localStorage.removeItem(REDDIT_SOURCE_STORAGE_KEY)
-    }
-  }
-
   // Get nuxt/image composable
   const nuxtImg = useImage()
 
@@ -207,13 +148,25 @@ export const useBackgroundImage = () => {
     }
   }
 
-  // Computed property for current optimized URL
-  const currentOptimizedUrl = computed(() => {
-    if (sharedOptimizedUrlRef.value && optimizedUrlCache.has(sharedBackgroundRef.value)) {
-      return sharedOptimizedUrlRef.value
+  // Clean up any invalid background values and reset to default
+  const resetToDefaultIfInvalid = () => {
+    if (!backgroundCookie.value || !isValidBackground(backgroundCookie.value)) {
+      backgroundCookie.value = DEFAULT_BACKGROUND
+      sharedBackgroundRef.value = DEFAULT_BACKGROUND
+
+      // Clear any Reddit source data that might be incorrect
+      if (process.client) {
+        localStorage.removeItem(REDDIT_SOURCE_STORAGE_KEY)
+        currentRedditSource.value = null
+      }
+
+      // Apply the default background immediately
+      if (process.client) {
+        const optimizedUrl = getOptimizedBackgroundUrl(DEFAULT_BACKGROUND)
+        document.documentElement.style.setProperty('background-image', `url('${optimizedUrl}')`, 'important')
+      }
     }
-    return getOptimizedBackgroundUrl(sharedBackgroundRef.value)
-  })
+  }
 
   // Apply background with improved performance and reliability
   function applyBackground(path: string) {
@@ -265,6 +218,53 @@ export const useBackgroundImage = () => {
       resetToDefaultIfInvalid()
     }
   }
+
+  // Initialize the shared reference from cookie, with validation
+  if (!backgroundCookie.value || backgroundCookie.value !== sharedBackgroundRef.value) {
+    // Ensure we have a valid background
+    resetToDefaultIfInvalid()
+    sharedBackgroundRef.value = backgroundCookie.value || DEFAULT_BACKGROUND
+  }
+
+  // Apply default background immediately on first load
+  if (process.client && document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', () => {
+      // Force apply the current background to ensure it's set correctly
+      applyBackground(sharedBackgroundRef.value)
+    })
+  } else if (process.client) {
+    // If document already loaded, apply background now
+    applyBackground(sharedBackgroundRef.value)
+  }
+
+  // Initialize Reddit source from localStorage on load
+  if (process.client && !currentRedditSource.value) {
+    try {
+      const storedData = localStorage.getItem(REDDIT_SOURCE_STORAGE_KEY)
+      if (storedData) {
+        const parsedSource = JSON.parse(storedData) as RedditPostInfo
+        if (parsedSource && parsedSource.imageUrl) {
+          // Check if the current background is from the saved Reddit source
+          if (backgroundCookie.value === parsedSource.imageUrl) {
+            currentRedditSource.value = parsedSource
+          } else {
+            // If background doesn't match, clear the Reddit source in localStorage
+            localStorage.removeItem(REDDIT_SOURCE_STORAGE_KEY)
+          }
+        }
+      }
+    } catch (error) {
+      localStorage.removeItem(REDDIT_SOURCE_STORAGE_KEY)
+    }
+  }
+
+  // Computed property for current optimized URL
+  const currentOptimizedUrl = computed(() => {
+    if (sharedOptimizedUrlRef.value && optimizedUrlCache.has(sharedBackgroundRef.value)) {
+      return sharedOptimizedUrlRef.value
+    }
+    return getOptimizedBackgroundUrl(sharedBackgroundRef.value)
+  })
 
   // Check if a path matches the current background
   const isCurrentBackground = (path: string) => sharedBackgroundRef.value === path

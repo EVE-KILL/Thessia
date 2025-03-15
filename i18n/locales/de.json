@@ -1,0 +1,155 @@
+{
+  "welcome": "Willkommen bei Thessia",
+  "language": "Sprache",
+  "navbar": {
+    "home": "Startseite",
+    "kills": "Abschüsse",
+    "about": "Über uns",
+    "search": "Suche nach Abschüssen, Spielern, Korporation...",
+    "background": "Hintergrundbild ändern",
+    "menu": "Menü",
+    "user": "Benutzerkonto",
+    "documentation": "Dokumentation",
+    "apiAccess": "API-Zugang",
+    "discord": "Discord",
+    "faq": "FAQ",
+    "status": "Systemstatus",
+    "information": "Informationen"
+  },
+  "user": {
+    "profile": "Profil",
+    "settings": "Einstellungen",
+    "documentation": "Dokumentation",
+    "apiAccess": "API-Zugang",
+    "discord": "Discord",
+    "logout": "Abmelden"
+  },
+  "menu": {
+    "menu": "Menü",
+    "navigation": "Navigation",
+    "userAccount": "Benutzerkonto",
+    "information": "Informationen",
+    "kills": "Abschüsse",
+    "language": "Sprache"
+  },
+  "background": {
+    "title": "Hintergrundbilder",
+    "random": "Zufälliges EVE-Bild",
+    "loading": "Wird geladen..."
+  },
+  "ui": {
+    "search": {
+      "placeholder": "Suchen..."
+    },
+    "notifications": {
+      "title": "Benachrichtigungen",
+      "clear": "Alle löschen"
+    },
+    "selectMenu": {
+      "empty": "Keine Ergebnisse gefunden",
+      "emptyItems": "Keine Einträge",
+      "all": "Alle",
+      "selected": "{count} ausgewählt"
+    },
+    "pagination": {
+      "next": "Weiter",
+      "previous": "Zurück",
+      "page": "Seite {page}",
+      "navigate": "Zu Seite {page} navigieren",
+      "current": "Seite {page}, aktuelle Seite"
+    }
+  },
+  "common": {
+    "loading": "Wird geladen...",
+    "retry": "Wiederholen",
+    "navigation": "Navigation",
+    "logout": "Abmelden",
+    "profile": "Profil",
+    "settings": "Einstellungen"
+  },
+  "status": {
+    "title": "Systemstatus",
+    "loading": "Wird geladen...",
+    "retry": "Wiederholen",
+    "refreshNow": "Jetzt aktualisieren",
+    "autoRefresh": "Automatisch aktualisieren {seconds}s",
+    "autoRefreshing": "Automatische Aktualisierung alle {seconds} Sekunden",
+    "lastUpdated": "Zuletzt aktualisiert: {time}",
+    "processedItems": "Verarbeitete Einträge ({period})",
+    "queueCounts": {
+      "title": "Warteschlangenanzahl",
+      "queue": "Warteschlange",
+      "count": "Anzahl"
+    },
+    "processingStatistics": {
+      "title": "Verarbeitungsstatistiken"
+    },
+    "timePeriod": "Zeitraum",
+    "databaseCounts": {
+      "title": "Datenbankanzahl",
+      "collection": "Sammlung",
+      "count": "Anzahl"
+    },
+    "cacheSizes": {
+      "title": "Cache-Größen",
+      "cache": "Cache",
+      "size": "Größe"
+    },
+    "cacheHits": {
+      "title": "Cache-Treffer",
+      "cache": "Cache",
+      "hits": "Treffer"
+    },
+    "timePeriods": {
+      "1min": "1 Minute",
+      "5min": "5 Minuten",
+      "15min": "15 Minuten",
+      "1hour": "1 Stunde",
+      "6hours": "6 Stunden",
+      "12hours": "12 Stunden",
+      "24hours": "24 Stunden",
+      "1week": "1 Woche",
+      "1month": "1 Monat"
+    },
+    "uptime": {
+      "title": "Betriebszeit",
+      "format": "{days}t {hours}h {minutes}m {seconds}s",
+      "since": "Aktiv seit",
+      "localTime": "Lokale Zeit"
+    },
+    "environment": {
+      "title": "Umgebung",
+      "nodeEnv": "Node-Umgebung",
+      "nodeVersion": "Node-Version",
+      "process": "Prozess"
+    },
+    "operatingSystem": {
+      "title": "Betriebssystem",
+      "platform": "Plattform",
+      "architecture": "Architektur",
+      "loadAverage": "Durchschnittslast",
+      "totalCPUs": "CPUs Gesamt",
+      "memory": "Speicher (GB)"
+    },
+    "queues": {
+      "title": "Warteschlangenanzahl",
+      "queue": "Warteschlange",
+      "count": "Anzahl"
+    },
+    "processing": {
+      "title": "Verarbeitungsstatistiken",
+      "timePeriod": "Zeitraum"
+    },
+    "database": {
+      "title": "Datenbankanzahl",
+      "collection": "Sammlung",
+      "count": "Anzahl"
+    },
+    "cache": {
+      "sizes": "Cache-Größen",
+      "hits": "Cache-Treffer",
+      "cache": "Cache",
+      "size": "Größe"
+    }
+  }
+}

@@ -1,0 +1,155 @@
+{
+  "welcome": "Bienvenido a Thessia",
+  "language": "Idioma",
+  "navbar": {
+    "home": "Inicio",
+    "kills": "Eliminaciones",
+    "about": "Acerca de",
+    "search": "Buscar eliminaciones, jugadores, corporaciones...",
+    "background": "Cambiar imagen de fondo",
+    "menu": "Menú",
+    "user": "Cuenta de usuario",
+    "documentation": "Documentación",
+    "apiAccess": "Acceso API",
+    "discord": "Discord",
+    "faq": "Preguntas frecuentes",
+    "status": "Estado del sistema",
+    "information": "Información"
+  },
+  "user": {
+    "profile": "Perfil",
+    "settings": "Configuración",
+    "documentation": "Documentación",
+    "apiAccess": "Acceso API",
+    "discord": "Discord",
+    "logout": "Cerrar sesión"
+  },
+  "menu": {
+    "menu": "Menú",
+    "navigation": "Navegación",
+    "userAccount": "Cuenta de usuario",
+    "information": "Información",
+    "kills": "Eliminaciones",
+    "language": "Idioma"
+  },
+  "background": {
+    "title": "Imágenes de fondo",
+    "random": "EVE aleatorio",
+    "loading": "Cargando..."
+  },
+  "ui": {
+    "search": {
+      "placeholder": "Buscar..."
+    },
+    "notifications": {
+      "title": "Notificaciones",
+      "clear": "Borrar todo"
+    },
+    "selectMenu": {
+      "empty": "No se encontraron resultados",
+      "emptyItems": "No hay elementos",
+      "all": "Todos",
+      "selected": "{count} seleccionados"
+    },
+    "pagination": {
+      "next": "Siguiente",
+      "previous": "Anterior",
+      "page": "Página {page}",
+      "navigate": "Ir a la página {page}",
+      "current": "Página {page}, página actual"
+    }
+  },
+  "common": {
+    "loading": "Cargando...",
+    "retry": "Reintentar",
+    "navigation": "Navegación",
+    "logout": "Cerrar sesión",
+    "profile": "Perfil",
+    "settings": "Configuración"
+  },
+  "status": {
+    "title": "Estado del sistema",
+    "loading": "Cargando...",
+    "retry": "Reintentar",
+    "refreshNow": "Actualizar ahora",
+    "autoRefresh": "Actualización automática {seconds}s",
+    "autoRefreshing": "Actualizando automáticamente cada {seconds} segundos",
+    "lastUpdated": "Última actualización: {time}",
+    "processedItems": "Elementos procesados ({period})",
+    "queueCounts": {
+      "title": "Recuentos de cola",
+      "queue": "Cola",
+      "count": "Cantidad"
+    },
+    "processingStatistics": {
+      "title": "Estadísticas de procesamiento"
+    },
+    "timePeriod": "Período de tiempo",
+    "databaseCounts": {
+      "title": "Recuentos de base de datos",
+      "collection": "Colección",
+      "count": "Cantidad"
+    },
+    "cacheSizes": {
+      "title": "Tamaños de caché",
+      "cache": "Caché",
+      "size": "Tamaño"
+    },
+    "cacheHits": {
+      "title": "Aciertos de caché",
+      "cache": "Caché",
+      "hits": "Aciertos"
+    },
+    "timePeriods": {
+      "1min": "1 Minuto",
+      "5min": "5 Minutos",
+      "15min": "15 Minutos",
+      "1hour": "1 Hora",
+      "6hours": "6 Horas",
+      "12hours": "12 Horas",
+      "24hours": "24 Horas",
+      "1week": "1 Semana",
+      "1month": "1 Mes"
+    },
+    "uptime": {
+      "title": "Tiempo de actividad",
+      "format": "{days}d {hours}h {minutes}m {seconds}s",
+      "since": "Activo desde",
+      "localTime": "Hora local"
+    },
+    "environment": {
+      "title": "Entorno",
+      "nodeEnv": "Entorno Node",
+      "nodeVersion": "Versión de Node",
+      "process": "Proceso"
+    },
+    "operatingSystem": {
+      "title": "Sistema operativo",
+      "platform": "Plataforma",
+      "architecture": "Arquitectura",
+      "loadAverage": "Carga promedio",
+      "totalCPUs": "CPUs totales",
+      "memory": "Memoria (GB)"
+    },
+    "queues": {
+      "title": "Recuentos de cola",
+      "queue": "Cola",
+      "count": "Cantidad"
+    },
+    "processing": {
+      "title": "Estadísticas de procesamiento",
+      "timePeriod": "Período de tiempo"
+    },
+    "database": {
+      "title": "Recuentos de base de datos",
+      "collection": "Colección",
+      "count": "Cantidad"
+    },
+    "cache": {
+      "sizes": "Tamaños de caché",
+      "hits": "Aciertos de caché",
+      "cache": "Caché",
+      "size": "Tamaño"
+    }
+  }
+}

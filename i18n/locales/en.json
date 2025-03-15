@@ -1,0 +1,155 @@
+{
+  "welcome": "Welcome to Thessia",
+  "language": "Language",
+  "navbar": {
+    "home": "Home",
+    "kills": "Kills",
+    "about": "About",
+    "search": "Search kills, players, corps...",
+    "background": "Change background image",
+    "menu": "Menu",
+    "user": "User Account",
+    "documentation": "Documentation",
+    "apiAccess": "API Access",
+    "discord": "Discord",
+    "faq": "FAQ",
+    "status": "System Status",
+    "information": "Information"
+  },
+  "user": {
+    "profile": "Profile",
+    "settings": "Settings",
+    "documentation": "Documentation",
+    "apiAccess": "API Access",
+    "discord": "Discord",
+    "logout": "Logout"
+  },
+  "menu": {
+    "menu": "Menu",
+    "navigation": "Navigation",
+    "userAccount": "User Account",
+    "information": "Information",
+    "kills": "Kills",
+    "language": "Language"
+  },
+  "background": {
+    "title": "Background Images",
+    "random": "Random EVEPorn",
+    "loading": "Loading..."
+  },
+  "ui": {
+    "search": {
+      "placeholder": "Search..."
+    },
+    "notifications": {
+      "title": "Notifications",
+      "clear": "Clear all"
+    },
+    "selectMenu": {
+      "empty": "No results found",
+      "emptyItems": "No items",
+      "all": "All",
+      "selected": "{count} selected"
+    },
+    "pagination": {
+      "next": "Next",
+      "previous": "Previous",
+      "page": "Page {page}",
+      "navigate": "Navigate to page {page}",
+      "current": "Page {page}, current page"
+    }
+  },
+  "common": {
+    "loading": "Loading...",
+    "retry": "Retry",
+    "navigation": "Navigation",
+    "logout": "Logout",
+    "profile": "Profile",
+    "settings": "Settings"
+  },
+  "status": {
+    "title": "System Status",
+    "loading": "Loading...",
+    "retry": "Retry",
+    "refreshNow": "Refresh Now",
+    "autoRefresh": "Auto refresh {seconds}s",
+    "autoRefreshing": "Auto-refreshing every {seconds} seconds",
+    "lastUpdated": "Last updated: {time}",
+    "processedItems": "Processed Items ({period})",
+    "queueCounts": {
+      "title": "Queue Counts",
+      "queue": "Queue",
+      "count": "Count"
+    },
+    "processingStatistics": {
+      "title": "Processing Statistics"
+    },
+    "timePeriod": "Time Period",
+    "databaseCounts": {
+      "title": "Database Counts",
+      "collection": "Collection",
+      "count": "Count"
+    },
+    "cacheSizes": {
+      "title": "Cache Sizes",
+      "cache": "Cache",
+      "size": "Size"
+    },
+    "cacheHits": {
+      "title": "Cache Hits",
+      "cache": "Cache",
+      "hits": "Hits"
+    },
+    "timePeriods": {
+      "1min": "1 Minute",
+      "5min": "5 Minutes",
+      "15min": "15 Minutes",
+      "1hour": "1 Hour",
+      "6hours": "6 Hours",
+      "12hours": "12 Hours",
+      "24hours": "24 Hours",
+      "1week": "1 Week",
+      "1month": "1 Month"
+    },
+    "uptime": {
+      "title": "Uptime",
+      "format": "{days}d {hours}h {minutes}m {seconds}s",
+      "since": "Up Since",
+      "localTime": "Local Time"
+    },
+    "environment": {
+      "title": "Environment",
+      "nodeEnv": "Node Env",
+      "nodeVersion": "Node Version",
+      "process": "Process"
+    },
+    "operatingSystem": {
+      "title": "Operating System",
+      "platform": "Platform",
+      "architecture": "Architecture",
+      "loadAverage": "Load Average",
+      "totalCPUs": "Total CPUs",
+      "memory": "Memory (GB)"
+    },
+    "queues": {
+      "title": "Queue Counts",
+      "queue": "Queue",
+      "count": "Count"
+    },
+    "processing": {
+      "title": "Processing Statistics",
+      "timePeriod": "Time Period"
+    },
+    "database": {
+      "title": "Database Counts",
+      "collection": "Collection",
+      "count": "Count"
+    },
+    "cache": {
+      "sizes": "Cache Sizes",
+      "hits": "Cache Hits",
+      "cache": "Cache",
+      "size": "Size"
+    }
+  }
+}
