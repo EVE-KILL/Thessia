@@ -12,18 +12,18 @@ const availableBackgrounds = [
   { name: 'Background 4', path: '/images/bg4.png' },
   { name: 'Background 5', path: '/images/bg5.png' },
   { name: 'Background 6', path: '/images/bg6.png' },
+  { name: 'Background 7', path: '/images/bg7.jpg' },
+  { name: 'Background 8', path: '/images/bg8.mp4' }
 ]
 
-// Module scope reference for sharing state between calls to useBackgroundImage
+// Module scope reference for sharing state between calls
 const sharedBackgroundRef = ref(DEFAULT_BACKGROUND)
-// Store optimized URL directly to avoid double loading
 const sharedOptimizedUrlRef = ref('')
-
-// Cache for optimized URLs to avoid regenerating them
 const optimizedUrlCache = new Map()
+const isVideoBackground = ref(false)
 
 export const useBackgroundImage = () => {
-  // Create a cookie when the function is called (in setup or plugin context)
+  // Create a cookie with appropriate settings
   const backgroundCookie = useCookie(BACKGROUND_COOKIE, {
     default: () => DEFAULT_BACKGROUND,
     watch: true,
@@ -31,7 +31,7 @@ export const useBackgroundImage = () => {
     path: '/'
   })
 
-  // Initialize the shared reference if we have a cookie
+  // Initialize the shared reference from cookie
   if (backgroundCookie.value && backgroundCookie.value !== sharedBackgroundRef.value) {
     sharedBackgroundRef.value = backgroundCookie.value
   }
@@ -39,9 +39,24 @@ export const useBackgroundImage = () => {
   // Get nuxt/image composable
   const nuxtImg = useImage()
 
-  // Improved function to get optimized background URL with caching
+  // Function to check if path is a video file
+  const isVideoFile = (path: string): boolean => {
+    return path.toLowerCase().endsWith('.mp4') ||
+           path.toLowerCase().endsWith('.webm') ||
+           path.toLowerCase().endsWith('.ogg')
+  }
+
+  // Get optimized background URL with caching
   const getOptimizedBackgroundUrl = (path: string) => {
     if (!path) return ''
+
+    // Don't process video files with nuxt/image
+    if (isVideoFile(path)) {
+      isVideoBackground.value = true
+      return path
+    }
+
+    isVideoBackground.value = false
 
     // Check cache first
     if (optimizedUrlCache.has(path)) {
@@ -51,7 +66,7 @@ export const useBackgroundImage = () => {
     try {
       // Generate responsive image URL with webp format
       const optimizedUrl = nuxtImg(path, {
-        width: 1920, // Use a single size for SSR consistency
+        width: 1920,
         format: 'webp',
         quality: 80,
         fit: 'cover',
@@ -59,61 +74,52 @@ export const useBackgroundImage = () => {
 
       // Cache the result
       optimizedUrlCache.set(path, optimizedUrl)
-      sharedOptimizedUrlRef.value = optimizedUrl // Store current optimized URL
+      sharedOptimizedUrlRef.value = optimizedUrl
       return optimizedUrl
     } catch (error) {
       console.error('Error optimizing image:', error)
-      sharedOptimizedUrlRef.value = path // Store fallback
+      sharedOptimizedUrlRef.value = path
       return path // Fallback to original path
     }
   }
 
-  // Get the currently optimized URL for the selected background
+  // Computed property for current optimized URL
   const currentOptimizedUrl = computed(() => {
-    // Use cached optimized URL if available
     if (sharedOptimizedUrlRef.value && optimizedUrlCache.has(sharedBackgroundRef.value)) {
       return sharedOptimizedUrlRef.value
     }
-    // Otherwise generate it
     return getOptimizedBackgroundUrl(sharedBackgroundRef.value)
   })
 
-  // Enhanced function to apply the background with immediate visual effect
+  // Apply background with improved performance and reliability
   const applyBackground = (path: string) => {
     if (!path) return
-    try {
-      // Update the cookie
-      backgroundCookie.value = path
 
-      // Update shared reference
+    try {
+      // Update cookie and shared reference
+      backgroundCookie.value = path
       sharedBackgroundRef.value = path
 
       if (process.client) {
-        // Always use and store the optimized URL
+        // Get optimized URL immediately
         const optimizedUrl = getOptimizedBackgroundUrl(path)
-        sharedOptimizedUrlRef.value = optimizedUrl // Cache this for other components
+        sharedOptimizedUrlRef.value = optimizedUrl
 
-        // Create and preload the image to ensure it's ready
-        const img = new Image()
-        img.onload = () => {
-          // Apply the optimized background
+        if (isVideoFile(path)) {
+          // For video backgrounds, apply directly without preloading
           document.documentElement.style.setProperty('background-image', `url('${optimizedUrl}')`, 'important')
-          document.documentElement.style.setProperty('background-repeat', 'no-repeat', 'important')
-          document.documentElement.style.setProperty('background-position', 'center', 'important')
-          document.documentElement.style.setProperty('background-attachment', 'fixed', 'important')
-          document.documentElement.style.setProperty('background-size', 'cover', 'important')
+        } else {
+          // Preload image
+          const img = new Image()
+          img.onload = () => {
+            // Apply background with important flag to override any other styles
+            document.documentElement.style.setProperty('background-image', `url('${optimizedUrl}')`, 'important')
 
-          // Force a repaint to ensure the background is updated
-          const currentScrollPosition = window.pageYOffset
-          document.documentElement.style.display = 'none'
-          // This will force a repaint
-          void document.documentElement.offsetHeight
-          document.documentElement.style.display = ''
-          window.scrollTo(0, currentScrollPosition)
+            // Trigger reflow for immediate update
+            void document.documentElement.offsetHeight
+          }
+          img.src = optimizedUrl
         }
-
-        // Start loading the optimized image
-        img.src = optimizedUrl
       }
     } catch (e) {
       console.error('Error applying background:', e)
@@ -125,11 +131,12 @@ export const useBackgroundImage = () => {
 
   return {
     selectedBackground: sharedBackgroundRef,
-    optimizedBackground: sharedOptimizedUrlRef, // Expose the optimized URL directly
+    optimizedBackground: sharedOptimizedUrlRef,
     availableBackgrounds,
     setBackground: applyBackground,
     isCurrentBackground,
     getOptimizedBackgroundUrl,
-    currentOptimizedUrl // Export the computed optimized URL
+    currentOptimizedUrl,
+    isVideoBackground // Expose this to let UI components know if the background is a video
   }
 }

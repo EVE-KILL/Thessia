@@ -13,7 +13,7 @@
             </div>
           </div>
           <div class="md:w-1/2 md:pl-8">
-            <div class="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6 backdrop-blur-sm bg-opacity-80 dark:bg-opacity-80">
+            <div class="bg-white bg-opacity-60 dark:bg-gray-800 dark:bg-opacity-60 rounded-lg shadow-lg p-6 backdrop-blur-sm">
               <h3 class="text-xl font-bold mb-3">Key Features</h3>
               <ul class="space-y-2">
                 <li class="flex items-center">
@@ -66,7 +66,7 @@
             :columns="tableColumns"
             :rows="tableData"
             :ui="{
-              wrapper: 'bg-white/60 dark:bg-black/40 backdrop-blur-sm rounded-lg',
+              wrapper: 'bg-white bg-opacity-60 dark:bg-black dark:bg-opacity-40 backdrop-blur-sm rounded-lg',
               td: { base: 'whitespace-nowrap py-3 px-4' }
             }"
           >
@@ -81,7 +81,7 @@
           <div
             v-for="(row, index) in tableData"
             :key="index"
-            class="bg-white/60 dark:bg-black/40 backdrop-blur-sm rounded-lg p-4 shadow-sm"
+            class="bg-white bg-opacity-60 dark:bg-black dark:bg-opacity-40 backdrop-blur-sm rounded-lg p-4 shadow-sm"
           >
             <div class="flex justify-between items-center mb-2">
               <h4 class="font-bold">{{ row.name }}</h4>
@@ -134,7 +134,7 @@
 // Page state
 const currentPage = ref(1)
 
-// Table columns definition - Added 'id' property to fix the error
+// Table columns definition with required id property
 const tableColumns = [
   { key: 'name', label: 'Player Name', id: 'name' },
   { key: 'ship', label: 'Ship Type', id: 'ship' },

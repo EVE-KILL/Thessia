@@ -1,5 +1,5 @@
 /** @type {import('tailwindcss').Config} */
-module.exports = {
+export default {
   darkMode: 'class',
   content: [
     "./components/**/*.{js,vue,ts}",
@@ -19,7 +19,27 @@ module.exports = {
         'xl': '1280px',
         '2xl': '1536px',
       },
+      opacity: {
+        '85': '0.85',
+      },
     },
   },
   plugins: [],
+  // Ensure core plugins are explicitly enabled
+  corePlugins: {
+    opacity: true,
+    backgroundColor: true,
+    backgroundOpacity: true,
+    textOpacity: true,
+    borderOpacity: true,
+  },
+  // Use a more specific safelist format
+  safelist: [
+    {
+      pattern: /bg-(white|black|gray|opacity)-(10|20|30|40|50|60|70|80|85|90)/,
+    },
+    {
+      pattern: /hover:bg-(white|black|gray|opacity)-(10|20|30|40|50|60|70|80|85|90)/,
+    }
+  ],
 }

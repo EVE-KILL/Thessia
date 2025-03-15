@@ -1,4 +1,17 @@
 <template>
+  <!-- Add video background element that shows only when a video is selected -->
+  <video
+    v-if="isVideoBackground"
+    ref="videoBackground"
+    class="video-background"
+    autoplay
+    loop
+    muted
+    playsinline
+  >
+    <source :src="currentOptimizedUrl" type="video/mp4">
+  </video>
+
   <UContainer id="content" class="content flex flex-col mx-auto">
     <div id="inner-content" class="inner-content h-full">
       <Navbar />
@@ -8,27 +21,36 @@
 </template>
 
 <script setup lang="ts">
-const { optimizedBackground, currentOptimizedUrl, getOptimizedBackgroundUrl } = useBackgroundImage()
+// Get background image handling functionality
+const { currentOptimizedUrl, getOptimizedBackgroundUrl, isVideoBackground } = useBackgroundImage()
 
-// Get the background from cookie which is available during SSR
+// Get theme mode functionality
+const { currentTheme } = useThemeMode()
+
+// Get the background from cookie for SSR
 const backgroundCookie = useCookie('selected-background', {
   default: () => '/images/bg2.png'
 })
 
-// Always optimize the initial background
+// Always optimize the background image
 const initialOptimizedUrl = getOptimizedBackgroundUrl(backgroundCookie.value)
 
-// Apply the background style during SSR with optimized image
+// Video background reference
+const videoBackground = ref(null)
+
+// Apply background styles during SSR and CSR
 useHead({
   htmlAttrs: {
-    style: `background-color: black; background-image: url('${initialOptimizedUrl}'); background-repeat: no-repeat; background-position: center; background-attachment: fixed; background-size: cover;`
+    style: isVideoBackground.value
+      ? 'background-color: black;'
+      : `background-color: black; background-image: url('${initialOptimizedUrl}'); background-repeat: no-repeat; background-position: center; background-attachment: fixed; background-size: cover;`
   },
   style: [
     {
       children: `
         html {
           background-color: black !important;
-          background-image: url('${currentOptimizedUrl.value}') !important;
+          ${!isVideoBackground.value ? `background-image: url('${currentOptimizedUrl.value}') !important;` : ''}
           background-repeat: no-repeat !important;
           background-position: center !important;
           background-attachment: fixed !important;
@@ -39,9 +61,36 @@ useHead({
     }
   ]
 })
+
+// Update background when optimized URL changes
+watch(currentOptimizedUrl, (newUrl) => {
+  if (process.client) {
+    if (!isVideoBackground.value) {
+      document.documentElement.style.setProperty('background-image', `url('${newUrl}')`, 'important')
+    } else {
+      // Clear background image when using video
+      document.documentElement.style.setProperty('background-image', 'none', 'important')
+
+      // If we have a video element, update its source
+      if (videoBackground.value) {
+        videoBackground.value.querySelector('source').src = newUrl
+        videoBackground.value.load()
+        videoBackground.value.play().catch(e => console.warn('Could not autoplay video:', e))
+      }
+    }
+  }
+})
+
+// Handle initial video loading if needed
+onMounted(() => {
+  if (isVideoBackground.value && videoBackground.value) {
+    videoBackground.value.play().catch(e => console.warn('Could not autoplay video:', e))
+  }
+})
 </script>
 
 <style>
+/* Root CSS variables for theme colors */
 :root {
   --bg-image-url: none;
 }
@@ -58,6 +107,19 @@ body {
 html.dark,
 html.dark body {
   color: white;
+}
+
+/* Video background styling */
+.video-background {
+  position: fixed;
+  top: 0;
+  left: 0;
+  min-width: 100%;
+  min-height: 100%;
+  width: auto;
+  height: auto;
+  z-index: -1;
+  object-fit: cover;
 }
 
 /* Base background styles */

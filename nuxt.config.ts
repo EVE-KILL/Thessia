@@ -3,8 +3,6 @@ export default defineNuxtConfig({
   nitro: {
     preset: "bun",
     srcDir: "server",
-    //minify: true,
-    //sourceMap: true,
 
     runtimeConfig: {
       enabledRunTimeCache: true,
@@ -51,14 +49,65 @@ export default defineNuxtConfig({
       }
     }
   },
+
+  // Ensure modern compatibility mode
   compatibilityDate: "2024-11-01",
+
+  // Development tools
   devtools: {
     enabled: true,
-
     timeline: {
       enabled: true,
     },
   },
-  modules: ["@nuxt/ui", "@nuxt/icon", "@nuxt/image", "@vueuse/nuxt"],
-  css: ['/app.css']
+
+  // Modules with automatic TypeScript support
+  modules: [
+    "@nuxt/ui",
+    "@nuxt/icon",
+    "@nuxt/image",
+    "@vueuse/nuxt"
+  ],
+
+  // CSS imports with proper path
+  css: ['~/app.css'],
+
+  // Image optimization settings
+  image: {
+    format: ['webp'],
+    quality: 80,
+    screens: {
+      xs: 320,
+      sm: 640,
+      md: 768,
+      lg: 1024,
+      xl: 1280,
+      xxl: 1536,
+      '2xl': 1536
+    },
+    presets: {
+      background: {
+        modifiers: {
+          format: 'webp',
+          width: 1920,
+          quality: 80,
+        }
+      }
+    }
+  },
+
+  // App configuration
+  app: {
+    head: {
+      title: 'EVE-KILL - EVE Online Killboard',
+      meta: [
+        { charset: 'utf-8' },
+        { name: 'viewport', content: 'width=device-width, initial-scale=1' },
+        { name: 'description', content: 'EVE Online killboard tracking kills and losses across New Eden' }
+      ],
+      link: [
+        { rel: 'icon', type: 'image/x-icon', href: '/favicon.ico' }
+      ]
+    }
+  }
 });
