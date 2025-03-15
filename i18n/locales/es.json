@@ -65,7 +65,14 @@
     "navigation": "Navegación",
     "logout": "Cerrar sesión",
     "profile": "Perfil",
-    "settings": "Configuración"
+    "settings": "Configuración",
+    "backToHome": "Volver al inicio"
+  },
+  "error": {
+    "notFound": "La página que busca no se puede encontrar.",
+    "forbidden": "No tiene permiso para acceder a esta página.",
+    "serverError": "Algo salió mal en nuestros servidores.",
+    "generic": "Se produjo un error."
   },
   "status": {
     "title": "Estado del sistema",
@@ -151,5 +158,20 @@
       "cache": "Caché",
       "size": "Tamaño"
     }
+  },
+  "search": {
+    "results": "Resultados de búsqueda",
+    "resultsFor": "Resultados para",
+    "searchPlaceholder": "Buscar personajes, corporaciones, alianzas...",
+    "searchButton": "Buscar",
+    "found": "{count} resultados encontrados",
+    "processingTimeMs": "en {time}ms",
+    "viewDetails": "Ver detalles",
+    "noResultsTitle": "No se encontraron resultados",
+    "noResultsDesc": "Intente ajustar sus términos de búsqueda o pruebe una búsqueda diferente.",
+    "initialMessage": "Ingrese un término de búsqueda arriba para comenzar",
+    "moreResults": "Cargar más resultados",
+    "viewAllResults": "Ver todos los {count} resultados",
+    "showMoreType": "Mostrar más {type}"
   }
 }

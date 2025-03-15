@@ -1,4 +1,5 @@
 <script lang="ts" setup>
+import { useSearch } from '~/composables/useSearch';
 
 // Props for passing data from parent
 const props = defineProps({
@@ -17,6 +18,16 @@ const props = defineProps({
 
 // State
 const isLoadingRandomBg = ref(false)
+const { query, navigateToSearch, results, isLoading, setupAutoSearch } = useSearch();
+
+// Set up auto search with debounce
+setupAutoSearch(3, 300);
+
+// Search handling
+const handleSearchSubmit = (e: Event) => {
+  e.preventDefault();
+  navigateToSearch();
+}
 
 // Create background items for the dropdown menu with thumbnails
 const backgroundItems = computed(() => {
@@ -45,6 +56,85 @@ const backgroundItems = computed(() => {
 
   return items;
 })
+
+// Create search items for dropdown
+const searchItems = computed(() => {
+  if (!results.value || !results.value.hits || results.value.hits.length === 0 || query.value.length < 3) {
+    return [];
+  }
+
+  const items = results.value.hits.slice(0, 5).map(hit => ({
+    label: hit.name,
+    icon: getIconForEntityType(hit.type),
+    iconClass: getColorForEntityType(hit.type),
+    description: capitalizeFirstLetter(hit.type),
+    click: () => {
+      navigateTo(`/${hit.type}/${hit.id}`);
+      query.value = '';
+    }
+  }));
+
+  // Add "view all results" item if there are more than 5 results
+  if (results.value.hits.length > 5) {
+    items.push({ type: 'divider' });
+    items.push({
+      label: `${$t('search.viewAllResults', { count: results.value.estimatedTotalHits })}`,
+      icon: 'i-heroicons-magnifying-glass',
+      click: () => navigateToSearch()
+    });
+  }
+
+  return items;
+});
+
+// Helper to capitalize first letter of a string
+const capitalizeFirstLetter = (string: string) => {
+  return string.charAt(0).toUpperCase() + string.slice(1);
+};
+
+// Helper functions for entity types
+const getIconForEntityType = (type: string) => {
+  switch (type.toLowerCase()) {
+    case 'character':
+      return 'i-heroicons-user';
+    case 'corporation':
+      return 'i-heroicons-building-office';
+    case 'alliance':
+      return 'i-heroicons-user-group';
+    case 'ship':
+      return 'i-heroicons-rocket-launch';
+    case 'item':
+      return 'i-heroicons-cube';
+    case 'system':
+      return 'i-heroicons-globe-alt';
+    case 'region':
+      return 'i-heroicons-map';
+    default:
+      return 'i-heroicons-question-mark-circle';
+  }
+};
+
+const getColorForEntityType = (type: string) => {
+  switch (type.toLowerCase()) {
+    case 'character':
+      return 'text-blue-600 dark:text-blue-400';
+    case 'corporation':
+      return 'text-green-600 dark:text-green-400';
+    case 'alliance':
+      return 'text-purple-600 dark:text-purple-400';
+    case 'ship':
+      return 'text-red-600 dark:text-red-400';
+    case 'item':
+      return 'text-orange-600 dark:text-orange-400';
+    case 'system':
+      return 'text-teal-600 dark:text-teal-400';
+    case 'region':
+      return 'text-indigo-600 dark:text-indigo-400';
+    default:
+      return 'text-gray-600 dark:text-gray-400';
+  }
+};
+
 </script>
 
 <template>
@@ -68,15 +158,83 @@ const backgroundItems = computed(() => {
 
           <!-- Center: Search (Desktop) -->
           <div class="absolute left-1/2 transform -translate-x-1/2">
-            <UInput
-              :placeholder="$t('navbar.search')"
-              icon="i-heroicons-magnifying-glass"
-              color="white"
-              variant="outline"
-              trailing
-              size="sm"
-              class="w-[320px] no-zoom-input"
-            />
+            <form @submit="handleSearchSubmit" class="relative">
+              <UInput
+                v-model="query"
+                :placeholder="$t('navbar.search')"
+                :icon="isLoading ? 'i-heroicons-arrow-path' : 'i-heroicons-magnifying-glass'"
+                :icon-class="isLoading ? 'animate-spin' : ''"
+                color="white"
+                variant="outline"
+                trailing
+                size="sm"
+                class="w-[320px] no-zoom-input"
+                @keydown.enter="handleSearchSubmit"
+              >
+                <template #trailing>
+                  <div class="flex items-center">
+                    <UButton
+                      v-if="query"
+                      color="gray"
+                      variant="ghost"
+                      icon="i-heroicons-x-mark"
+                      size="xs"
+                      :padded="false"
+                      @click="query = ''"
+                    />
+                    <UButton
+                      color="gray"
+                      variant="ghost"
+                      icon="i-heroicons-magnifying-glass"
+                      size="xs"
+                      :padded="false"
+                      @click="handleSearchSubmit"
+                    />
+                  </div>
+                </template>
+              </UInput>
+
+              <!-- Search Results Popover -->
+              <div
+                v-if="results && results.hits && results.hits.length > 0 && query.length >= 3"
+                class="searchbox-dropdown absolute top-full left-0 right-0 mt-1 border border-gray-200 dark:border-gray-700 rounded-md shadow-lg z-50 overflow-y-auto"
+              >
+                <div class="p-2 divide-y divide-gray-100 dark:divide-gray-700">
+                  <div
+                    v-for="(hit, index) in results.hits.slice(0, 5)"
+                    :key="`${hit.id}-${index}`"
+                    class="py-2 px-3 hover:bg-gray-100 dark:hover:bg-gray-700 rounded cursor-pointer transition-colors"
+                    @click="navigateTo(`/${hit.type}/${hit.id}`); query = '';"
+                  >
+                    <div class="flex items-center">
+                      <UIcon
+                        :name="getIconForEntityType(hit.type)"
+                        class="flex-shrink-0 mr-2"
+                        :class="getColorForEntityType(hit.type)"
+                      />
+                      <div class="flex-1 min-w-0">
+                        <div class="font-medium text-sm truncate">{{ hit.name }}</div>
+                        <div class="text-gray-500 dark:text-gray-400 text-xs">
+                          {{ capitalizeFirstLetter(hit.type) }}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <UButton
+                    v-if="results.hits.length > 5"
+                    block
+                    size="sm"
+                    color="gray"
+                    variant="ghost"
+                    class="mt-2"
+                    @click="navigateToSearch(); query = '';"
+                  >
+                    {{ $t('search.viewAllResults', { count: results.estimatedTotalHits }) }}
+                  </UButton>
+                </div>
+              </div>
+            </form>
           </div>
 
           <!-- Right: User menu and theme toggle -->
@@ -179,6 +337,25 @@ const backgroundItems = computed(() => {
 </template>
 
 <style scoped>
+.searchbox-dropdown {
+  background-color: rgba(255, 255, 255, 0.95);
+}
+
+:root.dark .searchbox-dropdown {
+  background-color: rgba(25, 25, 25, 0.95);
+}
+
+/* Add higher opacity fallback for browsers that don't support backdrop-filter */
+@supports not ((backdrop-filter: blur(8px)) or (-webkit-backdrop-filter: blur(8px))) {
+  .searchbox-dropdown {
+    background-color: rgba(255, 255, 255, 0.98);
+  }
+
+  :root.dark .searchbox-dropdown {
+    background-color: rgba(25, 25, 25, 0.98);
+  }
+}
+
 /* Ensure fixed elements don't cause unwanted overflow */
 .fixed.inset-0 {
   min-height: 100vh;

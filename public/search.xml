@@ -2,7 +2,7 @@
     <ShortName>EVE-KILL</ShortName>
     <Description>EVE-KILL.com - Killboard for EVE-Online</Description>
     <Image height="16" width="16" type="image/x-icon">https://eve-kill.com/favicon.png</Image>
-    <Url type="text/html" method="get" template="https://eve-kill.com/search/{searchTerms}/"/>
+    <Url type="text/html" method="get" template="https://eve-kill.com/search?q={searchTerms}/"/>
     <Contact>no-reply@eve-kill.com</Contact>
     <Tags>EVE Online, Killboard, Killmails</Tags>
     <LongName>EVE-KILL Killboard</LongName>

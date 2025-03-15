@@ -65,7 +65,14 @@
     "navigation": "탐색",
     "logout": "로그아웃",
     "profile": "프로필",
-    "settings": "설정"
+    "settings": "설정",
+    "backToHome": "홈으로 돌아가기"
+  },
+  "error": {
+    "notFound": "찾으시는 페이지를 찾을 수 없습니다.",
+    "forbidden": "이 페이지에 접근할 권한이 없습니다.",
+    "serverError": "서버에 문제가 발생했습니다.",
+    "generic": "오류가 발생했습니다."
   },
   "status": {
     "title": "시스템 상태",
@@ -151,5 +158,20 @@
       "cache": "캐시",
       "size": "크기"
     }
+  },
+  "search": {
+    "results": "검색 결과",
+    "resultsFor": "검색 결과:",
+    "searchPlaceholder": "캐릭터, 기업, 연합 검색...",
+    "searchButton": "검색",
+    "found": "{count}개 결과 발견",
+    "processingTimeMs": "{time}ms 소요",
+    "viewDetails": "상세 보기",
+    "noResultsTitle": "결과를 찾을 수 없음",
+    "noResultsDesc": "검색어를 조정하거나 다른 검색을 시도해보세요.",
+    "initialMessage": "위에 검색어를 입력하여 시작하세요",
+    "moreResults": "더 많은 결과 로드",
+    "viewAllResults": "모든 {count}개 결과 보기",
+    "showMoreType": "더 많은 {type} 표시"
   }
 }

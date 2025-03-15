@@ -182,7 +182,8 @@ export default defineNuxtConfig({
         { name: 'description', content: 'EVE Online killboard tracking kills and losses across New Eden' }
       ],
       link: [
-        { rel: 'icon', type: 'image/x-icon', href: '/favicon.ico' }
+        { rel: 'icon', type: 'image/x-icon', href: '/favicon.png' },
+        { rel: 'search', type: 'application/opensearchdescription+xml', title: 'EVE-KILL', href: '/search.xml' },
       ]
     }
   }

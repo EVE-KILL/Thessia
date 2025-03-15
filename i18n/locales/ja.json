@@ -65,7 +65,14 @@
     "navigation": "ナビゲーション",
     "logout": "ログアウト",
     "profile": "プロフィール",
-    "settings": "設定"
+    "settings": "設定",
+    "backToHome": "ホームに戻る"
+  },
+  "error": {
+    "notFound": "お探しのページが見つかりません。",
+    "forbidden": "このページにアクセスする権限がありません。",
+    "serverError": "サーバーで問題が発生しました。",
+    "generic": "エラーが発生しました。"
   },
   "status": {
     "title": "システムステータス",
@@ -151,5 +158,20 @@
       "cache": "キャッシュ",
       "size": "サイズ"
     }
+  },
+  "search": {
+    "results": "検索結果",
+    "resultsFor": "検索結果：",
+    "searchPlaceholder": "キャラクター、企業、同盟を検索...",
+    "searchButton": "検索",
+    "found": "{count}件の結果が見つかりました",
+    "processingTimeMs": "{time}ミリ秒で処理",
+    "viewDetails": "詳細を表示",
+    "noResultsTitle": "結果が見つかりません",
+    "noResultsDesc": "検索用語を調整するか、別の検索を試してください。",
+    "initialMessage": "上記に検索語を入力して開始してください",
+    "moreResults": "さらに結果を読み込む",
+    "viewAllResults": "すべての{count}件の結果を表示",
+    "showMoreType": "さらに{type}を表示"
   }
 }

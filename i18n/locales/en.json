@@ -65,7 +65,14 @@
     "navigation": "Navigation",
     "logout": "Logout",
     "profile": "Profile",
-    "settings": "Settings"
+    "settings": "Settings",
+    "backToHome": "Back to Home"
+  },
+  "error": {
+    "notFound": "The page you're looking for cannot be found.",
+    "forbidden": "You don't have permission to access this page.",
+    "serverError": "Something went wrong on our servers.",
+    "generic": "An error occurred."
   },
   "status": {
     "title": "System Status",
@@ -151,5 +158,20 @@
       "cache": "Cache",
       "size": "Size"
     }
+  },
+  "search": {
+    "results": "Search Results",
+    "resultsFor": "Results for",
+    "searchPlaceholder": "Search for characters, corporations, alliances...",
+    "searchButton": "Search",
+    "found": "{count} results found",
+    "processingTimeMs": "in {time}ms",
+    "viewDetails": "View Details",
+    "noResultsTitle": "No results found",
+    "noResultsDesc": "Try adjusting your search terms or try a different search.",
+    "initialMessage": "Enter a search term above to get started",
+    "moreResults": "Load More Results",
+    "viewAllResults": "View all {count} results",
+    "showMoreType": "Show more {type}"
   }
 }

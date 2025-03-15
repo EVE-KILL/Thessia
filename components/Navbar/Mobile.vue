@@ -1,7 +1,6 @@
 <script lang="ts" setup>
-import { ref, watch, nextTick, onUnmounted } from 'vue'
-// Remove the LocaleSwitcherMobile import since we'll use it in the menu
-// import LocaleSwitcherMobile from '../LocaleSwitcherMobile.vue'
+import { ref, watch, onUnmounted } from 'vue';
+import { useSearch } from '~/composables/useSearch';
 
 // Props for passing data from parent
 const props = defineProps({
@@ -15,7 +14,12 @@ const props = defineProps({
   userDropdown: Array,
   navigationItems: Array,
   informationDropdown: Array,
-  isVideoFile: Function
+  isVideoFile: Function,
+  // Add class prop to accept CSS classes from parent
+  class: {
+    type: [String, Object, Array],
+    default: ''
+  }
 })
 
 // Mobile menu state
@@ -36,16 +40,10 @@ const closeMobileBgSelector = () => {
   isMobileBgSelectorOpen.value = false
 }
 
-// Toggle search visibility
+// Toggle search visibility - updated to navigate to search page
 const toggleSearch = () => {
-  isSearchVisible.value = !isSearchVisible.value
-  // Focus the search input when it becomes visible
-  if (isSearchVisible.value) {
-    nextTick(() => {
-      const searchInput = document.querySelector('#mobileSearch') as HTMLInputElement
-      if (searchInput) searchInput.focus()
-    })
-  }
+  // Navigate to search page instead of showing in-navbar search
+  navigateTo('/search')
 }
 
 // Enhanced background changing function with proper cleanup
@@ -79,10 +77,72 @@ onUnmounted(() => {
     document.body.classList.remove('menu-open')
   }
 })
+
+// Search functionality
+const { query, navigateToSearch, results, isLoading, setupAutoSearch } = useSearch();
+
+// Set up auto search with debounce
+setupAutoSearch(3, 300);
+
+// Handle search submission
+const handleSearchSubmit = (e: Event) => {
+  e.preventDefault();
+  navigateToSearch();
+  isSearchVisible.value = false;
+}
+
+// Helper functions for entity types
+const getIconForEntityType = (type: string) => {
+  switch (type.toLowerCase()) {
+    case 'character':
+      return 'i-heroicons-user';
+    case 'corporation':
+      return 'i-heroicons-building-office';
+    case 'alliance':
+      return 'i-heroicons-user-group';
+    case 'ship':
+      return 'i-heroicons-rocket-launch';
+    case 'item':
+      return 'i-heroicons-cube';
+    case 'system':
+      return 'i-heroicons-globe-alt';
+    case 'region':
+      return 'i-heroicons-map';
+    default:
+      return 'i-heroicons-question-mark-circle';
+  }
+};
+
+const getColorForEntityType = (type: string) => {
+  switch (type.toLowerCase()) {
+    case 'character':
+      return 'text-blue-600 dark:text-blue-400';
+    case 'corporation':
+      return 'text-green-600 dark:text-green-400';
+    case 'alliance':
+      return 'text-purple-600 dark:text-purple-400';
+    case 'ship':
+      return 'text-red-600 dark:text-red-400';
+    case 'item':
+      return 'text-orange-600 dark:text-orange-400';
+    case 'system':
+      return 'text-teal-600 dark:text-teal-400';
+    case 'region':
+      return 'text-indigo-600 dark:text-indigo-400';
+    default:
+      return 'text-gray-600 dark:text-gray-400';
+  }
+};
+
+// Helper to capitalize first letter of a string
+const capitalizeFirstLetter = (string: string) => {
+  return string.charAt(0).toUpperCase() + string.slice(1);
+};
 </script>
 
 <template>
-  <div class="w-full bg-white bg-opacity-60 dark:bg-black dark:bg-opacity-40 backdrop-blur-sm border-b border-zinc-300 dark:border-zinc-800 sticky top-0 z-50">
+  <!-- Add :class="props.class" to the root element to inherit classes from parent -->
+  <div :class="props.class" class="w-full bg-white bg-opacity-60 dark:bg-black dark:bg-opacity-40 backdrop-blur-sm border-b border-zinc-300 dark:border-zinc-800 sticky top-0 z-50">
     <div class="max-w-[90rem] mx-auto">
       <nav class="px-4 py-3">
         <div class="flex justify-between items-center">
@@ -93,7 +153,7 @@ onUnmounted(() => {
 
           <!-- Right: Controls -->
           <div class="flex items-center gap-3">
-            <!-- Mobile search button -->
+            <!-- Mobile search button - updated to navigate directly -->
             <UButton
               icon="i-heroicons-magnifying-glass"
               color="gray"
@@ -101,17 +161,6 @@ onUnmounted(() => {
               class="text-black dark:text-white hover:bg-black hover:bg-opacity-10 dark:hover:bg-white dark:hover:bg-opacity-10"
               @click="toggleSearch"
             />
-
-            <!-- Information dropdown -->
-            <UDropdownMenu :items="informationDropdown">
-              <UButton
-                icon="i-heroicons-information-circle"
-                color="gray"
-                variant="ghost"
-                class="text-black dark:text-white hover:bg-black hover:bg-opacity-10 dark:hover:bg-white dark:hover:bg-opacity-10"
-                :aria-label="$t('navbar.information')"
-              />
-            </UDropdownMenu>
 
             <!-- Mobile background button - opens full-screen selector -->
             <UButton
@@ -144,19 +193,7 @@ onUnmounted(() => {
           </div>
         </div>
 
-        <!-- Mobile search -->
-        <div v-if="isSearchVisible" class="mt-2">
-          <UInput
-            id="mobileSearch"
-            :placeholder="$t('navbar.search')"
-            icon="i-heroicons-magnifying-glass"
-            color="white"
-            variant="outline"
-            trailing
-            size="sm"
-            class="w-full no-zoom-input"
-          />
-        </div>
+        <!-- Remove the mobile search input as we now navigate to search page -->
       </nav>
     </div>
   </div>

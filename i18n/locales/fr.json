@@ -65,7 +65,14 @@
     "navigation": "Navigation",
     "logout": "Déconnexion",
     "profile": "Profil",
-    "settings": "Paramètres"
+    "settings": "Paramètres",
+    "backToHome": "Retour à l'accueil"
+  },
+  "error": {
+    "notFound": "La page que vous recherchez est introuvable.",
+    "forbidden": "Vous n'avez pas la permission d'accéder à cette page.",
+    "serverError": "Un problème est survenu sur nos serveurs.",
+    "generic": "Une erreur s'est produite."
   },
   "status": {
     "title": "État du système",
@@ -151,5 +158,20 @@
       "cache": "Cache",
       "size": "Taille"
     }
+  },
+  "search": {
+    "results": "Résultats de recherche",
+    "resultsFor": "Résultats pour",
+    "searchPlaceholder": "Rechercher des personnages, corporations, alliances...",
+    "searchButton": "Rechercher",
+    "found": "{count} résultats trouvés",
+    "processingTimeMs": "en {time}ms",
+    "viewDetails": "Voir les détails",
+    "noResultsTitle": "Aucun résultat trouvé",
+    "noResultsDesc": "Essayez d'ajuster vos termes de recherche ou essayez une recherche différente.",
+    "initialMessage": "Entrez un terme de recherche ci-dessus pour commencer",
+    "moreResults": "Charger plus de résultats",
+    "viewAllResults": "Voir tous les {count} résultats",
+    "showMoreType": "Afficher plus de {type}"
   }
 }

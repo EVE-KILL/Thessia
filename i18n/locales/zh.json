@@ -65,7 +65,14 @@
     "navigation": "导航",
     "logout": "退出登录",
     "profile": "个人资料",
-    "settings": "设置"
+    "settings": "设置",
+    "backToHome": "返回首页"
+  },
+  "error": {
+    "notFound": "找不到您要访问的页面。",
+    "forbidden": "您没有权限访问此页面。",
+    "serverError": "我们的服务器出现了问题。",
+    "generic": "发生错误。"
   },
   "status": {
     "title": "系统状态",
@@ -151,5 +158,20 @@
       "cache": "缓存",
       "size": "大小"
     }
+  },
+  "search": {
+    "results": "搜索结果",
+    "resultsFor": "搜索结果：",
+    "searchPlaceholder": "搜索角色、公司、联盟...",
+    "searchButton": "搜索",
+    "found": "找到 {count} 个结果",
+    "processingTimeMs": "用时 {time}毫秒",
+    "viewDetails": "查看详情",
+    "noResultsTitle": "未找到结果",
+    "noResultsDesc": "请调整搜索词或尝试其他搜索。",
+    "initialMessage": "在上方输入搜索词开始",
+    "moreResults": "加载更多结果",
+    "viewAllResults": "查看所有 {count} 个结果",
+    "showMoreType": "显示更多{type}"
   }
 }

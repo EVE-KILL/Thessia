@@ -65,7 +65,14 @@
     "navigation": "Navigation",
     "logout": "Abmelden",
     "profile": "Profil",
-    "settings": "Einstellungen"
+    "settings": "Einstellungen",
+    "backToHome": "Zurück zur Startseite"
+  },
+  "error": {
+    "notFound": "Die gesuchte Seite wurde nicht gefunden.",
+    "forbidden": "Sie haben keine Berechtigung, auf diese Seite zuzugreifen.",
+    "serverError": "Auf unseren Servern ist etwas schiefgegangen.",
+    "generic": "Ein Fehler ist aufgetreten."
   },
   "status": {
     "title": "Systemstatus",
@@ -151,5 +158,20 @@
       "cache": "Cache",
       "size": "Größe"
     }
+  },
+  "search": {
+    "results": "Suchergebnisse",
+    "resultsFor": "Ergebnisse für",
+    "searchPlaceholder": "Suche nach Charakteren, Korporationen, Allianzen...",
+    "searchButton": "Suchen",
+    "found": "{count} Ergebnisse gefunden",
+    "processingTimeMs": "in {time}ms",
+    "viewDetails": "Details anzeigen",
+    "noResultsTitle": "Keine Ergebnisse gefunden",
+    "noResultsDesc": "Passen Sie Ihre Suchbegriffe an oder versuchen Sie eine andere Suche.",
+    "initialMessage": "Geben Sie oben einen Suchbegriff ein, um zu beginnen",
+    "moreResults": "Weitere Ergebnisse laden",
+    "viewAllResults": "Alle {count} Ergebnisse anzeigen",
+    "showMoreType": "Mehr {type} anzeigen"
   }
 }
