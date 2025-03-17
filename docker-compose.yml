@@ -1,0 +1,55 @@
+networks:
+  internet:
+    external: true
+
+services:
+  app:
+    image: ghcr.io/eve-kill/thessia:latest
+    container_name: app
+    build:
+      context: .
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    ports:
+      - 3000:3000
+    networks:
+      - internet
+    environment:
+      MONGO_URI: "mongodb://mongodb:27017/thessia"
+      REDIS_URI: "redis"
+      REDIS_PORT: 6379
+      REDIS_DB: 0
+
+
+  meilisearch:
+    image: getmeili/meilisearch:1.13
+    container_name: meilisearch
+    volumes:
+      - ./.data/meilisearch:/meili_data
+    ports:
+      - 7700:7700
+
+  redis:
+    image: library/redis
+    container_name: redis
+    volumes:
+      - ./.data/redis:/data
+    ports:
+      - 127.0.0.1:6379:6379
+    networks:
+      - internet
+    restart: unless-stopped
+
+  mongodb:
+    labels:
+      - "traefik.enable=false"
+    image: library/mongo
+    container_name: mongodb
+    volumes:
+      - ./.data/mongo:/data/db
+    ports:
+      - 127.0.0.1:27017:27017
+    networks:
+      - internet
+    command: ["--directoryperdb"]
+    restart: unless-stopped

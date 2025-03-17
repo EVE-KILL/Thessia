@@ -8,6 +8,7 @@ import SearchComponent from './Navbar/Search.vue';
 import BackgroundSwitcherComponent from './Navbar/BackgroundSwitcher.vue';
 import CustomDropdown from './Navbar/CustomDropdown.vue';
 import MobileFullscreenModal from './Modal/MobileFullscreenModal.vue';
+import NavbarUser from './Navbar/User.vue';
 
 // Use markRaw to prevent Vue from making components reactive
 const Search = markRaw(SearchComponent);
@@ -236,10 +237,10 @@ const navbarLinks = computed(() => {
         }
       ],
     },
-    //{
-    //  component: null, // Replace with actual UserDropdown when available
-    //  position: 'right',
-    //}
+    {
+      component: NavbarUser,
+      position: 'right',
+    }
   ];
 });
 </script>
