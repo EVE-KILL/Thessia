@@ -240,5 +240,59 @@
         "publicData": "Zugriff auf öffentliche Charakterinformationen",
         "readKillmails": "Zugriff auf Ihre Killmails",
         "readCorporationKillmails": "Zugriff auf die Killmails Ihrer Korporation"
+    },
+    "footer": {
+        "legal": "Rechtliche Informationen"
+    },
+    "legal": {
+        "pageTitle": "Rechtliche Informationen",
+        "title": "Rechtliche Informationen",
+        "disclaimer": {
+            "title": "Haftungsausschluss",
+            "p1": "Thessia ist ein Drittanbieter-Tool für EVE Online und ist nicht mit CCP Games verbunden oder von ihnen unterstützt.",
+            "p2": "Dieser Service wird 'wie er ist' ohne jegliche Garantie bereitgestellt. Wir geben keine Garantien bezüglich der Genauigkeit oder Zuverlässigkeit der präsentierten Daten."
+        },
+        "license": {
+            "title": "Lizenz",
+            "p1": "Thessia / EVE-KILL ist unter der MIT-Lizenz lizenziert und kann gemäß den Bedingungen dieser Lizenz frei verwendet, modifiziert und verteilt werden.",
+            "p2": "Das bedeutet, dass Sie die Software frei verwenden, kopieren, modifizieren, zusammenführen, veröffentlichen, verteilen, unterlizenzieren und/oder verkaufen dürfen, unter der Bedingung, dass der Copyright-Hinweis und die Genehmigungsmitteilung in allen Kopien oder wesentlichen Teilen der Software enthalten sind.",
+            "viewLicense": "Vollständige Lizenz auf GitHub ansehen"
+        },
+        "ownership": {
+            "title": "Geistiges Eigentum",
+            "p1": "EVE Online, das EVE-Logo, EVE und alle damit verbundenen Logos und Designs sind geistiges Eigentum von CCP hf. Alle Kunstwerke, Screenshots, Charaktere, Fahrzeuge, Handlungsstränge, Weltfakten oder andere erkennbare Merkmale des geistigen Eigentums, die sich auf diese Marken beziehen, sind ebenfalls geistiges Eigentum von CCP hf.",
+            "ccpLink": "CCP Games besuchen"
+        },
+        "data": {
+            "title": "Datennutzung & Datenschutz",
+            "p1": "Thessia sammelt und verarbeitet Daten aus der EVE Online API und anderen öffentlichen Quellen. Diese Daten werden ausschließlich zum Zweck der Bereitstellung der von dieser Website angebotenen Dienste verwendet.",
+            "p2": "Wir respektieren Ihre Privatsphäre und geben keine persönlichen Informationen an Dritte weiter. Alle von uns gesammelten Daten werden in Übereinstimmung mit standardmäßigen Datenschutzpraktiken verwendet."
+        },
+        "contact": {
+            "title": "Kontaktinformationen",
+            "p1": "Wenn Sie Fragen oder Bedenken bezüglich rechtlicher Angelegenheiten im Zusammenhang mit Thessia haben, kontaktieren Sie uns bitte über GitHub Issues:",
+            "githubIssues": "Ein Problem auf GitHub einreichen"
+        }
+    },
+    "about": {
+        "pageTitle": "Über EVE-KILL",
+        "title": "Über EVE-KILL",
+        "description": "EVE-KILL ist ein umfassender Killboard-Service für EVE Online, der Spielern detaillierte Statistiken und Analysen über Kampfaktivitäten in New Eden bietet.",
+        "mission": {
+            "title": "Unsere Mission",
+            "text": "Unsere Mission ist es, der EVE Online-Community die genaueste, aktuellste und benutzerfreundlichste Killboard-Erfahrung zu bieten. Wir bemühen uns, wertvolle Einblicke in PVP-Kämpfe zu geben und gleichzeitig einen zuverlässigen und schnellen Service für alle Spieler zu gewährleisten."
+        },
+        "history": {
+            "title": "Geschichte",
+            "text": "EVE-KILL wurde 2007 gegründet und hat sich seitdem zu einem der vertrauenswürdigsten Killboard-Dienste in New Eden entwickelt. Mit ständigen Updates und Verbesserungen dienen wir weiterhin der EVE-Community mit zuverlässiger Kampfverfolgung und Statistiken."
+        },
+        "contact": {
+            "title": "Kontakt",
+            "text": "Haben Sie Fragen, Vorschläge oder benötigen Sie Unterstützung? Treten Sie unserem Discord-Server bei oder erstellen Sie ein Problem auf unserem GitHub"
+        },
+        "links": {
+            "discord": "Unserem Discord beitreten",
+            "github": "GitHub-Repository"
+        }
     }
 }

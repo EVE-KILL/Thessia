@@ -239,5 +239,59 @@
         "publicData": "Acceder a información pública del personaje",
         "readKillmails": "Acceder a tus reportes de bajas",
         "readCorporationKillmails": "Acceder a los reportes de bajas de tu corporación"
+    },
+    "footer": {
+        "legal": "Información Legal"
+    },
+    "legal": {
+        "pageTitle": "Información Legal",
+        "title": "Información Legal",
+        "disclaimer": {
+            "title": "Descargo de Responsabilidad",
+            "p1": "Thessia es una herramienta de terceros para EVE Online y no está afiliada ni respaldada por CCP Games.",
+            "p2": "Este servicio se proporciona 'tal cual' sin garantía de ningún tipo. No ofrecemos garantías sobre la precisión o fiabilidad de los datos presentados."
+        },
+        "license": {
+            "title": "Licencia",
+            "p1": "Thessia / EVE-KILL está licenciado bajo la Licencia MIT y puede ser utilizado, modificado y distribuido libremente de acuerdo con los términos de esa licencia.",
+            "p2": "Esto significa que eres libre de usar, copiar, modificar, fusionar, publicar, distribuir, sublicenciar y/o vender copias del software, sujeto a la inclusión del aviso de copyright y el aviso de permiso en todas las copias o partes sustanciales del software.",
+            "viewLicense": "Ver Licencia Completa en GitHub"
+        },
+        "ownership": {
+            "title": "Propiedad Intelectual",
+            "p1": "EVE Online, el logotipo de EVE, EVE y todos los logotipos y diseños asociados son propiedad intelectual de CCP hf. Todo el material artístico, capturas de pantalla, personajes, vehículos, argumentos, hechos del mundo u otras características reconocibles de la propiedad intelectual relacionada con estas marcas comerciales son igualmente propiedad intelectual de CCP hf.",
+            "ccpLink": "Visitar CCP Games"
+        },
+        "data": {
+            "title": "Uso de Datos y Privacidad",
+            "p1": "Thessia recopila y procesa datos de la API de EVE Online y otras fuentes públicas. Estos datos se utilizan únicamente con el propósito de proporcionar los servicios ofrecidos por este sitio web.",
+            "p2": "Respetamos tu privacidad y no compartimos información personal con terceros. Cualquier dato que recopilamos se utiliza de acuerdo con las prácticas de privacidad estándar."
+        },
+        "contact": {
+            "title": "Información de Contacto",
+            "p1": "Si tienes alguna pregunta o inquietud sobre cuestiones legales relacionadas con Thessia, contáctanos a través de los problemas de GitHub:",
+            "githubIssues": "Enviar un problema en GitHub"
+        }
+    },
+    "about": {
+        "pageTitle": "Acerca de EVE-KILL",
+        "title": "Acerca de EVE-KILL",
+        "description": "EVE-KILL es un servicio completo de registro de bajas para EVE Online, que proporciona a los jugadores estadísticas detalladas y análisis sobre las actividades de combate en New Eden.",
+        "mission": {
+            "title": "Nuestra Misión",
+            "text": "Nuestra misión es proporcionar la experiencia de registro de bajas más precisa, actualizada y fácil de usar para la comunidad de EVE Online. Nos esforzamos por ofrecer información valiosa sobre el combate PVP mientras mantenemos un servicio confiable y rápido para todos los jugadores."
+        },
+        "history": {
+            "title": "Historia",
+            "text": "EVE-KILL se estableció en 2007 y desde entonces ha evolucionado para convertirse en uno de los servicios de registro de bajas más confiables en New Eden. Con actualizaciones y mejoras constantes, continuamos sirviendo a la comunidad de EVE con un seguimiento de combate confiable y estadísticas precisas."
+        },
+        "contact": {
+            "title": "Contáctenos",
+            "text": "¿Tiene preguntas, sugerencias o necesita apoyo? Únase a nuestro servidor de Discord o cree un problema en nuestro GitHub"
+        },
+        "links": {
+            "discord": "Unirse a nuestro Discord",
+            "github": "Repositorio de GitHub"
+        }
     }
 }

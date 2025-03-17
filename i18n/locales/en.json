@@ -239,5 +239,59 @@
         "publicData": "Access public character information",
         "readKillmails": "Access your killmails",
         "readCorporationKillmails": "Access your corporation killmails"
+    },
+    "footer": {
+        "legal": "Legal"
+    },
+    "legal": {
+        "pageTitle": "Legal Information",
+        "title": "Legal Information",
+        "disclaimer": {
+            "title": "Disclaimer",
+            "p1": "Thessia is a third-party tool for EVE Online and is not affiliated with or endorsed by CCP Games.",
+            "p2": "This service is provided 'as is' without warranty of any kind. We make no guarantees about the accuracy or reliability of the data presented."
+        },
+        "license": {
+            "title": "License",
+            "p1": "Thessia / EVE-KILL is licensed under the MIT License and can be freely used, modified, and distributed according to the terms of that license.",
+            "p2": "This means you are free to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the software, subject to the inclusion of the copyright notice and permission notice in all copies or substantial portions of the software.",
+            "viewLicense": "View Full License on GitHub"
+        },
+        "ownership": {
+            "title": "Intellectual Property",
+            "p1": "EVE Online, the EVE logo, EVE and all associated logos and designs are the intellectual property of CCP hf. All artwork, screenshots, characters, vehicles, storylines, world facts or other recognizable features of the intellectual property relating to these trademarks are likewise the intellectual property of CCP hf.",
+            "ccpLink": "Visit CCP Games"
+        },
+        "data": {
+            "title": "Data Usage & Privacy",
+            "p1": "Thessia collects and processes data from the EVE Online API and other public sources. This data is used solely for the purpose of providing the services offered by this website.",
+            "p2": "We respect your privacy and do not share personal information with third parties. Any data we collect is used in accordance with standard privacy practices."
+        },
+        "contact": {
+            "title": "Contact Information",
+            "p1": "If you have any questions or concerns regarding legal matters related to Thessia, please contact us via GitHub issues:",
+            "githubIssues": "Submit an issue on GitHub"
+        }
+    },
+    "about": {
+        "pageTitle": "About EVE-KILL",
+        "title": "About EVE-KILL",
+        "description": "EVE-KILL is a comprehensive killboard service for EVE Online, providing players with detailed statistics and analytics about combat activities across New Eden.",
+        "mission": {
+            "title": "Our Mission",
+            "text": "Our mission is to provide the most accurate, up-to-date, and user-friendly killboard experience for the EVE Online community. We strive to offer valuable insights into PVP combat while maintaining a reliable and fast service for all players."
+        },
+        "history": {
+            "title": "History",
+            "text": "EVE-KILL was established in 2007 and has since evolved to become one of the most trusted killboard services in New Eden. With constant updates and improvements, we continue to serve the EVE community with reliable combat tracking and statistics."
+        },
+        "contact": {
+            "title": "Contact Us",
+            "text": "Have questions, suggestions, or need support? Join our Discord server or make an issue on our GitHub"
+        },
+        "links": {
+            "discord": "Join our Discord",
+            "github": "GitHub Repository"
+        }
     }
 }

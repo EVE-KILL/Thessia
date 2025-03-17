@@ -239,5 +239,59 @@
         "publicData": "访问公共角色信息",
         "readKillmails": "访问您的击杀邮件",
         "readCorporationKillmails": "访问您的公司击杀邮件"
+    },
+    "footer": {
+        "legal": "法律信息"
+    },
+    "legal": {
+        "pageTitle": "法律信息",
+        "title": "法律信息",
+        "disclaimer": {
+            "title": "免责声明",
+            "p1": "Thessia 是EVE Online的第三方工具，未与CCP Games有任何关联或得到其认可。",
+            "p2": "本服务按\"原样\"提供，不提供任何形式的保证。我们对所呈现数据的准确性或可靠性不做任何保证。"
+        },
+        "license": {
+            "title": "许可证",
+            "p1": "Thessia / EVE-KILL 使用MIT许可证授权，根据该许可证的条款可以自由使用、修改和分发。",
+            "p2": "这意味着您可以自由地使用、复制、修改、合并、发布、分发、再许可和/或出售该软件的副本，前提是在软件的所有副本或实质性部分中包含版权通知和许可通知。",
+            "viewLicense": "在GitHub上查看完整许可证"
+        },
+        "ownership": {
+            "title": "知识产权",
+            "p1": "EVE Online、EVE标志、EVE及所有相关标志和设计均为CCP hf的知识产权。与这些商标相关的所有艺术作品、截图、角色、车辆、故事情节、世界事实或其他可识别的知识产权特征同样为CCP hf的知识产权。",
+            "ccpLink": "访问CCP Games"
+        },
+        "data": {
+            "title": "数据使用和隐私",
+            "p1": "Thessia从EVE Online API和其他公共来源收集和处理数据。这些数据仅用于提供本网站提供的服务。",
+            "p2": "我们尊重您的隐私，不会与第三方共享个人信息。我们收集的任何数据都按照标准隐私惯例使用。"
+        },
+        "contact": {
+            "title": "联系信息",
+            "p1": "如果您对Thessia相关的法律事务有任何问题或疑虑，请通过GitHub问题联系我们：",
+            "githubIssues": "在GitHub上提交问题"
+        }
+    },
+    "about": {
+        "pageTitle": "关于 EVE-KILL",
+        "title": "关于 EVE-KILL",
+        "description": "EVE-KILL 是一个全面的 EVE Online 击杀记录服务，为玩家提供有关新伊甸园中战斗活动的详细统计和分析。",
+        "mission": {
+            "title": "我们的使命",
+            "text": "我们的使命是为 EVE Online 社区提供最准确、最新和最用户友好的击杀记录体验。我们致力于提供有价值的 PVP 战斗洞察，同时为所有玩家维持可靠和快速的服务。"
+        },
+        "history": {
+            "title": "历史",
+            "text": "EVE-KILL 成立于 2007 年，此后已发展成为新伊甸园中最受信任的击杀记录服务之一。通过不断更新和改进，我们继续为 EVE 社区提供可靠的战斗跟踪和统计。"
+        },
+        "contact": {
+            "title": "联系我们",
+            "text": "有问题、建议或需要支持？加入我们的 Discord 服务器或在我们的 GitHub 上提交问题"
+        },
+        "links": {
+            "discord": "加入我们的 Discord",
+            "github": "GitHub 仓库"
+        }
     }
 }

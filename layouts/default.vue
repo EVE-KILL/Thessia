@@ -25,11 +25,14 @@
     />
   </div>
 
-  <!-- Remove position-relative class and simply use container -->
-  <UContainer id="content" class="content flex flex-col mx-auto">
-    <div id="inner-content" class="inner-content h-full">
+  <!-- Modified container structure to use grid layout -->
+  <UContainer id="content" class="content mx-auto">
+    <div id="inner-content" class="inner-content">
       <Navbar />
-      <slot />
+      <main class="main-content">
+        <slot />
+      </main>
+      <Footer />
     </div>
   </UContainer>
 </template>
@@ -274,7 +277,7 @@ body {
 }
 
 .content {
-  max-width: 90rem;
+  max-width: 80rem;
   background-color: rgba(245, 245, 245, 0.7) !important;
   border-left: 2px solid #e5e5e5;
   border-right: 2px solid #e5e5e5;
@@ -290,20 +293,31 @@ html.dark .content {
 }
 
 #content>#inner-content {
-  display: block;
-  padding: 5px 5px 25px 5px;
+  display: grid; /* Using grid instead of flex */
+  grid-template-rows: auto 1fr auto; /* Header, content, footer */
+  padding: 5px 5px 0 5px;
   background: rgba(255, 255, 255, 0.25);
   min-height: 100vh;
 }
 
+/* Main content area styling */
+.main-content {
+  padding-bottom: 20px; /* Add space above footer */
+}
+
 @media (min-width: 768px) {
   #content>#inner-content {
-    padding: 5px 5px 25px 25px;
+    padding-right: 5px;
+    padding-left: 25px;
   }
 }
 
 html.dark #content>#inner-content {
-  background: rgba(0, 0, 0, 0.25);
+  background: rgba(0, 0, 0, 0.80);
+}
+
+html #content>#inner-content {
+  background: rgba(255, 255, 255, 0.80);
 }
 
 /* Mobile-specific adjustments */

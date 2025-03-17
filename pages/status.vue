@@ -6,10 +6,10 @@ import { use } from 'echarts/core'
 import { CanvasRenderer } from 'echarts/renderers'
 import { BarChart } from 'echarts/charts'
 import {
-  TitleComponent,
-  TooltipComponent,
-  LegendComponent,
-  GridComponent
+    TitleComponent,
+    TooltipComponent,
+    LegendComponent,
+    GridComponent
 } from 'echarts/components'
 
 // Get i18n instance
@@ -204,7 +204,7 @@ onMounted(() => {
 
 <template>
     <div class="mx-auto max-w-7xl">
-      <div class="bg-gray-100 dark:bg-gray-900 bg-opacity-90 dark:bg-opacity-90 backdrop-blur-sm rounded-lg shadow-lg p-3 md:p-8 mb-8">
+      <div class="bg-gray-100 dark:bg-gray-900 rounded-lg shadow-lg p-3 md:p-8 mb-8">
         <div class="flex justify-between items-center mb-6">
           <h1 class="text-3xl md:text-4xl font-bold">{{ $t('status.title') }}</h1>
           <div class="flex items-center gap-3">
