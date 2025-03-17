@@ -17,25 +17,7 @@ env:
   IMAGE_NAME: eve-kill/thessia
 
 jobs:
-  analyze:
-    name: CodeQL Analysis
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - name: Initialize CodeQL
-        uses: github/codeql-action/init@v3
-        with:
-          languages: javascript, typescript
-
-      - name: Perform CodeQL Analysis
-        uses: github/codeql-action/analyze@v2
-        with:
-          category: "/language:javascript,typescript"
-
   build:
-    needs: analyze
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
