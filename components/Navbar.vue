@@ -2,6 +2,8 @@
 import { markRaw } from 'vue';
 const { t, locale } = useI18n()
 const { themeIcon, themeAriaLabel, toggleTheme } = useThemeMode()
+const colorMode = useColorMode();
+const isDark = computed(() => colorMode.value === 'dark');
 
 // Import components directly and mark them as raw to avoid reactivity warnings
 import SearchComponent from './Navbar/Search.vue';
@@ -19,9 +21,6 @@ const isMobileMenuOpen = ref(false);
 
 // Track dropdown states for menus with children
 const dropdownStates = ref({});
-
-// Clean up redundant body scroll locking code since MobileFullscreenModal handles it
-// We can remove the watch on isMobileMenuOpen and the onUnmounted cleanup
 
 // Track which menu sections are expanded on mobile
 const expandedMobileMenus = ref<Record<string, boolean>>({});
@@ -243,6 +242,29 @@ const navbarLinks = computed(() => {
     }
   ];
 });
+
+// Get access to user data and login state for mobile menu
+const isLoggedIn = ref(false);
+const userData = ref({
+  name: 'Demo User',
+  avatar: null,
+  email: 'user@example.com'
+});
+
+// Handle EVE SSO login
+const handleEveLogin = () => {
+  console.debug('EVE SSO login clicked');
+};
+
+// Handle logout
+const handleLogout = () => {
+  isLoggedIn.value = false;
+};
+
+// Toggle login state for demo purposes
+const toggleLoginState = () => {
+  isLoggedIn.value = !isLoggedIn.value;
+};
 </script>
 
 <template>
@@ -597,6 +619,19 @@ const navbarLinks = computed(() => {
               </div>
             </div>
           </template>
+        </div>
+      </div>
+
+      <!-- Account Section - Using NavbarUser component directly -->
+      <div class="mb-8">
+        <h3 class="text-lg font-bold mb-4 text-gray-900 dark:text-gray-100">{{ t('navbar.menuAccount', 'Account') }}</h3>
+        <div class="space-y-3">
+          <!-- Use NavbarUser component with mobile flag -->
+          <NavbarUser
+            :is-mobile-view="true"
+            @login-action="closeMobileMenu"
+            @logout-action="closeMobileMenu"
+          />
         </div>
       </div>
     </div>
