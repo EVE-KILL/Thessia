@@ -1,9 +1,3 @@
-<script setup lang="ts">
-    import { ref } from 'vue'
-    // Import necessary composables
-    const { currentTheme } = useThemeMode()
-</script>
-
 <template>
   <div>
     <!-- Hero Section -->

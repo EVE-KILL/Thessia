@@ -50,6 +50,41 @@ export default defineNuxtConfig({
 
   runtimeConfig: {
     enabledRunTimeCache: true,
+    public: {
+      sentry: {
+        dsn: process.env.SENTRY_DSN,
+        environment: process.env.NODE_ENV,
+        organization: process.env.SENTRY_ORG,
+        project: process.env.SENTRY_PROJECT,
+      },
+    },
+    mongodb: {
+      uri: process.env.MONGO_URI,
+    },
+    redis: {
+      uri: process.env.REDIS_URI,
+      port: process.env.REDIS_PORT,
+      db: process.env.REDIS_DB,
+    },
+    redisq: {
+      id: process.env.REDISQ_ID,
+    },
+    meilisearch: {
+      uri: process.env.MEILISEARCH_URI,
+    },
+    discord: {
+      backend: process.env.BACKEND_DISCORD_URL,
+    },
+    esi: {
+      url: process.env.ESI_URL,
+      rateLimit: process.env.ESI_RATE_LIMIT,
+      clientID: process.env.NODE_ENV === 'production' ? process.env.EVE_CLIENT_ID : process.env.EVE_CLIENT_ID_DEV,
+      clientSecret: process.env.NODE_ENV === 'production' ? process.env.EVE_CLIENT_SECRET : process.env.EVE_CLIENT_SECRET_DEV,
+      clientRedirect: process.env.NODE_ENV === 'production' ? process.env.EVE_CLIENT_REDIRECT : process.env.EVE_CLIENT_REDIRECT_DEV,
+    },
+    tasks: {
+      processKillmails: process.env.PROCESS_KILLMAILS,
+    }
   },
   // Ensure modern compatibility mode
   compatibilityDate: "2024-11-01",
@@ -60,6 +95,9 @@ export default defineNuxtConfig({
     timeline: {
       enabled: true,
     },
+    vscode: {
+      enabled: false
+    }
   },
 
   // Modules with automatic TypeScript support
@@ -68,15 +106,25 @@ export default defineNuxtConfig({
     "@nuxt/icon",
     "@nuxt/image",
     "@nuxtjs/i18n",
-    "@vueuse/nuxt"
+    "@vueuse/nuxt",
+    "@pinia/nuxt",
+    '@nuxtjs/sitemap',
+    '@sentry/nuxt/module',
+    '@nuxtjs/seo'
   ],
 
-  // UI configuration
-  ui: {
-    global: true,
-    icons: ['heroicons', 'simple-icons'],
-    // Add i18n configuration for UI components
-    safelistColors: ['primary', 'gray'],
+  // Sourcemaps
+  sourcemap: {
+    client: true
+  },
+
+  // Sentry configuration
+  sentry: {
+    sourceMapsUploadOptions: {
+      org: process.env.SENTRY_ORG,
+      project: process.env.SENTRY_PROJECT,
+      authToken: process.env.SENTRY_AUTH_TOKEN,
+    }
   },
 
   // i18n configuration

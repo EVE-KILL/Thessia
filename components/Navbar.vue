@@ -1,162 +1,759 @@
 <script lang="ts" setup>
-// Import the Navbar components
-import NavbarDesktop from './Navbar/Desktop.vue'
-import NavbarMobile from './Navbar/Mobile.vue'
-
-// Import the theme and background handlers
-const { themeIcon, themeAriaLabel, toggleTheme } = useThemeMode()
-const { availableBackgrounds, setBackground, isCurrentBackground, setRandomRedditBackground } = useBackgroundImage()
-
-// Load i18n
+import { markRaw } from 'vue';
 const { t } = useI18n()
+const { themeIcon, themeAriaLabel, toggleTheme } = useThemeMode()
 
-// Create a reactive variable to track screen size
-const isMobile = ref(false)
+// Import components directly and mark them as raw to avoid reactivity warnings
+import SearchComponent from './Navbar/Search.vue';
+import BackgroundSwitcherComponent from './Navbar/BackgroundSwitcher.vue';
+import CustomDropdown from './Navbar/CustomDropdown.vue';
+import MobileFullscreenModal from './Modal/MobileFullscreenModal.vue';
 
-// Define dropdown menu items
-const userDropdown = computed(() => [
-  {
-    label: t('user.profile'),
-    icon: 'i-heroicons-user-circle',
-    to: '/profile'
-  },
-  {
-    label: t('user.settings'),
-    icon: 'i-heroicons-cog-6-tooth',
-    to: '/settings'
-  },
-  {
-    label: t('user.documentation'),
-    icon: 'i-heroicons-document-text',
-    to: '/docs'
-  },
-  {
-    label: t('user.apiAccess'),
-    icon: 'i-heroicons-code-bracket',
-    to: '/api'
-  },
-  {
-    label: t('user.discord'),
-    icon: 'i-simple-icons-discord',
-    to: 'https://discord.gg/example',
-    target: '_blank'
-  },
-  {
-    type: 'divider'
-  },
-  {
-    label: t('user.logout'),
-    icon: 'i-heroicons-arrow-right-on-rectangle',
-    to: '/logout',
-    color: 'red'
-  }
-])
+// Use markRaw to prevent Vue from making components reactive
+const Search = markRaw(SearchComponent);
+const BackgroundSwitcher = markRaw(BackgroundSwitcherComponent);
 
-// Information dropdown items
-const informationDropdown = computed(() => [
-  {
-    label: t('navbar.faq'),
-    icon: 'i-heroicons-question-mark-circle',
-    to: '/faq'
-  },
-  {
-    label: t('navbar.status'),
-    icon: 'i-heroicons-server',
-    to: '/status'
-  },
-  {
-    label: t('navbar.about'),
-    icon: 'i-heroicons-information-circle',
-    to: '/about'
-  }
-])
+// Mobile menu state
+const isMobileMenuOpen = ref(false);
 
-// Navigation menu items - Remove Information from the left navigation
-const navigationItems = computed(() => [
-  {
-    label: t('navbar.home'),
-    to: '/'
-  },
-  {
-    label: t('navbar.kills'),
-    children: userDropdown.value
-  }
-  // Information dropdown removed from here
-])
+// Track dropdown states for menus with children
+const dropdownStates = ref({});
 
-// Function to check if path is a video file
-const isVideoFile = (path: string): boolean => {
-  return path.toLowerCase().endsWith('.mp4') ||
-         path.toLowerCase().endsWith('.webm') ||
-         path.toLowerCase().endsWith('.ogg')
-}
+// Clean up redundant body scroll locking code since MobileFullscreenModal handles it
+// We can remove the watch on isMobileMenuOpen and the onUnmounted cleanup
 
-// Check screen size on client side
+// Track which menu sections are expanded on mobile
+const expandedMobileMenus = ref<Record<string, boolean>>({});
+
+// Initialize expanded menus based on collapse property
 onMounted(() => {
-  if (process.client) {
-    const checkScreenSize = () => {
-      isMobile.value = window.innerWidth < 768 // md breakpoint in Tailwind
+  // We now only track collapsible items
+  navbarLinks.value.forEach(link => {
+    // Only set initial state for collapsible items (those without collapse: false)
+    if (link.children && link.collapse !== false) {
+      expandedMobileMenus.value[link.name || link.label] = false; // Start collapsed by default
     }
+  });
+});
 
-    // Initial check
-    checkScreenSize()
+// Toggle mobile menu section expansion
+const toggleMobileMenuSection = (menuName: string) => {
+  expandedMobileMenus.value[menuName] = !expandedMobileMenus.value[menuName];
+};
 
-    // Add event listener for resize
-    window.addEventListener('resize', checkScreenSize)
+// Track if background selector modal is open on mobile
+const isMobileBgSelectorOpen = ref(false);
 
-    // Clean up
-    onUnmounted(() => {
-      window.removeEventListener('resize', checkScreenSize)
-    })
-  }
-})
+// Handle background selection completion
+const handleBackgroundSelected = () => {
+  // Close the background selector
+  isMobileBgSelectorOpen.value = false;
+};
+
+// Close the mobile menu
+const closeMobileMenu = () => {
+  isMobileMenuOpen.value = false;
+};
+
+// Navbar links data
+const navbarLinks = ref([
+    {
+        name: t('navbar.home'),
+        label: t('navbar.home.label'),
+        icon: 'i-heroicons-home',
+        to: '/',
+        position: 'left'
+    },
+    {
+        name: t('navbar.kills'),
+        label: t('navbar.kills.label'),
+        icon: 'i-heroicons-forward',
+        position: 'left',
+        children: [
+            {
+                name: t('navbar.kills.latest'),
+                label: t('navbar.kills.latest.label'),
+                to: '/kills/latest'
+            },
+            {
+                name: t('navbar.kills.latest'),
+                label: t('navbar.kills.latest.label'),
+                to: '/kills/latest'
+            },
+            {
+                name: t('navbar.kills.top'),
+                label: t('navbar.kills.top.label'),
+                to: '/kills/top'
+            },
+            {
+                name: t('navbar.kills.wrecks'),
+                label: t('navbar.kills.wrecks.label'),
+                to: '/kills/wrecks'
+            },
+            {
+                name: t('navbar.kills.podcasts'),
+                label: t('navbar.kills.podcasts.label'),
+                to: '/kills/podcasts'
+            },
+            {
+                name: t('navbar.kills.videos'),
+                label: t('navbar.kills.videos.label'),
+                to: '/kills/videos'
+            },{
+                name: t('navbar.kills.latest'),
+                label: t('navbar.kills.latest.label'),
+                to: '/kills/latest'
+            },
+            {
+                name: t('navbar.kills.latest'),
+                label: t('navbar.kills.latest.label'),
+                to: '/kills/latest'
+            },
+            {
+                name: t('navbar.kills.top'),
+                label: t('navbar.kills.top.label'),
+                to: '/kills/top'
+            },
+            {
+                name: t('navbar.kills.wrecks'),
+                label: t('navbar.kills.wrecks.label'),
+                to: '/kills/wrecks'
+            },
+            {
+                name: t('navbar.kills.podcasts'),
+                label: t('navbar.kills.podcasts.label'),
+                to: '/kills/podcasts'
+            },
+            {
+                name: t('navbar.kills.videos'),
+                label: t('navbar.kills.videos.label'),
+                to: '/kills/videos'
+            },{
+                name: t('navbar.kills.latest'),
+                label: t('navbar.kills.latest.label'),
+                to: '/kills/latest'
+            },
+            {
+                name: t('navbar.kills.latest'),
+                label: t('navbar.kills.latest.label'),
+                to: '/kills/latest'
+            },
+            {
+                name: t('navbar.kills.top'),
+                label: t('navbar.kills.top.label'),
+                to: '/kills/top'
+            },
+            {
+                name: t('navbar.kills.wrecks'),
+                label: t('navbar.kills.wrecks.label'),
+                to: '/kills/wrecks'
+            },
+            {
+                name: t('navbar.kills.podcasts'),
+                label: t('navbar.kills.podcasts.label'),
+                to: '/kills/podcasts'
+            },
+            {
+                name: t('navbar.kills.videos'),
+                label: t('navbar.kills.videos.label'),
+                to: '/kills/videos'
+            },{
+                name: t('navbar.kills.latest'),
+                label: t('navbar.kills.latest.label'),
+                to: '/kills/latest'
+            },
+            {
+                name: t('navbar.kills.latest'),
+                label: t('navbar.kills.latest.label'),
+                to: '/kills/latest'
+            },
+            {
+                name: t('navbar.kills.top'),
+                label: t('navbar.kills.top.label'),
+                to: '/kills/top'
+            },
+            {
+                name: t('navbar.kills.wrecks'),
+                label: t('navbar.kills.wrecks.label'),
+                to: '/kills/wrecks'
+            },
+            {
+                name: t('navbar.kills.podcasts'),
+                label: t('navbar.kills.podcasts.label'),
+                to: '/kills/podcasts'
+            },
+            {
+                name: t('navbar.kills.videos'),
+                label: t('navbar.kills.videos.label'),
+                to: '/kills/videos'
+            },{
+                name: t('navbar.kills.latest'),
+                label: t('navbar.kills.latest.label'),
+                to: '/kills/latest'
+            },
+            {
+                name: t('navbar.kills.latest'),
+                label: t('navbar.kills.latest.label'),
+                to: '/kills/latest'
+            },
+            {
+                name: t('navbar.kills.top'),
+                label: t('navbar.kills.top.label'),
+                to: '/kills/top'
+            },
+            {
+                name: t('navbar.kills.wrecks'),
+                label: t('navbar.kills.wrecks.label'),
+                to: '/kills/wrecks'
+            },
+            {
+                name: t('navbar.kills.podcasts'),
+                label: t('navbar.kills.podcasts.label'),
+                to: '/kills/podcasts'
+            },
+            {
+                name: t('navbar.kills.videos'),
+                label: t('navbar.kills.videos.label'),
+                to: '/kills/videos'
+            },{
+                name: t('navbar.kills.latest'),
+                label: t('navbar.kills.latest.label'),
+                to: '/kills/latest'
+            },
+            {
+                name: t('navbar.kills.latest'),
+                label: t('navbar.kills.latest.label'),
+                to: '/kills/latest'
+            },
+            {
+                name: t('navbar.kills.top'),
+                label: t('navbar.kills.top.label'),
+                to: '/kills/top'
+            },
+            {
+                name: t('navbar.kills.wrecks'),
+                label: t('navbar.kills.wrecks.label'),
+                to: '/kills/wrecks'
+            },
+            {
+                name: t('navbar.kills.podcasts'),
+                label: t('navbar.kills.podcasts.label'),
+                to: '/kills/podcasts'
+            },
+            {
+                name: t('navbar.kills.videos'),
+                label: t('navbar.kills.videos.label'),
+                to: '/kills/videos'
+            },
+        ]
+    },
+    {
+        name: t('navbar.search'),
+        label: t('navbar.search.label'),
+        icon: 'i-heroicons-magnifying-glass',
+        component: Search, // Using markRaw'd component
+        inline: true,
+        position: 'center',
+    },
+    {
+        label: t('navbar.theme.label', {
+            text: themeAriaLabel
+        }),
+        icon: themeIcon,
+        position: 'right',
+        mobile: true,
+        onClick: () => {
+            toggleTheme()
+        },
+    },
+    {
+        label: t('navbar.background-selector.label'),
+        icon: 'i-heroicons-photo',
+        component: BackgroundSwitcher,
+        position: 'right',
+        mobile: true,
+    },
+    {
+        label: t('navbar.information.label'),
+        icon: 'i-heroicons-information-circle',
+        position: 'right',
+        collapse: false,
+        children: [
+            {
+                name: t('navbar.faq'),
+                label: t('navbar.faq.label'),
+                to: '/faq'
+            },
+            {
+                name: t('navbar.status'),
+                label: t('navbar.status.label'),
+                to: '/status'
+            },
+            {
+                name: t('navbar.about'),
+                label: t('navbar.about.label'),
+                to: '/about'
+            }
+        ],
+    },
+    {
+        name: t('navbar.user-dropdown'),
+        label: t('navbar.user-dropdown.label'),
+        icon: 'i-heroicons-user-circle',
+        component: null, // Replace with actual UserDropdown when available
+        position: 'right',
+    }
+]);
 </script>
 
 <template>
-  <ClientOnly>
-    <!-- Conditionally render desktop or mobile navbar -->
-    <NavbarDesktop
-      v-if="!isMobile"
-      :theme-icon="themeIcon"
-      :theme-aria-label="themeAriaLabel"
-      :toggle-theme="toggleTheme"
-      :available-backgrounds="availableBackgrounds"
-      :set-background="setBackground"
-      :is-current-background="isCurrentBackground"
-      :set-random-reddit-background="setRandomRedditBackground"
-      :user-dropdown="userDropdown"
-      :navigation-items="navigationItems"
-      :information-dropdown="informationDropdown"
-      :is-video-file="isVideoFile"
-    />
-    <NavbarMobile
-      v-else
-      :theme-icon="themeIcon"
-      :theme-aria-label="themeAriaLabel"
-      :toggle-theme="toggleTheme"
-      :available-backgrounds="availableBackgrounds"
-      :set-background="setBackground"
-      :is-current-background="isCurrentBackground"
-      :set-random-reddit-background="setRandomRedditBackground"
-      :user-dropdown="userDropdown"
-      :navigation-items="navigationItems"
-      :information-dropdown="informationDropdown"
-      :is-video-file="isVideoFile"
-    />
-    <!-- Fallback for SSR -->
-    <template #fallback>
-      <div class="w-full bg-white bg-opacity-60 dark:bg-black dark:bg-opacity-40 backdrop-blur-sm border-b border-zinc-300 dark:border-zinc-800 sticky top-0 z-50">
-        <div class="max-w-[90rem] mx-auto">
-          <nav class="px-4 py-3">
-            <div class="flex justify-between items-center">
-              <!-- Simplified fallback navbar -->
-              <NuxtLink to="/" class="text-black dark:text-white text-2xl font-bold">
-                {{ $t('navbar.home') }}
-              </NuxtLink>
+  <!-- Using sticky positioning like the old navbar - simpler approach -->
+  <nav class="hidden md:flex h-16 items-center justify-between sticky top-0 z-50 bg-white bg-opacity-90 dark:bg-black dark:bg-opacity-90 backdrop-blur-sm shadow-sm">
+    <!-- Left items -->
+    <div class="flex items-center space-x-4">
+        <div class="flex items-center space-x-2">
+            <template v-for="(link, index) in navbarLinks.filter(l => l.position === 'left')" :key="index">
+                <!-- Regular links -->
+                <NuxtLink v-if="link.to && !link.children" :to="link.to"
+                    class="flex items-center px-3 py-2 rounded-md text-sm font-medium hover:bg-gray-700 dark:hover:bg-gray-700"
+                    :aria-label="link.label" color="neutral" variant="ghost">
+                    <UIcon v-if="link.icon" :name="link.icon" class="mr-2 text-lg" />
+                    <span class="text-lg">{{ link.name }}</span>
+                </NuxtLink>
+
+                <!-- Dropdown menus - update to use CustomDropdown's built-in column distribution -->
+                <CustomDropdown
+                    v-else-if="link.children"
+                    v-model="dropdownStates[link.name]"
+                    :use-column-distribution="true"
+                    :items="link.children"
+                    :items-per-column="10"
+                    :max-height="70"
+                    position="bottom"
+                    align="start"
+                    :smart-position="true"
+                >
+                    <template #trigger>
+                        <UButton color="neutral" variant="ghost" class="flex items-center" :aria-label="link.label">
+                            <UIcon v-if="link.icon" :name="link.icon" class="mr-2 text-m" />
+                            <span class="text-lg">{{ link.name }}</span>
+                            <UIcon name="i-heroicons-chevron-down" class="ml-1 text-lg" />
+                        </UButton>
+                    </template>
+
+                    <!-- Use the column-item slot to render each menu item -->
+                    <template #column-item="{ item }">
+                        <NuxtLink
+                            :to="item.to"
+                            class="block px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-md"
+                            :aria-label="item.label"
+                            @click="dropdownStates[link.name] = false"
+                        >
+                            {{ item.name }}
+                        </NuxtLink>
+                    </template>
+                </CustomDropdown>
+
+                <!-- Inline components -->
+                <component v-else-if="link.component && link.inline" :is="link.component" />
+
+                <!-- Buttons with click handlers -->
+                <UButton v-else-if="link.onClick" color="neutral" variant="ghost" class="flex items-center"
+                    :aria-label="link.label" @click="link.onClick">
+                    <UIcon v-if="link.icon" :name="link.icon" class="mr-2 text-lg" />
+                    <span class="text-lg">{{ link.name }}</span>
+                </UButton>
+            </template>
+        </div>
+    </div>
+
+    <!-- Center items -->
+    <div class="flex items-center">
+        <template v-for="(link, index) in navbarLinks.filter(l => l.position === 'center')" :key="index">
+            <component v-if="link.component && link.inline" :is="link.component" />
+            <UButton v-else-if="link.onClick" color="neutral" variant="ghost" :aria-label="link.label"
+                @click="link.onClick">
+                <UIcon v-if="link.icon" :name="link.icon" class="mr-2 text-lg" />
+                <span class="text-lg">{{ link.name }}</span>
+            </UButton>
+        </template>
+    </div>
+
+    <!-- Right items -->
+    <div class="flex items-center space-x-2">
+        <template v-for="(link, index) in navbarLinks.filter(l => l.position === 'right')" :key="index">
+            <!-- Inline components -->
+            <component v-if="link.component && link.inline" :is="link.component" />
+
+            <!-- Component buttons without dropdown -->
+            <component
+              v-else-if="link.component"
+              :is="link.component"
+            />
+
+            <!-- Dropdown menus for right side -->
+            <CustomDropdown
+                v-else-if="link.children"
+                v-model="dropdownStates[link.label]"
+                position="bottom"
+                align="end"
+                :smart-position="true"
+            >
+                <template #trigger>
+                    <UButton color="neutral" variant="ghost" class="flex items-center" :aria-label="link.label">
+                        <UIcon v-if="link.icon" :name="link.icon" class="text-lg" />
+                        <span v-if="link.name" class="text-lg ml-2">{{ link.name }}</span>
+                    </UButton>
+                </template>
+
+                <!-- Render dropdown items -->
+                <template v-for="(item, itemIndex) in link.children" :key="itemIndex">
+                    <NuxtLink
+                        :to="item.to"
+                        class="block px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-md"
+                        :aria-label="item.label"
+                        @click="dropdownStates[link.label] = false"
+                    >
+                        <div class="flex items-center">
+                            <UIcon v-if="item.icon" :name="item.icon" class="mr-2 text-sm" />
+                            {{ item.name }}
+                        </div>
+                    </NuxtLink>
+                </template>
+            </CustomDropdown>
+
+            <!-- Buttons with click handlers -->
+            <UButton
+                v-else-if="link.onClick"
+                color="neutral"
+                variant="ghost"
+                class="flex items-center"
+                :aria-label="link.label"
+                @click="link.onClick"
+            >
+                <UIcon v-if="link.icon" :name="link.icon" class="text-lg" />
+                <span v-if="link.name" class="text-lg ml-2">{{ link.name }}</span>
+            </UButton>
+        </template>
+    </div>
+  </nav>
+
+  <!-- Same for mobile navbar - using sticky instead of fixed -->
+  <nav class="md:hidden sticky top-0 z-50 bg-white bg-opacity-90 dark:bg-black dark:bg-opacity-90 backdrop-blur-sm shadow-sm">
+    <div class="flex items-center justify-between h-16 p-4">
+        <!-- Logo/Home link -->
+        <NuxtLink to="/" class="flex items-center">
+            <Icon name="i-heroicons-home" class="text-2xl text-gray-900 text-black dark:text-white" />
+        </NuxtLink>
+
+        <!-- Center mobile items (typically search) -->
+        <div class="flex items-center mx-2 flex-grow">
+            <template v-for="(link, index) in navbarLinks.filter(l => l.position === 'center')" :key="index">
+                <component
+                    v-if="link.component && link.inline"
+                    :is="link.component"
+                    class="w-full"
+                />
+            </template>
+        </div>
+
+        <!-- Mobile header actions for items marked with mobile: true -->
+        <div class="flex items-center gap-3">
+            <template v-for="(link, index) in navbarLinks.filter(l => l.mobile === true)" :key="index">
+                <!-- Special handling for BackgroundSwitcher on mobile - Fix condition to identify by component -->
+                <template v-if="link.component === BackgroundSwitcher">
+                    <BackgroundSwitcher
+                        :is-mobile="true"
+                        :fullscreen-open="isMobileBgSelectorOpen"
+                        @fullscreen-opened="isMobileBgSelectorOpen = true"
+                        @fullscreen-closed="isMobileBgSelectorOpen = false"
+                        @background-selected="handleBackgroundSelected"
+                    />
+                </template>
+
+                <!-- Regular component buttons -->
+                <component
+                    v-else-if="link.component"
+                    :is="link.component"
+                />
+
+                <!-- Click handlers -->
+                <UButton
+                    v-else-if="link.onClick"
+                    color="neutral"
+                    variant="ghost"
+                    :aria-label="link.label"
+                    @click="link.onClick"
+                >
+                    <UIcon v-if="link.icon" :name="link.icon" class="text-xl text-black dark:text-white" />
+                </UButton>
+            </template>
+
+            <!-- Mobile menu toggle button -->
+            <UButton
+                color="neutral"
+                variant="ghost"
+                aria-label="Menu"
+                @click="isMobileMenuOpen = true"
+            >
+                <UIcon name="i-heroicons-bars-3" class="text-xl text-black dark:text-white" />
+            </UButton>
+        </div>
+    </div>
+  </nav>
+
+  <!-- Using MobileFullscreenModal for the mobile menu -->
+  <MobileFullscreenModal
+    :open="isMobileMenuOpen"
+    :title="t('menu.menu', 'Menu')"
+    @close="closeMobileMenu"
+  >
+    <!-- Main menu content -->
+    <div class="h-full pb-20">
+      <!-- Navigation section with collapsible items -->
+      <div class="mb-8">
+        <h3 class="text-lg font-bold mb-4 text-gray-900 dark:text-gray-100">{{ t('menu.navigation', 'Navigation') }}</h3>
+        <div class="space-y-3">
+          <!-- Left positioned links - typically navigation -->
+          <template v-for="(link, index) in navbarLinks.filter(l => l.position === 'left')" :key="`left-${index}`">
+            <!-- Regular links -->
+            <NuxtLink
+              v-if="link.to && !link.children"
+              :to="link.to"
+              class="flex items-center px-4 py-3 rounded-lg text-base font-medium bg-gray-50/70 dark:bg-gray-800/50 hover:bg-gray-100 dark:hover:bg-gray-700/70 text-gray-900 dark:text-gray-100 shadow-sm transition-colors"
+              :aria-label="link.label"
+              @click="isMobileMenuOpen = false"
+            >
+              <UIcon v-if="link.icon" :name="link.icon" class="mr-3 text-xl text-gray-700 dark:text-gray-300" />
+              {{ link.name }}
+            </NuxtLink>
+
+            <!-- Non-collapsible links with children - displayed as a header with nested items -->
+            <div v-else-if="link.children && link.collapse === false" class="mb-4 space-y-2">
+              <!-- Static header - no toggle button -->
+              <div class="px-4 py-3 text-base font-medium text-gray-900 dark:text-gray-100 bg-gray-50/70 dark:bg-gray-800/50 rounded-lg shadow-sm">
+                <div class="flex items-center">
+                  <UIcon v-if="link.icon" :name="link.icon" class="mr-3 text-xl text-gray-700 dark:text-gray-300" />
+                  {{ link.name }}
+                </div>
+              </div>
+
+              <!-- Direct list of children without collapsible container -->
+              <div class="pl-4 space-y-1">
+                <NuxtLink
+                  v-for="(child, childIndex) in link.children"
+                  :key="childIndex"
+                  :to="child.to"
+                  class="flex items-center px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700/70 rounded-md"
+                  :aria-label="child.label"
+                  @click="isMobileMenuOpen = false"
+                >
+                  <UIcon v-if="child.icon" :name="child.icon" class="mr-2" />
+                  {{ child.name }}
+                </NuxtLink>
+              </div>
             </div>
-          </nav>
+
+            <!-- Standard collapsible links with children -->
+            <div v-else-if="link.children" class="text-base font-medium text-gray-900 dark:text-gray-100 bg-gray-50/70 dark:bg-gray-800/50 rounded-lg shadow-sm">
+              <!-- Collapsible header with toggle button -->
+              <button
+                class="w-full flex items-center justify-between px-4 py-3 text-gray-700 dark:text-gray-300 transition-colors"
+                @click="toggleMobileMenuSection(link.name)"
+              >
+                <div class="flex items-center">
+                  <UIcon v-if="link.icon" :name="link.icon" class="mr-3 text-xl text-gray-700 dark:text-gray-300" />
+                  {{ link.name }}
+                </div>
+                <UIcon
+                  :name="expandedMobileMenus[link.name] ? 'i-heroicons-chevron-up' : 'i-heroicons-chevron-down'"
+                  class="text-lg text-gray-700 dark:text-gray-300"
+                />
+              </button>
+
+              <!-- Collapsible content -->
+              <div v-show="expandedMobileMenus[link.name]" class="border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/70">
+                <div class="py-2 space-y-1">
+                  <NuxtLink
+                    v-for="(child, childIndex) in link.children"
+                    :key="childIndex"
+                    :to="child.to"
+                    class="flex items-center px-4 py-2.5 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700/70"
+                    :aria-label="child.label"
+                    @click="isMobileMenuOpen = false"
+                  >
+                    {{ child.name }}
+                  </NuxtLink>
+                </div>
+              </div>
+            </div>
+          </template>
         </div>
       </div>
-    </template>
-  </ClientOnly>
+
+      <!-- Tools Section -->
+      <div class="mb-8">
+        <h3 class="text-lg font-bold mb-4 text-gray-900 dark:text-gray-100">{{ t('menu.tools', 'Tools') }}</h3>
+        <div class="space-y-3">
+          <!-- Information dropdown items in mobile view -->
+          <template v-for="(link, index) in navbarLinks.filter(l => l.position === 'right' && l.children)" :key="`info-${index}`">
+            <!-- Non-collapsible links with children - displayed as a header with nested items -->
+            <div v-if="link.collapse === false" class="mb-4 space-y-2">
+              <!-- Static header - no toggle button -->
+              <div class="px-4 py-3 text-base font-medium text-gray-900 dark:text-gray-100 bg-gray-50/70 dark:bg-gray-800/50 rounded-lg shadow-sm">
+                <div class="flex items-center">
+                  <UIcon v-if="link.icon" :name="link.icon" class="mr-3 text-xl text-gray-700 dark:text-gray-300" />
+                  <span>{{ link.label }}</span>
+                </div>
+              </div>
+
+              <!-- Direct list of children without collapsible container -->
+              <div class="pl-4 space-y-1">
+                <NuxtLink
+                  v-for="(child, childIndex) in link.children"
+                  :key="childIndex"
+                  :to="child.to"
+                  class="flex items-center px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700/70 rounded-md"
+                  :aria-label="child.label"
+                  @click="isMobileMenuOpen = false"
+                >
+                  <UIcon v-if="child.icon" :name="child.icon" class="mr-2 text-lg" />
+                  {{ child.name }}
+                </NuxtLink>
+              </div>
+            </div>
+
+            <!-- Standard collapsible links -->
+            <div v-else class="mb-4 overflow-hidden rounded-lg shadow-sm bg-white/50 dark:bg-black/30">
+              <!-- Collapsible header with toggle button -->
+              <button
+                class="w-full flex items-center justify-between px-4 py-3 text-base font-medium text-gray-900 dark:text-gray-100 hover:bg-gray-100/50 dark:hover:bg-gray-800/50 transition-colors"
+                @click="toggleMobileMenuSection(link.label)"
+              >
+                <div class="flex items-center">
+                  <UIcon v-if="link.icon" :name="link.icon" class="mr-3 text-xl text-gray-700 dark:text-gray-300" />
+                  <span>{{ link.label }}</span>
+                </div>
+                <UIcon
+                  :name="expandedMobileMenus[link.label] ? 'i-heroicons-chevron-up' : 'i-heroicons-chevron-down'"
+                  class="text-lg text-gray-500 dark:text-gray-400"
+                />
+              </button>
+
+              <!-- Collapsible content -->
+              <div v-show="expandedMobileMenus[link.label]" class="bg-gray-50 dark:bg-gray-800/70">
+                <div class="py-2 space-y-1">
+                  <NuxtLink
+                    v-for="(child, childIndex) in link.children"
+                    :key="childIndex"
+                    :to="child.to"
+                    class="flex items-center px-4 py-2.5 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700/70"
+                    :aria-label="child.label"
+                    @click="isMobileMenuOpen = false"
+                  >
+                    <UIcon v-if="child.icon" :name="child.icon" class="mr-2 text-lg" />
+                    {{ child.name }}
+                  </NuxtLink>
+                </div>
+              </div>
+            </div>
+          </template>
+        </div>
+      </div>
+    </div>
+  </MobileFullscreenModal>
 </template>
+
+<style scoped>
+/* Sticky header adjustments */
+.sticky.top-0 {
+  z-index: 5;
+}
+
+/* Animation for collapsible sections */
+.collapsible-enter-active,
+.collapsible-leave-active {
+  transition: max-height 0.3s ease;
+  overflow: hidden;
+}
+
+.collapsible-enter-from,
+.collapsible-leave-to {
+  max-height: 0;
+}
+
+.collapsible-enter-to,
+.collapsible-leave-from {
+  max-height: 500px;
+}
+
+/* Ensure navbar stays on top */
+nav.sticky {
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  transition: background-color 0.3s ease;
+}
+
+/* Safari fix for backdrop-filter */
+@supports not (backdrop-filter: blur(8px)) {
+  nav.sticky {
+    background-color: rgba(255, 255, 255, 0.98);
+  }
+
+  :root.dark nav.sticky {
+    background-color: rgba(0, 0, 0, 0.98);
+  }
+}
+
+/* Glass effect */
+.bg-white\/50, .dark\:bg-black\/30, .bg-gray-50\/70, .dark\:bg-gray-800\/50 {
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+}
+
+/* Improved hover and active states */
+.hover\:bg-gray-100:hover, .dark .hover\:bg-gray-700\/70:hover {
+  transition: background-color 0.2s ease;
+}
+
+/* Safari fixes for backdrop-filter */
+@supports not ((backdrop-filter: blur(8px)) or (-webkit-backdrop-filter: blur(8px))) {
+  .bg-white\/50, .dark\:bg-black\/30, .bg-gray-50\/70, .dark\:bg-gray-800\/50 {
+    background-color: rgba(255, 255, 255, 0.95) !important;
+  }
+
+  :root.dark .bg-white\/50,
+  :root.dark .dark\:bg-black\/30,
+  :root.dark .bg-gray-50\/70,
+  :root.dark .dark\:bg-gray-800\/50 {
+    background-color: rgba(15, 15, 15, 0.95) !important;
+  }
+}
+
+/* Better shadows */
+.shadow-sm {
+  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+}
+
+:root.dark .shadow-sm {
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.3);
+}
+
+/* Enhanced animations for menu items */
+@keyframes slideIn {
+  from {
+    transform: translateY(10px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+/* Apply animation to content */
+h3, .space-y-3 > div {
+  animation: slideIn 0.3s ease forwards;
+  animation-delay: calc(var(--index, 0) * 0.05s);
+}
+</style>

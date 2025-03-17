@@ -1,1 +1,0 @@
-The utils/ directory provides utility functions for various tasks, ensuring a clear separation from Vue composables and facilitating better organization and maintainability.

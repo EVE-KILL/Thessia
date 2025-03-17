@@ -10,7 +10,12 @@
     "postinstall": "nuxt prepare"
   },
   "dependencies": {
+    "@nuxtjs/seo": "3.0.1",
+    "@opentelemetry/instrumentation-ioredis": "^0.47.1",
+    "@opentelemetry/instrumentation-mongoose": "^0.46.1",
+    "@pinia/nuxt": "^0.10.1",
     "@sentry/bun": "^9.5.0",
+    "@sentry/nuxt": "^9.5.0",
     "amqplib": "^0.10.5",
     "bullmq": "^5.43.1",
     "commander": "^13.1.0",
@@ -23,6 +28,7 @@
     "mongoose": "^8.12.1",
     "node-gyp": "^11.1.0",
     "nuxt": "^3.16.0",
+    "pinia": "^3.0.1",
     "server-health": "^6.0.2",
     "sqlite": "^5.1.1",
     "sqlite3": "^5.1.7",
@@ -45,6 +51,7 @@
     "@nuxt/image": "^1.9.0",
     "@nuxt/ui": "^3.0.0",
     "@nuxtjs/i18n": "^9.3.1",
+    "@nuxtjs/sitemap": "^7.2.9",
     "@nuxtjs/tailwindcss": "^6.13.2",
     "@types/bun": "^1.2.5",
     "@types/lodash": "^4.17.16",

@@ -12,17 +12,13 @@
     <source :src="currentOptimizedUrl" type="video/mp4">
   </video>
 
+  <!-- Remove position-relative class and simply use container -->
   <UContainer id="content" class="content flex flex-col mx-auto">
     <div id="inner-content" class="inner-content h-full">
       <Navbar />
       <slot />
     </div>
   </UContainer>
-
-  <!-- Add Reddit source attribution without debugging elements -->
-  <ClientOnly>
-    <RedditSourceLink />
-  </ClientOnly>
 </template>
 
 <script setup lang="ts">
@@ -31,8 +27,6 @@ const {
   currentOptimizedUrl,
   getOptimizedBackgroundUrl,
   isVideoBackground,
-  isRedditBackground,
-  currentRedditSource
 } = useBackgroundImage()
 
 // Get theme mode functionality
@@ -239,5 +233,10 @@ html.dark #content>#inner-content {
     border-left: none;
     border-right: none;
   }
+}
+
+/* Add padding top to content to account for fixed navbar */
+#inner-content {
+  padding-top: 1rem; /* Reduced padding since sticky takes its own space */
 }
 </style>

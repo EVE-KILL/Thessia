@@ -5,7 +5,7 @@
     "home": "Home",
     "kills": "Kills",
     "about": "About",
-    "search": "Search kills, players, corps...",
+    "search": "Search",
     "background": "Change background image",
     "menu": "Menu",
     "user": "User Account",
@@ -13,8 +13,8 @@
     "apiAccess": "API Access",
     "discord": "Discord",
     "faq": "FAQ",
-    "status": "System Status",
-    "information": "Information"
+    "status": "Status",
+    "information": "Info"
   },
   "user": {
     "profile": "Profile",
@@ -66,7 +66,12 @@
     "logout": "Logout",
     "profile": "Profile",
     "settings": "Settings",
-    "backToHome": "Back to Home"
+    "backToHome": "Back to Home",
+    "error": "Error",
+    "cancel": "Cancel",
+    "save": "Save",
+    "delete": "Delete",
+    "edit": "Edit"
   },
   "error": {
     "notFound": "The page you're looking for cannot be found.",
@@ -164,14 +169,46 @@
     "resultsFor": "Results for",
     "searchPlaceholder": "Search for characters, corporations, alliances...",
     "searchButton": "Search",
-    "found": "{count} results found",
-    "processingTimeMs": "in {time}ms",
+    "processingTime": "{count} results found in {time}ms",
     "viewDetails": "View Details",
     "noResultsTitle": "No results found",
     "noResultsDesc": "Try adjusting your search terms or try a different search.",
     "initialMessage": "Enter a search term above to get started",
     "moreResults": "Load More Results",
     "viewAllResults": "View all {count} results",
-    "showMoreType": "Show more {type}"
+    "showMoreType": "Show more {type}",
+    "noResults": "No results found",
+    "placeholder": "Search for characters, corporations, alliances...",
+    "categories": {
+      "character": "Characters",
+      "corporation": "Corporations",
+      "alliance": "Alliances",
+      "item": "Items",
+      "system": "Systems",
+      "region": "Regions",
+    },
+    "viewAll": "View All"
+  },
+  "auth": {
+    "loginWithEve": "Login with EVE Online",
+    "loginDescription": "Log in with your EVE Online account to track your kills and access personalized features.",
+    "permissionsRequested": "Permissions Requested",
+    "processing": "Processing Login",
+    "processingLogin": "Authenticating with EVE Online...",
+    "loginSuccessful": "Login successful! Welcome back.",
+    "continueToSite": "Continue to Site",
+    "login": {
+      "title": "Login with EVE Online",
+      "description": "Login with your EVE Online account to access character-specific features and track your kills and losses.",
+      "scopesTitle": "Select Scopes",
+      "publicDataScope": "Public Data",
+      "characterKillmails": "Character Killmails",
+      "corpKillmails": "Corporation Killmails",
+      "loginWithEVE": "Login with EVE Online",
+      "selectScopes": "Login with EVE Online",
+      "customizeScopes": "Customize Scopes",
+      "requiredScopes": "Required",
+      "optionalScopes": "Optional"
+    }
   }
 }
