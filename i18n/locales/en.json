@@ -109,8 +109,7 @@
         "toggleVisibility": "Toggle background visibility",
         "loading": "Loading...",
         "randomReddit": "Random from r/EVEPorn",
-        "viewSource": "View source on Reddit",
-        "solidColor": "Use a solid color"
+        "viewSource": "View source on Reddit"
     },
     "status": {
         "title": "System Status",

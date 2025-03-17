@@ -16,8 +16,8 @@
   <div class="background-view-button">
     <UButton
       :icon="isViewingBackground ? 'i-heroicons-eye-slash' : 'i-heroicons-eye'"
-      color="secondary"
-      variant="soft"
+      color="neutral"
+      variant="solid"
       size="sm"
       aria-label="View background"
       :title="$t('background.toggleVisibility')"

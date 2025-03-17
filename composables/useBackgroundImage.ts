@@ -1,5 +1,5 @@
-import { ref, computed } from 'vue';
-import { getRandomSubredditImage, type RedditPostInfo } from '~/utils/reddit';
+import { ref, computed } from 'vue'
+import { getRandomSubredditImage, type RedditPostInfo } from '~/utils/reddit'
 
 // Define the cookie name and default background
 const BACKGROUND_COOKIE = 'selected-background'
@@ -26,10 +26,6 @@ const optimizedUrlCache = new Map()
 const isVideoBackground = ref(false)
 const currentRedditSource = ref<RedditPostInfo | null>(null)
 const processedRedditUrls = ref<Record<string, string>>({})
-
-// For solid color backgrounds - MOVED UP BEFORE applyBackground function
-const isSolidColor = ref(false);
-const currentSolidColor = ref('');
 
 export const useBackgroundImage = () => {
   // Create cookies with appropriate settings
@@ -174,15 +170,6 @@ export const useBackgroundImage = () => {
 
   // Apply background with improved performance and reliability
   function applyBackground(path: string) {
-    // Reset solid color state when switching to an image background
-    if (isSolidColor.value) {
-      isSolidColor.value = false;
-      if (process.client) {
-        // Remove the solid bg data attribute
-        document.documentElement.removeAttribute('data-solid-bg');
-      }
-    }
-
     if (!path) {
       path = DEFAULT_BACKGROUND
     }
@@ -352,77 +339,6 @@ export const useBackgroundImage = () => {
   // Initialize - ensure we have a valid background
   resetToDefaultIfInvalid()
 
-  // Initialize from localStorage if available
-  onMounted(() => {
-    if (process.client) {
-      const storedBackground = localStorage.getItem('background');
-      const storedColor = localStorage.getItem('backgroundColor');
-      const storedType = localStorage.getItem('backgroundType');
-
-      if (storedType === 'solid-color' && storedColor) {
-        isSolidColor.value = true;
-        currentSolidColor.value = storedColor;
-
-        // Set data attribute for CSS selector
-        document.documentElement.setAttribute('data-solid-bg', 'true');
-
-        // Set CSS variables
-        document.documentElement.style.setProperty('--bg-color', storedColor);
-        document.documentElement.style.setProperty('--bg-image', 'none');
-
-        // Directly set styles for immediate effect
-        document.documentElement.style.setProperty('background-image', 'none', 'important');
-        document.documentElement.style.setProperty('background-color', storedColor, 'important');
-
-        // Also set CSS variables
-        document.documentElement.style.setProperty('--bg-image', 'none');
-      }
-
-      // Try to load reddit source if applicable
-      const redditSourceStr = localStorage.getItem('redditSource');
-      if (redditSourceStr) {
-        try {
-          currentRedditSource.value = JSON.parse(redditSourceStr);
-        } catch (e) {
-          console.debug('Error parsing Reddit source:', e);
-        }
-      }
-    }
-  });
-
-  // Set solid color background
-  const setSolidColorBackground = (color: string) => {
-    currentSolidColor.value = color;
-    isSolidColor.value = true;
-
-    if (process.client) {
-      // Set data attribute for CSS selector
-      document.documentElement.setAttribute('data-solid-bg', 'true');
-
-      // Update CSS variables
-      document.documentElement.style.setProperty('--bg-color', color);
-      document.documentElement.style.setProperty('--bg-image', 'none');
-
-      // Directly set styles for immediate effect
-      document.documentElement.style.setProperty('background-image', 'none', 'important');
-      document.documentElement.style.setProperty('background-color', color, 'important');
-
-      // Store in localStorage
-      localStorage.setItem('backgroundColor', color);
-      localStorage.setItem('backgroundType', 'solid-color');
-      localStorage.removeItem('background');
-
-      // Clear any Reddit source data
-      localStorage.removeItem(REDDIT_SOURCE_STORAGE_KEY);
-      currentRedditSource.value = null;
-    }
-  };
-
-  // Check if current background is a solid color
-  const isSolidColorBackground = computed(() => {
-    return isSolidColor.value;
-  });
-
   return {
     selectedBackground: sharedBackgroundRef,
     optimizedBackground: sharedOptimizedUrlRef,
@@ -435,9 +351,6 @@ export const useBackgroundImage = () => {
     setRandomRedditBackground,
     currentRedditSource,
     isRedditBackground,
-    resetToDefaultIfInvalid,
-    setSolidColorBackground,
-    isSolidColorBackground,
-    currentSolidColor
+    resetToDefaultIfInvalid
   }
 }
