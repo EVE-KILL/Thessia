@@ -1,0 +1,47 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+    name: thessia
+    namespace: eve-kill
+spec:
+    replicas: 1
+    strategy:
+        type: RollingUpdate
+        rollingUpdate:
+            maxSurge: 1
+            maxUnavailable: 0
+    selector:
+        matchLabels:
+            app: thessia
+    template:
+        metadata:
+            labels:
+                app: thessia
+        spec:
+            restartPolicy: Always
+            containers:
+              - name: thessia
+                image: ghcr.io/eve-kill/thessia:latest
+                imagePullPolicy: Always
+                ports:
+                  - containerPort: 3000
+                livenessProbe:
+                    httpGet:
+                        path: /_healthcheck
+                        port: 3000
+                    initialDelaySeconds: 5
+                    periodSeconds: 10
+                readinessProbe:
+                    httpGet:
+                        path: /_healthcheck
+                        port: 3000
+                    initialDelaySeconds: 5
+                    periodSeconds: 10
+                volumeMounts:
+                  - name: eve-kill-config
+                    mountPath: /app/.env
+                    subPath: .env
+            volumes:
+              - name: eve-kill-config
+                configMap:
+                    name: eve-kill-config

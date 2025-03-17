@@ -10,7 +10,10 @@ const {
   isCurrentBackground,
   setRandomRedditBackground,
   isRedditBackground,
-  currentRedditSource
+  currentRedditSource,
+  setSolidColorBackground, // New method for solid color
+  isSolidColorBackground, // New method to check if using solid color
+  currentSolidColor // New ref for the current color
 } = useBackgroundImage();
 
 // Track dropdown state
@@ -21,6 +24,12 @@ const isLoadingRandomBg = ref(false);
 
 // Track if we're displaying in fullscreen mode (for mobile)
 const isFullscreen = ref(false);
+
+// Track if color picker is open
+const isColorPickerOpen = ref(false);
+
+// Selected color in the color picker
+const selectedColor = ref(currentSolidColor?.value || '#1e293b');
 
 // Emit events for parent components
 const emit = defineEmits(['fullscreen-opened', 'fullscreen-closed', 'background-selected']);
@@ -81,6 +90,21 @@ const selectRandomReddit = async () => {
   }
 };
 
+// Handle solid color background selection
+const selectSolidColorBackground = () => {
+  setSolidColorBackground(selectedColor.value);
+
+  // Close dropdowns or fullscreen mode
+  isDropdownOpen.value = false;
+  isColorPickerOpen.value = false;
+
+  if (isFullscreen.value) {
+    emit('background-selected', 'solid-color');
+    emit('fullscreen-closed');
+    isFullscreen.value = false;
+  }
+};
+
 // Format Reddit source URL
 const getRedditSourceUrl = computed(() => {
   if (!currentRedditSource.value) {
@@ -108,6 +132,13 @@ const closeFullscreen = () => {
   isFullscreen.value = false;
   emit('fullscreen-closed');
 };
+
+// Initialize selected color when component mounts
+onMounted(() => {
+  if (currentSolidColor?.value) {
+    selectedColor.value = currentSolidColor.value;
+  }
+});
 
 // Improved body scroll locking for mobile fullscreen view
 watch(isFullscreen, (isOpen) => {
@@ -235,6 +266,47 @@ onUnmounted(() => {
             </button>
           </div>
 
+          <!-- Solid Color Background Option -->
+          <div class="mt-2 px-3 py-2 border-t border-(--ui-border)">
+            <div class="flex justify-between items-center">
+              <button
+                @click="isColorPickerOpen = !isColorPickerOpen"
+                class="flex items-center text-(--ui-text-subtle) hover:text-(--ui-primary) transition-colors"
+              >
+                <UIcon
+                  name="i-heroicons-swatch"
+                  class="mr-2 text-[#FF4500]"
+                />
+                <span class="truncate">
+                  {{ $t('background.solidColor') }}
+                </span>
+              </button>
+              <UIcon
+                v-if="isSolidColorBackground"
+                name="i-heroicons-check"
+                class="text-(--ui-primary) text-xs ml-1"
+              />
+            </div>
+
+            <!-- Color Picker -->
+            <div v-if="isColorPickerOpen" class="mt-2">
+              <UColorPicker
+                v-model="selectedColor"
+                :presets="['#1e293b', '#172554', '#134e4a', '#3f6212', '#b45309', '#b91c1c', '#9d174d', '#701a75']"
+              />
+              <div class="flex justify-end mt-2">
+                <UButton
+                  size="xs"
+                  color="primary"
+                  @click="selectSolidColorBackground"
+                  class="px-2 py-1"
+                >
+                  {{ $t('background.apply') }}
+                </UButton>
+              </div>
+            </div>
+          </div>
+
           <!-- Random Reddit Option with consistent styling -->
           <div class="mt-2 px-3 py-2 border-t border-(--ui-border)">
             <button
@@ -336,6 +408,35 @@ onUnmounted(() => {
             </div>
           </div>
         </button>
+      </div>
+
+      <!-- Solid Color Option for Mobile -->
+      <div class="mt-6 mb-4 px-4">
+        <div class="bg-gray-50 dark:bg-gray-800 rounded-lg shadow-sm p-4">
+          <div class="flex justify-between items-center mb-3">
+            <h3 class="font-medium text-base">{{ $t('background.solidColor') }}</h3>
+            <UIcon
+              v-if="isSolidColorBackground"
+              name="i-heroicons-check"
+              class="text-primary-500"
+            />
+          </div>
+
+          <UColorPicker
+            v-model="selectedColor"
+            :presets="['#1e293b', '#172554', '#134e4a', '#3f6212', '#b45309', '#b91c1c', '#9d174d', '#701a75']"
+          />
+
+          <div class="flex justify-end mt-3">
+            <UButton
+              size="sm"
+              color="primary"
+              @click="selectSolidColorBackground"
+            >
+              {{ $t('background.apply') }}
+            </UButton>
+          </div>
+        </div>
       </div>
 
       <!-- Footer slot for fixed button at bottom -->

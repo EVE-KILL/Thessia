@@ -1,0 +1,31 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+    name: eve-kill-config
+    namespace: eve-kill
+data:
+    # Base64 encoded .env file
+    .env: |
+        # Environment variables for the backend
+        MONGO_URI=mongodb://mongodb.mongodb.svc.cluster.local:27017/thessia
+        REDIS_URI=redis.redis.svc.cluster.local
+        REDIS_PORT=6379
+        REDIS_DB=1
+        MEILISEARCH_URI=http://meilisearch.meilisearch.svc.cluster.local:7700
+        PROCESS_KILLMAILS=true
+        ENABLE_TASKS=true
+        HOST=0.0.0.0
+        REDISQ_ID=
+        ESI_URL=https://esi.evetech.net
+        ESI_RATE_LIMIT=25
+        BACKEND_DISCORD_URL=
+        SENTRY_DSN=
+        SENTRY_ORG=
+        SENTRY_PROJECT=
+        SENTRY_AUTH_TOKEN=
+        EVE_CLIENT_ID=
+        EVE_CLIENT_SECRET=
+        EVE_CLIENT_REDIRECT=
+        EVE_CLIENT_ID_DEV=
+        EVE_CLIENT_SECRET_DEV=
+        EVE_CLIENT_REDIRECT_DEV=

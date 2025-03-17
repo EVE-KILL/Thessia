@@ -1,0 +1,38 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+    name: redisq
+    namespace: eve-kill
+spec:
+    replicas: 1
+    strategy:
+        type: RollingUpdate
+        rollingUpdate:
+            maxSurge: 1
+            maxUnavailable: 0
+    selector:
+        matchLabels:
+            app: redisq
+    template:
+        metadata:
+            labels:
+                app: redisq
+        spec:
+            restartPolicy: Always
+            containers:
+              - name: redisq
+                image: ghcr.io/eve-kill/thessia:latest
+                imagePullPolicy: Always
+                command:
+                  - /bin/sh
+                  - -c
+                  - |
+                    ./bin/console redisq
+                volumeMounts:
+                  - name: eve-kill-config
+                    mountPath: /app/.env
+                    subPath: .env
+            volumes:
+              - name: eve-kill-config
+                configMap:
+                    name: eve-kill-config
