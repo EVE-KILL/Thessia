@@ -1,214 +1,179 @@
 {
-  "welcome": "Welcome to Thessia",
-  "language": "Language",
-  "navbar": {
-    "home": "Home",
-    "kills": "Kills",
-    "about": "About",
-    "search": "Search",
-    "background": "Change background image",
-    "menu": "Menu",
-    "user": "User Account",
-    "documentation": "Documentation",
-    "apiAccess": "API Access",
-    "discord": "Discord",
-    "faq": "FAQ",
-    "status": "Status",
-    "information": "Info"
-  },
-  "user": {
-    "profile": "Profile",
-    "settings": "Settings",
-    "documentation": "Documentation",
-    "apiAccess": "API Access",
-    "discord": "Discord",
-    "logout": "Logout"
-  },
-  "menu": {
-    "menu": "Menu",
-    "navigation": "Navigation",
-    "userAccount": "User Account",
-    "information": "Information",
-    "kills": "Kills",
-    "language": "Language"
-  },
-  "background": {
-    "title": "Background Images",
-    "random": "Random EVEPorn",
-    "loading": "Loading..."
-  },
-  "ui": {
+    "navbar": {
+        "menuTitle": "Menu",
+        "menuNavigation": "Navigation",
+        "menuTools": "Tools",
+        "home": {
+            "text": "Home",
+            "label": "Go to home page"
+        },
+        "kills": {
+            "text": "Kills",
+            "label": "Go to kills page",
+            "latest": "Latest",
+            "latestLabel": "Go to latest kills page",
+            "abyssal": "Abyssal",
+            "abyssalLabel": "Go to abyssal kills page",
+            "wspace": "Wormholes",
+            "wspaceLabel": "Go to wormhole kills page",
+            "highsec": "HighSec",
+            "highsecLabel": "Go to highsec kills page",
+            "lowsec": "LowSec",
+            "lowsecLabel": "Go to lowsec kills page",
+            "nullsec": "0.0",
+            "nullsecLabel": "Go to nullsec kills page",
+            "big": "Big",
+            "bigLabel": "Go to big kills page",
+            "solo": "Solo",
+            "soloLabel": "Go to solo kills page",
+            "npc": "NPC",
+            "npcLabel": "Go to NPC kills page",
+            "5b": "5B+",
+            "5bLabel": "Go to 5B+ kills page",
+            "10b": "10B+",
+            "10bLabel": "Go to 10B+ kills page",
+            "citadels": "Citadels",
+            "citadelsLabel": "Go to citadel kills page",
+            "t1": "T1",
+            "t1Label": "Go to T1 kills page",
+            "t2": "T2",
+            "t2Label": "Go to T2 kills page",
+            "t3": "T3",
+            "t3Label": "Go to T3 kills page",
+            "frigates": "Frigates",
+            "frigatesLabel": "Go to frigate kills page",
+            "destroyers": "Destroyers",
+            "destroyersLabel": "Go to destroyer kills page",
+            "cruisers": "Cruisers",
+            "cruisersLabel": "Go to cruiser kills page",
+            "battlecruisers": "Battlecruisers",
+            "battlecruisersLabel": "Go to battlecruiser kills page",
+            "battleships": "Battleships",
+            "battleshipsLabel": "Go to battleship kills page",
+            "capitals": "Capitals",
+            "capitalsLabel": "Go to capital kills page",
+            "freighters": "Freighters",
+            "freightersLabel": "Go to freighter kills page",
+            "supercarriers": "Super Carriers",
+            "supercarriersLabel": "Go to super carrier kills page",
+            "titans": "Titans",
+            "titansLabel": "Go to titan kills page"
+        },
+        "faq": {
+            "text": "FAQ",
+            "label": "Go to FAQ page"
+        },
+        "about": {
+            "text": "About",
+            "label": "Go to about page"
+        },
+        "status": {
+            "text": "Status",
+            "label": "Go to status page"
+        },
+        "backgroundSelector": {
+            "label": "Background"
+        },
+        "information": {
+            "label": "Information"
+        }
+    },
     "search": {
-      "placeholder": "Search..."
+        "title": "Search",
+        "placeholder": "Search ...",
+        "results": "Search results for {query}",
+        "searchButton": "Search",
+        "searching": "Searching...",
+        "noResults": "No results",
+        "noResultsTitle": "No results found",
+        "noResultsDesc": "We couldn't find anything matching your search. Try different keywords or broaden your search.",
+        "initialMessage": "Type something in the search box to start searching",
+        "more": "More",
+        "moreType": "More {type} ({count})",
+        "showMoreType": "Show more {type}",
+        "viewAllResults": "View all results ({count})",
+        "found": "Found {count} results",
+        "processingTimeMs": "Processing time: {time} ms",
+        "showMoreCategory": "Show more {category} ({count})",
+        "category": {
+            "character": "Characters",
+            "corporation": "Corporations",
+            "alliance": "Alliances",
+            "item": "Items",
+            "system": "Systems",
+            "region": "Regions"
+        }
     },
-    "notifications": {
-      "title": "Notifications",
-      "clear": "Clear all"
+    "background": {
+        "title": "Background",
+        "toggleVisibility": "Toggle background visibility",
+        "loading": "Loading...",
+        "randomReddit": "Random from r/EVEPorn",
+        "viewSource": "View source on Reddit"
     },
-    "selectMenu": {
-      "empty": "No results found",
-      "emptyItems": "No items",
-      "all": "All",
-      "selected": "{count} selected"
-    },
-    "pagination": {
-      "next": "Next",
-      "previous": "Previous",
-      "page": "Page {page}",
-      "navigate": "Navigate to page {page}",
-      "current": "Page {page}, current page"
+    "status": {
+        "title": "System Status",
+        "loading": "Loading status information...",
+        "autoRefresh": "Auto refresh every {seconds}s",
+        "refreshNow": "Refresh Now",
+        "retry": "Try Again",
+        "lastUpdated": "Last updated: {time}",
+        "autoRefreshing": "Auto-refreshing every {seconds} seconds",
+        "timePeriod": "Select Time Period",
+        "processedItems": "Processed Items ({period})",
+        "uptime": {
+            "title": "System Uptime",
+            "format": "{days}d {hours}h {minutes}m {seconds}s",
+            "since": "Up since",
+            "localTime": "Local time"
+        },
+        "environment": {
+            "title": "Environment",
+            "nodeEnv": "Node Environment",
+            "nodeVersion": "Node Version",
+            "process": "Process"
+        },
+        "operatingSystem": {
+            "title": "Operating System",
+            "platform": "Platform",
+            "architecture": "Architecture",
+            "loadAverage": "Load Average",
+            "totalCPUs": "CPU Cores",
+            "memory": "Memory (GB)"
+        },
+        "queueCounts": {
+            "title": "Active Queue Items",
+            "queue": "Queue Name",
+            "count": "Count"
+        },
+        "processingStatistics": {
+            "title": "Processing Statistics"
+        },
+        "databaseCounts": {
+            "title": "Database Collections",
+            "collection": "Collection",
+            "count": "Count"
+        },
+        "cacheSizes": {
+            "title": "Cache Sizes",
+            "cache": "Cache Name",
+            "size": "Size"
+        },
+        "cacheHits": {
+            "title": "Cache Performance",
+            "cache": "Cache Name",
+            "hits": "Hits"
+        },
+        "timePeriods": {
+            "1min": "1 Minute",
+            "5min": "5 Minutes",
+            "15min": "15 Minutes",
+            "1hour": "1 Hour",
+            "6hours": "6 Hours",
+            "12hours": "12 Hours",
+            "24hours": "24 Hours",
+            "1week": "1 Week",
+            "1month": "1 Month"
+        }
     }
-  },
-  "common": {
-    "loading": "Loading...",
-    "retry": "Retry",
-    "navigation": "Navigation",
-    "logout": "Logout",
-    "profile": "Profile",
-    "settings": "Settings",
-    "backToHome": "Back to Home",
-    "error": "Error",
-    "cancel": "Cancel",
-    "save": "Save",
-    "delete": "Delete",
-    "edit": "Edit"
-  },
-  "error": {
-    "notFound": "The page you're looking for cannot be found.",
-    "forbidden": "You don't have permission to access this page.",
-    "serverError": "Something went wrong on our servers.",
-    "generic": "An error occurred."
-  },
-  "status": {
-    "title": "System Status",
-    "loading": "Loading...",
-    "retry": "Retry",
-    "refreshNow": "Refresh Now",
-    "autoRefresh": "Auto refresh {seconds}s",
-    "autoRefreshing": "Auto-refreshing every {seconds} seconds",
-    "lastUpdated": "Last updated: {time}",
-    "processedItems": "Processed Items ({period})",
-    "queueCounts": {
-      "title": "Queue Counts",
-      "queue": "Queue",
-      "count": "Count"
-    },
-    "processingStatistics": {
-      "title": "Processing Statistics"
-    },
-    "timePeriod": "Time Period",
-    "databaseCounts": {
-      "title": "Database Counts",
-      "collection": "Collection",
-      "count": "Count"
-    },
-    "cacheSizes": {
-      "title": "Cache Sizes",
-      "cache": "Cache",
-      "size": "Size"
-    },
-    "cacheHits": {
-      "title": "Cache Hits",
-      "cache": "Cache",
-      "hits": "Hits"
-    },
-    "timePeriods": {
-      "1min": "1 Minute",
-      "5min": "5 Minutes",
-      "15min": "15 Minutes",
-      "1hour": "1 Hour",
-      "6hours": "6 Hours",
-      "12hours": "12 Hours",
-      "24hours": "24 Hours",
-      "1week": "1 Week",
-      "1month": "1 Month"
-    },
-    "uptime": {
-      "title": "Uptime",
-      "format": "{days}d {hours}h {minutes}m {seconds}s",
-      "since": "Up Since",
-      "localTime": "Local Time"
-    },
-    "environment": {
-      "title": "Environment",
-      "nodeEnv": "Node Env",
-      "nodeVersion": "Node Version",
-      "process": "Process"
-    },
-    "operatingSystem": {
-      "title": "Operating System",
-      "platform": "Platform",
-      "architecture": "Architecture",
-      "loadAverage": "Load Average",
-      "totalCPUs": "Total CPUs",
-      "memory": "Memory (GB)"
-    },
-    "queues": {
-      "title": "Queue Counts",
-      "queue": "Queue",
-      "count": "Count"
-    },
-    "processing": {
-      "title": "Processing Statistics",
-      "timePeriod": "Time Period"
-    },
-    "database": {
-      "title": "Database Counts",
-      "collection": "Collection",
-      "count": "Count"
-    },
-    "cache": {
-      "sizes": "Cache Sizes",
-      "hits": "Cache Hits",
-      "cache": "Cache",
-      "size": "Size"
-    }
-  },
-  "search": {
-    "results": "Search Results",
-    "resultsFor": "Results for",
-    "searchPlaceholder": "Search for characters, corporations, alliances...",
-    "searchButton": "Search",
-    "processingTime": "{count} results found in {time}ms",
-    "viewDetails": "View Details",
-    "noResultsTitle": "No results found",
-    "noResultsDesc": "Try adjusting your search terms or try a different search.",
-    "initialMessage": "Enter a search term above to get started",
-    "moreResults": "Load More Results",
-    "viewAllResults": "View all {count} results",
-    "showMoreType": "Show more {type}",
-    "noResults": "No results found",
-    "placeholder": "Search for characters, corporations, alliances...",
-    "categories": {
-      "character": "Characters",
-      "corporation": "Corporations",
-      "alliance": "Alliances",
-      "item": "Items",
-      "system": "Systems",
-      "region": "Regions",
-    },
-    "viewAll": "View All"
-  },
-  "auth": {
-    "loginWithEve": "Login with EVE Online",
-    "loginDescription": "Log in with your EVE Online account to track your kills and access personalized features.",
-    "permissionsRequested": "Permissions Requested",
-    "processing": "Processing Login",
-    "processingLogin": "Authenticating with EVE Online...",
-    "loginSuccessful": "Login successful! Welcome back.",
-    "continueToSite": "Continue to Site",
-    "login": {
-      "title": "Login with EVE Online",
-      "description": "Login with your EVE Online account to access character-specific features and track your kills and losses.",
-      "scopesTitle": "Select Scopes",
-      "publicDataScope": "Public Data",
-      "characterKillmails": "Character Killmails",
-      "corpKillmails": "Corporation Killmails",
-      "loginWithEVE": "Login with EVE Online",
-      "selectScopes": "Login with EVE Online",
-      "customizeScopes": "Customize Scopes",
-      "requiredScopes": "Required",
-      "optionalScopes": "Optional"
-    }
-  }
 }

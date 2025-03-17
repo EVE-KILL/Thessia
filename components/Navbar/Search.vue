@@ -206,24 +206,8 @@ const getColorForEntityType = (type: string) => {
 
 // Helper to get category label
 const getCategoryLabel = (type: string) => {
-  switch (type.toLowerCase()) {
-    case 'character':
-      return t('search.categoryCharacter', 'Characters');
-    case 'corporation':
-      return t('search.categoryCorporation', 'Corporations');
-    case 'alliance':
-      return t('search.categoryAlliance', 'Alliances');
-    case 'ship':
-      return t('search.categoryShip', 'Ships');
-    case 'item':
-      return t('search.categoryItem', 'Items');
-    case 'system':
-      return t('search.categorySystem', 'Systems');
-    case 'region':
-      return t('search.categoryRegion', 'Regions');
-    default:
-      return capitalizeFirstLetter(type + 's');
-  }
+  const key = `search.category.${type}`;
+  return t(key);
 };
 
 // Helper to capitalize first letter of a string
@@ -305,7 +289,7 @@ onUnmounted(() => {
         <input
           v-if="!isMobile"
           v-model="query"
-          :placeholder="t('navbar.search.placeholder', 'Search...')"
+          :placeholder="t('search.placeholder')"
           class="search-input w-full py-1.5 pl-8 pr-10 rounded-md bg-gray-100 dark:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-primary-500 text-base"
           type="search"
           @keydown="handleKeydown"
@@ -314,7 +298,7 @@ onUnmounted(() => {
         <!-- Mobile search input (that opens modal) -->
         <input
           v-else
-          :placeholder="t('navbar.search.placeholder', 'Search...')"
+          :placeholder="t('search.placeholder')"
           class="search-input w-full py-1.5 pl-8 pr-10 rounded-md bg-gray-100 dark:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-primary-500 text-base"
           type="search"
           @focus="openMobileSearch"
@@ -341,7 +325,7 @@ onUnmounted(() => {
         <!-- Search Header -->
         <div class="flex items-center justify-between mb-2">
           <h3 class="text-base font-medium text-gray-800 dark:text-gray-200">
-            {{ t('search.results', 'Search Results') }}
+            {{ t('search.results') }}
           </h3>
         </div>
 
@@ -387,7 +371,7 @@ onUnmounted(() => {
                     class="text-xs text-primary-600 dark:text-primary-400 hover:underline py-1"
                     @click="navigateToSearch(); shouldShowDropdown = false;"
                   >
-                    +{{ hits.length - 5 }} {{ t('search.more', 'more') }}
+                    +{{ hits.length - 5 }} {{ t('search.more') }}
                   </button>
                 </div>
               </div>
@@ -424,7 +408,7 @@ onUnmounted(() => {
           <input
             id="mobile-search-input"
             v-model="query"
-            :placeholder="t('navbar.search.placeholder', 'Search...')"
+            :placeholder="t('search.placeholder')"
             class="w-full py-1.5 bg-transparent border-none text-lg focus:outline-none text-gray-900 dark:text-white"
             type="search"
             @keydown="handleKeydown"
@@ -487,8 +471,8 @@ onUnmounted(() => {
         class="flex flex-col items-center justify-center min-h-[60vh] text-center text-gray-600 dark:text-gray-400"
       >
         <UIcon name="i-heroicons-magnifying-glass" class="text-5xl mb-4" />
-        <p v-if="isLoading">{{ t('search.searching', 'Searching...') }}</p>
-        <p v-else>{{ t('search.noResults', 'No results found') }}</p>
+        <p v-if="isLoading">{{ t('search.searching') }}</p>
+        <p v-else>{{ t('search.noResults') }}</p>
       </div>
 
       <!-- Type to search -->
@@ -497,7 +481,7 @@ onUnmounted(() => {
         class="flex flex-col items-center justify-center min-h-[60vh] text-center text-gray-600 dark:text-gray-400"
       >
         <UIcon name="i-heroicons-magnifying-glass" class="text-5xl mb-4" />
-        <p>{{ t('search.typeToSearch', 'Type to search...') }}</p>
+        <p>{{ t('search.placeholder') }}</p>
       </div>
 
       <!-- Footer slot for search all button -->

@@ -95,7 +95,7 @@ const handleClose = () => {
       <div class="modal-content">
         <!-- Header with close button -->
         <div class="modal-header">
-          <div class="flex items-center justify-between w-full">
+          <div class="flex items-center justify-between w-full h-6 mr-3 ml-3 mt-2">
             <!-- Default header with title - can be overridden -->
             <slot name="header">
               <h2 class="text-xl font-bold text-gray-900 dark:text-white">
@@ -111,6 +111,8 @@ const handleClose = () => {
               @click="handleClose"
             />
           </div>
+          <!-- Additional header controls slot -->
+          <slot name="header-controls"></slot>
         </div>
 
         <!-- Main scrollable content area -->

@@ -1,177 +1,178 @@
 {
-  "welcome": "欢迎来到 Thessia",
-  "language": "语言",
-  "navbar": {
-    "home": "首页",
-    "kills": "击杀",
-    "about": "关于",
-    "search": "搜索击杀、玩家、公司...",
-    "background": "更换背景图片",
-    "menu": "菜单",
-    "user": "用户账户",
-    "documentation": "文档",
-    "apiAccess": "API 访问",
-    "discord": "Discord",
-    "faq": "常见问题",
-    "status": "系统状态",
-    "information": "信息"
-  },
-  "user": {
-    "profile": "个人资料",
-    "settings": "设置",
-    "documentation": "文档",
-    "apiAccess": "API 访问",
-    "discord": "Discord",
-    "logout": "退出登录"
-  },
-  "menu": {
-    "menu": "菜单",
-    "navigation": "导航",
-    "userAccount": "用户账户",
-    "information": "信息",
-    "kills": "击杀",
-    "language": "语言"
-  },
-  "background": {
-    "title": "背景图片",
-    "random": "随机 EVE 图片",
-    "loading": "加载中..."
-  },
-  "ui": {
+    "navbar": {
+        "menuTitle": "菜单",
+        "menuNavigation": "导航",
+        "menuTools": "工具",
+        "home": {
+            "text": "主页",
+            "label": "前往主页"
+        },
+        "kills": {
+            "text": "击杀",
+            "label": "前往击杀页面",
+            "latest": "最新",
+            "latestLabel": "前往最新击杀页面",
+            "abyssal": "深渊",
+            "abyssalLabel": "前往深渊击杀页面",
+            "wspace": "虫洞",
+            "wspaceLabel": "前往虫洞击杀页面",
+            "highsec": "高安",
+            "highsecLabel": "前往高安区击杀页面",
+            "lowsec": "低安",
+            "lowsecLabel": "前往低安区击杀页面",
+            "nullsec": "零安",
+            "nullsecLabel": "前往零安区击杀页面",
+            "big": "大型",
+            "bigLabel": "前往大型击杀页面",
+            "solo": "单人",
+            "soloLabel": "前往单人击杀页面",
+            "npc": "NPC",
+            "npcLabel": "前往NPC击杀页面",
+            "5b": "5B+",
+            "5bLabel": "前往5B+击杀页面",
+            "10b": "10B+",
+            "10bLabel": "前往10B+击杀页面",
+            "citadels": "堡垒",
+            "citadelsLabel": "前往堡垒击杀页面",
+            "t1": "T1",
+            "t1Label": "前往T1击杀页面",
+            "t2": "T2",
+            "t2Label": "前往T2击杀页面",
+            "t3": "T3",
+            "t3Label": "前往T3击杀页面",
+            "frigates": "护卫舰",
+            "frigatesLabel": "前往护卫舰击杀页面",
+            "destroyers": "驱逐舰",
+            "destroyersLabel": "前往驱逐舰击杀页面",
+            "cruisers": "巡洋舰",
+            "cruisersLabel": "前往巡洋舰击杀页面",
+            "battlecruisers": "战巡舰",
+            "battlecruisersLabel": "前往战巡舰击杀页面",
+            "battleships": "战列舰",
+            "battleshipsLabel": "前往战列舰击杀页面",
+            "capitals": "资本舰",
+            "capitalsLabel": "前往资本舰击杀页面",
+            "freighters": "运输舰",
+            "freightersLabel": "前往运输舰击杀页面",
+            "supercarriers": "超级航母",
+            "supercarriersLabel": "前往超级航母击杀页面",
+            "titans": "泰坦",
+            "titansLabel": "前往泰坦击杀页面"
+        },
+        "faq": {
+            "text": "常见问题",
+            "label": "前往常见问题页面"
+        },
+        "about": {
+            "text": "关于",
+            "label": "前往关于页面"
+        },
+        "status": {
+            "text": "状态",
+            "label": "前往状态页面"
+        },
+        "backgroundSelector": {
+            "label": "背景"
+        },
+        "information": {
+            "label": "信息"
+        }
+    },
     "search": {
-      "placeholder": "搜索..."
+        "title": "搜索",
+        "placeholder": "搜索...",
+        "results": "{query}的搜索结果",
+        "searchButton": "搜索",
+        "searching": "搜索中...",
+        "noResults": "无结果",
+        "noResultsTitle": "未找到结果",
+        "noResultsDesc": "没有找到匹配您搜索的内容。请尝试不同的关键词或扩大您的搜索范围。",
+        "initialMessage": "在搜索框中输入内容开始搜索",
+        "more": "更多",
+        "moreType": "更多{type}（{count}）",
+        "showMoreType": "显示更多{type}",
+        "viewAllResults": "查看所有结果（{count}）",
+        "found": "找到{count}个结果",
+        "processingTimeMs": "处理时间：{time}毫秒",
+        "showMoreCategory": "显示更多{category}（{count}）",
+        "category": {
+            "character": "角色",
+            "corporation": "公司",
+            "alliance": "联盟",
+            "item": "物品",
+            "system": "星系",
+            "region": "区域"
+        }
     },
-    "notifications": {
-      "title": "通知",
-      "clear": "清除全部"
+    "background": {
+        "title": "背景",
+        "loading": "加载中...",
+        "randomReddit": "从r/EVEPorn随机选择",
+        "viewSource": "在Reddit上查看源"
     },
-    "selectMenu": {
-      "empty": "未找到结果",
-      "emptyItems": "没有项目",
-      "all": "全部",
-      "selected": "已选择 {count} 项"
-    },
-    "pagination": {
-      "next": "下一页",
-      "previous": "上一页",
-      "page": "第 {page} 页",
-      "navigate": "跳转到第 {page} 页",
-      "current": "第 {page} 页，当前页"
+    "status": {
+        "title": "系统状态",
+        "loading": "加载状态信息...",
+        "autoRefresh": "每{seconds}秒自动刷新",
+        "refreshNow": "立即刷新",
+        "retry": "重试",
+        "lastUpdated": "最后更新：{time}",
+        "autoRefreshing": "每{seconds}秒自动刷新",
+        "timePeriod": "选择时间段",
+        "processedItems": "已处理项目（{period}）",
+        "uptime": {
+            "title": "系统运行时间",
+            "format": "{days}天 {hours}小时 {minutes}分钟 {seconds}秒",
+            "since": "开始运行时间",
+            "localTime": "当地时间"
+        },
+        "environment": {
+            "title": "环境",
+            "nodeEnv": "Node环境",
+            "nodeVersion": "Node版本",
+            "process": "进程"
+        },
+        "operatingSystem": {
+            "title": "操作系统",
+            "platform": "平台",
+            "architecture": "架构",
+            "loadAverage": "平均负载",
+            "totalCPUs": "CPU核心数",
+            "memory": "内存（GB）"
+        },
+        "queueCounts": {
+            "title": "活跃队列项目",
+            "queue": "队列名称",
+            "count": "数量"
+        },
+        "processingStatistics": {
+            "title": "处理统计"
+        },
+        "databaseCounts": {
+            "title": "数据库集合",
+            "collection": "集合",
+            "count": "数量"
+        },
+        "cacheSizes": {
+            "title": "缓存大小",
+            "cache": "缓存名称",
+            "size": "大小"
+        },
+        "cacheHits": {
+            "title": "缓存性能",
+            "cache": "缓存名称",
+            "hits": "命中次数"
+        },
+        "timePeriods": {
+            "1min": "1分钟",
+            "5min": "5分钟",
+            "15min": "15分钟",
+            "1hour": "1小时",
+            "6hours": "6小时",
+            "12hours": "12小时",
+            "24hours": "24小时",
+            "1week": "1周",
+            "1month": "1个月"
+        }
     }
-  },
-  "common": {
-    "loading": "加载中...",
-    "retry": "重试",
-    "navigation": "导航",
-    "logout": "退出登录",
-    "profile": "个人资料",
-    "settings": "设置",
-    "backToHome": "返回首页"
-  },
-  "error": {
-    "notFound": "找不到您要访问的页面。",
-    "forbidden": "您没有权限访问此页面。",
-    "serverError": "我们的服务器出现了问题。",
-    "generic": "发生错误。"
-  },
-  "status": {
-    "title": "系统状态",
-    "loading": "加载中...",
-    "retry": "重试",
-    "refreshNow": "立即刷新",
-    "autoRefresh": "自动刷新 {seconds}秒",
-    "autoRefreshing": "每 {seconds} 秒自动刷新",
-    "lastUpdated": "最后更新时间: {time}",
-    "processedItems": "已处理项目 ({period})",
-    "queueCounts": {
-      "title": "队列数量",
-      "queue": "队列",
-      "count": "数量"
-    },
-    "processingStatistics": {
-      "title": "处理统计"
-    },
-    "timePeriod": "时间段",
-    "databaseCounts": {
-      "title": "数据库计数",
-      "collection": "集合",
-      "count": "数量"
-    },
-    "cacheSizes": {
-      "title": "缓存大小",
-      "cache": "缓存",
-      "size": "大小"
-    },
-    "cacheHits": {
-      "title": "缓存命中",
-      "cache": "缓存",
-      "hits": "命中"
-    },
-    "timePeriods": {
-      "1min": "1 分钟",
-      "5min": "5 分钟",
-      "15min": "15 分钟",
-      "1hour": "1 小时",
-      "6hours": "6 小时",
-      "12hours": "12 小时",
-      "24hours": "24 小时",
-      "1week": "1 周",
-      "1month": "1 个月"
-    },
-    "uptime": {
-      "title": "运行时间",
-      "format": "{days}天 {hours}时 {minutes}分 {seconds}秒",
-      "since": "运行开始时间",
-      "localTime": "本地时间"
-    },
-    "environment": {
-      "title": "环境",
-      "nodeEnv": "Node 环境",
-      "nodeVersion": "Node 版本",
-      "process": "进程"
-    },
-    "operatingSystem": {
-      "title": "操作系统",
-      "platform": "平台",
-      "architecture": "架构",
-      "loadAverage": "平均负载",
-      "totalCPUs": "CPU 总数",
-      "memory": "内存 (GB)"
-    },
-    "queues": {
-      "title": "队列数量",
-      "queue": "队列",
-      "count": "数量"
-    },
-    "processing": {
-      "title": "处理统计",
-      "timePeriod": "时间段"
-    },
-    "database": {
-      "title": "数据库计数",
-      "collection": "集合",
-      "count": "数量"
-    },
-    "cache": {
-      "sizes": "缓存大小",
-      "hits": "缓存命中",
-      "cache": "缓存",
-      "size": "大小"
-    }
-  },
-  "search": {
-    "results": "搜索结果",
-    "resultsFor": "搜索结果：",
-    "searchPlaceholder": "搜索角色、公司、联盟...",
-    "searchButton": "搜索",
-    "found": "找到 {count} 个结果",
-    "processingTimeMs": "用时 {time}毫秒",
-    "viewDetails": "查看详情",
-    "noResultsTitle": "未找到结果",
-    "noResultsDesc": "请调整搜索词或尝试其他搜索。",
-    "initialMessage": "在上方输入搜索词开始",
-    "moreResults": "加载更多结果",
-    "viewAllResults": "查看所有 {count} 个结果",
-    "showMoreType": "显示更多{type}"
-  }
 }

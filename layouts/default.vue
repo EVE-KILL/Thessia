@@ -12,6 +12,19 @@
     <source :src="currentOptimizedUrl" type="video/mp4">
   </video>
 
+  <!-- Background viewer button - changed to toggle on click -->
+  <div class="background-view-button">
+    <UButton
+      :icon="isViewingBackground ? 'i-heroicons-eye-slash' : 'i-heroicons-eye'"
+      color="secondary"
+      variant="soft"
+      size="sm"
+      aria-label="View background"
+      :title="$t('background.toggleVisibility')"
+      @click="toggleBackgroundView"
+    />
+  </div>
+
   <!-- Remove position-relative class and simply use container -->
   <UContainer id="content" class="content flex flex-col mx-auto">
     <div id="inner-content" class="inner-content h-full">
@@ -31,6 +44,9 @@ const {
 
 // Get theme mode functionality
 const { currentTheme } = useThemeMode()
+
+// Track if background is being viewed (content faded out)
+const isViewingBackground = ref(false);
 
 // Get the background from cookie for SSR
 const backgroundCookie = useCookie('selected-background', {
@@ -67,6 +83,63 @@ useHead({
   ]
 })
 
+// Background viewing functions - now toggled with one click
+const toggleBackgroundView = () => {
+  if (!process.client) return;
+
+  // Toggle the viewing state
+  isViewingBackground.value = !isViewingBackground.value;
+
+  if (isViewingBackground.value) {
+    // Create and inject global style when turning ON
+    const styleElement = document.createElement('style');
+    styleElement.id = 'background-view-styles';
+    styleElement.innerHTML = `
+      /* Hide all content */
+      #content,
+      #inner-content {
+        opacity: 0 !important;
+        transition: opacity 0.2s ease-out !important;
+      }
+
+      /* Remove the vignette effect */
+      html::before {
+        opacity: 0 !important;
+        background: none !important;
+      }
+
+      /* Keep video background visible */
+      .video-background {
+        opacity: 1 !important;
+        z-index: 1 !important;
+      }
+
+      /* Keep the button visible */
+      .background-view-button {
+        opacity: 1 !important;
+        z-index: 9999 !important;
+      }
+
+      /* Disable pointer events except for our button */
+      body {
+        pointer-events: none !important;
+      }
+
+      .background-view-button {
+        pointer-events: auto !important;
+      }
+    `;
+
+    document.head.appendChild(styleElement);
+  } else {
+    // Remove the injected style when turning OFF
+    const styleElement = document.getElementById('background-view-styles');
+    if (styleElement) {
+      document.head.removeChild(styleElement);
+    }
+  }
+};
+
 // Update background when optimized URL changes
 watch(currentOptimizedUrl, (newUrl) => {
   if (process.client) {
@@ -86,10 +159,21 @@ watch(currentOptimizedUrl, (newUrl) => {
   }
 })
 
-// Handle initial video loading if needed
+// Handle initial video loading
 onMounted(() => {
-  if (isVideoBackground.value && videoBackground.value) {
+  if (process.client && isVideoBackground.value && videoBackground.value) {
     videoBackground.value.play().catch(e => console.warn('Could not autoplay video:', e))
+  }
+})
+
+// Clean up event listeners
+onUnmounted(() => {
+  if (process.client) {
+    // Remove any lingering styles
+    const styleElement = document.getElementById('background-view-styles');
+    if (styleElement) {
+      document.head.removeChild(styleElement);
+    }
   }
 })
 </script>
@@ -238,5 +322,24 @@ html.dark #content>#inner-content {
 /* Add padding top to content to account for fixed navbar */
 #inner-content {
   padding-top: 1rem; /* Reduced padding since sticky takes its own space */
+}
+
+/* Background viewer button positioning - updated for better visibility */
+.background-view-button {
+  position: fixed;
+  bottom: 20px;
+  left: 20px;
+  z-index: 40;
+  opacity: 0.6;
+  transition: opacity 0.2s ease;
+}
+
+.background-view-button:hover {
+  opacity: 1;
+}
+
+/* Add a inset shadow to the button to make it visible on light and dark backgrounds */
+.background-view-button .u-button {
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
 }
 </style>

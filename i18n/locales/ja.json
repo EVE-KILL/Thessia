@@ -1,177 +1,178 @@
 {
-  "welcome": "Thessiaへようこそ",
-  "language": "言語",
-  "navbar": {
-    "home": "ホーム",
-    "kills": "キル",
-    "about": "概要",
-    "search": "キル、プレイヤー、企業を検索...",
-    "background": "背景画像の変更",
-    "menu": "メニュー",
-    "user": "ユーザーアカウント",
-    "documentation": "ドキュメント",
-    "apiAccess": "APIアクセス",
-    "discord": "Discord",
-    "faq": "よくある質問",
-    "status": "システムステータス",
-    "information": "情報"
-  },
-  "user": {
-    "profile": "プロフィール",
-    "settings": "設定",
-    "documentation": "ドキュメント",
-    "apiAccess": "APIアクセス",
-    "discord": "Discord",
-    "logout": "ログアウト"
-  },
-  "menu": {
-    "menu": "メニュー",
-    "navigation": "ナビゲーション",
-    "userAccount": "ユーザーアカウント",
-    "information": "情報",
-    "kills": "キル",
-    "language": "言語"
-  },
-  "background": {
-    "title": "背景画像",
-    "random": "ランダムEVE画像",
-    "loading": "読み込み中..."
-  },
-  "ui": {
+    "navbar": {
+        "menuTitle": "メニュー",
+        "menuNavigation": "ナビゲーション",
+        "menuTools": "ツール",
+        "home": {
+            "text": "ホーム",
+            "label": "ホームページへ"
+        },
+        "kills": {
+            "text": "キル",
+            "label": "キルページへ",
+            "latest": "最新",
+            "latestLabel": "最新キルページへ",
+            "abyssal": "アビサル",
+            "abyssalLabel": "アビサルキルページへ",
+            "wspace": "ワームホール",
+            "wspaceLabel": "ワームホールキルページへ",
+            "highsec": "ハイセク",
+            "highsecLabel": "ハイセクキルページへ",
+            "lowsec": "ローセク",
+            "lowsecLabel": "ローセクキルページへ",
+            "nullsec": "ヌルセク",
+            "nullsecLabel": "ヌルセクキルページへ",
+            "big": "ビッグキル",
+            "bigLabel": "ビッグキルページへ",
+            "solo": "ソロ",
+            "soloLabel": "ソロキルページへ",
+            "npc": "NPC",
+            "npcLabel": "NPCキルページへ",
+            "5b": "5B+",
+            "5bLabel": "5B+キルページへ",
+            "10b": "10B+",
+            "10bLabel": "10B+キルページへ",
+            "citadels": "シタデル",
+            "citadelsLabel": "シタデルキルページへ",
+            "t1": "T1",
+            "t1Label": "T1キルページへ",
+            "t2": "T2",
+            "t2Label": "T2キルページへ",
+            "t3": "T3",
+            "t3Label": "T3キルページへ",
+            "frigates": "フリゲート",
+            "frigatesLabel": "フリゲートキルページへ",
+            "destroyers": "デストロイヤー",
+            "destroyersLabel": "デストロイヤーキルページへ",
+            "cruisers": "クルーザー",
+            "cruisersLabel": "クルーザーキルページへ",
+            "battlecruisers": "バトルクルーザー",
+            "battlecruisersLabel": "バトルクルーザーキルページへ",
+            "battleships": "バトルシップ",
+            "battleshipsLabel": "バトルシップキルページへ",
+            "capitals": "キャピタル",
+            "capitalsLabel": "キャピタルキルページへ",
+            "freighters": "フレイター",
+            "freightersLabel": "フレイターキルページへ",
+            "supercarriers": "スーパーキャリア",
+            "supercarriersLabel": "スーパーキャリアキルページへ",
+            "titans": "タイタン",
+            "titansLabel": "タイタンキルページへ"
+        },
+        "faq": {
+            "text": "FAQ",
+            "label": "FAQページへ"
+        },
+        "about": {
+            "text": "について",
+            "label": "についてのページへ"
+        },
+        "status": {
+            "text": "ステータス",
+            "label": "ステータスページへ"
+        },
+        "backgroundSelector": {
+            "label": "背景"
+        },
+        "information": {
+            "label": "情報"
+        }
+    },
     "search": {
-      "placeholder": "検索..."
+        "title": "検索",
+        "placeholder": "検索 ...",
+        "results": "{query}の検索結果",
+        "searchButton": "検索",
+        "searching": "検索中...",
+        "noResults": "結果なし",
+        "noResultsTitle": "結果が見つかりません",
+        "noResultsDesc": "検索に一致するものが見つかりませんでした。異なるキーワードを試すか、検索範囲を広げてください。",
+        "initialMessage": "検索を開始するには検索ボックスに入力してください",
+        "more": "もっと",
+        "moreType": "もっと{type}（{count}）",
+        "showMoreType": "{type}をもっと表示",
+        "viewAllResults": "全ての結果を表示（{count}）",
+        "found": "{count}件の結果が見つかりました",
+        "processingTimeMs": "処理時間：{time}ミリ秒",
+        "showMoreCategory": "もっと{category}を表示（{count}）",
+        "category": {
+            "character": "キャラクター",
+            "corporation": "コーポレーション",
+            "alliance": "アライアンス",
+            "item": "アイテム",
+            "system": "システム",
+            "region": "リージョン"
+        }
     },
-    "notifications": {
-      "title": "通知",
-      "clear": "すべてクリア"
+    "background": {
+        "title": "背景",
+        "loading": "読み込み中...",
+        "randomReddit": "r/EVEPornからランダム",
+        "viewSource": "Redditでソースを見る"
     },
-    "selectMenu": {
-      "empty": "結果が見つかりません",
-      "emptyItems": "アイテムがありません",
-      "all": "すべて",
-      "selected": "{count}個選択済み"
-    },
-    "pagination": {
-      "next": "次へ",
-      "previous": "前へ",
-      "page": "ページ {page}",
-      "navigate": "ページ{page}に移動",
-      "current": "ページ{page}、現在のページ"
+    "status": {
+        "title": "システムステータス",
+        "loading": "ステータス情報を読み込み中...",
+        "autoRefresh": "{seconds}秒ごとに自動更新",
+        "refreshNow": "今すぐ更新",
+        "retry": "再試行",
+        "lastUpdated": "最終更新：{time}",
+        "autoRefreshing": "{seconds}秒ごとに自動更新中",
+        "timePeriod": "期間を選択",
+        "processedItems": "処理アイテム（{period}）",
+        "uptime": {
+            "title": "システム稼働時間",
+            "format": "{days}日 {hours}時間 {minutes}分 {seconds}秒",
+            "since": "稼働開始",
+            "localTime": "現地時間"
+        },
+        "environment": {
+            "title": "環境",
+            "nodeEnv": "Node環境",
+            "nodeVersion": "Nodeバージョン",
+            "process": "プロセス"
+        },
+        "operatingSystem": {
+            "title": "オペレーティングシステム",
+            "platform": "プラットフォーム",
+            "architecture": "アーキテクチャ",
+            "loadAverage": "平均負荷",
+            "totalCPUs": "CPUコア",
+            "memory": "メモリ（GB）"
+        },
+        "queueCounts": {
+            "title": "アクティブキューアイテム",
+            "queue": "キュー名",
+            "count": "数"
+        },
+        "processingStatistics": {
+            "title": "処理統計"
+        },
+        "databaseCounts": {
+            "title": "データベースコレクション",
+            "collection": "コレクション",
+            "count": "数"
+        },
+        "cacheSizes": {
+            "title": "キャッシュサイズ",
+            "cache": "キャッシュ名",
+            "size": "サイズ"
+        },
+        "cacheHits": {
+            "title": "キャッシュパフォーマンス",
+            "cache": "キャッシュ名",
+            "hits": "ヒット数"
+        },
+        "timePeriods": {
+            "1min": "1分",
+            "5min": "5分",
+            "15min": "15分",
+            "1hour": "1時間",
+            "6hours": "6時間",
+            "12hours": "12時間",
+            "24hours": "24時間",
+            "1week": "1週間",
+            "1month": "1ヶ月"
+        }
     }
-  },
-  "common": {
-    "loading": "読み込み中...",
-    "retry": "再試行",
-    "navigation": "ナビゲーション",
-    "logout": "ログアウト",
-    "profile": "プロフィール",
-    "settings": "設定",
-    "backToHome": "ホームに戻る"
-  },
-  "error": {
-    "notFound": "お探しのページが見つかりません。",
-    "forbidden": "このページにアクセスする権限がありません。",
-    "serverError": "サーバーで問題が発生しました。",
-    "generic": "エラーが発生しました。"
-  },
-  "status": {
-    "title": "システムステータス",
-    "loading": "読み込み中...",
-    "retry": "再試行",
-    "refreshNow": "今すぐ更新",
-    "autoRefresh": "自動更新 {seconds}秒",
-    "autoRefreshing": "{seconds}秒ごとに自動更新",
-    "lastUpdated": "最終更新: {time}",
-    "processedItems": "処理済みアイテム ({period})",
-    "queueCounts": {
-      "title": "キューカウント",
-      "queue": "キュー",
-      "count": "カウント"
-    },
-    "processingStatistics": {
-      "title": "処理統計"
-    },
-    "timePeriod": "期間",
-    "databaseCounts": {
-      "title": "データベースカウント",
-      "collection": "コレクション",
-      "count": "カウント"
-    },
-    "cacheSizes": {
-      "title": "キャッシュサイズ",
-      "cache": "キャッシュ",
-      "size": "サイズ"
-    },
-    "cacheHits": {
-      "title": "キャッシュヒット",
-      "cache": "キャッシュ",
-      "hits": "ヒット"
-    },
-    "timePeriods": {
-      "1min": "1分",
-      "5min": "5分",
-      "15min": "15分",
-      "1hour": "1時間",
-      "6hours": "6時間",
-      "12hours": "12時間",
-      "24hours": "24時間",
-      "1week": "1週間",
-      "1month": "1ヶ月"
-    },
-    "uptime": {
-      "title": "稼働時間",
-      "format": "{days}日 {hours}時間 {minutes}分 {seconds}秒",
-      "since": "稼働開始",
-      "localTime": "現地時間"
-    },
-    "environment": {
-      "title": "環境",
-      "nodeEnv": "Node環境",
-      "nodeVersion": "Nodeバージョン",
-      "process": "プロセス"
-    },
-    "operatingSystem": {
-      "title": "オペレーティングシステム",
-      "platform": "プラットフォーム",
-      "architecture": "アーキテクチャ",
-      "loadAverage": "平均負荷",
-      "totalCPUs": "CPU合計",
-      "memory": "メモリ (GB)"
-    },
-    "queues": {
-      "title": "キューカウント",
-      "queue": "キュー",
-      "count": "カウント"
-    },
-    "processing": {
-      "title": "処理統計",
-      "timePeriod": "期間"
-    },
-    "database": {
-      "title": "データベースカウント",
-      "collection": "コレクション",
-      "count": "カウント"
-    },
-    "cache": {
-      "sizes": "キャッシュサイズ",
-      "hits": "キャッシュヒット",
-      "cache": "キャッシュ",
-      "size": "サイズ"
-    }
-  },
-  "search": {
-    "results": "検索結果",
-    "resultsFor": "検索結果：",
-    "searchPlaceholder": "キャラクター、企業、同盟を検索...",
-    "searchButton": "検索",
-    "found": "{count}件の結果が見つかりました",
-    "processingTimeMs": "{time}ミリ秒で処理",
-    "viewDetails": "詳細を表示",
-    "noResultsTitle": "結果が見つかりません",
-    "noResultsDesc": "検索用語を調整するか、別の検索を試してください。",
-    "initialMessage": "上記に検索語を入力して開始してください",
-    "moreResults": "さらに結果を読み込む",
-    "viewAllResults": "すべての{count}件の結果を表示",
-    "showMoreType": "さらに{type}を表示"
-  }
 }

@@ -1,177 +1,178 @@
 {
-  "welcome": "Bienvenue sur Thessia",
-  "language": "Langue",
-  "navbar": {
-    "home": "Accueil",
-    "kills": "Destructions",
-    "about": "À propos",
-    "search": "Rechercher destructions, joueurs, corporations...",
-    "background": "Changer l'image de fond",
-    "menu": "Menu",
-    "user": "Compte utilisateur",
-    "documentation": "Documentation",
-    "apiAccess": "Accès API",
-    "discord": "Discord",
-    "faq": "FAQ",
-    "status": "État du système",
-    "information": "Informations"
-  },
-  "user": {
-    "profile": "Profil",
-    "settings": "Paramètres",
-    "documentation": "Documentation",
-    "apiAccess": "Accès API",
-    "discord": "Discord",
-    "logout": "Déconnexion"
-  },
-  "menu": {
-    "menu": "Menu",
-    "navigation": "Navigation",
-    "userAccount": "Compte utilisateur",
-    "information": "Informations",
-    "kills": "Destructions",
-    "language": "Langue"
-  },
-  "background": {
-    "title": "Images de fond",
-    "random": "EVE aléatoire",
-    "loading": "Chargement..."
-  },
-  "ui": {
+    "navbar": {
+        "menuTitle": "Menu",
+        "menuNavigation": "Navigation",
+        "menuTools": "Outils",
+        "home": {
+            "text": "Accueil",
+            "label": "Aller à la page d'accueil"
+        },
+        "kills": {
+            "text": "Éliminations",
+            "label": "Aller à la page des éliminations",
+            "latest": "Récentes",
+            "latestLabel": "Aller à la page des éliminations récentes",
+            "abyssal": "Abyssal",
+            "abyssalLabel": "Aller à la page des éliminations abyssales",
+            "wspace": "Trous de Ver",
+            "wspaceLabel": "Aller à la page des éliminations en trou de ver",
+            "highsec": "HighSec",
+            "highsecLabel": "Aller à la page des éliminations en haute sécurité",
+            "lowsec": "LowSec",
+            "lowsecLabel": "Aller à la page des éliminations en basse sécurité",
+            "nullsec": "0.0",
+            "nullsecLabel": "Aller à la page des éliminations en null-sec",
+            "big": "Importantes",
+            "bigLabel": "Aller à la page des éliminations importantes",
+            "solo": "Solo",
+            "soloLabel": "Aller à la page des éliminations en solo",
+            "npc": "NPC",
+            "npcLabel": "Aller à la page des éliminations de NPC",
+            "5b": "5B+",
+            "5bLabel": "Aller à la page des éliminations 5B+",
+            "10b": "10B+",
+            "10bLabel": "Aller à la page des éliminations 10B+",
+            "citadels": "Citadelles",
+            "citadelsLabel": "Aller à la page des éliminations de citadelles",
+            "t1": "T1",
+            "t1Label": "Aller à la page des éliminations T1",
+            "t2": "T2",
+            "t2Label": "Aller à la page des éliminations T2",
+            "t3": "T3",
+            "t3Label": "Aller à la page des éliminations T3",
+            "frigates": "Frégates",
+            "frigatesLabel": "Aller à la page des éliminations de frégates",
+            "destroyers": "Destroyers",
+            "destroyersLabel": "Aller à la page des éliminations de destroyers",
+            "cruisers": "Croiseurs",
+            "cruisersLabel": "Aller à la page des éliminations de croiseurs",
+            "battlecruisers": "Croiseurs de Bataille",
+            "battlecruisersLabel": "Aller à la page des éliminations de croiseurs de bataille",
+            "battleships": "Vaisseaux de Ligne",
+            "battleshipsLabel": "Aller à la page des éliminations de vaisseaux de ligne",
+            "capitals": "Capitaux",
+            "capitalsLabel": "Aller à la page des éliminations de vaisseaux capitaux",
+            "freighters": "Transporteurs",
+            "freightersLabel": "Aller à la page des éliminations de transporteurs",
+            "supercarriers": "Super-porteurs",
+            "supercarriersLabel": "Aller à la page des éliminations de super-porteurs",
+            "titans": "Titans",
+            "titansLabel": "Aller à la page des éliminations de titans"
+        },
+        "faq": {
+            "text": "FAQ",
+            "label": "Aller à la page FAQ"
+        },
+        "about": {
+            "text": "À Propos",
+            "label": "Aller à la page à propos"
+        },
+        "status": {
+            "text": "Statut",
+            "label": "Aller à la page de statut"
+        },
+        "backgroundSelector": {
+            "label": "Arrière-plan"
+        },
+        "information": {
+            "label": "Information"
+        }
+    },
     "search": {
-      "placeholder": "Rechercher..."
+        "title": "Rechercher",
+        "placeholder": "Rechercher ...",
+        "results": "Résultats de recherche pour {query}",
+        "searchButton": "Rechercher",
+        "searching": "Recherche en cours...",
+        "noResults": "Aucun résultat",
+        "noResultsTitle": "Aucun résultat trouvé",
+        "noResultsDesc": "Nous n'avons rien trouvé correspondant à votre recherche. Essayez différents mots-clés ou élargissez votre recherche.",
+        "initialMessage": "Tapez quelque chose dans la barre de recherche pour commencer",
+        "more": "Plus",
+        "moreType": "Plus de {type} ({count})",
+        "showMoreType": "Afficher plus de {type}",
+        "viewAllResults": "Voir tous les résultats ({count})",
+        "found": "{count} résultats trouvés",
+        "processingTimeMs": "Temps de traitement : {time} ms",
+        "showMoreCategory": "Afficher plus de {category} ({count})",
+        "category": {
+            "character": "Personnages",
+            "corporation": "Corporations",
+            "alliance": "Alliances",
+            "item": "Objets",
+            "system": "Systèmes",
+            "region": "Régions"
+        }
     },
-    "notifications": {
-      "title": "Notifications",
-      "clear": "Tout effacer"
+    "background": {
+        "title": "Arrière-plan",
+        "loading": "Chargement...",
+        "randomReddit": "Aléatoire depuis r/EVEPorn",
+        "viewSource": "Voir la source sur Reddit"
     },
-    "selectMenu": {
-      "empty": "Aucun résultat trouvé",
-      "emptyItems": "Aucun élément",
-      "all": "Tous",
-      "selected": "{count} sélectionnés"
-    },
-    "pagination": {
-      "next": "Suivant",
-      "previous": "Précédent",
-      "page": "Page {page}",
-      "navigate": "Aller à la page {page}",
-      "current": "Page {page}, page actuelle"
+    "status": {
+        "title": "État du Système",
+        "loading": "Chargement des informations d'état...",
+        "autoRefresh": "Actualisation automatique toutes les {seconds}s",
+        "refreshNow": "Actualiser Maintenant",
+        "retry": "Réessayer",
+        "lastUpdated": "Dernière mise à jour : {time}",
+        "autoRefreshing": "Actualisation automatique toutes les {seconds} secondes",
+        "timePeriod": "Sélectionner la Période",
+        "processedItems": "Éléments Traités ({period})",
+        "uptime": {
+            "title": "Temps de Fonctionnement",
+            "format": "{days}j {hours}h {minutes}m {seconds}s",
+            "since": "En service depuis",
+            "localTime": "Heure locale"
+        },
+        "environment": {
+            "title": "Environnement",
+            "nodeEnv": "Environnement Node",
+            "nodeVersion": "Version de Node",
+            "process": "Processus"
+        },
+        "operatingSystem": {
+            "title": "Système d'Exploitation",
+            "platform": "Plateforme",
+            "architecture": "Architecture",
+            "loadAverage": "Charge Moyenne",
+            "totalCPUs": "Cœurs CPU",
+            "memory": "Mémoire (Go)"
+        },
+        "queueCounts": {
+            "title": "Éléments Actifs dans la File d'Attente",
+            "queue": "Nom de la File",
+            "count": "Nombre"
+        },
+        "processingStatistics": {
+            "title": "Statistiques de Traitement"
+        },
+        "databaseCounts": {
+            "title": "Collections de Base de Données",
+            "collection": "Collection",
+            "count": "Nombre"
+        },
+        "cacheSizes": {
+            "title": "Tailles de Cache",
+            "cache": "Nom du Cache",
+            "size": "Taille"
+        },
+        "cacheHits": {
+            "title": "Performance du Cache",
+            "cache": "Nom du Cache",
+            "hits": "Hits"
+        },
+        "timePeriods": {
+            "1min": "1 Minute",
+            "5min": "5 Minutes",
+            "15min": "15 Minutes",
+            "1hour": "1 Heure",
+            "6hours": "6 Heures",
+            "12hours": "12 Heures",
+            "24hours": "24 Heures",
+            "1week": "1 Semaine",
+            "1month": "1 Mois"
+        }
     }
-  },
-  "common": {
-    "loading": "Chargement...",
-    "retry": "Réessayer",
-    "navigation": "Navigation",
-    "logout": "Déconnexion",
-    "profile": "Profil",
-    "settings": "Paramètres",
-    "backToHome": "Retour à l'accueil"
-  },
-  "error": {
-    "notFound": "La page que vous recherchez est introuvable.",
-    "forbidden": "Vous n'avez pas la permission d'accéder à cette page.",
-    "serverError": "Un problème est survenu sur nos serveurs.",
-    "generic": "Une erreur s'est produite."
-  },
-  "status": {
-    "title": "État du système",
-    "loading": "Chargement...",
-    "retry": "Réessayer",
-    "refreshNow": "Actualiser maintenant",
-    "autoRefresh": "Actualisation auto {seconds}s",
-    "autoRefreshing": "Actualisation automatique toutes les {seconds} secondes",
-    "lastUpdated": "Dernière mise à jour: {time}",
-    "processedItems": "Éléments traités ({period})",
-    "queueCounts": {
-      "title": "Compteurs de file d'attente",
-      "queue": "File d'attente",
-      "count": "Nombre"
-    },
-    "processingStatistics": {
-      "title": "Statistiques de traitement"
-    },
-    "timePeriod": "Période",
-    "databaseCounts": {
-      "title": "Compteurs de base de données",
-      "collection": "Collection",
-      "count": "Nombre"
-    },
-    "cacheSizes": {
-      "title": "Tailles de cache",
-      "cache": "Cache",
-      "size": "Taille"
-    },
-    "cacheHits": {
-      "title": "Hits de cache",
-      "cache": "Cache",
-      "hits": "Hits"
-    },
-    "timePeriods": {
-      "1min": "1 Minute",
-      "5min": "5 Minutes",
-      "15min": "15 Minutes",
-      "1hour": "1 Heure",
-      "6hours": "6 Heures",
-      "12hours": "12 Heures",
-      "24hours": "24 Heures",
-      "1week": "1 Semaine",
-      "1month": "1 Mois"
-    },
-    "uptime": {
-      "title": "Temps de fonctionnement",
-      "format": "{days}j {hours}h {minutes}m {seconds}s",
-      "since": "En ligne depuis",
-      "localTime": "Heure locale"
-    },
-    "environment": {
-      "title": "Environnement",
-      "nodeEnv": "Env Node",
-      "nodeVersion": "Version de Node",
-      "process": "Processus"
-    },
-    "operatingSystem": {
-      "title": "Système d'exploitation",
-      "platform": "Plateforme",
-      "architecture": "Architecture",
-      "loadAverage": "Charge moyenne",
-      "totalCPUs": "CPUs total",
-      "memory": "Mémoire (GB)"
-    },
-    "queues": {
-      "title": "Compteurs de file d'attente",
-      "queue": "File d'attente",
-      "count": "Nombre"
-    },
-    "processing": {
-      "title": "Statistiques de traitement",
-      "timePeriod": "Période"
-    },
-    "database": {
-      "title": "Compteurs de base de données",
-      "collection": "Collection",
-      "count": "Nombre"
-    },
-    "cache": {
-      "sizes": "Tailles de cache",
-      "hits": "Hits de cache",
-      "cache": "Cache",
-      "size": "Taille"
-    }
-  },
-  "search": {
-    "results": "Résultats de recherche",
-    "resultsFor": "Résultats pour",
-    "searchPlaceholder": "Rechercher des personnages, corporations, alliances...",
-    "searchButton": "Rechercher",
-    "found": "{count} résultats trouvés",
-    "processingTimeMs": "en {time}ms",
-    "viewDetails": "Voir les détails",
-    "noResultsTitle": "Aucun résultat trouvé",
-    "noResultsDesc": "Essayez d'ajuster vos termes de recherche ou essayez une recherche différente.",
-    "initialMessage": "Entrez un terme de recherche ci-dessus pour commencer",
-    "moreResults": "Charger plus de résultats",
-    "viewAllResults": "Voir tous les {count} résultats",
-    "showMoreType": "Afficher plus de {type}"
-  }
 }

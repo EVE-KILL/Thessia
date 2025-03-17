@@ -1,6 +1,6 @@
 <script lang="ts" setup>
 import { markRaw } from 'vue';
-const { t } = useI18n()
+const { t, locale } = useI18n()
 const { themeIcon, themeAriaLabel, toggleTheme } = useThemeMode()
 
 // Import components directly and mark them as raw to avoid reactivity warnings
@@ -55,260 +55,198 @@ const closeMobileMenu = () => {
   isMobileMenuOpen.value = false;
 };
 
-// Navbar links data
-const navbarLinks = ref([
+// Convert navbarLinks to a computed property to make it reactive to language changes
+const navbarLinks = computed(() => {
+  // This computed property will re-evaluate whenever locale changes
+  return [
     {
-        name: t('navbar.home'),
-        label: t('navbar.home.label'),
-        icon: 'i-heroicons-home',
-        to: '/',
-        position: 'left'
+      name: t('navbar.home.text'),
+      label: t('navbar.home.label'),
+      icon: 'i-heroicons-home',
+      to: '/',
+      position: 'left'
     },
     {
-        name: t('navbar.kills'),
-        label: t('navbar.kills.label'),
-        icon: 'i-heroicons-forward',
-        position: 'left',
-        children: [
-            {
-                name: t('navbar.kills.latest'),
-                label: t('navbar.kills.latest.label'),
-                to: '/kills/latest'
-            },
-            {
-                name: t('navbar.kills.latest'),
-                label: t('navbar.kills.latest.label'),
-                to: '/kills/latest'
-            },
-            {
-                name: t('navbar.kills.top'),
-                label: t('navbar.kills.top.label'),
-                to: '/kills/top'
-            },
-            {
-                name: t('navbar.kills.wrecks'),
-                label: t('navbar.kills.wrecks.label'),
-                to: '/kills/wrecks'
-            },
-            {
-                name: t('navbar.kills.podcasts'),
-                label: t('navbar.kills.podcasts.label'),
-                to: '/kills/podcasts'
-            },
-            {
-                name: t('navbar.kills.videos'),
-                label: t('navbar.kills.videos.label'),
-                to: '/kills/videos'
-            },{
-                name: t('navbar.kills.latest'),
-                label: t('navbar.kills.latest.label'),
-                to: '/kills/latest'
-            },
-            {
-                name: t('navbar.kills.latest'),
-                label: t('navbar.kills.latest.label'),
-                to: '/kills/latest'
-            },
-            {
-                name: t('navbar.kills.top'),
-                label: t('navbar.kills.top.label'),
-                to: '/kills/top'
-            },
-            {
-                name: t('navbar.kills.wrecks'),
-                label: t('navbar.kills.wrecks.label'),
-                to: '/kills/wrecks'
-            },
-            {
-                name: t('navbar.kills.podcasts'),
-                label: t('navbar.kills.podcasts.label'),
-                to: '/kills/podcasts'
-            },
-            {
-                name: t('navbar.kills.videos'),
-                label: t('navbar.kills.videos.label'),
-                to: '/kills/videos'
-            },{
-                name: t('navbar.kills.latest'),
-                label: t('navbar.kills.latest.label'),
-                to: '/kills/latest'
-            },
-            {
-                name: t('navbar.kills.latest'),
-                label: t('navbar.kills.latest.label'),
-                to: '/kills/latest'
-            },
-            {
-                name: t('navbar.kills.top'),
-                label: t('navbar.kills.top.label'),
-                to: '/kills/top'
-            },
-            {
-                name: t('navbar.kills.wrecks'),
-                label: t('navbar.kills.wrecks.label'),
-                to: '/kills/wrecks'
-            },
-            {
-                name: t('navbar.kills.podcasts'),
-                label: t('navbar.kills.podcasts.label'),
-                to: '/kills/podcasts'
-            },
-            {
-                name: t('navbar.kills.videos'),
-                label: t('navbar.kills.videos.label'),
-                to: '/kills/videos'
-            },{
-                name: t('navbar.kills.latest'),
-                label: t('navbar.kills.latest.label'),
-                to: '/kills/latest'
-            },
-            {
-                name: t('navbar.kills.latest'),
-                label: t('navbar.kills.latest.label'),
-                to: '/kills/latest'
-            },
-            {
-                name: t('navbar.kills.top'),
-                label: t('navbar.kills.top.label'),
-                to: '/kills/top'
-            },
-            {
-                name: t('navbar.kills.wrecks'),
-                label: t('navbar.kills.wrecks.label'),
-                to: '/kills/wrecks'
-            },
-            {
-                name: t('navbar.kills.podcasts'),
-                label: t('navbar.kills.podcasts.label'),
-                to: '/kills/podcasts'
-            },
-            {
-                name: t('navbar.kills.videos'),
-                label: t('navbar.kills.videos.label'),
-                to: '/kills/videos'
-            },{
-                name: t('navbar.kills.latest'),
-                label: t('navbar.kills.latest.label'),
-                to: '/kills/latest'
-            },
-            {
-                name: t('navbar.kills.latest'),
-                label: t('navbar.kills.latest.label'),
-                to: '/kills/latest'
-            },
-            {
-                name: t('navbar.kills.top'),
-                label: t('navbar.kills.top.label'),
-                to: '/kills/top'
-            },
-            {
-                name: t('navbar.kills.wrecks'),
-                label: t('navbar.kills.wrecks.label'),
-                to: '/kills/wrecks'
-            },
-            {
-                name: t('navbar.kills.podcasts'),
-                label: t('navbar.kills.podcasts.label'),
-                to: '/kills/podcasts'
-            },
-            {
-                name: t('navbar.kills.videos'),
-                label: t('navbar.kills.videos.label'),
-                to: '/kills/videos'
-            },{
-                name: t('navbar.kills.latest'),
-                label: t('navbar.kills.latest.label'),
-                to: '/kills/latest'
-            },
-            {
-                name: t('navbar.kills.latest'),
-                label: t('navbar.kills.latest.label'),
-                to: '/kills/latest'
-            },
-            {
-                name: t('navbar.kills.top'),
-                label: t('navbar.kills.top.label'),
-                to: '/kills/top'
-            },
-            {
-                name: t('navbar.kills.wrecks'),
-                label: t('navbar.kills.wrecks.label'),
-                to: '/kills/wrecks'
-            },
-            {
-                name: t('navbar.kills.podcasts'),
-                label: t('navbar.kills.podcasts.label'),
-                to: '/kills/podcasts'
-            },
-            {
-                name: t('navbar.kills.videos'),
-                label: t('navbar.kills.videos.label'),
-                to: '/kills/videos'
-            },
-        ]
-    },
-    {
-        name: t('navbar.search'),
-        label: t('navbar.search.label'),
-        icon: 'i-heroicons-magnifying-glass',
-        component: Search, // Using markRaw'd component
-        inline: true,
-        position: 'center',
-    },
-    {
-        label: t('navbar.theme.label', {
-            text: themeAriaLabel
-        }),
-        icon: themeIcon,
-        position: 'right',
-        mobile: true,
-        onClick: () => {
-            toggleTheme()
+      name: t('navbar.kills.text'),
+      label: t('navbar.kills.label'),
+      position: 'left',
+      children: [
+        {
+          name: t('navbar.kills.latest'),
+          label: t('navbar.kills.latestLabel'),
+          to: '/kills/latest'
         },
+        {
+          name: t('navbar.kills.abyssal'),
+          label: t('navbar.kills.abyssalLabel'),
+          to: '/kills/abyssal'
+        },
+        {
+          name: t('navbar.kills.wspace'),
+          label: t('navbar.kills.wspaceLabel'),
+          to: '/kills/wspace'
+        },
+        {
+          name: t('navbar.kills.highsec'),
+          label: t('navbar.kills.highsecLabel'),
+          to: '/kills/highsec'
+        },
+        {
+          name: t('navbar.kills.lowsec'),
+          label: t('navbar.kills.lowsecLabel'),
+          to: '/kills/lowsec'
+        },
+        {
+          name: t('navbar.kills.nullsec'),
+          label: t('navbar.kills.nullsecLabel'),
+          to: '/kills/nullsec'
+        },
+        {
+          name: t('navbar.kills.big'),
+          label: t('navbar.kills.bigLabel'),
+          to: '/kills/big'
+        },
+        {
+          name: t('navbar.kills.solo'),
+          label: t('navbar.kills.soloLabel'),
+          to: '/kills/solo'
+        },
+        {
+          name: t('navbar.kills.npc'),
+          label: t('navbar.kills.npcLabel'),
+          to: '/kills/npc'
+        },
+        {
+          name: t('navbar.kills.5b'),
+          label: t('navbar.kills.5bLabel'),
+          to: '/kills/5b'
+        },
+        {
+          name: t('navbar.kills.10b'),
+          label: t('navbar.kills.10bLabel'),
+          to: '/kills/10b'
+        },
+        {
+          name: t('navbar.kills.citadels'),
+          label: t('navbar.kills.citadelsLabel'),
+          to: '/kills/citadels'
+        },
+        {
+          name: t('navbar.kills.t1'),
+          label: t('navbar.kills.t1Label'),
+          to: '/kills/t1'
+        },
+        {
+          name: t('navbar.kills.t2'),
+          label: t('navbar.kills.t2Label'),
+          to: '/kills/t2'
+        },
+        {
+          name: t('navbar.kills.t3'),
+          label: t('navbar.kills.t3Label'),
+          to: '/kills/t3'
+        },
+        {
+          name: t('navbar.kills.frigates'),
+          label: t('navbar.kills.frigatesLabel'),
+          to: '/kills/frigates'
+        },
+        {
+          name: t('navbar.kills.destroyers'),
+          label: t('navbar.kills.destroyersLabel'),
+          to: '/kills/destroyers'
+        },
+        {
+          name: t('navbar.kills.cruisers'),
+          label: t('navbar.kills.cruisersLabel'),
+          to: '/kills/cruisers'
+        },
+        {
+          name: t('navbar.kills.battlecruisers'),
+          label: t('navbar.kills.battlecruisersLabel'),
+          to: '/kills/battlecruisers'
+        },
+        {
+          name: t('navbar.kills.battleships'),
+          label: t('navbar.kills.battleshipsLabel'),
+          to: '/kills/battleships'
+        },
+        {
+          name: t('navbar.kills.capitals'),
+          label: t('navbar.kills.capitalsLabel'),
+          to: '/kills/capitals'
+        },
+        {
+          name: t('navbar.kills.freighters'),
+          label: t('navbar.kills.freightersLabel'),
+          to: '/kills/freighters'
+        },
+        {
+          name: t('navbar.kills.supercarriers'),
+          label: t('navbar.kills.supercarriersLabel'),
+          to: '/kills/supercarriers'
+        },
+        {
+          name: t('navbar.kills.titans'),
+          label: t('navbar.kills.titansLabel'),
+          to: '/kills/titans'
+        }
+      ]
     },
     {
-        label: t('navbar.background-selector.label'),
-        icon: 'i-heroicons-photo',
-        component: BackgroundSwitcher,
-        position: 'right',
-        mobile: true,
+      component: Search,
+      inline: true,
+      position: 'center',
     },
     {
-        label: t('navbar.information.label'),
-        icon: 'i-heroicons-information-circle',
-        position: 'right',
-        collapse: false,
-        children: [
-            {
-                name: t('navbar.faq'),
-                label: t('navbar.faq.label'),
-                to: '/faq'
-            },
-            {
-                name: t('navbar.status'),
-                label: t('navbar.status.label'),
-                to: '/status'
-            },
-            {
-                name: t('navbar.about'),
-                label: t('navbar.about.label'),
-                to: '/about'
-            }
-        ],
+      icon: themeIcon.value,
+      position: 'right',
+      mobile: true,
+      onClick: () => {
+        toggleTheme()
+      },
     },
     {
-        name: t('navbar.user-dropdown'),
-        label: t('navbar.user-dropdown.label'),
-        icon: 'i-heroicons-user-circle',
-        component: null, // Replace with actual UserDropdown when available
-        position: 'right',
-    }
-]);
+      label: t('navbar.backgroundSelector.label'),
+      icon: 'i-heroicons-photo',
+      component: BackgroundSwitcher,
+      position: 'right',
+      mobile: true,
+    },
+    {
+      label: t('navbar.information.label'),
+      icon: 'i-heroicons-information-circle',
+      position: 'right',
+      collapse: false,
+      children: [
+        {
+          name: t('navbar.faq.text'),
+          label: t('navbar.faq.label'),
+          to: '/faq'
+        },
+        {
+          name: t('navbar.status.text'),
+          label: t('navbar.status.label'),
+          to: '/status'
+        },
+        {
+          name: t('navbar.about.text'),
+          label: t('navbar.about.label'),
+          to: '/about'
+        }
+      ],
+    },
+    //{
+    //  component: null, // Replace with actual UserDropdown when available
+    //  position: 'right',
+    //}
+  ];
+});
 </script>
 
 <template>
   <!-- Using sticky positioning like the old navbar - simpler approach -->
-  <nav class="hidden md:flex h-16 items-center justify-between sticky top-0 z-50 bg-white bg-opacity-90 dark:bg-black dark:bg-opacity-90 backdrop-blur-sm shadow-sm">
+  <nav class="hidden md:flex h-16 items-center justify-between sticky top-0 z-50 bg-white bg-opacity-90 dark:bg-black dark:bg-opacity-90 backdrop-blur-sm shadow-sm mr-4 ml-0">
     <!-- Left items -->
     <div class="flex items-center space-x-4">
         <div class="flex items-center space-x-2">
@@ -505,14 +443,14 @@ const navbarLinks = ref([
   <!-- Using MobileFullscreenModal for the mobile menu -->
   <MobileFullscreenModal
     :open="isMobileMenuOpen"
-    :title="t('menu.menu', 'Menu')"
+    :title="t('navbar.menuTitle')"
     @close="closeMobileMenu"
   >
     <!-- Main menu content -->
     <div class="h-full pb-20">
       <!-- Navigation section with collapsible items -->
       <div class="mb-8">
-        <h3 class="text-lg font-bold mb-4 text-gray-900 dark:text-gray-100">{{ t('menu.navigation', 'Navigation') }}</h3>
+        <h3 class="text-lg font-bold mb-4 text-gray-900 dark:text-gray-100">{{ t('navbar.menuNavigation') }}</h3>
         <div class="space-y-3">
           <!-- Left positioned links - typically navigation -->
           <template v-for="(link, index) in navbarLinks.filter(l => l.position === 'left')" :key="`left-${index}`">
@@ -593,7 +531,7 @@ const navbarLinks = ref([
 
       <!-- Tools Section -->
       <div class="mb-8">
-        <h3 class="text-lg font-bold mb-4 text-gray-900 dark:text-gray-100">{{ t('menu.tools', 'Tools') }}</h3>
+        <h3 class="text-lg font-bold mb-4 text-gray-900 dark:text-gray-100">{{ t('navbar.menuTools') }}</h3>
         <div class="space-y-3">
           <!-- Information dropdown items in mobile view -->
           <template v-for="(link, index) in navbarLinks.filter(l => l.position === 'right' && l.children)" :key="`info-${index}`">

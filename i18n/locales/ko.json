@@ -1,177 +1,178 @@
 {
-  "welcome": "Thessia에 오신 것을 환영합니다",
-  "language": "언어",
-  "navbar": {
-    "home": "홈",
-    "kills": "킬",
-    "about": "소개",
-    "search": "킬, 플레이어, 기업 검색...",
-    "background": "배경 이미지 변경",
-    "menu": "메뉴",
-    "user": "사용자 계정",
-    "documentation": "문서",
-    "apiAccess": "API 액세스",
-    "discord": "디스코드",
-    "faq": "자주 묻는 질문",
-    "status": "시스템 상태",
-    "information": "정보"
-  },
-  "user": {
-    "profile": "프로필",
-    "settings": "설정",
-    "documentation": "문서",
-    "apiAccess": "API 액세스",
-    "discord": "디스코드",
-    "logout": "로그아웃"
-  },
-  "menu": {
-    "menu": "메뉴",
-    "navigation": "탐색",
-    "userAccount": "사용자 계정",
-    "information": "정보",
-    "kills": "킬",
-    "language": "언어"
-  },
-  "background": {
-    "title": "배경 이미지",
-    "random": "랜덤 EVE 이미지",
-    "loading": "로딩 중..."
-  },
-  "ui": {
+    "navbar": {
+        "menuTitle": "메뉴",
+        "menuNavigation": "탐색",
+        "menuTools": "도구",
+        "home": {
+            "text": "홈",
+            "label": "홈페이지로 이동"
+        },
+        "kills": {
+            "text": "킬",
+            "label": "킬 페이지로 이동",
+            "latest": "최신",
+            "latestLabel": "최신 킬 페이지로 이동",
+            "abyssal": "어비설",
+            "abyssalLabel": "어비설 킬 페이지로 이동",
+            "wspace": "웜홀",
+            "wspaceLabel": "웜홀 킬 페이지로 이동",
+            "highsec": "하이섹",
+            "highsecLabel": "하이섹 킬 페이지로 이동",
+            "lowsec": "로우섹",
+            "lowsecLabel": "로우섹 킬 페이지로 이동",
+            "nullsec": "널섹",
+            "nullsecLabel": "널섹 킬 페이지로 이동",
+            "big": "빅킬",
+            "bigLabel": "빅킬 페이지로 이동",
+            "solo": "솔로",
+            "soloLabel": "솔로 킬 페이지로 이동",
+            "npc": "NPC",
+            "npcLabel": "NPC 킬 페이지로 이동",
+            "5b": "5B+",
+            "5bLabel": "5B+ 킬 페이지로 이동",
+            "10b": "10B+",
+            "10bLabel": "10B+ 킬 페이지로 이동",
+            "citadels": "시타델",
+            "citadelsLabel": "시타델 킬 페이지로 이동",
+            "t1": "T1",
+            "t1Label": "T1 킬 페이지로 이동",
+            "t2": "T2",
+            "t2Label": "T2 킬 페이지로 이동",
+            "t3": "T3",
+            "t3Label": "T3 킬 페이지로 이동",
+            "frigates": "프리깃",
+            "frigatesLabel": "프리깃 킬 페이지로 이동",
+            "destroyers": "디스트로이어",
+            "destroyersLabel": "디스트로이어 킬 페이지로 이동",
+            "cruisers": "크루저",
+            "cruisersLabel": "크루저 킬 페이지로 이동",
+            "battlecruisers": "배틀크루저",
+            "battlecruisersLabel": "배틀크루저 킬 페이지로 이동",
+            "battleships": "배틀쉽",
+            "battleshipsLabel": "배틀쉽 킬 페이지로 이동",
+            "capitals": "캐피탈",
+            "capitalsLabel": "캐피탈 킬 페이지로 이동",
+            "freighters": "프레이터",
+            "freightersLabel": "프레이터 킬 페이지로 이동",
+            "supercarriers": "슈퍼캐리어",
+            "supercarriersLabel": "슈퍼캐리어 킬 페이지로 이동",
+            "titans": "타이탄",
+            "titansLabel": "타이탄 킬 페이지로 이동"
+        },
+        "faq": {
+            "text": "FAQ",
+            "label": "FAQ 페이지로 이동"
+        },
+        "about": {
+            "text": "소개",
+            "label": "소개 페이지로 이동"
+        },
+        "status": {
+            "text": "상태",
+            "label": "상태 페이지로 이동"
+        },
+        "backgroundSelector": {
+            "label": "배경"
+        },
+        "information": {
+            "label": "정보"
+        }
+    },
     "search": {
-      "placeholder": "검색..."
+        "title": "검색",
+        "placeholder": "검색...",
+        "results": "{query}에 대한 검색 결과",
+        "searchButton": "검색",
+        "searching": "검색 중...",
+        "noResults": "결과 없음",
+        "noResultsTitle": "검색 결과가 없습니다",
+        "noResultsDesc": "검색어와 일치하는 항목을 찾을 수 없습니다. 다른 키워드로 시도하거나 검색 범위를 넓혀보세요.",
+        "initialMessage": "검색을 시작하려면 검색창에 입력하세요",
+        "more": "더보기",
+        "moreType": "더 많은 {type} ({count})",
+        "showMoreType": "더 많은 {type} 보기",
+        "viewAllResults": "모든 결과 보기 ({count})",
+        "found": "{count}개의 결과를 찾았습니다",
+        "processingTimeMs": "처리 시간: {time} ms",
+        "showMoreCategory": "더 많은 {category} 보기 ({count})",
+        "category": {
+            "character": "캐릭터",
+            "corporation": "코퍼레이션",
+            "alliance": "얼라이언스",
+            "item": "아이템",
+            "system": "시스템",
+            "region": "지역"
+        }
     },
-    "notifications": {
-      "title": "알림",
-      "clear": "모두 지우기"
+    "background": {
+        "title": "배경",
+        "loading": "로딩 중...",
+        "randomReddit": "r/EVEPorn에서 무작위로 가져오기",
+        "viewSource": "Reddit에서 소스 보기"
     },
-    "selectMenu": {
-      "empty": "결과를 찾을 수 없습니다",
-      "emptyItems": "항목 없음",
-      "all": "모두",
-      "selected": "{count}개 선택됨"
-    },
-    "pagination": {
-      "next": "다음",
-      "previous": "이전",
-      "page": "페이지 {page}",
-      "navigate": "페이지 {page}로 이동",
-      "current": "페이지 {page}, 현재 페이지"
+    "status": {
+        "title": "시스템 상태",
+        "loading": "상태 정보 로딩 중...",
+        "autoRefresh": "{seconds}초마다 자동 새로고침",
+        "refreshNow": "지금 새로고침",
+        "retry": "다시 시도",
+        "lastUpdated": "마지막 업데이트: {time}",
+        "autoRefreshing": "{seconds}초마다 자동으로 새로고침 중",
+        "timePeriod": "시간 기간 선택",
+        "processedItems": "처리된 항목 ({period})",
+        "uptime": {
+            "title": "시스템 가동 시간",
+            "format": "{days}일 {hours}시간 {minutes}분 {seconds}초",
+            "since": "시작 시간",
+            "localTime": "현지 시간"
+        },
+        "environment": {
+            "title": "환경",
+            "nodeEnv": "Node 환경",
+            "nodeVersion": "Node 버전",
+            "process": "프로세스"
+        },
+        "operatingSystem": {
+            "title": "운영 체제",
+            "platform": "플랫폼",
+            "architecture": "아키텍처",
+            "loadAverage": "평균 부하",
+            "totalCPUs": "CPU 코어",
+            "memory": "메모리 (GB)"
+        },
+        "queueCounts": {
+            "title": "활성 큐 항목",
+            "queue": "큐 이름",
+            "count": "개수"
+        },
+        "processingStatistics": {
+            "title": "처리 통계"
+        },
+        "databaseCounts": {
+            "title": "데이터베이스 컬렉션",
+            "collection": "컬렉션",
+            "count": "개수"
+        },
+        "cacheSizes": {
+            "title": "캐시 크기",
+            "cache": "캐시 이름",
+            "size": "크기"
+        },
+        "cacheHits": {
+            "title": "캐시 성능",
+            "cache": "캐시 이름",
+            "hits": "히트 수"
+        },
+        "timePeriods": {
+            "1min": "1분",
+            "5min": "5분",
+            "15min": "15분",
+            "1hour": "1시간",
+            "6hours": "6시간",
+            "12hours": "12시간",
+            "24hours": "24시간",
+            "1week": "1주",
+            "1month": "1개월"
+        }
     }
-  },
-  "common": {
-    "loading": "로딩 중...",
-    "retry": "재시도",
-    "navigation": "탐색",
-    "logout": "로그아웃",
-    "profile": "프로필",
-    "settings": "설정",
-    "backToHome": "홈으로 돌아가기"
-  },
-  "error": {
-    "notFound": "찾으시는 페이지를 찾을 수 없습니다.",
-    "forbidden": "이 페이지에 접근할 권한이 없습니다.",
-    "serverError": "서버에 문제가 발생했습니다.",
-    "generic": "오류가 발생했습니다."
-  },
-  "status": {
-    "title": "시스템 상태",
-    "loading": "로딩 중...",
-    "retry": "재시도",
-    "refreshNow": "지금 새로고침",
-    "autoRefresh": "자동 새로고침 {seconds}초",
-    "autoRefreshing": "{seconds}초마다 자동 새로고침",
-    "lastUpdated": "마지막 업데이트: {time}",
-    "processedItems": "처리된 항목 ({period})",
-    "queueCounts": {
-      "title": "대기열 수",
-      "queue": "대기열",
-      "count": "수"
-    },
-    "processingStatistics": {
-      "title": "처리 통계"
-    },
-    "timePeriod": "기간",
-    "databaseCounts": {
-      "title": "데이터베이스 수",
-      "collection": "컬렉션",
-      "count": "수"
-    },
-    "cacheSizes": {
-      "title": "캐시 크기",
-      "cache": "캐시",
-      "size": "크기"
-    },
-    "cacheHits": {
-      "title": "캐시 히트",
-      "cache": "캐시",
-      "hits": "히트"
-    },
-    "timePeriods": {
-      "1min": "1분",
-      "5min": "5분",
-      "15min": "15분",
-      "1hour": "1시간",
-      "6hours": "6시간",
-      "12hours": "12시간",
-      "24hours": "24시간",
-      "1week": "1주일",
-      "1month": "1개월"
-    },
-    "uptime": {
-      "title": "가동 시간",
-      "format": "{days}일 {hours}시간 {minutes}분 {seconds}초",
-      "since": "가동 시작일",
-      "localTime": "현지 시간"
-    },
-    "environment": {
-      "title": "환경",
-      "nodeEnv": "Node 환경",
-      "nodeVersion": "Node 버전",
-      "process": "프로세스"
-    },
-    "operatingSystem": {
-      "title": "운영 체제",
-      "platform": "플랫폼",
-      "architecture": "아키텍처",
-      "loadAverage": "평균 부하",
-      "totalCPUs": "총 CPU",
-      "memory": "메모리 (GB)"
-    },
-    "queues": {
-      "title": "대기열 수",
-      "queue": "대기열",
-      "count": "수"
-    },
-    "processing": {
-      "title": "처리 통계",
-      "timePeriod": "기간"
-    },
-    "database": {
-      "title": "데이터베이스 수",
-      "collection": "컬렉션",
-      "count": "수"
-    },
-    "cache": {
-      "sizes": "캐시 크기",
-      "hits": "캐시 히트",
-      "cache": "캐시",
-      "size": "크기"
-    }
-  },
-  "search": {
-    "results": "검색 결과",
-    "resultsFor": "검색 결과:",
-    "searchPlaceholder": "캐릭터, 기업, 연합 검색...",
-    "searchButton": "검색",
-    "found": "{count}개 결과 발견",
-    "processingTimeMs": "{time}ms 소요",
-    "viewDetails": "상세 보기",
-    "noResultsTitle": "결과를 찾을 수 없음",
-    "noResultsDesc": "검색어를 조정하거나 다른 검색을 시도해보세요.",
-    "initialMessage": "위에 검색어를 입력하여 시작하세요",
-    "moreResults": "더 많은 결과 로드",
-    "viewAllResults": "모든 {count}개 결과 보기",
-    "showMoreType": "더 많은 {type} 표시"
-  }
 }

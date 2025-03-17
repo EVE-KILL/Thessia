@@ -86,7 +86,7 @@ const getRedditSourceUrl = computed(() => {
   if (!currentRedditSource.value) {
     return 'https://www.reddit.com/r/eveporn';
   }
-  return `https://www.reddit.com${currentRedditSource.value.permalink}`;
+  return `${currentRedditSource.value.permalink}`;
 });
 
 // Get title for Reddit source
@@ -184,15 +184,9 @@ onUnmounted(() => {
         <div class="p-2">
           <div class="flex items-center justify-between mb-4">
             <h3 class="text-base font-medium">
-              {{ $t('background.title', 'Background Images') }}
+              {{ $t('background.title') }}
             </h3>
-            <UButton
-              icon="i-heroicons-x-mark"
-              color="primary"
-              variant="ghost"
-              size="sm"
-              @click="isDropdownOpen = false"
-            />
+            <!-- Background view button removed -->
           </div>
 
           <!-- Background Grid - without random button -->
@@ -245,7 +239,7 @@ onUnmounted(() => {
           <div class="mt-2 px-3 py-2 border-t border-(--ui-border)">
             <button
               @click="selectRandomReddit"
-              class="w-full flex items-center text-sm text-(--ui-text-subtle) hover:text-(--ui-primary) transition-colors"
+              class="w-full flex items-center text-(--ui-text-subtle) hover:text-(--ui-primary) transition-colors"
               :disabled="isLoadingRandomBg"
             >
               <UIcon
@@ -254,7 +248,7 @@ onUnmounted(() => {
                 :class="{'animate-spin': isLoadingRandomBg}"
               />
               <span class="truncate">
-                {{ isLoadingRandomBg ? $t('background.loading', 'Loading...') : $t('background.randomReddit', 'Random from r/EVEPorn') }}
+                {{ isLoadingRandomBg ? $t('background.loading') : $t('background.randomReddit') }}
               </span>
             </button>
           </div>
@@ -269,7 +263,7 @@ onUnmounted(() => {
               :title="getRedditSourceTitle"
             >
               <UIcon name="i-simple-icons-reddit" class="mr-2 text-[#FF4500]" />
-              <span class="truncate">{{ $t('background.viewSource', 'View source on Reddit') }}</span>
+              <span class="truncate">{{ $t('background.viewSource') }}</span>
             </a>
           </div>
         </div>
@@ -291,9 +285,14 @@ onUnmounted(() => {
     <!-- Using the new MobileFullscreenModal component -->
     <MobileFullscreenModal
       :open="isFullscreen"
-      :title="$t('background.title', 'Background Images')"
+      :title="$t('background.title')"
       @close="closeFullscreen"
     >
+      <!-- Header controls slot - removed background viewing button -->
+      <template #header-controls>
+        <!-- Background view button removed -->
+      </template>
+
       <!-- Main content slot -->
       <div class="grid grid-cols-2 gap-4">
         <button
@@ -319,7 +318,7 @@ onUnmounted(() => {
 
             <!-- For Videos -->
             <template v-else>
-              <div class="w-full h-full flex items-center justify-center bg-black/20 dark:bg-white/10">
+              <div class="w-full h-full flex items-center justify-center bg-black/20 dark:bg.white/10">
                 <UIcon name="i-heroicons-film" class="text-3xl" />
               </div>
             </template>
@@ -354,7 +353,7 @@ onUnmounted(() => {
               :style="isLoadingRandomBg ? '' : 'color: #FF4500;'"
             />
             <span class="font-medium">
-              {{ isLoadingRandomBg ? $t('background.loading', 'Loading...') : $t('background.randomReddit', 'Random from r/EVEPorn') }}
+              {{ isLoadingRandomBg ? $t('background.loading') : $t('background.randomReddit') }}
             </span>
           </button>
 
@@ -368,7 +367,7 @@ onUnmounted(() => {
             :title="getRedditSourceTitle"
           >
             <UIcon name="i-simple-icons-reddit" class="mr-2" style="color: #FF4500;" />
-            <span>{{ $t('background.viewSource', 'View source on Reddit') }}</span>
+            <span>{{ $t('background.viewSource') }}</span>
           </a>
         </div>
       </template>

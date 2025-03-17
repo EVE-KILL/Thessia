@@ -1,11 +1,7 @@
 <template>
   <div class="container mx-auto p-4">
     <div class="mb-8">
-      <h1 class="text-3xl font-bold mb-2">{{ $t('search.results') }}</h1>
-      <p class="text-gray-600 dark:text-gray-400">
-        {{ $t('search.resultsFor') }}
-        <span class="font-semibold">{{ route.query.q }}</span>
-      </p>
+      <h1 class="text-3xl font-bold mb-2">{{ $t('search.results', { query: capitalizeWords(searchQuery) }) }}</h1>
     </div>
 
     <!-- Search form -->
@@ -13,7 +9,7 @@
       <div class="flex items-center relative">
         <UInput
           v-model="searchQuery"
-          :placeholder="$t('search.searchPlaceholder')"
+          :placeholder="$t('search.placeholder')"
           :icon="isLoading ? 'i-heroicons-arrow-path' : 'i-heroicons-magnifying-glass'"
           :icon-class="isLoading ? 'animate-spin' : ''"
           size="lg"
@@ -92,14 +88,14 @@
               <!-- See more button for this type if many results -->
               <template #footer v-if="getHitCountByType(type) > group.length">
                 <UButton
-                  variant="ghost"
+                  variant="soft"
                   size="sm"
                   block
                   @click="loadMoreForType(type)"
                   :loading="loadingMoreTypes[type]"
-                  color="gray"
+                  color="secondary"
                 >
-                  {{ $t('search.showMoreType', { type: capitalizeFirstLetter(type) }) }}
+                  {{ $t('search.moreType', { type: capitalizeFirstLetter(type) + 's', count: getHitCountByType(type) }) }}
                 </UButton>
               </template>
             </UCard>
@@ -113,7 +109,7 @@
       v-else-if="results && results.hits.length === 0 && !isLoading"
       :title="$t('search.noResultsTitle')"
       icon="i-heroicons-information-circle"
-      color="blue"
+      color="warning"
     >
       {{ $t('search.noResultsDesc') }}
     </UAlert>
@@ -321,6 +317,15 @@ const capitalizeFirstLetter = (string: string) => {
   return string.charAt(0).toUpperCase() + string.slice(1);
 };
 
+// Helper to capitalize the first letter of each word in a string
+const capitalizeWords = (string: string) => {
+  if (!string) return '';
+  return string
+    .split(' ')
+    .map(word => capitalizeFirstLetter(word))
+    .join(' ');
+};
+
 // Search function - updated to use debounce
 let searchDebounceTimer: NodeJS.Timeout | null = null;
 const performSearch = async () => {
@@ -345,7 +350,8 @@ const performSearch = async () => {
 onMounted(async () => {
   // First perform initial search if query exists in URL
   if (route.query.q) {
-    results.value = await search(route.query.q as string);
+    searchQuery.value = route.query.q as string;
+    results.value = await search(searchQuery.value);
   }
 
   // Initialize auto-search functionality

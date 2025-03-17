@@ -1,177 +1,178 @@
 {
-  "welcome": "Bienvenido a Thessia",
-  "language": "Idioma",
-  "navbar": {
-    "home": "Inicio",
-    "kills": "Eliminaciones",
-    "about": "Acerca de",
-    "search": "Buscar eliminaciones, jugadores, corporaciones...",
-    "background": "Cambiar imagen de fondo",
-    "menu": "Menú",
-    "user": "Cuenta de usuario",
-    "documentation": "Documentación",
-    "apiAccess": "Acceso API",
-    "discord": "Discord",
-    "faq": "Preguntas frecuentes",
-    "status": "Estado del sistema",
-    "information": "Información"
-  },
-  "user": {
-    "profile": "Perfil",
-    "settings": "Configuración",
-    "documentation": "Documentación",
-    "apiAccess": "Acceso API",
-    "discord": "Discord",
-    "logout": "Cerrar sesión"
-  },
-  "menu": {
-    "menu": "Menú",
-    "navigation": "Navegación",
-    "userAccount": "Cuenta de usuario",
-    "information": "Información",
-    "kills": "Eliminaciones",
-    "language": "Idioma"
-  },
-  "background": {
-    "title": "Imágenes de fondo",
-    "random": "EVE aleatorio",
-    "loading": "Cargando..."
-  },
-  "ui": {
+    "navbar": {
+        "menuTitle": "Menú",
+        "menuNavigation": "Navegación",
+        "menuTools": "Herramientas",
+        "home": {
+            "text": "Inicio",
+            "label": "Ir a la página de inicio"
+        },
+        "kills": {
+            "text": "Bajas",
+            "label": "Ir a la página de bajas",
+            "latest": "Recientes",
+            "latestLabel": "Ir a la página de bajas recientes",
+            "abyssal": "Abisal",
+            "abyssalLabel": "Ir a la página de bajas abisales",
+            "wspace": "Agujeros de Gusano",
+            "wspaceLabel": "Ir a la página de bajas en agujeros de gusano",
+            "highsec": "Alta Seguridad",
+            "highsecLabel": "Ir a la página de bajas en alta seguridad",
+            "lowsec": "Baja Seguridad",
+            "lowsecLabel": "Ir a la página de bajas en baja seguridad",
+            "nullsec": "0.0",
+            "nullsecLabel": "Ir a la página de bajas en espacio nulo",
+            "big": "Grandes",
+            "bigLabel": "Ir a la página de grandes bajas",
+            "solo": "Solo",
+            "soloLabel": "Ir a la página de bajas en solitario",
+            "npc": "NPC",
+            "npcLabel": "Ir a la página de bajas NPC",
+            "5b": "5B+",
+            "5bLabel": "Ir a la página de bajas de 5B+",
+            "10b": "10B+",
+            "10bLabel": "Ir a la página de bajas de 10B+",
+            "citadels": "Ciudadelas",
+            "citadelsLabel": "Ir a la página de bajas de ciudadelas",
+            "t1": "T1",
+            "t1Label": "Ir a la página de bajas T1",
+            "t2": "T2",
+            "t2Label": "Ir a la página de bajas T2",
+            "t3": "T3",
+            "t3Label": "Ir a la página de bajas T3",
+            "frigates": "Fragatas",
+            "frigatesLabel": "Ir a la página de bajas de fragatas",
+            "destroyers": "Destructores",
+            "destroyersLabel": "Ir a la página de bajas de destructores",
+            "cruisers": "Cruceros",
+            "cruisersLabel": "Ir a la página de bajas de cruceros",
+            "battlecruisers": "Cruceros de Batalla",
+            "battlecruisersLabel": "Ir a la página de bajas de cruceros de batalla",
+            "battleships": "Acorazados",
+            "battleshipsLabel": "Ir a la página de bajas de acorazados",
+            "capitals": "Capitales",
+            "capitalsLabel": "Ir a la página de bajas de naves capitales",
+            "freighters": "Cargueros",
+            "freightersLabel": "Ir a la página de bajas de cargueros",
+            "supercarriers": "Superportaaviones",
+            "supercarriersLabel": "Ir a la página de bajas de superportaaviones",
+            "titans": "Titanes",
+            "titansLabel": "Ir a la página de bajas de titanes"
+        },
+        "faq": {
+            "text": "FAQ",
+            "label": "Ir a la página de preguntas frecuentes"
+        },
+        "about": {
+            "text": "Acerca de",
+            "label": "Ir a la página de acerca de"
+        },
+        "status": {
+            "text": "Estado",
+            "label": "Ir a la página de estado"
+        },
+        "backgroundSelector": {
+            "label": "Fondo"
+        },
+        "information": {
+            "label": "Información"
+        }
+    },
     "search": {
-      "placeholder": "Buscar..."
+        "title": "Buscar",
+        "placeholder": "Buscar ...",
+        "results": "Resultados de búsqueda para {query}",
+        "searchButton": "Buscar",
+        "searching": "Buscando...",
+        "noResults": "Sin resultados",
+        "noResultsTitle": "No se encontraron resultados",
+        "noResultsDesc": "No pudimos encontrar nada que coincida con tu búsqueda. Intenta con otras palabras clave o amplía tu búsqueda.",
+        "initialMessage": "Escribe algo en el cuadro de búsqueda para comenzar",
+        "more": "Más",
+        "moreType": "Más {type} ({count})",
+        "showMoreType": "Mostrar más {type}",
+        "viewAllResults": "Ver todos los resultados ({count})",
+        "found": "Se encontraron {count} resultados",
+        "processingTimeMs": "Tiempo de procesamiento: {time} ms",
+        "showMoreCategory": "Mostrar más {category} ({count})",
+        "category": {
+            "character": "Personajes",
+            "corporation": "Corporaciones",
+            "alliance": "Alianzas",
+            "item": "Objetos",
+            "system": "Sistemas",
+            "region": "Regiones"
+        }
     },
-    "notifications": {
-      "title": "Notificaciones",
-      "clear": "Borrar todo"
+    "background": {
+        "title": "Fondo",
+        "loading": "Cargando...",
+        "randomReddit": "Aleatorio de r/EVEPorn",
+        "viewSource": "Ver fuente en Reddit"
     },
-    "selectMenu": {
-      "empty": "No se encontraron resultados",
-      "emptyItems": "No hay elementos",
-      "all": "Todos",
-      "selected": "{count} seleccionados"
-    },
-    "pagination": {
-      "next": "Siguiente",
-      "previous": "Anterior",
-      "page": "Página {page}",
-      "navigate": "Ir a la página {page}",
-      "current": "Página {page}, página actual"
+    "status": {
+        "title": "Estado del Sistema",
+        "loading": "Cargando información de estado...",
+        "autoRefresh": "Actualización automática cada {seconds}s",
+        "refreshNow": "Actualizar Ahora",
+        "retry": "Intentar de Nuevo",
+        "lastUpdated": "Última actualización: {time}",
+        "autoRefreshing": "Actualizando automáticamente cada {seconds} segundos",
+        "timePeriod": "Seleccionar Período de Tiempo",
+        "processedItems": "Elementos Procesados ({period})",
+        "uptime": {
+            "title": "Tiempo de Actividad del Sistema",
+            "format": "{days}d {hours}h {minutes}m {seconds}s",
+            "since": "Activo desde",
+            "localTime": "Hora local"
+        },
+        "environment": {
+            "title": "Entorno",
+            "nodeEnv": "Entorno de Node",
+            "nodeVersion": "Versión de Node",
+            "process": "Proceso"
+        },
+        "operatingSystem": {
+            "title": "Sistema Operativo",
+            "platform": "Plataforma",
+            "architecture": "Arquitectura",
+            "loadAverage": "Carga Promedio",
+            "totalCPUs": "Núcleos de CPU",
+            "memory": "Memoria (GB)"
+        },
+        "queueCounts": {
+            "title": "Elementos Activos en Cola",
+            "queue": "Nombre de Cola",
+            "count": "Contador"
+        },
+        "processingStatistics": {
+            "title": "Estadísticas de Procesamiento"
+        },
+        "databaseCounts": {
+            "title": "Colecciones de Base de Datos",
+            "collection": "Colección",
+            "count": "Contador"
+        },
+        "cacheSizes": {
+            "title": "Tamaños de Caché",
+            "cache": "Nombre de Caché",
+            "size": "Tamaño"
+        },
+        "cacheHits": {
+            "title": "Rendimiento de Caché",
+            "cache": "Nombre de Caché",
+            "hits": "Aciertos"
+        },
+        "timePeriods": {
+            "1min": "1 Minuto",
+            "5min": "5 Minutos",
+            "15min": "15 Minutos",
+            "1hour": "1 Hora",
+            "6hours": "6 Horas",
+            "12hours": "12 Horas",
+            "24hours": "24 Horas",
+            "1week": "1 Semana",
+            "1month": "1 Mes"
+        }
     }
-  },
-  "common": {
-    "loading": "Cargando...",
-    "retry": "Reintentar",
-    "navigation": "Navegación",
-    "logout": "Cerrar sesión",
-    "profile": "Perfil",
-    "settings": "Configuración",
-    "backToHome": "Volver al inicio"
-  },
-  "error": {
-    "notFound": "La página que busca no se puede encontrar.",
-    "forbidden": "No tiene permiso para acceder a esta página.",
-    "serverError": "Algo salió mal en nuestros servidores.",
-    "generic": "Se produjo un error."
-  },
-  "status": {
-    "title": "Estado del sistema",
-    "loading": "Cargando...",
-    "retry": "Reintentar",
-    "refreshNow": "Actualizar ahora",
-    "autoRefresh": "Actualización automática {seconds}s",
-    "autoRefreshing": "Actualizando automáticamente cada {seconds} segundos",
-    "lastUpdated": "Última actualización: {time}",
-    "processedItems": "Elementos procesados ({period})",
-    "queueCounts": {
-      "title": "Recuentos de cola",
-      "queue": "Cola",
-      "count": "Cantidad"
-    },
-    "processingStatistics": {
-      "title": "Estadísticas de procesamiento"
-    },
-    "timePeriod": "Período de tiempo",
-    "databaseCounts": {
-      "title": "Recuentos de base de datos",
-      "collection": "Colección",
-      "count": "Cantidad"
-    },
-    "cacheSizes": {
-      "title": "Tamaños de caché",
-      "cache": "Caché",
-      "size": "Tamaño"
-    },
-    "cacheHits": {
-      "title": "Aciertos de caché",
-      "cache": "Caché",
-      "hits": "Aciertos"
-    },
-    "timePeriods": {
-      "1min": "1 Minuto",
-      "5min": "5 Minutos",
-      "15min": "15 Minutos",
-      "1hour": "1 Hora",
-      "6hours": "6 Horas",
-      "12hours": "12 Horas",
-      "24hours": "24 Horas",
-      "1week": "1 Semana",
-      "1month": "1 Mes"
-    },
-    "uptime": {
-      "title": "Tiempo de actividad",
-      "format": "{days}d {hours}h {minutes}m {seconds}s",
-      "since": "Activo desde",
-      "localTime": "Hora local"
-    },
-    "environment": {
-      "title": "Entorno",
-      "nodeEnv": "Entorno Node",
-      "nodeVersion": "Versión de Node",
-      "process": "Proceso"
-    },
-    "operatingSystem": {
-      "title": "Sistema operativo",
-      "platform": "Plataforma",
-      "architecture": "Arquitectura",
-      "loadAverage": "Carga promedio",
-      "totalCPUs": "CPUs totales",
-      "memory": "Memoria (GB)"
-    },
-    "queues": {
-      "title": "Recuentos de cola",
-      "queue": "Cola",
-      "count": "Cantidad"
-    },
-    "processing": {
-      "title": "Estadísticas de procesamiento",
-      "timePeriod": "Período de tiempo"
-    },
-    "database": {
-      "title": "Recuentos de base de datos",
-      "collection": "Colección",
-      "count": "Cantidad"
-    },
-    "cache": {
-      "sizes": "Tamaños de caché",
-      "hits": "Aciertos de caché",
-      "cache": "Caché",
-      "size": "Tamaño"
-    }
-  },
-  "search": {
-    "results": "Resultados de búsqueda",
-    "resultsFor": "Resultados para",
-    "searchPlaceholder": "Buscar personajes, corporaciones, alianzas...",
-    "searchButton": "Buscar",
-    "found": "{count} resultados encontrados",
-    "processingTimeMs": "en {time}ms",
-    "viewDetails": "Ver detalles",
-    "noResultsTitle": "No se encontraron resultados",
-    "noResultsDesc": "Intente ajustar sus términos de búsqueda o pruebe una búsqueda diferente.",
-    "initialMessage": "Ingrese un término de búsqueda arriba para comenzar",
-    "moreResults": "Cargar más resultados",
-    "viewAllResults": "Ver todos los {count} resultados",
-    "showMoreType": "Mostrar más {type}"
-  }
 }

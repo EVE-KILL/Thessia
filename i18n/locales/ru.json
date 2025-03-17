@@ -1,177 +1,178 @@
 {
-  "welcome": "Добро пожаловать в Thessia",
-  "language": "Язык",
-  "navbar": {
-    "home": "Главная",
-    "kills": "Уничтожения",
-    "about": "О нас",
-    "search": "Поиск уничтожений, игроков, корпораций...",
-    "background": "Изменить фоновое изображение",
-    "menu": "Меню",
-    "user": "Учетная запись",
-    "documentation": "Документация",
-    "apiAccess": "Доступ к API",
-    "discord": "Discord",
-    "faq": "ЧЗВ",
-    "status": "Состояние системы",
-    "information": "Информация"
-  },
-  "user": {
-    "profile": "Профиль",
-    "settings": "Настройки",
-    "documentation": "Документация",
-    "apiAccess": "Доступ к API",
-    "discord": "Discord",
-    "logout": "Выход"
-  },
-  "menu": {
-    "menu": "Меню",
-    "navigation": "Навигация",
-    "userAccount": "Учетная запись",
-    "information": "Информация",
-    "kills": "Уничтожения",
-    "language": "Язык"
-  },
-  "background": {
-    "title": "Фоновые изображения",
-    "random": "Случайное изображение EVE",
-    "loading": "Загрузка..."
-  },
-  "ui": {
+    "navbar": {
+        "menuTitle": "Меню",
+        "menuNavigation": "Навигация",
+        "menuTools": "Инструменты",
+        "home": {
+            "text": "Главная",
+            "label": "Перейти на главную страницу"
+        },
+        "kills": {
+            "text": "Уничтожения",
+            "label": "Перейти на страницу уничтожений",
+            "latest": "Последние",
+            "latestLabel": "Перейти на страницу последних уничтожений",
+            "abyssal": "Бездна",
+            "abyssalLabel": "Перейти на страницу уничтожений в Бездне",
+            "wspace": "Червоточины",
+            "wspaceLabel": "Перейти на страницу уничтожений в червоточинах",
+            "highsec": "ХайСек",
+            "highsecLabel": "Перейти на страницу уничтожений в ХайСек",
+            "lowsec": "ЛоуСек",
+            "lowsecLabel": "Перейти на страницу уничтожений в ЛоуСек",
+            "nullsec": "НулСек",
+            "nullsecLabel": "Перейти на страницу уничтожений в НулСек",
+            "big": "Крупные",
+            "bigLabel": "Перейти на страницу крупных уничтожений",
+            "solo": "Соло",
+            "soloLabel": "Перейти на страницу соло-уничтожений",
+            "npc": "NPC",
+            "npcLabel": "Перейти на страницу уничтожений NPC",
+            "5b": "5B+",
+            "5bLabel": "Перейти на страницу уничтожений 5B+",
+            "10b": "10B+",
+            "10bLabel": "Перейти на страницу уничтожений 10B+",
+            "citadels": "Цитадели",
+            "citadelsLabel": "Перейти на страницу уничтожений цитаделей",
+            "t1": "T1",
+            "t1Label": "Перейти на страницу уничтожений T1",
+            "t2": "T2",
+            "t2Label": "Перейти на страницу уничтожений T2",
+            "t3": "T3",
+            "t3Label": "Перейти на страницу уничтожений T3",
+            "frigates": "Фрегаты",
+            "frigatesLabel": "Перейти на страницу уничтожений фрегатов",
+            "destroyers": "Эсминцы",
+            "destroyersLabel": "Перейти на страницу уничтожений эсминцев",
+            "cruisers": "Крейсеры",
+            "cruisersLabel": "Перейти на страницу уничтожений крейсеров",
+            "battlecruisers": "Линейные крейсеры",
+            "battlecruisersLabel": "Перейти на страницу уничтожений линейных крейсеров",
+            "battleships": "Линкоры",
+            "battleshipsLabel": "Перейти на страницу уничтожений линкоров",
+            "capitals": "Капиталы",
+            "capitalsLabel": "Перейти на страницу уничтожений капитальных кораблей",
+            "freighters": "Фрахтовщики",
+            "freightersLabel": "Перейти на страницу уничтожений фрахтовщиков",
+            "supercarriers": "Суперносцы",
+            "supercarriersLabel": "Перейти на страницу уничтожений суперносцев",
+            "titans": "Титаны",
+            "titansLabel": "Перейти на страницу уничтожений титанов"
+        },
+        "faq": {
+            "text": "ЧаВо",
+            "label": "Перейти на страницу часто задаваемых вопросов"
+        },
+        "about": {
+            "text": "О нас",
+            "label": "Перейти на страницу о нас"
+        },
+        "status": {
+            "text": "Статус",
+            "label": "Перейти на страницу статуса"
+        },
+        "backgroundSelector": {
+            "label": "Фон"
+        },
+        "information": {
+            "label": "Информация"
+        }
+    },
     "search": {
-      "placeholder": "Поиск..."
+        "title": "Поиск",
+        "placeholder": "Поиск...",
+        "results": "Результаты поиска для {query}",
+        "searchButton": "Поиск",
+        "searching": "Поиск...",
+        "noResults": "Нет результатов",
+        "noResultsTitle": "Результаты не найдены",
+        "noResultsDesc": "Мы не смогли найти ничего соответствующего вашему запросу. Попробуйте другие ключевые слова или расширьте поиск.",
+        "initialMessage": "Введите что-нибудь в поле поиска, чтобы начать",
+        "more": "Ещё",
+        "moreType": "Ещё {type} ({count})",
+        "showMoreType": "Показать больше {type}",
+        "viewAllResults": "Просмотреть все результаты ({count})",
+        "found": "Найдено {count} результатов",
+        "processingTimeMs": "Время обработки: {time} мс",
+        "showMoreCategory": "Показать больше {category} ({count})",
+        "category": {
+            "character": "Персонажи",
+            "corporation": "Корпорации",
+            "alliance": "Альянсы",
+            "item": "Предметы",
+            "system": "Системы",
+            "region": "Регионы"
+        }
     },
-    "notifications": {
-      "title": "Уведомления",
-      "clear": "Очистить все"
+    "background": {
+        "title": "Фон",
+        "loading": "Загрузка...",
+        "randomReddit": "Случайное изображение с r/EVEPorn",
+        "viewSource": "Посмотреть источник на Reddit"
     },
-    "selectMenu": {
-      "empty": "Результаты не найдены",
-      "emptyItems": "Нет элементов",
-      "all": "Все",
-      "selected": "Выбрано: {count}"
-    },
-    "pagination": {
-      "next": "Следующая",
-      "previous": "Предыдущая",
-      "page": "Страница {page}",
-      "navigate": "Перейти на страницу {page}",
-      "current": "Страница {page}, текущая страница"
+    "status": {
+        "title": "Статус системы",
+        "loading": "Загрузка информации о статусе...",
+        "autoRefresh": "Автообновление каждые {seconds} с",
+        "refreshNow": "Обновить сейчас",
+        "retry": "Повторить попытку",
+        "lastUpdated": "Последнее обновление: {time}",
+        "autoRefreshing": "Автоматическое обновление каждые {seconds} секунд",
+        "timePeriod": "Выбрать период времени",
+        "processedItems": "Обработанные элементы ({period})",
+        "uptime": {
+            "title": "Время работы системы",
+            "format": "{days}д {hours}ч {minutes}м {seconds}с",
+            "since": "Работает с",
+            "localTime": "Местное время"
+        },
+        "environment": {
+            "title": "Окружение",
+            "nodeEnv": "Окружение Node",
+            "nodeVersion": "Версия Node",
+            "process": "Процесс"
+        },
+        "operatingSystem": {
+            "title": "Операционная система",
+            "platform": "Платформа",
+            "architecture": "Архитектура",
+            "loadAverage": "Средняя нагрузка",
+            "totalCPUs": "Ядер CPU",
+            "memory": "Память (ГБ)"
+        },
+        "queueCounts": {
+            "title": "Активные элементы очереди",
+            "queue": "Название очереди",
+            "count": "Количество"
+        },
+        "processingStatistics": {
+            "title": "Статистика обработки"
+        },
+        "databaseCounts": {
+            "title": "Коллекции базы данных",
+            "collection": "Коллекция",
+            "count": "Количество"
+        },
+        "cacheSizes": {
+            "title": "Размеры кэша",
+            "cache": "Название кэша",
+            "size": "Размер"
+        },
+        "cacheHits": {
+            "title": "Производительность кэша",
+            "cache": "Название кэша",
+            "hits": "Попадания"
+        },
+        "timePeriods": {
+            "1min": "1 минута",
+            "5min": "5 минут",
+            "15min": "15 минут",
+            "1hour": "1 час",
+            "6hours": "6 часов",
+            "12hours": "12 часов",
+            "24hours": "24 часа",
+            "1week": "1 неделя",
+            "1month": "1 месяц"
+        }
     }
-  },
-  "common": {
-    "loading": "Загрузка...",
-    "retry": "Повторить",
-    "navigation": "Навигация",
-    "logout": "Выход",
-    "profile": "Профиль",
-    "settings": "Настройки",
-    "backToHome": "Вернуться на главную"
-  },
-  "error": {
-    "notFound": "Страница, которую вы ищете, не найдена.",
-    "forbidden": "У вас нет разрешения на доступ к этой странице.",
-    "serverError": "На наших серверах произошла ошибка.",
-    "generic": "Произошла ошибка."
-  },
-  "status": {
-    "title": "Состояние системы",
-    "loading": "Загрузка...",
-    "retry": "Повторить",
-    "refreshNow": "Обновить сейчас",
-    "autoRefresh": "Автообновление {seconds} с",
-    "autoRefreshing": "Автоматическое обновление каждые {seconds} секунд",
-    "lastUpdated": "Последнее обновление: {time}",
-    "processedItems": "Обработанные элементы ({period})",
-    "queueCounts": {
-      "title": "Количество в очередях",
-      "queue": "Очередь",
-      "count": "Количество"
-    },
-    "processingStatistics": {
-      "title": "Статистика обработки"
-    },
-    "timePeriod": "Период времени",
-    "databaseCounts": {
-      "title": "Количество в базе данных",
-      "collection": "Коллекция",
-      "count": "Количество"
-    },
-    "cacheSizes": {
-      "title": "Размеры кэша",
-      "cache": "Кэш",
-      "size": "Размер"
-    },
-    "cacheHits": {
-      "title": "Попадания в кэш",
-      "cache": "Кэш",
-      "hits": "Попадания"
-    },
-    "timePeriods": {
-      "1min": "1 минута",
-      "5min": "5 минут",
-      "15min": "15 минут",
-      "1hour": "1 час",
-      "6hours": "6 часов",
-      "12hours": "12 часов",
-      "24hours": "24 часа",
-      "1week": "1 неделя",
-      "1month": "1 месяц"
-    },
-    "uptime": {
-      "title": "Время работы",
-      "format": "{days}д {hours}ч {minutes}м {seconds}с",
-      "since": "Работает с",
-      "localTime": "Местное время"
-    },
-    "environment": {
-      "title": "Окружение",
-      "nodeEnv": "Окружение Node",
-      "nodeVersion": "Версия Node",
-      "process": "Процесс"
-    },
-    "operatingSystem": {
-      "title": "Операционная система",
-      "platform": "Платформа",
-      "architecture": "Архитектура",
-      "loadAverage": "Средняя нагрузка",
-      "totalCPUs": "Всего CPU",
-      "memory": "Память (ГБ)"
-    },
-    "queues": {
-      "title": "Количество в очередях",
-      "queue": "Очередь",
-      "count": "Количество"
-    },
-    "processing": {
-      "title": "Статистика обработки",
-      "timePeriod": "Период времени"
-    },
-    "database": {
-      "title": "Количество в базе данных",
-      "collection": "Коллекция",
-      "count": "Количество"
-    },
-    "cache": {
-      "sizes": "Размеры кэша",
-      "hits": "Попадания в кэш",
-      "cache": "Кэш",
-      "size": "Размер"
-    }
-  },
-  "search": {
-    "results": "Результаты поиска",
-    "resultsFor": "Результаты для",
-    "searchPlaceholder": "Поиск персонажей, корпораций, альянсов...",
-    "searchButton": "Поиск",
-    "found": "Найдено результатов: {count}",
-    "processingTimeMs": "за {time} мс",
-    "viewDetails": "Просмотреть детали",
-    "noResultsTitle": "Результаты не найдены",
-    "noResultsDesc": "Попробуйте изменить условия поиска или выполнить другой поиск.",
-    "initialMessage": "Введите поисковый запрос выше, чтобы начать",
-    "moreResults": "Загрузить ещё результаты",
-    "viewAllResults": "Просмотреть все {count} результатов",
-    "showMoreType": "Показать больше {type}"
-  }
 }
