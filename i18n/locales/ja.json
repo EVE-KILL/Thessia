@@ -174,5 +174,70 @@
             "1week": "1週間",
             "1month": "1ヶ月"
         }
+    },
+    "auth": {
+        "signIn": "サインイン",
+        "signInWithEve": "EVE Onlineアカウントでサインイン",
+        "useEveSSOToLogin": "EVE Online SSOを使用してアカウントにサインイン",
+        "loading": "読み込み中...",
+        "loggingOut": "ログアウト中...",
+        "ssoRequiredForLogin": "ログインにはEVE SSOが必要です",
+        "alreadySignedIn": "すでにサインインしています",
+        "signedInAs": "{name}としてサインイン中",
+        "privacyNote": "当サービスを利用することで、リクエストされた権限に従ってEVE Onlineキャラクターデータへのアクセスを許可したことになります。",
+        "error": {
+            "general": "認証に失敗しました。もう一度お試しください。",
+            "tokenExpired": "セッションの有効期限が切れました。もう一度サインインしてください。",
+            "missingScope": "必要な権限がありません: {scope}"
+        }
+    },
+    "user": {
+        "profile": "プロフィール",
+        "settings": "設定",
+        "logout": "ログアウト",
+        "characterDetails": "キャラクター詳細",
+        "characterId": "キャラクターID",
+        "registeredSince": "登録日",
+        "tokenExpires": "トークン有効期限",
+        "permissions": "権限",
+        "needHelp": "アカウントについて助けが必要ですか？サポートにお問い合わせください。",
+        "profileDescription": "EVE Onlineキャラクター情報の閲覧と管理"
+    },
+    "common": {
+        "loading": "読み込み中...",
+        "error": "エラー",
+        "tryAgain": "再試行",
+        "goHome": "ホームへ",
+        "cancel": "キャンセル",
+        "save": "保存",
+        "selectLanguage": "言語を選択"
+    },
+    "settings": {
+        "description": "アカウント設定と権限を管理",
+        "accountSettings": "アカウント設定",
+        "permissions": "EVE Online権限",
+        "permissionsDescription": "EVE SSOを通じてこのアプリケーションに付与した権限:",
+        "permissionsNote": "これらの権限を変更するには、EVE SSOを通じて再認証する必要があります。",
+        "dataPrivacy": "データプライバシー",
+        "dataPrivacyDescription": "EVE Onlineデータの取り扱いに関する情報:",
+        "authenticationStatus": "認証ステータス",
+        "authenticated": "認証済み",
+        "expiringToken": "トークンの有効期限が近づいています",
+        "refreshToken": "トークンを更新",
+        "reauthenticate": "再認証",
+        "storesCharacterData": "ID、名前、付与された権限を含むキャラクター情報を保存します。",
+        "tokensEncrypted": "認証トークンは暗号化され安全に保存されています。",
+        "removeDataByRevoking": "EVE Onlineウェブサイトを通じていつでもアクセスを取り消すことができます。",
+        "deleteData": "データを削除",
+        "deleteError": "アカウントデータの削除に失敗しました",
+        "deleteAccountConfirmTitle": "アカウントデータ削除",
+        "deleteAccountConfirmMessage": "アカウントデータを削除してもよろしいですか？この操作は元に戻せません。",
+        "confirmDelete": "はい、データを削除します",
+        "permanentActionWarning": "これにより、設定や環境設定を含むすべてのデータがシステムから完全に削除されます。"
+    },
+    "permissions": {
+        "publicData": "公開キャラクター情報へのアクセス",
+        "readKillmails": "キルメールへのアクセス",
+        "readCorporationKillmails": "コーポレーションキルメールへのアクセス"
     }
 }

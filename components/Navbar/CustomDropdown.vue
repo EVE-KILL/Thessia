@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted, computed, watch } from 'vue';
+import { ref, onMounted, onUnmounted, computed, watch, nextTick } from 'vue';
 import { onClickOutside } from '@vueuse/core';
 
 const props = defineProps({
@@ -141,13 +141,17 @@ const distributedColumns = computed(() => {
   return distributeItemsInColumns(props.items, calculateColumns.value);
 });
 
-// Position the dropdown
+// Position the dropdown - completely revised for viewport-based positioning
 const updatePosition = () => {
   if (!triggerRef.value || !dropdownRef.value) return;
 
+  // Get trigger position relative to viewport
   const triggerRect = triggerRef.value.getBoundingClientRect();
   const { position, align } = props;
+
+  // Screen dimensions
   const screenWidth = window.innerWidth;
+  const screenHeight = window.innerHeight;
   const screenCenter = screenWidth / 2;
   const isOnRightSide = triggerRect.left > screenCenter;
 
@@ -159,19 +163,22 @@ const updatePosition = () => {
     widthValue = props.width;
   }
 
-  // Default positioning variables
+  // Default positioning variables - using viewport coordinates
   let top = 0;
   let left = 0;
   let right = 'auto';
 
-  // Smart positioning logic - prioritize keeping dropdown visible on screen
+  // Add 5px offset for better visual spacing
+  const offsetY = 5;
+
+  // Smart positioning logic - using viewport coordinates
   if (props.smartPosition) {
-    // Always position below the trigger by default
-    top = triggerRect.bottom + window.scrollY;
+    // Position relative to the trigger in the viewport with offset
+    top = triggerRect.bottom + offsetY; // Bottom edge of trigger in viewport + offset
 
     if (isOnRightSide) {
       // If on right half of screen, align right edges
-      right = `${window.innerWidth - triggerRect.right}px`;
+      right = screenWidth - triggerRect.right;
       left = 'auto';
     } else {
       // If on left half of screen, align left edges
@@ -179,20 +186,20 @@ const updatePosition = () => {
       right = 'auto';
     }
   } else {
-    // Original positioning logic
+    // Original positioning logic with viewport coordinates
     switch (position) {
       case 'bottom':
-        top = triggerRect.bottom;
+        top = triggerRect.bottom + offsetY; // Add offset
         break;
       case 'top':
-        top = triggerRect.top - (dropdownRef.value?.offsetHeight || 0);
+        top = triggerRect.top - (dropdownRef.value?.offsetHeight || 0) - offsetY; // Subtract offset for top positioning
         break;
       case 'left':
-        left = triggerRect.left - (dropdownRef.value?.offsetWidth || 0);
+        left = triggerRect.left - (dropdownRef.value?.offsetWidth || 0) - offsetY; // Subtract offset for left positioning
         top = triggerRect.top;
         break;
       case 'right':
-        left = triggerRect.right;
+        left = triggerRect.right + offsetY; // Add offset
         top = triggerRect.top;
         break;
     }
@@ -217,80 +224,77 @@ const updatePosition = () => {
     }
   }
 
-  // Ensure the dropdown doesn't go outside the viewport
-  const viewportWidth = window.innerWidth;
-  const viewportHeight = window.innerHeight;
+  // Get dropdown dimensions
   const dropdownWidth = dropdownRef.value?.offsetWidth || 0;
   const dropdownHeight = dropdownRef.value?.offsetHeight || 0;
 
-  // Horizontal constraint
-  if (left !== 'auto' && left + dropdownWidth > viewportWidth) {
-    left = viewportWidth - dropdownWidth - 8;
+  // Horizontal constraint within viewport
+  if (left !== 'auto' && left + dropdownWidth > screenWidth) {
+    left = screenWidth - dropdownWidth - 8;
   }
   if (left !== 'auto' && left < 8) {
     left = 8;
   }
 
-  // Vertical constraint
-  if (top + dropdownHeight > viewportHeight) {
+  // Vertical constraint within viewport
+  if (top + dropdownHeight > screenHeight) {
     // Flip to above if below would go off screen
     if (position === 'bottom' || props.smartPosition) {
-      top = triggerRect.top - dropdownHeight + window.scrollY;
+      top = triggerRect.top - dropdownHeight;
     } else {
-      top = viewportHeight - dropdownHeight - 8 + window.scrollY;
+      top = screenHeight - dropdownHeight - 8;
     }
   }
   if (top < 8) {
     top = 8;
   }
 
-  // Apply final styles
+  // Apply final styles - using fixed position to stay relative to viewport
   dropdownStyles.value = {
-    position: 'absolute',
+    position: 'fixed', // Key change: use fixed positioning to stay in viewport
     top: `${top}px`,
     left: left !== 'auto' ? `${left}px` : left,
-    right: right !== 'auto' ? right : 'auto',
+    right: right !== 'auto' ? `${right}px` : 'auto',
     width: widthValue,
     maxHeight: `${props.maxHeight}vh`,
     zIndex: 50
   };
 
-  // After applying styles, we need a short delay to ensure accurate measurements
-  // when first opening the dropdown
+  // Apply second-level adjustments after rendering
   setTimeout(() => {
-    // Do a second measurement after the content has had time to render fully
     if (dropdownRef.value) {
-      // Recalculate with actual rendered dimensions
-      const dropdownWidth = dropdownRef.value.offsetWidth;
-      const dropdownHeight = dropdownRef.value.offsetHeight;
+      const actualDropdownWidth = dropdownRef.value.offsetWidth;
 
-      // Update horizontal position
+      // Adjust horizontal position if needed
       if (props.smartPosition) {
-        const isOnRightSide = triggerRect.left > screenCenter;
-
         if (isOnRightSide) {
-          // Align right edges
-          dropdownStyles.value.right = `${window.innerWidth - triggerRect.right}px`;
+          dropdownStyles.value.right = `${screenWidth - triggerRect.right}px`;
           dropdownStyles.value.left = 'auto';
         } else {
-          // Align left edges
           dropdownStyles.value.left = `${triggerRect.left}px`;
           dropdownStyles.value.right = 'auto';
         }
 
-        // Additional edge detection
-        if (left !== 'auto' && left + dropdownWidth > viewportWidth) {
-          dropdownStyles.value.left = `${viewportWidth - dropdownWidth - 8}px`;
+        // Final edge detection
+        if (left !== 'auto' && left + actualDropdownWidth > screenWidth) {
+          dropdownStyles.value.left = `${screenWidth - actualDropdownWidth - 8}px`;
         }
       }
     }
-  }, 10); // Very short timeout to ensure DOM has updated
+  }, 10);
 };
 
 // Handle inner clicks
 const handleContentClick = (e: MouseEvent) => {
   if (props.closeOnInnerClick) {
     isOpen.value = false;
+  }
+};
+
+// Update position on scroll to ensure dropdowns follow the navbar when fixed
+const handleScroll = () => {
+  if (isOpen.value) {
+    updatePosition();
   }
 };
 
@@ -301,11 +305,11 @@ watch(() => isOpen.value, (value) => {
     nextTick(() => {
       updatePosition();
       window.addEventListener('resize', updatePosition);
-      window.addEventListener('scroll', updatePosition);
+      window.addEventListener('scroll', handleScroll);
     });
   } else {
     window.removeEventListener('resize', updatePosition);
-    window.removeEventListener('scroll', updatePosition);
+    window.removeEventListener('scroll', handleScroll);
   }
 });
 

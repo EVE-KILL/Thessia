@@ -174,5 +174,70 @@
             "1week": "1周",
             "1month": "1个月"
         }
+    },
+    "auth": {
+        "signIn": "登录",
+        "signInWithEve": "使用您的EVE Online账户登录",
+        "useEveSSOToLogin": "使用EVE Online SSO登录您的账户",
+        "loading": "加载中...",
+        "loggingOut": "正在登出...",
+        "ssoRequiredForLogin": "需要EVE SSO才能登录",
+        "alreadySignedIn": "您已经登录",
+        "signedInAs": "以{name}身份登录",
+        "privacyNote": "使用我们的服务，即表示您授权我们根据所请求的权限访问您的EVE Online角色数据。",
+        "error": {
+            "general": "认证失败。请重试。",
+            "tokenExpired": "您的会话已过期。请重新登录。",
+            "missingScope": "缺少所需权限：{scope}"
+        }
+    },
+    "user": {
+        "profile": "个人资料",
+        "settings": "设置",
+        "logout": "登出",
+        "characterDetails": "角色详情",
+        "characterId": "角色ID",
+        "registeredSince": "注册时间",
+        "tokenExpires": "令牌过期时间",
+        "permissions": "权限",
+        "needHelp": "需要账户帮助？请联系支持团队。",
+        "profileDescription": "查看并管理您的EVE Online角色信息"
+    },
+    "common": {
+        "loading": "加载中...",
+        "error": "错误",
+        "tryAgain": "重试",
+        "goHome": "返回首页",
+        "cancel": "取消",
+        "save": "保存",
+        "selectLanguage": "选择语言"
+    },
+    "settings": {
+        "description": "管理您的账户设置和权限",
+        "accountSettings": "账户设置",
+        "permissions": "EVE Online权限",
+        "permissionsDescription": "这些是您通过EVE SSO授予此应用程序的权限：",
+        "permissionsNote": "要修改这些权限，您需要通过EVE SSO重新认证。",
+        "dataPrivacy": "数据隐私",
+        "dataPrivacyDescription": "关于我们如何处理您的EVE Online数据的信息：",
+        "authenticationStatus": "认证状态",
+        "authenticated": "已认证",
+        "expiringToken": "令牌即将过期",
+        "refreshToken": "刷新令牌",
+        "reauthenticate": "重新认证",
+        "storesCharacterData": "我们存储您的角色信息，包括ID、名称和授予的权限。",
+        "tokensEncrypted": "您的认证令牌已加密并安全存储。",
+        "removeDataByRevoking": "您可以随时通过EVE Online网站撤销访问权限。",
+        "deleteData": "删除我的数据",
+        "deleteError": "删除账户数据失败",
+        "deleteAccountConfirmTitle": "删除账户数据",
+        "deleteAccountConfirmMessage": "您确定要删除您的账户数据吗？此操作无法撤消。",
+        "confirmDelete": "是的，删除我的数据",
+        "permanentActionWarning": "这将永久从我们的系统中删除所有您的数据，包括设置和偏好。"
+    },
+    "permissions": {
+        "publicData": "访问公共角色信息",
+        "readKillmails": "访问您的击杀邮件",
+        "readCorporationKillmails": "访问您的公司击杀邮件"
     }
 }

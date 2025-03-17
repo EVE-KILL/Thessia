@@ -174,5 +174,70 @@
             "1week": "1주",
             "1month": "1개월"
         }
+    },
+    "auth": {
+        "signIn": "로그인",
+        "signInWithEve": "EVE Online 계정으로 로그인",
+        "useEveSSOToLogin": "EVE Online SSO를 사용하여 계정에 로그인하세요",
+        "loading": "로딩 중...",
+        "loggingOut": "로그아웃 중...",
+        "ssoRequiredForLogin": "로그인을 위해 EVE SSO가 필요합니다",
+        "alreadySignedIn": "이미 로그인되어 있습니다",
+        "signedInAs": "{name}(으)로 로그인됨",
+        "privacyNote": "당사 서비스를 이용함으로써, 귀하는 요청된 권한에 따라 귀하의 EVE Online 캐릭터 데이터에 접근할 권한을 당사에 부여합니다.",
+        "error": {
+            "general": "인증에 실패했습니다. 다시 시도해주세요.",
+            "tokenExpired": "세션이 만료되었습니다. 다시 로그인해주세요.",
+            "missingScope": "필요한 권한이 없습니다: {scope}"
+        }
+    },
+    "user": {
+        "profile": "프로필",
+        "settings": "설정",
+        "logout": "로그아웃",
+        "characterDetails": "캐릭터 세부정보",
+        "characterId": "캐릭터 ID",
+        "registeredSince": "등록일",
+        "tokenExpires": "토큰 만료",
+        "permissions": "권한",
+        "needHelp": "계정에 도움이 필요하신가요? 지원팀에 문의하세요.",
+        "profileDescription": "EVE Online 캐릭터 정보를 보고 관리하세요"
+    },
+    "common": {
+        "loading": "로딩 중...",
+        "error": "오류",
+        "tryAgain": "다시 시도",
+        "goHome": "홈으로",
+        "cancel": "취소",
+        "save": "저장",
+        "selectLanguage": "언어 선택"
+    },
+    "settings": {
+        "description": "계정 설정 및 권한 관리",
+        "accountSettings": "계정 설정",
+        "permissions": "EVE Online 권한",
+        "permissionsDescription": "EVE SSO를 통해 이 애플리케이션에 부여한 권한입니다:",
+        "permissionsNote": "이러한 권한을 수정하려면 EVE SSO를 통해 재인증해야 합니다.",
+        "dataPrivacy": "데이터 개인정보",
+        "dataPrivacyDescription": "당사가 귀하의 EVE Online 데이터를 처리하는 방법에 관한 정보:",
+        "authenticationStatus": "인증 상태",
+        "authenticated": "인증됨",
+        "expiringToken": "토큰이 곧 만료됩니다",
+        "refreshToken": "토큰 새로고침",
+        "reauthenticate": "재인증",
+        "storesCharacterData": "당사는 ID, 이름 및 부여된 권한을 포함한 캐릭터 정보를 저장합니다.",
+        "tokensEncrypted": "인증 토큰은 암호화되어 안전하게 저장됩니다.",
+        "removeDataByRevoking": "EVE Online 웹사이트를 통해 언제든지 접근 권한을 취소할 수 있습니다.",
+        "deleteData": "내 데이터 삭제",
+        "deleteError": "계정 데이터 삭제 실패",
+        "deleteAccountConfirmTitle": "계정 데이터 삭제",
+        "deleteAccountConfirmMessage": "계정 데이터를 삭제하시겠습니까? 이 작업은 취소할 수 없습니다.",
+        "confirmDelete": "예, 내 데이터를 삭제합니다",
+        "permanentActionWarning": "이것은 설정 및 환경설정을 포함한 모든 데이터를 시스템에서 영구적으로 제거합니다."
+    },
+    "permissions": {
+        "publicData": "공개 캐릭터 정보 접근",
+        "readKillmails": "킬메일 접근",
+        "readCorporationKillmails": "법인 킬메일 접근"
     }
 }

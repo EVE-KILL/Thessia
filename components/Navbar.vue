@@ -11,6 +11,7 @@ import BackgroundSwitcherComponent from './Navbar/BackgroundSwitcher.vue';
 import CustomDropdown from './Navbar/CustomDropdown.vue';
 import MobileFullscreenModal from './Modal/MobileFullscreenModal.vue';
 import NavbarUser from './Navbar/User.vue';
+import LanguageSelector from './Navbar/LanguageSelector.vue';
 
 // Use markRaw to prevent Vue from making components reactive
 const Search = markRaw(SearchComponent);
@@ -197,6 +198,11 @@ const navbarLinks = computed(() => {
       component: Search,
       inline: true,
       position: 'center',
+    },
+    {
+      position: 'right',
+      component: LanguageSelector,
+      mobile: true,
     },
     {
       icon: themeIcon.value,

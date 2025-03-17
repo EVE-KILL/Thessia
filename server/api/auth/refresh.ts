@@ -1,7 +1,12 @@
 import { getJwtFromEvent, verifyJwtToken, refreshAccessToken, verifyToken } from '~/server/utils/auth.utils';
 import { Users } from '~/server/models/Users';
-import { EVE_SSO_CONFIG } from '~/server/utils/auth.config';
 
+/**
+ * Refreshes the access token for a user
+ *
+ * @route POST /api/auth/refresh
+ * @returns {Object} Object containing success status and expiration time
+ */
 export default defineEventHandler(async (event) => {
   try {
     // Get JWT from request
@@ -61,9 +66,16 @@ export default defineEventHandler(async (event) => {
 
   } catch (error) {
     console.debug('Refresh error:', error);
+
+    // Handle more specific errors
+    if (error.statusCode) {
+      throw error; // Re-throw if it's already a properly formatted error
+    }
+
     throw createError({
       statusCode: 500,
-      statusMessage: 'Failed to refresh token'
+      statusMessage: 'Failed to refresh token',
+      data: { error: error.message }
     });
   }
 });

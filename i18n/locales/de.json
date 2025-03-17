@@ -108,7 +108,8 @@
         "title": "Hintergrund",
         "loading": "Wird geladen...",
         "randomReddit": "Zufällig von r/EVEPorn",
-        "viewSource": "Quelle auf Reddit anzeigen"
+        "viewSource": "Quelle auf Reddit anzeigen",
+        "toggleVisibility": "Hintergrund-Sichtbarkeit umschalten"
     },
     "status": {
         "title": "Systemstatus",
@@ -174,5 +175,70 @@
             "1week": "1 Woche",
             "1month": "1 Monat"
         }
+    },
+    "auth": {
+        "signIn": "Anmelden",
+        "signInWithEve": "Mit Ihrem EVE Online-Konto anmelden",
+        "useEveSSOToLogin": "Verwenden Sie EVE Online SSO, um sich bei Ihrem Konto anzumelden",
+        "loading": "Wird geladen...",
+        "loggingOut": "Abmeldung läuft...",
+        "ssoRequiredForLogin": "EVE SSO ist für die Anmeldung erforderlich",
+        "alreadySignedIn": "Sie sind bereits angemeldet",
+        "signedInAs": "Angemeldet als {name}",
+        "privacyNote": "Durch die Nutzung unseres Dienstes autorisieren Sie uns, auf Ihre EVE Online-Charakterdaten gemäß den angeforderten Berechtigungen zuzugreifen.",
+        "error": {
+            "general": "Authentifizierung fehlgeschlagen. Bitte versuchen Sie es erneut.",
+            "tokenExpired": "Ihre Sitzung ist abgelaufen. Bitte melden Sie sich erneut an.",
+            "missingScope": "Fehlende erforderliche Berechtigung: {scope}"
+        }
+    },
+    "user": {
+        "profile": "Profil",
+        "settings": "Einstellungen",
+        "logout": "Abmelden",
+        "characterDetails": "Charakterdetails",
+        "characterId": "Charakter-ID",
+        "registeredSince": "Registriert seit",
+        "tokenExpires": "Token läuft ab",
+        "permissions": "Berechtigungen",
+        "needHelp": "Benötigen Sie Hilfe mit Ihrem Konto? Kontaktieren Sie den Support.",
+        "profileDescription": "Sehen und verwalten Sie Ihre EVE Online-Charakterinformationen"
+    },
+    "common": {
+        "loading": "Wird geladen...",
+        "error": "Fehler",
+        "tryAgain": "Erneut versuchen",
+        "goHome": "Zur Startseite",
+        "cancel": "Abbrechen",
+        "save": "Speichern",
+        "selectLanguage": "Sprache auswählen"
+    },
+    "settings": {
+        "description": "Verwalten Sie Ihre Kontoeinstellungen und Berechtigungen",
+        "accountSettings": "Kontoeinstellungen",
+        "permissions": "EVE Online-Berechtigungen",
+        "permissionsDescription": "Dies sind die Berechtigungen, die Sie dieser Anwendung über EVE SSO erteilt haben:",
+        "permissionsNote": "Um diese Berechtigungen zu ändern, müssen Sie sich über EVE SSO erneut authentifizieren.",
+        "dataPrivacy": "Datenschutz",
+        "dataPrivacyDescription": "Informationen darüber, wie wir mit Ihren EVE Online-Daten umgehen:",
+        "authenticationStatus": "Authentifizierungsstatus",
+        "authenticated": "Authentifiziert",
+        "expiringToken": "Token läuft bald ab",
+        "refreshToken": "Token aktualisieren",
+        "reauthenticate": "Erneut authentifizieren",
+        "storesCharacterData": "Wir speichern Ihre Charakterinformationen, einschließlich ID, Name und erteilte Berechtigungen.",
+        "tokensEncrypted": "Ihre Authentifizierungstoken werden verschlüsselt und sicher gespeichert.",
+        "removeDataByRevoking": "Sie können den Zugriff jederzeit über die EVE Online-Website widerrufen.",
+        "deleteData": "Meine Daten löschen",
+        "deleteError": "Löschen der Kontodaten fehlgeschlagen",
+        "deleteAccountConfirmTitle": "Kontodaten löschen",
+        "deleteAccountConfirmMessage": "Sind Sie sicher, dass Sie Ihre Kontodaten löschen möchten? Diese Aktion kann nicht rückgängig gemacht werden.",
+        "confirmDelete": "Ja, meine Daten löschen",
+        "permanentActionWarning": "Dies entfernt alle Ihre Daten dauerhaft aus unserem System, einschließlich Einstellungen und Präferenzen."
+    },
+    "permissions": {
+        "publicData": "Zugriff auf öffentliche Charakterinformationen",
+        "readKillmails": "Zugriff auf Ihre Killmails",
+        "readCorporationKillmails": "Zugriff auf die Killmails Ihrer Korporation"
     }
 }

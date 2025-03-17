@@ -174,5 +174,70 @@
             "1week": "1 Semaine",
             "1month": "1 Mois"
         }
+    },
+    "auth": {
+        "signIn": "Se connecter",
+        "signInWithEve": "Se connecter avec votre compte EVE Online",
+        "useEveSSOToLogin": "Utilisez EVE Online SSO pour vous connecter à votre compte",
+        "loading": "Chargement...",
+        "loggingOut": "Déconnexion...",
+        "ssoRequiredForLogin": "EVE SSO est requis pour la connexion",
+        "alreadySignedIn": "Vous êtes déjà connecté",
+        "signedInAs": "Connecté en tant que {name}",
+        "privacyNote": "En utilisant notre service, vous nous autorisez à accéder aux données de votre personnage EVE Online conformément aux autorisations demandées.",
+        "error": {
+            "general": "Échec de l'authentification. Veuillez réessayer.",
+            "tokenExpired": "Votre session a expiré. Veuillez vous reconnecter.",
+            "missingScope": "Autorisation requise manquante : {scope}"
+        }
+    },
+    "user": {
+        "profile": "Profil",
+        "settings": "Paramètres",
+        "logout": "Déconnexion",
+        "characterDetails": "Détails du personnage",
+        "characterId": "ID du personnage",
+        "registeredSince": "Inscrit depuis",
+        "tokenExpires": "Expiration du jeton",
+        "permissions": "Autorisations",
+        "needHelp": "Besoin d'aide avec votre compte ? Contactez le support.",
+        "profileDescription": "Consultez et gérez les informations de votre personnage EVE Online"
+    },
+    "common": {
+        "loading": "Chargement...",
+        "error": "Erreur",
+        "tryAgain": "Réessayer",
+        "goHome": "Accueil",
+        "cancel": "Annuler",
+        "save": "Enregistrer",
+        "selectLanguage": "Sélectionner la langue"
+    },
+    "settings": {
+        "description": "Gérez les paramètres de votre compte et vos autorisations",
+        "accountSettings": "Paramètres du compte",
+        "permissions": "Autorisations EVE Online",
+        "permissionsDescription": "Voici les autorisations que vous avez accordées à cette application via EVE SSO :",
+        "permissionsNote": "Pour modifier ces autorisations, vous devez vous réauthentifier via EVE SSO.",
+        "dataPrivacy": "Confidentialité des données",
+        "dataPrivacyDescription": "Informations sur la façon dont nous traitons vos données EVE Online :",
+        "authenticationStatus": "État de l'authentification",
+        "authenticated": "Authentifié",
+        "expiringToken": "Jeton expirant bientôt",
+        "refreshToken": "Actualiser le jeton",
+        "reauthenticate": "Se réauthentifier",
+        "storesCharacterData": "Nous stockons vos informations de personnage, y compris l'ID, le nom et les autorisations accordées.",
+        "tokensEncrypted": "Vos jetons d'authentification sont chiffrés et stockés en toute sécurité.",
+        "removeDataByRevoking": "Vous pouvez révoquer l'accès à tout moment via le site Web d'EVE Online.",
+        "deleteData": "Supprimer mes données",
+        "deleteError": "Échec de la suppression des données du compte",
+        "deleteAccountConfirmTitle": "Supprimer les données du compte",
+        "deleteAccountConfirmMessage": "Êtes-vous sûr de vouloir supprimer les données de votre compte ? Cette action ne peut pas être annulée.",
+        "confirmDelete": "Oui, supprimer mes données",
+        "permanentActionWarning": "Cela supprimera définitivement toutes vos données de notre système, y compris les paramètres et les préférences."
+    },
+    "permissions": {
+        "publicData": "Accéder aux informations publiques du personnage",
+        "readKillmails": "Accéder à vos killmails",
+        "readCorporationKillmails": "Accéder aux killmails de votre corporation"
     }
 }

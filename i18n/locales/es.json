@@ -174,5 +174,70 @@
             "1week": "1 Semana",
             "1month": "1 Mes"
         }
+    },
+    "auth": {
+        "signIn": "Iniciar sesión",
+        "signInWithEve": "Iniciar sesión con tu cuenta de EVE Online",
+        "useEveSSOToLogin": "Usa EVE Online SSO para iniciar sesión en tu cuenta",
+        "loading": "Cargando...",
+        "loggingOut": "Cerrando sesión...",
+        "ssoRequiredForLogin": "Se requiere EVE SSO para iniciar sesión",
+        "alreadySignedIn": "Ya has iniciado sesión",
+        "signedInAs": "Iniciado sesión como {name}",
+        "privacyNote": "Al usar nuestro servicio, autorizas que accedamos a los datos de tu personaje de EVE Online según los permisos solicitados.",
+        "error": {
+            "general": "Falló la autenticación. Por favor, inténtalo de nuevo.",
+            "tokenExpired": "Tu sesión ha expirado. Por favor, inicia sesión de nuevo.",
+            "missingScope": "Falta el permiso requerido: {scope}"
+        }
+    },
+    "user": {
+        "profile": "Perfil",
+        "settings": "Configuración",
+        "logout": "Cerrar sesión",
+        "characterDetails": "Detalles del personaje",
+        "characterId": "ID del personaje",
+        "registeredSince": "Registrado desde",
+        "tokenExpires": "El token expira",
+        "permissions": "Permisos",
+        "needHelp": "¿Necesitas ayuda con tu cuenta? Contacta con soporte.",
+        "profileDescription": "Ver y gestionar la información de tu personaje de EVE Online"
+    },
+    "common": {
+        "loading": "Cargando...",
+        "error": "Error",
+        "tryAgain": "Intentar de nuevo",
+        "goHome": "Ir al inicio",
+        "cancel": "Cancelar",
+        "save": "Guardar",
+        "selectLanguage": "Seleccionar idioma"
+    },
+    "settings": {
+        "description": "Gestiona la configuración y permisos de tu cuenta",
+        "accountSettings": "Configuración de la cuenta",
+        "permissions": "Permisos de EVE Online",
+        "permissionsDescription": "Estos son los permisos que has concedido a esta aplicación a través de EVE SSO:",
+        "permissionsNote": "Para modificar estos permisos, debes volver a autenticarte a través de EVE SSO.",
+        "dataPrivacy": "Privacidad de datos",
+        "dataPrivacyDescription": "Información sobre cómo manejamos tus datos de EVE Online:",
+        "authenticationStatus": "Estado de autenticación",
+        "authenticated": "Autenticado",
+        "expiringToken": "Token a punto de expirar",
+        "refreshToken": "Actualizar token",
+        "reauthenticate": "Volver a autenticar",
+        "storesCharacterData": "Almacenamos la información de tu personaje, incluido el ID, nombre y permisos concedidos.",
+        "tokensEncrypted": "Tus tokens de autenticación están cifrados y almacenados de forma segura.",
+        "removeDataByRevoking": "Puedes revocar el acceso en cualquier momento a través del sitio web de EVE Online.",
+        "deleteData": "Eliminar mis datos",
+        "deleteError": "Error al eliminar los datos de la cuenta",
+        "deleteAccountConfirmTitle": "Eliminar datos de la cuenta",
+        "deleteAccountConfirmMessage": "¿Estás seguro de que deseas eliminar los datos de tu cuenta? Esta acción no se puede deshacer.",
+        "confirmDelete": "Sí, eliminar mis datos",
+        "permanentActionWarning": "Esto eliminará permanentemente todos tus datos de nuestro sistema, incluida la configuración y las preferencias."
+    },
+    "permissions": {
+        "publicData": "Acceder a información pública del personaje",
+        "readKillmails": "Acceder a tus reportes de bajas",
+        "readCorporationKillmails": "Acceder a los reportes de bajas de tu corporación"
     }
 }
