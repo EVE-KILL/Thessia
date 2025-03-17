@@ -1,3 +1,6 @@
+/**
+ * Interface representing a user authenticated with EVE SSO
+ */
 export interface IUser {
   accessToken: string;
   dateExpiration: Date;
@@ -10,4 +13,6 @@ export interface IUser {
   uniqueIdentifier: string;
   lastChecked: Date;
   canFetchCorporationKillmails: boolean;
+  createdAt?: Date;
+  updatedAt?: Date;
 }

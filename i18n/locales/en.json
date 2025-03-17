@@ -175,5 +175,69 @@
             "1week": "1 Week",
             "1month": "1 Month"
         }
+    },
+    "auth": {
+        "signIn": "Sign In",
+        "signInWithEve": "Sign in with your EVE Online account",
+        "useEveSSOToLogin": "Use EVE Online SSO to sign in to your account",
+        "loading": "Loading...",
+        "loggingOut": "Logging out...",
+        "ssoRequiredForLogin": "EVE SSO is required for login",
+        "alreadySignedIn": "You are already signed in",
+        "signedInAs": "Signed in as {name}",
+        "privacyNote": "By using our service, you authorize us to access your EVE Online character data according to the requested permissions.",
+        "error": {
+            "general": "Authentication failed. Please try again.",
+            "tokenExpired": "Your session has expired. Please sign in again.",
+            "missingScope": "Missing required permission: {scope}"
+        }
+    },
+    "user": {
+        "profile": "Profile",
+        "settings": "Settings",
+        "logout": "Log Out",
+        "characterDetails": "Character Details",
+        "characterId": "Character ID",
+        "registeredSince": "Registered Since",
+        "tokenExpires": "Token Expires",
+        "permissions": "Permissions",
+        "needHelp": "Need help with your account? Contact support.",
+        "profileDescription": "View and manage your EVE Online character information"
+    },
+    "common": {
+        "loading": "Loading...",
+        "error": "Error",
+        "tryAgain": "Try Again",
+        "goHome": "Go Home",
+        "cancel": "Cancel",
+        "save": "Save"
+    },
+    "settings": {
+        "description": "Manage your account settings and permissions",
+        "accountSettings": "Account Settings",
+        "permissions": "EVE Online Permissions",
+        "permissionsDescription": "These are the permissions you have granted to this application through EVE SSO:",
+        "permissionsNote": "To modify these permissions, you need to re-authenticate through EVE SSO.",
+        "dataPrivacy": "Data Privacy",
+        "dataPrivacyDescription": "Information about how we handle your EVE Online data:",
+        "authenticationStatus": "Authentication Status",
+        "authenticated": "Authenticated",
+        "expiringToken": "Token expiring soon",
+        "refreshToken": "Refresh Token",
+        "reauthenticate": "Re-authenticate",
+        "storesCharacterData": "We store your character information, including ID, name, and granted permissions.",
+        "tokensEncrypted": "Your authentication tokens are encrypted and stored securely.",
+        "removeDataByRevoking": "You can revoke access at any time through the EVE Online website.",
+        "deleteData": "Delete My Data",
+        "deleteError": "Failed to delete account data",
+        "deleteAccountConfirmTitle": "Delete Account Data",
+        "deleteAccountConfirmMessage": "Are you sure you want to delete your account data? This action cannot be undone.",
+        "confirmDelete": "Yes, Delete My Data",
+        "permanentActionWarning": "This will permanently remove all your data from our system, including settings and preferences."
+    },
+    "permissions": {
+        "publicData": "Access public character information",
+        "readKillmails": "Access your killmails",
+        "readCorporationKillmails": "Access your corporation killmails"
     }
 }
