@@ -97,62 +97,19 @@ function isImageUrl(url: string): boolean {
  */
 export async function getRandomSubredditImage(subreddit: string): Promise<RedditPostInfo | null> {
   try {
-    // Use the JSON API to get top posts from the subreddit
-    const url = `https://www.reddit.com/r/${subreddit}/top.json?sort=top&t=month&limit=25`
+    // Fetch up to 100 images from the subreddit using our existing function
+    const images = await fetchSubredditImages(subreddit, 100);
 
-    // Fetch with a user agent to avoid 429 errors
-    const response = await fetch(url, {
-      headers: {
-        'User-Agent': 'EVE-KILL/1.0 (https://eve-kill.net)'
-      }
-    })
-
-    if (!response.ok) {
-      throw new Error(`Reddit API error: ${response.status}`)
+    if (!images || images.length === 0) {
+      console.debug(`No images found in r/${subreddit}`);
+      return null;
     }
 
-    const data = await response.json()
-
-    if (!data?.data?.children || !Array.isArray(data.data.children)) {
-      throw new Error('Invalid Reddit API response format')
-    }
-
-    // Filter posts to only include images (not videos or links)
-    const imagePosts = data.data.children.filter(post => {
-      const url = post.data?.url || ''
-      const hint = post.data?.post_hint || ''
-
-      // Check if it's an image by extension or hint
-      return (
-        hint === 'image' ||
-        url.endsWith('.jpg') ||
-        url.endsWith('.jpeg') ||
-        url.endsWith('.png') ||
-        url.endsWith('.gif') ||
-        new URL(url).host === 'i.imgur.com' ||
-        new URL(url).host === 'i.redd.it'
-      )
-    })
-
-    if (imagePosts.length === 0) {
-      return null
-    }
-
-    // Select a random post from the filtered list
-    const randomPost = imagePosts[Math.floor(Math.random() * imagePosts.length)]
-    const postData = randomPost.data
-
-    // Create a normalized post info object
-    return {
-      title: postData.title,
-      permalink: `https://www.reddit.com${postData.permalink}`,
-      imageUrl: postData.url,
-      author: postData.author,
-      score: postData.score,
-      createdAt: postData.created_utc * 1000 // Convert to milliseconds
-    }
+    // Select a truly random image from the array
+    const randomIndex = Math.floor(Math.random() * images.length);
+    return images[randomIndex];
   } catch (error) {
-    console.error(`Error fetching from Reddit r/${subreddit}:`, error)
-    return null
+    console.debug(`Error getting random image from r/${subreddit}:`, error);
+    return null;
   }
 }
