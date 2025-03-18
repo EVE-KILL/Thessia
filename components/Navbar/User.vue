@@ -109,7 +109,7 @@ const toggleLoginState = () => {
             <!-- Show user icon when not logged in -->
             <UIcon
               v-if="!userStore.isAuthenticated"
-              name="i-heroicons-user-circle"
+              name="lucide:user"
               class="text-lg"
             />
 
@@ -140,7 +140,7 @@ const toggleLoginState = () => {
               :disabled="userStore.isLoading"
             >
               <div v-if="userStore.isLoading" class="flex items-center justify-center">
-                <UIcon name="i-heroicons-arrow-path" class="animate-spin mr-2" />
+                <UIcon name="lucide:loader" class="animate-spin mr-2" />
                 {{ t('auth.loading', 'Loading...') }}
               </div>
               <img
@@ -182,7 +182,7 @@ const toggleLoginState = () => {
                 @click="isDropdownOpen = false"
               >
                 <div class="flex items-center">
-                  <UIcon name="i-heroicons-user-circle" class="mr-2" />
+                  <UIcon name="lucide:user-circle" class="mr-2" />
                   {{ t('user.profile') }}
                 </div>
               </NuxtLink>
@@ -193,7 +193,7 @@ const toggleLoginState = () => {
                 @click="isDropdownOpen = false"
               >
                 <div class="flex items-center">
-                  <UIcon name="i-heroicons-cog-6-tooth" class="mr-2" />
+                  <UIcon name="lucide:settings" class="mr-2" />
                   {{ t('user.settings') }}
                 </div>
               </NuxtLink>
@@ -207,7 +207,7 @@ const toggleLoginState = () => {
                 >
                   <div class="flex items-center">
                     <UIcon
-                      :name="userStore.isLoading ? 'i-heroicons-arrow-path' : 'i-heroicons-arrow-right-on-rectangle'"
+                      :name="userStore.isLoading ? 'lucide:loader' : 'lucide:log-out'"
                       :class="{ 'animate-spin': userStore.isLoading }"
                       class="mr-2"
                     />
@@ -232,7 +232,7 @@ const toggleLoginState = () => {
           aria-label="User menu"
           @click="isDropdownOpen = !isDropdownOpen"
         >
-          <UIcon name="i-heroicons-user-circle" class="text-lg" />
+          <UIcon name="lucide:user-circle" class="text-lg" />
         </UButton>
 
         <!-- Dropdown for small screen header -->
@@ -247,7 +247,7 @@ const toggleLoginState = () => {
             :disabled="userStore.isLoading"
           >
             <div v-if="userStore.isLoading" class="flex items-center justify-center">
-              <UIcon name="i-heroicons-arrow-path" class="animate-spin mr-2" />
+              <UIcon name="lucide:loader" class="animate-spin mr-2" />
               {{ t('auth.loading', 'Loading...') }}
             </div>
             <img
@@ -301,7 +301,7 @@ const toggleLoginState = () => {
         :disabled="userStore.isLoading"
       >
         <div v-if="userStore.isLoading" class="flex items-center justify-center">
-          <UIcon name="i-heroicons-arrow-path" class="animate-spin mr-2" />
+          <UIcon name="lucide:loader" class="animate-spin mr-2" />
           {{ t('auth.loading', 'Loading...') }}
         </div>
         <img
@@ -353,7 +353,7 @@ const toggleLoginState = () => {
           @click="emit('loginAction')"
         >
           <div class="flex items-center">
-            <UIcon name="i-heroicons-user-circle" class="mr-2" />
+            <UIcon name="lucide:user-circle" class="mr-2" />
             {{ t('user.profile') }}
           </div>
         </NuxtLink>
@@ -364,7 +364,7 @@ const toggleLoginState = () => {
           @click="emit('loginAction')"
         >
           <div class="flex items-center">
-            <UIcon name="i-heroicons-cog-6-tooth" class="mr-2" />
+            <UIcon name="lucide:settings" class="mr-2" />
             {{ t('user.settings') }}
           </div>
         </NuxtLink>
@@ -378,7 +378,7 @@ const toggleLoginState = () => {
           >
             <div class="flex items-center">
               <UIcon
-                :name="userStore.isLoading ? 'i-heroicons-arrow-path' : 'i-heroicons-arrow-right-on-rectangle'"
+                :name="userStore.isLoading ? 'lucide:loader' : 'lucide:log-out'"
                 :class="{ 'animate-spin': userStore.isLoading }"
                 class="mr-2"
               />

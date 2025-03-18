@@ -1,7 +1,7 @@
 <template>
   <div class="background-view-button">
     <UButton
-      :icon="isViewingBackground ? 'i-heroicons-eye-slash' : 'i-heroicons-eye'"
+      :icon="isViewingBackground ? 'lucide:eye-off' : 'lucide:eye'"
       color="neutral"
       variant="solid"
       size="sm"

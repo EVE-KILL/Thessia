@@ -165,21 +165,21 @@ const scrollActiveItemIntoView = () => {
 const getIconForEntityType = (type: string) => {
   switch (type.toLowerCase()) {
     case 'character':
-      return 'i-heroicons-user';
+      return 'lucide:user';
     case 'corporation':
-      return 'i-heroicons-building-office';
+      return 'lucide:building';
     case 'alliance':
-      return 'i-heroicons-user-group';
+      return 'lucide:users';
     case 'ship':
-      return 'i-heroicons-rocket-launch';
+      return 'lucide:ship';
     case 'item':
-      return 'i-heroicons-cube';
+      return 'lucide:box';
     case 'system':
-      return 'i-heroicons-globe-alt';
+      return 'lucide:globe';
     case 'region':
-      return 'i-heroicons-map';
+      return 'lucide:map';
     default:
-      return 'i-heroicons-question-mark-circle';
+      return 'lucide:circle';
   }
 };
 
@@ -281,12 +281,12 @@ onUnmounted(() => {
     <form @submit.prevent="handleSearchSubmit" class="flex items-center">
       <div class="relative w-full">
         <UIcon
-          :name="isLoading ? 'i-heroicons-arrow-path' : 'i-heroicons-magnifying-glass'"
+          :name="isLoading ? 'lucide:refresh-ccw' : 'lucide:search'"
           :class="{'animate-spin': isLoading}"
           class="absolute left-2 top-1/2 transform -translate-y-1/2 text-gray-400"
         />
         <!-- Desktop search input -->
-        <input
+        <UInput
           v-if="!isMobile"
           v-model="query"
           :placeholder="t('search.placeholder')"
@@ -296,21 +296,13 @@ onUnmounted(() => {
           @focus="handleFocus"
         />
         <!-- Mobile search input (that opens modal) -->
-        <input
+        <UInput
           v-else
           :placeholder="t('search.placeholder')"
           class="search-input w-full py-1.5 pl-8 pr-10 rounded-md bg-gray-100 dark:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-primary-500 text-base"
           type="search"
           @focus="openMobileSearch"
         />
-        <button
-          v-if="query"
-          type="button"
-          class="absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
-          @click="query = ''"
-        >
-          <UIcon name="i-heroicons-x-mark" class="w-4 h-4" />
-        </button>
       </div>
     </form>
 
@@ -401,7 +393,7 @@ onUnmounted(() => {
       <template #header>
         <div class="flex items-center flex-grow mr-3 w-full">
           <UIcon
-            :name="isLoading ? 'i-heroicons-arrow-path' : 'i-heroicons-magnifying-glass'"
+            :name="isLoading ? 'lucide:refresh-ccw' : 'lucide:search'"
             :class="{'animate-spin': isLoading}"
             class="text-gray-400 mr-3"
           />
@@ -470,7 +462,7 @@ onUnmounted(() => {
         v-else-if="query.length >= 3"
         class="flex flex-col items-center justify-center min-h-[60vh] text-center text-gray-600 dark:text-gray-400"
       >
-        <UIcon name="i-heroicons-magnifying-glass" class="text-5xl mb-4" />
+        <UIcon name="lucide:search" class="text-5xl mb-4" />
         <p v-if="isLoading">{{ t('search.searching') }}</p>
         <p v-else>{{ t('search.noResults') }}</p>
       </div>
@@ -480,7 +472,7 @@ onUnmounted(() => {
         v-else
         class="flex flex-col items-center justify-center min-h-[60vh] text-center text-gray-600 dark:text-gray-400"
       >
-        <UIcon name="i-heroicons-magnifying-glass" class="text-5xl mb-4" />
+        <UIcon name="lucide:search" class="text-5xl mb-4" />
         <p>{{ t('search.placeholder') }}</p>
       </div>
 

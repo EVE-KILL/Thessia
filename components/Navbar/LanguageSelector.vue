@@ -9,7 +9,7 @@
         class="flex items-center"
       >
         <Icon
-          name="i-heroicons-globe-alt"
+          name="lucide:earth"
           class="text-lg"
         />
       </UButton>
@@ -32,7 +32,7 @@
         >
           <UIcon
             v-if="currentLocale === locale.code"
-            name="i-heroicons-check"
+            name="lucide:check"
             class="mr-2 text-primary-500"
           />
           <span class="text-sm">{{ locale.name }}</span>
@@ -73,7 +73,7 @@ const availableLocales = computed(() => {
 const localeItems = computed(() => {
   return availableLocales.value.map((locale) => ({
     label: locale.name,
-    icon: currentLocale.value === locale.code ? 'i-heroicons-check' : '',
+    icon: currentLocale.value === locale.code ? 'lucide:check' : '',
     iconClass: 'text-primary-500',
     // Show language code instead of flag
     trailing: () => h('span', { class: 'text-xs ml-2' }, locale.code.toUpperCase()),

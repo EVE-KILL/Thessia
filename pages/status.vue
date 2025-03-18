@@ -215,7 +215,7 @@ onMounted(() => {
             <UButton
               color="primary"
               variant="ghost"
-              icon="i-heroicons-arrow-path"
+              icon="lucide:refresh-cw"
               @click="refresh"
               :loading="loading"
               :disabled="loading"
@@ -239,7 +239,7 @@ onMounted(() => {
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 mb-8">
               <div class="bg-gray-50 dark:bg-gray-800 rounded-lg shadow p-3">
                 <h2 class="text-xl font-bold mb-4 flex items-center">
-                  <UIcon name="i-heroicons-clock" class="mr-2" /> {{ $t('status.uptime.title') }}
+                  <UIcon name="lucide:clock" class="mr-2" /> {{ $t('status.uptime.title') }}
                 </h2>
                 <div class="text-2xl font-mono">{{ formattedUptime }}</div>
                 <div class="text-sm opacity-75 mt-2">
@@ -250,7 +250,7 @@ onMounted(() => {
 
               <div class="bg-gray-50 dark:bg-gray-800 rounded-lg shadow p-3">
                 <h2 class="text-xl font-bold mb-4 flex items-center">
-                  <UIcon name="i-heroicons-server" class="mr-2" /> {{ $t('status.environment.title') }}
+                  <UIcon name="lucide:server" class="mr-2" /> {{ $t('status.environment.title') }}
                 </h2>
                 <div class="space-y-2">
                   <div><span class="font-semibold">{{ $t('status.environment.nodeEnv') }}:</span> {{ statusData.env.nodeEnv }}</div>
@@ -261,7 +261,7 @@ onMounted(() => {
 
               <div class="bg-gray-50 dark:bg-gray-800 rounded-lg shadow p-3">
                 <h2 class="text-xl font-bold mb-4 flex items-center">
-                  <UIcon name="i-heroicons-cpu-chip" class="mr-2" /> {{ $t('status.operatingSystem.title') }}
+                  <UIcon name="lucide:cpu" class="mr-2" /> {{ $t('status.operatingSystem.title') }}
                 </h2>
                 <div class="space-y-2">
                   <div><span class="font-semibold">{{ $t('status.operatingSystem.platform') }}:</span> {{ statusData.operatingSystem.systemPlatform }}</div>
@@ -276,7 +276,7 @@ onMounted(() => {
             <!-- Queue Counts -->
             <div class="bg-gray-50 dark:bg-gray-800 rounded-lg shadow p-3 mb-8">
               <h2 class="text-xl font-bold mb-4 flex items-center">
-                <UIcon name="i-heroicons-queue-list" class="mr-2" /> {{ $t('status.queueCounts.title') }}
+                <UIcon name="lucide:list" class="mr-2" /> {{ $t('status.queueCounts.title') }}
               </h2>
               <div class="overflow-x-auto">
                 <table class="min-w-full bg-transparent">
@@ -300,7 +300,7 @@ onMounted(() => {
             <!-- Processed Counts Graph -->
             <div class="bg-gray-50 dark:bg-gray-800 rounded-lg shadow p-3 mb-8">
               <h2 class="text-xl font-bold mb-4 flex items-center">
-                <UIcon name="i-heroicons-chart-bar" class="mr-2" /> {{ $t('status.processingStatistics.title') }}
+                <UIcon name="lucide:bar-chart-2" class="mr-2" /> {{ $t('status.processingStatistics.title') }}
               </h2>
 
               <div class="mb-4">
@@ -314,7 +314,7 @@ onMounted(() => {
 
               <div class="h-80 relative">
                 <div v-if="loading" class="absolute inset-0 flex items-center justify-center bg-gray-50/50 dark:bg-gray-800/50 backdrop-blur-sm z-10">
-                  <UIcon name="i-heroicons-arrow-path" class="animate-spin h-8 w-8" />
+                  <UIcon name="lucide:loader" class="animate-spin h-8 w-8" />
                 </div>
                 <v-chart class="w-full h-full" :option="chartOptions" autoresize />
               </div>
@@ -346,7 +346,7 @@ onMounted(() => {
             <!-- Database Counts -->
             <div class="bg-gray-50 dark:bg-gray-800 rounded-lg shadow p-3 mb-8">
               <h2 class="text-xl font-bold mb-4 flex items-center">
-                <UIcon name="i-heroicons-cube" class="mr-2" /> {{ $t('status.databaseCounts.title') }}
+                <UIcon name="lucide:database" class="mr-2" /> {{ $t('status.databaseCounts.title') }}
               </h2>
               <div class="overflow-x-auto">
                 <table class="min-w-full bg-transparent">
@@ -373,7 +373,7 @@ onMounted(() => {
               <!-- Cache Sizes -->
               <div class="bg-gray-50 dark:bg-gray-800 rounded-lg shadow p-3">
                 <h2 class="text-xl font-bold mb-4 flex items-center">
-                  <UIcon name="i-heroicons-table-cells" class="mr-2" /> {{ $t('status.cacheSizes.title') }}
+                  <UIcon name="lucide:table" class="mr-2" /> {{ $t('status.cacheSizes.title') }}
                 </h2>
                 <div class="overflow-x-auto">
                   <table class="min-w-full bg-transparent">
@@ -397,7 +397,7 @@ onMounted(() => {
               <!-- Cache Hits -->
               <div class="bg-gray-50 dark:bg-gray-800 rounded-lg shadow p-3">
                 <h2 class="text-xl font-bold mb-4 flex items-center">
-                  <UIcon name="i-heroicons-bolt" class="mr-2" /> {{ $t('status.cacheHits.title') }}
+                  <UIcon name="lucide:zap" class="mr-2" /> {{ $t('status.cacheHits.title') }}
                 </h2>
                 <div class="overflow-x-auto">
                   <table class="min-w-full bg-transparent">

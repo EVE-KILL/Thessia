@@ -96,7 +96,7 @@ onBeforeUnmount(() => {
               class="w-full max-w-xs transition-opacity hover:opacity-90 disabled:opacity-50"
             >
               <div v-if="userStore.isLoading" class="flex items-center justify-center p-4">
-                <UIcon name="i-heroicons-arrow-path" class="animate-spin mr-2" />
+                <UIcon name="lucide:loader" class="animate-spin mr-2" />
                 {{ $t('auth.loading') }}
               </div>
               <img

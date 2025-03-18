@@ -131,13 +131,13 @@ const handleDeleteAccount = async () => {
 
     <!-- Loading state -->
     <div v-if="pending" class="flex justify-center py-12">
-      <UIcon name="i-heroicons-arrow-path" class="animate-spin h-8 w-8 text-primary-600 dark:text-primary-400" />
+      <UIcon name="lucide:loader" class="animate-spin h-8 w-8 text-primary-600 dark:text-primary-400" />
     </div>
 
     <!-- Error state -->
     <div v-else-if="error" class="bg-red-50 dark:bg-red-900/20 p-4 rounded-md">
       <div class="flex">
-        <UIcon name="i-heroicons-exclamation-triangle" class="h-5 w-5 text-red-500 dark:text-red-400" />
+        <UIcon name="lucide:alert-triangle" class="h-5 w-5 text-red-500 dark:text-red-400" />
         <div class="ml-3">
           <h3 class="text-sm font-medium text-red-800 dark:text-red-300">
             {{ $t('common.error') }}
@@ -229,7 +229,7 @@ const handleDeleteAccount = async () => {
               <UButton
                 color="primary"
                 size="sm"
-                icon="i-heroicons-arrow-path"
+                icon="lucide:refresh-cw"
                 @click="handleRefreshToken"
               >
                 {{ $t('settings.refreshToken') }}
@@ -238,7 +238,7 @@ const handleDeleteAccount = async () => {
               <UButton
                 color="gray"
                 size="sm"
-                icon="i-heroicons-arrow-right-on-rectangle"
+                icon="lucide:log-in"
                 @click="handleReauthenticate"
               >
                 {{ $t('settings.reauthenticate') }}
@@ -248,7 +248,7 @@ const handleDeleteAccount = async () => {
                 color="red"
                 size="sm"
                 variant="soft"
-                icon="i-heroicons-power"
+                icon="lucide:power"
                 @click="handleLogout"
               >
                 {{ $t('user.logout') }}
@@ -274,7 +274,7 @@ const handleDeleteAccount = async () => {
           <ul class="divide-y divide-gray-200 dark:divide-gray-700">
             <li v-for="(scope, index) in profileData.scopes" :key="index" class="py-3">
               <div class="flex items-start">
-                <UIcon name="i-heroicons-check-circle" class="h-5 w-5 text-green-500 dark:text-green-400 mt-0.5 mr-3 flex-shrink-0" />
+                <UIcon name="lucide:check-circle" class="h-5 w-5 text-green-500 dark:text-green-400 mt-0.5 mr-3 flex-shrink-0" />
                 <div>
                   <div class="text-sm font-medium text-gray-900 dark:text-white">
                     {{ scope }}
@@ -308,15 +308,15 @@ const handleDeleteAccount = async () => {
 
           <ul class="mt-4 space-y-2 text-sm">
             <li class="flex items-start">
-              <UIcon name="i-heroicons-information-circle" class="h-5 w-5 text-blue-500 dark:text-blue-400 mt-0.5 mr-2 flex-shrink-0" />
+              <UIcon name="lucide:info" class="h-5 w-5 text-blue-500 dark:text-blue-400 mt-0.5 mr-2 flex-shrink-0" />
               <span class="text-gray-600 dark:text-gray-300">{{ $t('settings.storesCharacterData') }}</span>
             </li>
             <li class="flex items-start">
-              <UIcon name="i-heroicons-information-circle" class="h-5 w-5 text-blue-500 dark:text-blue-400 mt-0.5 mr-2 flex-shrink-0" />
+              <UIcon name="lucide:info" class="h-5 w-5 text-blue-500 dark:text-blue-400 mt-0.5 mr-2 flex-shrink-0" />
               <span class="text-gray-600 dark:text-gray-300">{{ $t('settings.tokensEncrypted') }}</span>
             </li>
             <li class="flex items-start">
-              <UIcon name="i-heroicons-information-circle" class="h-5 w-5 text-blue-500 dark:text-blue-400 mt-0.5 mr-2 flex-shrink-0" />
+              <UIcon name="lucide:info" class="h-5 w-5 text-blue-500 dark:text-blue-400 mt-0.5 mr-2 flex-shrink-0" />
               <span class="text-gray-600 dark:text-gray-300">{{ $t('settings.removeDataByRevoking') }}</span>
             </li>
           </ul>
@@ -325,7 +325,7 @@ const handleDeleteAccount = async () => {
             <UButton
               color="red"
               size="sm"
-              icon="i-heroicons-trash"
+              icon="lucide:trash-2"
               @click="isDeleteModalOpen = true"
             >
               {{ $t('settings.deleteData') }}
@@ -351,7 +351,7 @@ const handleDeleteAccount = async () => {
             <div class="bg-red-50 dark:bg-red-900/30 px-4 py-3 sm:px-6 border-b-2 border-red-500 dark:border-red-600">
               <div class="sm:flex sm:items-start">
                 <div class="mx-auto flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-full bg-red-100 dark:bg-red-800 sm:mx-0 sm:h-10 sm:w-10">
-                  <UIcon name="i-heroicons-exclamation-triangle" class="h-6 w-6 text-red-600 dark:text-red-400" />
+                  <UIcon name="lucide:alert-triangle" class="h-6 w-6 text-red-600 dark:text-red-400" />
                 </div>
                 <div class="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left">
                   <h3 class="text-lg leading-6 font-bold text-red-700 dark:text-red-400" id="modal-title">
@@ -370,7 +370,7 @@ const handleDeleteAccount = async () => {
 
                 <div class="mt-3 p-3 bg-red-50 dark:bg-red-950 border border-red-200 dark:border-red-800 rounded-md">
                   <div class="flex">
-                    <UIcon name="i-heroicons-exclamation-circle" class="h-5 w-5 text-red-500 dark:text-red-400 mr-2 flex-shrink-0 mt-0.5" />
+                    <UIcon name="lucide:alert-circle" class="h-5 w-5 text-red-500 dark:text-red-400 mr-2 flex-shrink-0 mt-0.5" />
                     <p class="text-sm text-red-600 dark:text-red-400">
                       {{ $t('settings.permanentActionWarning', 'This will permanently remove all your data from our system, including settings and preferences.') }}
                     </p>
@@ -394,7 +394,7 @@ const handleDeleteAccount = async () => {
                 :loading="isDeletingAccount"
                 :disabled="isDeletingAccount"
               >
-                <UIcon name="i-heroicons-trash" class="mr-1" />
+                <UIcon name="lucide:trash-2" class="mr-1" />
                 {{ $t('settings.confirmDelete', 'Yes, Delete My Data') }}
               </UButton>
               <UButton

@@ -105,7 +105,7 @@ const handleClose = () => {
 
             <!-- Close button - always present -->
             <UButton
-              icon="i-heroicons-x-mark"
+              icon="lucide:x"
               color="gray"
               variant="ghost"
               @click="handleClose"

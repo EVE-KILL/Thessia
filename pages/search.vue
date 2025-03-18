@@ -10,7 +10,7 @@
         <UInput
           v-model="searchQuery"
           :placeholder="$t('search.placeholder')"
-          :icon="isLoading ? 'i-heroicons-arrow-path' : 'i-heroicons-magnifying-glass'"
+          :icon="isLoading ? 'lucide:loader' : 'lucide:search'"
           :icon-class="isLoading ? 'animate-spin' : ''"
           size="lg"
           class="w-full md:w-1/2"
@@ -80,7 +80,7 @@
                     class="justify-between h-auto py-2"
                   >
                     <span class="font-medium">{{ hit.name }}</span>
-                    <UIcon name="i-heroicons-arrow-right" class="text-gray-400" />
+                    <UIcon name="lucide:arrow-right" class="text-gray-400" />
                   </UButton>
                 </li>
               </ul>
@@ -108,7 +108,7 @@
     <UAlert
       v-else-if="results && results.hits.length === 0 && !isLoading"
       :title="$t('search.noResultsTitle')"
-      icon="i-heroicons-information-circle"
+      icon="lucide:info"
       color="warning"
     >
       {{ $t('search.noResultsDesc') }}
@@ -116,13 +116,13 @@
 
     <!-- Initial state - no search yet -->
     <div v-else-if="!results && !isLoading" class="text-center py-12">
-      <UIcon name="i-heroicons-magnifying-glass" class="text-6xl mx-auto mb-4 text-gray-400" />
+      <UIcon name="lucide:search" class="text-6xl mx-auto mb-4 text-gray-400" />
       <h2 class="text-xl font-medium text-gray-600 dark:text-gray-400">{{ $t('search.initialMessage') }}</h2>
     </div>
 
     <!-- Loading state shown only on initial load, not during auto-search -->
     <div v-else-if="isLoading && !results" class="flex justify-center py-8">
-      <UIcon name="i-heroicons-arrow-path" class="text-4xl animate-spin text-primary-500" />
+      <UIcon name="lucide:loader" class="text-4xl animate-spin text-primary-500" />
     </div>
   </div>
 </template>
@@ -250,21 +250,21 @@ const getColumnClass = (type: string) => {
 const getIconForEntityType = (type: string) => {
   switch (type.toLowerCase()) {
     case 'character':
-      return 'i-heroicons-user';
+      return 'lucide:user';
     case 'corporation':
-      return 'i-heroicons-building-office';
+      return 'lucide:building';
     case 'alliance':
-      return 'i-heroicons-user-group';
+      return 'lucide:users';
     case 'ship':
-      return 'i-heroicons-rocket-launch';
+      return 'lucide:rocket';
     case 'item':
-      return 'i-heroicons-cube';
+      return 'lucide:box';
     case 'system':
-      return 'i-heroicons-globe-alt';
+      return 'lucide:globe';
     case 'region':
-      return 'i-heroicons-map';
+      return 'lucide:map';
     default:
-      return 'i-heroicons-question-mark-circle';
+      return 'lucide:help-circle';
   }
 };
 

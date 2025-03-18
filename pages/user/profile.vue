@@ -33,13 +33,13 @@ const characterPortraitUrl = computed(() => {
 
     <!-- Loading state -->
     <div v-if="pending" class="flex justify-center py-12">
-      <UIcon name="i-heroicons-arrow-path" class="animate-spin h-8 w-8 text-primary-600 dark:text-primary-400" />
+      <UIcon name="lucide:loader" class="animate-spin h-8 w-8 text-primary-600 dark:text-primary-400" />
     </div>
 
     <!-- Error state -->
     <div v-else-if="error" class="bg-red-50 dark:bg-red-900/20 p-4 rounded-md">
       <div class="flex">
-        <UIcon name="i-heroicons-exclamation-triangle" class="h-5 w-5 text-red-500 dark:text-red-400" />
+        <UIcon name="lucide:alert-triangle" class="h-5 w-5 text-red-500 dark:text-red-400" />
         <div class="ml-3">
           <h3 class="text-sm font-medium text-red-800 dark:text-red-300">
             {{ $t('common.error') }}
@@ -119,7 +119,7 @@ const characterPortraitUrl = computed(() => {
               </dt>
               <dd class="mt-1 space-y-1">
                 <div v-for="(scope, index) in profileData.scopes" :key="index" class="flex items-center">
-                  <UIcon name="i-heroicons-check-circle" class="h-4 w-4 text-green-500 dark:text-green-400 mr-2" />
+                  <UIcon name="lucide:check-circle" class="h-4 w-4 text-green-500 dark:text-green-400 mr-2" />
                   <span class="text-sm text-gray-900 dark:text-white">{{ scope }}</span>
                 </div>
               </dd>

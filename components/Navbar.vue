@@ -48,7 +48,7 @@ const navbarLinks = computed(() => {
     {
       name: t('navbar.home.text'),
       label: t('navbar.home.label'),
-      icon: 'i-heroicons-home',
+      icon: 'lucide:house',
       to: '/',
       position: 'left'
     },
@@ -190,7 +190,7 @@ const navbarLinks = computed(() => {
       mobile: true,
     },
     {
-      icon: colorMode.value === 'dark' ? 'i-heroicons:moon' : 'i-heroicons:sun',
+      icon: 'lucide:sun-moon',
       position: 'right',
       mobile: true,
       onClick: () => {
@@ -206,7 +206,7 @@ const navbarLinks = computed(() => {
     //},
     {
       label: t('navbar.information.label'),
-      icon: 'i-heroicons-information-circle',
+      icon: 'lucide:info',
       position: 'right',
       collapse: false,
       children: [
@@ -266,7 +266,7 @@ const navbarLinks = computed(() => {
                         <UButton color="neutral" variant="ghost" class="flex items-center" :aria-label="link.label">
                             <UIcon v-if="link.icon" :name="link.icon" class="mr-2 text-m" />
                             <span class="text-lg">{{ link.name }}</span>
-                            <UIcon name="i-heroicons-chevron-down" class="ml-1 text-lg" />
+                            <UIcon name="lucide:chevron-down" class="ml-1 text-lg" />
                         </UButton>
                     </template>
 
@@ -372,7 +372,7 @@ const navbarLinks = computed(() => {
     <div class="flex items-center justify-between h-16 p-4">
         <!-- Logo/Home link -->
         <NuxtLink to="/" class="flex items-center">
-            <Icon name="i-heroicons-home" class="text-2xl text-gray-900 text-black dark:text-white" />
+            <Icon name="lucide:house" class="text-2xl text-gray-900 text-black dark:text-white" />
         </NuxtLink>
 
         <!-- Center mobile items (typically search) -->
@@ -414,7 +414,7 @@ const navbarLinks = computed(() => {
                 aria-label="Menu"
                 @click="isMobileMenuOpen = true"
             >
-                <UIcon name="i-heroicons-bars-3" class="text-xl text-black dark:text-white" />
+                <UIcon name="lucide:menu" class="text-xl text-black dark:text-white" />
             </UButton>
         </div>
     </div>
@@ -484,7 +484,7 @@ const navbarLinks = computed(() => {
                   {{ link.name }}
                 </div>
                 <UIcon
-                  :name="expandedMobileMenus[link.name] ? 'i-heroicons-chevron-up' : 'i-heroicons-chevron-down'"
+                  :name="expandedMobileMenus[link.name] ? 'lucide:chevron-up' : 'lucide:chevron-down'"
                   class="text-lg text-gray-700 dark:text-gray-300"
                 />
               </button>
@@ -553,7 +553,7 @@ const navbarLinks = computed(() => {
                   <span>{{ link.label }}</span>
                 </div>
                 <UIcon
-                  :name="expandedMobileMenus[link.label] ? 'i-heroicons-chevron-up' : 'i-heroicons-chevron-down'"
+                  :name="expandedMobileMenus[link.label] ? 'lucide:chevron-up' : 'lucide:chevron-down'"
                   class="text-lg text-gray-500 dark:text-gray-400"
                 />
               </button>
