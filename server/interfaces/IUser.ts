@@ -13,6 +13,7 @@ export interface IUser {
   uniqueIdentifier: string;
   lastChecked: Date;
   canFetchCorporationKillmails: boolean;
+  administrator: boolean;
   createdAt?: Date;
   updatedAt?: Date;
 }

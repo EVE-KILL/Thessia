@@ -20,6 +20,18 @@ const characterPortraitUrl = computed(() => {
   return `https://images.evetech.net/characters/${userStore.user.characterId}/portrait?size=128`;
 });
 
+// Corporation logo URL
+const corporationLogoUrl = computed(() => {
+  if (!userStore.user.corporationId) return null;
+  return `https://images.evetech.net/corporations/${userStore.user.corporationId}/logo?size=64`;
+});
+
+// Alliance logo URL
+const allianceLogoUrl = computed(() => {
+  if (!userStore.user.allianceId) return null;
+  return `https://images.evetech.net/alliances/${userStore.user.allianceId}/logo?size=64`;
+});
+
 // Format expiration date
 const formattedExpirationDate = computed(() => {
   if (!profileData.value?.dateExpiration) return '';
@@ -27,8 +39,10 @@ const formattedExpirationDate = computed(() => {
   const date = new Date(profileData.value.dateExpiration);
   return new Intl.DateTimeFormat(undefined, {
     dateStyle: 'medium',
-    timeStyle: 'short'
-  }).format(date);
+    timeStyle: 'short',
+    timeZone: 'UTC',
+    hour12: false
+  }).format(date) + ' UTC';
 });
 
 // Calculate if token will expire soon (within 48 hours)
@@ -165,17 +179,18 @@ const handleDeleteAccount = async () => {
         </div>
 
         <div class="p-6">
-          <div class="flex items-center space-x-4">
+          <div class="flex items-start space-x-4">
             <!-- Character avatar -->
-            <img
+            <NuxtImg
               v-if="characterPortraitUrl"
               :src="characterPortraitUrl"
               :alt="profileData.characterName"
-              class="w-16 h-16 rounded-full object-cover"
+              class="w-16 h-16 rounded-lg object-cover"
+              :width="128" :height="128" format="webp" quality="90"
             />
             <div
               v-else
-              class="w-16 h-16 rounded-full bg-primary-100 dark:bg-primary-900 flex items-center justify-center text-primary-700 dark:text-primary-300 text-2xl font-medium"
+              class="w-16 h-16 rounded-lg bg-primary-100 dark:bg-primary-900 flex items-center justify-center text-primary-700 dark:text-primary-300 text-2xl font-medium"
             >
               {{ profileData.characterName.substring(0, 2).toUpperCase() }}
             </div>
@@ -188,6 +203,29 @@ const handleDeleteAccount = async () => {
               <p class="text-sm text-gray-500 dark:text-gray-400">
                 ID: {{ profileData.characterId }}
               </p>
+
+              <!-- Corporation info -->
+              <div v-if="userStore.user.corporationName" class="flex items-center mt-2">
+                <NuxtImg v-if="corporationLogoUrl" :src="corporationLogoUrl"
+                    :alt="userStore.user.corporationName" class="w-5 h-5 rounded-lg mr-2"
+                    :width="20" :height="20" format="webp" quality="80" />
+                <span class="text-sm text-gray-700 dark:text-gray-300">{{ userStore.user.corporationName }}</span>
+              </div>
+
+              <!-- Alliance info -->
+              <div v-if="userStore.user.allianceName" class="flex items-center mt-1">
+                <NuxtImg v-if="allianceLogoUrl" :src="allianceLogoUrl"
+                    :alt="userStore.user.allianceName" class="w-5 h-5 rounded-lg mr-2"
+                    :width="20" :height="20" format="webp" quality="80" />
+                <span class="text-sm text-gray-700 dark:text-gray-300">{{ userStore.user.allianceName }}</span>
+              </div>
+
+              <!-- Admin badge -->
+              <div v-if="userStore.user.administrator" class="mt-2">
+                <UBadge color="violet" variant="subtle">
+                  {{ $t('user.administrator', 'Administrator') }}
+                </UBadge>
+              </div>
             </div>
           </div>
 

@@ -36,15 +36,39 @@ export default defineEventHandler(async (event) => {
       };
     }
 
+    // Fetch additional character information
+    const characterData = await $fetch(`/api/characters/${characterId}`);
+    let corporationData = null;
+    let allianceData = null;
+
+    // Get corporation info if available
+    if (characterData && characterData.corporation_id) {
+      corporationData = await $fetch(`/api/corporations/${characterData.corporation_id}`);
+    }
+
+    // Get alliance info if available
+    if (characterData && characterData.alliance_id) {
+      allianceData = await $fetch(`/api/alliances/${characterData.alliance_id}`);
+    }
+
+    // Format the expiration date in 24h UTC format
+    const expirationDate = user.dateExpiration;
+    const formattedExpirationDate = expirationDate.toISOString();
+
     // Return user info without sensitive fields
     return {
       authenticated: true,
       user: {
         characterId: user.characterId,
         characterName: user.characterName,
+        corporationId: characterData?.corporation_id || null,
+        corporationName: corporationData?.name || null,
+        allianceId: characterData?.alliance_id || null,
+        allianceName: allianceData?.name || null,
         scopes: user.scopes,
         canFetchCorporationKillmails: user.canFetchCorporationKillmails,
-        dateExpiration: user.dateExpiration
+        dateExpiration: formattedExpirationDate,
+        administrator: user.administrator || false
       }
     };
 

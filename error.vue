@@ -6,9 +6,6 @@ const props = defineProps({
   error: Object
 })
 
-// Import the theme mode composable
-const { currentTheme } = useThemeMode()
-
 // Load i18n
 const { locale, t } = useI18n();
 

@@ -5,6 +5,7 @@
 This project uses:
 
 - **Nuxt (Vue 3 & Nitro)** for frontend and backend.
+- **Nuxt/UI** for UI components.
 - **MongoDB (via Mongoose)** for data storage.
 - **Redis (via ioredis)** for caching.
 - **BullMQ** for job processing.

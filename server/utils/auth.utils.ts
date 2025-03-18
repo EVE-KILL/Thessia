@@ -1,5 +1,6 @@
 import jwt from 'jsonwebtoken';
 import { H3Event } from 'h3';
+import { Users } from '../models/Users';
 import { EVE_SSO_CONFIG } from './auth.config';
 import type { IEveSSOTokenResponse, IEveSSOVerifyResponse } from '../interfaces/IEveSSO';
 
@@ -180,3 +181,40 @@ export function verifyJwtToken(token: string): { characterId: number } {
     });
   }
 }
+
+/**
+ * Verify if the current user is an administrator
+ * @param event - H3 event object
+ * @returns The user object if admin, throws error otherwise
+ */
+export const verifyAdmin = async (event: H3Event) => {
+  const token = getJwtFromEvent(event);
+
+  if (!token) {
+    throw createError({
+      statusCode: 401,
+      message: 'Authentication required'
+    });
+  }
+
+  // Verify JWT
+  const { characterId } = verifyJwtToken(token);
+
+  // Check if user exists and is an admin
+  const user = await Users.findOne({ characterId });
+  if (!user) {
+    throw createError({
+      statusCode: 401,
+      message: 'User not found'
+    });
+  }
+
+  if (!user.administrator) {
+    throw createError({
+      statusCode: 403,
+      message: 'Admin privileges required'
+    });
+  }
+
+  return user;
+};
