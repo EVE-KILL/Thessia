@@ -12,10 +12,17 @@
   <BackgroundViewer />
 </template>
 
+<script setup lang="ts">
+
+</script>
+
 <style>
-/* Root CSS variables for theme colors */
+/* Root CSS variables for theme colors and backgrounds */
 :root {
   --bg-image-url: url('/backgrounds/images/bg2.png');
+  --bg-video-url: none;
+  --bg-image-display: block;
+  --bg-video-display: none;
 }
 
 html,
@@ -32,7 +39,7 @@ html.dark body {
   color: white;
 }
 
-/* Base background styles with hardcoded image */
+/* Base background styles with dynamic image */
 html {
   background-color: black !important;
   background-image: var(--bg-image-url) !important;

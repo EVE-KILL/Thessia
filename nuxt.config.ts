@@ -110,7 +110,8 @@ export default defineNuxtConfig({
     "@pinia/nuxt",
     '@nuxtjs/sitemap',
     '@sentry/nuxt/module',
-    '@nuxtjs/seo'
+    '@nuxtjs/seo',
+    '@nuxtjs/color-mode'
   ],
 
   // Sourcemaps
@@ -234,5 +235,13 @@ export default defineNuxtConfig({
         { rel: 'search', type: 'application/opensearchdescription+xml', title: 'EVE-KILL', href: '/search.xml' },
       ]
     }
+  },
+
+  colorMode: {
+    classSuffix: '',
+    storage: 'cookie',
+    storageKey: 'theme',
+    preference: 'system',
+    fallback: 'dark'
   }
 });

@@ -1,7 +1,7 @@
 <script lang="ts" setup>
 import { markRaw } from 'vue';
 const { t } = useI18n();
-const { themeIcon, toggleTheme } = useThemeMode();
+const colorMode = useColorMode();
 
 import SearchComponent from './navbar/Search.vue';
 import CustomDropdown from './navbar/CustomDropdown.vue';
@@ -34,15 +34,6 @@ onMounted(() => {
 // Toggle mobile menu section expansion
 const toggleMobileMenuSection = (menuName: string) => {
   expandedMobileMenus.value[menuName] = !expandedMobileMenus.value[menuName];
-};
-
-// Track if background selector modal is open on mobile
-const isMobileBgSelectorOpen = ref(false);
-
-// Handle background selection completion
-const handleBackgroundSelected = () => {
-  // Close the background selector
-  isMobileBgSelectorOpen.value = false;
 };
 
 // Close the mobile menu
@@ -199,11 +190,11 @@ const navbarLinks = computed(() => {
       mobile: true,
     },
     {
-      icon: themeIcon.value,
+      icon: colorMode.value === 'dark' ? 'i-heroicons:moon' : 'i-heroicons:sun',
       position: 'right',
       mobile: true,
       onClick: () => {
-        toggleTheme()
+        colorMode.preference = colorMode.preference === 'dark' ? 'light' : 'dark';
       },
     },
     //{
@@ -242,29 +233,6 @@ const navbarLinks = computed(() => {
     }
   ];
 });
-
-// Get access to user data and login state for mobile menu
-const isLoggedIn = ref(false);
-const userData = ref({
-  name: 'Demo User',
-  avatar: null,
-  email: 'user@example.com'
-});
-
-// Handle EVE SSO login
-const handleEveLogin = () => {
-  console.debug('EVE SSO login clicked');
-};
-
-// Handle logout
-const handleLogout = () => {
-  isLoggedIn.value = false;
-};
-
-// Toggle login state for demo purposes
-const toggleLoginState = () => {
-  isLoggedIn.value = !isLoggedIn.value;
-};
 </script>
 
 <template>
