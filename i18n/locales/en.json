@@ -120,7 +120,23 @@
         "lastUpdated": "Last updated: {time}",
         "autoRefreshing": "Auto-refreshing every {seconds} seconds",
         "timePeriod": "Select Time Period",
+        "selectTimePeriod": "Time Period",
         "processedItems": "Processed Items ({period})",
+        "simplified": "Simplified",
+        "detailed": "Detailed",
+        "detailedStats": "Detailed Statistics",
+        "systemInfo": "System Information",
+        "summary": {
+            "uptime": "System Uptime",
+            "processedLast5m": "Processed (Last 5m)",
+            "queuedItems": "Queued Items"
+        },
+        "tabs": {
+            "overview": "Overview",
+            "processing": "Processing",
+            "database": "Database",
+            "cache": "Cache"
+        },
         "uptime": {
             "title": "System Uptime",
             "format": "{days}d {hours}h {minutes}m {seconds}s",
