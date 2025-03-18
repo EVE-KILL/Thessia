@@ -60,6 +60,7 @@
     "@types/unbzip2-stream": "^1.4.3",
     "@vueuse/nuxt": "^13.0.0",
     "husky": "^9.1.7",
-    "lint-staged": "^15.5.0"
+    "lint-staged": "^15.5.0",
+    "nuxt-purgecss": "^2.0.0"
   }
 }
