@@ -4,7 +4,6 @@ export default defineNuxtConfig({
     preset: "bun",
     srcDir: "server",
     minify: true,
-    sourceMap: true,
 
     esbuild: {
       options: {
@@ -109,10 +108,8 @@ export default defineNuxtConfig({
     "@vueuse/nuxt",
     "@pinia/nuxt",
     '@nuxtjs/sitemap',
-    '@sentry/nuxt/module',
     '@nuxtjs/seo',
     '@nuxtjs/color-mode',
-    'nuxt-purgecss',
     'nuxt-security'
   ],
 
