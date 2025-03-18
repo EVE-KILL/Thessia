@@ -1,25 +1,21 @@
 <script lang="ts" setup>
 import { markRaw } from 'vue';
-const { t, locale } = useI18n()
-const { themeIcon, themeAriaLabel, toggleTheme } = useThemeMode()
-const colorMode = useColorMode();
-const isDark = computed(() => colorMode.value === 'dark');
+const { t } = useI18n();
+const { themeIcon, toggleTheme } = useThemeMode();
 
-import SearchComponent from './Navbar/Search.vue';
-import BackgroundSwitcherComponent from './Navbar/BackgroundSwitcher.vue';
-import CustomDropdown from './Navbar/CustomDropdown.vue';
-import MobileFullscreenModal from './Modal/MobileFullscreenModal.vue';
-import NavbarUser from './Navbar/User.vue';
-import LanguageSelector from './Navbar/LanguageSelector.vue';
+import SearchComponent from './navbar/Search.vue';
+import CustomDropdown from './navbar/CustomDropdown.vue';
+import MobileFullscreenModal from './modal/MobileFullscreenModal.vue';
+import NavbarUser from './navbar/User.vue';
+import LanguageSelector from './navbar/LanguageSelector.vue';
 
 const Search = markRaw(SearchComponent);
-const BackgroundSwitcher = markRaw(BackgroundSwitcherComponent);
 
 // Mobile menu state
 const isMobileMenuOpen = ref(false);
 
 // Track dropdown states for menus with children
-const dropdownStates = ref({});
+const dropdownStates = ref<Record<string, boolean>>({});
 
 // Track which menu sections are expanded on mobile
 const expandedMobileMenus = ref<Record<string, boolean>>({});
@@ -289,7 +285,7 @@ const toggleLoginState = () => {
                 <!-- Dropdown menus - update to use CustomDropdown's built-in column distribution -->
                 <CustomDropdown
                     v-else-if="link.children"
-                    v-model="dropdownStates[link.name]"
+                    v-model="dropdownStates[link.name || link.label || '']"
                     :use-column-distribution="true"
                     :items="link.children"
                     :items-per-column="10"
@@ -312,7 +308,7 @@ const toggleLoginState = () => {
                             :to="item.to"
                             class="block px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-md"
                             :aria-label="item.label"
-                            @click="dropdownStates[link.name] = false"
+                            @click="dropdownStates[link.name || link.label || ''] = false"
                         >
                             {{ item.name }}
                         </NuxtLink>
@@ -425,20 +421,9 @@ const toggleLoginState = () => {
         <!-- Mobile header actions for items marked with mobile: true -->
         <div class="flex items-center gap-3">
             <template v-for="(link, index) in navbarLinks.filter(l => l.mobile === true)" :key="index">
-                <!-- Special handling for BackgroundSwitcher on mobile - Fix condition to identify by component -->
-                <template v-if="link.component === BackgroundSwitcher">
-                    <BackgroundSwitcher
-                        :is-mobile="true"
-                        :fullscreen-open="isMobileBgSelectorOpen"
-                        @fullscreen-opened="isMobileBgSelectorOpen = true"
-                        @fullscreen-closed="isMobileBgSelectorOpen = false"
-                        @background-selected="handleBackgroundSelected"
-                    />
-                </template>
-
                 <!-- Regular component buttons -->
                 <component
-                    v-else-if="link.component"
+                    v-if="link.component"
                     :is="link.component"
                 />
 

@@ -29,7 +29,7 @@ const emit = defineEmits(['close']);
 
 // Improved body scroll locking when modal is open
 watch(() => props.open, (isOpen) => {
-  if (process.client) {
+  if (import.meta.client) {
     const body = document.body;
 
     if (isOpen) {
@@ -62,7 +62,7 @@ watch(() => props.open, (isOpen) => {
 
 // Clean up on unmount
 onUnmounted(() => {
-  if (process.client && document.body.classList.contains('modal-open')) {
+  if (import.meta.client && document.body.classList.contains('modal-open')) {
     // Restore scroll if component unmounts while modal is open
     const scrollY = document.body.dataset.scrollPosition || '0';
     document.body.style.position = '';

@@ -59,7 +59,7 @@ export function useThemeMode() {
     updateCookie(newMode, true)
 
     // Apply DOM changes immediately if on client
-    if (process.client) {
+    if (import.meta.client) {
       document.documentElement.classList.toggle('dark', newMode === 'dark')
     }
 

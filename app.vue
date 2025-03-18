@@ -9,7 +9,7 @@ const { locale } = useI18n();
 
 // Apply theme class when component mounts
 onMounted(() => {
-  if (process.client) {
+  if (import.meta.client) {
     const applyThemeClass = () => {
       const colorMode = useColorMode()
       const isDarkMode = colorMode.value === 'dark'

@@ -9,13 +9,13 @@
     </div>
   </UContainer>
 
-  <globalBackgroundViewer />
+  <BackgroundViewer />
 </template>
 
 <style>
 /* Root CSS variables for theme colors */
 :root {
-  --bg-image-url: url('/images/bg2.png');
+  --bg-image-url: url('/backgrounds/images/bg2.png');
 }
 
 html,

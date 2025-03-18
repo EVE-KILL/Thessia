@@ -58,11 +58,11 @@ const { data: statusData, pending: loading, error, refresh: refreshData } = useL
 // Custom refresh function
 const refresh = async () => {
   try {
-    if (process.client) {
+    if (import.meta.client) {
       scrollPosition.value = window.scrollY
     }
     await refreshData()
-    if (process.client) {
+    if (import.meta.client) {
       nextTick(() => {
         window.scrollTo({
           top: scrollPosition.value,
@@ -77,7 +77,7 @@ const refresh = async () => {
 
 // Setup auto-refresh using VueUse's useIntervalFn
 const { pause, resume } = useIntervalFn(() => {
-  if (process.client && isVisible.value === 'visible' && autoRefresh.value) {
+  if (import.meta.client && isVisible.value === 'visible' && autoRefresh.value) {
     refresh()
   }
 }, autoRefreshInterval.value * 1000)

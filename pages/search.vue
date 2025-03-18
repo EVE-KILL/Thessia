@@ -167,7 +167,7 @@ const initAutoSearch = () => {
 
 // Update the URL with the search query without triggering a route change
 const updateSearchUrl = (query: string) => {
-  if (process.client) {
+  if (import.meta.client) {
     const url = new URL(window.location.href);
     url.searchParams.set('q', query);
     window.history.replaceState({}, '', url.toString());

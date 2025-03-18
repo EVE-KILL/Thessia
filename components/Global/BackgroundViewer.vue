@@ -17,7 +17,7 @@ const isViewingBackground = ref(false)
 
 // Toggle background view function
 const toggleBackgroundView = () => {
-  if (!process.client) return
+  if (!import.meta.client) return
 
   isViewingBackground.value = !isViewingBackground.value
 
@@ -66,7 +66,7 @@ const toggleBackgroundView = () => {
 
 // Clean up event listeners
 onUnmounted(() => {
-  if (process.client) {
+  if (import.meta.client) {
     // Remove any styles we added
     const styleElement = document.getElementById('background-view-styles')
     if (styleElement) {
