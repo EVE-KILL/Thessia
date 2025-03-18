@@ -3,11 +3,11 @@ import { markRaw } from 'vue';
 const { t } = useI18n();
 const colorMode = useColorMode();
 
-import SearchComponent from './navbar/Search.vue';
-import CustomDropdown from './navbar/CustomDropdown.vue';
-import MobileFullscreenModal from './modal/MobileFullscreenModal.vue';
-import NavbarUser from './navbar/User.vue';
-import LanguageSelector from './navbar/LanguageSelector.vue';
+import SearchComponent from './Navbar/Search.vue';
+import CustomDropdown from './Navbar/CustomDropdown.vue';
+import MobileFullscreenModal from './Modal/MobileFullscreenModal.vue';
+import NavbarUser from './Navbar/User.vue';
+import LanguageSelector from './Navbar/LanguageSelector.vue';
 
 const Search = markRaw(SearchComponent);
 
