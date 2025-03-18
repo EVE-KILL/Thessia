@@ -5,7 +5,6 @@ const { themeIcon, themeAriaLabel, toggleTheme } = useThemeMode()
 const colorMode = useColorMode();
 const isDark = computed(() => colorMode.value === 'dark');
 
-// Import components directly and mark them as raw to avoid reactivity warnings
 import SearchComponent from './Navbar/Search.vue';
 import BackgroundSwitcherComponent from './Navbar/BackgroundSwitcher.vue';
 import CustomDropdown from './Navbar/CustomDropdown.vue';
@@ -13,7 +12,6 @@ import MobileFullscreenModal from './Modal/MobileFullscreenModal.vue';
 import NavbarUser from './Navbar/User.vue';
 import LanguageSelector from './Navbar/LanguageSelector.vue';
 
-// Use markRaw to prevent Vue from making components reactive
 const Search = markRaw(SearchComponent);
 const BackgroundSwitcher = markRaw(BackgroundSwitcherComponent);
 
@@ -212,13 +210,13 @@ const navbarLinks = computed(() => {
         toggleTheme()
       },
     },
-    {
-      label: t('navbar.backgroundSelector.label'),
-      icon: 'i-heroicons-photo',
-      component: BackgroundSwitcher,
-      position: 'right',
-      mobile: true,
-    },
+    //{
+    //  label: t('navbar.backgroundSelector.label'),
+    //  icon: 'i-heroicons-photo',
+    //  component: BackgroundSwitcher,
+    //  position: 'right',
+    //  mobile: true,
+    //},
     {
       label: t('navbar.information.label'),
       icon: 'i-heroicons-information-circle',
