@@ -239,6 +239,12 @@ export default defineNuxtConfig({
     }
   },
 
+  security: {
+    headers: {
+        contentSecurityPolicy: false
+    }
+  },
+
   colorMode: {
     classSuffix: '',
     storage: 'cookie',
