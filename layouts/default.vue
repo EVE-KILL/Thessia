@@ -9,7 +9,7 @@
     </div>
   </UContainer>
 
-  <BackgroundViewer />
+  <GlobalBackgroundViewer />
 </template>
 
 <script setup lang="ts">
