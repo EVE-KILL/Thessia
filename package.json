@@ -30,6 +30,7 @@
     "mongoose": "^8.12.1",
     "node-gyp": "^11.1.0",
     "nuxt": "^3.16.0",
+    "nuxt-security": "2.2.0",
     "pinia": "^3.0.1",
     "server-health": "^6.0.2",
     "sqlite": "^5.1.1",

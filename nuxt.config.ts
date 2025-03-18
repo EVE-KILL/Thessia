@@ -112,7 +112,8 @@ export default defineNuxtConfig({
     '@sentry/nuxt/module',
     '@nuxtjs/seo',
     '@nuxtjs/color-mode',
-    'nuxt-purgecss'
+    'nuxt-purgecss',
+    'nuxt-security'
   ],
 
   // Sourcemaps
