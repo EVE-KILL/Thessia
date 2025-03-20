@@ -200,7 +200,7 @@ const navbarLinks = computed(() => {
     },
     {
       label: t('navbar.backgroundSelector.label'),
-      icon: 'i-heroicons-photo',
+      icon: 'lucide:book-image',
       component: BackgroundSwitcher,
       position: 'right',
       mobile: true,

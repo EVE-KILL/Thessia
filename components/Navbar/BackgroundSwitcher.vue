@@ -136,7 +136,7 @@ onUnmounted(() => {
             variant="ghost"
             aria-label="Change background"
           >
-            <UIcon name="i-heroicons-photo" class="text-xl text-black dark:text-white" />
+            <UIcon name="lucide:book-image" class="text-xl text-black dark:text-white" />
           </UButton>
         </template>
 
@@ -150,7 +150,7 @@ onUnmounted(() => {
 
           <!-- Loading state -->
           <div v-if="loading" class="p-4 text-center">
-            <UIcon name="i-heroicons-arrow-path" class="animate-spin text-xl mb-2" />
+            <UIcon name="lucide:refresh-ccw" class="animate-spin text-xl mb-2" />
             <p class="text-sm text-gray-500 dark:text-gray-400">{{ $t('background.loading', 'Loading backgrounds...') }}</p>
           </div>
 
@@ -181,7 +181,7 @@ onUnmounted(() => {
                 <div class="flex items-center justify-between">
                   <UIcon
                     v-if="isCurrentBackground(bg.path)"
-                    name="i-heroicons-check"
+                    name="lucide:check"
                     class="text-(--ui-primary) text-xs"
                   />
                 </div>
@@ -200,7 +200,7 @@ onUnmounted(() => {
         aria-label="Change background"
         @click="openFullscreen"
       >
-        <UIcon name="i-heroicons-photo" class="text-xl text-black dark:text-white" />
+        <UIcon name="lucide:book-image" class="text-xl text-black dark:text-white" />
       </UButton>
     </div>
 
@@ -212,7 +212,7 @@ onUnmounted(() => {
     >
       <!-- Loading state -->
       <div v-if="loading" class="p-8 text-center">
-        <UIcon name="i-heroicons-arrow-path" class="animate-spin text-2xl mb-3" />
+        <UIcon name="lucide:refresh-ccw" class="animate-spin text-2xl mb-3" />
         <p class="text-gray-500 dark:text-gray-400">{{ $t('background.loading', 'Loading backgrounds...') }}</p>
       </div>
 
@@ -243,7 +243,7 @@ onUnmounted(() => {
               <span class="text-sm text-white truncate">{{ bg.name }}</span>
               <UIcon
                 v-if="isCurrentBackground(bg.path)"
-                name="i-heroicons-check"
+                name="lucide:check"
                 class="text-primary-500"
               />
             </div>

@@ -1,3 +1,9 @@
+import { readFileSync } from "node:fs";
+import yaml from "yaml";
+
+// Load apiCacheTimes.yaml
+const apiCacheTimes = readFileSync("./apiCacheTimes.yaml", "utf8");
+
 // https://nuxt.com/docs/api/configuration/nuxt-config
 export default defineNuxtConfig({
     site: {
@@ -15,6 +21,8 @@ export default defineNuxtConfig({
                 target: "esnext",
             },
         },
+
+        routeRules: routeRuleGenerator(),
 
         imports: {
             dirs: ["server/models/**"],
@@ -276,3 +284,31 @@ export default defineNuxtConfig({
         fallback: "dark",
     },
 });
+
+function routeRuleGenerator(debug = false): Record<string, any> {
+  // Build route rules as an object with a default rule for /api/**
+  const rules: Record<string, any> = {
+    "/api/**": { cors: true },
+  };
+
+  if (debug === true) {
+    return rules;
+  }
+
+  // Parse YAML
+  const cacheTimes = yaml.parse(apiCacheTimes);
+
+  // Merge routes from YAML:
+  for (const route in cacheTimes) {
+    rules[`/api${route}`] = {
+      cors: true,
+      cache: {
+        maxAge: cacheTimes[route].maxAge || 60,
+        staleMaxAge: cacheTimes[route].staleMaxAge || -1,
+        swr: cacheTimes[route].swr || true,
+      },
+    };
+  }
+
+  return rules;
+}
