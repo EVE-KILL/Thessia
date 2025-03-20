@@ -20,10 +20,16 @@ useHead({
 
 <template>
     <div :style="{
+        backgroundColor: 'black',
         backgroundImage: `url(${backgroundUrl})`,
-        backgroundSize: 'cover',
+        backgroundRepeat: 'no-repeat',
         backgroundPosition: 'center',
-        backgroundRepeat: 'no-repeat'
+        backgroundAttachment: 'fixed',
+        backgroundSize: 'cover',
+        position: 'relative',
+        minHeight: '100%',
+        overflowY: 'scroll',
+        scrollbarGutter: 'stable',
     }">
         <UContainer id="content" class="content mx-auto">
             <div id="inner-content" class="inner-content">
