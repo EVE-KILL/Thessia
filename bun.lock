@@ -44,7 +44,7 @@
         "@nuxt/icon": "1.11.0",
         "@nuxt/image": "^1.10.0",
         "@nuxt/ui": "^3.0.0",
-        "@nuxtjs/i18n": "^9.3.2",
+        "@nuxtjs/i18n": "^9.3.3",
         "@nuxtjs/sitemap": "^7.2.9",
         "@nuxtjs/tailwindcss": "^6.13.2",
         "@types/bun": "^1.2.5",
