@@ -2,8 +2,12 @@
 import BackgroundViewer from '~/components/Global/BackgroundViewer.vue';
 const { getOptimizedImageUrl, getSiteBackground } = siteBackground();
 
+// Get the reactive ref directly from getSiteBackground()
+const backgroundRef = getSiteBackground();
+
+// Create a computed that reacts to changes in the ref
 const backgroundUrl = computed(() => {
-    return getOptimizedImageUrl(getSiteBackground());
+    return getOptimizedImageUrl(backgroundRef.value);
 });
 
 // Preload the optimized image
@@ -18,7 +22,8 @@ useHead({
     <div :style="{
         backgroundImage: `url(${backgroundUrl})`,
         backgroundSize: 'cover',
-        backgroundPosition: 'center'
+        backgroundPosition: 'center',
+        backgroundRepeat: 'no-repeat'
     }">
         <UContainer id="content" class="content mx-auto">
             <div id="inner-content" class="inner-content">

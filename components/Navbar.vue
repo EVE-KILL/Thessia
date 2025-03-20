@@ -8,6 +8,7 @@ import CustomDropdown from './Navbar/CustomDropdown.vue';
 import MobileFullscreenModal from './Modal/MobileFullscreenModal.vue';
 import NavbarUser from './Navbar/User.vue';
 import LanguageSelector from './Navbar/LanguageSelector.vue';
+import BackgroundSwitcher from './Navbar/BackgroundSwitcher.vue';
 
 const Search = markRaw(SearchComponent);
 
@@ -197,13 +198,13 @@ const navbarLinks = computed(() => {
         colorMode.preference = colorMode.preference === 'dark' ? 'light' : 'dark';
       },
     },
-    //{
-    //  label: t('navbar.backgroundSelector.label'),
-    //  icon: 'i-heroicons-photo',
-    //  component: BackgroundSwitcher,
-    //  position: 'right',
-    //  mobile: true,
-    //},
+    {
+      label: t('navbar.backgroundSelector.label'),
+      icon: 'i-heroicons-photo',
+      component: BackgroundSwitcher,
+      position: 'right',
+      mobile: true,
+    },
     {
       label: t('navbar.information.label'),
       icon: 'lucide:info',

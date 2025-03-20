@@ -3,7 +3,10 @@ export function siteBackground() {
     const cookie = useCookie('siteBackground');
 
     // Create a reactive ref to track the current background
-    const currentBackground = ref<string>(cookie.value || '/backgrounds/images/bg2.png');
+    // Make it globally accessible with useState instead of a local ref
+    const currentBackground = useState<string>('currentBackground', () =>
+        cookie.value || '/backgrounds/bg2.png'
+    );
 
     // Watch for changes to the ref and update the cookie
     watch(currentBackground, (newValue) => {
@@ -11,7 +14,7 @@ export function siteBackground() {
     });
 
     const getSiteBackground = () => {
-        return currentBackground.value;
+        return currentBackground;
     }
 
     const setSiteBackground = (path: string) => {
@@ -30,6 +33,8 @@ export function siteBackground() {
     return {
         getOptimizedImageUrl,
         getSiteBackground,
-        setSiteBackground
+        setSiteBackground,
+        // Also expose the ref directly for more direct access
+        currentBackground
     }
 }
