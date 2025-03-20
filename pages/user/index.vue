@@ -1,6 +1,4 @@
 <script setup lang="ts">
-import { useUserStore } from '~/stores/userStore';
-
 definePageMeta({
   title: 'User Account',
   layout: 'default',
@@ -9,9 +7,9 @@ definePageMeta({
 
 const router = useRouter();
 
-// Redirect to profile by default
+// Redirect to settings by default
 onMounted(() => {
-  router.push('/user/profile');
+  router.push('/user/settings');
 });
 </script>
 

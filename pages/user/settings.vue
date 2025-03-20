@@ -8,7 +8,6 @@ definePageMeta({
 // Add active tab tracking
 const activeTab = ref('profile');
 
-// Use auth composable instead of userStore
 const auth = useAuth();
 const { t } = useI18n();
 const router = useRouter();

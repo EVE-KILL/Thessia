@@ -1,12 +1,11 @@
 <script setup lang="ts">
-import { useUserStore } from '~/stores/userStore';
-
 definePageMeta({
   title: 'Login',
   layout: 'default'
 });
 
-const userStore = useUserStore();
+// Use the auth composable instead of userStore
+const auth = useAuth();
 const { t } = useI18n();
 const route = useRoute();
 const colorMode = useColorMode();
@@ -16,7 +15,7 @@ onMounted(() => {
   // Check for auth error from redirect
   const authError = route.query.auth_error;
   if (authError) {
-    userStore.authError = t('auth.error.general', 'Authentication failed. Please try again.');
+    auth.authError.value = t('auth.error.general', 'Authentication failed. Please try again.');
   }
 });
 
@@ -28,12 +27,14 @@ const ssoImageSrc = computed(() => {
 
 // Handle login button click
 const handleLogin = () => {
-  userStore.login();
+  // Get the redirect URL from the query parameter if available
+  const redirectUrl = route.query.redirect as string || null;
+  auth.login(redirectUrl);
 };
 
 // Clear errors when leaving the page
 onBeforeUnmount(() => {
-  userStore.clearError();
+  auth.authError.value = null;
 });
 </script>
 
@@ -50,18 +51,18 @@ onBeforeUnmount(() => {
       </div>
 
       <div class="bg-white dark:bg-gray-800 py-8 px-4 shadow-md rounded-lg sm:px-10">
-        <div v-if="userStore.hasError" class="mb-4 text-sm text-center p-3 bg-red-100 dark:bg-red-900/20 text-red-600 dark:text-red-400 rounded-md">
-          {{ userStore.errorMessage }}
+        <div v-if="auth.hasError.value" class="mb-4 text-sm text-center p-3 bg-red-100 dark:bg-red-900/20 text-red-600 dark:text-red-400 rounded-md">
+          {{ auth.errorMessage.value }}
         </div>
 
         <!-- If already authenticated -->
-        <div v-if="userStore.isAuthenticated" class="space-y-6">
+        <div v-if="auth.isAuthenticated.value" class="space-y-6">
           <div class="text-center space-y-3">
             <div class="text-gray-900 dark:text-white font-medium">
               {{ $t('auth.alreadySignedIn') }}
             </div>
             <div class="text-sm text-gray-600 dark:text-gray-400">
-              {{ $t('auth.signedInAs', { name: userStore.user.characterName }) }}
+              {{ $t('auth.signedInAs', { name: auth.user.value.characterName }) }}
             </div>
           </div>
 
@@ -76,7 +77,7 @@ onBeforeUnmount(() => {
             <UButton
               color="gray"
               class="w-full"
-              @click="userStore.logout"
+              @click="auth.logout"
             >
               {{ $t('user.logout') }}
             </UButton>
@@ -92,10 +93,10 @@ onBeforeUnmount(() => {
 
             <button
               @click="handleLogin"
-              :disabled="userStore.isLoading"
+              :disabled="auth.isLoading.value"
               class="w-full max-w-xs transition-opacity hover:opacity-90 disabled:opacity-50"
             >
-              <div v-if="userStore.isLoading" class="flex items-center justify-center p-4">
+              <div v-if="auth.isLoading.value" class="flex items-center justify-center p-4">
                 <UIcon name="lucide:loader" class="animate-spin mr-2" />
                 {{ $t('auth.loading') }}
               </div>
