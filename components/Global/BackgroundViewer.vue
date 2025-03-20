@@ -21,80 +21,63 @@ const toggleBackgroundView = () => {
 
   isViewingBackground.value = !isViewingBackground.value
 
-  // Initialize the style element if it doesn't exist yet
-  if (!document.getElementById('background-view-styles')) {
+  if (isViewingBackground.value) {
+    // Create and inject style for background viewing mode
     const styleElement = document.createElement('style')
     styleElement.id = 'background-view-styles'
+    styleElement.innerHTML = `
+      /* Set up transition properties for all elements */
+      #content,
+      #inner-content,
+      html::before,
+      .vignette-overlay {
+        transition: opacity 0.6s cubic-bezier(0.4, 0, 0.2, 1),
+                    background 0.6s cubic-bezier(0.4, 0, 0.2, 1) !important;
+      }
+
+      /* Hide all content */
+      #content,
+      #inner-content {
+        opacity: 0 !important;
+      }
+
+      /* Remove the vignette effects */
+      html::before,
+      .vignette-overlay {
+        opacity: 0 !important;
+        background: none !important;
+      }
+
+      /* Keep the button visible with a nice transition */
+      .background-view-button {
+        opacity: 1 !important;
+        z-index: 9999 !important;
+        transition: transform 0.3s ease, opacity 0.3s ease !important;
+        transform: scale(1.1) !important;
+      }
+
+      /* Disable pointer events except for our button */
+      body {
+        pointer-events: none !important;
+      }
+
+      .background-view-button {
+        pointer-events: auto !important;
+      }
+    `
     document.head.appendChild(styleElement)
-  }
-
-  const styleElement = document.getElementById('background-view-styles')
-
-  // Set base CSS that applies regardless of view state
-  let baseCSS = `
-    /* Set up smooth transitions for all affected elements */
-    .vignette-overlay,
-    html::before,
-    #content,
-    #inner-content {
-      transition: opacity 0.6s cubic-bezier(0.4, 0, 0.2, 1),
-                  background 0.6s cubic-bezier(0.4, 0, 0.2, 1) !important;
-    }
-
-    /* Default state (visible vignette) */
-    html::before {
-      opacity: 1 !important;
-    }
-
-    .vignette-overlay {
-      opacity: 1 !important;
-    }
-
-    /* Background view state - hide content and vignette */
-    body.viewing-background #content,
-    body.viewing-background #inner-content {
-      opacity: 0 !important;
-    }
-
-    body.viewing-background html::before,
-    body.viewing-background .vignette-overlay {
-      opacity: 0 !important;
-      background: none !important;
-    }
-
-    /* Button styling */
-    .background-view-button {
-      transition: transform 0.3s ease, opacity 0.3s ease !important;
-    }
-
-    body.viewing-background .background-view-button {
-      opacity: 1 !important;
-      z-index: 9999 !important;
-      transform: scale(1.1) !important;
-    }
-
-    /* Pointer events */
-    body.viewing-background {
-      pointer-events: none !important;
-    }
-
-    body.viewing-background .background-view-button {
-      pointer-events: auto !important;
-    }
-  `
-
-  // Apply styles
-  styleElement.innerHTML = baseCSS
-
-  // Toggle body class for the view state
-  if (isViewingBackground.value) {
-    document.body.classList.add('viewing-background')
   } else {
-    document.body.classList.remove('viewing-background')
+    // Add a short delay before removing styles for a smooth transition back
+    setTimeout(() => {
+      const styleElement = document.getElementById('background-view-styles')
+      if (styleElement) {
+        document.head.removeChild(styleElement)
+      }
+    }, 100) // Short delay to allow transitions to complete more naturally
   }
 }
 
-// Clean up on component unmount
+// Clean up event listeners
 onUnmounted(() => {
   if (import.meta.client) {
     // Remove any styles we added
@@ -102,9 +85,6 @@ onUnmounted(() => {
     if (styleElement) {
       document.head.removeChild(styleElement)
     }
-
-    // Remove any class we added
-    document.body.classList.remove('viewing-background')
   }
 })
 </script>
