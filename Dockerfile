@@ -4,7 +4,12 @@ COPY . /app
 
 RUN \
     bun install && \
-    bun run build
+    bun run build --standalone
+
+FROM oven/bun:latest AS production
+WORKDIR /app
+COPY --from=build /app/.output /app/.output
+COPY --from=build /app/nuxt.config.ts /app/
 
 EXPOSE 3000
 CMD [ "bun", "--bun", "run", "/app/.output/server/index.mjs" ]
