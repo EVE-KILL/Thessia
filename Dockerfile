@@ -8,7 +8,7 @@ RUN \
 
 FROM oven/bun:latest AS production
 WORKDIR /app
-COPY --from=build /app/.output /app/.output
+COPY --from=build /app/.output /app/
 COPY --from=build /app/nuxt.config.ts /app/
 
 EXPOSE 3000

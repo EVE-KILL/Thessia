@@ -131,11 +131,6 @@ export default defineNuxtConfig({
         "nuxt-security",
     ],
 
-    // Sourcemaps
-    sourcemap: {
-        client: true,
-    },
-
     // Sentry configuration
     sentry: {
         sourceMapsUploadOptions: {
