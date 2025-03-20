@@ -135,6 +135,7 @@ onUnmounted(() => {
             color="primary"
             variant="ghost"
             aria-label="Change background"
+            class="cursor-pointer"
           >
             <UIcon name="lucide:book-image" class="text-xl text-black dark:text-white" />
           </UButton>
@@ -160,7 +161,7 @@ onUnmounted(() => {
               v-for="bg in backgrounds"
               :key="bg.path"
               @click="selectBackground(bg.path)"
-              class="bg-thumb-btn relative overflow-hidden rounded-md focus:outline-none focus-visible:ring-2 focus-visible:ring-(--ui-focus-ring)"
+              class="bg-thumb-btn relative overflow-hidden rounded-md focus:outline-none focus-visible:ring-2 focus-visible:ring-(--ui-focus-ring) cursor-pointer"
               :class="{'ring-2 ring-(--ui-focus-ring)': isCurrentBackground(bg.path)}"
             >
               <!-- Image Thumbnail -->
@@ -199,6 +200,7 @@ onUnmounted(() => {
         variant="ghost"
         aria-label="Change background"
         @click="openFullscreen"
+        class="cursor-pointer"
       >
         <UIcon name="lucide:book-image" class="text-xl text-black dark:text-white" />
       </UButton>
@@ -222,7 +224,7 @@ onUnmounted(() => {
           v-for="bg in backgrounds"
           :key="bg.path"
           @click="selectBackground(bg.path)"
-          class="bg-thumb-btn relative overflow-hidden rounded-lg focus:outline-none shadow-sm"
+          class="bg-thumb-btn relative overflow-hidden rounded-lg focus:outline-none shadow-sm cursor-pointer"
           :class="{'ring-2 ring-primary-500': isCurrentBackground(bg.path)}"
         >
           <!-- Image Thumbnail -->
@@ -261,6 +263,7 @@ onUnmounted(() => {
 
 .bg-thumb-btn {
   transition: all 0.2s ease;
+  cursor: pointer;
 }
 
 .bg-thumb-btn:hover {

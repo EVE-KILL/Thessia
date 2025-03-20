@@ -1,5 +1,6 @@
 import { getJwtFromEvent, verifyJwtToken } from '~/server/utils/auth.utils';
 import { Users } from '~/server/models/Users';
+import { getAlliance, getCharacter, getCorporation } from '~/server/helpers/ESIData';
 
 export default defineEventHandler(async (event) => {
   try {
@@ -37,18 +38,18 @@ export default defineEventHandler(async (event) => {
     }
 
     // Fetch additional character information
-    const characterData = await $fetch(`/api/characters/${characterId}`);
+    const characterData = await getCharacter(characterId);
     let corporationData = null;
     let allianceData = null;
 
     // Get corporation info if available
     if (characterData && characterData.corporation_id) {
-      corporationData = await $fetch(`/api/corporations/${characterData.corporation_id}`);
+      corporationData = await getCorporation(characterData.corporation_id);
     }
 
     // Get alliance info if available
     if (characterData && characterData.alliance_id) {
-      allianceData = await $fetch(`/api/alliances/${characterData.alliance_id}`);
+      allianceData = await getAlliance(characterData.alliance_id);
     }
 
     // Format the expiration date in 24h UTC format

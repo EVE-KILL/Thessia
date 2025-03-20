@@ -3,7 +3,7 @@ import { computed } from 'vue';
 import CustomDropdown from './CustomDropdown.vue';
 import { useUserStore } from '~/stores/userStore';
 
-// Props
+// Props for component
 const props = defineProps({
     isMobileView: {
         type: Boolean,
@@ -34,7 +34,8 @@ const characterInitials = computed(() => {
 // Determine which EVE SSO image to use based on color mode and screen size
 const ssoImageSrc = computed(() => {
     const isDark = colorMode.value === 'dark';
-    const isSmallScreen = props.isMobileView || window.innerWidth < 768; // md breakpoint in Tailwind
+    const isSmallScreen = props.isMobileView ||
+        (process.client && window.innerWidth < 768); // md breakpoint in Tailwind
 
     if (isDark) {
         return isSmallScreen ? '/images/sso-light-small.png' : '/images/sso-light-large.png';
@@ -86,16 +87,6 @@ const allianceLogoUrl = computed(() => {
     if (!userStore.user.allianceId) return null;
     return `https://images.evetech.net/alliances/${userStore.user.allianceId}/logo?size=64`;
 });
-
-// For demo purposes only - can be removed in production
-const toggleLoginState = () => {
-    if (userStore.isAuthenticated) {
-        userStore.logout();
-    } else {
-        // Demo login won't work with real EVE auth, this is just for UI testing
-        console.debug('Demo login can only be used for UI testing');
-    }
-};
 </script>
 
 <template>
@@ -105,7 +96,7 @@ const toggleLoginState = () => {
             <!-- Using dropdown for both logged in and logged out states -->
             <CustomDropdown v-model="isDropdownOpen" :smart-position="true" position="bottom" align="end">
                 <template #trigger>
-                    <!-- Updated button to match navbar style -->
+                    <!-- Button to match navbar style -->
                     <UButton color="neutral" variant="ghost" size="sm" class="flex items-center" aria-label="User menu">
                         <!-- Show user icon when not logged in -->
                         <UIcon v-if="!userStore.isAuthenticated" name="lucide:user" class="text-lg" />
@@ -141,7 +132,7 @@ const toggleLoginState = () => {
                             {{ userStore.errorMessage }}
                         </div>
 
-                        <!-- For demo purposes - can be removed in production -->
+                        <!-- Info message -->
                         <div class="border-t border-gray-100 dark:border-gray-800 my-1 pt-1 opacity-30">
                             <div class="px-4 py-2 text-xs text-gray-400 dark:text-gray-500">
                                 {{ t('auth.ssoRequiredForLogin', 'EVE SSO is required for login') }}
@@ -213,7 +204,7 @@ const toggleLoginState = () => {
                                         <UIcon :name="userStore.isLoading ? 'lucide:loader' : 'lucide:log-out'"
                                             :class="{ 'animate-spin': userStore.isLoading }" class="mr-2" />
                                         {{ userStore.isLoading ? t('auth.loggingOut', 'Logging out...') :
-                                        t('user.logout') }}
+                                            t('user.logout') }}
                                     </div>
                                 </button>
                             </div>
@@ -272,7 +263,7 @@ const toggleLoginState = () => {
                     format="webp" quality="95" />
             </button>
 
-            <!-- Error message -->
+            <!-- Error message - Fixed structure -->
             <div v-if="userStore.hasError" class="px-2 py-2 text-sm text-red-500 mb-3">
                 {{ userStore.errorMessage }}
             </div>
@@ -369,5 +360,22 @@ const toggleLoginState = () => {
 .dropdown-leave-to {
     opacity: 0;
     transform: translateY(-0.25rem);
+}
+
+/* Glass effect for containers */
+.bg-gray-50\/70, .dark\:bg-gray-800\/50 {
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+}
+
+/* Safari fix for backdrop-filter */
+@supports not ((backdrop-filter: blur(4px)) or (-webkit-backdrop-filter: blur(4px))) {
+    .bg-gray-50\/70 {
+        background-color: rgba(249, 250, 251, 0.95) !important;
+    }
+
+    :root.dark .dark\:bg-gray-800\/50 {
+        background-color: rgba(31, 41, 55, 0.95) !important;
+    }
 }
 </style>

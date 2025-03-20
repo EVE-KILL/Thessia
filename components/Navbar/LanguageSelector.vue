@@ -6,7 +6,7 @@
         color="neutral"
         variant="ghost"
         size="sm"
-        class="flex items-center"
+        class="flex items-center cursor-pointer"
       >
         <Icon
           name="lucide:earth"
@@ -26,7 +26,7 @@
           :key="locale.code"
           color="neutral"
           variant="ghost"
-          class="flex items-center justify-start p-2"
+          class="flex items-center justify-start p-2 cursor-pointer"
           :class="{ 'ring-2 ring-primary-500 dark:ring-primary-400': currentLocale === locale.code }"
           @click="switchLocale(locale.code)"
         >

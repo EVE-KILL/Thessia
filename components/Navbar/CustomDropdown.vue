@@ -338,7 +338,7 @@ const contentStyle = computed(() => {
 <template>
   <div class="custom-dropdown-container">
     <!-- Use stopPropagation to prevent click events from bubbling -->
-    <div ref="triggerRef" @click.stop="toggleDropdown">
+    <div ref="triggerRef" @click.stop="toggleDropdown" class="cursor-pointer">
       <slot name="trigger"></slot>
     </div>
 
@@ -408,5 +408,11 @@ const contentStyle = computed(() => {
 .dropdown-leave-to {
   opacity: 0;
   transform: translateY(-0.25rem);
+}
+
+/* Add cursor-pointer for items in dropdown */
+:deep(.dropdown-content a),
+:deep(.dropdown-content button) {
+  cursor: pointer;
 }
 </style>

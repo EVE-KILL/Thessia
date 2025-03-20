@@ -56,6 +56,38 @@ body.overflow-hidden {
   overflow-y: scroll !important;
 }
 
+/* Ensure consistent cursor behavior */
+a,
+button,
+.btn,
+[role="button"],
+.cursor-pointer,
+.interactive,
+.clickable,
+select,
+summary,
+input[type="submit"],
+input[type="button"],
+input[type="reset"],
+input[type="file"],
+input[type="checkbox"],
+input[type="radio"] {
+  cursor: pointer;
+}
+
+input:disabled,
+button:disabled,
+select:disabled,
+textarea:disabled,
+.disabled {
+  cursor: not-allowed !important;
+}
+
+input:not([type="submit"]):not([type="button"]):not([type="reset"]):not([type="checkbox"]):not([type="radio"]),
+textarea {
+  cursor: text;
+}
+
 /* Theme variables */
 :root {
   --text-color: #121212;

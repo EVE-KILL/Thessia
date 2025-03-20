@@ -360,7 +360,7 @@ onUnmounted(() => {
                 <!-- Show more if there are more than 5 results in this category -->
                 <div v-if="hits.length > 5" class="text-center mt-1">
                   <button
-                    class="text-xs text-primary-600 dark:text-primary-400 hover:underline py-1"
+                    class="text-xs text-primary-600 dark:text-primary-400 hover:underline py-1 cursor-pointer"
                     @click="navigateToSearch(); shouldShowDropdown = false;"
                   >
                     +{{ hits.length - 5 }} {{ t('search.more') }}
@@ -374,7 +374,7 @@ onUnmounted(() => {
         <!-- View all results button -->
         <div class="pt-2 mt-2">
           <button
-            class="w-full text-center py-2 px-3 text-sm text-primary-600 dark:text-primary-400 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-md"
+            class="w-full text-center py-2 px-3 text-sm text-primary-600 dark:text-primary-400 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-md cursor-pointer"
             @click="navigateToSearch(); shouldShowDropdown = false;"
           >
             {{ t('search.viewAllResults', { count: results.estimatedTotalHits || results.hits.length }) }}
@@ -611,5 +611,12 @@ onUnmounted(() => {
 :root.dark .fixed-bottom-button {
   background-color: rgba(0, 0, 0, 0.9);
   border-top-color: rgba(55, 65, 81);
+}
+
+/* Ensure all buttons and interactive elements have pointer cursor */
+button,
+.search-result-item,
+a {
+  cursor: pointer;
 }
 </style>
