@@ -11,6 +11,7 @@ export default defineNuxtConfig({
         name: 'EVE-KILL',
         description: 'EVE Online killboard tracking kills and losses across New Eden'
     },
+    sourcemap: true,
     nitro: {
         preset: "bun",
         srcDir: "server",
@@ -22,7 +23,7 @@ export default defineNuxtConfig({
             },
         },
 
-        routeRules: routeRuleGenerator(),
+        routeRules: process.env.NODE_ENV === 'production' ? routeRuleGenerator() : {},
 
         imports: {
             dirs: ["server/models/**"],
@@ -66,7 +67,33 @@ export default defineNuxtConfig({
 
     runtimeConfig: {
         enabledRunTimeCache: true,
+        eve: {
+            clientId:
+                process.env.NODE_ENV === "production"
+                    ? process.env.EVE_CLIENT_ID
+                    : process.env.EVE_CLIENT_ID_DEV,
+            clientSecret:
+                process.env.NODE_ENV === "production"
+                    ? process.env.EVE_CLIENT_SECRET
+                    : process.env.EVE_CLIENT_SECRET_DEV,
+            callbackUrl:
+                process.env.NODE_ENV === "production"
+                    ? process.env.EVE_CLIENT_REDIRECT
+                    : process.env.EVE_CLIENT_REDIRECT_DEV,
+            tokenUrl: 'https://login.eveonline.com/v2/oauth/token',
+            authorizeUrl: 'https://login.eveonline.com/v2/oauth/authorize',
+            verifyUrl: 'https://login.eveonline.com/oauth/verify',
+            cookieName: 'evelogin',
+            scopes: [
+                "publicData",
+                "esi-killmails.read_killmails.v1",
+                "esi-killmails.read_corporation_killmails.v1",
+            ],
+        },
         public: {
+            eve: {
+                cookieName: 'evelogin',
+            },
             sentry: {
                 dsn: process.env.SENTRY_DSN,
                 environment: process.env.NODE_ENV,

@@ -7,14 +7,14 @@
     "dev": "nuxt dev",
     "generate": "nuxt generate",
     "preview": "nuxt preview",
-    "postinstall": "nuxt prepare"
+    "postinstall": "nuxt prepare",
+    "debug": "nuxt dev --inspect --host 0.0.0.0"
   },
   "dependencies": {
     "@nuxtjs/color-mode": "3.5.2",
     "@nuxtjs/seo": "3.0.1",
     "@opentelemetry/instrumentation-ioredis": "^0.47.1",
     "@opentelemetry/instrumentation-mongoose": "^0.46.1",
-    "@pinia/nuxt": "^0.10.1",
     "@sentry/bun": "^9.7.0",
     "@sentry/nuxt": "^9.7.0",
     "amqplib": "^0.10.5",
@@ -31,7 +31,6 @@
     "node-gyp": "^11.1.0",
     "nuxt": "^3.16.1",
     "nuxt-security": "2.2.0",
-    "pinia": "^3.0.1",
     "server-health": "^6.0.2",
     "sqlite": "^5.1.1",
     "sqlite3": "^5.1.7",
@@ -52,7 +51,7 @@
     "@nuxt/icon": "1.11.0",
     "@nuxt/image": "^1.10.0",
     "@nuxt/ui": "^3.0.0",
-    "@nuxtjs/i18n": "^9.3.2",
+    "@nuxtjs/i18n": "^9.3.3",
     "@nuxtjs/sitemap": "^7.2.9",
     "@nuxtjs/tailwindcss": "^6.13.2",
     "@types/bun": "^1.2.5",

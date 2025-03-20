@@ -1,41 +1,35 @@
-import { getJwtFromEvent, verifyJwtToken } from '~/server/utils/auth.utils';
-import { Users } from '~/server/models/Users';
+import { getCookie } from 'h3';
 
 export default defineEventHandler(async (event) => {
   try {
-    // Get JWT token
-    const token = getJwtFromEvent(event);
+    // Get cookie
+    const config = useRuntimeConfig().eve;
+    const cookieName = config.cookieName;
+    const cookie = getCookie(event, cookieName);
 
-    if (!token) {
+    if (!cookie) {
       throw createError({
         statusCode: 401,
         statusMessage: 'Authentication required'
       });
     }
 
-    // Verify JWT
-    const { characterId } = verifyJwtToken(token);
+    // Forward the request to the me endpoint for consistency
+    const { data } = await useFetch('/api/auth/me', {
+      headers: {
+        Cookie: `${cookieName}=${cookie}`
+      }
+    });
 
-    // Find user in database
-    const user = await Users.findOne({ characterId });
-
-    if (!user) {
+    if (!data.value || !data.value.authenticated) {
       throw createError({
-        statusCode: 404,
-        statusMessage: 'User profile not found'
+        statusCode: 401,
+        statusMessage: 'Authentication required'
       });
     }
 
-    // Return sanitized user profile
-    return {
-      characterId: user.characterId,
-      characterName: user.characterName,
-      scopes: user.scopes,
-      canFetchCorporationKillmails: user.canFetchCorporationKillmails,
-      dateExpiration: user.dateExpiration,
-      createdAt: user.createdAt
-    };
-
+    // Return just the user data portion
+    return data.value.user;
   } catch (error) {
     console.debug('Get profile error:', error);
     throw createError({

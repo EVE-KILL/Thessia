@@ -31,8 +31,15 @@ export class RedisStorage {
   }
 
   // Redis operations
-  async set(key: string, value: any): Promise<void> {
-    await this.client.set(key, value);
+  async set(key: string, value: any, ttl: number = 0): Promise<void> {
+    if (ttl === 0) {
+      // Set the value without expiration
+      await this.client.set(key, value);
+      return;
+    }
+
+    // Set the value with an expiration time (in seconds)
+    await this.client.set(key, value, "EX", ttl);
   }
 
   async get(key: string): Promise<any | null> {

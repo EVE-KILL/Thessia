@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import BackgroundViewer from '~/components/Global/BackgroundViewer.vue';
 const { getOptimizedImageUrl, getSiteBackground } = siteBackground();
 
 // Get the reactive ref directly from getSiteBackground()

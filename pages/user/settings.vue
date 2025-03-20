@@ -8,36 +8,19 @@ definePageMeta({
 // Add active tab tracking
 const activeTab = ref('profile');
 
-const userStore = useUserStore();
+// Use auth composable instead of userStore
+const auth = useAuth();
 const { t } = useI18n();
 const router = useRouter();
 
-// Get user profile data
-const { data: profileData, pending, error, refresh } = await useFetch('/api/user/profile');
-
-// Character portrait URL from EVE Image Server
-const characterPortraitUrl = computed(() => {
-    if (!userStore.user.characterId) return null;
-    return `https://images.evetech.net/characters/${userStore.user.characterId}/portrait?size=128`;
-});
-
-// Corporation logo URL
-const corporationLogoUrl = computed(() => {
-    if (!userStore.user.corporationId) return null;
-    return `https://images.evetech.net/corporations/${userStore.user.corporationId}/logo?size=64`;
-});
-
-// Alliance logo URL
-const allianceLogoUrl = computed(() => {
-    if (!userStore.user.allianceId) return null;
-    return `https://images.evetech.net/alliances/${userStore.user.allianceId}/logo?size=64`;
-});
+// Get user profile data directly from auth/me
+const { data: profileData, pending, error, refresh } = await useFetch('/api/auth/me');
 
 // Format expiration date
 const formattedExpirationDate = computed(() => {
-    if (!profileData.value?.dateExpiration) return '';
+    if (!profileData.value?.user?.dateExpiration) return '';
 
-    const date = new Date(profileData.value.dateExpiration);
+    const date = new Date(profileData.value.user.dateExpiration);
     return new Intl.DateTimeFormat(undefined, {
         dateStyle: 'medium',
         timeStyle: 'short',
@@ -48,9 +31,9 @@ const formattedExpirationDate = computed(() => {
 
 // Calculate if token will expire soon (within 48 hours)
 const tokenExpiresSoon = computed(() => {
-    if (!profileData.value?.dateExpiration) return false;
+    if (!profileData.value?.user?.dateExpiration) return false;
 
-    const expirationDate = new Date(profileData.value.dateExpiration);
+    const expirationDate = new Date(profileData.value.user.dateExpiration);
     const now = new Date();
     const hoursDiff = (expirationDate.getTime() - now.getTime()) / (1000 * 60 * 60);
 
@@ -59,7 +42,7 @@ const tokenExpiresSoon = computed(() => {
 
 // Handle logout
 const handleLogout = async () => {
-    await userStore.logout();
+    await auth.logout();
     navigateTo('/');
 };
 
@@ -77,14 +60,26 @@ const getPermissionDescription = (scope: string) => {
 
 // Handle refresh token
 const handleRefreshToken = async () => {
-    await userStore.refreshToken();
-    refresh();
+    try {
+        const { data, error } = await useFetch('/api/auth/refresh', {
+            method: 'POST'
+        });
+
+        if (error.value) {
+            throw new Error(error.value.message);
+        }
+
+        // Refresh auth state and profile data
+        await auth.checkAuth();
+        await refresh();
+    } catch (err) {
+        console.debug('Error refreshing token:', err);
+    }
 };
 
 // Handle re-authentication
 const handleReauthenticate = async () => {
-    userStore.setRedirectUrl('/user/settings');
-    userStore.login();
+    auth.login('/user/settings');
 };
 
 // State for delete confirmation modal
@@ -108,15 +103,8 @@ const handleDeleteAccount = async () => {
         }
 
         if (data.value?.success) {
-            // Reset user state in store
-            userStore.authenticated = false;
-            userStore.user = {
-                characterId: null,
-                characterName: null,
-                scopes: [],
-                canFetchCorporationKillmails: false,
-                dateExpiration: null,
-            };
+            // Reset auth state
+            await auth.logout();
 
             // Close modal first
             isDeleteModalOpen.value = false;
@@ -160,21 +148,22 @@ const checkIfMobile = () => {
                 <div class="relative">
                     <div class="w-20 h-20 sm:w-24 sm:h-24 rounded-lg overflow-hidden shadow-lg">
                         <NuxtLink
-                            v-if="characterPortraitUrl && userStore.user"
-                            :to="`/characters/${userStore.user.characterId}`"
+                            v-if="auth.user.value.characterId"
+                            :to="`/characters/${auth.user.value.characterId}`"
                             class="block w-full h-full">
-                            <NuxtImg :src="characterPortraitUrl"
-                                :alt="userStore.user.characterName" class="w-full h-full object-cover" :width="128"
-                                :height="128" format="webp" quality="90" />
+                            <EveImage
+                                type="character"
+                                :id="auth.user.value.characterId"
+                                :alt="auth.user.value.characterName"
+                                :size="128"
+                                class="w-full h-full"
+                                :quality="90"
+                            />
                         </NuxtLink>
-                        <div v-else
-                            class="w-full h-full bg-primary-100 dark:bg-primary-900 flex items-center justify-center text-primary-700 dark:text-primary-300 text-2xl font-medium">
-                            {{ userStore.user?.characterName?.substring(0, 2).toUpperCase() }}
-                        </div>
                     </div>
 
                     <!-- Admin badge for admin users -->
-                    <UBadge v-if="userStore.user?.administrator" color="error" variant="solid"
+                    <UBadge v-if="auth.user.value.administrator" color="error" variant="solid"
                         class="absolute -bottom-1 -right-1">
                         {{ $t('user.administrator', 'Admin') }}
                     </UBadge>
@@ -184,32 +173,43 @@ const checkIfMobile = () => {
                 <div class="text-center sm:text-left flex-1">
                     <h1 class="text-2xl font-bold text-gray-900 dark:text-white">
                         <NuxtLink
-                            :to="`/characters/${userStore.user.characterId}`"
+                            :to="`/characters/${auth.user.value.characterId}`"
                             class="hover:underline">
-                            {{ userStore.user?.characterName }}
+                            {{ auth.user.value.characterName }}
                         </NuxtLink>
                     </h1>
 
                     <div class="flex flex-wrap items-center justify-center sm:justify-start gap-x-4 mt-2">
                         <!-- Corporation info -->
-                        <NuxtLink v-if="userStore.user.corporationName" class="flex items-center hover:underline"
-                            :to="`/corporations/${userStore.user.corporationId}`"
-                            :class="userStore.user.allianceName ? 'text-gray-700 dark:text-gray-300' : 'hidden'">
-                            <NuxtImg v-if="corporationLogoUrl" :src="corporationLogoUrl"
-                                :alt="userStore.user.corporationName" class="w-5 h-5 rounded-sm mr-1" :width="20"
-                                :height="20" format="webp" quality="80" />
-                            <span class="text-sm text-gray-700 dark:text-gray-300">{{ userStore.user.corporationName
-                                }}</span>
+                        <NuxtLink v-if="auth.user.value.corporationName" class="flex items-center hover:underline"
+                            :to="`/corporations/${auth.user.value.corporationId}`"
+                            :class="auth.user.value.allianceName ? 'text-gray-700 dark:text-gray-300' : 'hidden'">
+                            <EveImage
+                                type="corporation"
+                                :id="auth.user.value.corporationId"
+                                :alt="auth.user.value.corporationName"
+                                :size="20"
+                                class="w-5 h-5 mr-1"
+                            />
+                            <span class="text-sm text-gray-700 dark:text-gray-300">
+                                {{ auth.user.value.corporationName }}
+                            </span>
                         </NuxtLink>
 
                         <!-- Alliance info -->
-                        <NuxtLink v-if="userStore.user.allianceId" :to="`/alliances/${userStore.user.allianceId}`"
+                        <NuxtLink v-if="auth.user.value.allianceId" :to="`/alliances/${auth.user.value.allianceId}`"
                             class="flex items-center hover:underline"
-                            :class="userStore.user.allianceName ? 'text-gray-700 dark:text-gray-300' : 'hidden'">
-                            <NuxtImg v-if="allianceLogoUrl" :src="allianceLogoUrl" :alt="userStore.user.allianceName"
-                                class="w-5 h-5 rounded-sm mr-1" :width="20" :height="20" format="webp" quality="80" />
-                            <span class="text-sm text-gray-700 dark:text-gray-300">{{ userStore.user.allianceName
-                                }}</span>
+                            :class="auth.user.value.allianceName ? 'text-gray-700 dark:text-gray-300' : 'hidden'">
+                            <EveImage
+                                type="alliance"
+                                :id="auth.user.value.allianceId"
+                                :alt="auth.user.value.allianceName"
+                                :size="20"
+                                class="w-5 h-5 mr-1"
+                            />
+                            <span class="text-sm text-gray-700 dark:text-gray-300">
+                                {{ auth.user.value.allianceName }}
+                            </span>
                         </NuxtLink>
                     </div>
                 </div>
@@ -272,7 +272,7 @@ const checkIfMobile = () => {
         </UAlert>
 
         <!-- Settings Tabs -->
-        <UTabs v-else-if="profileData" :items="[
+        <UTabs v-else-if="profileData && profileData.authenticated" :items="[
             { label: isMobile ? '' : $t('user.profile'), icon: 'lucide:user', slot: 'profile', defaultSelected: true },
             { label: isMobile ? '' : $t('user.permissions'), icon: 'lucide:shield', slot: 'permissions' },
             { label: isMobile ? '' : $t('settings.dataPrivacy'), icon: 'lucide:lock', slot: 'privacy' },
@@ -351,7 +351,7 @@ const checkIfMobile = () => {
 
                         <!-- Permission list with description -->
                         <div class="space-y-2">
-                            <div v-for="(scope, index) in profileData.scopes" :key="index"
+                            <div v-for="(scope, index) in profileData.user.scopes" :key="index"
                                 class="p-3 bg-gray-50 dark:bg-gray-800 rounded-md">
                                 <div class="flex items-start">
                                     <UIcon name="lucide:check"

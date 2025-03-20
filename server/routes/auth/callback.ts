@@ -1,125 +1,73 @@
-import { v4 as uuidv4 } from 'uuid';
-import { Users } from '~/server/models/Users';
-import { getAccessToken, verifyToken, generateJwtToken } from '~/server/utils/auth.utils';
-import { EVE_SSO_CONFIG } from '~/server/utils/auth.config';
+import { v4 as uuidv4 } from "uuid";
+import { RedisStorage } from "~/server/helpers/Storage";
+import { decodeState, getUserData } from "~/server/utils/eveAuthentication";
 
 export default defineEventHandler(async (event) => {
-  const startTime = new Date();
-
-  try {
-    // Get the authorization code and state from query params
+    const config = useRuntimeConfig().eve;
     const query = getQuery(event);
     const { code, state } = query;
 
-    if (!code) {
-      throw createError({
-        statusCode: 400,
-        statusMessage: 'Authorization code missing'
-      });
+    // Decode the state
+    const decodedState = decodeState(state as string);
+
+    // Check if the state is valid
+    const redis = new RedisStorage();
+    const foundState = await redis.get(`sso:${decodedState.id}`);
+    if (!foundState) {
+        console.debug(`[Auth] State not found in Redis: ${decodedState.id}`);
+        return {
+            error: "Invalid state",
+            message: "The state parameter is invalid or has expired."
+        };
     }
+    // Remove the state from Redis
+    await redis.del(`sso:${decodedState.id}`);
 
-    console.debug(`[Auth] Processing callback for code: ${code.toString().substring(0, 6)}...`);
+    // Lets gets the accessToken
+    const accessTokenRequest: IAuthAccessToken = await getAccessToken(code as string);
+    const accessToken = accessTokenRequest.access_token;
+    const expiresIn = accessTokenRequest.expires_in;
+    const tokenType = accessTokenRequest.token_type;
+    const refreshToken = accessTokenRequest.refresh_token;
 
-    // Get access token from EVE SSO
-    const tokenResponse = await getAccessToken(code.toString());
-    console.debug('[Auth] Successfully obtained access token');
+    // Generate user data
+    const userData = await getUserData(accessToken);
 
-    // Verify the token with EVE SSO
-    const verifyResponse = await verifyToken(tokenResponse.access_token);
-    console.debug(`[Auth] Token verified for character: ${verifyResponse.CharacterName} (${verifyResponse.CharacterID})`);
-
-    // Calculate expiration date
-    const expiresAt = new Date();
-    expiresAt.setSeconds(expiresAt.getSeconds() + tokenResponse.expires_in);
-
-    // Generate a unique identifier for this auth
+    // Generate a unique identifier
     const uniqueIdentifier = uuidv4();
 
-    // Create user data object
-    const userData = {
-      accessToken: tokenResponse.access_token,
-      refreshToken: tokenResponse.refresh_token,
-      dateExpiration: expiresAt,
-      characterId: verifyResponse.CharacterID,
-      characterName: verifyResponse.CharacterName,
-      scopes: verifyResponse.Scopes.split(' '),
-      tokenType: verifyResponse.TokenType,
-      characterOwnerHash: verifyResponse.CharacterOwnerHash,
-      uniqueIdentifier,
-      lastChecked: new Date(),
-      canFetchCorporationKillmails: verifyResponse.Scopes.includes('esi-killmails.read_corporation_killmails.v1')
+    // Generate the payload we need to save in the database
+    const payload = {
+        accessToken: accessToken,
+        dateExpiration: new Date(Date.now() + expiresIn * 1000),
+        refreshToken: refreshToken,
+        characterId: userData.characterId,
+        characterName: userData.characterName,
+        scopes: userData.scopes,
+        tokenType: tokenType,
+        characterOwnerHash: userData.characterOwnerHash,
+        uniqueIdentifier: uniqueIdentifier,
+        lastChecked: new Date(),
+        canFetchCorporationKillmails: userData.scopes.includes("esi-killmails.read_corporation_killmails.v1"),
+        administrator: false
     };
 
-    // Log the user data we're about to save (without sensitive info)
-    console.debug(`[Auth] Processing user data for character: ${userData.characterName} (${userData.characterId})`);
-
+    const user = new Users(payload);
     try {
-      // First, check if the user already exists
-      const existingUser = await Users.findOne({ characterId: verifyResponse.CharacterID });
-
-      if (existingUser) {
-        // User exists, update it
-        console.debug(`[Auth] Character ${userData.characterId} exists, updating record`);
-        await Users.updateOne({ characterId: verifyResponse.CharacterID }, userData);
-      } else {
-        // User doesn't exist, create a new one
-        console.debug(`[Auth] Character ${userData.characterId} is new, creating record`);
-        const newUser = new Users(userData);
-        await newUser.save();
-      }
-
-      // Verify the user was saved by fetching it
-      const savedUser = await Users.findOne({ characterId: verifyResponse.CharacterID });
-      if (!savedUser) {
-        throw new Error(`Failed to find user ${userData.characterId} after save operation`);
-      }
-
-      console.debug(`[Auth] Successfully saved user data for character ${userData.characterId}`);
-      console.debug(`[Auth] User has ${savedUser.scopes.length} scopes granted`);
-    } catch (dbError) {
-      console.debug('[Auth] Database error:', dbError);
-      throw createError({
-        statusCode: 500,
-        statusMessage: `Database error: ${dbError.message}`
-      });
+        await user.save();
+    } catch (error) {
+        await Users.updateOne({ characterId: user.characterId }, payload, { upsert: true });
     }
 
-    // Generate JWT token for authenticating API requests
-    const jwtToken = generateJwtToken(verifyResponse.CharacterID);
-
-    // Set the token in a cookie
-    setCookie(event, EVE_SSO_CONFIG.COOKIE_NAME, jwtToken, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'lax',
-      maxAge: 60 * 60 * 24 * 7, // 7 days
-      path: '/'
+    // Set the cookie using h3's setCookie instead of Vue's useCookie
+    setCookie(event, config.cookieName, uniqueIdentifier, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === "production",
+        sameSite: "lax",
+        maxAge: 60 * 60 * 24 * 7, // 7 days
+        path: '/'
     });
 
-    // If state contains redirectUrl (stored by frontend during login init)
-    let redirectUrl = '/';
-    try {
-      if (state) {
-        const stateObj = JSON.parse(atob(state.toString()));
-        if (stateObj.redirectUrl) {
-          redirectUrl = stateObj.redirectUrl;
-        }
-      }
-    } catch (e) {
-      console.debug('Error parsing state:', e);
-    }
-
-    console.debug(`[Auth] Authentication successful, redirecting to: ${redirectUrl}`);
-
-    // Redirect back to the frontend with success
-    return sendRedirect(event, redirectUrl);
-
-  } catch (error) {
-    console.debug('[Auth] Authentication error:', error);
-
-    // Redirect with error
-    return sendRedirect(event, '/?auth_error=true');
-  } finally {
-    console.debug(`[Auth] Callback execution time: ${new Date().getTime() - startTime.getTime()}ms`);
-  }
+    // If all went well, redirect the user to the original URL
+    return sendRedirect(event, decodedState.redirectUrl);
 });

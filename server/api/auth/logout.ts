@@ -1,25 +1,27 @@
-import { EVE_SSO_CONFIG } from '~/server/utils/auth.config';
-
 export default defineEventHandler(async (event) => {
   try {
-    // Clear the auth cookie
-    deleteCookie(event, EVE_SSO_CONFIG.COOKIE_NAME, {
-      path: '/',
+    // Get the cookie name from config
+    const config = useRuntimeConfig().eve;
+    const cookieName = config.cookieName;
+
+    // Delete the cookie by setting it with a past expiration
+    setCookie(event, cookieName, '', {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
-      sameSite: 'lax'
+      sameSite: 'lax',
+      maxAge: -1, // Expired
+      path: '/'
     });
 
     return {
       success: true,
       message: 'Logged out successfully'
     };
-
   } catch (error) {
-    console.debug('Logout error:', error);
-    throw createError({
-      statusCode: 500,
-      statusMessage: 'Failed to log out'
-    });
+    console.debug('[Auth] Logout error:', error);
+    return {
+      success: false,
+      message: 'An error occurred during logout'
+    };
   }
 });
