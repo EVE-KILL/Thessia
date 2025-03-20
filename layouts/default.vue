@@ -31,6 +31,9 @@ useHead({
         overflowY: 'scroll',
         scrollbarGutter: 'stable',
     }">
+        <!-- Add vignette overlay -->
+        <div class="vignette-overlay"></div>
+
         <UContainer id="content" class="content mx-auto">
             <div id="inner-content" class="inner-content">
                 <Navbar />
@@ -121,6 +124,8 @@ body {
 }
 
 .content {
+    position: relative;
+    z-index: 2;
     max-width: 80rem;
     background-color: rgba(245, 245, 245, 0.7) !important;
     border-left: 2px solid #e5e5e5;
@@ -184,5 +189,44 @@ html #content>#inner-content {
 #inner-content {
     padding-top: 1rem;
     /* Reduced padding since sticky takes its own space */
+}
+
+/* Vignette overlay for the background image - Light mode */
+.vignette-overlay {
+    position: fixed;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    background: radial-gradient(
+        circle,
+        transparent 30%,
+        rgba(245, 245, 245, 0.3) 70%,
+        rgba(220, 220, 220, 0.8) 100%
+    );
+    pointer-events: none; /* Allows clicks to pass through */
+    z-index: 1; /* Above background but below content */
+    transition: background 0.5s ease;
+}
+
+/* Dark mode vignette - more pronounced darkness */
+html.dark .vignette-overlay {
+    background: radial-gradient(
+        circle,
+        transparent 30%,
+        rgba(0, 0, 0, 0.5) 70%,
+        rgba(0, 0, 0, 0.85) 100%
+    );
+}
+
+/* Optional: add a very subtle pulse animation to the vignette */
+@keyframes subtle-pulse {
+    0% { opacity: 0.95; }
+    50% { opacity: 1; }
+    100% { opacity: 0.95; }
+}
+
+.vignette-overlay {
+    animation: subtle-pulse 8s infinite ease-in-out;
 }
 </style>
