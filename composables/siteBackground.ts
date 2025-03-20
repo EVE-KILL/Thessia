@@ -21,7 +21,7 @@ export function siteBackground() {
 
     const getOptimizedImageUrl = (path: string): string => {
         return image(path, {
-            format: 'webp',
+            format: 'avif,webp',
             quality: 80
         });
     };
