@@ -159,7 +159,6 @@ export default defineNuxtConfig({
         "@nuxt/image",
         "@nuxtjs/i18n",
         "@vueuse/nuxt",
-        "@pinia/nuxt",
         "@nuxtjs/sitemap",
         "@nuxtjs/seo",
         "@nuxtjs/color-mode",
