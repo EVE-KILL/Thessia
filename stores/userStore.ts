@@ -174,11 +174,6 @@ export const useUserStore = defineStore("user", {
                     return true;
                 }
 
-                // If token needs refreshing
-                if (data.value.requiresRefresh) {
-                    return await this.refreshToken();
-                }
-
                 // Authentication failed
                 this.authenticated = false;
                 this.authError = data.value.message || "Verification failed";
