@@ -12,4 +12,4 @@ COPY --from=build /app/.output /app/
 COPY --from=build /app/nuxt.config.ts /app/
 
 EXPOSE 3000
-CMD [ "bun", "--bun", "run", "/app/.output/server/index.mjs" ]
+CMD [ "bun", "--bun", "run", "/app/server/index.mjs" ]
