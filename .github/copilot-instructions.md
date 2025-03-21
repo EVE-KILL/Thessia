@@ -36,11 +36,15 @@ This project uses:
 
 ## Internationalization
 
-- Use `$t('key')` for translations in Vue templates
 - Use `t('key')` in composables with `useI18n()` hook
 - Organize translations by feature area
 - Include all user-facing strings in translation files
 - Support locale fallbacks
+
+## Icons
+
+- Use **Lucide Icons** for all icons.
+- Use **Simple Icons** for SVG icons.
 
 ## Copilot-Specific Instructions
 

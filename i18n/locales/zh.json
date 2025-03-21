@@ -339,5 +339,19 @@
     },
     "faq": {
         "pageTitle": "常见问题"
+    },
+    "killList": {
+        "ship": "舰船",
+        "victim": "受害者",
+        "finalBlow": "最后一击",
+        "location": "位置",
+        "details": "详情",
+        "noKills": "未找到击杀",
+        "loading": "正在加载击杀...",
+        "type": "类型",
+        "itemsPerPage": "每页项目数",
+        "wsConnected": "WebSocket 已连接",
+        "wsDisconnected": "WebSocket 已断开",
+        "showing": "显示"
     }
 }

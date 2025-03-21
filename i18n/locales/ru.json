@@ -339,5 +339,19 @@
     },
     "faq": {
         "pageTitle": "Часто задаваемые вопросы"
+    },
+    "killList": {
+        "ship": "Корабль",
+        "victim": "Жертва",
+        "finalBlow": "Последний удар",
+        "location": "Локация",
+        "details": "Детали",
+        "noKills": "Уничтожения не найдены",
+        "loading": "Загрузка уничтожений...",
+        "type": "Тип",
+        "itemsPerPage": "Элементов на странице",
+        "wsConnected": "WebSocket подключен",
+        "wsDisconnected": "WebSocket отключен",
+        "showing": "Показано"
     }
 }

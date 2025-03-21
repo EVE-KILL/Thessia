@@ -8,10 +8,10 @@
         "@nuxtjs/seo": "3.0.1",
         "@opentelemetry/instrumentation-ioredis": "^0.47.1",
         "@opentelemetry/instrumentation-mongoose": "^0.46.1",
-        "@sentry/bun": "^9.7.0",
-        "@sentry/nuxt": "^9.7.0",
+        "@sentry/bun": "^9.8.0",
+        "@sentry/nuxt": "^9.8.0",
         "amqplib": "^0.10.5",
-        "bullmq": "^5.44.0",
+        "bullmq": "^5.44.1",
         "commander": "^13.1.0",
         "cron-parser": "^5.0.6",
         "csv-parser": "^3.2.0",
@@ -20,6 +20,8 @@
         "jsonwebtoken": "^9.0.2",
         "lru-cache": "^11.0.2",
         "meilisearch": "^0.49.0",
+        "moment": "^2.30.1",
+        "moment-timezone": "^0.5.47",
         "mongoose": "^8.12.1",
         "node-gyp": "^11.1.0",
         "nuxt": "^3.16.1",
@@ -39,11 +41,11 @@
       },
       "devDependencies": {
         "@biomejs/biome": "^1.9.4",
-        "@iconify-json/lucide": "^1.2.31",
+        "@iconify-json/lucide": "^1.2.32",
         "@iconify-json/simple-icons": "^1.2.29",
         "@nuxt/icon": "1.11.0",
         "@nuxt/image": "^1.10.0",
-        "@nuxt/ui": "^3.0.0",
+        "@nuxt/ui": "^3.0.1",
         "@nuxtjs/i18n": "^9.3.3",
         "@nuxtjs/sitemap": "^7.2.9",
         "@nuxtjs/tailwindcss": "^6.13.2",
@@ -1690,6 +1692,10 @@
     "mocked-exports": ["mocked-exports@0.1.1", "", {}, "sha512-aF7yRQr/Q0O2/4pIXm6PZ5G+jAd7QS4Yu8m+WEeEHGnbo+7mE36CbLSDQiXYV8bVL3NfmdeqPJct0tUlnjVSnA=="],
 
     "module-details-from-path": ["module-details-from-path@1.0.3", "", {}, "sha512-ySViT69/76t8VhE1xXHK6Ch4NcDd26gx0MzKXLO+F7NOtnqH68d9zF94nT8ZWSxXh8ELOERsnJO/sWt1xZYw5A=="],
+
+    "moment": ["moment@2.30.1", "", {}, "sha512-uEmtNhbDOrWPFS+hdjFCBfy9f2YoyzRpwcl+DqpC6taX21FzsTLQVbMV/W7PzNSX6x/bhC1zA3c2UQ5NzH6how=="],
+
+    "moment-timezone": ["moment-timezone@0.5.47", "", { "dependencies": { "moment": "^2.29.4" } }, "sha512-UbNt/JAWS0m/NJOebR0QMRHBk0hu03r5dx9GK8Cs0AS3I81yDcOc9k+DytPItgVvBP7J6Mf6U2n3BPAacAV9oA=="],
 
     "mongodb": ["mongodb@6.14.2", "", { "dependencies": { "@mongodb-js/saslprep": "^1.1.9", "bson": "^6.10.3", "mongodb-connection-string-url": "^3.0.0" }, "peerDependencies": { "@aws-sdk/credential-providers": "^3.188.0", "@mongodb-js/zstd": "^1.1.0 || ^2.0.0", "gcp-metadata": "^5.2.0", "kerberos": "^2.0.1", "mongodb-client-encryption": ">=6.0.0 <7", "snappy": "^7.2.2", "socks": "^2.7.1" }, "optionalPeers": ["@aws-sdk/credential-providers", "@mongodb-js/zstd", "gcp-metadata", "kerberos", "mongodb-client-encryption", "snappy", "socks"] }, "sha512-kMEHNo0F3P6QKDq17zcDuPeaywK/YaJVCEQRzPF3TOM/Bl9MFg64YE5Tu7ifj37qZJMhwU1tl2Ioivws5gRG5Q=="],
 

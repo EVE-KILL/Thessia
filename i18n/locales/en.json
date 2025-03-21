@@ -236,7 +236,11 @@
         "tryAgain": "Try Again",
         "goHome": "Go Home",
         "cancel": "Cancel",
-        "save": "Save"
+        "save": "Save",
+        "selectLanguage": "Select language",
+        "page": "Page",
+        "previous": "Previous",
+        "next": "Next"
     },
     "settings": {
         "description": "Manage your account settings and permissions",
@@ -341,5 +345,19 @@
     },
     "faq": {
         "pageTitle": "Frequently Asked Questions"
+    },
+    "killList": {
+        "ship": "Ship",
+        "victim": "Victim",
+        "finalBlow": "Final Blow",
+        "location": "Location",
+        "details": "Details",
+        "noKills": "No kills found",
+        "loading": "Loading kills...",
+        "type": "Type",
+        "itemsPerPage": "Items per page",
+        "wsConnected": "WebSocket Connected",
+        "wsDisconnected": "WebSocket Disconnected",
+        "showing": "Showing"
     }
 }

@@ -10,6 +10,7 @@ export default defineNuxtConfig({
         url: 'https://demo.eve-kill.net'
     },
     sourcemap: true,
+    logLevel: process.env.NODE_ENV !== 'production' ? 'info' : 'silent',
     nitro: {
         preset: "bun",
         srcDir: "server",
@@ -61,6 +62,11 @@ export default defineNuxtConfig({
                 database: process.env.REDIS_DB || 0,
             },
         },
+        debug: process.env.NODE_ENV !== 'production',
+        devProxy: {
+            // If your API is on a different host in development
+            // '/api': { target: 'http://localhost:3001/api', changeOrigin: true }
+        }
     },
 
     runtimeConfig: {
@@ -78,7 +84,7 @@ export default defineNuxtConfig({
 
     // Development tools
     devtools: {
-        enabled: true,
+        enabled: process.env.NODE_ENV !== 'production',
         timeline: {
             enabled: true,
         },
@@ -97,7 +103,7 @@ export default defineNuxtConfig({
         "@nuxtjs/sitemap",
         "@nuxtjs/seo",
         "@nuxtjs/color-mode",
-        "nuxt-security",
+        //"nuxt-security",
     ],
 
     // Sentry configuration
@@ -237,8 +243,11 @@ export default defineNuxtConfig({
         preference: "system",
         fallback: "dark",
     },
+    ssr: true,
+    imports: {
+        autoImport: true,
+    },
 });
-
 function routeRuleGenerator(debug = false): Record<string, any> {
   // Build route rules as an object with a default rule for /api/**
   const rules: Record<string, any> = {

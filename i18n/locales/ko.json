@@ -339,5 +339,19 @@
     },
     "faq": {
         "pageTitle": "자주 묻는 질문"
+    },
+    "killList": {
+        "ship": "함선",
+        "victim": "피해자",
+        "finalBlow": "최후의 일격",
+        "location": "위치",
+        "details": "세부정보",
+        "noKills": "킬 기록이 없습니다",
+        "loading": "킬 기록 로딩 중...",
+        "type": "유형",
+        "itemsPerPage": "페이지당 항목 수",
+        "wsConnected": "WebSocket 연결됨",
+        "wsDisconnected": "WebSocket 연결 해제됨",
+        "showing": "표시"
     }
 }

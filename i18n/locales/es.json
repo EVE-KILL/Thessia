@@ -339,5 +339,19 @@
     },
     "faq": {
         "pageTitle": "Preguntas Frecuentes"
+    },
+    "killList": {
+        "ship": "Nave",
+        "victim": "Víctima",
+        "finalBlow": "Golpe Final",
+        "location": "Ubicación",
+        "details": "Detalles",
+        "noKills": "No se encontraron bajas",
+        "loading": "Cargando bajas...",
+        "type": "Tipo",
+        "itemsPerPage": "Elementos por página",
+        "wsConnected": "WebSocket Conectado",
+        "wsDisconnected": "WebSocket Desconectado",
+        "showing": "Mostrando"
     }
 }
