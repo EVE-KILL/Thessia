@@ -1,14 +1,18 @@
 <script setup lang="ts">
 definePageMeta({
-  title: 'Login',
   layout: 'default'
+});
+
+// Add SEO meta
+const { t } = useI18n();
+useSeoMeta({
+  title: t('user.loginPageTitle')
 });
 
 import { reactive, onMounted } from 'vue';
 
 // Composables
 const auth = useAuth();
-const { t } = useI18n();
 const route = useRoute();
 const colorMode = useColorMode();
 

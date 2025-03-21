@@ -370,22 +370,12 @@ onMounted(async () => {
   });
 });
 
-// Define page metadata
-useHead({
+// Define page metadata using useSeoMeta instead of useHead
+useSeoMeta({
   title: computed(() =>
     searchQuery.value
       ? `${searchQuery.value} - Search Results`
       : 'Search'
-  ),
-  meta: [
-    {
-      name: 'description',
-      content: computed(() =>
-        searchQuery.value
-          ? `Search results for "${searchQuery.value}"`
-          : 'Search for characters, corporations, alliances, and more'
-      )
-    }
-  ]
+  )
 });
 </script>

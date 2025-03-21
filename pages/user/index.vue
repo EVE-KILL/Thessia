@@ -1,11 +1,16 @@
 <script setup lang="ts">
 definePageMeta({
-  title: 'User Account',
   layout: 'default',
   requiresAuth: true
 });
 
 const router = useRouter();
+const { t } = useI18n();
+
+// Add SEO meta
+useSeoMeta({
+  title: t('user.pageTitle')
+});
 
 // Redirect to settings by default
 onMounted(() => {

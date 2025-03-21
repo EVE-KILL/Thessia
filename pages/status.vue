@@ -16,6 +16,11 @@ import {
 const { t } = useI18n();
 const isMobile = ref(false);
 
+// Add SEO meta
+useSeoMeta({
+  title: t('status.pageTitle')
+});
+
 // Check if we're on mobile
 const checkIfMobile = () => {
   isMobile.value = window.innerWidth < 768;

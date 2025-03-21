@@ -112,6 +112,7 @@
         "viewSource": "Ver fuente en Reddit"
     },
     "status": {
+        "pageTitle": "Estado del Sistema",
         "title": "Estado del Sistema",
         "loading": "Cargando información de estado...",
         "autoRefresh": "Actualización automática cada {seconds}s",
@@ -214,6 +215,9 @@
         "required": "Requerido"
     },
     "user": {
+        "pageTitle": "Cuenta de Usuario",
+        "settingsPageTitle": "Configuración de Usuario",
+        "loginPageTitle": "Iniciar Sesión",
         "profile": "Perfil",
         "settings": "Configuración",
         "logout": "Cerrar sesión",
@@ -325,5 +329,15 @@
         "readKillmailsDesc": "Acceso a los reportes de bajas de tu personaje",
         "readCorpKillmails": "Leer Reportes de Bajas Corporativos",
         "readCorpKillmailsDesc": "Acceso a los reportes de bajas de tu corporación"
+    },
+    "home": {
+        "pageTitle": "Inicio"
+    },
+    "kills": {
+        "pageTitle": "Detalles del Reporte de Baja",
+        "listPageTitle": "Tabla de Bajas"
+    },
+    "faq": {
+        "pageTitle": "Preguntas Frecuentes"
     }
 }

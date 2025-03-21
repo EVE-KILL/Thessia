@@ -112,6 +112,7 @@
         "viewSource": "View source on Reddit"
     },
     "status": {
+        "pageTitle": "System Status",
         "title": "System Status",
         "loading": "Loading status information...",
         "autoRefresh": "Auto refresh every {seconds}s",
@@ -215,6 +216,9 @@
         }
     },
     "user": {
+        "pageTitle": "User Account",
+        "settingsPageTitle": "User Settings",
+        "loginPageTitle": "Login",
         "profile": "Profile",
         "settings": "Settings",
         "logout": "Log Out",
@@ -327,5 +331,15 @@
         "readKillmailsDesc": "Access to your character's killmails",
         "readCorpKillmails": "Read Corporation Killmails",
         "readCorpKillmailsDesc": "Access to your corporation's killmails"
+    },
+    "home": {
+        "pageTitle": "Home"
+    },
+    "kills": {
+        "pageTitle": "Killmail Details",
+        "listPageTitle": "Killboard"
+    },
+    "faq": {
+        "pageTitle": "Frequently Asked Questions"
     }
 }

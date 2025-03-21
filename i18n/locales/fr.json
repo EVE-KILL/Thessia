@@ -112,6 +112,7 @@
         "viewSource": "Voir la source sur Reddit"
     },
     "status": {
+        "pageTitle": "État du Système",
         "title": "État du Système",
         "loading": "Chargement des informations d'état...",
         "autoRefresh": "Actualisation automatique toutes les {seconds}s",
@@ -214,6 +215,9 @@
         "required": "Requis"
     },
     "user": {
+        "pageTitle": "Compte Utilisateur",
+        "settingsPageTitle": "Paramètres Utilisateur",
+        "loginPageTitle": "Connexion",
         "profile": "Profil",
         "settings": "Paramètres",
         "logout": "Déconnexion",
@@ -268,7 +272,7 @@
         "legal": "Informations légales"
     },
     "legal": {
-        "pageTitle": "Informations légales",
+        "pageTitle": "Informations Légales",
         "title": "Informations légales",
         "disclaimer": {
             "title": "Avertissement",
@@ -325,5 +329,15 @@
         "readKillmailsDesc": "Accès aux killmails de votre personnage",
         "readCorpKillmails": "Lire les Killmails de Corporation",
         "readCorpKillmailsDesc": "Accès aux killmails de votre corporation"
+    },
+    "home": {
+        "pageTitle": "Accueil"
+    },
+    "kills": {
+        "pageTitle": "Détails du Killmail",
+        "listPageTitle": "Tableau des Éliminations"
+    },
+    "faq": {
+        "pageTitle": "Questions Fréquentes"
     }
 }

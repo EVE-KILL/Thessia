@@ -1,15 +1,19 @@
 <script setup lang="ts">
 definePageMeta({
-    title: 'Settings',
     layout: 'default',
     requiresAuth: true
+});
+
+// Add SEO meta
+const { t } = useI18n();
+useSeoMeta({
+    title: t('user.settingsPageTitle')
 });
 
 // Add active tab tracking
 const activeTab = ref('esi');
 
 const auth = useAuth();
-const { t } = useI18n();
 const router = useRouter();
 
 // Get user profile data directly from auth/me

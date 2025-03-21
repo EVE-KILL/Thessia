@@ -112,6 +112,7 @@
         "toggleVisibility": "Hintergrund-Sichtbarkeit umschalten"
     },
     "status": {
+        "pageTitle": "Systemstatus",
         "title": "Systemstatus",
         "loading": "Lade Statusinformationen...",
         "autoRefresh": "Automatische Aktualisierung alle {seconds}s",
@@ -214,6 +215,9 @@
         "required": "Erforderlich"
     },
     "user": {
+        "pageTitle": "Benutzerkonto",
+        "settingsPageTitle": "Benutzereinstellungen",
+        "loginPageTitle": "Anmelden",
         "profile": "Profil",
         "settings": "Einstellungen",
         "logout": "Abmelden",
@@ -325,5 +329,15 @@
         "readKillmailsDesc": "Zugriff auf die Killmails Ihres Charakters",
         "readCorpKillmails": "Korporations-Killmails lesen",
         "readCorpKillmailsDesc": "Zugriff auf die Killmails Ihrer Korporation"
+    },
+    "home": {
+        "pageTitle": "Startseite"
+    },
+    "kills": {
+        "pageTitle": "Killmail-Details",
+        "listPageTitle": "Killboard"
+    },
+    "faq": {
+        "pageTitle": "Häufig gestellte Fragen"
     }
 }

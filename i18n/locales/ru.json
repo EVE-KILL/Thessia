@@ -112,6 +112,7 @@
         "viewSource": "Посмотреть источник на Reddit"
     },
     "status": {
+        "pageTitle": "Статус системы",
         "title": "Статус системы",
         "loading": "Загрузка информации о статусе...",
         "autoRefresh": "Автообновление каждые {seconds} с",
@@ -214,6 +215,9 @@
         "required": "Обязательно"
     },
     "user": {
+        "pageTitle": "Учетная запись пользователя",
+        "settingsPageTitle": "Настройки пользователя",
+        "loginPageTitle": "Вход",
         "profile": "Профиль",
         "settings": "Настройки",
         "logout": "Выйти",
@@ -325,5 +329,15 @@
         "readKillmailsDesc": "Доступ к килмейлам вашего персонажа",
         "readCorpKillmails": "Чтение корпоративных килмейлов",
         "readCorpKillmailsDesc": "Доступ к килмейлам вашей корпорации"
+    },
+    "home": {
+        "pageTitle": "Главная"
+    },
+    "kills": {
+        "pageTitle": "Детали уничтожения",
+        "listPageTitle": "Доска уничтожений"
+    },
+    "faq": {
+        "pageTitle": "Часто задаваемые вопросы"
     }
 }

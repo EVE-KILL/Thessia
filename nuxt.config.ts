@@ -7,9 +7,7 @@ const apiCacheTimes = readFileSync("./apiCacheTimes.yaml", "utf8");
 // https://nuxt.com/docs/api/configuration/nuxt-config
 export default defineNuxtConfig({
     site: {
-        url: 'https://demo.eve-kill.net',
-        name: 'EVE-KILL',
-        description: 'EVE Online killboard tracking kills and losses across New Eden'
+        url: 'https://demo.eve-kill.net'
     },
     sourcemap: true,
     nitro: {
@@ -207,22 +205,15 @@ export default defineNuxtConfig({
     // App configuration
     app: {
         head: {
-            title: "EVE-KILL - EVE Online Killboard",
-            meta: [
-                { charset: "utf-8" },
-                {
-                    name: "viewport",
-                    content:
-                        "width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no",
-                },
-                {
-                    name: "description",
-                    content:
-                        "EVE Online killboard tracking kills and losses across New Eden",
-                },
-            ],
+            charset: "utf-8",
+            viewport: "width=device-width, initial-scale=1",
+            title: "EVE-KILL",
+            titleTemplate: "EVE-KILL | %s",
+            base: {
+                href: "/",
+            },
             link: [
-                { rel: "icon", type: "image/x-icon", href: "/favicon.png" },
+                { rel: "icon", type: "image/png", href: "/favicon.png" },
                 {
                     rel: "search",
                     type: "application/opensearchdescription+xml",

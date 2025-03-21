@@ -112,6 +112,7 @@
         "viewSource": "Reddit에서 소스 보기"
     },
     "status": {
+        "pageTitle": "시스템 상태",
         "title": "시스템 상태",
         "loading": "상태 정보 로딩 중...",
         "autoRefresh": "{seconds}초마다 자동 새로고침",
@@ -214,6 +215,9 @@
         "required": "필수"
     },
     "user": {
+        "pageTitle": "사용자 계정",
+        "settingsPageTitle": "사용자 설정",
+        "loginPageTitle": "로그인",
         "profile": "프로필",
         "settings": "설정",
         "logout": "로그아웃",
@@ -325,5 +329,15 @@
         "readKillmailsDesc": "캐릭터의 킬메일 접근",
         "readCorpKillmails": "법인 킬메일 읽기",
         "readCorpKillmailsDesc": "법인의 킬메일 접근"
+    },
+    "home": {
+        "pageTitle": "홈"
+    },
+    "kills": {
+        "pageTitle": "킬메일 세부정보",
+        "listPageTitle": "킬보드"
+    },
+    "faq": {
+        "pageTitle": "자주 묻는 질문"
     }
 }

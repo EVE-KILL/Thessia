@@ -112,6 +112,7 @@
         "viewSource": "Redditでソースを見る"
     },
     "status": {
+        "pageTitle": "システムステータス",
         "title": "システムステータス",
         "loading": "ステータス情報を読み込み中...",
         "autoRefresh": "{seconds}秒ごとに自動更新",
@@ -214,6 +215,9 @@
         "required": "必須"
     },
     "user": {
+        "pageTitle": "ユーザーアカウント",
+        "settingsPageTitle": "ユーザー設定",
+        "loginPageTitle": "ログイン",
         "profile": "プロフィール",
         "settings": "設定",
         "logout": "ログアウト",
@@ -325,5 +329,15 @@
         "readKillmailsDesc": "あなたのキャラクターのキルメールへのアクセス",
         "readCorpKillmails": "コーポレーションキルメール読み取り",
         "readCorpKillmailsDesc": "あなたのコーポレーションのキルメールへのアクセス"
+    },
+    "home": {
+        "pageTitle": "ホーム"
+    },
+    "kills": {
+        "pageTitle": "キルメール詳細",
+        "listPageTitle": "キルボード"
+    },
+    "faq": {
+        "pageTitle": "よくある質問"
     }
 }
