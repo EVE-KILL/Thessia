@@ -95,15 +95,16 @@ export default defineNuxtConfig({
 
     // Modules with automatic TypeScript support
     modules: [
-        "@nuxt/ui",
-        "@nuxt/icon",
-        "@nuxt/image",
-        "@nuxtjs/i18n",
-        "@vueuse/nuxt",
-        "@nuxtjs/sitemap",
-        "@nuxtjs/seo",
-        "@nuxtjs/color-mode",
-        //"nuxt-security",
+      "@nuxt/ui",
+      "@nuxt/icon",
+      "@nuxt/image",
+      "@nuxtjs/i18n",
+      "@vueuse/nuxt",
+      "@nuxtjs/sitemap",
+      "@nuxtjs/seo",
+      //"nuxt-security",
+      "@nuxtjs/color-mode",
+      "@nuxtjs/device"
     ],
 
     // Sentry configuration

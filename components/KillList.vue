@@ -246,8 +246,64 @@ const handleKillClick = (row: any) => {
   navigateTo(`/kill/${row.original.killmail_id}`);
 };
 
-// Column definitions
-const columns: TableColumn<IKillList>[] = [
+// Responsive design - enhanced with server-side detection
+const device = useDevice();
+
+// Initialize with server-side device detection for proper SSR
+const isMobile = ref(device.isMobile);
+console.debug('Initial device detection (server-side):', device.isMobile);
+
+// Then enhance with client-side detection for dynamic updates
+onMounted(() => {
+  if (process.client) {
+    // Create media query listener for client-side updates
+    const mediaQuery = window.matchMedia('(max-width: 767px)');
+
+    // Update isMobile when media query changes
+    const handleMediaQueryChange = (e) => {
+      isMobile.value = e.matches;
+      console.debug('Media query changed:', e.matches);
+    };
+
+    // Add listener based on browser support
+    if (mediaQuery.addEventListener) {
+      mediaQuery.addEventListener('change', handleMediaQueryChange);
+    } else {
+      // Fallback for older browsers
+      mediaQuery.addListener(handleMediaQueryChange);
+    }
+
+    // Ensure client-side detection matches the current viewport
+    // This handles cases where the server detection might be incorrect
+    isMobile.value = mediaQuery.matches;
+    console.debug('Client-side detection update:', mediaQuery.matches);
+
+    // Clean up
+    onBeforeUnmount(() => {
+      if (mediaQuery.removeEventListener) {
+        mediaQuery.removeEventListener('change', handleMediaQueryChange);
+      } else {
+        mediaQuery.removeListener(handleMediaQueryChange);
+      }
+    });
+  }
+});
+
+// Force reactive computation by making columns directly reactive
+const columns = computed<TableColumn<IKillList>[]>(() => {
+  // Force reactivity by referencing the ref value directly in the computation
+  const mobile = isMobile.value;
+  console.debug('Computing columns based on mobile status:', mobile);
+  return mobile ? columnsMobile : columnsDesktop;
+});
+
+// Add a watcher to debug when isMobile changes
+watch(isMobile, (newValue) => {
+  console.debug('isMobile changed to:', newValue);
+});
+
+// Desktop Column definitions
+const columnsDesktop: TableColumn<IKillList>[] = [
   {
     accessorKey: 'ship',
     header: t('killList.ship'),
@@ -363,19 +419,92 @@ const columns: TableColumn<IKillList>[] = [
   }
 ];
 
+// Mobile Column definitions - Simplified for mobile view
+const columnsMobile: TableColumn<IKillList>[] = [
+  {
+    accessorKey: 'mobile-view',
+    header: t('killList.kill'),
+    id: 'mobile-view',
+    meta: { width: '100%' },
+    cell: ({ row }) => {
+      return h('div', {
+        class: {
+          'flex items-center py-3 w-full': true,
+          'bg-darkred': isCombinedLoss(row.original)
+        }
+      }, [
+        // Ship Image
+        h(resolveComponent('NuxtImg'), {
+          src: `https://images.evetech.net/types/${row.original.victim.ship_id}/render?size=64`,
+          loading: 'lazy',
+          format: 'webp',
+          alt: `Ship: ${getLocalizedString(row.original.victim.ship_name, currentLocale.value)}`,
+          class: 'rounded w-16 h-16 mr-2'
+        }),
+
+        // Victim Info
+        h('div', { class: 'flex flex-col justify-center mr-3 min-w-0 flex-grow' }, [
+          // Top Line: Victim Name + ISK Value
+          h('div', { class: 'flex justify-between items-center' }, [
+            h('span', { class: 'text-sm font-medium truncate mr-1' }, row.original.victim.character_name),
+            row.original.total_value > 50
+              ? h('span', { class: 'text-background-400 text-xs whitespace-nowrap' }, `${formatIsk(row.original.total_value)} ISK`)
+              : null
+          ]),
+
+          // Middle Line: Victim Corp
+          h('span', { class: 'text-background-400 text-xs truncate' }, row.original.victim.corporation_name),
+
+          // Bottom Line: Attacker Name + Location
+          h('div', { class: 'flex justify-between items-center' }, [
+            h('span', { class: 'text-background-400 text-xs truncate mr-1' },
+              row.original.is_npc ? row.original.finalblow.faction_name : row.original.finalblow.character_name),
+            h('div', { class: 'text-background-400 text-xs whitespace-nowrap flex items-center' }, [
+              h('span', null, row.original.system_name),
+              h('span', null, ' ('),
+              h('span', { style: `color: ${getSecurityColor(row.original.system_security)}` },
+                row.original.system_security.toFixed(1)),
+              h('span', null, ')')
+            ])
+          ]),
+
+          // Last Line: Time + Attacker Count
+          h('div', { class: 'flex justify-between items-center mt-1' }, [
+            h('span', { class: 'text-background-500 text-xs' }, formatDate(row.original.kill_time)),
+            h('div', { class: 'flex gap-1 items-center' }, [
+              h('span', { class: 'text-background-400 text-xs' }, row.original.attackerCount),
+              h('img', {
+                src: '/images/involved.png',
+                alt: `${row.original.attackerCount} Involved`,
+                class: 'h-3'
+              }),
+            ])
+          ])
+        ])
+      ]);
+    }
+  }
+];
+
 // Update column headers when locale changes
 watch(locale, () => {
-  columns.forEach((column, index) => {
+  columnsDesktop.forEach((column, index) => {
     if (column.id === 'ship') {
-      columns[index].header = t('killList.ship');
+      columnsDesktop[index].header = t('killList.ship');
     } else if (column.id === 'victim') {
-      columns[index].header = t('killList.victim');
+      columnsDesktop[index].header = t('killList.victim');
     } else if (column.id === 'finalBlow') {
-      columns[index].header = t('killList.finalBlow');
+      columnsDesktop[index].header = t('killList.finalBlow');
     } else if (column.id === 'location') {
-      columns[index].header = t('killList.location');
+      columnsDesktop[index].header = t('killList.location');
     } else if (column.id === 'details') {
-      columns[index].header = () => h('div', { class: 'text-right' }, t('killList.details'));
+      columnsDesktop[index].header = () => h('div', { class: 'text-right' }, t('killList.details'));
+    }
+  });
+
+  columnsMobile.forEach((column, index) => {
+    if (column.id === 'mobile-view') {
+      columnsMobile[index].header = t('killList.kill');
     }
   });
 });
@@ -430,10 +559,35 @@ watch(locale, () => {
       </button>
     </div>
 
+    <!-- Mobile Table - Only shown on mobile -->
     <UTable
+      v-if="isMobile"
       v-model:pagination="pagination"
       :data="killlistData || []"
-      :columns="columns"
+      :columns="columnsMobile"
+      :loading="pending"
+      :empty-state="{ icon: 'i-heroicons-document-text', label: $t('killList.noKills') }"
+      :loading-state="{ icon: 'i-heroicons-arrow-path', label: $t('killList.loading') }"
+      :ui="{
+        base: 'min-w-full table-fixed bg-transparent text-white',
+        thead: 'hidden', // Always hide header on mobile
+        tbody: 'divide-y divide-background-700',
+        tr: 'hover:bg-background-800 transition-colors duration-300 cursor-pointer',
+        th: 'text-left py-1 px-2 uppercase text-xs font-medium',
+        td: 'p-0 text-xs',
+        empty: 'py-4 text-center text-background-400',
+        loading: 'py-4 text-center',
+        root: 'relative overflow-hidden rounded-sm bg-background-900',
+      }"
+      @select="handleKillClick"
+    />
+
+    <!-- Desktop Table - Only shown on desktop -->
+    <UTable
+      v-else
+      v-model:pagination="pagination"
+      :data="killlistData || []"
+      :columns="columnsDesktop"
       :loading="pending"
       :empty-state="{ icon: 'i-heroicons-document-text', label: $t('killList.noKills') }"
       :loading-state="{ icon: 'i-heroicons-arrow-path', label: $t('killList.loading') }"
@@ -503,11 +657,29 @@ watch(locale, () => {
   border-bottom: 1px solid rgb(40, 40, 40) !important;
 }
 
-:deep(th:nth-child(1)), :deep(td:nth-child(1)) { width: 20%; }
-:deep(th:nth-child(2)), :deep(td:nth-child(2)) { width: 25%; }
-:deep(th:nth-child(3)), :deep(td:nth-child(3)) { width: 25%; }
-:deep(th:nth-child(4)), :deep(td:nth-child(4)) { width: 15%; }
-:deep(th:nth-child(5)), :deep(td:nth-child(5)) { width: 15%; }
+/* Desktop column sizes */
+@media (min-width: 768px) {
+  :deep(th:nth-child(1)), :deep(td:nth-child(1)) { width: 20%; }
+  :deep(th:nth-child(2)), :deep(td:nth-child(2)) { width: 25%; }
+  :deep(th:nth-child(3)), :deep(td:nth-child(3)) { width: 25%; }
+  :deep(th:nth-child(4)), :deep(td:nth-child(4)) { width: 15%; }
+  :deep(th:nth-child(5)), :deep(td:nth-child(5)) { width: 15%; }
+}
+
+/* Mobile optimizations */
+@media (max-width: 767px) {
+  :deep(td > div) {
+    padding: 0.5rem;
+  }
+
+  :deep(.text-sm) {
+    font-size: 0.9rem;
+  }
+
+  :deep(.text-xs) {
+    font-size: 0.75rem;
+  }
+}
 
 :deep(td > div) {
   max-width: 100%;
