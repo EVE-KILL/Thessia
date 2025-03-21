@@ -10,6 +10,22 @@ useHead({
         { rel: 'preload', as: 'image', href: backgroundUrl.value }
     ]
 });
+
+useSeoMeta({
+    titleTemplate: 'EVE-KILL | %s',
+    description: 'EVE-KILL is a community-driven killboard for EVE Online, providing detailed statistics and analysis of player kills and losses.',
+    ogDescription: 'EVE-KILL is a community-driven killboard for EVE Online, providing detailed statistics and analysis of player kills and losses.',
+    twitterDescription: 'EVE-KILL is a community-driven killboard for EVE Online, providing detailed statistics and analysis of player kills and losses.',
+    ogImage: '/icon.svg',
+    twitterImage: '/icon.svg',
+    icon: '/icon.svg',
+    ogType: 'website',
+    twitterCard: 'summary_large_image',
+    twitterTitle: 'EVE-KILL',
+    ogUrl: 'https://eve-kill.net',
+    ogSiteName: 'EVE-KILL',
+    twitterSite: '@eve_kill',
+})
 </script>
 
 <template>
