@@ -106,6 +106,7 @@
     },
     "background": {
         "title": "Фон",
+        "toggleVisibility": "Переключить видимость фона",
         "loading": "Загрузка...",
         "randomReddit": "Случайное изображение с r/EVEPorn",
         "viewSource": "Посмотреть источник на Reddit"
@@ -173,6 +174,21 @@
             "24hours": "24 часа",
             "1week": "1 неделя",
             "1month": "1 месяц"
+        },
+        "simplified": "Упрощенно",
+        "detailed": "Подробно",
+        "detailedStats": "Подробная статистика",
+        "systemInfo": "Информация о системе",
+        "summary": {
+            "uptime": "Время работы системы",
+            "processedLast5m": "Обработано (последние 5 мин)",
+            "queuedItems": "Элементы в очереди"
+        },
+        "tabs": {
+            "overview": "Обзор",
+            "processing": "Обработка",
+            "database": "База данных",
+            "cache": "Кэш"
         }
     },
     "auth": {
@@ -189,7 +205,13 @@
             "general": "Ошибка аутентификации. Пожалуйста, попробуйте снова.",
             "tokenExpired": "Ваша сессия истекла. Пожалуйста, войдите снова.",
             "missingScope": "Отсутствует необходимое разрешение: {scope}"
-        }
+        },
+        "customizeScopes": "Настроить области доступа",
+        "loginTitle": "Вход через EVE Online",
+        "quickLoginInfo": "Вход с рекомендуемыми областями доступа",
+        "customizeScopesInfo": "Выберите, к какой информации EVE Kill может получить доступ:",
+        "loginWithSelectedScopes": "Войти с выбранными областями доступа",
+        "required": "Обязательно"
     },
     "user": {
         "profile": "Профиль",
@@ -295,5 +317,13 @@
             "discord": "Присоединиться к Discord",
             "github": "GitHub репозиторий"
         }
+    },
+    "scopes": {
+        "publicData": "Публичные данные",
+        "publicDataDesc": "Основная информация о персонаже",
+        "readKillmails": "Чтение килмейлов",
+        "readKillmailsDesc": "Доступ к килмейлам вашего персонажа",
+        "readCorpKillmails": "Чтение корпоративных килмейлов",
+        "readCorpKillmailsDesc": "Доступ к килмейлам вашей корпорации"
     }
 }

@@ -69,13 +69,16 @@ export function useAuth() {
 
   /**
    * Login with EVE SSO
+   * @param redirectUrl URL to redirect after login
+   * @param customScopes Optional array of scopes to request
    */
-  const login = async (redirectUrl: string | null = null) => {
+  const login = async (redirectUrl: string | null = null, customScopes?: string[]) => {
     try {
       const { data, error } = await useFetch('/api/auth/loginurl', {
         method: 'GET',
         params: {
           redirect: redirectUrl || (import.meta.client ? window.location.pathname : '/'),
+          scopes: customScopes ? customScopes.join(',') : undefined,
         },
       });
 

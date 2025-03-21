@@ -106,6 +106,7 @@
     },
     "background": {
         "title": "Fondo",
+        "toggleVisibility": "Alternar visibilidad del fondo",
         "loading": "Cargando...",
         "randomReddit": "Aleatorio de r/EVEPorn",
         "viewSource": "Ver fuente en Reddit"
@@ -173,6 +174,21 @@
             "24hours": "24 Horas",
             "1week": "1 Semana",
             "1month": "1 Mes"
+        },
+        "simplified": "Simplificado",
+        "detailed": "Detallado",
+        "detailedStats": "Estadísticas Detalladas",
+        "systemInfo": "Información del Sistema",
+        "summary": {
+            "uptime": "Tiempo de Actividad del Sistema",
+            "processedLast5m": "Procesados (Últimos 5m)",
+            "queuedItems": "Elementos en Cola"
+        },
+        "tabs": {
+            "overview": "Resumen",
+            "processing": "Procesamiento",
+            "database": "Base de Datos",
+            "cache": "Caché"
         }
     },
     "auth": {
@@ -189,7 +205,13 @@
             "general": "Falló la autenticación. Por favor, inténtalo de nuevo.",
             "tokenExpired": "Tu sesión ha expirado. Por favor, inicia sesión de nuevo.",
             "missingScope": "Falta el permiso requerido: {scope}"
-        }
+        },
+        "customizeScopes": "Personalizar Permisos de Acceso",
+        "loginTitle": "Iniciar sesión con EVE Online",
+        "quickLoginInfo": "Iniciar sesión con permisos recomendados",
+        "customizeScopesInfo": "Personaliza qué información puede acceder EVE Kill:",
+        "loginWithSelectedScopes": "Iniciar sesión con Permisos Seleccionados",
+        "required": "Requerido"
     },
     "user": {
         "profile": "Perfil",
@@ -295,5 +317,13 @@
             "discord": "Unirse a nuestro Discord",
             "github": "Repositorio de GitHub"
         }
+    },
+    "scopes": {
+        "publicData": "Datos Públicos",
+        "publicDataDesc": "Información básica del personaje",
+        "readKillmails": "Leer Reportes de Bajas",
+        "readKillmailsDesc": "Acceso a los reportes de bajas de tu personaje",
+        "readCorpKillmails": "Leer Reportes de Bajas Corporativos",
+        "readCorpKillmailsDesc": "Acceso a los reportes de bajas de tu corporación"
     }
 }

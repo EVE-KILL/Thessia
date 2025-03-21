@@ -106,6 +106,7 @@
     },
     "background": {
         "title": "背景",
+        "toggleVisibility": "背景の表示切り替え",
         "loading": "読み込み中...",
         "randomReddit": "r/EVEPornからランダム",
         "viewSource": "Redditでソースを見る"
@@ -173,6 +174,21 @@
             "24hours": "24時間",
             "1week": "1週間",
             "1month": "1ヶ月"
+        },
+        "simplified": "簡易表示",
+        "detailed": "詳細表示",
+        "detailedStats": "詳細統計",
+        "systemInfo": "システム情報",
+        "summary": {
+            "uptime": "システム稼働時間",
+            "processedLast5m": "処理済み（過去5分）",
+            "queuedItems": "キュー内アイテム"
+        },
+        "tabs": {
+            "overview": "概要",
+            "processing": "処理",
+            "database": "データベース",
+            "cache": "キャッシュ"
         }
     },
     "auth": {
@@ -189,7 +205,13 @@
             "general": "認証に失敗しました。もう一度お試しください。",
             "tokenExpired": "セッションの有効期限が切れました。もう一度サインインしてください。",
             "missingScope": "必要な権限がありません: {scope}"
-        }
+        },
+        "customizeScopes": "ログインスコープをカスタマイズ",
+        "loginTitle": "EVE Onlineでログイン",
+        "quickLoginInfo": "推奨スコープでログイン",
+        "customizeScopesInfo": "EVE Killがアクセスできる情報をカスタマイズ:",
+        "loginWithSelectedScopes": "選択したスコープでログイン",
+        "required": "必須"
     },
     "user": {
         "profile": "プロフィール",
@@ -295,5 +317,13 @@
             "discord": "Discordに参加する",
             "github": "GitHubリポジトリ"
         }
+    },
+    "scopes": {
+        "publicData": "公開データ",
+        "publicDataDesc": "基本的なキャラクター情報",
+        "readKillmails": "キルメール読み取り",
+        "readKillmailsDesc": "あなたのキャラクターのキルメールへのアクセス",
+        "readCorpKillmails": "コーポレーションキルメール読み取り",
+        "readCorpKillmailsDesc": "あなたのコーポレーションのキルメールへのアクセス"
     }
 }

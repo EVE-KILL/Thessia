@@ -14,7 +14,7 @@ export default defineNuxtRouteMiddleware(async (to) => {
     // If we're still not authenticated after checking, redirect to login
     if (!auth.isAuthenticated.value) {
       // Remember where the user was trying to go
-      return navigateTo(`/login?redirect=${encodeURIComponent(to.fullPath)}`);
+      return navigateTo(`/user/login?redirect=${encodeURIComponent(to.fullPath)}`);
     }
   }
 });

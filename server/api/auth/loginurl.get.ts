@@ -4,7 +4,7 @@ import { RedisStorage } from "~/server/helpers/Storage";
 
 export default defineEventHandler(async (event) => {
     const query = getQuery(event);
-    const { redirect } = query;
+    const { redirect, scopes: customScopes } = query;
 
     // Use direct environment variables instead of runtime config
     const clientId = process.env.NODE_ENV === 'production'
@@ -15,15 +15,30 @@ export default defineEventHandler(async (event) => {
         ? process.env.EVE_CLIENT_REDIRECT
         : process.env.EVE_CLIENT_REDIRECT_DEV;
 
-    // Define scopes directly
-    const scopes = ["publicData", "esi-killmails.read_killmails.v1", "esi-killmails.read_corporation_killmails.v1"];
-    const scope = scopes.join(" ");
+    // Define default scopes
+    const defaultScopes = ["publicData", "esi-killmails.read_killmails.v1", "esi-killmails.read_corporation_killmails.v1"];
+
+    // Handle custom scopes if provided, ensuring publicData is always included
+    let requestedScopes: string[] = [];
+
+    if (typeof customScopes === 'string' && customScopes.length > 0) {
+        requestedScopes = customScopes.split(',');
+        // Ensure publicData is always included
+        if (!requestedScopes.includes('publicData')) {
+            requestedScopes.unshift('publicData');
+        }
+    } else {
+        requestedScopes = defaultScopes;
+    }
+
+    const scope = requestedScopes.join(" ");
     const authorizeUrl = 'https://login.eveonline.com/v2/oauth/authorize';
 
     // Create state with redirect information
     const stateData = {
         id: uuidv4(),
-        redirectUrl: redirect
+        redirectUrl: redirect,
+        scopes: requestedScopes
     };
 
     // Convert to base64 for passing in URL

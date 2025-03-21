@@ -106,6 +106,7 @@
     },
     "background": {
         "title": "배경",
+        "toggleVisibility": "배경 표시 전환",
         "loading": "로딩 중...",
         "randomReddit": "r/EVEPorn에서 무작위로 가져오기",
         "viewSource": "Reddit에서 소스 보기"
@@ -173,6 +174,21 @@
             "24hours": "24시간",
             "1week": "1주",
             "1month": "1개월"
+        },
+        "simplified": "간소화",
+        "detailed": "상세",
+        "detailedStats": "상세 통계",
+        "systemInfo": "시스템 정보",
+        "summary": {
+            "uptime": "시스템 가동 시간",
+            "processedLast5m": "처리됨 (최근 5분)",
+            "queuedItems": "대기 중인 항목"
+        },
+        "tabs": {
+            "overview": "개요",
+            "processing": "처리",
+            "database": "데이터베이스",
+            "cache": "캐시"
         }
     },
     "auth": {
@@ -189,7 +205,13 @@
             "general": "인증에 실패했습니다. 다시 시도해주세요.",
             "tokenExpired": "세션이 만료되었습니다. 다시 로그인해주세요.",
             "missingScope": "필요한 권한이 없습니다: {scope}"
-        }
+        },
+        "customizeScopes": "로그인 범위 사용자 지정",
+        "loginTitle": "EVE Online으로 로그인",
+        "quickLoginInfo": "권장 범위로 로그인",
+        "customizeScopesInfo": "EVE Kill이 액세스할 수 있는 정보 사용자 지정:",
+        "loginWithSelectedScopes": "선택한 범위로 로그인",
+        "required": "필수"
     },
     "user": {
         "profile": "프로필",
@@ -295,5 +317,13 @@
             "discord": "Discord 가입하기",
             "github": "GitHub 저장소"
         }
+    },
+    "scopes": {
+        "publicData": "공개 데이터",
+        "publicDataDesc": "기본 캐릭터 정보",
+        "readKillmails": "킬메일 읽기",
+        "readKillmailsDesc": "캐릭터의 킬메일 접근",
+        "readCorpKillmails": "법인 킬메일 읽기",
+        "readCorpKillmailsDesc": "법인의 킬메일 접근"
     }
 }

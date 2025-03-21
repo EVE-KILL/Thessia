@@ -201,7 +201,13 @@
         "ssoRequiredForLogin": "EVE SSO is required for login",
         "alreadySignedIn": "You are already signed in",
         "signedInAs": "Signed in as {name}",
-        "privacyNote": "By using our service, you authorize us to access your EVE Online character data according to the requested permissions.",
+        "customizeScopes": "Customize Login Scopes",
+        "loginTitle": "Login with EVE Online",
+        "quickLoginInfo": "Login with recommended scopes",
+        "customizeScopesInfo": "Customize which information EVE Kill can access:",
+        "loginWithSelectedScopes": "Login with Selected Scopes",
+        "required": "Required",
+        "privacyNote": "By logging in, you agree to share the selected information with EVE Kill. We only use this data to provide services to you.",
         "error": {
             "general": "Authentication failed. Please try again.",
             "tokenExpired": "Your session has expired. Please sign in again.",
@@ -241,6 +247,8 @@
         "expiringToken": "Token expiring soon",
         "refreshToken": "Refresh Token",
         "reauthenticate": "Re-authenticate",
+        "defaultScopes": "Default Scopes",
+        "customizeScopes": "Customize Scopes",
         "storesCharacterData": "We store your character information, including ID, name, and granted permissions.",
         "tokensEncrypted": "Your authentication tokens are encrypted and stored securely.",
         "removeDataByRevoking": "You can revoke access at any time through the EVE Online website.",
@@ -311,5 +319,13 @@
             "discord": "Join our Discord",
             "github": "GitHub Repository"
         }
+    },
+    "scopes": {
+        "publicData": "Public Data",
+        "publicDataDesc": "Basic character information",
+        "readKillmails": "Read Killmails",
+        "readKillmailsDesc": "Access to your character's killmails",
+        "readCorpKillmails": "Read Corporation Killmails",
+        "readCorpKillmailsDesc": "Access to your corporation's killmails"
     }
 }

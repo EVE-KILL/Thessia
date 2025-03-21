@@ -37,6 +37,12 @@ const handleLogout = () => {
     isDropdownOpen.value = false;
 };
 
+const handleCustomizeLogin = () => {
+    const currentPath = window.location.pathname;
+    navigateTo(`/user/login?customize=true&redirect=${encodeURIComponent(currentPath)}`);
+    isDropdownOpen.value = false;
+};
+
 // SSO image configuration
 const SSO_IMAGES = {
   light: {
@@ -105,6 +111,16 @@ const ssoImageDimensions = computed(() => {
                                 format="webp"
                                 quality="95"
                             />
+                        </button>
+
+                        <!-- Add Customize Scopes option -->
+                        <button
+                            class="w-full px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors text-left"
+                            @click="handleCustomizeLogin">
+                            <div class="flex items-center">
+                                <UIcon name="lucide:settings" class="mr-2" />
+                                {{ t('auth.customizeScopes', 'Customize Login Scopes') }}
+                            </div>
                         </button>
 
                         <div v-if="auth.hasError.value" class="px-4 py-2 text-sm text-red-600 dark:text-red-400">
@@ -230,6 +246,16 @@ const ssoImageDimensions = computed(() => {
                         />
                     </button>
 
+                    <!-- Add Customize Scopes option for mobile -->
+                    <button
+                        class="w-full px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors text-left"
+                        @click="handleCustomizeLogin">
+                        <div class="flex items-center">
+                            <UIcon name="lucide:settings" class="mr-2" />
+                            {{ t('auth.customizeScopes', 'Customize Login') }}
+                        </div>
+                    </button>
+
                     <div v-if="auth.hasError.value" class="px-4 py-2 text-sm text-red-500">
                         {{ auth.errorMessage.value }}
                     </div>
@@ -259,6 +285,16 @@ const ssoImageDimensions = computed(() => {
                     format="webp"
                     quality="95"
                 />
+            </button>
+
+            <!-- Add Customize Scopes option for mobile fullscreen menu -->
+            <button
+                class="w-full mb-3 px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700/70 transition-colors rounded-md text-left"
+                @click="handleCustomizeLogin">
+                <div class="flex items-center">
+                    <UIcon name="lucide:settings" class="mr-2" />
+                    {{ t('auth.customizeScopes', 'Customize Login Scopes') }}
+                </div>
             </button>
 
             <div v-if="auth.hasError.value" class="px-2 py-2 text-sm text-red-500 mb-3">

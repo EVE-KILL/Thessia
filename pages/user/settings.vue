@@ -51,9 +51,23 @@ const splitPermission = (permission: string) => {
     return permission.split('.');
 };
 
-// Handle re-authentication
+// Handle re-authentication with current scopes
 const handleReauthenticate = async () => {
+    // Re-authenticate with existing scopes
+    const currentScopes = profileData.value?.user?.scopes || [];
+    auth.login('/user/settings', Array.isArray(currentScopes) ? currentScopes : [currentScopes]);
+};
+
+// Handle re-authentication with default scopes
+const handleDefaultScopes = async () => {
+    // Re-authenticate with default scopes (let the API handle defaults)
     auth.login('/user/settings');
+};
+
+// Handle customized scope selection
+const handleCustomizeScopes = () => {
+    // Navigate to login page with customize=true parameter
+    navigateTo('/user/login?customize=true&redirect=/user/settings');
 };
 
 // State for delete confirmation modal
@@ -301,11 +315,23 @@ const hasScope = (scope: string) => {
                                 </div>
                             </div>
 
-                            <!-- Token management buttons - Remove refresh token, keep only reauthenticate -->
+                            <!-- Token management buttons - Replace existing reauthenticate button with 3 options -->
                             <div class="flex flex-wrap gap-2 mt-4">
-                                <UTooltip text="Re-authenticate through EVE SSO">
-                                    <UButton color="primary" size="sm" icon="lucide:log-in" @click="handleReauthenticate">
+                                <UTooltip text="Re-authenticate with current permissions">
+                                    <UButton color="primary" size="sm" icon="lucide:refresh-cw" @click="handleReauthenticate">
                                         {{ $t('settings.reauthenticate') }}
+                                    </UButton>
+                                </UTooltip>
+
+                                <UTooltip text="Re-authenticate with all default permissions">
+                                    <UButton color="secondary" size="sm" icon="lucide:shield" @click="handleDefaultScopes">
+                                        {{ $t('settings.defaultScopes', 'Default Scopes') }}
+                                    </UButton>
+                                </UTooltip>
+
+                                <UTooltip text="Choose which permissions to grant">
+                                    <UButton color="gray" size="sm" icon="lucide:settings" @click="handleCustomizeScopes">
+                                        {{ $t('settings.customizeScopes', 'Customize Scopes') }}
                                     </UButton>
                                 </UTooltip>
                             </div>

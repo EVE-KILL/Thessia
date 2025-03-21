@@ -106,6 +106,7 @@
     },
     "background": {
         "title": "背景",
+        "toggleVisibility": "切换背景可见性",
         "loading": "加载中...",
         "randomReddit": "从r/EVEPorn随机选择",
         "viewSource": "在Reddit上查看源"
@@ -173,6 +174,21 @@
             "24hours": "24小时",
             "1week": "1周",
             "1month": "1个月"
+        },
+        "simplified": "简化",
+        "detailed": "详细",
+        "detailedStats": "详细统计",
+        "systemInfo": "系统信息",
+        "summary": {
+            "uptime": "系统运行时间",
+            "processedLast5m": "最近5分钟已处理",
+            "queuedItems": "队列中的项目"
+        },
+        "tabs": {
+            "overview": "概览",
+            "processing": "处理",
+            "database": "数据库",
+            "cache": "缓存"
         }
     },
     "auth": {
@@ -189,7 +205,13 @@
             "general": "认证失败。请重试。",
             "tokenExpired": "您的会话已过期。请重新登录。",
             "missingScope": "缺少所需权限：{scope}"
-        }
+        },
+        "customizeScopes": "自定义登录权限",
+        "loginTitle": "使用EVE Online登录",
+        "quickLoginInfo": "使用推荐权限登录",
+        "customizeScopesInfo": "自定义EVE Kill可以访问的信息：",
+        "loginWithSelectedScopes": "使用所选权限登录",
+        "required": "必需"
     },
     "user": {
         "profile": "个人资料",
@@ -295,5 +317,13 @@
             "discord": "加入我们的 Discord",
             "github": "GitHub 仓库"
         }
+    },
+    "scopes": {
+        "publicData": "公开数据",
+        "publicDataDesc": "基本角色信息",
+        "readKillmails": "读取击杀邮件",
+        "readKillmailsDesc": "访问您角色的击杀邮件",
+        "readCorpKillmails": "读取公司击杀邮件",
+        "readCorpKillmailsDesc": "访问您公司的击杀邮件"
     }
 }

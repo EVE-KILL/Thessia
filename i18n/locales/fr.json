@@ -106,6 +106,7 @@
     },
     "background": {
         "title": "Arrière-plan",
+        "toggleVisibility": "Basculer la visibilité de l'arrière-plan",
         "loading": "Chargement...",
         "randomReddit": "Aléatoire depuis r/EVEPorn",
         "viewSource": "Voir la source sur Reddit"
@@ -173,6 +174,21 @@
             "24hours": "24 Heures",
             "1week": "1 Semaine",
             "1month": "1 Mois"
+        },
+        "simplified": "Simplifié",
+        "detailed": "Détaillé",
+        "detailedStats": "Statistiques Détaillées",
+        "systemInfo": "Informations Système",
+        "summary": {
+            "uptime": "Temps de Fonctionnement",
+            "processedLast5m": "Traités (5 dernières min)",
+            "queuedItems": "Éléments en File d'Attente"
+        },
+        "tabs": {
+            "overview": "Aperçu",
+            "processing": "Traitement",
+            "database": "Base de Données",
+            "cache": "Cache"
         }
     },
     "auth": {
@@ -189,7 +205,13 @@
             "general": "Échec de l'authentification. Veuillez réessayer.",
             "tokenExpired": "Votre session a expiré. Veuillez vous reconnecter.",
             "missingScope": "Autorisation requise manquante : {scope}"
-        }
+        },
+        "customizeScopes": "Personnaliser les Autorisations",
+        "loginTitle": "Connexion avec EVE Online",
+        "quickLoginInfo": "Connexion avec les autorisations recommandées",
+        "customizeScopesInfo": "Personnalisez les informations auxquelles EVE Kill peut accéder :",
+        "loginWithSelectedScopes": "Se connecter avec les Autorisations Sélectionnées",
+        "required": "Requis"
     },
     "user": {
         "profile": "Profil",
@@ -295,5 +317,13 @@
             "discord": "Rejoindre notre Discord",
             "github": "Dépôt GitHub"
         }
+    },
+    "scopes": {
+        "publicData": "Données Publiques",
+        "publicDataDesc": "Informations de base du personnage",
+        "readKillmails": "Lire les Killmails",
+        "readKillmailsDesc": "Accès aux killmails de votre personnage",
+        "readCorpKillmails": "Lire les Killmails de Corporation",
+        "readCorpKillmailsDesc": "Accès aux killmails de votre corporation"
     }
 }
