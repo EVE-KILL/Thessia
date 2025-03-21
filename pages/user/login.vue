@@ -39,7 +39,7 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
-  <div class="min-h-[calc(100vh-theme(spacing.16))] flex flex-col items-center justify-center px-4 sm:px-6 lg:px-8">
+  <div class="min-h-[calc(100vh-theme(spacing.16))] flex flex-col items-center justify-center">
     <div class="w-full max-w-md space-y-8">
       <div class="text-center">
         <h1 class="text-3xl font-bold text-gray-900 dark:text-white">

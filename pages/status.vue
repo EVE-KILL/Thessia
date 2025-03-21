@@ -245,8 +245,8 @@ const summaryStats = computed(() => {
 </script>
 
 <template>
-  <div class="mx-auto max-w-7xl">
-    <div class="bg-gray-100 dark:bg-gray-900 rounded-lg shadow-lg p-3 md:p-6 mb-8">
+  <div class="mx-auto">
+    <div class="bg-gray-100 dark:bg-gray-900 rounded-lg shadow-lg">
       <div class="flex justify-end items-center mb-4">
         <div class="flex items-center gap-2">
           <div class="flex items-center">

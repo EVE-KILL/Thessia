@@ -280,26 +280,24 @@ onUnmounted(() => {
   <div class="search-container w-full relative">
     <form @submit.prevent="handleSearchSubmit" class="flex items-center">
       <div class="relative w-full">
-        <UIcon
-          :name="isLoading ? 'lucide:refresh-ccw' : 'lucide:search'"
-          :class="{'animate-spin': isLoading}"
-          class="absolute left-2 top-1/2 transform -translate-y-1/2 text-gray-400"
-        />
-        <!-- Desktop search input -->
+        <!-- Desktop search input using icon prop -->
         <UInput
           v-if="!isMobile"
           v-model="query"
+          :icon="isLoading ? 'i-lucide-refresh-ccw' : 'i-lucide-search'"
           :placeholder="t('search.placeholder')"
-          class="search-input w-full py-1.5 pl-8 pr-10 rounded-md bg-gray-100 dark:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-primary-500 text-base"
+          class="search-input w-full py-1.5 rounded-md bg-gray-100 dark:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-primary-500 text-base"
           type="search"
           @keydown="handleKeydown"
           @focus="handleFocus"
         />
+
         <!-- Mobile search input (that opens modal) -->
         <UInput
           v-else
+          :icon="isLoading ? 'i-lucide-refresh-ccw' : 'i-lucide-search'"
           :placeholder="t('search.placeholder')"
-          class="search-input w-full py-1.5 pl-8 pr-10 rounded-md bg-gray-100 dark:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-primary-500 text-base"
+          class="search-input w-full py-1.5 rounded-md bg-gray-100 dark:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-primary-500 text-base"
           type="search"
           @focus="openMobileSearch"
         />

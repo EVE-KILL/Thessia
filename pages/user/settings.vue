@@ -138,7 +138,7 @@ const checkIfMobile = () => {
 </script>
 
 <template>
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+    <div class="mx-auto">
         <!-- Profile Header with Character Info -->
         <div
             class="mb-6 bg-gradient-to-r from-primary-50 to-gray-100 dark:from-gray-800 dark:to-gray-900 rounded-lg p-4 sm:p-6">

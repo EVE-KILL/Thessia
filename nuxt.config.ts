@@ -248,7 +248,7 @@ export default defineNuxtConfig({
             "2xl": 1536,
         },
         // Updated providers configuration
-        domains: ["i.redd.it", "i.imgur.com", "preview.redd.it"],
+        domains: ["i.redd.it", "i.imgur.com", "preview.redd.it", "images.evetech.net"],
         // Use ipx as default provider - it handles both local and remote images
         provider: "ipx",
         providers: {

@@ -1,5 +1,5 @@
 <template>
-    <div class="py-8 px-4">
+    <div>
         <div class="bg-white dark:bg-black rounded-lg shadow-lg">
             <h1 class="text-3xl md:text-4xl font-bold mb-6">{{ $t('about.title') }}</h1>
 

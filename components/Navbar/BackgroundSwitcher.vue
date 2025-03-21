@@ -1,20 +1,40 @@
 <script setup lang="ts">
-import { ref } from 'vue';
+import { ref, computed, onMounted, onUnmounted } from 'vue';
 import CustomDropdown from './CustomDropdown.vue';
 import MobileFullscreenModal from '../Modal/MobileFullscreenModal.vue';
 
-// Use the composables
+// Import the composable properly
 const { currentBackground, setSiteBackground } = siteBackground();
 
 // Get the backgrounds that are available from the API
-const bgData = await useFetch('/api/site/backgrounds');
-const backgrounds = bgData.data;
+const { data: backgrounds, pending: loading } = await useFetch('/api/site/backgrounds');
 
 // Track dropdown state
 const isDropdownOpen = ref(false);
 
 // Track if we're displaying in fullscreen mode (for mobile)
 const isFullscreen = ref(false);
+
+// Add internal mobile detection
+const internalIsMobile = ref(false);
+const checkIfMobile = () => {
+  internalIsMobile.value = window.innerWidth < 768;
+};
+
+// Setup mobile detection on mount
+onMounted(() => {
+  if (import.meta.client) {
+    checkIfMobile();
+    window.addEventListener('resize', checkIfMobile);
+  }
+});
+
+// Clean up event listener
+onUnmounted(() => {
+  if (import.meta.client) {
+    window.removeEventListener('resize', checkIfMobile);
+  }
+});
 
 // Emit events for parent components
 const emit = defineEmits(['fullscreen-opened', 'fullscreen-closed', 'background-selected']);
@@ -31,6 +51,11 @@ const props = defineProps({
     type: Boolean,
     default: false
   }
+});
+
+// Compute effective mobile state (use internal detection OR prop)
+const isMobileView = computed(() => {
+  return internalIsMobile.value || props.isMobile;
 });
 
 // Watch for changes in fullscreen prop from parent
@@ -71,7 +96,7 @@ const closeFullscreen = () => {
 
 // Improved body scroll locking for mobile fullscreen view
 watch(isFullscreen, (isOpen) => {
-  if (process.client) {
+  if (import.meta.client) {
     const body = document.body;
 
     if (isOpen) {
@@ -104,7 +129,7 @@ watch(isFullscreen, (isOpen) => {
 
 // Clean up on unmount
 onUnmounted(() => {
-  if (process.client && document.body.classList.contains('modal-open')) {
+  if (import.meta.client && document.body.classList.contains('modal-open')) {
     // Restore scroll if component unmounts while modal is open
     const scrollY = document.body.dataset.scrollPosition || '0';
     document.body.style.position = '';
@@ -122,7 +147,7 @@ onUnmounted(() => {
 <template>
   <div class="background-switcher">
     <!-- For desktop: Use CustomDropdown -->
-    <div v-if="!isMobile" class="desktop-switcher">
+    <div v-if="!isMobileView" class="desktop-switcher">
       <CustomDropdown
         v-model="isDropdownOpen"
         width="320px"

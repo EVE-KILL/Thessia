@@ -27,7 +27,7 @@ export function useAuth() {
    * Check/refresh the user's authentication status
    */
   const checkAuth = async () => {
-    if (loading.value || !process.client) return;
+    if (loading.value || !import.meta.client) return;
 
     loading.value = true;
 
@@ -75,7 +75,7 @@ export function useAuth() {
       const { data, error } = await useFetch('/api/auth/loginurl', {
         method: 'GET',
         params: {
-          redirect: redirectUrl || (process.client ? window.location.pathname : '/'),
+          redirect: redirectUrl || (import.meta.client ? window.location.pathname : '/'),
         },
       });
 
@@ -84,7 +84,7 @@ export function useAuth() {
         return;
       }
 
-      if (data.value?.url && process.client) {
+      if (data.value?.url && import.meta.client) {
         window.location.href = data.value.url;
       }
     } catch (err) {

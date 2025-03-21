@@ -1,5 +1,5 @@
 <template>
-  <div class="container mx-auto p-4">
+  <div class="container mx-auto">
     <div class="mb-8">
       <h1 class="text-3xl font-bold mb-2">{{ $t('search.results', { query: capitalizeWords(searchQuery) }) }}</h1>
     </div>

@@ -1,5 +1,5 @@
 <template>
-  <div class="py-8 px-4">
+  <div>
     <h1 class="text-3xl md:text-4xl font-bold mb-6">{{ $t('legal.title') }}</h1>
 
     <section class="mb-8">

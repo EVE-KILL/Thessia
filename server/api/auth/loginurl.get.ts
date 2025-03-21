@@ -24,8 +24,6 @@ export default defineEventHandler(async (event) => {
     const redis = new RedisStorage();
     await redis.set(`sso:${stateData.id}`, stateBase64, 60 * 5); // 5 minutes expiration
 
-    console.debug(`[Auth] Created state with ID: ${stateData.id} for redirect to: ${redirect}`);
-
     // Remove the single quotes around the state parameter
     const url = `${authorizeUrl}?response_type=code&client_id=${encodeURIComponent(clientId)}&redirect_uri=${encodeURIComponent(callbackUrl)}&scope=${encodeURIComponent(scope)}&state=${encodeURIComponent(stateBase64)}`;
 

@@ -238,7 +238,7 @@ const navbarLinks = computed(() => {
 
 <template>
   <!-- Desktop Navbar -->
-  <nav class="hidden md:flex h-16 items-center justify-between sticky top-0 z-50 bg-white bg-opacity-90 dark:bg-black dark:bg-opacity-90 backdrop-blur-sm shadow-sm mr-4 ml-0">
+  <nav class="hidden md:flex h-16 items-center justify-between sticky top-0 z-50 bg-white bg-opacity-90 dark:bg-black dark:bg-opacity-90 backdrop-blur-sm shadow-sm">
     <!-- Left items -->
     <div class="flex items-center space-x-4">
       <div class="flex items-center space-x-2">

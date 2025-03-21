@@ -59,6 +59,7 @@ const toggleBackgroundView = () => {
       /* Disable pointer events except for our button */
       body {
         pointer-events: none !important;
+        overflow: hidden !important;
       }
 
       .background-view-button {

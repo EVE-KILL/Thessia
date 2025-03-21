@@ -1,7 +1,6 @@
 <template>
   <footer class="footer">
     <div class="footer-content">
-      <!-- Left section - GitHub link -->
       <div class="footer-section">
         <a href="https://github.com/EVE-KILL/Thessia" target="_blank" rel="noopener noreferrer" class="footer-link">
           <div class="flex items-center">
@@ -11,7 +10,6 @@
         </a>
       </div>
 
-      <!-- Middle section - Creator info -->
       <div class="footer-section text-center">
         <div>
           Created by
@@ -21,7 +19,6 @@
         </div>
       </div>
 
-      <!-- Right section - Legal info -->
       <div class="footer-section text-right">
         <div class="text-xs mt-1">
           All materials are property of
@@ -35,15 +32,21 @@
 </template>
 
 <script setup lang="ts">
-// No script needed after removing timer functionality
+// No script needed
 </script>
 
 <style scoped>
 .footer {
   width: 100%;
-  padding: 1rem;
-  border-top: 1px solid rgba(128, 128, 128, 0.4); /* Enhanced border for better visibility */
+  padding: 1rem 1rem 0;
+  border-top: 1px solid rgba(128, 128, 128, 0.4);
   font-size: 0.875rem;
+  margin: 0 !important; /* Force no margin */
+  box-sizing: border-box;
+  height: auto;
+  display: block;
+  /* Allow footer content to be visible */
+  overflow: visible;
 }
 
 .footer-content {
@@ -52,11 +55,16 @@
   justify-content: space-between;
   align-items: center;
   gap: 1rem;
+  margin-bottom: 1rem;
+  padding-bottom: 0;
+  /* Allow content to determine height */
+  min-height: 0;
+  box-sizing: border-box;
 }
 
 .footer-section {
   flex: 1;
-  min-width: 200px;
+  min-width: 150px; /* Reduced from 200px to prevent unnecessary wrapping */
 }
 
 .footer-link {
@@ -74,6 +82,9 @@
   .footer-content {
     flex-direction: column;
     gap: 0.5rem;
+    margin-bottom: 0.5rem;
+    /* Ensure no overflow */
+    overflow: hidden;
   }
 
   .footer-section {
