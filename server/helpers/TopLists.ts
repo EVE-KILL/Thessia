@@ -326,7 +326,7 @@ async function topRegions(
       const data: IRegion | null = await Regions.findOne({ region_id: region.id });
       return {
         region_id: data?.region_id || 0,
-        name: data?.region_name || "Unknown",
+        name: data?.name || "Unknown",
         count: region.count,
       };
     }),
