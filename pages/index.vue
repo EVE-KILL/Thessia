@@ -82,13 +82,13 @@ useSeoMeta({
 
 .main-content {
     display: grid;
-    grid-template-columns: 300px 1fr;
+    grid-template-columns: 250px 1fr;
     gap: 1rem;
 }
 
 .left-column {
-    max-width: 300px;
-    width: 300px;
+    max-width: 250px;
+    width: 250px;
 }
 
 .right-column {
