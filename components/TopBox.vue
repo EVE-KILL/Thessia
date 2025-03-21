@@ -108,11 +108,6 @@ const getImageUrlForType = (type: string, id: number): string => {
     return imageMap[type] || '/images/unknown.png';
 };
 
-// Navigation handler
-const navigateToEntity = (entity: ITopEntity): void => {
-    navigateTo(`/${props.type}/${entity.id}`);
-};
-
 // Get display name for entity, with automatic translation support for ships
 const getEntityDisplayName = (entity: ITopEntity): string => {
     // Ships always need translation
@@ -122,6 +117,44 @@ const getEntityDisplayName = (entity: ITopEntity): string => {
 
     // Default case, just return the name
     return entity.name;
+};
+
+// Function to get the entity-specific ID based on entity type
+const getEntityId = (entity: ITopEntity): number => {
+    if (!entity) return 0;
+
+    // Use the same mapping of type to ID field as in getImageUrl
+    const idFieldMap = {
+        character: 'character_id',
+        corporation: 'corporation_id',
+        alliance: 'alliance_id',
+        ship: 'type_id',
+        solarsystem: 'system_id',
+        constellation: 'constellation_id',
+        region: 'region_id'
+    };
+
+    // Get the correct ID field name
+    const idField = idFieldMap[props.type];
+    const entityId = idField && entity[idField];
+
+    // Fallback to id field if specific field not found
+    if (!entityId && entity.id) {
+        return entity.id;
+    }
+
+    return entityId || 0;
+};
+
+// Get the correct URL path based on entity type
+const getUrlPath = (type: string): string => {
+    // Map certain types to different URL paths
+    const urlPathMap = {
+        'solarsystem': 'system',
+        'ship': 'item'
+    };
+
+    return urlPathMap[type] || type;
 };
 </script>
 
@@ -150,11 +183,20 @@ const getEntityDisplayName = (entity: ITopEntity): string => {
 
         <!-- Entity list -->
         <template v-else>
-            <button v-for="entity in entities" :key="entity.id"
-                class="grid grid-cols-[1fr_auto] items-center bg-semi-transparent border-b-2 border-background-800 w-full py-1"
-                @click="navigateToEntity(entity)">
+            <NuxtLink
+                v-for="entity in entities"
+                :key="entity.id"
+                :to="`/${getUrlPath(props.type)}/${getEntityId(entity)}`"
+                class="grid grid-cols-[1fr_auto] items-center bg-semi-transparent border-b-2 border-background-800 w-full py-1 block no-underline hover:bg-background-800 transition-colors duration-200"
+            >
                 <div class="flex items-center overflow-hidden">
-                    <img :src="getImageUrl(entity)" loading="lazy" :alt="`${props.type}: ${getEntityDisplayName(entity)}`" class="w-7 flex-shrink-0" />
+                    <NuxtImg
+                        :src="getImageUrl(entity)"
+                        loading="lazy"
+                        format="webp"
+                        :alt="`${props.type}: ${getEntityDisplayName(entity)}`"
+                        class="w-7 flex-shrink-0"
+                    />
                     <div class="text-sm text-left text-primary-400 truncate ml-2 min-w-0 overflow-hidden">
                         {{ getEntityDisplayName(entity) }}
                     </div>
@@ -162,7 +204,7 @@ const getEntityDisplayName = (entity: ITopEntity): string => {
                 <div class="text-sm text-right text-background-200 pr-4 flex-shrink-0 ml-2">
                     {{ entity.count }}
                 </div>
-            </button>
+            </NuxtLink>
         </template>
 
         <!-- Footer -->
@@ -177,12 +219,13 @@ const getEntityDisplayName = (entity: ITopEntity): string => {
     background-color: rgba(0, 0, 0, 0.4);
 }
 
-button:hover {
+/* Update hover styles for NuxtLink instead of button */
+a.grid:hover {
     background-color: rgba(40, 40, 40, 0.7);
 }
 
 /* Use grid with specific column sizing instead of grid-cols-2 */
-button.grid {
+a.grid {
     grid-template-columns: 1fr auto;
 }
 </style>
