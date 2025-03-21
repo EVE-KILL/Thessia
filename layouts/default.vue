@@ -18,13 +18,24 @@ useSeoMeta({
     twitterDescription: 'EVE-KILL is a community-driven killboard for EVE Online, providing detailed statistics and analysis of player kills and losses.',
     ogImage: '/icon.svg',
     twitterImage: '/icon.svg',
-    icon: '/icon.svg',
     ogType: 'website',
     twitterCard: 'summary_large_image',
     twitterTitle: 'EVE-KILL',
     ogUrl: 'https://eve-kill.net',
     ogSiteName: 'EVE-KILL',
     twitterSite: '@eve_kill',
+    twitterCreator: '@eve_kill',
+    ogLocale: 'en_US',
+})
+
+useHead({
+    link: [
+        {
+            rel: 'icon',
+            type: 'image/png',
+            href: '/favicon.png'
+        }
+    ]
 })
 </script>
 
