@@ -14,7 +14,10 @@ const props = defineProps({
   combinedVictimType: { type: String, default: 'character' },
   combinedVictimId: { type: Number, default: null },
   killlistType: { type: String, default: 'latest' },
-  wsFilter: { type: String, default: 'all' }
+  wsFilter: { type: String, default: 'all' },
+  wsDisabled: { type: Boolean, default: false },
+  externalKilllistData: { type: Array as PropType<IKillList[]>, default: null },
+  limit: { type: Number, default: 100 } // New prop to control default page size
 });
 
 // Pagination and display settings
@@ -31,7 +34,8 @@ const pageSizeItems = [
   { label: '500', id: 500 },
   { label: '1000', id: 1000 }
 ];
-const selectedPageSize = ref(100);
+// Use the limit prop as the default page size
+const selectedPageSize = ref(props.limit);
 const currentPage = computed(() => pagination.value.pageIndex + 1);
 const totalItems = ref(9999);
 
@@ -42,22 +46,52 @@ const queryParams = computed(() => ({
   limit: selectedPageSize.value
 }));
 
-// Fetch kill list data
-const { data: killlistData, pending, error, refresh } = useFetch<IKillList[]>('/api/killlist', {
-  key: 'killlist',
-  query: queryParams,
-  watch: [queryParams]
+// Determine if we should use external data
+const useExternalData = computed(() => props.externalKilllistData !== null);
+
+// Local reactive container for kill list data
+const localKilllistData = ref<IKillList[]>([]);
+
+// Fetch kill list data only if not using external data
+const { data: fetchedData, pending, error, refresh } = !useExternalData.value
+  ? useFetch<IKillList[]>('/api/killlist', {
+      key: 'killlist',
+      query: queryParams,
+      watch: [queryParams]
+    })
+  : { data: ref(null), pending: ref(false), error: ref(null), refresh: () => Promise.resolve() };
+
+// Combined kill list data - either from props or fetched
+const killlistData = computed(() => {
+  return useExternalData.value ? props.externalKilllistData : fetchedData.value || [];
 });
+
+// Update local data when external data changes
+watch(() => props.externalKilllistData, (newData) => {
+  if (newData && useExternalData.value) {
+    localKilllistData.value = [...newData];
+  }
+}, { immediate: true });
+
+// Update local data when fetched data changes
+watch(fetchedData, (newData) => {
+  if (newData && !useExternalData.value) {
+    localKilllistData.value = [...newData];
+  }
+}, { immediate: true });
 
 // Update pagination when page size changes
 watch(selectedPageSize, async (newSize) => {
   pagination.value.pageSize = newSize;
   pagination.value.pageIndex = 0;
 
-  try {
-    await refresh();
-  } catch (err) {
-    console.error('Error refreshing data after page size change:', err);
+  // Only attempt to refresh if using fetched data
+  if (!useExternalData.value) {
+    try {
+      await refresh();
+    } catch (err) {
+      console.error('Error refreshing data after page size change:', err);
+    }
   }
 });
 
@@ -65,6 +99,118 @@ watch(selectedPageSize, async (newSize) => {
 let socket: WebSocket | null = null;
 const isConnected = ref(false);
 const wsNewKillCount = ref(0);
+
+// WebSocket pausing functionality
+const isWebSocketPaused = ref(false);
+const mouseMoveTimer = ref<NodeJS.Timeout | null>(null);
+const pendingMessages = ref<IKillmail[]>([]);
+const router = useRouter();
+const manuallyPaused = ref(false);
+
+// Watch page changes to control WebSocket pausing
+watch(() => pagination.value.pageIndex, (newPageIndex) => {
+  if (newPageIndex > 0) {
+    // Automatically pause on pages > 1
+    pauseWebSocket('pagination');
+  } else if (!manuallyPaused.value) {
+    // Resume on page 1 (unless manually paused)
+    resumeWebSocket();
+  }
+});
+
+// Pause WebSocket processing with reason
+const pauseWebSocket = (reason = 'hover') => {
+  isWebSocketPaused.value = true;
+  if (reason === 'manual') {
+    manuallyPaused.value = true;
+  }
+  console.debug(`WebSocket processing paused (${reason})`);
+};
+
+// Resume WebSocket processing
+const resumeWebSocket = () => {
+  // Don't resume if we're not on page 1
+  if (pagination.value.pageIndex > 0) {
+    console.debug('Cannot resume WebSocket on pages > 1');
+    return;
+  }
+
+  isWebSocketPaused.value = false;
+  console.debug('WebSocket processing resumed, processing pending messages:', pendingMessages.value.length);
+
+  // Process any pending messages
+  if (pendingMessages.value.length > 0 && !useExternalData.value) {
+    // Sort by kill time to maintain chronological order
+    pendingMessages.value.sort((a, b) =>
+      new Date(b.kill_time).getTime() - new Date(a.kill_time).getTime()
+    );
+
+    // Process each pending message
+    pendingMessages.value.forEach(killmail => {
+      processKillmail(killmail);
+    });
+
+    // Clear pending messages
+    pendingMessages.value = [];
+  }
+};
+
+// Toggle WebSocket mode (manually pause/resume)
+const toggleWebSocketMode = () => {
+  if (!isConnected.value || props.wsDisabled) return;
+
+  if (isWebSocketPaused.value) {
+    // Only allow toggling on page 1
+    if (pagination.value.pageIndex === 0) {
+      manuallyPaused.value = false;
+      resumeWebSocket();
+    }
+  } else {
+    pauseWebSocket('manual');
+  }
+};
+
+// Mouse event handlers
+const handleMouseEnter = () => {
+  if (pagination.value.pageIndex === 0 && !manuallyPaused.value && !props.wsDisabled) {
+    pauseWebSocket('hover');
+    clearTimeout(mouseMoveTimer.value);
+  }
+};
+
+const handleMouseLeave = () => {
+  if (pagination.value.pageIndex === 0 && !manuallyPaused.value && !props.wsDisabled) {
+    resumeWebSocket();
+    clearTimeout(mouseMoveTimer.value);
+  }
+};
+
+const handleMouseMove = () => {
+  if (isWebSocketPaused.value && pagination.value.pageIndex === 0 &&
+      !manuallyPaused.value && !props.wsDisabled) {
+    clearTimeout(mouseMoveTimer.value);
+    mouseMoveTimer.value = setTimeout(() => {
+      resumeWebSocket();
+    }, 10000); // 10 seconds
+  }
+};
+
+// Function to process a killmail
+const processKillmail = (killmail: IKillmail) => {
+  const formattedKill = formatKillmail(killmail);
+
+  // This check is redundant now but keeping for safety
+  if (killlistData.value && killlistData.value.length > 0 &&
+      new Date(formattedKill.kill_time).getTime() <= new Date(killlistData.value[0].kill_time).getTime()) {
+    return;
+  }
+
+  if (killlistData.value) {
+    killlistData.value = [formattedKill, ...killlistData.value];
+    wsNewKillCount.value++;
+    ensureKillListLimit();
+  }
+};
 
 // Format killmail object to KillList format
 const formatKillmail = (killmail: IKillmail): IKillList => {
@@ -116,8 +262,24 @@ const ensureKillListLimit = () => {
   }
 };
 
+// Function to check if a killmail is newer than our current newest
+const isNewerThanLatestKill = (killmail: IKillmail): boolean => {
+  if (!killlistData.value || killlistData.value.length === 0) return true;
+
+  const killmailTime = new Date(killmail.kill_time).getTime();
+  const latestKillTime = new Date(killlistData.value[0].kill_time).getTime();
+
+  return killmailTime > latestKillTime;
+};
+
 // Establish WebSocket connection
 const connectWebSocket = () => {
+  // Don't connect if WebSocket is disabled or we're using external data
+  if (props.wsDisabled || useExternalData.value) {
+    console.debug('WebSocket disabled by props.wsDisabled or using external data');
+    return;
+  }
+
   try {
     if (socket) {
       socket.close();
@@ -139,18 +301,20 @@ const connectWebSocket = () => {
         if (data.type !== 'killmail') return;
 
         const killmail: IKillmail = data.data;
-        const formattedKill = formatKillmail(killmail);
 
-        if (killlistData.value && killlistData.value.length > 0 &&
-            formattedKill.kill_time <= killlistData.value[0].kill_time) {
+        // Always check if this killmail is newer before processing or queuing
+        if (!isNewerThanLatestKill(killmail)) {
+          console.debug('Ignoring killmail as it\'s older than current newest');
           return;
         }
 
-        if (killlistData.value) {
-          killlistData.value = [formattedKill, ...killlistData.value];
-          wsNewKillCount.value++;
-          ensureKillListLimit();
+        // If WebSocket is paused, add to pending messages
+        if (isWebSocketPaused.value) {
+          pendingMessages.value.push(killmail);
+          return;
         }
+
+        processKillmail(killmail);
       } catch (err) {
         console.error('Error processing WebSocket message:', err);
       }
@@ -191,13 +355,40 @@ watch(selectedPageSize, () => {
 
 // WebSocket lifecycle management
 onMounted(() => {
-  if (process.client) {
+  if (process.client && !props.wsDisabled && !useExternalData.value) {
     connectWebSocket();
+
+    // Add router navigation guards to pause WebSocket on page changes
+    router.beforeEach((to, from) => {
+      if (to.path !== from.path) {
+        pauseWebSocket('navigation');
+      }
+      return true;
+    });
   }
 });
 
 onBeforeUnmount(() => {
   closeWebSocket();
+
+  // Clear any timers
+  if (mouseMoveTimer.value) {
+    clearTimeout(mouseMoveTimer.value);
+    mouseMoveTimer.value = null;
+  }
+});
+
+// Update pagination page size based on props.limit
+onMounted(() => {
+  pagination.value.pageSize = props.limit;
+});
+
+// Watch for changes to the limit prop
+watch(() => props.limit, (newLimit) => {
+  if (selectedPageSize.value !== newLimit) {
+    selectedPageSize.value = newLimit;
+    pagination.value.pageSize = newLimit;
+  }
 });
 
 // Helper functions for data formatting
@@ -397,7 +588,10 @@ const columnsDesktop: TableColumn<IKillList>[] = [
     meta: { width: '15%' },
     cell: ({ row }) => {
       return h('div', { class: 'flex flex-col items-end py-1 text-sm whitespace-nowrap px-2' }, [
-        h('div', { class: 'text-background-500' }, formatDate(row.original.kill_time)),
+        h(resolveComponent('ClientOnly'), {}, {
+          default: () => h('div', { class: 'text-background-500' }, formatDate(row.original.kill_time)),
+          fallback: () => h('div', { class: 'text-background-500' }, '—')
+        }),
         h('div', { class: 'flex gap-1 items-center' }, [
           h('span', { class: 'text-background-400' }, row.original.attackerCount),
           h('img', {
@@ -417,7 +611,6 @@ const columnsDesktop: TableColumn<IKillList>[] = [
 const columnsMobile: TableColumn<IKillList>[] = [
   {
     accessorKey: 'mobile-view',
-    header: t('killList.kill'),
     id: 'mobile-view',
     meta: { width: '100%' },
     cell: ({ row }) => {
@@ -464,7 +657,10 @@ const columnsMobile: TableColumn<IKillList>[] = [
 
           // Last Line: Time + Attacker Count
           h('div', { class: 'flex justify-between items-center mt-1' }, [
-            h('span', { class: 'text-background-500 text-xs' }, formatDate(row.original.kill_time)),
+            h(resolveComponent('ClientOnly'), {}, {
+              default: () => h('span', { class: 'text-background-500 text-xs' }, formatDate(row.original.kill_time)),
+              fallback: () => h('span', { class: 'text-background-500 text-xs' }, '—')
+            }),
             h('div', { class: 'flex gap-1 items-center' }, [
               h('span', { class: 'text-background-400 text-xs' }, row.original.attackerCount),
               h('img', {
@@ -495,12 +691,6 @@ watch(locale, () => {
       columnsDesktop[index].header = () => h('div', { class: 'text-right' }, t('killList.details'));
     }
   });
-
-  columnsMobile.forEach((column, index) => {
-    if (column.id === 'mobile-view') {
-      columnsMobile[index].header = t('killList.kill');
-    }
-  });
 });
 </script>
 
@@ -509,19 +699,33 @@ watch(locale, () => {
     <div class="flex justify-between items-center mb-3 px-2 py-2 bg-background-800 rounded-md">
       <div class="flex items-center">
         <div
+          v-if="!wsDisabled && !useExternalData"
           :class="[
-            'w-3 h-3 rounded-full mr-2',
-            isConnected ? 'bg-green-500' : 'bg-red-500'
+            'w-3 h-3 rounded-full mr-2 cursor-pointer',
+            !isConnected ? 'bg-red-500' :
+            (isWebSocketPaused ? 'bg-yellow-500' : 'bg-green-500')
           ]"
-          :title="isConnected ? t('killList.wsConnected') : t('killList.wsDisconnected')"
+          :title="isConnected
+            ? (isWebSocketPaused
+                ? t('killList.wsPaused')
+                : t('killList.wsConnected'))
+            : t('killList.wsDisconnected')"
+          @click="toggleWebSocketMode"
         ></div>
 
         <span
-          v-if="wsNewKillCount > 0"
-          class="ml-2 px-2 py-0.5 bg-primary-500 text-white text-xs rounded-full"
+          v-if="wsNewKillCount > 0 && !wsDisabled && !useExternalData"
+          class="ml-2 px-2 py-0.5 bg-primary-500 text-white text-xs rounded-full cursor-pointer"
           @click="resetNewKillCount"
         >
           +{{ wsNewKillCount }}
+        </span>
+
+        <span
+          v-if="isWebSocketPaused && pendingMessages.length > 0 && !wsDisabled && !useExternalData"
+          class="ml-2 text-xs text-yellow-400"
+        >
+          {{ pendingMessages.length }} pending
         </span>
       </div>
 
@@ -553,51 +757,63 @@ watch(locale, () => {
       </button>
     </div>
 
-    <!-- Mobile Table - Only shown on mobile -->
-    <UTable
+    <!-- Mobile Table - Wrapped with event listeners -->
+    <div
       v-if="isMobile"
-      v-model:pagination="pagination"
-      :data="killlistData || []"
-      :columns="columnsMobile"
-      :loading="pending"
-      :empty-state="{ icon: 'i-heroicons-document-text', label: t('killList.noKills') }"
-      :loading-state="{ icon: 'i-heroicons-arrow-path', label: t('killList.loading') }"
-      :ui="{
-        base: 'min-w-full table-fixed bg-transparent text-white',
-        thead: 'hidden', // Always hide header on mobile
-        tbody: 'divide-y divide-background-700',
-        tr: 'hover:bg-background-800 transition-colors duration-300 cursor-pointer',
-        th: 'text-left py-1 px-2 uppercase text-xs font-medium',
-        td: 'p-0 text-xs',
-        empty: 'py-4 text-center text-background-400',
-        loading: 'py-4 text-center',
-        root: 'relative overflow-hidden rounded-sm bg-background-900',
-      }"
-      @select="handleKillClick"
-    />
+      @mouseenter="handleMouseEnter"
+      @mouseleave="handleMouseLeave"
+      @mousemove="handleMouseMove"
+    >
+      <UTable
+        v-model:pagination="pagination"
+        :data="killlistData || []"
+        :columns="columnsMobile"
+        :loading="pending"
+        :empty-state="{ icon: 'i-heroicons-document-text', label: t('killList.noKills') }"
+        :loading-state="{ icon: 'i-heroicons-arrow-path', label: t('killList.loading') }"
+        :ui="{
+          base: 'min-w-full table-fixed bg-transparent text-white',
+          thead: 'hidden', // Always hide header on mobile
+          tbody: 'divide-y divide-background-700',
+          tr: 'hover:bg-background-800 transition-colors duration-300 cursor-pointer',
+          th: 'text-left py-1 px-2 uppercase text-xs font-medium',
+          td: 'p-0 text-xs',
+          empty: 'py-4 text-center text-background-400',
+          loading: 'py-4 text-center',
+          root: 'relative overflow-hidden rounded-sm bg-background-900',
+        }"
+        @select="handleKillClick"
+      />
+    </div>
 
-    <!-- Desktop Table - Only shown on desktop -->
-    <UTable
+    <!-- Desktop Table - Wrapped with event listeners -->
+    <div
       v-else
-      v-model:pagination="pagination"
-      :data="killlistData || []"
-      :columns="columnsDesktop"
-      :loading="pending"
-      :empty-state="{ icon: 'i-heroicons-document-text', label: t('killList.noKills') }"
-      :loading-state="{ icon: 'i-heroicons-arrow-path', label: t('killList.loading') }"
-      :ui="{
-        base: 'min-w-full table-fixed bg-transparent text-white',
-        thead: 'bg-background-800 border-b border-background-700',
-        tbody: 'divide-y divide-background-700',
-        tr: 'hover:bg-background-800 transition-colors duration-300 cursor-pointer',
-        th: 'text-left py-1 px-2 uppercase text-xs font-medium',
-        td: 'p-0 text-xs',
-        empty: 'py-4 text-center text-background-400',
-        loading: 'py-4 text-center',
-        root: 'relative overflow-hidden rounded-sm bg-background-900',
-      }"
-      @select="handleKillClick"
-    />
+      @mouseenter="handleMouseEnter"
+      @mouseleave="handleMouseLeave"
+      @mousemove="handleMouseMove"
+    >
+      <UTable
+        v-model:pagination="pagination"
+        :data="killlistData || []"
+        :columns="columnsDesktop"
+        :loading="pending"
+        :empty-state="{ icon: 'i-heroicons-document-text', label: t('killList.noKills') }"
+        :loading-state="{ icon: 'i-heroicons-arrow-path', label: t('killList.loading') }"
+        :ui="{
+          base: 'min-w-full table-fixed bg-transparent text-white',
+          thead: 'bg-background-800 border-b border-background-700',
+          tbody: 'divide-y divide-background-700',
+          tr: 'hover:bg-background-800 transition-colors duration-300 cursor-pointer',
+          th: 'text-left py-1 px-2 uppercase text-xs font-medium',
+          td: 'p-0 text-xs',
+          empty: 'py-4 text-center text-background-400',
+          loading: 'py-4 text-center',
+          root: 'relative overflow-hidden rounded-sm bg-background-900',
+        }"
+        @select="handleKillClick"
+      />
+    </div>
 
     <div class="flex justify-between items-center mt-3">
       <button
