@@ -1,9 +1,64 @@
 <template>
-    <KillList :killlistType="'latest'" />
+    <div class="layout-container">
+        <div class="top-row">
+
+        </div>
+
+        <div class="main-content">
+            <div class="left-column">
+                <div class="mt-24"/>
+                <TopBox
+                    type="character"
+                    :limit="10"
+                    :days="7"
+                    title="Top Characters"
+                />
+                <TopBox
+                    type="corporation"
+                    :limit="10"
+                    :days="7"
+                    title="Top Corporations"
+                />
+                <TopBox
+                    type="alliance"
+                    :limit="10"
+                    :days="7"
+                    title="Top Alliances"
+                />
+                <TopBox
+                    type="ship"
+                    :limit="10"
+                    :days="7"
+                    title="Top Ships"
+                />
+                <TopBox
+                    type="solarsystem"
+                    :limit="10"
+                    :days="7"
+                    title="Top Systems"
+                />
+                <TopBox
+                    type="constellation"
+                    :limit="10"
+                    :days="7"
+                    title="Top Constellations"
+                />
+                <TopBox
+                    type="region"
+                    :limit="10"
+                    :days="7"
+                    title="Top Regions"
+                />
+            </div>
+
+            <div class="right-column">
+                <KillList :killlistType="'latest'" />
+            </div>
+        </div>
+    </div>
 </template>
 
 <script setup lang="ts">
-import KillList from '~/components/KillList.vue';
 
 const { t } = useI18n();
 useSeoMeta({
@@ -14,5 +69,42 @@ useSeoMeta({
 </script>
 
 <style scoped>
+.layout-container {
+    display: grid;
+    grid-template-rows: auto 1fr;
+    gap: 1rem;
+    width: 100%;
+}
 
+.top-row {
+    grid-column: 1 / -1;
+}
+
+.main-content {
+    display: grid;
+    grid-template-columns: 300px 1fr;
+    gap: 1rem;
+}
+
+.left-column {
+    max-width: 300px;
+    width: 300px;
+}
+
+.right-column {
+    min-width: 0; /* Ensures the column can shrink below content size */
+    flex: 1;
+}
+
+/* Media query for responsive design */
+@media (max-width: 768px) {
+    .main-content {
+        grid-template-columns: 1fr;
+    }
+
+    .left-column {
+        max-width: 100%;
+        width: 100%;
+    }
+}
 </style>
