@@ -119,13 +119,10 @@ async function loadAllCustomPrices(): Promise<void> {
   }
 }
 
-// useRuntimeConfig() exists only in nitro, so the ./bin/console job will fail, check if it exists before using it
-// If it exists, check if useRuntimeConfig().enabledRunTimeCache is true
-if (
-  typeof useRuntimeConfig === "function" &&
-  useRuntimeConfig()?.enabledRunTimeCache &&
-  process.env.NODE_ENV === "production"
-) {
+// Use a direct boolean or default to true if in production
+const enabledRuntimeCache = process.env.ENABLE_RUNTIME_CACHE !== 'false' && process.env.NODE_ENV === 'production';
+
+if (enabledRuntimeCache) {
   // Load at startup
   await Promise.all([
     loadAllInvGroups(),

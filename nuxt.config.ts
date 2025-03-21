@@ -66,77 +66,14 @@ export default defineNuxtConfig({
     },
 
     runtimeConfig: {
-        enabledRunTimeCache: true,
-        eve: {
-            clientId:
-                process.env.NODE_ENV === "production"
-                    ? process.env.EVE_CLIENT_ID
-                    : process.env.EVE_CLIENT_ID_DEV,
-            clientSecret:
-                process.env.NODE_ENV === "production"
-                    ? process.env.EVE_CLIENT_SECRET
-                    : process.env.EVE_CLIENT_SECRET_DEV,
-            callbackUrl:
-                process.env.NODE_ENV === "production"
-                    ? process.env.EVE_CLIENT_REDIRECT
-                    : process.env.EVE_CLIENT_REDIRECT_DEV,
-            tokenUrl: 'https://login.eveonline.com/v2/oauth/token',
-            authorizeUrl: 'https://login.eveonline.com/v2/oauth/authorize',
-            verifyUrl: 'https://login.eveonline.com/oauth/verify',
-            cookieName: 'evelogin',
-            scopes: [
-                "publicData",
-                "esi-killmails.read_killmails.v1",
-                "esi-killmails.read_corporation_killmails.v1",
-            ],
-        },
         public: {
-            eve: {
-                cookieName: 'evelogin',
-            },
             sentry: {
                 dsn: process.env.SENTRY_DSN,
                 environment: process.env.NODE_ENV,
                 organization: process.env.SENTRY_ORG,
                 project: process.env.SENTRY_PROJECT,
-            },
-        },
-        mongodb: {
-            uri: process.env.MONGO_URI,
-        },
-        redis: {
-            uri: process.env.REDIS_URI,
-            port: process.env.REDIS_PORT,
-            db: process.env.REDIS_DB,
-        },
-        redisq: {
-            id: process.env.REDISQ_ID,
-        },
-        meilisearch: {
-            uri: process.env.MEILISEARCH_URI,
-        },
-        discord: {
-            backend: process.env.BACKEND_DISCORD_URL,
-        },
-        esi: {
-            url: process.env.ESI_URL,
-            rateLimit: process.env.ESI_RATE_LIMIT,
-            clientID:
-                process.env.NODE_ENV === "production"
-                    ? process.env.EVE_CLIENT_ID
-                    : process.env.EVE_CLIENT_ID_DEV,
-            clientSecret:
-                process.env.NODE_ENV === "production"
-                    ? process.env.EVE_CLIENT_SECRET
-                    : process.env.EVE_CLIENT_SECRET_DEV,
-            clientRedirect:
-                process.env.NODE_ENV === "production"
-                    ? process.env.EVE_CLIENT_REDIRECT
-                    : process.env.EVE_CLIENT_REDIRECT_DEV,
-        },
-        tasks: {
-            processKillmails: process.env.PROCESS_KILLMAILS,
-        },
+            }
+        }
     },
     // Ensure modern compatibility mode
     compatibilityDate: "2024-11-01",

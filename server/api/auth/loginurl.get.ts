@@ -5,11 +5,20 @@ import { RedisStorage } from "~/server/helpers/Storage";
 export default defineEventHandler(async (event) => {
     const query = getQuery(event);
     const { redirect } = query;
-    const config = useRuntimeConfig().eve;
-    const clientId = config.clientId;
-    const callbackUrl = config.callbackUrl;
-    const scope = config.scopes.join(" ");
-    const authorizeUrl = config.authorizeUrl;
+
+    // Use direct environment variables instead of runtime config
+    const clientId = process.env.NODE_ENV === 'production'
+        ? process.env.EVE_CLIENT_ID
+        : process.env.EVE_CLIENT_ID_DEV;
+
+    const callbackUrl = process.env.NODE_ENV === 'production'
+        ? process.env.EVE_CLIENT_REDIRECT
+        : process.env.EVE_CLIENT_REDIRECT_DEV;
+
+    // Define scopes directly
+    const scopes = ["publicData", "esi-killmails.read_killmails.v1", "esi-killmails.read_corporation_killmails.v1"];
+    const scope = scopes.join(" ");
+    const authorizeUrl = 'https://login.eveonline.com/v2/oauth/authorize';
 
     // Create state with redirect information
     const stateData = {

@@ -10,9 +10,8 @@ export default defineEventHandler(async (event) => {
         'Expires': '0'
     });
 
-    // Get the cookie value
-    const config = useRuntimeConfig().eve;
-    const cookieName = config.cookieName;
+    // Get the cookie value using the hardcoded cookie name
+    const cookieName = 'evelogin';
     const cookie = getCookie(event, cookieName);
 
     if (!cookie) {

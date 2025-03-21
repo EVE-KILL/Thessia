@@ -26,9 +26,8 @@ export default defineNuxtPlugin(async (nuxtApp) => {
             return;
         }
 
-        // Get the runtime config
-        const config = useRuntimeConfig().eve;
-        const cookieName = config.cookieName;
+        // Define the cookie name directly
+        const cookieName = 'evelogin';
 
         // Server-side rendering auth check
         if (import.meta.server) {

@@ -3,7 +3,7 @@ import { RedisStorage } from "~/server/helpers/Storage";
 import { decodeState, getUserData } from "~/server/utils/eveAuthentication";
 
 export default defineEventHandler(async (event) => {
-    const config = useRuntimeConfig().eve;
+    const cookieName = 'evelogin';
     const query = getQuery(event);
     const { code, state } = query;
 
@@ -60,7 +60,7 @@ export default defineEventHandler(async (event) => {
     }
 
     // Set the cookie using h3's setCookie instead of Vue's useCookie
-    setCookie(event, config.cookieName, uniqueIdentifier, {
+    setCookie(event, cookieName, uniqueIdentifier, {
         httpOnly: true,
         secure: process.env.NODE_ENV === "production",
         sameSite: "lax",

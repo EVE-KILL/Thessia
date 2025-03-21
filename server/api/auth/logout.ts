@@ -1,8 +1,6 @@
 export default defineEventHandler(async (event) => {
   try {
-    // Get the cookie name from config
-    const config = useRuntimeConfig().eve;
-    const cookieName = config.cookieName;
+    const cookieName = 'evelogin';
 
     // Delete the cookie by setting it with a past expiration
     setCookie(event, cookieName, '', {

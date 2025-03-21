@@ -1,9 +1,12 @@
-
 export function getAccessToken(code: string): Promise<IAuthAccessToken> {
-    const config = useRuntimeConfig().eve;
-    const tokenUrl = config.tokenUrl;
-    const clientId = config.clientId;
-    const clientSecret = config.clientSecret;
+    const tokenUrl = 'https://login.eveonline.com/v2/oauth/token';
+    const clientId = process.env.NODE_ENV === 'production'
+        ? process.env.EVE_CLIENT_ID
+        : process.env.EVE_CLIENT_ID_DEV;
+
+    const clientSecret = process.env.NODE_ENV === 'production'
+        ? process.env.EVE_CLIENT_SECRET
+        : process.env.EVE_CLIENT_SECRET_DEV;
 
     const payload = {
         grant_type: 'authorization_code',
@@ -22,8 +25,7 @@ export function getAccessToken(code: string): Promise<IAuthAccessToken> {
 }
 
 export function verifyToken(accessToken: string): Promise<FetchEvent> {
-    const config = useRuntimeConfig().eve;
-    const verifyUrl = config.verifyUrl;
+    const verifyUrl = 'https://login.eveonline.com/oauth/verify';
 
     return $fetch(verifyUrl, {
         method: 'GET',

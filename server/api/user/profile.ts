@@ -2,9 +2,8 @@ import { getCookie } from 'h3';
 
 export default defineEventHandler(async (event) => {
   try {
-    // Get cookie
-    const config = useRuntimeConfig().eve;
-    const cookieName = config.cookieName;
+    // Use hardcoded cookie name
+    const cookieName = 'evelogin';
     const cookie = getCookie(event, cookieName);
 
     if (!cookie) {
