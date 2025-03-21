@@ -170,7 +170,7 @@ const handleRowClick = (row) => {
     </div>
 
     <div v-if="pending" class="text-center py-4 text-background-400">
-      <UIcon name="i-heroicons-arrow-path" class="animate-spin mr-2" />
+      <UIcon name="i-lucide-refresh-cw" class="animate-spin mr-2" />
       {{ t('common.loading') }}
     </div>
 
@@ -187,8 +187,8 @@ const handleRowClick = (row) => {
         :columns="columns"
         :data="entities || []"
         :loading="pending"
-        :empty-state="{ icon: 'i-heroicons-document-text', label: t('topBox.noData') }"
-        :loading-state="{ icon: 'i-heroicons-arrow-path', label: t('common.loading') }"
+        :empty-state="{ icon: 'i-lucide-file-text', label: t('topBox.noData') }"
+        :loading-state="{ icon: 'i-lucide-refresh-cw', label: t('common.loading') }"
         :ui="{
           base: 'min-w-full table-fixed bg-transparent text-white',
           thead: 'hidden',

@@ -757,7 +757,7 @@ watch(locale, () => {
       </button>
     </div>
 
-    <!-- Mobile Table - Wrapped with event listeners -->
+    <!-- Mobile Table -->
     <div
       v-if="isMobile"
       @mouseenter="handleMouseEnter"
@@ -769,8 +769,8 @@ watch(locale, () => {
         :data="killlistData || []"
         :columns="columnsMobile"
         :loading="pending"
-        :empty-state="{ icon: 'i-heroicons-document-text', label: t('killList.noKills') }"
-        :loading-state="{ icon: 'i-heroicons-arrow-path', label: t('killList.loading') }"
+        :empty-state="{ icon: 'i-lucide-file-text', label: t('killList.noKills') }"
+        :loading-state="{ icon: 'i-lucide-refresh-cw', label: t('killList.loading') }"
         :ui="{
           base: 'min-w-full table-fixed bg-transparent text-white',
           thead: 'hidden', // Always hide header on mobile
@@ -786,7 +786,7 @@ watch(locale, () => {
       />
     </div>
 
-    <!-- Desktop Table - Wrapped with event listeners -->
+    <!-- Desktop Table -->
     <div
       v-else
       @mouseenter="handleMouseEnter"
@@ -798,8 +798,8 @@ watch(locale, () => {
         :data="killlistData || []"
         :columns="columnsDesktop"
         :loading="pending"
-        :empty-state="{ icon: 'i-heroicons-document-text', label: t('killList.noKills') }"
-        :loading-state="{ icon: 'i-heroicons-arrow-path', label: t('killList.loading') }"
+        :empty-state="{ icon: 'i-lucide-file-text', label: t('killList.noKills') }"
+        :loading-state="{ icon: 'i-lucide-refresh-cw', label: t('killList.loading') }"
         :ui="{
           base: 'min-w-full table-fixed bg-transparent text-white',
           thead: 'bg-background-800 border-b border-background-700',
