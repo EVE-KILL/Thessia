@@ -233,7 +233,9 @@
         "deleteAccountConfirmTitle": "계정 데이터 삭제",
         "deleteAccountConfirmMessage": "계정 데이터를 삭제하시겠습니까? 이 작업은 취소할 수 없습니다.",
         "confirmDelete": "예, 내 데이터를 삭제합니다",
-        "permanentActionWarning": "이것은 설정 및 환경설정을 포함한 모든 데이터를 시스템에서 영구적으로 제거합니다."
+        "permanentActionWarning": "이것은 설정 및 환경설정을 포함한 모든 데이터를 시스템에서 영구적으로 제거합니다.",
+        "esi": "EVE SSO 인증",
+        "permissionDescription": "이 권한이 허용하는 사항:"
     },
     "permissions": {
         "publicData": "공개 캐릭터 정보 접근",

@@ -233,7 +233,9 @@
         "deleteAccountConfirmTitle": "アカウントデータ削除",
         "deleteAccountConfirmMessage": "アカウントデータを削除してもよろしいですか？この操作は元に戻せません。",
         "confirmDelete": "はい、データを削除します",
-        "permanentActionWarning": "これにより、設定や環境設定を含むすべてのデータがシステムから完全に削除されます。"
+        "permanentActionWarning": "これにより、設定や環境設定を含むすべてのデータがシステムから完全に削除されます。",
+        "esi": "EVE SSO認証",
+        "permissionDescription": "この権限が許可すること："
     },
     "permissions": {
         "publicData": "公開キャラクター情報へのアクセス",

@@ -249,7 +249,9 @@
         "deleteAccountConfirmTitle": "Delete Account Data",
         "deleteAccountConfirmMessage": "Are you sure you want to delete your account data? This action cannot be undone.",
         "confirmDelete": "Yes, Delete My Data",
-        "permanentActionWarning": "This will permanently remove all your data from our system, including settings and preferences."
+        "permanentActionWarning": "This will permanently remove all your data from our system, including settings and preferences.",
+        "esi": "EVE SSO Authentication",
+        "permissionDescription": "What this permission allows:"
     },
     "permissions": {
         "publicData": "Access public character information",

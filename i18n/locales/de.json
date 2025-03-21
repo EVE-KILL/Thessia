@@ -234,7 +234,9 @@
         "deleteAccountConfirmTitle": "Kontodaten löschen",
         "deleteAccountConfirmMessage": "Sind Sie sicher, dass Sie Ihre Kontodaten löschen möchten? Diese Aktion kann nicht rückgängig gemacht werden.",
         "confirmDelete": "Ja, meine Daten löschen",
-        "permanentActionWarning": "Dies entfernt alle Ihre Daten dauerhaft aus unserem System, einschließlich Einstellungen und Präferenzen."
+        "permanentActionWarning": "Dies entfernt alle Ihre Daten dauerhaft aus unserem System, einschließlich Einstellungen und Präferenzen.",
+        "esi": "EVE SSO Authentifizierung",
+        "permissionDescription": "Was diese Berechtigung erlaubt:"
     },
     "permissions": {
         "publicData": "Zugriff auf öffentliche Charakterinformationen",

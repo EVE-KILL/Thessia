@@ -6,7 +6,7 @@ definePageMeta({
 });
 
 // Add active tab tracking
-const activeTab = ref('profile');
+const activeTab = ref('esi');
 
 const auth = useAuth();
 const { t } = useI18n();
@@ -28,17 +28,6 @@ const formattedExpirationDate = computed(() => {
     }).format(date) + ' UTC';
 });
 
-// Calculate if token will expire soon (within 48 hours)
-const tokenExpiresSoon = computed(() => {
-    if (!profileData.value?.user?.dateExpiration) return false;
-
-    const expirationDate = new Date(profileData.value.user.dateExpiration);
-    const now = new Date();
-    const hoursDiff = (expirationDate.getTime() - now.getTime()) / (1000 * 60 * 60);
-
-    return hoursDiff < 48;
-});
-
 // Handle logout
 const handleLogout = async () => {
     await auth.logout();
@@ -57,23 +46,9 @@ const getPermissionDescription = (scope: string) => {
     return permissionDescriptions[scope] || scope;
 };
 
-// Handle refresh token
-const handleRefreshToken = async () => {
-    try {
-        const { data, error } = await useFetch('/api/auth/refresh', {
-            method: 'POST'
-        });
-
-        if (error.value) {
-            throw new Error(error.value.message);
-        }
-
-        // Refresh auth state and profile data
-        await auth.checkAuth();
-        await refresh();
-    } catch (err) {
-        console.debug('Error refreshing token:', err);
-    }
+// Split permission into parts for better display
+const splitPermission = (permission: string) => {
+    return permission.split('.');
 };
 
 // Handle re-authentication
@@ -92,7 +67,7 @@ const handleDeleteAccount = async () => {
         isDeletingAccount.value = true;
         deleteError.value = '';
 
-        const { data, error } = await useFetch('/api/user/delete', {
+        const { data, error } = await useFetch('/api/auth/logout', {
             method: 'POST'
         });
 
@@ -101,16 +76,14 @@ const handleDeleteAccount = async () => {
             return;
         }
 
-        if (data.value?.success) {
-            // Reset auth state
-            await auth.logout();
+        // Reset auth state
+        await auth.logout();
 
-            // Close modal first
-            isDeleteModalOpen.value = false;
+        // Close modal first
+        isDeleteModalOpen.value = false;
 
-            // Redirect to home page with success message
-            router.push('/?deleted=true');
-        }
+        // Redirect to home page with success message
+        router.push('/?deleted=true');
     } catch (err) {
         console.debug('Error deleting account:', err);
         deleteError.value = t('settings.deleteError', 'Failed to delete account data');
@@ -134,6 +107,26 @@ onUnmounted(() => {
 // Check if we're on mobile
 const checkIfMobile = () => {
     isMobile.value = window.innerWidth < 768;
+};
+
+// Define all possible permission scopes
+const allPermissionScopes = [
+    'publicData',
+    'esi-killmails.read_killmails.v1',
+    'esi-killmails.read_corporation_killmails.v1'
+];
+
+// Check if user has a particular scope
+const hasScope = (scope: string) => {
+    if (!profileData.value?.user?.scopes) return false;
+
+    // The scopes might be an array with a single string containing space-separated scopes
+    // or it might be a single string directly
+    const scopesArray = profileData.value.user.scopes;
+    const scopesString = Array.isArray(scopesArray) ? scopesArray[0] : String(scopesArray);
+
+    // Check if the scope is in the space-separated string
+    return scopesString.includes(scope);
 };
 </script>
 
@@ -222,7 +215,7 @@ const checkIfMobile = () => {
                     <!-- Delete Account Modal -->
                     <UModal v-model="isDeleteModalOpen">
                         <!-- Delete button that triggers modal -->
-                        <UButton color="warning" variant="soft" size="sm" icon="lucide:trash-2">
+                        <UButton color="warning" variant="soft" size="sm" icon="lucide:trash-2" @click="isDeleteModalOpen = true">
                             {{ $t('settings.deleteData') }}
                         </UButton>
 
@@ -270,151 +263,95 @@ const checkIfMobile = () => {
             </template>
         </UAlert>
 
-        <!-- Settings Tabs -->
+        <!-- Settings Tabs - Combined into single ESI tab -->
         <UTabs v-else-if="profileData && profileData.authenticated" :items="[
-            { label: isMobile ? '' : $t('user.profile'), icon: 'lucide:user', slot: 'profile', defaultSelected: true },
-            { label: isMobile ? '' : $t('user.permissions'), icon: 'lucide:shield', slot: 'permissions' },
-            { label: isMobile ? '' : $t('settings.dataPrivacy'), icon: 'lucide:lock', slot: 'privacy' },
+            { label: isMobile ? '' : $t('settings.esi', 'EVE SSO Authentication'), icon: 'lucide:shield', slot: 'esi', defaultSelected: true },
         ]" class="mb-6">
-            <!-- Account Tab -->
-            <template #profile>
-                <UCard>
-                    <template #header>
-                        <div class="flex items-center">
-                            <UIcon name="lucide:user" class="mr-2" />
-                            <h2 class="text-xl font-semibold">{{ $t('settings.accountSettings') }}</h2>
-                        </div>
-                    </template>
-
-                    <!-- Authentication Status Panel -->
-                    <div class="space-y-4">
-                        <!-- Status badges -->
-                        <div class="flex items-center justify-between">
-                            <div class="font-medium">{{ $t('settings.authenticationStatus') }}</div>
-                            <div>
-                                <UBadge v-if="!tokenExpiresSoon" color="green" variant="subtle" class="ml-2">
-                                    <template #leading>
-                                        <UIcon name="lucide:shield-check" class="mr-1" />
-                                    </template>
-                                    {{ $t('settings.authenticated') }}
-                                </UBadge>
-                                <UBadge v-else color="amber" variant="subtle" class="ml-2">
-                                    <template #leading>
-                                        <UIcon name="lucide:clock" class="mr-1" />
-                                    </template>
-                                    {{ $t('settings.expiringToken') }}
-                                </UBadge>
-                            </div>
-                        </div>
-
-                        <!-- Expiration information -->
-                        <div class="p-3 bg-gray-50 dark:bg-gray-800 rounded-md">
-                            <div class="flex items-center justify-between">
-                                <div class="text-sm font-medium">{{ $t('user.tokenExpires') }}</div>
-                                <div class="text-sm font-mono">{{ formattedExpirationDate }}</div>
-                            </div>
-                        </div>
-
-                        <!-- Token management buttons -->
-                        <div class="flex flex-wrap gap-2 mt-4">
-                            <UTooltip text="Silently refresh your authentication token">
-                                <UButton color="primary" size="sm" icon="lucide:refresh-cw" @click="handleRefreshToken">
-                                    {{ $t('settings.refreshToken') }}
-                                </UButton>
-                            </UTooltip>
-
-                            <UTooltip text="Re-authenticate through EVE SSO">
-                                <UButton color="gray" size="sm" icon="lucide:log-in" @click="handleReauthenticate">
-                                    {{ $t('settings.reauthenticate') }}
-                                </UButton>
-                            </UTooltip>
-                        </div>
-                    </div>
-                </UCard>
-            </template>
-
-            <!-- Permissions Tab -->
-            <template #permissions>
+            <!-- ESI Tab (Combined Profile and Permissions) -->
+            <template #esi>
                 <UCard>
                     <template #header>
                         <div class="flex items-center">
                             <UIcon name="lucide:shield" class="mr-2" />
-                            <h3 class="font-semibold text-lg">{{ $t('settings.permissions') }}</h3>
+                            <h3 class="font-semibold text-lg">{{ $t('settings.esi', 'EVE SSO Authentication') }}</h3>
                         </div>
                     </template>
 
-                    <div class="space-y-4">
-                        <p class="text-sm text-gray-600 dark:text-gray-400">
-                            {{ $t('settings.permissionsDescription') }}
-                        </p>
+                    <div class="space-y-6">
+                        <!-- Authentication Status Panel -->
+                        <div class="space-y-4">
+                            <!-- Status badges -->
+                            <div class="flex items-center justify-between">
+                                <div class="font-medium">{{ $t('settings.authenticationStatus') }}</div>
+                                <div>
+                                    <UBadge color="green" variant="subtle" class="ml-2">
+                                        <template #leading>
+                                            <UIcon name="lucide:shield-check" class="mr-1" />
+                                        </template>
+                                        {{ $t('settings.authenticated') }}
+                                    </UBadge>
+                                </div>
+                            </div>
 
-                        <!-- Permission list with description -->
-                        <div class="space-y-2">
-                            <div v-for="(scope, index) in profileData.user.scopes" :key="index"
-                                class="p-3 bg-gray-50 dark:bg-gray-800 rounded-md">
-                                <div class="flex items-start">
-                                    <UIcon name="lucide:check"
-                                        class="h-5 w-5 text-green-500 dark:text-green-400 mt-0.5 mr-2 flex-shrink-0" />
-                                    <div>
-                                        <div class="font-medium text-sm text-primary-600 dark:text-primary-400">
-                                            {{ scope }}
-                                        </div>
-                                        <div class="text-sm text-gray-600 dark:text-gray-300 mt-0.5">
-                                            {{ getPermissionDescription(scope) }}
+                            <!-- Expiration information -->
+                            <div class="p-3 bg-gray-50 dark:bg-gray-800 rounded-md">
+                                <div class="flex items-center justify-between">
+                                    <div class="text-sm font-medium">{{ $t('user.tokenExpires') }}</div>
+                                    <div class="text-sm font-mono">{{ formattedExpirationDate }}</div>
+                                </div>
+                            </div>
+
+                            <!-- Token management buttons - Remove refresh token, keep only reauthenticate -->
+                            <div class="flex flex-wrap gap-2 mt-4">
+                                <UTooltip text="Re-authenticate through EVE SSO">
+                                    <UButton color="primary" size="sm" icon="lucide:log-in" @click="handleReauthenticate">
+                                        {{ $t('settings.reauthenticate') }}
+                                    </UButton>
+                                </UTooltip>
+                            </div>
+                        </div>
+
+                        <!-- Permissions Section -->
+                        <div class="mt-8 pt-6 border-t border-gray-200 dark:border-gray-700">
+                            <h4 class="font-semibold text-lg mb-4">{{ $t('user.permissions') }}</h4>
+
+                            <p class="text-sm text-gray-600 dark:text-gray-400 mb-4">
+                                {{ $t('settings.permissionsDescription') }}
+                            </p>
+
+                            <!-- Improved Permission list with permission status -->
+                            <div class="grid grid-cols-1 gap-4">
+                                <div v-for="(scope, index) in allPermissionScopes" :key="index"
+                                    class="p-4 bg-gray-50 dark:bg-gray-800 rounded-md">
+
+                                    <div class="flex items-start">
+                                        <!-- Show checkmark or X based on if the user has the permission -->
+                                        <UIcon v-if="hasScope(scope)" name="lucide:check"
+                                            class="h-5 w-5 text-green-500 dark:text-green-400 mt-0.5 mr-2 flex-shrink-0" />
+                                        <UIcon v-else name="lucide:x"
+                                            class="h-5 w-5 text-red-500 dark:text-red-400 mt-0.5 mr-2 flex-shrink-0" />
+
+                                        <div class="w-full">
+                                            <!-- Display the permission name -->
+                                            <div class="font-medium text-sm mb-1"
+                                                 :class="hasScope(scope) ? 'text-primary-600 dark:text-primary-400' : 'text-gray-500 dark:text-gray-400'">
+                                                <code class="bg-gray-100 dark:bg-gray-700 px-1.5 py-0.5 rounded text-sm">
+                                                    {{ scope }}
+                                                </code>
+                                            </div>
+
+                                            <!-- Permission description -->
+                                            <div class="mt-2 text-sm text-gray-600 dark:text-gray-300 pl-2 border-l-2 border-gray-200 dark:border-gray-700">
+                                                {{ getPermissionDescription(scope) }}
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
                             </div>
+
+                            <UAlert color="blue" variant="soft" icon="lucide:info" class="mt-4"
+                                :title="$t('settings.permissionsNote')" />
                         </div>
-
-                        <UAlert color="blue" variant="soft" icon="lucide:info"
-                            :title="$t('settings.permissionsNote')" />
-                    </div>
-                </UCard>
-            </template>
-
-            <!-- Data Privacy Tab - Modified to remove duplicate delete button -->
-            <template #privacy>
-                <UCard>
-                    <template #header>
-                        <div class="flex items-center">
-                            <UIcon name="lucide:lock" class="mr-2" />
-                            <h3 class="font-semibold text-lg">{{ $t('settings.dataPrivacy') }}</h3>
-                        </div>
-                    </template>
-
-                    <div class="space-y-4">
-                        <p class="text-sm text-gray-600 dark:text-gray-400">
-                            {{ $t('settings.dataPrivacyDescription') }}
-                        </p>
-
-                        <!-- Data privacy details -->
-                        <div class="grid grid-cols-1 gap-3">
-                            <div class="p-3 bg-gray-50 dark:bg-gray-800 rounded-md flex items-start">
-                                <UIcon name="lucide:database"
-                                    class="h-5 w-5 text-blue-500 dark:text-blue-400 mt-0.5 mr-2 flex-shrink-0" />
-                                <span class="text-sm">{{ $t('settings.storesCharacterData') }}</span>
-                            </div>
-
-                            <div class="p-3 bg-gray-50 dark:bg-gray-800 rounded-md flex items-start">
-                                <UIcon name="lucide:shield"
-                                    class="h-5 w-5 text-blue-500 dark:text-blue-400 mt-0.5 mr-2 flex-shrink-0" />
-                                <span class="text-sm">{{ $t('settings.tokensEncrypted') }}</span>
-                            </div>
-
-                            <div class="p-3 bg-gray-50 dark:bg-gray-800 rounded-md flex items-start">
-                                <UIcon name="lucide:key"
-                                    class="h-5 w-5 text-blue-500 dark:text-blue-400 mt-0.5 mr-2 flex-shrink-0" />
-                                <span class="text-sm">{{ $t('settings.removeDataByRevoking') }}</span>
-                            </div>
-                        </div>
-
-                        <!-- Information about data deletion - keep this but remove the button -->
-                        <UAlert color="gray" icon="lucide:info" :description="$t('settings.permanentActionWarning')" />
-
-                        <p class="text-sm text-gray-600 dark:text-gray-400">
-                            {{ $t('settings.deleteAccountConfirmMessage') }}
-                        </p>
                     </div>
                 </UCard>
             </template>

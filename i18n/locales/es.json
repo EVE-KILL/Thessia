@@ -233,7 +233,9 @@
         "deleteAccountConfirmTitle": "Eliminar datos de la cuenta",
         "deleteAccountConfirmMessage": "¿Estás seguro de que deseas eliminar los datos de tu cuenta? Esta acción no se puede deshacer.",
         "confirmDelete": "Sí, eliminar mis datos",
-        "permanentActionWarning": "Esto eliminará permanentemente todos tus datos de nuestro sistema, incluida la configuración y las preferencias."
+        "permanentActionWarning": "Esto eliminará permanentemente todos tus datos de nuestro sistema, incluida la configuración y las preferencias.",
+        "esi": "Autenticación EVE SSO",
+        "permissionDescription": "Lo que permite este permiso:"
     },
     "permissions": {
         "publicData": "Acceder a información pública del personaje",
