@@ -121,6 +121,7 @@
         "lastUpdated": "Última actualización: {time}",
         "autoRefreshing": "Actualizando automáticamente cada {seconds} segundos",
         "timePeriod": "Seleccionar Período de Tiempo",
+        "selectTimePeriod": "Período de Tiempo",
         "processedItems": "Elementos Procesados ({period})",
         "uptime": {
             "title": "Tiempo de Actividad del Sistema",
@@ -236,7 +237,10 @@
         "goHome": "Ir al inicio",
         "cancel": "Cancelar",
         "save": "Guardar",
-        "selectLanguage": "Seleccionar idioma"
+        "selectLanguage": "Seleccionar idioma",
+        "page": "Página",
+        "previous": "Anterior",
+        "next": "Siguiente"
     },
     "settings": {
         "description": "Gestiona la configuración y permisos de tu cuenta",

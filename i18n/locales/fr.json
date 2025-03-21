@@ -121,6 +121,7 @@
         "lastUpdated": "Dernière mise à jour : {time}",
         "autoRefreshing": "Actualisation automatique toutes les {seconds} secondes",
         "timePeriod": "Sélectionner la Période",
+        "selectTimePeriod": "Période",
         "processedItems": "Éléments Traités ({period})",
         "uptime": {
             "title": "Temps de Fonctionnement",
@@ -236,7 +237,10 @@
         "goHome": "Accueil",
         "cancel": "Annuler",
         "save": "Enregistrer",
-        "selectLanguage": "Sélectionner la langue"
+        "selectLanguage": "Sélectionner la langue",
+        "page": "Page",
+        "previous": "Précédent",
+        "next": "Suivant"
     },
     "settings": {
         "description": "Gérez les paramètres de votre compte et vos autorisations",

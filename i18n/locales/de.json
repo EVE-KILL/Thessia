@@ -121,6 +121,7 @@
         "lastUpdated": "Zuletzt aktualisiert: {time}",
         "autoRefreshing": "Automatische Aktualisierung alle {seconds} Sekunden",
         "timePeriod": "Zeitraum auswählen",
+        "selectTimePeriod": "Zeitraum",
         "processedItems": "Verarbeitete Elemente ({period})",
         "uptime": {
             "title": "Systemlaufzeit",
@@ -236,7 +237,10 @@
         "goHome": "Zur Startseite",
         "cancel": "Abbrechen",
         "save": "Speichern",
-        "selectLanguage": "Sprache auswählen"
+        "selectLanguage": "Sprache auswählen",
+        "page": "Seite",
+        "previous": "Vorherige",
+        "next": "Nächste"
     },
     "settings": {
         "description": "Verwalten Sie Ihre Kontoeinstellungen und Berechtigungen",

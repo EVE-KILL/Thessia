@@ -121,6 +121,7 @@
         "lastUpdated": "Последнее обновление: {time}",
         "autoRefreshing": "Автоматическое обновление каждые {seconds} секунд",
         "timePeriod": "Выбрать период времени",
+        "selectTimePeriod": "Период времени",
         "processedItems": "Обработанные элементы ({period})",
         "uptime": {
             "title": "Время работы системы",
@@ -236,7 +237,10 @@
         "goHome": "На главную",
         "cancel": "Отмена",
         "save": "Сохранить",
-        "selectLanguage": "Выбрать язык"
+        "selectLanguage": "Выбрать язык",
+        "page": "Страница",
+        "previous": "Предыдущая",
+        "next": "Следующая"
     },
     "settings": {
         "description": "Управление настройками аккаунта и разрешениями",

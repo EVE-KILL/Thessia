@@ -121,6 +121,7 @@
         "lastUpdated": "最終更新：{time}",
         "autoRefreshing": "{seconds}秒ごとに自動更新中",
         "timePeriod": "期間を選択",
+        "selectTimePeriod": "期間",
         "processedItems": "処理アイテム（{period}）",
         "uptime": {
             "title": "システム稼働時間",
@@ -236,7 +237,10 @@
         "goHome": "ホームへ",
         "cancel": "キャンセル",
         "save": "保存",
-        "selectLanguage": "言語を選択"
+        "selectLanguage": "言語を選択",
+        "page": "ページ",
+        "previous": "前へ",
+        "next": "次へ"
     },
     "settings": {
         "description": "アカウント設定と権限を管理",

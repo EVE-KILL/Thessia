@@ -121,6 +121,7 @@
         "lastUpdated": "最后更新：{time}",
         "autoRefreshing": "每{seconds}秒自动刷新",
         "timePeriod": "选择时间段",
+        "selectTimePeriod": "时间段",
         "processedItems": "已处理项目（{period}）",
         "uptime": {
             "title": "系统运行时间",
@@ -236,7 +237,10 @@
         "goHome": "返回首页",
         "cancel": "取消",
         "save": "保存",
-        "selectLanguage": "选择语言"
+        "selectLanguage": "选择语言",
+        "page": "页面",
+        "previous": "上一页",
+        "next": "下一页"
     },
     "settings": {
         "description": "管理您的账户设置和权限",

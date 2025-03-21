@@ -246,14 +246,11 @@ const handleKillClick = (row: any) => {
   navigateTo(`/kill/${row.original.killmail_id}`);
 };
 
-// Responsive design - enhanced with server-side detection
+// Responsive design - clean implementation with device module
 const device = useDevice();
-
-// Initialize with server-side device detection for proper SSR
 const isMobile = ref(device.isMobile);
-console.debug('Initial device detection (server-side):', device.isMobile);
 
-// Then enhance with client-side detection for dynamic updates
+// Client-side detection for dynamic updates
 onMounted(() => {
   if (process.client) {
     // Create media query listener for client-side updates
@@ -262,7 +259,6 @@ onMounted(() => {
     // Update isMobile when media query changes
     const handleMediaQueryChange = (e) => {
       isMobile.value = e.matches;
-      console.debug('Media query changed:', e.matches);
     };
 
     // Add listener based on browser support
@@ -274,9 +270,7 @@ onMounted(() => {
     }
 
     // Ensure client-side detection matches the current viewport
-    // This handles cases where the server detection might be incorrect
     isMobile.value = mediaQuery.matches;
-    console.debug('Client-side detection update:', mediaQuery.matches);
 
     // Clean up
     onBeforeUnmount(() => {
@@ -519,7 +513,7 @@ watch(locale, () => {
             'w-3 h-3 rounded-full mr-2',
             isConnected ? 'bg-green-500' : 'bg-red-500'
           ]"
-          :title="isConnected ? $t('killList.wsConnected') : $t('killList.wsDisconnected')"
+          :title="isConnected ? t('killList.wsConnected') : t('killList.wsDisconnected')"
         ></div>
 
         <span
@@ -566,8 +560,8 @@ watch(locale, () => {
       :data="killlistData || []"
       :columns="columnsMobile"
       :loading="pending"
-      :empty-state="{ icon: 'i-heroicons-document-text', label: $t('killList.noKills') }"
-      :loading-state="{ icon: 'i-heroicons-arrow-path', label: $t('killList.loading') }"
+      :empty-state="{ icon: 'i-heroicons-document-text', label: t('killList.noKills') }"
+      :loading-state="{ icon: 'i-heroicons-arrow-path', label: t('killList.loading') }"
       :ui="{
         base: 'min-w-full table-fixed bg-transparent text-white',
         thead: 'hidden', // Always hide header on mobile
@@ -589,8 +583,8 @@ watch(locale, () => {
       :data="killlistData || []"
       :columns="columnsDesktop"
       :loading="pending"
-      :empty-state="{ icon: 'i-heroicons-document-text', label: $t('killList.noKills') }"
-      :loading-state="{ icon: 'i-heroicons-arrow-path', label: $t('killList.loading') }"
+      :empty-state="{ icon: 'i-heroicons-document-text', label: t('killList.noKills') }"
+      :loading-state="{ icon: 'i-heroicons-arrow-path', label: t('killList.loading') }"
       :ui="{
         base: 'min-w-full table-fixed bg-transparent text-white',
         thead: 'bg-background-800 border-b border-background-700',
