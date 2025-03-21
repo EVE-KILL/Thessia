@@ -6,7 +6,8 @@
 
         <div class="main-content">
             <div class="left-column">
-                <div class="mt-24"/>
+                <!-- Add padding to match KillList controls height - approximately 122px -->
+                <div class="mt-25"></div>
                 <TopBox
                     type="character"
                     :limit="10"

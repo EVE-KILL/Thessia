@@ -863,10 +863,6 @@ watch(locale, () => {
   border-top: 1px solid rgb(40, 40, 40) !important;
 }
 
-:deep(thead tr) {
-  border-bottom: 1px solid rgb(40, 40, 40) !important;
-}
-
 /* Desktop column sizes */
 @media (min-width: 768px) {
   :deep(th:nth-child(1)), :deep(td:nth-child(1)) { width: 20%; }
