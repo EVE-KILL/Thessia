@@ -8,6 +8,10 @@ export class RedisStorage {
   // Redis client instance
   public client: Redis;
 
+  // Private properties for pub/sub functionality
+  private subscribeClient: Redis | null = null;
+  private channelCallbacks: Map<string, Array<(message: string, channel: string) => void>> = new Map();
+
   // Private constructor to prevent direct instantiation
   public constructor() {
     this.client = new Redis({
@@ -50,8 +54,86 @@ export class RedisStorage {
     await this.client.del(key);
   }
 
+  // Redis Pub/Sub operations
+  /**
+   * Publish a message to a Redis channel
+   * @param channel The channel to publish to
+   * @param message The message to publish (will be stringified)
+   */
+  async publish(channel: string, message: any): Promise<number> {
+    const messageString = typeof message === 'string' ? message : JSON.stringify(message);
+    return await this.client.publish(channel, messageString);
+  }
+
+  /**
+   * Subscribe to a Redis channel
+   * @param channel The channel to subscribe to
+   * @param callback The callback to execute when a message is received
+   */
+  async subscribe(channel: string, callback: (message: string, channel: string) => void): Promise<void> {
+    // Create a duplicate client for subscriptions if one doesn't exist yet
+    if (!this.subscribeClient) {
+      this.subscribeClient = new Redis({
+        host: process.env.REDIS_URI ? process.env.REDIS_URI : "192.168.10.10",
+        port: process.env.REDIS_PORT ? Number.parseInt(process.env.REDIS_PORT) : 6379,
+        db: process.env.REDIS_DB ? Number.parseInt(process.env.REDIS_DB) : 0,
+      });
+
+      // Set up the message handler
+      this.subscribeClient.on('message', (channel, message) => {
+        // Find and execute the callback for this channel
+        const channelCallbacks = this.channelCallbacks.get(channel) || [];
+        for (const callback of channelCallbacks) {
+          callback(message, channel);
+        }
+      });
+    }
+
+    // Store the callback
+    const callbacks = this.channelCallbacks.get(channel) || [];
+    callbacks.push(callback);
+    this.channelCallbacks.set(channel, callbacks);
+
+    // Subscribe to the channel
+    await this.subscribeClient.subscribe(channel);
+  }
+
+  /**
+   * Unsubscribe from a Redis channel
+   * @param channel The channel to unsubscribe from
+   * @param callback Optional specific callback to remove
+   */
+  async unsubscribe(channel: string, callback?: (message: string, channel: string) => void): Promise<void> {
+    if (!this.subscribeClient) return;
+
+    if (callback) {
+      // Remove specific callback
+      const callbacks = this.channelCallbacks.get(channel) || [];
+      const updatedCallbacks = callbacks.filter(cb => cb !== callback);
+
+      if (updatedCallbacks.length === 0) {
+        // No more callbacks, unsubscribe from channel
+        await this.subscribeClient.unsubscribe(channel);
+        this.channelCallbacks.delete(channel);
+      } else {
+        this.channelCallbacks.set(channel, updatedCallbacks);
+      }
+    } else {
+      // Remove all callbacks for this channel
+      await this.subscribeClient.unsubscribe(channel);
+      this.channelCallbacks.delete(channel);
+    }
+  }
+
   // Optional: Gracefully disconnect the Redis client
   async disconnect(): Promise<void> {
+    if (this.subscribeClient) {
+      await this.subscribeClient.quit();
+      this.subscribeClient = null;
+    }
     await this.client.quit();
   }
 }
+
+// Define a constant for the killmail channel
+export const KILLMAIL_PUBSUB_CHANNEL = 'killmail-broadcasts';

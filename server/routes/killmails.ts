@@ -1,4 +1,4 @@
-import { addClient, removeClient } from "../helpers/WSClientManager";
+import { addClient, removeClient, initializeKillmailSubscription } from "../helpers/WSClientManager";
 
 const validTopics = [
   "all",
@@ -28,6 +28,9 @@ const validTopics = [
 ];
 
 const partialTopics = ["victim.", "attacker.", "system.", "region."];
+
+// Initialize the Redis subscription when this module loads
+initializeKillmailSubscription();
 
 export default defineWebSocketHandler({
   open(peer) {
