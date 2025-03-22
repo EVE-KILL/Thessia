@@ -136,8 +136,7 @@
             "overview": "개요",
             "processing": "처리",
             "database": "데이터베이스",
-            "cache": "캐시",
-            "redis": "Redis"
+            "cache": "캐시"
         },
         "uptime": {
             "title": "시스템 가동 시간",
@@ -192,30 +191,6 @@
             "24hours": "24시간",
             "1week": "1 주",
             "1month": "1개월"
-        },
-        "redis": {
-            "server": "Redis 서버",
-            "version": "버전",
-            "mode": "모드",
-            "os": "운영 체제",
-            "uptime": "가동 시간",
-            "uptimeFormat": "{days}D {hours}H {minutes}M {seconds}S",
-            "memory": "메모리",
-            "usedMemory": "사용한 메모리",
-            "usedMemoryPeak": "최대 메모리 사용량",
-            "memFragmentationRatio": "메모리 조각화 비율",
-            "stats": "통계",
-            "connectedClients": "연결된 클라이언트",
-            "totalConnections": "총 연결 수",
-            "totalCommands": "총 명령어",
-            "keyspaceHits": "키스페이스 조회수",
-            "keyspaceMisses": "키 스페이스 누락",
-            "hitRatio": "적중률",
-            "keyspace": "키 스페이스",
-            "database": "데이터베이스",
-            "keys": "키",
-            "expires": "만료",
-            "avgTtl": "평균 TTL"
         }
     },
     "auth": {
