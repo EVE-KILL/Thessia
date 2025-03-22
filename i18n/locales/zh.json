@@ -136,7 +136,8 @@
             "overview": "概述",
             "processing": "加工",
             "database": "数据库",
-            "cache": "缓存"
+            "cache": "缓存",
+            "redis": "Redis"
         },
         "uptime": {
             "title": "系统正常运行时间",
@@ -191,6 +192,30 @@
             "24hours": "24 小时",
             "1week": "1 周",
             "1month": "1 个月"
+        },
+        "redis": {
+            "server": "Redis 服务器",
+            "version": "版本",
+            "mode": "模式",
+            "os": "操作系统",
+            "uptime": "正常运行时间",
+            "uptimeFormat": "{days}D{hours}H{minutes}M{seconds}S",
+            "memory": "内存",
+            "usedMemory": "使用过的内存",
+            "usedMemoryPeak": "内存使用峰值",
+            "memFragmentationRatio": "内存碎片率",
+            "stats": "统计资料",
+            "connectedClients": "连接客户",
+            "totalConnections": "连接总数",
+            "totalCommands": "命令总数",
+            "keyspaceHits": "关键空间点击",
+            "keyspaceMisses": "关键空间失误",
+            "hitRatio": "命中率",
+            "keyspace": "钥匙空间",
+            "database": "数据库",
+            "keys": "钥匙",
+            "expires": "到期",
+            "avgTtl": "平均 TTL"
         }
     },
     "auth": {
