@@ -38,7 +38,7 @@ This project uses:
 
 - Use `t('key')` in composables with `useI18n()` hook
 - Organize translations by feature area
-- Include all user-facing strings in translation files
+- Include all user-facing strings in english translation, located at `i18n/locales/en.json`
 - Support locale fallbacks
 
 ## Icons
@@ -52,7 +52,6 @@ This project uses:
 - Use `useFetch` or `useAsyncData` for API calls.
 - Handle errors with try-catch blocks.
 - Use `console.debug` for logging.
-- Avoid exposing sensitive data.
 - Implement proper TypeScript typing for all functions and variables.
 - Follow the single responsibility principle.
 - Utilize existing composables and utilities before creating new ones.
@@ -60,6 +59,3 @@ This project uses:
 - Include appropriate error handling for async operations.
 - Consider performance implications, especially with MongoDB queries.
 - Use proper index definitions when querying MongoDB.
-- Implement proper caching strategies when appropriate.
-- Ensure queue jobs are idempotent when possible.
-- Follow RESTful principles for API endpoints.
