@@ -123,6 +123,21 @@
         "timePeriod": "Sélectionner la Période",
         "selectTimePeriod": "Période",
         "processedItems": "Éléments Traités ({period})",
+        "simplified": "Simplifié",
+        "detailed": "Détaillé",
+        "detailedStats": "Statistiques Détaillées",
+        "systemInfo": "Informations Système",
+        "summary": {
+            "uptime": "Temps de Fonctionnement",
+            "processedLast5m": "Traités (5 dernières min)",
+            "queuedItems": "Éléments en File d'Attente"
+        },
+        "tabs": {
+            "overview": "Aperçu",
+            "processing": "Traitement",
+            "database": "Base de Données",
+            "cache": "Cache"
+        },
         "uptime": {
             "title": "Temps de Fonctionnement",
             "format": "{days}j {hours}h {minutes}m {seconds}s",
@@ -176,23 +191,6 @@
             "24hours": "24 Heures",
             "1week": "1 Semaine",
             "1month": "1 Mois"
-        },
-        "simplified": "Simplifié",
-        "detailed": "Détaillé",
-        "detailedStats": "Statistiques Détaillées",
-        "systemInfo": "Informations Système",
-        "summary": {
-            "uptime": "Temps de Fonctionnement",
-            "processedLast5m": "Traités (5 dernières min)",
-            "queuedItems": "Éléments en File d'Attente"
-        },
-        "tabs": {
-            "overview": "Aperçu",
-            "processing": "Traitement",
-            "database": "Base de Données",
-            "cache": "Cache",
-            "topLists": "Classements",
-            "kills": "Éliminations"
         }
     },
     "auth": {
@@ -204,18 +202,18 @@
         "ssoRequiredForLogin": "EVE SSO est requis pour la connexion",
         "alreadySignedIn": "Vous êtes déjà connecté",
         "signedInAs": "Connecté en tant que {name}",
-        "privacyNote": "En utilisant notre service, vous nous autorisez à accéder aux données de votre personnage EVE Online conformément aux autorisations demandées.",
-        "error": {
-            "general": "Échec de l'authentification. Veuillez réessayer.",
-            "tokenExpired": "Votre session a expiré. Veuillez vous reconnecter.",
-            "missingScope": "Autorisation requise manquante : {scope}"
-        },
         "customizeScopes": "Personnaliser les Autorisations",
         "loginTitle": "Connexion avec EVE Online",
         "quickLoginInfo": "Connexion avec les autorisations recommandées",
         "customizeScopesInfo": "Personnalisez les informations auxquelles EVE Kill peut accéder :",
         "loginWithSelectedScopes": "Se connecter avec les Autorisations Sélectionnées",
-        "required": "Requis"
+        "required": "Requis",
+        "privacyNote": "En utilisant notre service, vous nous autorisez à accéder aux données de votre personnage EVE Online conformément aux autorisations demandées.",
+        "error": {
+            "general": "Échec de l'authentification. Veuillez réessayer.",
+            "tokenExpired": "Votre session a expiré. Veuillez vous reconnecter.",
+            "missingScope": "Autorisation requise manquante : {scope}"
+        }
     },
     "user": {
         "pageTitle": "Compte Utilisateur",
@@ -257,6 +255,8 @@
         "expiringToken": "Jeton expirant bientôt",
         "refreshToken": "Actualiser le jeton",
         "reauthenticate": "Se réauthentifier",
+        "defaultScopes": "Portée par défaut",
+        "customizeScopes": "Personnaliser les champs d'application",
         "storesCharacterData": "Nous stockons vos informations de personnage, y compris l'ID, le nom et les autorisations accordées.",
         "tokensEncrypted": "Vos jetons d'authentification sont chiffrés et stockés en toute sécurité.",
         "removeDataByRevoking": "Vous pouvez révoquer l'accès à tout moment via le site Web d'EVE Online.",
@@ -359,6 +359,14 @@
         "wsConnected": "WebSocket Connecté",
         "wsDisconnected": "WebSocket Déconnecté",
         "showing": "Affichage"
+    },
+    "topBox": {
+        "killsOver": "Derniers {days} jours"
+    },
+    "tabs": {
+        "topLists": "Top Lists",
+        "kills": "Tue",
+        "overview": "Vue d'ensemble"
     },
     "top": {
         "characters": "Meilleurs Personnages",
