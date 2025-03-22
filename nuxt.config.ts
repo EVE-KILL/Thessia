@@ -1,5 +1,4 @@
-import { readFileSync, cpSync } from "node:fs";
-import path from 'node:path';
+import { readFileSync } from "node:fs";
 import yaml from "yaml";
 
 // Load apiCacheTimes.yaml
@@ -8,7 +7,7 @@ const apiCacheTimes = readFileSync("./apiCacheTimes.yaml", "utf8");
 // https://nuxt.com/docs/api/configuration/nuxt-config
 export default defineNuxtConfig({
     site: {
-        url: 'https://demo.eve-kill.net'
+        url: 'https://eve-kill.net'
     },
     sourcemap: true,
     logLevel: process.env.NODE_ENV !== 'production' ? 'info' : 'silent',
