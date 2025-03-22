@@ -35,6 +35,7 @@
     "nuxt": "^3.16.1",
     "nuxt-security": "2.2.0",
     "server-health": "^6.0.2",
+    "sharp": "^0.33.5",
     "sqlite": "^5.1.1",
     "sqlite3": "^5.1.7",
     "stream-json": "^1.9.1",
