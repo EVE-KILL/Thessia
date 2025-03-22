@@ -372,9 +372,9 @@
         "characters": "Personajes principales",
         "corporations": "Principales empresas",
         "alliances": "Alianzas principales",
-        "ships": "Naves Top",
-        "systems": "Sistemas Top",
-        "constellations": "Constelaciones Top",
-        "regions": "Regiones Top"
+        "ships": "Top Barcos",
+        "systems": "Sistemas superiores",
+        "constellations": "Top Constelaciones",
+        "regions": "Regiones principales"
     }
 }
