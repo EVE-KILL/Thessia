@@ -12,7 +12,7 @@
         "@sentry/bun": "^9.8.0",
         "@sentry/nuxt": "^9.8.0",
         "amqplib": "^0.10.5",
-        "bullmq": "^5.44.2",
+        "bullmq": "^5.44.3",
         "commander": "^13.1.0",
         "cron-parser": "^5.0.6",
         "csv-parser": "^3.2.0",

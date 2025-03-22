@@ -17,7 +17,7 @@ const props = defineProps({
   wsFilter: { type: String, default: 'all' },
   wsDisabled: { type: Boolean, default: false },
   externalKilllistData: { type: Array as PropType<IKillList[]>, default: null },
-  limit: { type: Number, default: 100 } // New prop to control default page size
+  limit: { type: Number, default: 100 }
 });
 
 // Pagination and display settings
@@ -37,7 +37,6 @@ const pageSizeItems = [
 // Use the limit prop as the default page size
 const selectedPageSize = ref(props.limit);
 const currentPage = computed(() => pagination.value.pageIndex + 1);
-const totalItems = ref(9999);
 
 // Create query params for API
 const queryParams = computed(() => ({
@@ -199,16 +198,40 @@ const handleMouseMove = () => {
 const processKillmail = (killmail: IKillmail) => {
   const formattedKill = formatKillmail(killmail);
 
-  // This check is redundant now but keeping for safety
-  if (killlistData.value && killlistData.value.length > 0 &&
-      new Date(formattedKill.kill_time).getTime() <= new Date(killlistData.value[0].kill_time).getTime()) {
+  // Check if we have any data and if the new killmail is newer than our current newest
+  // This is redundant with the isNewerThanLatestKill check but keeping as a safety measure
+  if (!killlistData.value || killlistData.value.length === 0) {
+    // If we have no data, just add it
+    if (useExternalData.value) {
+      // Can't modify external data, just log
+      console.debug('Cannot add new killmail to external data source');
+      return;
+    } else if (fetchedData.value) {
+      // Update the fetched data
+      fetchedData.value = [formattedKill, ...(fetchedData.value || [])];
+      wsNewKillCount.value++;
+      ensureKillListLimit();
+    }
     return;
   }
 
-  if (killlistData.value) {
-    killlistData.value = [formattedKill, ...killlistData.value];
-    wsNewKillCount.value++;
-    ensureKillListLimit();
+  // If we have data, add the new killmail if it's newer
+  const newKillTime = new Date(formattedKill.kill_time).getTime();
+  const latestKillTime = new Date(killlistData.value[0].kill_time).getTime();
+
+  if (newKillTime > latestKillTime) {
+    if (useExternalData.value) {
+      // Can't modify external data, just log
+      console.debug('Cannot add new killmail to external data source');
+      return;
+    } else if (fetchedData.value) {
+      // Update the fetched data
+      fetchedData.value = [formattedKill, ...(fetchedData.value || [])];
+      wsNewKillCount.value++;
+      ensureKillListLimit();
+    }
+  } else {
+    console.debug('Ignoring killmail as it\'s older than or equal to current newest');
   }
 };
 
@@ -257,8 +280,8 @@ const formatKillmail = (killmail: IKillmail): IKillList => {
 
 // Ensure kill list doesn't exceed selected page size
 const ensureKillListLimit = () => {
-  if (killlistData.value && killlistData.value.length > selectedPageSize.value) {
-    killlistData.value = killlistData.value.slice(0, selectedPageSize.value);
+  if (fetchedData.value && fetchedData.value.length > selectedPageSize.value) {
+    fetchedData.value = fetchedData.value.slice(0, selectedPageSize.value);
   }
 };
 
