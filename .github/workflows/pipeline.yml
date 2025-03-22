@@ -15,6 +15,8 @@ permissions:
 env:
     REGISTRY: ghcr.io
     IMAGE_NAME: eve-kill/thessia
+    # Create a consistent tag using the short SHA
+    IMAGE_TAG: sha-${{ github.sha }}
 
 jobs:
     build:
@@ -30,17 +32,17 @@ jobs:
             - name: Setup Bun
               uses: oven-sh/setup-bun@v1
               with:
-                bun-version: latest
+                  bun-version: latest
 
             - name: Install dependencies
               run: bun install
 
             - name: Build application
               env:
-                SENTRY_DSN: ${{ secrets.SENTRY_DSN }}
-                SENTRY_ORG: ${{ secrets.SENTRY_ORG }}
-                SENTRY_PROJECT: ${{ secrets.SENTRY_PROJECT }}
-                SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
+                  SENTRY_DSN: ${{ secrets.SENTRY_DSN }}
+                  SENTRY_ORG: ${{ secrets.SENTRY_ORG }}
+                  SENTRY_PROJECT: ${{ secrets.SENTRY_PROJECT }}
+                  SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
               run: bun run build
 
             - name: Set up Docker Buildx
@@ -68,8 +70,9 @@ jobs:
               with:
                   context: .
                   push: true
-                  tags: ${{ steps.meta.outputs.tags }}
-                  labels: ${{ steps.meta.outputs.labels }}
+                  tags: |
+                    ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }}
+                    ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest
 
     deploy:
         name: Deploy application
@@ -101,6 +104,7 @@ jobs:
             - name: Deploy helm chart
               run: |
                   helm upgrade --install eve-kill -n eve-kill chart/ \
+                      --set global.image.tag=${{ env.IMAGE_TAG }} \
                       --set global.env.esiUrl=${{ secrets.ESI_URL }} \
                       --set global.env.redisqId=${{ secrets.REDISQ_ID }} \
                       --set global.env.sensitive.eveClientId=${{ secrets.EVE_CLIENT_ID }} \
@@ -128,7 +132,7 @@ jobs:
             - name: Run Trivy vulnerability scanner
               uses: aquasecurity/trivy-action@master
               with:
-                  image-ref: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest
+                  image-ref: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }}
                   format: "sarif"
                   output: "trivy-results.sarif"
                   severity: "CRITICAL,HIGH"
