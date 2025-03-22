@@ -15,7 +15,7 @@
     "@nuxtjs/device": "3.2.4",
     "@nuxtjs/seo": "3.0.1",
     "@opentelemetry/instrumentation-ioredis": "^0.48.0",
-    "@opentelemetry/instrumentation-mongoose": "^0.46.1",
+    "@opentelemetry/instrumentation-mongoose": "^0.47.0",
     "@sentry/bun": "^9.8.0",
     "@sentry/nuxt": "^9.8.0",
     "amqplib": "^0.10.5",
