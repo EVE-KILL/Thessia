@@ -1,0 +1,17 @@
+{{- if and .Values.monitoring.enabled .Values.monitoring.jsonExporter.enabled }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: thessia-metrics
+  namespace: {{ .Values.namespace.name }}
+  labels:
+    {{- include "thessia.labels" . | nindent 4 }}
+spec:
+  selector:
+    app: {{ include "thessia.name" . }}
+  ports:
+    - name: metrics
+      protocol: TCP
+      port: 7979
+      targetPort: metrics
+{{- end }}

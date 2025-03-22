@@ -1,0 +1,48 @@
+{{- if .Values.processKillmails.enabled }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: process-killmails
+  namespace: {{ .Values.namespace.name }}
+  labels:
+    {{- include "thessia.labels" . | nindent 4 }}
+spec:
+  replicas: {{ .Values.processKillmails.replicas }}
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
+  selector:
+    matchLabels:
+      app: process-killmails
+      {{- include "thessia.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        app: process-killmails
+        {{- include "thessia.selectorLabels" . | nindent 8 }}
+    spec:
+      serviceAccountName: {{ include "thessia.serviceAccountName" . }}
+      securityContext:
+        {{- toYaml .Values.processKillmails.securityContext | nindent 8 }}
+      containers:
+        - name: process-killmails
+          image: "{{ .Values.global.image.repository }}:{{ .Values.global.image.tag }}"
+          imagePullPolicy: {{ .Values.global.image.pullPolicy }}
+          command:
+            - /bin/sh
+            - -c
+            - |
+              ./bin/queue process:killmails
+          resources:
+            {{- toYaml .Values.processKillmails.resources | nindent 12 }}
+          env:
+            - name: ENABLE_RUNTIME_CACHE
+              value: {{ .Values.global.env.enableRuntimeCache | quote }}
+          envFrom:
+            - configMapRef:
+                name: config
+            - secretRef:
+                name: secrets
+{{- end }}

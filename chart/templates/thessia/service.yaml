@@ -1,0 +1,17 @@
+{{- if .Values.thessia.enabled }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "thessia.fullname" . }}
+  namespace: {{ .Values.namespace.name }}
+  labels:
+    {{- include "thessia.labels" . | nindent 4 }}
+spec:
+  selector:
+    app: {{ include "thessia.name" . }}
+  ports:
+    - name: http
+      protocol: TCP
+      port: {{ .Values.thessia.service.port }}
+      targetPort: {{ .Values.thessia.service.targetPort }}
+{{- end }}

@@ -1,0 +1,21 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: config
+  namespace: {{ .Values.namespace.name }}
+  labels:
+    {{- include "thessia.labels" . | nindent 4 }}
+data:
+  # Database Configuration
+  MONGO_URI: {{ .Values.global.env.mongoUri | quote }}
+  REDIS_URI: {{ .Values.global.env.redisUri | quote }}
+  REDIS_PORT: {{ .Values.global.env.redisPort | quote }}
+  REDIS_DB: {{ .Values.global.env.redisDb | quote }}
+  MEILISEARCH_URI: {{ .Values.global.env.meilisearchUri | quote }}
+
+  # EVE Online API
+  ESI_URL: {{ .Values.global.env.esiUrl | quote }}
+  ESI_RATE_LIMIT: {{ .Values.global.env.esiRateLimit | quote }}
+
+  # RedisQ
+  REDISQ_ID: {{ .Values.global.env.redisqId | quote }}

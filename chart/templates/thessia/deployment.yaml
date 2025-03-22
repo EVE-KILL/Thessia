@@ -1,0 +1,82 @@
+{{- if .Values.thessia.enabled }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: thessia
+  namespace: {{ .Values.namespace.name }}
+  labels:
+    {{- include "thessia.labels" . | nindent 4 }}
+spec:
+  replicas: {{ .Values.thessia.replicas }}
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
+  selector:
+    matchLabels:
+      app: {{ include "thessia.name" . }}
+  template:
+    metadata:
+      labels:
+        app: {{ include "thessia.name" . }}
+        {{- include "thessia.selectorLabels" . | nindent 8 }}
+      {{- if and .Values.monitoring.enabled .Values.monitoring.jsonExporter.enabled }}
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "7979"
+        prometheus.io/path: "/metrics"
+      {{- end }}
+    spec:
+      serviceAccountName: {{ include "thessia.serviceAccountName" . }}
+      securityContext:
+        {{- toYaml .Values.thessia.securityContext | nindent 8 }}
+      containers:
+        - name: {{ include "thessia.name" . }}
+          image: "{{ .Values.global.image.repository }}:{{ .Values.global.image.tag }}"
+          imagePullPolicy: {{ .Values.global.image.pullPolicy }}
+          ports:
+            - containerPort: {{ .Values.thessia.service.targetPort }}
+              name: http
+          livenessProbe:
+            httpGet:
+              path: /_healthcheck
+              port: {{ .Values.thessia.service.targetPort }}
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          readinessProbe:
+            httpGet:
+              path: /_healthcheck
+              port: {{ .Values.thessia.service.targetPort }}
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          resources:
+            {{- toYaml .Values.thessia.resources | nindent 12 }}
+          envFrom:
+            - configMapRef:
+                name: config
+            - secretRef:
+                name: secrets
+        {{- if and .Values.monitoring.enabled .Values.monitoring.jsonExporter.enabled }}
+        - name: json-exporter
+          image: "{{ .Values.monitoring.jsonExporter.image.repository }}:{{ .Values.monitoring.jsonExporter.image.tag }}"
+          imagePullPolicy: {{ .Values.monitoring.jsonExporter.image.pullPolicy }}
+          args:
+            - "--config.file=/etc/json-exporter/config.yml"
+          ports:
+            - containerPort: 7979
+              name: metrics
+          resources:
+            {{- toYaml .Values.monitoring.jsonExporter.resources | nindent 12 }}
+          volumeMounts:
+            - name: json-exporter-config
+              mountPath: /etc/json-exporter/config.yml
+              subPath: config.yml
+        {{- end }}
+      volumes:
+        {{- if and .Values.monitoring.enabled .Values.monitoring.jsonExporter.enabled }}
+        - name: json-exporter-config
+          configMap:
+            name: thessia-json-exporter-config
+        {{- end }}
+{{- end }}

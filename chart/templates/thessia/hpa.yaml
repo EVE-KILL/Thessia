@@ -1,0 +1,23 @@
+{{- if and .Values.thessia.enabled .Values.thessia.autoscaling.enabled }}
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: {{ include "thessia.fullname" . }}
+  namespace: {{ .Values.namespace.name }}
+  labels:
+    {{- include "thessia.labels" . | nindent 4 }}
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: {{ include "thessia.fullname" . }}
+  minReplicas: {{ .Values.thessia.autoscaling.minReplicas }}
+  maxReplicas: {{ .Values.thessia.autoscaling.maxReplicas }}
+  metrics:
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          type: Utilization
+          averageUtilization: {{ .Values.thessia.autoscaling.targetCPUUtilizationPercentage }}
+{{- end }}

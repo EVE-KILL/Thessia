@@ -1,0 +1,299 @@
+# Default values for the Thessia Helm chart
+
+# Global settings
+global:
+    # Image settings
+    image:
+        repository: ghcr.io/eve-kill/thessia
+        tag: latest
+        pullPolicy: Always
+
+    # Environment configuration
+    env:
+        # Database Configuration
+        mongoUri: "mongodb://mongodb.mongodb.svc.cluster.local:27017/thessia"
+        redisUri: "redis.redis.svc.cluster.local"
+        redisPort: 6379
+        redisDb: 1
+        meilisearchUri: "http://meilisearch.meilisearch.svc.cluster.local:7700"
+
+        # EVE Online API
+        esiUrl: "https://esi.evetech.net/"
+        esiRateLimit: 25
+
+        # RedisQ
+        redisqId: ""
+
+        # Enable the runtime cache
+        enableRuntimeCache: true
+
+        # Sensitive data (will be stored in Kubernetes Secrets)
+        # These should be overridden using --set-file or external secrets management
+        sensitive:
+            # EVE Online API Credentials
+            eveClientId: ""
+            eveClientSecret: ""
+            eveClientRedirect: "https://eve-kill.com/auth/callback"
+            eveClientIdDev: ""
+            eveClientSecretDev: ""
+            eveClientRedirectDev: "http://localhost:3000/auth/callback"
+
+            # Discord webhooks
+            backendDiscordUrl: ""
+
+            # Monitoring
+            sentryDsn: ""
+            sentryOrg: "eve-kill"
+            sentryProject: "thessia"
+            sentryAuthToken: ""
+
+# Namespace configuration
+namespace:
+    create: true
+    name: "eve-kill"
+
+# Service Account
+serviceAccount:
+    create: true
+    name: "thessia"
+    annotations: {}
+
+# RBAC configuration
+rbac:
+    create: true
+
+# Thessia web application
+thessia:
+    enabled: true
+    replicas: 1
+    autoscaling:
+        enabled: false
+        minReplicas: 1
+        maxReplicas: 5
+        targetCPUUtilizationPercentage: 50
+    resources:
+        requests:
+            cpu: 500m
+            memory: 128Mi
+        limits:
+            cpu: 8000m
+            memory: 1024Mi
+    service:
+        port: 3000
+        targetPort: 3000
+    securityContext:
+        runAsUser: 1000
+        runAsGroup: 1000
+        fsGroup: 1000
+        runAsNonRoot: true
+
+# Process Entities
+processEntities:
+    enabled: true
+    replicas: 1
+    resources:
+        requests:
+            cpu: 250m
+            memory: 128Mi
+        limits:
+            cpu: 4000m
+            memory: 1024Mi
+    securityContext:
+        runAsUser: 1000
+        runAsGroup: 1000
+        fsGroup: 1000
+        runAsNonRoot: true
+
+# Process Wars
+processWars:
+    enabled: true
+    replicas: 1
+    resources:
+        requests:
+            cpu: 250m
+            memory: 128Mi
+        limits:
+            cpu: 4000m
+            memory: 1024Mi
+    securityContext:
+        runAsUser: 1000
+        runAsGroup: 1000
+        fsGroup: 1000
+        runAsNonRoot: true
+
+# Process Killmails
+processKillmails:
+    enabled: true
+    replicas: 1
+    resources:
+        requests:
+            cpu: 250m
+            memory: 1512Mi
+        limits:
+            cpu: 4000m
+            memory: 2048Mi
+    securityContext:
+        runAsUser: 1000
+        runAsGroup: 1000
+        fsGroup: 1000
+        runAsNonRoot: true
+
+# RedisQ
+redisq:
+    enabled: true
+    replicas: 1
+    resources:
+        requests:
+            cpu: 100m
+            memory: 128Mi
+        limits:
+            cpu: 1000m
+            memory: 512Mi
+    securityContext:
+        runAsUser: 1000
+        runAsGroup: 1000
+        fsGroup: 1000
+        runAsNonRoot: true
+
+# Cron Job
+cron:
+    enabled: true
+    schedule: "* * * * *"
+    successfulJobsHistoryLimit: 5
+    failedJobsHistoryLimit: 5
+    startingDeadlineSeconds: 60
+    activeDeadlineSeconds: 3600
+    resources:
+        requests:
+            cpu: 1000m
+            memory: 1024Mi
+        limits:
+            cpu: 8000m
+            memory: 2048Mi
+    securityContext:
+        runAsUser: 1000
+        runAsGroup: 1000
+        fsGroup: 1000
+        runAsNonRoot: true
+
+# Ingress configuration
+ingress:
+    enabled: true
+    className: nginx
+    annotations:
+        cert-manager.io/cluster-issuer: letsencrypt
+        nginx.ingress.kubernetes.io/ssl-redirect: "true"
+        nginx.ingress.kubernetes.io/backend-protocol: "http"
+        nginx.ingress.kubernetes.io/proxy-read-timeout: "3600"
+        nginx.ingress.kubernetes.io/proxy-send-timeout: "3600"
+        nginx.ingress.kubernetes.io/enable-compression: "true"
+        nginx.ingress.kubernetes.io/configuration-snippet: |
+            proxy_set_header X-Real-IP $remote_addr;
+            proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+            proxy_set_header X-Forwarded-Proto $scheme;
+            proxy_set_header X-Forwarded-Host $host;
+        nginx.ingress.kubernetes.io/location-snippets: |
+            location /killmails {
+              proxy_set_header Upgrade "websocket";
+              proxy_set_header Connection "Upgrade";
+            }
+        nginx.ingress.kubernetes.io/use-forwarded-headers: "true"
+        nginx.ingress.kubernetes.io/proxy-real-ip-cidr: "0.0.0.0/0"
+    hosts:
+      - host: "eve-kill.com"
+        paths:
+          - path: /
+            pathType: Prefix
+    tls:
+      - secretName: "evekill-tls"
+        hosts:
+          - "eve-kill.com"
+
+# Pod Disruption Budget
+podDisruptionBudget:
+    enabled: true
+    minAvailable: 1
+
+# Monitoring configuration
+monitoring:
+    enabled: true
+    # JSON exporter configuration for scraping /api/status
+    jsonExporter:
+        enabled: true
+        image:
+            repository: prometheuscommunity/json-exporter
+            tag: latest
+            pullPolicy: IfNotPresent
+        resources:
+            requests:
+                cpu: 50m
+                memory: 64Mi
+            limits:
+                cpu: 100m
+                memory: 128Mi
+        # Configuration for which metrics to extract from the /api/status endpoint
+        config:
+            modules:
+                default:
+                    metrics:
+                      - name: thessia_queue_count
+                        type: object
+                        help: "Current queue counts"
+                        path: "{.queueCounts}"
+                        labels:
+                            queue: "{@key}"
+                        values:
+                            count: "{@value}"
+                      - name: thessia_processed_counts
+                        type: object
+                        help: "Processed entity counts"
+                        path: "{.processedCounts}"
+                        labels:
+                            entity_type: "{@key}"
+                            time_range: "{subkey}"
+                        values:
+                            count: "{@value}"
+                      - name: thessia_load_average
+                        type: array
+                        help: "System load average"
+                        path: "{.operatingSystem.loadAvg}"
+                        labels:
+                            period: "{{ with $i := @index }}{{ if eq $i 0 }}1min{{ else if eq $i 1 }}5min{{ else }}15min{{ end }}{{ end }}"
+                        values:
+                            value: "{@value}"
+                      - name: thessia_database_counts
+                        type: object
+                        help: "Database entity counts"
+                        path: "{.databaseCounts}"
+                        labels:
+                            entity_type: "{@key}"
+                        values:
+                            count: "{@value}"
+                      - name: thessia_cache_sizes
+                        type: object
+                        help: "Cache sizes"
+                        path: "{.cacheSizes}"
+                        labels:
+                            cache_type: "{@key}"
+                        values:
+                            size: "{@value}"
+                      - name: thessia_cache_hits
+                        type: object
+                        help: "Cache hit counters"
+                        path: "{.cacheHits}"
+                        labels:
+                            cache_type: "{@key}"
+                        values:
+                            hits: "{@value}"
+                      - name: thessia_uptime
+                        type: gauge
+                        help: "Application uptime in seconds"
+                        path: "{.uptime}"
+
+    # ServiceMonitor configuration for Prometheus Operator
+    serviceMonitor:
+        enabled: false
+        additionalLabels: {}
+        interval: 30s
+        scrapeTimeout: 10s
+        relabelings: []

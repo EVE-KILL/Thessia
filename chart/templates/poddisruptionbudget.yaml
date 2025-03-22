@@ -1,0 +1,15 @@
+{{- if and .Values.podDisruptionBudget.enabled .Values.thessia.enabled }}
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: {{ include "thessia.fullname" . }}
+  namespace: {{ .Values.namespace.name }}
+  labels:
+    {{- include "thessia.labels" . | nindent 4 }}
+spec:
+  minAvailable: {{ .Values.podDisruptionBudget.minAvailable }}
+  selector:
+    matchLabels:
+      app: {{ include "thessia.name" . }}
+      {{- include "thessia.selectorLabels" . | nindent 6 }}
+{{- end }}

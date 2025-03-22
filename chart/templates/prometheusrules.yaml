@@ -1,0 +1,46 @@
+{{- if .Capabilities.APIVersions.Has "monitoring.coreos.com/v1" }}
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: {{ include "thessia.fullname" . }}
+  namespace: {{ .Values.namespace.name }}
+  labels:
+    {{- include "thessia.labels" . | nindent 4 }}
+spec:
+  groups:
+  - name: thessia.rules
+    rules:
+    - alert: ThessiaHighMemoryUsage
+      expr: >
+        sum(container_memory_usage_bytes{namespace="{{ .Values.namespace.name }}", pod=~"{{ include "thessia.fullname" . }}.*"})
+        /
+        sum(kube_pod_container_resource_limits{namespace="{{ .Values.namespace.name }}", pod=~"{{ include "thessia.fullname" . }}.*", resource="memory"}) > 0.9
+      for: 5m
+      labels:
+        severity: warning
+      annotations:
+        summary: "High memory usage in Thessia pods"
+        description: "Thessia pods are using more than 90% of their memory limit for more than 5 minutes."
+
+    - alert: ThessiaHighCPUUsage
+      expr: >
+        sum(rate(container_cpu_usage_seconds_total{namespace="{{ .Values.namespace.name }}", pod=~"{{ include "thessia.fullname" . }}.*"}[5m]))
+        /
+        sum(kube_pod_container_resource_limits{namespace="{{ .Values.namespace.name }}", pod=~"{{ include "thessia.fullname" . }}.*", resource="cpu"}) > 0.9
+      for: 5m
+      labels:
+        severity: warning
+      annotations:
+        summary: "High CPU usage in Thessia pods"
+        description: "Thessia pods are using more than 90% of their CPU limit for more than 5 minutes."
+
+    - alert: ThessiaPodCrashLooping
+      expr: >
+        rate(kube_pod_container_status_restarts_total{namespace="{{ .Values.namespace.name }}", pod=~"{{ include "thessia.fullname" . }}.*"}[5m]) > 0
+      for: 5m
+      labels:
+        severity: critical
+      annotations:
+        summary: "Thessia pod is crash looping"
+        description: "Pod {{ "{{" }} $labels.pod {{ "}}" }} in namespace {{ "{{" }} $labels.namespace {{ "}}" }} is crash looping."
+{{- end }}

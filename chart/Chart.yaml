@@ -1,0 +1,14 @@
+apiVersion: v2
+name: Thessia
+description: A Helm chart for EVE-Kill Thessia - EVE Online Kill Board
+type: application
+version: 0.1.0
+appVersion: "latest"
+maintainers:
+  - name: EVE-Kill Team
+    email: admin@eve-kill.com
+keywords:
+  - eve-online
+  - killboard
+  - thessia
+icon: https://raw.githubusercontent.com/eve-kill/artwork/main/thessia-logo.png

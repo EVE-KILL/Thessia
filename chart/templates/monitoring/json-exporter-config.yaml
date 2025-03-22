@@ -1,0 +1,38 @@
+{{- if and .Values.monitoring.enabled .Values.monitoring.jsonExporter.enabled }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: thessia-json-exporter-config
+  namespace: {{ .Values.namespace.name }}
+  labels:
+    {{- include "thessia.labels" . | nindent 4 }}
+data:
+  config.yml: |
+    modules:
+      default:
+        metrics:
+        {{- range .Values.monitoring.jsonExporter.config.modules.default.metrics }}
+        - name: {{ .name }}
+          type: {{ .type }}
+          help: {{ .help | quote }}
+          path: {{ .path | quote }}
+          {{- if .labels }}
+          labels:
+            {{- range $key, $value := .labels }}
+            {{ $key }}: {{ $value | quote }}
+            {{- end }}
+          {{- end }}
+          {{- if .values }}
+          values:
+            {{- range $key, $value := .values }}
+            {{ $key }}: {{ $value | quote }}
+            {{- end }}
+          {{- end }}
+        {{- end }}
+    scrape_configs:
+      - name: "thessia_status_api"
+        url: "http://localhost:{{ .Values.thessia.service.targetPort }}/api/status"
+        scrape_interval: "30s"
+        scrape_timeout: "10s"
+        method: GET
+{{- end }}

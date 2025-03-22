@@ -1,0 +1,40 @@
+{{- if .Values.cron.enabled }}
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: cron
+  namespace: {{ .Values.namespace.name }}
+  labels:
+    {{- include "thessia.labels" . | nindent 4 }}
+spec:
+  schedule: {{ .Values.cron.schedule | quote }}
+  successfulJobsHistoryLimit: {{ .Values.cron.successfulJobsHistoryLimit }}
+  failedJobsHistoryLimit: {{ .Values.cron.failedJobsHistoryLimit }}
+  startingDeadlineSeconds: {{ .Values.cron.startingDeadlineSeconds }}
+  concurrencyPolicy: Allow
+  jobTemplate:
+    spec:
+      activeDeadlineSeconds: {{ .Values.cron.activeDeadlineSeconds }}
+      template:
+        spec:
+          serviceAccountName: {{ include "thessia.serviceAccountName" . }}
+          securityContext:
+            {{- toYaml .Values.cron.securityContext | nindent 12 }}
+          containers:
+            - name: cron
+              image: "{{ .Values.global.image.repository }}:{{ .Values.global.image.tag }}"
+              imagePullPolicy: {{ .Values.global.image.pullPolicy }}
+              command:
+                - /bin/sh
+                - -c
+                - |
+                  ./bin/cron
+              resources:
+                {{- toYaml .Values.cron.resources | nindent 16 }}
+              envFrom:
+                - configMapRef:
+                    name: config
+                - secretRef:
+                    name: secrets
+          restartPolicy: OnFailure
+{{- end }}
