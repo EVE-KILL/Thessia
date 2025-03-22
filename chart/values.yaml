@@ -235,12 +235,9 @@ ingress:
         paths:
           - path: /
             pathType: Prefix
-      - host: "images.eve-kill.com"
-        paths:
-          - path: /
-            pathType: Prefix
-            serviceName: imageserver
+            serviceName: thessia
             servicePort: 3000
+
     tls:
       - secretName: "evekill-tls"
         hosts:
