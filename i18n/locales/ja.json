@@ -370,11 +370,11 @@
     },
     "top": {
         "characters": "トップキャラクター",
-        "corporations": "トップコーポレーション",
-        "alliances": "トップアライアンス",
-        "ships": "トップシップ",
+        "corporations": "トップ企業",
+        "alliances": "トップ・アライアンス",
+        "ships": "トップシップス",
         "systems": "トップシステム",
         "constellations": "トップ星座",
-        "regions": "トップリージョン"
+        "regions": "トップ"
     }
 }
