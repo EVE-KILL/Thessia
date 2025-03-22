@@ -8,64 +8,64 @@
             "label": "Ir a la página de inicio"
         },
         "kills": {
-            "text": "Bajas",
-            "label": "Ir a la página de bajas",
-            "latest": "Recientes",
-            "latestLabel": "Ir a la página de bajas recientes",
+            "text": "Mata",
+            "label": "Ir a la página de muertes",
+            "latest": "Última",
+            "latestLabel": "Ir a la página de los últimos asesinatos",
             "abyssal": "Abisal",
-            "abyssalLabel": "Ir a la página de bajas abisales",
-            "wspace": "Agujeros de Gusano",
-            "wspaceLabel": "Ir a la página de bajas en agujeros de gusano",
-            "highsec": "Alta Seguridad",
-            "highsecLabel": "Ir a la página de bajas en alta seguridad",
-            "lowsec": "Baja Seguridad",
-            "lowsecLabel": "Ir a la página de bajas en baja seguridad",
+            "abyssalLabel": "Ir a la página de muertes abisales",
+            "wspace": "Agujeros de gusano",
+            "wspaceLabel": "Ir a la página de muertes por agujeros de gusano",
+            "highsec": "HighSec",
+            "highsecLabel": "Ir a la página de muertes en highsec",
+            "lowsec": "LowSec",
+            "lowsecLabel": "Ir a la página de muertes en lowsec",
             "nullsec": "0.0",
-            "nullsecLabel": "Ir a la página de bajas en espacio nulo",
-            "big": "Grandes",
-            "bigLabel": "Ir a la página de grandes bajas",
+            "nullsecLabel": "Ir a la página de nullsec kills",
+            "big": "Gran",
+            "bigLabel": "Ir a la página de las grandes matanzas",
             "solo": "Solo",
-            "soloLabel": "Ir a la página de bajas en solitario",
+            "soloLabel": "Ir a la página de asesinatos en solitario",
             "npc": "NPC",
-            "npcLabel": "Ir a la página de bajas NPC",
+            "npcLabel": "Ir a la página de muertes de PNJ",
             "5b": "5B+",
-            "5bLabel": "Ir a la página de bajas de 5B+",
+            "5bLabel": "Ir a la página de muertes de 5B+",
             "10b": "10B+",
-            "10bLabel": "Ir a la página de bajas de 10B+",
+            "10bLabel": "Ir a la página 10B+ kills",
             "citadels": "Ciudadelas",
-            "citadelsLabel": "Ir a la página de bajas de ciudadelas",
+            "citadelsLabel": "Ir a la página de la ciudadela mata",
             "t1": "T1",
-            "t1Label": "Ir a la página de bajas T1",
+            "t1Label": "Ir a la página T1 mata",
             "t2": "T2",
-            "t2Label": "Ir a la página de bajas T2",
+            "t2Label": "Ir a la página de muertes de la T2",
             "t3": "T3",
-            "t3Label": "Ir a la página de bajas T3",
+            "t3Label": "Ir a la página de T3 kills",
             "frigates": "Fragatas",
-            "frigatesLabel": "Ir a la página de bajas de fragatas",
+            "frigatesLabel": "Ir a la página de muertes de fragatas",
             "destroyers": "Destructores",
-            "destroyersLabel": "Ir a la página de bajas de destructores",
+            "destroyersLabel": "Ir a la página de destructor mata",
             "cruisers": "Cruceros",
-            "cruisersLabel": "Ir a la página de bajas de cruceros",
+            "cruisersLabel": "Ir a la página de muertes en cruceros",
             "battlecruisers": "Cruceros de Batalla",
-            "battlecruisersLabel": "Ir a la página de bajas de cruceros de batalla",
+            "battlecruisersLabel": "Ir a la página de muertes de cruceros de batalla",
             "battleships": "Acorazados",
-            "battleshipsLabel": "Ir a la página de bajas de acorazados",
+            "battleshipsLabel": "Ir a la página de matanzas de acorazados",
             "capitals": "Capitales",
-            "capitalsLabel": "Ir a la página de bajas de naves capitales",
+            "capitalsLabel": "Ir a la página de asesinatos capitales",
             "freighters": "Cargueros",
-            "freightersLabel": "Ir a la página de bajas de cargueros",
-            "supercarriers": "Superportaaviones",
-            "supercarriersLabel": "Ir a la página de bajas de superportaaviones",
+            "freightersLabel": "Ir a la página de muertes de cargueros",
+            "supercarriers": "Supertransportistas",
+            "supercarriersLabel": "Ir a la página de asesinatos de supertransportistas",
             "titans": "Titanes",
-            "titansLabel": "Ir a la página de bajas de titanes"
+            "titansLabel": "Ir a la página de asesinatos de titanes"
         },
         "faq": {
-            "text": "FAQ",
+            "text": "PREGUNTAS FRECUENTES",
             "label": "Ir a la página de preguntas frecuentes"
         },
         "about": {
             "text": "Acerca de",
-            "label": "Ir a la página de acerca de"
+            "label": "Ir a la página Acerca de"
         },
         "status": {
             "text": "Estado",
@@ -79,164 +79,162 @@
         }
     },
     "search": {
-        "title": "Buscar",
+        "title": "Buscar en",
         "placeholder": "Buscar ...",
-        "results": "Resultados de búsqueda para {query}",
-        "searchButton": "Buscar",
+        "results": "Resultados de la búsqueda {query}",
+        "searchButton": "Buscar en",
         "searching": "Buscando...",
         "noResults": "Sin resultados",
-        "noResultsTitle": "No se encontraron resultados",
-        "noResultsDesc": "No pudimos encontrar nada que coincida con tu búsqueda. Intenta con otras palabras clave o amplía tu búsqueda.",
-        "initialMessage": "Escribe algo en el cuadro de búsqueda para comenzar",
+        "noResultsTitle": "No se han encontrado resultados",
+        "noResultsDesc": "No hemos encontrado nada que coincida con su búsqueda. Pruebe con otras palabras clave o amplíe la búsqueda.",
+        "initialMessage": "Escriba algo en el cuadro de búsqueda para iniciar la búsqueda",
         "more": "Más",
         "moreType": "Más {type} ({count})",
-        "showMoreType": "Mostrar más {type}",
+        "showMoreType": "Ver más {type}",
         "viewAllResults": "Ver todos los resultados ({count})",
-        "found": "Se encontraron {count} resultados",
+        "found": "Encontrados {count} resultados",
         "processingTimeMs": "Tiempo de procesamiento: {time} ms",
         "showMoreCategory": "Mostrar más {category} ({count})",
         "category": {
             "character": "Personajes",
-            "corporation": "Corporaciones",
+            "corporation": "Empresas",
             "alliance": "Alianzas",
-            "item": "Objetos",
+            "item": "Artículos",
             "system": "Sistemas",
             "region": "Regiones"
         }
     },
     "background": {
         "title": "Fondo",
-        "toggleVisibility": "Alternar visibilidad del fondo",
+        "toggleVisibility": "Alternar la visibilidad del fondo",
         "loading": "Cargando...",
-        "randomReddit": "Aleatorio de r/EVEPorn",
+        "randomReddit": "Al azar de r/EVEPorn",
         "viewSource": "Ver fuente en Reddit"
     },
     "status": {
-        "pageTitle": "Estado del Sistema",
-        "title": "Estado del Sistema",
+        "pageTitle": "Estado del sistema",
+        "title": "Estado del sistema",
         "loading": "Cargando información de estado...",
         "autoRefresh": "Actualización automática cada {seconds}s",
-        "refreshNow": "Actualizar Ahora",
-        "retry": "Intentar de Nuevo",
+        "refreshNow": "Actualizar ahora",
+        "retry": "Inténtelo de nuevo",
         "lastUpdated": "Última actualización: {time}",
-        "autoRefreshing": "Actualizando automáticamente cada {seconds} segundos",
-        "timePeriod": "Seleccionar Período de Tiempo",
-        "selectTimePeriod": "Período de Tiempo",
-        "processedItems": "Elementos Procesados ({period})",
+        "autoRefreshing": "Auto-refresco cada {seconds} segundos",
+        "timePeriod": "Seleccione el periodo",
+        "selectTimePeriod": "Periodo de tiempo",
+        "processedItems": "Artículos procesados ({period})",
+        "simplified": "Simplificado",
+        "detailed": "Detallado",
+        "detailedStats": "Estadísticas detalladas",
+        "systemInfo": "Información del sistema",
+        "summary": {
+            "uptime": "Tiempo de actividad del sistema",
+            "processedLast5m": "Procesado (Últimos 5m)",
+            "queuedItems": "Artículos en cola"
+        },
+        "tabs": {
+            "overview": "Visión general",
+            "processing": "Tratamiento",
+            "database": "Base de datos",
+            "cache": "Caché"
+        },
         "uptime": {
-            "title": "Tiempo de Actividad del Sistema",
+            "title": "Tiempo de actividad del sistema",
             "format": "{days}d {hours}h {minutes}m {seconds}s",
-            "since": "Activo desde",
+            "since": "Arriba desde",
             "localTime": "Hora local"
         },
         "environment": {
-            "title": "Entorno",
-            "nodeEnv": "Entorno de Node",
-            "nodeVersion": "Versión de Node",
+            "title": "Medio ambiente",
+            "nodeEnv": "Nodo Entorno",
+            "nodeVersion": "Versión del nodo",
             "process": "Proceso"
         },
         "operatingSystem": {
-            "title": "Sistema Operativo",
+            "title": "Sistema operativo",
             "platform": "Plataforma",
             "architecture": "Arquitectura",
-            "loadAverage": "Carga Promedio",
-            "totalCPUs": "Núcleos de CPU",
+            "loadAverage": "Carga Media",
+            "totalCPUs": "Núcleos CPU",
             "memory": "Memoria (GB)"
         },
         "queueCounts": {
-            "title": "Elementos Activos en Cola",
-            "queue": "Nombre de Cola",
-            "count": "Contador"
+            "title": "Colas activas",
+            "queue": "Nombre de la cola",
+            "count": "Cuenta"
         },
         "processingStatistics": {
-            "title": "Estadísticas de Procesamiento"
+            "title": "Estadísticas de tratamiento"
         },
         "databaseCounts": {
-            "title": "Colecciones de Base de Datos",
+            "title": "Colecciones de bases de datos",
             "collection": "Colección",
-            "count": "Contador"
+            "count": "Cuenta"
         },
         "cacheSizes": {
-            "title": "Tamaños de Caché",
-            "cache": "Nombre de Caché",
-            "size": "Tamaño"
+            "title": "Tamaños de caché",
+            "cache": "Nombre de la caché",
+            "size": "Talla"
         },
         "cacheHits": {
-            "title": "Rendimiento de Caché",
-            "cache": "Nombre de Caché",
-            "hits": "Aciertos"
+            "title": "Rendimiento de la caché",
+            "cache": "Nombre de la caché",
+            "hits": "Hits"
         },
         "timePeriods": {
-            "1min": "1 Minuto",
-            "5min": "5 Minutos",
-            "15min": "15 Minutos",
-            "1hour": "1 Hora",
-            "6hours": "6 Horas",
-            "12hours": "12 Horas",
-            "24hours": "24 Horas",
-            "1week": "1 Semana",
-            "1month": "1 Mes"
-        },
-        "simplified": "Simplificado",
-        "detailed": "Detallado",
-        "detailedStats": "Estadísticas Detalladas",
-        "systemInfo": "Información del Sistema",
-        "summary": {
-            "uptime": "Tiempo de Actividad del Sistema",
-            "processedLast5m": "Procesados (Últimos 5m)",
-            "queuedItems": "Elementos en Cola"
-        },
-        "tabs": {
-            "overview": "Resumen",
-            "processing": "Procesamiento",
-            "database": "Base de Datos",
-            "cache": "Caché",
-            "topLists": "Listas Top",
-            "kills": "Bajas"
+            "1min": "1 minuto",
+            "5min": "5 minutos",
+            "15min": "15 minutos",
+            "1hour": "1 hora",
+            "6hours": "6 horas",
+            "12hours": "12 horas",
+            "24hours": "24 horas",
+            "1week": "1 semana",
+            "1month": "1 mes"
         }
     },
     "auth": {
         "signIn": "Iniciar sesión",
-        "signInWithEve": "Iniciar sesión con tu cuenta de EVE Online",
-        "useEveSSOToLogin": "Usa EVE Online SSO para iniciar sesión en tu cuenta",
+        "signInWithEve": "Inicia sesión con tu cuenta de EVE Online",
+        "useEveSSOToLogin": "Utiliza el SSO de EVE Online para acceder a tu cuenta",
         "loading": "Cargando...",
-        "loggingOut": "Cerrando sesión...",
+        "loggingOut": "Cerrar sesión...",
         "ssoRequiredForLogin": "Se requiere EVE SSO para iniciar sesión",
-        "alreadySignedIn": "Ya has iniciado sesión",
-        "signedInAs": "Iniciado sesión como {name}",
-        "privacyNote": "Al usar nuestro servicio, autorizas que accedamos a los datos de tu personaje de EVE Online según los permisos solicitados.",
-        "error": {
-            "general": "Falló la autenticación. Por favor, inténtalo de nuevo.",
-            "tokenExpired": "Tu sesión ha expirado. Por favor, inicia sesión de nuevo.",
-            "missingScope": "Falta el permiso requerido: {scope}"
-        },
-        "customizeScopes": "Personalizar Permisos de Acceso",
+        "alreadySignedIn": "Ya ha iniciado sesión",
+        "signedInAs": "Registrado como {name}",
+        "customizeScopes": "Personalizar los ámbitos de inicio de sesión",
         "loginTitle": "Iniciar sesión con EVE Online",
-        "quickLoginInfo": "Iniciar sesión con permisos recomendados",
-        "customizeScopesInfo": "Personaliza qué información puede acceder EVE Kill:",
-        "loginWithSelectedScopes": "Iniciar sesión con Permisos Seleccionados",
-        "required": "Requerido"
+        "quickLoginInfo": "Inicio de sesión con ámbitos recomendados",
+        "customizeScopesInfo": "Personaliza a qué información puede acceder EVE Kill:",
+        "loginWithSelectedScopes": "Inicio de sesión con ámbitos seleccionados",
+        "required": "Requerido",
+        "privacyNote": "Al iniciar sesión, aceptas compartir la información seleccionada con EVE Kill. Solo utilizamos estos datos para prestarte servicios.",
+        "error": {
+            "general": "Autenticación fallida. Por favor, inténtelo de nuevo.",
+            "tokenExpired": "Su sesión ha expirado. Por favor, inicie sesión de nuevo.",
+            "missingScope": "Falta el permiso requerido: {scope}"
+        }
     },
     "user": {
-        "pageTitle": "Cuenta de Usuario",
-        "settingsPageTitle": "Configuración de Usuario",
-        "loginPageTitle": "Iniciar Sesión",
+        "pageTitle": "Cuenta de usuario",
+        "settingsPageTitle": "Configuración de usuario",
+        "loginPageTitle": "Inicio de sesión",
         "profile": "Perfil",
-        "settings": "Configuración",
+        "settings": "Ajustes",
         "logout": "Cerrar sesión",
         "characterDetails": "Detalles del personaje",
-        "characterId": "ID del personaje",
+        "characterId": "ID de personaje",
         "registeredSince": "Registrado desde",
-        "tokenExpires": "El token expira",
+        "tokenExpires": "Caduca el token",
         "permissions": "Permisos",
-        "needHelp": "¿Necesitas ayuda con tu cuenta? Contacta con soporte.",
-        "profileDescription": "Ver y gestionar la información de tu personaje de EVE Online"
+        "needHelp": "¿Necesita ayuda con su cuenta? Póngase en contacto con el servicio de asistencia.",
+        "profileDescription": "Consulta y gestiona la información de tu personaje de EVE Online"
     },
     "common": {
         "loading": "Cargando...",
         "error": "Error",
-        "tryAgain": "Intentar de nuevo",
-        "goHome": "Ir al inicio",
+        "tryAgain": "Inténtelo de nuevo",
+        "goHome": "Volver a casa",
         "cancel": "Cancelar",
         "save": "Guardar",
         "selectLanguage": "Seleccionar idioma",
@@ -245,128 +243,138 @@
         "next": "Siguiente"
     },
     "settings": {
-        "description": "Gestiona la configuración y permisos de tu cuenta",
+        "description": "Gestione la configuración y los permisos de su cuenta",
         "accountSettings": "Configuración de la cuenta",
         "permissions": "Permisos de EVE Online",
         "permissionsDescription": "Estos son los permisos que has concedido a esta aplicación a través de EVE SSO:",
-        "permissionsNote": "Para modificar estos permisos, debes volver a autenticarte a través de EVE SSO.",
-        "dataPrivacy": "Privacidad de datos",
-        "dataPrivacyDescription": "Información sobre cómo manejamos tus datos de EVE Online:",
+        "permissionsNote": "Para modificar estos permisos, es necesario volver a autenticarse a través de EVE SSO.",
+        "dataPrivacy": "Protección de datos",
+        "dataPrivacyDescription": "Información sobre cómo tratamos tus datos de EVE Online:",
         "authenticationStatus": "Estado de autenticación",
-        "authenticated": "Autenticado",
-        "expiringToken": "Token a punto de expirar",
-        "refreshToken": "Actualizar token",
-        "reauthenticate": "Volver a autenticar",
-        "storesCharacterData": "Almacenamos la información de tu personaje, incluido el ID, nombre y permisos concedidos.",
-        "tokensEncrypted": "Tus tokens de autenticación están cifrados y almacenados de forma segura.",
+        "authenticated": "Autentificado",
+        "expiringToken": "La ficha caduca pronto",
+        "refreshToken": "Actualizar ficha",
+        "reauthenticate": "Vuelva a autentificar",
+        "defaultScopes": "Ámbitos por defecto",
+        "customizeScopes": "Personalizar ámbitos",
+        "storesCharacterData": "Almacenamos la información de tu personaje, incluyendo ID, nombre y permisos concedidos.",
+        "tokensEncrypted": "Sus tokens de autenticación se cifran y almacenan de forma segura.",
         "removeDataByRevoking": "Puedes revocar el acceso en cualquier momento a través del sitio web de EVE Online.",
-        "deleteData": "Eliminar mis datos",
-        "deleteError": "Error al eliminar los datos de la cuenta",
-        "deleteAccountConfirmTitle": "Eliminar datos de la cuenta",
-        "deleteAccountConfirmMessage": "¿Estás seguro de que deseas eliminar los datos de tu cuenta? Esta acción no se puede deshacer.",
-        "confirmDelete": "Sí, eliminar mis datos",
-        "permanentActionWarning": "Esto eliminará permanentemente todos tus datos de nuestro sistema, incluida la configuración y las preferencias.",
+        "deleteData": "Borrar mis datos",
+        "deleteError": "Error al borrar los datos de la cuenta",
+        "deleteAccountConfirmTitle": "Borrar datos de la cuenta",
+        "deleteAccountConfirmMessage": "¿Está seguro de que desea eliminar los datos de su cuenta? Esta acción no se puede deshacer.",
+        "confirmDelete": "Sí, borrar mis datos",
+        "permanentActionWarning": "Esto eliminará permanentemente todos sus datos de nuestro sistema, incluidos los ajustes y preferencias.",
         "esi": "Autenticación EVE SSO",
-        "permissionDescription": "Lo que permite este permiso:"
+        "permissionDescription": "Qué permite este permiso:"
     },
     "permissions": {
-        "publicData": "Acceder a información pública del personaje",
-        "readKillmails": "Acceder a tus reportes de bajas",
-        "readCorporationKillmails": "Acceder a los reportes de bajas de tu corporación"
+        "publicData": "Acceder a información de carácter público",
+        "readKillmails": "Accede a tus killmails",
+        "readCorporationKillmails": "Acceda a los killmails de su empresa"
     },
     "footer": {
-        "legal": "Información Legal"
+        "legal": "Legal"
     },
     "legal": {
-        "pageTitle": "Información Legal",
-        "title": "Información Legal",
+        "pageTitle": "Información jurídica",
+        "title": "Información jurídica",
         "disclaimer": {
-            "title": "Descargo de Responsabilidad",
+            "title": "Descargo de responsabilidad",
             "p1": "Thessia es una herramienta de terceros para EVE Online y no está afiliada ni respaldada por CCP Games.",
-            "p2": "Este servicio se proporciona 'tal cual' sin garantía de ningún tipo. No ofrecemos garantías sobre la precisión o fiabilidad de los datos presentados."
+            "p2": "Este servicio se proporciona \"tal cual\", sin garantía de ningún tipo. No ofrecemos garantías sobre la exactitud o fiabilidad de los datos presentados."
         },
         "license": {
             "title": "Licencia",
-            "p1": "Thessia / EVE-KILL está licenciado bajo la Licencia MIT y puede ser utilizado, modificado y distribuido libremente de acuerdo con los términos de esa licencia.",
-            "p2": "Esto significa que eres libre de usar, copiar, modificar, fusionar, publicar, distribuir, sublicenciar y/o vender copias del software, sujeto a la inclusión del aviso de copyright y el aviso de permiso en todas las copias o partes sustanciales del software.",
-            "viewLicense": "Ver Licencia Completa en GitHub"
+            "p1": "Thessia / EVE-KILL está licenciado bajo la Licencia MIT y puede ser utilizado, modificado y distribuido libremente de acuerdo con los términos de dicha licencia.",
+            "p2": "Esto significa que usted es libre de utilizar, copiar, modificar, fusionar, publicar, distribuir, sublicenciar y/o vender copias del software, siempre que se incluya el aviso de copyright y el aviso de permiso en todas las copias o partes sustanciales del software.",
+            "viewLicense": "Ver la licencia completa en GitHub"
         },
         "ownership": {
-            "title": "Propiedad Intelectual",
-            "p1": "EVE Online, el logotipo de EVE, EVE y todos los logotipos y diseños asociados son propiedad intelectual de CCP hf. Todo el material artístico, capturas de pantalla, personajes, vehículos, argumentos, hechos del mundo u otras características reconocibles de la propiedad intelectual relacionada con estas marcas comerciales son igualmente propiedad intelectual de CCP hf.",
-            "ccpLink": "Visitar CCP Games"
+            "title": "Propiedad intelectual",
+            "p1": "EVE Online, el logotipo de EVE, EVE y todos los logotipos y diseños asociados son propiedad intelectual de CCP hf. Todas las ilustraciones, capturas de pantalla, personajes, vehículos, argumentos, hechos del mundo u otras características reconocibles de la propiedad intelectual relacionadas con estas marcas son igualmente propiedad intelectual de CCP hf.",
+            "ccpLink": "Visita CCP Games"
         },
         "data": {
-            "title": "Uso de Datos y Privacidad",
-            "p1": "Thessia recopila y procesa datos de la API de EVE Online y otras fuentes públicas. Estos datos se utilizan únicamente con el propósito de proporcionar los servicios ofrecidos por este sitio web.",
-            "p2": "Respetamos tu privacidad y no compartimos información personal con terceros. Cualquier dato que recopilamos se utiliza de acuerdo con las prácticas de privacidad estándar."
+            "title": "Uso de datos y privacidad",
+            "p1": "Thessia recopila y procesa datos de la API de EVE Online y de otras fuentes públicas. Estos datos se utilizan únicamente con el fin de prestar los servicios que ofrece este sitio web.",
+            "p2": "Respetamos su privacidad y no compartimos información personal con terceros. Todos los datos que recopilamos se utilizan de acuerdo con las prácticas de privacidad habituales."
         },
         "contact": {
-            "title": "Información de Contacto",
-            "p1": "Si tienes alguna pregunta o inquietud sobre cuestiones legales relacionadas con Thessia, contáctanos a través de los problemas de GitHub:",
-            "githubIssues": "Enviar un problema en GitHub"
+            "title": "Información de contacto",
+            "p1": "Si tiene alguna pregunta o duda sobre asuntos legales relacionados con Thessia, póngase en contacto con nosotros a través de GitHub issues:",
+            "githubIssues": "Enviar una incidencia a GitHub"
         }
     },
     "about": {
         "pageTitle": "Acerca de EVE-KILL",
         "title": "Acerca de EVE-KILL",
-        "description": "EVE-KILL es un servicio completo de registro de bajas para EVE Online, que proporciona a los jugadores estadísticas detalladas y análisis sobre las actividades de combate en New Eden.",
+        "description": "EVE-KILL es un completo servicio de killboard para EVE Online, que proporciona a los jugadores estadísticas y análisis detallados sobre las actividades de combate en New Eden.",
         "mission": {
-            "title": "Nuestra Misión",
-            "text": "Nuestra misión es proporcionar la experiencia de registro de bajas más precisa, actualizada y fácil de usar para la comunidad de EVE Online. Nos esforzamos por ofrecer información valiosa sobre el combate PVP mientras mantenemos un servicio confiable y rápido para todos los jugadores."
+            "title": "Nuestra misión",
+            "text": "Nuestra misión es proporcionar la experiencia de killboard más precisa, actualizada y fácil de usar para la comunidad de EVE Online. Nos esforzamos por ofrecer información valiosa sobre el combate PVP al tiempo que mantenemos un servicio fiable y rápido para todos los jugadores."
         },
         "history": {
             "title": "Historia",
-            "text": "EVE-KILL se estableció en 2007 y desde entonces ha evolucionado para convertirse en uno de los servicios de registro de bajas más confiables en New Eden. Con actualizaciones y mejoras constantes, continuamos sirviendo a la comunidad de EVE con un seguimiento de combate confiable y estadísticas precisas."
+            "text": "EVE-KILL se fundó en 2007 y desde entonces ha evolucionado hasta convertirse en uno de los servicios de killboard más fiables de New Eden. Con actualizaciones y mejoras constantes, seguimos sirviendo a la comunidad de EVE con estadísticas y seguimiento de combate fiables."
         },
         "contact": {
-            "title": "Contáctenos",
-            "text": "¿Tiene preguntas, sugerencias o necesita apoyo? Únase a nuestro servidor de Discord o cree un problema en nuestro GitHub"
+            "title": "Contacte con nosotros",
+            "text": "¿Tienes preguntas, sugerencias o necesitas ayuda? Únete a nuestro servidor Discord o haz una incidencia en nuestro GitHub"
         },
         "links": {
-            "discord": "Unirse a nuestro Discord",
-            "github": "Repositorio de GitHub"
+            "discord": "Únase a nuestro Discord",
+            "github": "Repositorio GitHub"
         }
     },
     "scopes": {
-        "publicData": "Datos Públicos",
-        "publicDataDesc": "Información básica del personaje",
-        "readKillmails": "Leer Reportes de Bajas",
-        "readKillmailsDesc": "Acceso a los reportes de bajas de tu personaje",
-        "readCorpKillmails": "Leer Reportes de Bajas Corporativos",
-        "readCorpKillmailsDesc": "Acceso a los reportes de bajas de tu corporación"
+        "publicData": "Datos públicos",
+        "publicDataDesc": "Información básica sobre los personajes",
+        "readKillmails": "Leer Killmails",
+        "readKillmailsDesc": "Acceso a los killmails de tu personaje",
+        "readCorpKillmails": "Leer los Killmails de la Corporación",
+        "readCorpKillmailsDesc": "Acceso a los killmails de su empresa"
     },
     "home": {
         "pageTitle": "Inicio"
     },
     "kills": {
-        "pageTitle": "Detalles del Reporte de Baja",
-        "listPageTitle": "Tabla de Bajas"
+        "pageTitle": "Detalles de Killmail",
+        "listPageTitle": "Killboard"
     },
     "faq": {
-        "pageTitle": "Preguntas Frecuentes"
+        "pageTitle": "Preguntas frecuentes"
     },
     "killList": {
-        "ship": "Nave",
+        "ship": "Barco",
         "victim": "Víctima",
-        "finalBlow": "Golpe Final",
+        "finalBlow": "Golpe final",
         "location": "Ubicación",
         "details": "Detalles",
-        "noKills": "No se encontraron bajas",
-        "loading": "Cargando bajas...",
+        "noKills": "No se han encontrado muertes",
+        "loading": "Cargando muertes...",
         "type": "Tipo",
-        "itemsPerPage": "Elementos por página",
-        "wsConnected": "WebSocket Conectado",
-        "wsDisconnected": "WebSocket Desconectado",
-        "showing": "Mostrando"
+        "itemsPerPage": "Artículos por página",
+        "wsConnected": "WebSocket conectado",
+        "wsDisconnected": "WebSocket desconectado",
+        "showing": "Mostrar"
+    },
+    "topBox": {
+        "killsOver": "Últimos {days} días"
+    },
+    "tabs": {
+        "topLists": "Listas principales",
+        "kills": "Mata",
+        "overview": "Visión general"
     },
     "top": {
-        "characters": "Personajes Top",
-        "corporations": "Corporaciones Top",
-        "alliances": "Alianzas Top",
-        "ships": "Naves Top",
-        "systems": "Sistemas Top",
-        "constellations": "Constelaciones Top",
-        "regions": "Regiones Top"
+        "characters": "Personajes principales",
+        "corporations": "Principales empresas",
+        "alliances": "Alianzas principales",
+        "ships": "Top Barcos",
+        "systems": "Sistemas superiores",
+        "constellations": "Top Constelaciones",
+        "regions": "Regiones principales"
     }
 }
