@@ -136,7 +136,8 @@
             "overview": "Обзор",
             "processing": "Обработка",
             "database": "База данных",
-            "cache": "Кэш"
+            "cache": "Кэш",
+            "redis": "Redis"
         },
         "uptime": {
             "title": "Время безотказной работы системы",
@@ -191,6 +192,30 @@
             "24hours": "24 часа",
             "1week": "1 неделя",
             "1month": "1 месяц"
+        },
+        "redis": {
+            "server": "Сервер Redis",
+            "version": "Версия",
+            "mode": "Режим",
+            "os": "Операционная система",
+            "uptime": "Время работы",
+            "uptimeFormat": "{days}d {hours}h {minutes}m {seconds}s",
+            "memory": "Память",
+            "usedMemory": "Используемая память",
+            "usedMemoryPeak": "Пиковое использование памяти",
+            "memFragmentationRatio": "Коэффициент фрагментации памяти",
+            "stats": "Статистика",
+            "connectedClients": "Подключенные клиенты",
+            "totalConnections": "Всего соединений",
+            "totalCommands": "Всего команд",
+            "keyspaceHits": "Хиты в пространстве ключей",
+            "keyspaceMisses": "Пропуски в пространстве ключей",
+            "hitRatio": "Коэффициент попадания",
+            "keyspace": "Keyspace",
+            "database": "База данных",
+            "keys": "Ключи",
+            "expires": "Срок действия:",
+            "avgTtl": "Avg TTL"
         }
     },
     "auth": {
