@@ -3,34 +3,34 @@ updates:
   - package-ecosystem: 'npm'
     directory: '/'
     schedule:
-      interval: 'weekly'
+        interval: 'daily'
     groups:
-      vue-ecosystem:
-        patterns:
-          - "vue*"
-          - "@vue*"
-          - "nuxt"
-          - "@nuxt*"
-      dev-dependencies:
-        dependency-type: "development"
+        vue-ecosystem:
+            patterns:
+              - "vue*"
+              - "@vue*"
+              - "nuxt"
+              - "@nuxt*"
+        dev-dependencies:
+            dependency-type: "development"
     open-pull-requests-limit: 10
     versioning-strategy: auto
     ignore:
       - dependency-name: "*"
-        update-types: ["version-update:semver-patch"]
+        update-types: [ "version-update:semver-patch" ]
     labels:
       - "dependencies"
       - "vue"
     assignees:
       - "karbowiak"
     commit-message:
-      prefix: "deps"
-      include: "scope"
+        prefix: "deps"
+        include: "scope"
 
   - package-ecosystem: 'github-actions'
     directory: '/'
     schedule:
-      interval: 'weekly'
+        interval: 'daily'
     labels:
       - "ci-cd"
       - "dependencies"
