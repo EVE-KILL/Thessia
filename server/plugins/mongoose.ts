@@ -1,7 +1,8 @@
 import { initMongooseConnection } from "../helpers/Mongoose";
+import { cliLogger } from "../helpers/Logger";
 
 export default defineNitroPlugin(() => {
   initMongooseConnection().then(() => {
-    console.log("✔ Connected to MongoDB");
+    cliLogger.info("✔ Connected to MongoDB");
   });
 });

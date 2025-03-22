@@ -20,6 +20,7 @@ import { Regions } from "../models/Regions";
 import { SolarSystems } from "../models/SolarSystems";
 import { getAlliance, getCharacter, getCorporation } from "./ESIData";
 import { getPrice } from "./Prices";
+import { cliLogger } from "./Logger";
 
 export const invGroupsCache = new Map<number, IInvGroup>();
 export const invTypesCache = new Map<number, IInvType>();
@@ -120,7 +121,7 @@ async function loadAllCustomPrices(): Promise<void> {
 }
 
 // Use a direct boolean or default to true if in production
-const enabledRuntimeCache = process.env.ENABLE_RUNTIME_CACHE !== 'false';
+const enabledRuntimeCache = process.env.ENABLE_RUNTIME_CACHE === 'true';
 
 if (enabledRuntimeCache) {
   // Load at startup
@@ -134,16 +135,16 @@ if (enabledRuntimeCache) {
     loadAllSolarSystems(),
     loadAllCustomPrices(),
   ]);
-  console.log(
-    "ℹ️  Runtime caches loaded",
-    `invGroups: ${invGroupsCache.size}`,
-    `invTypes: ${invTypesCache.size}`,
-    `invFlags: ${invFlagsCache.size}`,
-    `factions: ${factionsCache.size}`,
-    `regions: ${regionsCache.size}`,
-    `constellations: ${constellationsCache.size}`,
-    `solarSystems: ${solarSystemsCache.size}`,
-    `customPrices: ${customPriceCache.size}`,
+  cliLogger.info(
+    "Runtime caches loaded " +
+    `invGroups: ${invGroupsCache.size} ` +
+    `invTypes: ${invTypesCache.size} ` +
+    `invFlags: ${invFlagsCache.size} ` +
+    `factions: ${factionsCache.size} ` +
+    `regions: ${regionsCache.size} ` +
+    `constellations: ${constellationsCache.size} ` +
+    `solarSystems: ${solarSystemsCache.size} ` +
+    `customPrices: ${customPriceCache.size}`
   );
 
   setInterval(loadAllInvGroups, 1000 * 60 * 60);

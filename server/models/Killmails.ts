@@ -2,6 +2,7 @@
 
 import { type Document, type Model, Schema, model } from "mongoose";
 import type { IAttacker, IItem, IKillmail, IVictim } from "../interfaces/IKillmail"; // Adjust the path as necessary
+import { cliLogger } from "../helpers/Logger";
 
 export interface IKillmailDocument extends IKillmail, Document {}
 
@@ -174,7 +175,7 @@ Killmails.collection
       if (idx.name !== "_id_" && !allowedIndexNames.has(idx.name)) {
         try {
           await Killmails.collection.dropIndex(idx.name);
-          console.log(`Dropped index ${idx.name}`);
+          cliLogger.info(`Dropped index ${idx.name}`);
         } catch (err) {
           console.error(`Error dropping index ${idx.name}:`, err);
         }
