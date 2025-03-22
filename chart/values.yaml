@@ -159,10 +159,10 @@ processKillmails:
     resources:
         requests:
             cpu: 250m
-            memory: 256Mi
+            memory: 1024Mi
         limits:
             cpu: 4000m
-            memory: 1024Mi
+            memory: 4096Mi
     securityContext:
         runAsUser: 1000
         runAsGroup: 1000
