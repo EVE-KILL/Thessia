@@ -100,7 +100,7 @@ export default defineNuxtConfig({
       //"nuxt-security",
       "@nuxtjs/color-mode",
       "@nuxtjs/device",
-      "@sentry/nuxt"
+      "@sentry/nuxt/module"
     ],
 
     // Sentry configuration

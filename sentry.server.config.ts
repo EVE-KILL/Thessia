@@ -1,4 +1,4 @@
-import * as Sentry from '@sentry/nuxt';
+import * as Sentry from "@sentry/nuxt";
 
 
 if (process.env.SENTRY_DSN) {
