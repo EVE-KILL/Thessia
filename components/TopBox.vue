@@ -165,7 +165,7 @@ const handleRowClick = (row) => {
 
 <template>
   <div class="pb-5 min-h-[485px]">
-    <div class="text-sm font-bold text-center bg-background-900 py-1 rounded-tl-lg rounded-tr-lg border-b border-background-700">
+    <div class="text-sm font-bold text-center py-1 rounded-tl-lg rounded-tr-lg border-b bg-gray-200 dark:bg-gray-900">
       {{ displayTitle }}
     </div>
 
@@ -193,12 +193,12 @@ const handleRowClick = (row) => {
           base: 'min-w-full table-fixed text-black dark:text-white',
           thead: 'hidden',
           tbody: 'divide-y divide-background-700',
-          tr: 'hover:bg-background-400 transition-colors duration-300 cursor-pointer',
-          th: 'text-center py-1 px-2 uppercase text-xs font-medium',
+          tr: 'hover:bg-gray-200 dark:hover:bg-gray-900 transition-colors duration-300 cursor-pointer',
+          th: 'text-left py-1 px-2 uppercase text-xs font-medium bg-gray-200 dark:bg-gray-900',
           td: 'p-0 text-xs',
-          empty: 'py-4 text-center text-background-400',
+          empty: 'py-4 text-center text-black dark:text-white',
           loading: 'py-4 text-center',
-          root: 'relative overflow-hidden rounded-sm',
+          root: 'relative overflow-hidden rounded-sm bg-background-900',
         }"
         @select="handleRowClick"
       />
@@ -231,18 +231,6 @@ const handleRowClick = (row) => {
   table-layout: fixed;
 }
 
-:deep(tbody tr) {
-  border-color: rgb(40, 40, 40) !important;
-}
-
-:deep(tbody tr + tr) {
-  border-top: 1px solid rgb(40, 40, 40) !important;
-}
-
-:deep(thead tr) {
-  border-bottom: 1px solid rgb(40, 40, 40) !important;
-}
-
 :deep(td > div) {
   max-width: 100%;
   overflow: hidden;
@@ -260,5 +248,18 @@ const handleRowClick = (row) => {
 
 :deep(table) {
   width: 100%;
+}
+
+/* Table styles */
+:deep(tbody tr) {
+  border-color: rgb(40, 40, 40) !important;
+}
+
+:deep(tbody tr + tr) {
+  border-top: 1px solid rgb(40, 40, 40) !important;
+}
+
+:deep(tbody tr):hover {
+    background: light-dark(#e5e7eb, #1a1a1a);
 }
 </style>

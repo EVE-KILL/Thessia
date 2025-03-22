@@ -70,7 +70,7 @@ const formatIsk = (value: number): string => {
 };
 
 const getImageUrl = (shipId: number): string => {
-  return `https://images.evetech.net/types/${shipId}/render?size=128`;
+  return `https://images.evetech.net/types/${shipId}/render?size=256`;
 };
 
 const getShipName = (item: IMostValuableItem): string => {
@@ -110,8 +110,7 @@ const tabsUi = computed(() => {
 </script>
 
 <template>
-  <div class="flex flex-col min-w-full rounded-lg overflow-hidden min-h-[316px]">
-    <!-- Use UTabs with string v-model for the index - set default-selected to "1" (Kills tab) -->
+  <div class="flex flex-col min-w-full rounded-lg overflow-hidden min-h-[350px] bg-white dark:bg-background-900">
     <UTabs
       v-model="activeTabIndex"
       :items="categories"
@@ -122,30 +121,28 @@ const tabsUi = computed(() => {
 
     <!-- Loading state -->
     <div v-if="pending" class="flex justify-center items-center py-12">
-      <UIcon name="i-lucide-refresh-cw" class="animate-spin text-2xl text-background-400" />
-      <span class="ml-2 text-background-400">{{ t('common.loading') }}</span>
+      <UIcon name="i-lucide-refresh-cw" class="animate-spin text-2xl text-gray-400 dark:text-background-400" />
+      <span class="ml-2 text-gray-400 dark:text-background-400">{{ t('common.loading') }}</span>
     </div>
 
     <!-- Error state -->
-    <div v-else-if="error" class="text-center py-8 text-red-400">
+    <div v-else-if="error" class="text-center py-8 text-red-600 dark:text-red-400">
       {{ t('common.error') }}: {{ error.message }}
     </div>
 
     <!-- Empty state -->
-    <div v-else-if="!items || items.length === 0" class="text-center py-8 text-background-400">
+    <div v-else-if="!items || items.length === 0" class="text-center py-8 text-gray-400 dark:text-background-400">
       {{ t('mostValuable.noData') }}
     </div>
 
     <!-- Content - Displayed differently based on device -->
     <template v-else>
       <!-- Desktop Grid Layout -->
-      <div v-if="!isMobile" class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-4 justify-items-center p-4">
-        <UButton
+      <div v-if="!isMobile" class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-3 p-4">
+        <div
           v-for="item in items"
           :key="item.killmail_id"
-          variant="ghost"
-          color="neutral"
-          class="flex flex-col items-center justify-center h-auto w-full p-2 rounded"
+          class="flex flex-col items-center p-2 rounded transition-colors duration-300 cursor-pointer hover:bg-gray-200 dark:hover:bg-gray-900"
           @click="handleItemClick(item.killmail_id)"
         >
           <NuxtImg
@@ -153,25 +150,23 @@ const tabsUi = computed(() => {
             loading="lazy"
             format="webp"
             :alt="`Ship: ${getShipName(item)}`"
-            class="rounded w-16 h-16 md:w-24 md:h-24 object-contain"
+            class="rounded w-24 h-24 md:w-32 md:h-32 object-contain mb-2"
           />
-          <div class="text-center text-sm mt-1 max-w-full truncate">
+          <div class="text-center text-sm mt-1 max-w-full truncate text-gray-900 dark:text-white">
             {{ getShipName(item) }}
           </div>
-          <div class="text-center text-xs mt-1 text-background-300">
+          <div class="text-center text-xs mt-1 text-gray-500 dark:text-background-300">
             {{ formatIsk(item.total_value) }} ISK
           </div>
-        </UButton>
+        </div>
       </div>
 
       <!-- Mobile Vertical Layout -->
-      <div v-else class="flex flex-col gap-2 p-2">
-        <UButton
+      <div v-else class="flex flex-col divide-y divide-gray-200 dark:divide-background-700">
+        <div
           v-for="item in items"
           :key="item.killmail_id"
-          variant="ghost"
-          color="neutral"
-          class="flex items-center justify-start h-auto w-full p-2 rounded"
+          class="flex items-center p-3 cursor-pointer hover:bg-gray-100 dark:hover:bg-background-800 transition-colors duration-300"
           @click="handleItemClick(item.killmail_id)"
         >
           <NuxtImg
@@ -181,19 +176,19 @@ const tabsUi = computed(() => {
             :alt="`Ship: ${getShipName(item)}`"
             class="rounded w-14 h-14 object-contain mr-3"
           />
-          <div class="flex flex-col flex-grow items-start">
-            <div class="text-sm truncate">
+          <div class="flex flex-col flex-grow">
+            <div class="text-sm truncate text-gray-900 dark:text-white">
               {{ getShipName(item) }}
             </div>
-            <div class="text-xs text-background-300">
+            <div class="text-xs text-gray-500 dark:text-background-300">
               {{ formatIsk(item.total_value) }} ISK
             </div>
           </div>
-          <UIcon name="i-lucide-chevron-right" class="text-background-400" />
-        </UButton>
+          <UIcon name="i-lucide-chevron-right" class="text-gray-400 dark:text-background-400" />
+        </div>
       </div>
 
-      <div class="text-sm text-center mt-2 text-background-400 pb-2">
+      <div class="text-sm text-center mt-2 text-gray-500 dark:text-background-400 pb-4">
         ({{ t('topBox.killsOver', { days: props.days }) }})
       </div>
     </template>
@@ -205,6 +200,17 @@ const tabsUi = computed(() => {
   background-color: rgba(0, 0, 0, 0.4);
 }
 
+/* Match text sizes with other components */
+:deep(.text-sm) {
+  font-size: 0.9rem;
+  line-height: 1rem;
+}
+
+:deep(.text-xs) {
+  font-size: 0.8rem;
+  line-height: 1rem;
+}
+
 /* Responsive adjustments */
 @media (max-width: 768px) {
   .grid {
@@ -212,12 +218,26 @@ const tabsUi = computed(() => {
     padding: 0.5rem;
   }
 
-  .text-sm {
-    font-size: 0.8rem;
+  :deep(.text-sm) {
+    font-size: 0.85rem;
   }
 
-  .text-xs {
-    font-size: 0.7rem;
+  :deep(.text-xs) {
+    font-size: 0.75rem;
   }
 }
+
+/* Table styles */
+:deep(tbody tr) {
+  border-color: rgb(40, 40, 40) !important;
+}
+
+:deep(tbody tr + tr) {
+  border-top: 1px solid rgb(40, 40, 40) !important;
+}
+
+:deep(tbody tr):hover {
+    background: light-dark(#e5e7eb, #1a1a1a);
+}
+
 </style>

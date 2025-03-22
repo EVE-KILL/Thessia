@@ -1,19 +1,47 @@
 <template>
   <div class="language-selector">
-    <!-- Desktop dropdown -->
-    <UDropdownMenu :items="localeItems">
-      <UButton
-        color="neutral"
-        variant="ghost"
-        size="sm"
-        class="flex items-center cursor-pointer"
-      >
-        <Icon
-          name="lucide:earth"
-          class="text-lg"
-        />
-      </UButton>
-    </UDropdownMenu>
+    <!-- Desktop dropdown with CustomDropdown -->
+    <CustomDropdown
+      v-model="isDropdownOpen"
+      :smart-position="true"
+      position="bottom"
+      align="end"
+    >
+      <template #trigger>
+        <UButton
+          color="neutral"
+          variant="ghost"
+          size="sm"
+          class="flex items-center cursor-pointer"
+        >
+          <!-- Language icon - using the standard translate icon -->
+          <UIcon
+            name="lucide:languages"
+            class="text-lg"
+          />
+        </UButton>
+      </template>
+
+      <!-- Dropdown Content -->
+      <div class="py-2 w-48">
+        <button
+          v-for="locale in availableLocales"
+          :key="locale.code"
+          class="w-full text-left px-4 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors flex items-center"
+          :class="{'font-medium': currentLocale === locale.code}"
+          @click="switchLocale(locale.code)"
+        >
+          <UIcon
+            v-if="currentLocale === locale.code"
+            name="lucide:check"
+            class="mr-2 text-primary-500"
+          />
+          <span v-else class="w-5 mr-2"></span> <!-- Spacer for alignment -->
+          {{ locale.name }}
+          <span class="text-xs ml-auto text-gray-500">{{ locale.code.toUpperCase() }}</span>
+        </button>
+      </div>
+    </CustomDropdown>
 
     <!-- Mobile view version (simplified display) -->
     <div v-if="isMobileView" class="flex flex-col gap-2 w-full">
@@ -45,6 +73,7 @@
 <script setup lang="ts">
 import type { LocaleObject } from '@nuxtjs/i18n';
 import type { Locale } from 'vue-i18n';
+import CustomDropdown from './CustomDropdown.vue';
 
 // Props
 const props = defineProps({
@@ -57,10 +86,8 @@ const props = defineProps({
 // Use the i18n composable
 const { locale: currentLocale, locales, setLocale } = useI18n();
 
-// Current language code for displaying in button
-const currentLocaleCode = computed(() => {
-  return currentLocale.value.toUpperCase();
-});
+// Dropdown state
+const isDropdownOpen = ref(false);
 
 // Type-safe available locales
 const availableLocales = computed(() => {
@@ -69,22 +96,12 @@ const availableLocales = computed(() => {
   );
 });
 
-// Generate dropdown items for locales
-const localeItems = computed(() => {
-  return availableLocales.value.map((locale) => ({
-    label: locale.name,
-    icon: currentLocale.value === locale.code ? 'lucide:check' : '',
-    iconClass: 'text-primary-500',
-    // Show language code instead of flag
-    trailing: () => h('span', { class: 'text-xs ml-2' }, locale.code.toUpperCase()),
-    onSelect: () => switchLocale(locale.code)
-  }));
-});
-
 // Function to switch the locale using the built-in setLocale method
 async function switchLocale(newLocale: Locale) {
   try {
     await setLocale(newLocale);
+    // Close dropdown after selection
+    isDropdownOpen.value = false;
   } catch (error) {
     console.debug('Failed to switch locale:', error);
   }

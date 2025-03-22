@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed, onMounted, onUnmounted } from 'vue';
+import { ref, computed, onUnmounted } from 'vue';
 import CustomDropdown from './CustomDropdown.vue';
 import MobileFullscreenModal from '../Modal/MobileFullscreenModal.vue';
 
@@ -136,7 +136,7 @@ onUnmounted(() => {
         :max-height="80"
         :smart-position="true"
       >
-        <!-- Trigger Button -->
+        <!-- Trigger Button - Updated icon to a more appropriate choice -->
         <template #trigger>
           <UButton
             color="primary"
@@ -144,7 +144,7 @@ onUnmounted(() => {
             aria-label="Change background"
             class="cursor-pointer"
           >
-            <UIcon name="lucide:book-image" class="text-xl text-black dark:text-white" />
+            <UIcon name="lucide:wallpaper" class="text-xl text-black dark:text-white" />
           </UButton>
         </template>
 
@@ -209,7 +209,7 @@ onUnmounted(() => {
         @click="openFullscreen"
         class="cursor-pointer"
       >
-        <UIcon name="lucide:book-image" class="text-xl text-black dark:text-white" />
+        <UIcon name="lucide:wallpaper" class="text-xl text-black dark:text-white" />
       </UButton>
     </div>
 
