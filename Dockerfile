@@ -1,4 +1,4 @@
-FROM oven/bun:latest AS build
+FROM oven/bun:alpine AS build
 WORKDIR /app
 COPY . /app
 
@@ -6,7 +6,7 @@ RUN \
     bun install && \
     bun run build --standalone
 
-FROM oven/bun:latest AS production
+FROM oven/bun:alpine AS production
 WORKDIR /app
 COPY --from=build /app/.output /app/
 COPY --from=build /app/nuxt.config.ts /app/
