@@ -370,11 +370,11 @@
     },
     "top": {
         "characters": "인기 캐릭터",
-        "corporations": "상위 법인",
-        "alliances": "상위 얼라이언스",
-        "ships": "상위 함선",
+        "corporations": "상위 기업",
+        "alliances": "상위 제휴사",
+        "ships": "상위 선박",
         "systems": "상위 시스템",
-        "constellations": "상위 성단",
-        "regions": "상위 지역"
+        "constellations": "상위 별자리",
+        "regions": "인기 지역"
     }
 }
