@@ -391,7 +391,7 @@
     "tabs": {
         "topLists": "Top Lists",
         "kills": "Kills",
-        "overview": "Overview"
+        "most-valuable": "Most Valuable"
     },
     "top": {
         "characters": "Top Characters",
@@ -401,5 +401,11 @@
         "systems": "Top Systems",
         "constellations": "Top Constellations",
         "regions": "Top Regions"
+    },
+    "mostValuable": {
+        "kills": "Kills",
+        "structures": "Structures",
+        "ships": "Ships",
+        "noData": "No valuable items found"
     }
 }

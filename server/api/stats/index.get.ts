@@ -1,17 +1,17 @@
 import {
-  topCharacters,
-  topCorporations,
-  topAlliances,
-  topSystems,
-  topConstellations,
-  topRegions,
-  topShips,
-  topSolo,
-  mostValuableKills,
-  mostValuableStructures,
-  mostValuableShips,
-  killCount,
-  newCharacters,
+    topCharacters,
+    topCorporations,
+    topAlliances,
+    topSystems,
+    topConstellations,
+    topRegions,
+    topShips,
+    topSolo,
+    mostValuableKills,
+    mostValuableStructures,
+    mostValuableShips,
+    killCount,
+    newCharacters,
 } from "../../helpers/TopLists"; // Adjust path as needed
 
 export default defineEventHandler(async (event) => {
@@ -23,13 +23,13 @@ export default defineEventHandler(async (event) => {
   let days = 7;
   if (query.days !== undefined) {
     const parsedDays = Number.parseInt(query.days as string, 10);
-    days = Number.isNaN(parsedDays) ? null : parsedDays;
+    days = Number.isNaN(parsedDays) ? 7 : parsedDays; // Default to 7 instead of null
   }
 
   let limit = 10;
   if (query.limit !== undefined) {
     const parsedLimit = Number.parseInt(query.limit as string, 10);
-    limit = Number.isNaN(parsedLimit) ? null : parsedLimit;
+    limit = Number.isNaN(parsedLimit) ? 10 : parsedLimit; // Default to 10 instead of null
   }
 
   // Map type to the appropriate function call
@@ -43,10 +43,10 @@ export default defineEventHandler(async (event) => {
     regions: () => topRegions(null, null, days, limit),
     ships: () => topShips(null, null, days, limit),
     solo: () => topSolo(null, null, days, limit),
-    most_valuable_kills: () => mostValuableKills(days ?? 7, limit),
-    most_valuable_structures: () => mostValuableStructures(days ?? 7, limit),
-    most_valuable_ships: () => mostValuableShips(days ?? 7, limit),
-    kill_count: () => killCount(days ?? 7),
+    most_valuable_kills: () => mostValuableKills(days, limit),
+    most_valuable_structures: () => mostValuableStructures(days, limit),
+    most_valuable_ships: () => mostValuableShips(days, limit),
+    kill_count: () => killCount(days),
     new_characters: () => newCharacters(),
   };
 
@@ -55,6 +55,11 @@ export default defineEventHandler(async (event) => {
     return { error: `Invalid type provided: ${type}`, types: Object.keys(statsQueries) };
   }
 
-  const result = await handler();
-  return result;
+  try {
+    const result = await handler();
+    return result;
+  } catch (error) {
+    console.error(`Error fetching stats for type ${type}:`, error);
+    return { error: 'Failed to fetch data', message: error.message };
+  }
 });

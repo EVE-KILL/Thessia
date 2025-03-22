@@ -3,7 +3,7 @@
         <!-- Desktop View - Only shown on desktop -->
         <div v-if="!isMobile" class="desktop-layout">
             <div class="top-row">
-                <!-- Content for the top row -->
+                <MostValuable />
             </div>
 
             <div class="main-content">
@@ -116,8 +116,8 @@
                         </template>
 
                         <!-- Overview tab content -->
-                        <template v-else-if="item.key === 'overview'">
-                            <div>Overview content will go here</div>
+                        <template v-else-if="item.key === 'most-valuable'">
+                            <MostValuable />
                         </template>
                     </div>
                 </template>
@@ -143,8 +143,8 @@ const tabItems = ref([
         icon: 'i-lucide-swords'
     },
     {
-        key: 'overview',
-        label: t('tabs.overview'),
+        key: 'most-valuable',
+        label: t('tabs.most-valuable'),
         icon: 'i-lucide-layout-dashboard'
     }
 ]);
