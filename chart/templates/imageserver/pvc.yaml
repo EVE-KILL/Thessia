@@ -1,0 +1,20 @@
+{{- if and .Values.imageserver.enabled .Values.imageserver.persistence.enabled }}
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: imageserver
+  namespace: {{ .Values.namespace.name }}
+  labels:
+    {{- include "thessia.labels" . | nindent 4 }}
+spec:
+  accessModes:
+    {{- range .Values.imageserver.persistence.accessModes }}
+    - {{ . | quote }}
+    {{- end }}
+  {{- if .Values.imageserver.persistence.storageClassName }}
+  storageClassName: {{ .Values.imageserver.persistence.storageClassName }}
+  {{- end }}
+  resources:
+    requests:
+      storage: {{ .Values.imageserver.persistence.size }}
+{{- end }}

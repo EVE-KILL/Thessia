@@ -1,0 +1,57 @@
+{{- if .Values.imageserver.enabled }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: imageserver
+  namespace: {{ .Values.namespace.name }}
+  labels:
+    {{- include "thessia.labels" . | nindent 4 }}
+spec:
+  replicas: {{ .Values.imageserver.replicas }}
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
+  selector:
+    matchLabels:
+      app: imageserver
+      {{- include "thessia.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        app: imageserver
+        {{- include "thessia.selectorLabels" . | nindent 8 }}
+    spec:
+      serviceAccountName: {{ include "thessia.serviceAccountName" . }}
+      securityContext:
+        {{- toYaml .Values.imageserver.securityContext | nindent 8 }}
+      containers:
+        - name: imageserver
+          image: "{{ .Values.imageserver.image.repository }}:{{ .Values.imageserver.image.tag }}"
+          imagePullPolicy: {{ .Values.imageserver.image.pullPolicy }}
+          ports:
+            - containerPort: {{ .Values.imageserver.service.targetPort }}
+              name: http
+          livenessProbe:
+            httpGet:
+              path: /_healthcheck
+              port: {{ .Values.imageserver.service.targetPort }}
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          readinessProbe:
+            httpGet:
+              path: /_healthcheck
+              port: {{ .Values.imageserver.service.targetPort }}
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          resources:
+            {{- toYaml .Values.imageserver.resources | nindent 12 }}
+          volumeMounts:
+            - name: imageserver-storage
+              mountPath: {{ .Values.imageserver.persistence.mountPath }}
+      volumes:
+        - name: imageserver-storage
+          persistentVolumeClaim:
+            claimName: imageserver
+{{- end }}

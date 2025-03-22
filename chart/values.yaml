@@ -87,6 +87,37 @@ thessia:
         fsGroup: 1000
         runAsNonRoot: true
 
+# Image server
+imageserver:
+    enabled: true
+    replicas: 1
+    resources:
+        requests:
+            cpu: 500m
+            memory: 256Mi
+        limits:
+            cpu: 8000m
+            memory: 1024Mi
+    image:
+        repository: ghcr.io/eve-kill/imageserver
+        tag: latest
+        pullPolicy: Always
+    service:
+        port: 3000
+        targetPort: 3000
+    securityContext:
+        runAsUser: 1000
+        runAsGroup: 1000
+        fsGroup: 1000
+        runAsNonRoot: true
+    persistence:
+        enabled: true
+        storageClassName: nvme
+        accessModes:
+          - ReadWriteOnce
+        size: 50Gi
+        mountPath: /app/cache
+
 # Process Entities
 processEntities:
     enabled: true
@@ -204,10 +235,17 @@ ingress:
         paths:
           - path: /
             pathType: Prefix
+      - host: "images.eve-kill.com"
+        paths:
+          - path: /
+            pathType: Prefix
+            serviceName: imageserver
+            servicePort: 3000
     tls:
       - secretName: "evekill-tls"
         hosts:
           - "eve-kill.com"
+          - "images.eve-kill.com"
 
 # Pod Disruption Budget
 podDisruptionBudget:

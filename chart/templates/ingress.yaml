@@ -32,9 +32,17 @@ spec:
             pathType: {{ .pathType }}
             backend:
               service:
+                {{- if .serviceName }}
+                name: {{ .serviceName }}
+                {{- else }}
                 name: {{ include "thessia.fullname" $ }}
+                {{- end }}
                 port:
+                  {{- if .servicePort }}
+                  number: {{ .servicePort }}
+                  {{- else }}
                   number: {{ $.Values.thessia.service.port }}
+                  {{- end }}
           {{- end }}
     {{- end }}
 {{- end }}
