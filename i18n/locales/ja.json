@@ -136,7 +136,8 @@
             "overview": "概要",
             "processing": "加工",
             "database": "データベース",
-            "cache": "キャッシュ"
+            "cache": "キャッシュ",
+            "redis": "レディス"
         },
         "uptime": {
             "title": "システム稼働時間",
@@ -191,6 +192,30 @@
             "24hours": "24時間",
             "1week": "1週間",
             "1month": "1ヶ月"
+        },
+        "redis": {
+            "server": "レディス・サーバー",
+            "version": "バージョン",
+            "mode": "モード",
+            "os": "オペレーティングシステム",
+            "uptime": "アップタイム",
+            "uptimeFormat": "{days}D{hours}H{minutes}M{seconds}S",
+            "memory": "メモリー",
+            "usedMemory": "中古メモリー",
+            "usedMemoryPeak": "ピーク時のメモリ使用量",
+            "memFragmentationRatio": "メモリの断片化率",
+            "stats": "統計",
+            "connectedClients": "コネクテッド・クライアント",
+            "totalConnections": "総接続数",
+            "totalCommands": "総コマンド数",
+            "keyspaceHits": "キースペース・ヒット",
+            "keyspaceMisses": "キースペースのミス",
+            "hitRatio": "ヒット率",
+            "keyspace": "キースペース",
+            "database": "データベース",
+            "keys": "鍵",
+            "expires": "期限切れ",
+            "avgTtl": "平均TTL"
         }
     },
     "auth": {
