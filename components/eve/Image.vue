@@ -2,6 +2,7 @@
 import { computed } from 'vue';
 
 const eveImages = useEveImages();
+const { isMobile } = useResponsive();
 
 /**
  * Props for the component
@@ -68,6 +69,11 @@ const props = defineProps({
   circle: {
     type: Boolean,
     default: false
+  },
+  // Whether to optimize image quality on mobile
+  mobileOptimize: {
+    type: Boolean,
+    default: true
   }
 });
 
@@ -111,6 +117,15 @@ const src = computed(() => {
 const imgWidth = computed(() => props.width || props.size || eveSize.value);
 const imgHeight = computed(() => props.height || props.size || eveSize.value);
 
+// Calculate image quality based on device
+const effectiveQuality = computed(() => {
+  // If mobile optimization is enabled and we're on mobile, reduce quality
+  if (props.mobileOptimize && isMobile.value) {
+    return Math.min(props.quality, 60); // Cap at 60% quality on mobile
+  }
+  return props.quality;
+});
+
 // Computed classes for the image
 const imageClasses = computed(() => {
   const classes = props.class ? [props.class] : [];
@@ -140,7 +155,7 @@ const imageClasses = computed(() => {
     :width="imgWidth"
     :height="imgHeight"
     :format="format"
-    :quality="quality"
+    :quality="effectiveQuality"
   />
   <div
     v-else

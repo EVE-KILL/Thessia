@@ -359,5 +359,8 @@
         "wsConnected": "WebSocket Connected",
         "wsDisconnected": "WebSocket Disconnected",
         "showing": "Showing"
+    },
+    "topBox": {
+        "killsOver": "Last {days} days"
     }
 }

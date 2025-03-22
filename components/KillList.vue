@@ -438,48 +438,11 @@ const handleKillClick = (row: any) => {
 };
 
 // Responsive design - clean implementation with device module
-const device = useDevice();
-const isMobile = ref(device.isMobile);
-
-// Client-side detection for dynamic updates
-onMounted(() => {
-  if (process.client) {
-    // Create media query listener for client-side updates
-    const mediaQuery = window.matchMedia('(max-width: 767px)');
-
-    // Update isMobile when media query changes
-    const handleMediaQueryChange = (e) => {
-      isMobile.value = e.matches;
-    };
-
-    // Add listener based on browser support
-    if (mediaQuery.addEventListener) {
-      mediaQuery.addEventListener('change', handleMediaQueryChange);
-    } else {
-      // Fallback for older browsers
-      mediaQuery.addListener(handleMediaQueryChange);
-    }
-
-    // Ensure client-side detection matches the current viewport
-    isMobile.value = mediaQuery.matches;
-
-    // Clean up
-    onBeforeUnmount(() => {
-      if (mediaQuery.removeEventListener) {
-        mediaQuery.removeEventListener('change', handleMediaQueryChange);
-      } else {
-        mediaQuery.removeListener(handleMediaQueryChange);
-      }
-    });
-  }
-});
+const { isMobile } = useResponsive();
 
 // Force reactive computation by making columns directly reactive
 const columns = computed<TableColumn<IKillList>[]>(() => {
-  // Force reactivity by referencing the ref value directly in the computation
-  const mobile = isMobile.value;
-  console.debug('Computing columns based on mobile status:', mobile);
-  return mobile ? columnsMobile : columnsDesktop;
+  return isMobile.value ? columnsMobile : columnsDesktop;
 });
 
 // Add a watcher to debug when isMobile changes

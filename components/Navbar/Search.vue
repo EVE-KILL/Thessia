@@ -16,36 +16,22 @@ const activeItemIndex = ref(-1);
 const activeCategory = ref('');
 const shouldShowDropdown = ref(false);
 const dropdownRef = ref<HTMLElement | null>(null);
-const isMobile = ref(false);
+
+const { isMobile } = useResponsive();
 const isFullscreenMobile = ref(false);
 
-// Fix animation and positioning issues
-const dropdownTransition = ref({
-  entering: false
-});
-
-// Detect if we're on mobile
-onMounted(() => {
-  checkIfMobile();
-  window.addEventListener('resize', checkIfMobile);
-});
-
-onUnmounted(() => {
-  window.removeEventListener('resize', checkIfMobile);
-});
-
-// Check if we're on mobile
-const checkIfMobile = () => {
-  isMobile.value = window.innerWidth < 768;
-};
-
-// Show fullscreen mobile search when typing on mobile - modified to not auto-open
-watch([() => query.value, () => isMobile.value], ([newQuery, isMobileDevice]) => {
+// Watch for changes in query and mobile state
+watch([() => query.value, isMobile], ([newQuery, isMobileDevice]) => {
   // Only auto-close when query is cleared
   if (newQuery.length === 0) {
     isFullscreenMobile.value = false;
   }
 }, { immediate: true });
+
+// Fix animation and positioning issues
+const dropdownTransition = ref({
+  entering: false
+});
 
 // Group results by type for fancy category-based display
 const groupedResults = computed(() => {

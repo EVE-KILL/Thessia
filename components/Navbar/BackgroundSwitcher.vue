@@ -15,26 +15,8 @@ const isDropdownOpen = ref(false);
 // Track if we're displaying in fullscreen mode (for mobile)
 const isFullscreen = ref(false);
 
-// Add internal mobile detection
-const internalIsMobile = ref(false);
-const checkIfMobile = () => {
-  internalIsMobile.value = window.innerWidth < 768;
-};
-
-// Setup mobile detection on mount
-onMounted(() => {
-  if (import.meta.client) {
-    checkIfMobile();
-    window.addEventListener('resize', checkIfMobile);
-  }
-});
-
-// Clean up event listener
-onUnmounted(() => {
-  if (import.meta.client) {
-    window.removeEventListener('resize', checkIfMobile);
-  }
-});
+// Use the composable instead of internal detection
+const { isMobile: internalIsMobile } = useResponsive();
 
 // Emit events for parent components
 const emit = defineEmits(['fullscreen-opened', 'fullscreen-closed', 'background-selected']);
@@ -53,7 +35,7 @@ const props = defineProps({
   }
 });
 
-// Compute effective mobile state (use internal detection OR prop)
+// Compute effective mobile state (use responsive composable OR prop)
 const isMobileView = computed(() => {
   return internalIsMobile.value || props.isMobile;
 });
