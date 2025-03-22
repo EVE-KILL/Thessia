@@ -122,6 +122,11 @@ const formatDate = (dateString) => {
   return new Date(dateString).toLocaleString()
 }
 
+// Format numbers using the browser's locale system
+const formatNumber = (value: number): string => {
+  return value.toLocaleString("da-DK");
+};
+
 // Function to update chart options
 const updateChartOptions = () => {
   if (!statusData.value) return
@@ -130,14 +135,13 @@ const updateChartOptions = () => {
   const processedCounts = statusData.value.processedCounts
   const categories = Object.keys(processedCounts)
 
-  // Extract data for the selected time period and convert to numbers
+  // Extract data for the selected time period - now handling numeric values directly
   const dataPoints = categories.map(category => {
-    const strValue = processedCounts[category][period]
-    // Parse the number string by removing dots/commas and converting to number
-    const numValue = Number(strValue.replace(/\./g, '').replace(/,/g, ''))
+    const value = processedCounts[category][period]
+    // Values are now already numbers from the API, no need for string conversion
     return {
       name: category,
-      value: numValue
+      value: typeof value === 'number' ? value : 0
     }
   })
 
@@ -226,23 +230,17 @@ const activeTab = ref('overview')
 // Invert the logic - change from simplified to detailed
 const detailed = ref(false)
 
-// Add summary stats computed property with fixed number conversion
+// Add summary stats computed property with number handling
 const summaryStats = computed(() => {
   if (!statusData.value) return null
 
   return {
     totalQueued: Object.values(statusData.value.queueCounts).reduce(
-      (sum, val) => {
-        // Handle string formatting in queue counts
-        const numValue = typeof val === 'string'
-          ? Number(val.replace(/[.,]/g, ''))
-          : Number(val);
-        return sum + (isNaN(numValue) ? 0 : numValue);
-      }, 0
+      (sum, val) => sum + (typeof val === 'number' ? val : 0), 0
     ),
-    // Change to use 5min for consistency with the default selection
+    // Values are now numbers directly from the API
     totalProcessed: Object.values(statusData.value.processedCounts).reduce(
-      (sum, val) => sum + Number(val['5min'].replace(/\./g, '').replace(/,/g, '')), 0
+      (sum, val) => sum + (val['5min'] || 0), 0
     ),
     unprocessedItems: statusData.value.databaseCounts.unprocessedCount || 0
   }
@@ -290,11 +288,11 @@ const summaryStats = computed(() => {
             </div>
             <div class="bg-emerald-50 dark:bg-emerald-900/30 rounded-lg shadow p-3">
               <div class="text-xs uppercase text-emerald-700 dark:text-emerald-300">{{ $t('status.summary.processedLast5m') }}</div>
-              <div class="text-xl font-mono">{{ summaryStats?.totalProcessed.toLocaleString() }}</div>
+              <div class="text-xl font-mono">{{ formatNumber(summaryStats?.totalProcessed) }}</div>
             </div>
             <div class="bg-amber-50 dark:bg-amber-900/30 rounded-lg shadow p-3">
               <div class="text-xs uppercase text-amber-700 dark:text-amber-300">{{ $t('status.summary.queuedItems') }}</div>
-              <div class="text-xl font-mono">{{ summaryStats?.totalQueued.toLocaleString() }}</div>
+              <div class="text-xl font-mono">{{ formatNumber(summaryStats?.totalQueued) }}</div>
             </div>
           </div>
 
@@ -304,6 +302,7 @@ const summaryStats = computed(() => {
               { label: isMobile ? '' : $t('status.tabs.overview'), icon: 'lucide:layout-dashboard', slot: 'overview', defaultSelected: true },
               { label: isMobile ? '' : $t('status.tabs.processing'), icon: 'lucide:bar-chart-2', slot: 'processing' },
               { label: isMobile ? '' : $t('status.tabs.database'), icon: 'lucide:database', slot: 'database' },
+              { label: isMobile ? '' : $t('status.tabs.cache'), icon: 'lucide:hard-drive', slot: 'cache' },
             ]"
             class="mb-6"
           >
@@ -350,7 +349,7 @@ const summaryStats = computed(() => {
                         <tr v-for="(count, queue) in statusData.queueCounts" :key="queue"
                             class="border-t border-gray-200 dark:border-gray-700">
                           <td class="py-1 capitalize text-sm">{{ queue }}</td>
-                          <td class="py-1 text-right font-mono text-sm">{{ count }}</td>
+                          <td class="py-1 text-right font-mono text-sm">{{ formatNumber(count) }}</td>
                         </tr>
                       </tbody>
                     </table>
@@ -443,12 +442,72 @@ const summaryStats = computed(() => {
                           class="border-t border-gray-200 dark:border-gray-700"
                           :class="{'bg-amber-100 dark:bg-amber-900/50': collection === 'unprocessedCount'}">
                         <td class="py-1 capitalize text-sm">{{ collection }}</td>
-                        <td class="py-1 text-right font-mono text-sm">{{ count }}</td>
+                        <td class="py-1 text-right font-mono text-sm">{{ formatNumber(count) }}</td>
                       </tr>
                     </tbody>
                   </table>
                 </div>
               </UCard>
+            </template>
+
+            <template #cache>
+              <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                <!-- Cache Sizes -->
+                <UCard>
+                  <template #header>
+                    <div class="flex items-center">
+                      <UIcon name="lucide:table" class="mr-2" />
+                      <h3 class="font-bold">{{ $t('status.cacheSizes.title') }}</h3>
+                    </div>
+                  </template>
+
+                  <div class="overflow-x-auto">
+                    <table class="min-w-full">
+                      <thead>
+                        <tr>
+                          <th class="text-left text-xs">{{ $t('status.cacheSizes.cache') }}</th>
+                          <th class="text-right text-xs">{{ $t('status.cacheSizes.size') }}</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        <tr v-for="(size, cache) in statusData.cacheSizes" :key="cache"
+                            class="border-t border-gray-200 dark:border-gray-700">
+                          <td class="py-1 text-sm">{{ cache }}</td>
+                          <td class="py-1 text-right font-mono text-sm">{{ formatNumber(size) }}</td>
+                        </tr>
+                      </tbody>
+                    </table>
+                  </div>
+                </UCard>
+
+                <!-- Cache Hits -->
+                <UCard>
+                  <template #header>
+                    <div class="flex items-center">
+                      <UIcon name="lucide:zap" class="mr-2" />
+                      <h3 class="font-bold">{{ $t('status.cacheHits.title') }}</h3>
+                    </div>
+                  </template>
+
+                  <div class="overflow-x-auto">
+                    <table class="min-w-full">
+                      <thead>
+                        <tr>
+                          <th class="text-left text-xs">{{ $t('status.cacheHits.cache') }}</th>
+                          <th class="text-right text-xs">{{ $t('status.cacheHits.hits') }}</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        <tr v-for="(hits, cache) in statusData.cacheHits" :key="cache"
+                            class="border-t border-gray-200 dark:border-gray-700">
+                          <td class="py-1 text-sm">{{ cache }}</td>
+                          <td class="py-1 text-right font-mono text-sm">{{ formatNumber(hits) }}</td>
+                        </tr>
+                      </tbody>
+                    </table>
+                  </div>
+                </UCard>
+              </div>
             </template>
           </UTabs>
 

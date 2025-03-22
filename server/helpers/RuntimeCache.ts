@@ -21,7 +21,33 @@ import { SolarSystems } from "../models/SolarSystems";
 import { getAlliance, getCharacter, getCorporation } from "./ESIData";
 import { getPrice } from "./Prices";
 import { cliLogger } from "./Logger";
+import { RedisStorage } from "./Storage";
 
+// Get Redis client for the secondary cache
+const redis = RedisStorage.getInstance().getClient();
+
+// Define TTLs for different cache types (in seconds)
+const STATIC_DATA_TTL = 86400 * 7; // 7 days for rarely changing data
+const ENTITY_DATA_TTL = 3600 * 6;  // 6 hours for entities
+const PRICE_DATA_TTL = 86400;      // 1 day for prices
+
+// Define cache namespaces for consistent usage
+export const CACHE_NAMESPACES = {
+  INV_GROUPS: 'invGroups',
+  INV_TYPES: 'invTypes',
+  INV_FLAGS: 'invFlags',
+  FACTIONS: 'factions',
+  REGIONS: 'regions',
+  CONSTELLATIONS: 'constellations',
+  SOLAR_SYSTEMS: 'solarSystems',
+  CUSTOM_PRICES: 'customPrices',
+  PRICE: 'price',
+  CHARACTER: 'character',
+  CORPORATION: 'corporation',
+  ALLIANCE: 'alliance'
+};
+
+// Primary cache using Maps or LRU for fast access
 export const invGroupsCache = new Map<number, IInvGroup>();
 export const invTypesCache = new Map<number, IInvType>();
 export const invFlagsCache = new Map<number, IInvFlag>();
@@ -30,210 +56,264 @@ export const regionsCache = new Map<number, IRegion>();
 export const constellationsCache = new Map<number, IConstellation>();
 export const solarSystemsCache = new Map<number, ISolarSystem>();
 export const customPriceCache = new Map<number, ICustomPrice>();
+
+// For the LRU caches for dynamic data
 export const priceCache = new LRUCache<string, number>({
   max: 1000000,
-  ttl: 1000 * 60 * 60 * 24,
+  ttl: 1000 * 60 * 60 * 24, // 24 hours
   allowStale: true,
 });
+
 export const characterCache = new LRUCache<string, ICharacter>({
   max: 100000,
-  ttl: 1000 * 60 * 60 * 6,
+  ttl: 1000 * 60 * 60 * 6, // 6 hours
   allowStale: true,
 });
+
 export const corporationCache = new LRUCache<string, ICorporation>({
   max: 100000,
-  ttl: 1000 * 60 * 60 * 6,
+  ttl: 1000 * 60 * 60 * 6, // 6 hours
   allowStale: true,
 });
+
 export const allianceCache = new LRUCache<string, IAlliance>({
   max: 100000,
-  ttl: 1000 * 60 * 60 * 6,
-  allowStale: true,
-});
-export const nearCache = new LRUCache<string, any>({
-  max: 500000,
-  ttl: 1000 * 60 * 60 * 1,
+  ttl: 1000 * 60 * 60 * 6, // 6 hours
   allowStale: true,
 });
 
-async function loadAllInvGroups(): Promise<void> {
-  const groups = await InvGroups.find({});
-  for (const group of groups) {
-    invGroupsCache.set(group.group_id, group);
-  }
-}
-async function loadAllInvTypes(): Promise<void> {
-  const types = await InvTypes.find({});
-  for (const type of types) {
-    invTypesCache.set(type.type_id, type);
-  }
-}
-async function loadAllInvFlags(): Promise<void> {
-  const flags = await InvFlags.find({});
-  for (const flag of flags) {
-    invFlagsCache.set(flag.flag_id, flag);
-  }
-}
-async function loadAllFactions(): Promise<void> {
-  const factions = await Factions.find({});
-  for (const faction of factions) {
-    factionsCache.set(faction.faction_id, faction);
-  }
-}
-async function loadAllRegions(): Promise<void> {
-  const regions = await Regions.find({});
-  for (const region of regions) {
-    regionsCache.set(region.region_id, region);
-  }
-}
-async function loadAllConstellations(): Promise<void> {
-  const constellations = await Constellations.find({});
-  for (const constellation of constellations) {
-    constellationsCache.set(constellation.constellation_id, constellation);
-  }
-}
-async function loadAllSolarSystems(): Promise<void> {
-  const solarSystems = await SolarSystems.find({});
-  for (const solarSystem of solarSystems) {
-    solarSystemsCache.set(solarSystem.system_id, solarSystem);
-  }
-}
-async function loadAllCustomPrices(): Promise<void> {
-  const prices = await CustomPrices.find({}).sort({ date: 1 });
-  for (const price of prices) {
-    customPriceCache.set(price.type_id, price);
-  }
-}
+// Helper functions for Redis cache
+const redisCacheKey = (namespace: string, id: string | number) => `cache:${namespace}:${id}`;
+const redisHitKey = (namespace: string) => `cache:hits:${namespace}`;
+const redisKeysSetKey = (namespace: string) => `cache:keys:${namespace}`;
 
-// Use a direct boolean or default to true if in production
-const enabledRuntimeCache = process.env.ENABLE_RUNTIME_CACHE === 'true';
-
-if (enabledRuntimeCache) {
-  // Load at startup
-  await Promise.all([
-    loadAllInvGroups(),
-    loadAllInvTypes(),
-    loadAllInvFlags(),
-    loadAllFactions(),
-    loadAllRegions(),
-    loadAllConstellations(),
-    loadAllSolarSystems(),
-    loadAllCustomPrices(),
-  ]);
-  cliLogger.info(
-    "Runtime caches loaded " +
-    `invGroups: ${invGroupsCache.size} ` +
-    `invTypes: ${invTypesCache.size} ` +
-    `invFlags: ${invFlagsCache.size} ` +
-    `factions: ${factionsCache.size} ` +
-    `regions: ${regionsCache.size} ` +
-    `constellations: ${constellationsCache.size} ` +
-    `solarSystems: ${solarSystemsCache.size} ` +
-    `customPrices: ${customPriceCache.size}`
+// Track cache hit in Redis for stats
+const trackCacheHit = (namespace: string) => {
+  redis.incr(redisHitKey(namespace)).catch(err =>
+    cliLogger.error(`Failed to increment hit counter for ${namespace}:`, err)
   );
+};
+
+// Track cached keys for size stats
+const trackCacheKey = (namespace: string, id: string | number) => {
+  redis.sadd(redisKeysSetKey(namespace), id.toString()).catch(err =>
+    cliLogger.error(`Failed to track cache key for ${namespace}:${id}`, err)
+  );
+};
+
+// Helper to get from Redis cache
+const getFromRedis = async <T>(namespace: string, id: string | number): Promise<T | null> => {
+  try {
+    const key = redisCacheKey(namespace, id);
+    const data = await redis.get(key);
+    return data ? JSON.parse(data) : null;
+  } catch (err) {
+    cliLogger.error(`Redis cache error for ${namespace}:${id}`, err);
+    return null;
+  }
+};
+
+// Helper to set in Redis cache
+const setInRedis = async <T>(namespace: string, id: string | number, value: T, ttl = STATIC_DATA_TTL): Promise<void> => {
+  try {
+    const key = redisCacheKey(namespace, id);
+    await redis.set(key, JSON.stringify(value), 'EX', ttl);
+    trackCacheKey(namespace, id);
+  } catch (err) {
+    cliLogger.error(`Failed to set in Redis cache ${namespace}:${id}`, err);
+  }
+};
+
+/**
+ * Generic caching function that follows the pattern:
+ * 1. Check local cache
+ * 2. Check Redis cache
+ * 3. Fetch from data source
+ * 4. Store in caches
+ */
+async function getCachedData<T>({
+  namespace,
+  id,
+  localCache,
+  fetchData,
+  ttl = STATIC_DATA_TTL
+}: {
+  namespace: string;
+  id: string | number;
+  localCache?: Map<number, T> | LRUCache<string, T>;
+  fetchData: () => Promise<T | null>;
+  ttl?: number;
+}): Promise<T | null> {
+  // Convert id to string or number as needed by the cache
+  const cacheId = typeof id === 'string' || !localCache ? id : Number(id);
+  const stringId = typeof id === 'number' ? String(id) : id;
+
+  // 1. Check local cache first
+  if (localCache && localCache.has(cacheId)) {
+    trackCacheHit(namespace);
+    return localCache.get(cacheId) as T;
+  }
+
+  // 2. Check Redis cache
+  const redisData = await getFromRedis<T>(namespace, stringId);
+  if (redisData !== null) {
+    if (localCache) {
+      localCache.set(cacheId, redisData);
+    }
+    trackCacheHit(namespace);
+    return redisData;
+  }
+
+  // 3. Fetch from data source
+  const data = await fetchData();
+
+  // 4. Store in caches if data was found
+  if (data !== null) {
+    if (localCache) {
+      localCache.set(cacheId, data);
+    }
+    setInRedis(namespace, stringId, data, ttl);
+  }
+
+  return data;
 }
 
+// Specialized cached lookup functions using the generic pattern
 export async function getCachedInvGroup(groupId: number): Promise<IInvGroup | null> {
-  if (invGroupsCache.has(groupId)) {
-    return invGroupsCache.get(groupId) as IInvGroup | null;
-  }
-  const group = await InvGroups.findOne({ group_id: groupId });
-  if (group) invGroupsCache.set(groupId, group);
-  return group;
+  return getCachedData<IInvGroup>({
+    namespace: CACHE_NAMESPACES.INV_GROUPS,
+    id: groupId,
+    localCache: invGroupsCache,
+    fetchData: () => InvGroups.findOne({ group_id: groupId })
+  });
 }
 
 export async function getCachedItem(typeId: number): Promise<IInvType | null> {
-  if (invTypesCache.has(typeId)) {
-    return invTypesCache.get(typeId) as IInvType | null;
-  }
-  const type = await InvTypes.findOne({ type_id: typeId });
-  if (type) invTypesCache.set(typeId, type);
-  return type;
+  return getCachedData<IInvType>({
+    namespace: CACHE_NAMESPACES.INV_TYPES,
+    id: typeId,
+    localCache: invTypesCache,
+    fetchData: () => InvTypes.findOne({ type_id: typeId })
+  });
 }
 
 export async function getCachedInvFlag(flagId: number): Promise<IInvFlag | null> {
-  if (invFlagsCache.has(flagId)) {
-    return invFlagsCache.get(flagId) as IInvFlag | null;
-  }
-  const flag = await InvFlags.findOne({ flag_id: flagId });
-  if (flag) invFlagsCache.set(flagId, flag);
-  return flag;
+  return getCachedData<IInvFlag>({
+    namespace: CACHE_NAMESPACES.INV_FLAGS,
+    id: flagId,
+    localCache: invFlagsCache,
+    fetchData: () => InvFlags.findOne({ flag_id: flagId })
+  });
 }
 
 export async function getCachedFaction(factionId: number): Promise<IFaction | null> {
-  if (factionsCache.has(factionId)) {
-    return factionsCache.get(factionId) as IFaction | null;
-  }
-  const faction = await Factions.findOne({ faction_id: factionId });
-  if (faction) factionsCache.set(factionId, faction);
-  return faction;
+  return getCachedData<IFaction>({
+    namespace: CACHE_NAMESPACES.FACTIONS,
+    id: factionId,
+    localCache: factionsCache,
+    fetchData: () => Factions.findOne({ faction_id: factionId })
+  });
 }
 
 export async function getCachedRegion(regionId: number): Promise<IRegion | null> {
-  if (regionsCache.has(regionId)) {
-    return regionsCache.get(regionId) as IRegion | null;
-  }
-  const region = await Regions.findOne({ region_id: regionId });
-  if (region) regionsCache.set(regionId, region);
-  return region;
+  return getCachedData<IRegion>({
+    namespace: CACHE_NAMESPACES.REGIONS,
+    id: regionId,
+    localCache: regionsCache,
+    fetchData: () => Regions.findOne({ region_id: regionId })
+  });
 }
 
-export async function getCachedConstellation(
-  constellationId: number,
-): Promise<IConstellation | null> {
-  if (constellationsCache.has(constellationId)) {
-    return constellationsCache.get(constellationId) as IConstellation | null;
-  }
-  const constellation = await Constellations.findOne({ constellation_id: constellationId });
-  if (constellation) constellationsCache.set(constellationId, constellation);
-  return constellation;
+export async function getCachedConstellation(constellationId: number): Promise<IConstellation | null> {
+  return getCachedData<IConstellation>({
+    namespace: CACHE_NAMESPACES.CONSTELLATIONS,
+    id: constellationId,
+    localCache: constellationsCache,
+    fetchData: () => Constellations.findOne({ constellation_id: constellationId })
+  });
 }
 
 export async function getCachedSolarSystem(solarSystemId: number): Promise<ISolarSystem | null> {
-  if (solarSystemsCache.has(solarSystemId)) {
-    return solarSystemsCache.get(solarSystemId) as ISolarSystem | null;
-  }
-  const solarSystem = await SolarSystems.findOne({ system_id: solarSystemId });
-  if (solarSystem) solarSystemsCache.set(solarSystemId, solarSystem);
-  return solarSystem;
+  return getCachedData<ISolarSystem>({
+    namespace: CACHE_NAMESPACES.SOLAR_SYSTEMS,
+    id: solarSystemId,
+    localCache: solarSystemsCache,
+    fetchData: () => SolarSystems.findOne({ system_id: solarSystemId })
+  });
+}
+
+export async function getCachedCustomPrice(typeId: number): Promise<ICustomPrice | null> {
+  return getCachedData<ICustomPrice>({
+    namespace: CACHE_NAMESPACES.CUSTOM_PRICES,
+    id: typeId,
+    localCache: customPriceCache,
+    fetchData: () => CustomPrices.findOne({ type_id: typeId }),
+    ttl: PRICE_DATA_TTL
+  });
 }
 
 export async function getCachedCharacter(characterId: number): Promise<ICharacter | null> {
-  const key = String(characterId);
-  if (characterCache.has(key)) {
-    return characterCache.get(key) as ICharacter | null;
-  }
-  const character = await getCharacter(characterId);
-  if (character) characterCache.set(key, character);
-  return character;
+  return getCachedData<ICharacter>({
+    namespace: CACHE_NAMESPACES.CHARACTER,
+    id: String(characterId),
+    localCache: characterCache,
+    fetchData: () => getCharacter(characterId),
+    ttl: ENTITY_DATA_TTL
+  });
 }
 
 export async function getCachedCorporation(corporationId: number): Promise<ICorporation | null> {
-  const key = String(corporationId);
-  if (corporationCache.has(key)) {
-    return corporationCache.get(key) as ICorporation | null;
-  }
-  const corp = await getCorporation(corporationId);
-  if (corp) corporationCache.set(key, corp);
-  return corp;
+  return getCachedData<ICorporation>({
+    namespace: CACHE_NAMESPACES.CORPORATION,
+    id: String(corporationId),
+    localCache: corporationCache,
+    fetchData: () => getCorporation(corporationId),
+    ttl: ENTITY_DATA_TTL
+  });
 }
 
 export async function getCachedAlliance(allianceId: number): Promise<IAlliance | null> {
-  const key = String(allianceId);
-  if (allianceCache.has(key)) {
-    return allianceCache.get(key) as IAlliance | null;
-  }
-  const alliance = await getAlliance(allianceId);
-  if (alliance) allianceCache.set(key, alliance);
-  return alliance;
+  return getCachedData<IAlliance>({
+    namespace: CACHE_NAMESPACES.ALLIANCE,
+    id: String(allianceId),
+    localCache: allianceCache,
+    fetchData: () => getAlliance(allianceId),
+    ttl: ENTITY_DATA_TTL
+  });
 }
 
 export async function getCachedPrice(typeId: number, killTime: Date): Promise<number> {
   const key = `${typeId}-${killTime.getTime()}`;
-  if (priceCache.has(key)) {
-    return priceCache.get(key) as number | undefined;
+  return getCachedData<number>({
+    namespace: CACHE_NAMESPACES.PRICE,
+    id: key,
+    localCache: priceCache,
+    fetchData: async () => {
+      const price = await getPrice(typeId, killTime);
+      return price;
+    },
+    ttl: PRICE_DATA_TTL
+  }) || 0; // Default to 0 if no price found
+}
+
+// Utility functions for stats
+export async function getCacheSize(namespace: string): Promise<number> {
+  try {
+    const keysSetKey = redisKeysSetKey(namespace);
+    return await redis.scard(keysSetKey);
+  } catch (err) {
+    cliLogger.error(`Failed to get cache size for ${namespace}:`, err);
+    return 0;
   }
-  const price = await getPrice(typeId, killTime);
-  if (price) priceCache.set(key, price);
-  return price;
+}
+
+export async function getCacheHitCount(namespace: string): Promise<number> {
+  try {
+    const hitKey = redisHitKey(namespace);
+    const count = await redis.get(hitKey);
+    return count ? parseInt(count, 10) : 0;
+  } catch (err) {
+    cliLogger.error(`Failed to get hit count for ${namespace}:`, err);
+    return 0;
+  }
 }

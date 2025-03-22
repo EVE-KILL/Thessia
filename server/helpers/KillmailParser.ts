@@ -19,8 +19,7 @@ import {
     getCachedItem,
     getCachedPrice,
     getCachedRegion,
-    getCachedSolarSystem,
-    nearCache,
+    getCachedSolarSystem
 } from "./RuntimeCache";
 
 async function parseKillmail(killmail: IESIKillmail, warId = 0): Promise<Partial<IKillmail>> {
@@ -201,12 +200,6 @@ async function getNear(x: number, y: number, z: number, solarSystemId: number): 
     return "";
   }
 
-  const nearKey = `${solarSystemId}-${x}-${y}-${z}`;
-  const cached = nearCache.get(nearKey);
-  if (cached) {
-    return cached;
-  }
-
   // This query remains here due to its complexity
   const distance = 1000 * 3.086e16;
 
@@ -239,7 +232,6 @@ async function getNear(x: number, y: number, z: number, solarSystemId: number): 
   ]);
 
   const result = celestials?.[0]?.item_name || "";
-  nearCache.set(nearKey, result);
   return result;
 }
 
