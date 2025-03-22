@@ -110,7 +110,7 @@ const tabsUi = computed(() => {
 </script>
 
 <template>
-  <div class="flex flex-col min-w-full bg-semi-transparent rounded-lg shadow-lg overflow-hidden">
+  <div class="flex flex-col min-w-full rounded-lg overflow-hidden min-h-[316px]">
     <!-- Use UTabs with string v-model for the index - set default-selected to "1" (Kills tab) -->
     <UTabs
       v-model="activeTabIndex"
@@ -140,10 +140,12 @@ const tabsUi = computed(() => {
     <template v-else>
       <!-- Desktop Grid Layout -->
       <div v-if="!isMobile" class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-4 justify-items-center p-4">
-        <button
+        <UButton
           v-for="item in items"
           :key="item.killmail_id"
-          class="flex flex-col items-center justify-center p-2 hover:bg-background-800 rounded transition-colors duration-300"
+          variant="ghost"
+          color="neutral"
+          class="flex flex-col items-center justify-center h-auto w-full p-2 rounded"
           @click="handleItemClick(item.killmail_id)"
         >
           <NuxtImg
@@ -159,15 +161,17 @@ const tabsUi = computed(() => {
           <div class="text-center text-xs mt-1 text-background-300">
             {{ formatIsk(item.total_value) }} ISK
           </div>
-        </button>
+        </UButton>
       </div>
 
       <!-- Mobile Vertical Layout -->
       <div v-else class="flex flex-col gap-2 p-2">
-        <button
+        <UButton
           v-for="item in items"
           :key="item.killmail_id"
-          class="flex items-center p-2 hover:bg-background-800 rounded transition-colors duration-300"
+          variant="ghost"
+          color="neutral"
+          class="flex items-center justify-start h-auto w-full p-2 rounded"
           @click="handleItemClick(item.killmail_id)"
         >
           <NuxtImg
@@ -177,7 +181,7 @@ const tabsUi = computed(() => {
             :alt="`Ship: ${getShipName(item)}`"
             class="rounded w-14 h-14 object-contain mr-3"
           />
-          <div class="flex flex-col flex-grow">
+          <div class="flex flex-col flex-grow items-start">
             <div class="text-sm truncate">
               {{ getShipName(item) }}
             </div>
@@ -186,7 +190,7 @@ const tabsUi = computed(() => {
             </div>
           </div>
           <UIcon name="i-lucide-chevron-right" class="text-background-400" />
-        </button>
+        </UButton>
       </div>
 
       <div class="text-sm text-center mt-2 text-background-400 pb-2">

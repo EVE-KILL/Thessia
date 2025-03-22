@@ -144,7 +144,7 @@ const columns: TableColumn<ITopEntity>[] = [
         alt: `${props.type}: ${getEntityDisplayName(row.original)}`,
         class: 'w-7 flex-shrink-0 mr-2'
       }),
-      h('div', { class: 'text-sm text-left text-primary-400 truncate min-w-0 overflow-hidden' },
+      h('div', { class: 'text-sm text-left text-white truncate min-w-0 overflow-hidden' },
         getEntityDisplayName(row.original))
     ])
   },
@@ -164,7 +164,7 @@ const handleRowClick = (row) => {
 </script>
 
 <template>
-  <div class="pb-5">
+  <div class="pb-5 min-h-[485px]">
     <div class="text-sm font-bold text-center bg-background-900 py-1 rounded-tl-lg rounded-tr-lg border-b border-background-700">
       {{ displayTitle }}
     </div>
@@ -198,13 +198,13 @@ const handleRowClick = (row) => {
           td: 'p-0 text-xs',
           empty: 'py-4 text-center text-background-400',
           loading: 'py-4 text-center',
-          root: 'relative overflow-hidden rounded-sm bg-semi-transparent',
+          root: 'relative overflow-hidden rounded-sm',
         }"
         @select="handleRowClick"
       />
     </template>
 
-    <div class="text-sm bg-semi-transparent text-center text-background-300 py-1 rounded-br-lg rounded-bl-lg">
+    <div class="text-sm text-center text-background-300 py-1 rounded-br-lg rounded-bl-lg">
       ({{ t('topBox.killsOver', { days: props.days }) }})
     </div>
   </div>
