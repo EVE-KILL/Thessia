@@ -4,75 +4,75 @@
         "menuNavigation": "导航",
         "menuTools": "工具",
         "home": {
-            "text": "主页",
-            "label": "前往主页"
+            "text": "首页",
+            "label": "转到主页"
         },
         "kills": {
-            "text": "击杀",
-            "label": "前往击杀页面",
+            "text": "击毙",
+            "label": "转到击杀页面",
             "latest": "最新",
-            "latestLabel": "前往最新击杀页面",
+            "latestLabel": "转到最新杀戮页面",
             "abyssal": "深渊",
             "abyssalLabel": "前往深渊击杀页面",
             "wspace": "虫洞",
-            "wspaceLabel": "前往虫洞击杀页面",
-            "highsec": "高安",
-            "highsecLabel": "前往高安区击杀页面",
-            "lowsec": "低安",
-            "lowsecLabel": "前往低安区击杀页面",
-            "nullsec": "零安",
-            "nullsecLabel": "前往零安区击杀页面",
-            "big": "大型",
-            "bigLabel": "前往大型击杀页面",
-            "solo": "单人",
-            "soloLabel": "前往单人击杀页面",
+            "wspaceLabel": "转到虫洞击杀页面",
+            "highsec": "高级安全",
+            "highsecLabel": "转到高危击杀页面",
+            "lowsec": "LowSec",
+            "lowsecLabel": "转到低安全区击杀页面",
+            "nullsec": "0.0",
+            "nullsecLabel": "转到无效安全击杀页面",
+            "big": "大",
+            "bigLabel": "转到大型杀戮活动页面",
+            "solo": "独奏",
+            "soloLabel": "转到单人击杀页面",
             "npc": "NPC",
-            "npcLabel": "前往NPC击杀页面",
+            "npcLabel": "转到 NPC 击杀页面",
             "5b": "5B+",
-            "5bLabel": "前往5B+击杀页面",
+            "5bLabel": "转到 5B+ 击毙页面",
             "10b": "10B+",
-            "10bLabel": "前往10B+击杀页面",
-            "citadels": "堡垒",
-            "citadelsLabel": "前往堡垒击杀页面",
+            "10bLabel": "转到 10B+ 击杀页面",
+            "citadels": "城堡",
+            "citadelsLabel": "转到城堡击杀页面",
             "t1": "T1",
-            "t1Label": "前往T1击杀页面",
+            "t1Label": "转到 T1 击杀页面",
             "t2": "T2",
-            "t2Label": "前往T2击杀页面",
+            "t2Label": "转到 T2 击杀页面",
             "t3": "T3",
-            "t3Label": "前往T3击杀页面",
+            "t3Label": "转到 T3 杀戮页面",
             "frigates": "护卫舰",
-            "frigatesLabel": "前往护卫舰击杀页面",
+            "frigatesLabel": "转到护卫舰击杀页面",
             "destroyers": "驱逐舰",
-            "destroyersLabel": "前往驱逐舰击杀页面",
+            "destroyersLabel": "转到驱逐舰击杀页面",
             "cruisers": "巡洋舰",
-            "cruisersLabel": "前往巡洋舰击杀页面",
-            "battlecruisers": "战巡舰",
-            "battlecruisersLabel": "前往战巡舰击杀页面",
+            "cruisersLabel": "转到巡洋舰击杀页面",
+            "battlecruisers": "战列巡洋舰",
+            "battlecruisersLabel": "前往战列巡洋舰击杀页面",
             "battleships": "战列舰",
-            "battleshipsLabel": "前往战列舰击杀页面",
-            "capitals": "资本舰",
-            "capitalsLabel": "前往资本舰击杀页面",
-            "freighters": "运输舰",
-            "freightersLabel": "前往运输舰击杀页面",
-            "supercarriers": "超级航母",
-            "supercarriersLabel": "前往超级航母击杀页面",
+            "battleshipsLabel": "前往战舰击杀页面",
+            "capitals": "首都",
+            "capitalsLabel": "转到资本击杀页面",
+            "freighters": "货轮",
+            "freightersLabel": "前往货轮击杀页面",
+            "supercarriers": "超级承运人",
+            "supercarriersLabel": "转到超级航母击杀页面",
             "titans": "泰坦",
             "titansLabel": "前往泰坦击杀页面"
         },
         "faq": {
             "text": "常见问题",
-            "label": "前往常见问题页面"
+            "label": "转至常见问题页面"
         },
         "about": {
             "text": "关于",
-            "label": "前往关于页面"
+            "label": "转到关于页面"
         },
         "status": {
-            "text": "状态",
-            "label": "前往状态页面"
+            "text": "现状",
+            "label": "转到状态页面"
         },
         "backgroundSelector": {
-            "label": "背景"
+            "label": "背景介绍"
         },
         "information": {
             "label": "信息"
@@ -80,293 +80,301 @@
     },
     "search": {
         "title": "搜索",
-        "placeholder": "搜索...",
-        "results": "{query}的搜索结果",
+        "placeholder": "搜索 ...",
+        "results": "搜索结果{query}",
         "searchButton": "搜索",
-        "searching": "搜索中...",
+        "searching": "搜索...",
         "noResults": "无结果",
         "noResultsTitle": "未找到结果",
-        "noResultsDesc": "没有找到匹配您搜索的内容。请尝试不同的关键词或扩大您的搜索范围。",
+        "noResultsDesc": "我们无法找到与您的搜索匹配的内容。请尝试不同的关键词或扩大搜索范围。",
         "initialMessage": "在搜索框中输入内容开始搜索",
-        "more": "更多",
-        "moreType": "更多{type}（{count}）",
+        "more": "更多信息",
+        "moreType": "更多{type} ({count})",
         "showMoreType": "显示更多{type}",
-        "viewAllResults": "查看所有结果（{count}）",
-        "found": "找到{count}个结果",
-        "processingTimeMs": "处理时间：{time}毫秒",
-        "showMoreCategory": "显示更多{category}（{count}）",
+        "viewAllResults": "查看所有结果 ({count})",
+        "found": "发现{count} 结果",
+        "processingTimeMs": "处理时间：{time} ms",
+        "showMoreCategory": "显示更多{category} ({count})",
         "category": {
-            "character": "角色",
+            "character": "人物",
             "corporation": "公司",
             "alliance": "联盟",
-            "item": "物品",
-            "system": "星系",
-            "region": "区域"
+            "item": "项目",
+            "system": "系统",
+            "region": "地区"
         }
     },
     "background": {
-        "title": "背景",
+        "title": "背景介绍",
         "toggleVisibility": "切换背景可见性",
-        "loading": "加载中...",
-        "randomReddit": "从r/EVEPorn随机选择",
-        "viewSource": "在Reddit上查看源"
+        "loading": "正在加载...",
+        "randomReddit": "随机选自 r/EVEPorn",
+        "viewSource": "在 Reddit 上查看来源"
     },
     "status": {
         "pageTitle": "系统状态",
         "title": "系统状态",
         "loading": "加载状态信息...",
-        "autoRefresh": "每{seconds}秒自动刷新",
+        "autoRefresh": "每{seconds}秒自动刷新一次",
         "refreshNow": "立即刷新",
-        "retry": "重试",
-        "lastUpdated": "最后更新：{time}",
-        "autoRefreshing": "每{seconds}秒自动刷新",
+        "retry": "再试一次",
+        "lastUpdated": "最后更新{time}",
+        "autoRefreshing": "每{seconds} 秒自动刷新一次",
         "timePeriod": "选择时间段",
         "selectTimePeriod": "时间段",
-        "processedItems": "已处理项目（{period}）",
+        "processedItems": "加工项目 ({period})",
+        "simplified": "简化版",
+        "detailed": "详细",
+        "detailedStats": "详细统计数据",
+        "systemInfo": "系统信息",
+        "summary": {
+            "uptime": "系统正常运行时间",
+            "processedLast5m": "已处理（最后 5 米）",
+            "queuedItems": "排队项目"
+        },
+        "tabs": {
+            "overview": "概述",
+            "processing": "加工",
+            "database": "数据库",
+            "cache": "缓存"
+        },
         "uptime": {
-            "title": "系统运行时间",
-            "format": "{days}天 {hours}小时 {minutes}分钟 {seconds}秒",
-            "since": "开始运行时间",
+            "title": "系统正常运行时间",
+            "format": "{days}D{hours}H{minutes}M{seconds}S",
+            "since": "自",
             "localTime": "当地时间"
         },
         "environment": {
             "title": "环境",
-            "nodeEnv": "Node环境",
-            "nodeVersion": "Node版本",
-            "process": "进程"
+            "nodeEnv": "节点环境",
+            "nodeVersion": "节点版本",
+            "process": "过程"
         },
         "operatingSystem": {
             "title": "操作系统",
             "platform": "平台",
-            "architecture": "架构",
+            "architecture": "建筑学",
             "loadAverage": "平均负载",
-            "totalCPUs": "CPU核心数",
+            "totalCPUs": "CPU 内核",
             "memory": "内存（GB）"
         },
         "queueCounts": {
-            "title": "活跃队列项目",
+            "title": "活动队列项目",
             "queue": "队列名称",
-            "count": "数量"
+            "count": "计数"
         },
         "processingStatistics": {
             "title": "处理统计"
         },
         "databaseCounts": {
-            "title": "数据库集合",
-            "collection": "集合",
-            "count": "数量"
+            "title": "数据库收藏",
+            "collection": "收藏品",
+            "count": "计数"
         },
         "cacheSizes": {
             "title": "缓存大小",
             "cache": "缓存名称",
-            "size": "大小"
+            "size": "尺寸"
         },
         "cacheHits": {
             "title": "缓存性能",
             "cache": "缓存名称",
-            "hits": "命中次数"
+            "hits": "点击数"
         },
         "timePeriods": {
-            "1min": "1分钟",
-            "5min": "5分钟",
-            "15min": "15分钟",
-            "1hour": "1小时",
-            "6hours": "6小时",
-            "12hours": "12小时",
-            "24hours": "24小时",
-            "1week": "1周",
-            "1month": "1个月"
-        },
-        "simplified": "简化",
-        "detailed": "详细",
-        "detailedStats": "详细统计",
-        "systemInfo": "系统信息",
-        "summary": {
-            "uptime": "系统运行时间",
-            "processedLast5m": "最近5分钟已处理",
-            "queuedItems": "队列中的项目"
-        },
-        "tabs": {
-            "overview": "概览",
-            "processing": "处理",
-            "database": "数据库",
-            "cache": "缓存",
-            "topLists": "排行榜",
-            "kills": "击杀"
+            "1min": "1 分钟",
+            "5min": "5 分钟",
+            "15min": "15 分钟",
+            "1hour": "1 小时",
+            "6hours": "6 小时",
+            "12hours": "12 小时",
+            "24hours": "24 小时",
+            "1week": "1 周",
+            "1month": "1 个月"
         }
     },
     "auth": {
         "signIn": "登录",
-        "signInWithEve": "使用您的EVE Online账户登录",
-        "useEveSSOToLogin": "使用EVE Online SSO登录您的账户",
-        "loading": "加载中...",
-        "loggingOut": "正在登出...",
-        "ssoRequiredForLogin": "需要EVE SSO才能登录",
-        "alreadySignedIn": "您已经登录",
-        "signedInAs": "以{name}身份登录",
-        "privacyNote": "使用我们的服务，即表示您授权我们根据所请求的权限访问您的EVE Online角色数据。",
+        "signInWithEve": "使用您的 EVE Online 帐户登录",
+        "useEveSSOToLogin": "使用 EVE Online SSO 登录您的账户",
+        "loading": "正在加载...",
+        "loggingOut": "注销...",
+        "ssoRequiredForLogin": "登录需要 EVE SSO",
+        "alreadySignedIn": "您已登录",
+        "signedInAs": "登录为{name}",
+        "customizeScopes": "自定义登录范围",
+        "loginTitle": "登录 EVE Online",
+        "quickLoginInfo": "使用推荐范围登录",
+        "customizeScopesInfo": "自定义 EVE Kill 可以访问的信息：",
+        "loginWithSelectedScopes": "使用选定范围登录",
+        "required": "需要",
+        "privacyNote": "登录即表示您同意与 EVE Kill 共享所选信息。我们仅使用这些数据为您提供服务。",
         "error": {
-            "general": "认证失败。请重试。",
+            "general": "验证失败。请重试。",
             "tokenExpired": "您的会话已过期。请重新登录。",
-            "missingScope": "缺少所需权限：{scope}"
-        },
-        "customizeScopes": "自定义登录权限",
-        "loginTitle": "使用EVE Online登录",
-        "quickLoginInfo": "使用推荐权限登录",
-        "customizeScopesInfo": "自定义EVE Kill可以访问的信息：",
-        "loginWithSelectedScopes": "使用所选权限登录",
-        "required": "必需"
+            "missingScope": "缺少必要的许可：{scope}"
+        }
     },
     "user": {
         "pageTitle": "用户账户",
         "settingsPageTitle": "用户设置",
         "loginPageTitle": "登录",
-        "profile": "个人资料",
+        "profile": "简介",
         "settings": "设置",
-        "logout": "登出",
-        "characterDetails": "角色详情",
-        "characterId": "角色ID",
+        "logout": "退出登录",
+        "characterDetails": "人物详情",
+        "characterId": "字符 ID",
         "registeredSince": "注册时间",
-        "tokenExpires": "令牌过期时间",
+        "tokenExpires": "令牌到期",
         "permissions": "权限",
-        "needHelp": "需要账户帮助？请联系支持团队。",
-        "profileDescription": "查看并管理您的EVE Online角色信息"
+        "needHelp": "需要账户帮助？请联系技术支持。",
+        "profileDescription": "查看和管理您的 EVE Online 角色信息"
     },
     "common": {
-        "loading": "加载中...",
+        "loading": "正在加载...",
         "error": "错误",
-        "tryAgain": "重试",
-        "goHome": "返回首页",
+        "tryAgain": "再试一次",
+        "goHome": "回家",
         "cancel": "取消",
-        "save": "保存",
+        "save": "节省",
         "selectLanguage": "选择语言",
-        "page": "页面",
+        "page": "页次",
         "previous": "上一页",
         "next": "下一页"
     },
     "settings": {
-        "description": "管理您的账户设置和权限",
+        "description": "管理账户设置和权限",
         "accountSettings": "账户设置",
-        "permissions": "EVE Online权限",
-        "permissionsDescription": "这些是您通过EVE SSO授予此应用程序的权限：",
-        "permissionsNote": "要修改这些权限，您需要通过EVE SSO重新认证。",
+        "permissions": "EVE Online 权限",
+        "permissionsDescription": "这些是您通过 EVE SSO 授予此应用程序的权限：",
+        "permissionsNote": "要修改这些权限，您需要通过 EVE SSO 重新进行身份验证。",
         "dataPrivacy": "数据隐私",
-        "dataPrivacyDescription": "关于我们如何处理您的EVE Online数据的信息：",
+        "dataPrivacyDescription": "有关我们如何处理您的 EVE Online 数据的信息：",
         "authenticationStatus": "认证状态",
         "authenticated": "已认证",
-        "expiringToken": "令牌即将过期",
+        "expiringToken": "代币即将到期",
         "refreshToken": "刷新令牌",
         "reauthenticate": "重新认证",
-        "storesCharacterData": "我们存储您的角色信息，包括ID、名称和授予的权限。",
-        "tokensEncrypted": "您的认证令牌已加密并安全存储。",
-        "removeDataByRevoking": "您可以随时通过EVE Online网站撤销访问权限。",
+        "defaultScopes": "默认范围",
+        "customizeScopes": "自定义范围",
+        "storesCharacterData": "我们会保存您的角色信息，包括 ID、姓名和授予的权限。",
+        "tokensEncrypted": "您的身份验证令牌已加密并安全存储。",
+        "removeDataByRevoking": "您可以随时通过 EVE Online 网站撤销访问权限。",
         "deleteData": "删除我的数据",
         "deleteError": "删除账户数据失败",
         "deleteAccountConfirmTitle": "删除账户数据",
-        "deleteAccountConfirmMessage": "您确定要删除您的账户数据吗？此操作无法撤消。",
-        "confirmDelete": "是的，删除我的数据",
-        "permanentActionWarning": "这将永久从我们的系统中删除所有您的数据，包括设置和偏好。",
-        "esi": "EVE SSO 认证",
-        "permissionDescription": "此权限允许："
+        "deleteAccountConfirmMessage": "您确定要删除账户数据吗？此操作无法撤销。",
+        "confirmDelete": "是，删除我的数据",
+        "permanentActionWarning": "这将从我们的系统中永久删除您的所有数据，包括设置和偏好。",
+        "esi": "EVE SSO 身份验证",
+        "permissionDescription": "该许可允许什么："
     },
     "permissions": {
-        "publicData": "访问公共角色信息",
-        "readKillmails": "访问您的击杀邮件",
-        "readCorporationKillmails": "访问您的公司击杀邮件"
+        "publicData": "获取公共字符信息",
+        "readKillmails": "访问您的杀毒软件",
+        "readCorporationKillmails": "访问您公司的杀伤邮件"
     },
     "footer": {
-        "legal": "法律信息"
+        "legal": "法律"
     },
     "legal": {
         "pageTitle": "法律信息",
         "title": "法律信息",
         "disclaimer": {
             "title": "免责声明",
-            "p1": "Thessia 是EVE Online的第三方工具，未与CCP Games有任何关联或得到其认可。",
-            "p2": "本服务按\"原样\"提供，不提供任何形式的保证。我们对所呈现数据的准确性或可靠性不做任何保证。"
+            "p1": "Thessia 是 EVE Online 的第三方工具，与 CCP Games 无关，也未经 CCP Games 认可。",
+            "p2": "本服务按 \"现状 \"提供，不作任何形式的保证。我们不保证所提供数据的准确性或可靠性。"
         },
         "license": {
             "title": "许可证",
-            "p1": "Thessia / EVE-KILL 使用MIT许可证授权，根据该许可证的条款可以自由使用、修改和分发。",
-            "p2": "这意味着您可以自由地使用、复制、修改、合并、发布、分发、再许可和/或出售该软件的副本，前提是在软件的所有副本或实质性部分中包含版权通知和许可通知。",
-            "viewLicense": "在GitHub上查看完整许可证"
+            "p1": "Thessia / EVE-KILL 采用 MIT 许可，可根据该许可条款自由使用、修改和发布。",
+            "p2": "这意味着您可以自由使用、复制、修改、合并、出版、分发、转授权和/或出售软件副本，但须在软件的所有副本或实质部分中包含版权声明和许可声明。",
+            "viewLicense": "在 GitHub 上查看完整许可证"
         },
         "ownership": {
             "title": "知识产权",
-            "p1": "EVE Online、EVE标志、EVE及所有相关标志和设计均为CCP hf的知识产权。与这些商标相关的所有艺术作品、截图、角色、车辆、故事情节、世界事实或其他可识别的知识产权特征同样为CCP hf的知识产权。",
-            "ccpLink": "访问CCP Games"
+            "p1": "EVE Online、EVE 徽标、EVE 及所有相关徽标和设计均为 CCP hf 的知识产权。与这些商标相关的知识产权的所有艺术品、截图、角色、载具、故事情节、世界事实或其他可识别特征同样属于 CCP hf 的知识产权。",
+            "ccpLink": "访问 CCP Games"
         },
         "data": {
-            "title": "数据使用和隐私",
-            "p1": "Thessia从EVE Online API和其他公共来源收集和处理数据。这些数据仅用于提供本网站提供的服务。",
-            "p2": "我们尊重您的隐私，不会与第三方共享个人信息。我们收集的任何数据都按照标准隐私惯例使用。"
+            "title": "数据使用与隐私",
+            "p1": "Thessia 从 EVE Online API 和其他公共来源收集和处理数据。这些数据仅用于提供本网站所提供的服务。",
+            "p2": "我们尊重您的隐私，不会与第三方共享个人信息。我们收集的任何数据均按照标准隐私惯例使用。"
         },
         "contact": {
             "title": "联系信息",
-            "p1": "如果您对Thessia相关的法律事务有任何问题或疑虑，请通过GitHub问题联系我们：",
-            "githubIssues": "在GitHub上提交问题"
+            "p1": "如果您有任何与 Thessia 相关的法律问题或疑虑，请通过 GitHub issues 联系我们：",
+            "githubIssues": "在 GitHub 上提交问题"
         }
     },
     "about": {
         "pageTitle": "关于 EVE-KILL",
         "title": "关于 EVE-KILL",
-        "description": "EVE-KILL 是一个全面的 EVE Online 击杀记录服务，为玩家提供有关新伊甸园中战斗活动的详细统计和分析。",
+        "description": "EVE-KILL 是 EVE Online 的综合杀戮榜服务，为玩家提供有关整个新伊甸园战斗活动的详细统计数据和分析。",
         "mission": {
             "title": "我们的使命",
-            "text": "我们的使命是为 EVE Online 社区提供最准确、最新和最用户友好的击杀记录体验。我们致力于提供有价值的 PVP 战斗洞察，同时为所有玩家维持可靠和快速的服务。"
+            "text": "我们的使命是为 EVE Online 社区提供最准确、最新和用户友好的杀戮榜体验。我们努力为 PVP 战斗提供有价值的见解，同时为所有玩家提供可靠、快捷的服务。"
         },
         "history": {
             "title": "历史",
-            "text": "EVE-KILL 成立于 2007 年，此后已发展成为新伊甸园中最受信任的击杀记录服务之一。通过不断更新和改进，我们继续为 EVE 社区提供可靠的战斗跟踪和统计。"
+            "text": "EVE-KILL 成立于 2007 年，发展至今已成为新伊甸最值得信赖的杀戮榜服务之一。通过不断的更新和改进，我们将继续为 EVE 社区提供可靠的战斗追踪和统计数据。"
         },
         "contact": {
             "title": "联系我们",
             "text": "有问题、建议或需要支持？加入我们的 Discord 服务器或在我们的 GitHub 上提交问题"
         },
         "links": {
-            "discord": "加入我们的 Discord",
-            "github": "GitHub 仓库"
+            "discord": "加入我们的讨论区",
+            "github": "GitHub 存储库"
         }
     },
     "scopes": {
-        "publicData": "公开数据",
-        "publicDataDesc": "基本角色信息",
-        "readKillmails": "读取击杀邮件",
-        "readKillmailsDesc": "访问您角色的击杀邮件",
-        "readCorpKillmails": "读取公司击杀邮件",
-        "readCorpKillmailsDesc": "访问您公司的击杀邮件"
+        "publicData": "公共数据",
+        "publicDataDesc": "基本字符信息",
+        "readKillmails": "阅读杀伤邮件",
+        "readKillmailsDesc": "查看角色的杀人邮件",
+        "readCorpKillmails": "阅读公司 Killmails",
+        "readCorpKillmailsDesc": "访问公司的杀伤邮件"
     },
     "home": {
-        "pageTitle": "主页"
+        "pageTitle": "首页"
     },
     "kills": {
-        "pageTitle": "击杀详情",
-        "listPageTitle": "击杀板"
+        "pageTitle": "Killmail 详情",
+        "listPageTitle": "杀人板"
     },
     "faq": {
         "pageTitle": "常见问题"
     },
     "killList": {
-        "ship": "舰船",
+        "ship": "船舶",
         "victim": "受害者",
         "finalBlow": "最后一击",
-        "location": "位置",
-        "details": "详情",
-        "noKills": "未找到击杀",
-        "loading": "正在加载击杀...",
+        "location": "地点",
+        "details": "详细信息",
+        "noKills": "未发现击毙",
+        "loading": "加载杀戮...",
         "type": "类型",
-        "itemsPerPage": "每页项目数",
-        "wsConnected": "WebSocket 已连接",
-        "wsDisconnected": "WebSocket 已断开",
+        "itemsPerPage": "每页项目",
+        "wsConnected": "已连接 WebSocket",
+        "wsDisconnected": "断开 WebSocket 连接",
         "showing": "显示"
     },
+    "topBox": {
+        "killsOver": "最后{days} 天"
+    },
+    "tabs": {
+        "topLists": "热门列表",
+        "kills": "击毙",
+        "overview": "概述"
+    },
     "top": {
-        "characters": "角色排行",
-        "corporations": "公司排行",
-        "alliances": "联盟排行",
-        "ships": "舰船排行",
-        "systems": "星系排行",
-        "constellations": "星座排行",
-        "regions": "星域排行"
+        "characters": "顶级人物",
+        "corporations": "顶级企业",
+        "alliances": "顶级联盟",
+        "ships": "顶级船舶",
+        "systems": "顶级系统",
+        "constellations": "顶级星座",
+        "regions": "顶级地区"
     }
 }
