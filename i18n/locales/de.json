@@ -106,10 +106,10 @@
     },
     "background": {
         "title": "Hintergrund",
+        "toggleVisibility": "Hintergrund-Sichtbarkeit umschalten",
         "loading": "Wird geladen...",
         "randomReddit": "Zufällig von r/EVEPorn",
-        "viewSource": "Quelle auf Reddit anzeigen",
-        "toggleVisibility": "Hintergrund-Sichtbarkeit umschalten"
+        "viewSource": "Quelle auf Reddit anzeigen"
     },
     "status": {
         "pageTitle": "Systemstatus",
@@ -123,6 +123,21 @@
         "timePeriod": "Zeitraum auswählen",
         "selectTimePeriod": "Zeitraum",
         "processedItems": "Verarbeitete Elemente ({period})",
+        "simplified": "Vereinfacht",
+        "detailed": "Detailliert",
+        "detailedStats": "Detaillierte Statistiken",
+        "systemInfo": "Systeminformationen",
+        "summary": {
+            "uptime": "Systemlaufzeit",
+            "processedLast5m": "Verarbeitet (Letzte 5min)",
+            "queuedItems": "Elemente in der Warteschlange"
+        },
+        "tabs": {
+            "overview": "Übersicht",
+            "processing": "Verarbeitung",
+            "database": "Datenbank",
+            "cache": "Cache"
+        },
         "uptime": {
             "title": "Systemlaufzeit",
             "format": "{days}T {hours}Std {minutes}Min {seconds}Sek",
@@ -176,21 +191,6 @@
             "24hours": "24 Stunden",
             "1week": "1 Woche",
             "1month": "1 Monat"
-        },
-        "simplified": "Vereinfacht",
-        "detailed": "Detailliert",
-        "detailedStats": "Detaillierte Statistiken",
-        "systemInfo": "Systeminformationen",
-        "summary": {
-            "uptime": "Systemlaufzeit",
-            "processedLast5m": "Verarbeitet (Letzte 5min)",
-            "queuedItems": "Elemente in der Warteschlange"
-        },
-        "tabs": {
-            "overview": "Übersicht",
-            "processing": "Verarbeitung",
-            "database": "Datenbank",
-            "cache": "Cache"
         }
     },
     "auth": {
@@ -202,18 +202,18 @@
         "ssoRequiredForLogin": "EVE SSO ist für die Anmeldung erforderlich",
         "alreadySignedIn": "Sie sind bereits angemeldet",
         "signedInAs": "Angemeldet als {name}",
-        "privacyNote": "Durch die Nutzung unseres Dienstes autorisieren Sie uns, auf Ihre EVE Online-Charakterdaten gemäß den angeforderten Berechtigungen zuzugreifen.",
-        "error": {
-            "general": "Authentifizierung fehlgeschlagen. Bitte versuchen Sie es erneut.",
-            "tokenExpired": "Ihre Sitzung ist abgelaufen. Bitte melden Sie sich erneut an.",
-            "missingScope": "Fehlende erforderliche Berechtigung: {scope}"
-        },
         "customizeScopes": "Zugriffsberechtigungen anpassen",
         "loginTitle": "Mit EVE Online anmelden",
         "quickLoginInfo": "Mit empfohlenen Berechtigungen anmelden",
         "customizeScopesInfo": "Passen Sie an, auf welche Informationen EVE Kill zugreifen kann:",
         "loginWithSelectedScopes": "Mit ausgewählten Berechtigungen anmelden",
-        "required": "Erforderlich"
+        "required": "Erforderlich",
+        "privacyNote": "Durch die Nutzung unseres Dienstes autorisieren Sie uns, auf Ihre EVE Online-Charakterdaten gemäß den angeforderten Berechtigungen zuzugreifen.",
+        "error": {
+            "general": "Authentifizierung fehlgeschlagen. Bitte versuchen Sie es erneut.",
+            "tokenExpired": "Ihre Sitzung ist abgelaufen. Bitte melden Sie sich erneut an.",
+            "missingScope": "Fehlende erforderliche Berechtigung: {scope}"
+        }
     },
     "user": {
         "pageTitle": "Benutzerkonto",
@@ -255,6 +255,8 @@
         "expiringToken": "Token läuft bald ab",
         "refreshToken": "Token aktualisieren",
         "reauthenticate": "Erneut authentifizieren",
+        "defaultScopes": "Standard-Bereiche",
+        "customizeScopes": "Anpassen von Bereichen",
         "storesCharacterData": "Wir speichern Ihre Charakterinformationen, einschließlich ID, Name und erteilte Berechtigungen.",
         "tokensEncrypted": "Ihre Authentifizierungstoken werden verschlüsselt und sicher gespeichert.",
         "removeDataByRevoking": "Sie können den Zugriff jederzeit über die EVE Online-Website widerrufen.",
@@ -357,6 +359,9 @@
         "wsConnected": "WebSocket Verbunden",
         "wsDisconnected": "WebSocket Getrennt",
         "showing": "Anzeigen"
+    },
+    "topBox": {
+        "killsOver": "Letzte {days} Tage"
     },
     "tabs": {
         "topLists": "Top-Listen",
