@@ -1,8 +1,8 @@
 import type {
-  IESIAttacker,
-  IESIKillmail,
-  IESIVictim,
-  IESIVictimItem,
+    IESIAttacker,
+    IESIKillmail,
+    IESIVictim,
+    IESIVictimItem,
 } from "../interfaces/IESIKillmail";
 import type { IAttacker, IItem, IKillmail, IVictim } from "../interfaces/IKillmail";
 import type { ITranslation } from "../interfaces/ITranslation";
@@ -10,18 +10,17 @@ import { Celestials } from "../models/Celestials";
 import { Characters } from "../models/Characters";
 
 import {
-  cacheHits,
-  getCachedAlliance,
-  getCachedCharacter,
-  getCachedConstellation,
-  getCachedCorporation,
-  getCachedFaction,
-  getCachedInvGroup,
-  getCachedItem,
-  getCachedPrice,
-  getCachedRegion,
-  getCachedSolarSystem,
-  nearCache,
+    getCachedAlliance,
+    getCachedCharacter,
+    getCachedConstellation,
+    getCachedCorporation,
+    getCachedFaction,
+    getCachedInvGroup,
+    getCachedItem,
+    getCachedPrice,
+    getCachedRegion,
+    getCachedSolarSystem,
+    nearCache,
 } from "./RuntimeCache";
 
 async function parseKillmail(killmail: IESIKillmail, warId = 0): Promise<Partial<IKillmail>> {
@@ -205,7 +204,6 @@ async function getNear(x: number, y: number, z: number, solarSystemId: number): 
   const nearKey = `${solarSystemId}-${x}-${y}-${z}`;
   const cached = nearCache.get(nearKey);
   if (cached) {
-    cacheHits.near++;
     return cached;
   }
 

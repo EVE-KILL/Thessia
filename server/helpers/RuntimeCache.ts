@@ -56,21 +56,6 @@ export const nearCache = new LRUCache<string, any>({
   allowStale: true,
 });
 
-export const cacheHits = {
-  invGroups: 0,
-  invTypes: 0,
-  invFlags: 0,
-  factions: 0,
-  regions: 0,
-  constellations: 0,
-  solarSystems: 0,
-  price: 0,
-  character: 0,
-  corporation: 0,
-  alliance: 0,
-  near: 0,
-};
-
 async function loadAllInvGroups(): Promise<void> {
   const groups = await InvGroups.find({});
   for (const group of groups) {
@@ -146,20 +131,10 @@ if (enabledRuntimeCache) {
     `solarSystems: ${solarSystemsCache.size} ` +
     `customPrices: ${customPriceCache.size}`
   );
-
-  setInterval(loadAllInvGroups, 1000 * 60 * 60);
-  setInterval(loadAllInvTypes, 1000 * 60 * 60);
-  setInterval(loadAllInvFlags, 1000 * 60 * 60);
-  setInterval(loadAllFactions, 1000 * 60 * 60);
-  setInterval(loadAllRegions, 1000 * 60 * 60);
-  setInterval(loadAllConstellations, 1000 * 60 * 60);
-  setInterval(loadAllSolarSystems, 1000 * 60 * 60);
-  setInterval(loadAllCustomPrices, 1000 * 60 * 60);
 }
 
 export async function getCachedInvGroup(groupId: number): Promise<IInvGroup | null> {
   if (invGroupsCache.has(groupId)) {
-    cacheHits.invGroups++;
     return invGroupsCache.get(groupId) as IInvGroup | null;
   }
   const group = await InvGroups.findOne({ group_id: groupId });
@@ -169,7 +144,6 @@ export async function getCachedInvGroup(groupId: number): Promise<IInvGroup | nu
 
 export async function getCachedItem(typeId: number): Promise<IInvType | null> {
   if (invTypesCache.has(typeId)) {
-    cacheHits.invTypes++;
     return invTypesCache.get(typeId) as IInvType | null;
   }
   const type = await InvTypes.findOne({ type_id: typeId });
@@ -179,7 +153,6 @@ export async function getCachedItem(typeId: number): Promise<IInvType | null> {
 
 export async function getCachedInvFlag(flagId: number): Promise<IInvFlag | null> {
   if (invFlagsCache.has(flagId)) {
-    cacheHits.invFlags++;
     return invFlagsCache.get(flagId) as IInvFlag | null;
   }
   const flag = await InvFlags.findOne({ flag_id: flagId });
@@ -189,7 +162,6 @@ export async function getCachedInvFlag(flagId: number): Promise<IInvFlag | null>
 
 export async function getCachedFaction(factionId: number): Promise<IFaction | null> {
   if (factionsCache.has(factionId)) {
-    cacheHits.factions++;
     return factionsCache.get(factionId) as IFaction | null;
   }
   const faction = await Factions.findOne({ faction_id: factionId });
@@ -199,7 +171,6 @@ export async function getCachedFaction(factionId: number): Promise<IFaction | nu
 
 export async function getCachedRegion(regionId: number): Promise<IRegion | null> {
   if (regionsCache.has(regionId)) {
-    cacheHits.regions++;
     return regionsCache.get(regionId) as IRegion | null;
   }
   const region = await Regions.findOne({ region_id: regionId });
@@ -211,7 +182,6 @@ export async function getCachedConstellation(
   constellationId: number,
 ): Promise<IConstellation | null> {
   if (constellationsCache.has(constellationId)) {
-    cacheHits.constellations++;
     return constellationsCache.get(constellationId) as IConstellation | null;
   }
   const constellation = await Constellations.findOne({ constellation_id: constellationId });
@@ -221,7 +191,6 @@ export async function getCachedConstellation(
 
 export async function getCachedSolarSystem(solarSystemId: number): Promise<ISolarSystem | null> {
   if (solarSystemsCache.has(solarSystemId)) {
-    cacheHits.solarSystems++;
     return solarSystemsCache.get(solarSystemId) as ISolarSystem | null;
   }
   const solarSystem = await SolarSystems.findOne({ system_id: solarSystemId });
@@ -232,7 +201,6 @@ export async function getCachedSolarSystem(solarSystemId: number): Promise<ISola
 export async function getCachedCharacter(characterId: number): Promise<ICharacter | null> {
   const key = String(characterId);
   if (characterCache.has(key)) {
-    cacheHits.character++;
     return characterCache.get(key) as ICharacter | null;
   }
   const character = await getCharacter(characterId);
@@ -243,7 +211,6 @@ export async function getCachedCharacter(characterId: number): Promise<ICharacte
 export async function getCachedCorporation(corporationId: number): Promise<ICorporation | null> {
   const key = String(corporationId);
   if (corporationCache.has(key)) {
-    cacheHits.corporation++;
     return corporationCache.get(key) as ICorporation | null;
   }
   const corp = await getCorporation(corporationId);
@@ -254,7 +221,6 @@ export async function getCachedCorporation(corporationId: number): Promise<ICorp
 export async function getCachedAlliance(allianceId: number): Promise<IAlliance | null> {
   const key = String(allianceId);
   if (allianceCache.has(key)) {
-    cacheHits.alliance++;
     return allianceCache.get(key) as IAlliance | null;
   }
   const alliance = await getAlliance(allianceId);
@@ -265,7 +231,6 @@ export async function getCachedAlliance(allianceId: number): Promise<IAlliance |
 export async function getCachedPrice(typeId: number, killTime: Date): Promise<number> {
   const key = `${typeId}-${killTime.getTime()}`;
   if (priceCache.has(key)) {
-    cacheHits.price++;
     return priceCache.get(key) as number | undefined;
   }
   const price = await getPrice(typeId, killTime);

@@ -304,7 +304,6 @@ const summaryStats = computed(() => {
               { label: isMobile ? '' : $t('status.tabs.overview'), icon: 'lucide:layout-dashboard', slot: 'overview', defaultSelected: true },
               { label: isMobile ? '' : $t('status.tabs.processing'), icon: 'lucide:bar-chart-2', slot: 'processing' },
               { label: isMobile ? '' : $t('status.tabs.database'), icon: 'lucide:database', slot: 'database' },
-              { label: isMobile ? '' : $t('status.tabs.cache'), icon: 'lucide:hard-drive', slot: 'cache' },
             ]"
             class="mb-6"
           >
@@ -450,66 +449,6 @@ const summaryStats = computed(() => {
                   </table>
                 </div>
               </UCard>
-            </template>
-
-            <template #cache>
-              <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
-                <!-- Cache Sizes -->
-                <UCard>
-                  <template #header>
-                    <div class="flex items-center">
-                      <UIcon name="lucide:table" class="mr-2" />
-                      <h3 class="font-bold">{{ $t('status.cacheSizes.title') }}</h3>
-                    </div>
-                  </template>
-
-                  <div class="overflow-x-auto">
-                    <table class="min-w-full">
-                      <thead>
-                        <tr>
-                          <th class="text-left text-xs">{{ $t('status.cacheSizes.cache') }}</th>
-                          <th class="text-right text-xs">{{ $t('status.cacheSizes.size') }}</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        <tr v-for="(size, cache) in statusData.cacheSizes" :key="cache"
-                            class="border-t border-gray-200 dark:border-gray-700">
-                          <td class="py-1 text-sm">{{ cache }}</td>
-                          <td class="py-1 text-right font-mono text-sm">{{ size }}</td>
-                        </tr>
-                      </tbody>
-                    </table>
-                  </div>
-                </UCard>
-
-                <!-- Cache Hits -->
-                <UCard>
-                  <template #header>
-                    <div class="flex items-center">
-                      <UIcon name="lucide:zap" class="mr-2" />
-                      <h3 class="font-bold">{{ $t('status.cacheHits.title') }}</h3>
-                    </div>
-                  </template>
-
-                  <div class="overflow-x-auto">
-                    <table class="min-w-full">
-                      <thead>
-                        <tr>
-                          <th class="text-left text-xs">{{ $t('status.cacheHits.cache') }}</th>
-                          <th class="text-right text-xs">{{ $t('status.cacheHits.hits') }}</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        <tr v-for="(hits, cache) in statusData.cacheHits" :key="cache"
-                            class="border-t border-gray-200 dark:border-gray-700">
-                          <td class="py-1 text-sm">{{ cache }}</td>
-                          <td class="py-1 text-right font-mono text-sm">{{ hits }}</td>
-                        </tr>
-                      </tbody>
-                    </table>
-                  </div>
-                </UCard>
-              </div>
             </template>
           </UTabs>
 

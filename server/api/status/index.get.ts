@@ -1,22 +1,6 @@
 import os from "node:os";
 import { MetricsTime } from "bullmq";
 import { createQueue } from "../../helpers/Queue";
-import {
-  allianceCache,
-  cacheHits,
-  characterCache,
-  constellationsCache,
-  corporationCache,
-  customPriceCache,
-  factionsCache,
-  invFlagsCache,
-  invGroupsCache,
-  invTypesCache,
-  nearCache,
-  priceCache,
-  regionsCache,
-  solarSystemsCache,
-} from "../../helpers/RuntimeCache";
 
 const startTime = new Date();
 export default defineEventHandler(async () => {
@@ -79,11 +63,6 @@ export default defineEventHandler(async () => {
     Users.estimatedDocumentCount(),
     Wars.estimatedDocumentCount(),
   ]);
-
-  // Format cacheHits with formatNumber
-  const formattedCacheHits = Object.fromEntries(
-    Object.entries(cacheHits).map(([key, value]) => [key, formatNumber(value)]),
-  );
 
   return {
     uptime: Math.floor(process.uptime()),
@@ -592,24 +571,6 @@ export default defineEventHandler(async () => {
       solarSystems: formatNumber(solarSystemsCount),
       users: formatNumber(userCount),
       wars: formatNumber(warCount),
-    },
-    cacheSizes: {
-      solarSystemsCache: formatNumber(solarSystemsCache.size),
-      regionsCache: formatNumber(regionsCache.size),
-      nearCache: formatNumber(nearCache.size),
-      constellationsCache: formatNumber(constellationsCache.size),
-      customPriceCache: formatNumber(customPriceCache.size),
-      invGroupsCache: formatNumber(invGroupsCache.size),
-      invFlagsCache: formatNumber(invFlagsCache.size),
-      invTypesCache: formatNumber(invTypesCache.size),
-      factionsCache: formatNumber(factionsCache.size),
-      priceCache: formatNumber(priceCache.size),
-      characterCache: formatNumber(characterCache.size),
-      corporationCache: formatNumber(corporationCache.size),
-      allianceCache: formatNumber(allianceCache.size),
-    },
-    cacheHits: {
-      ...formattedCacheHits,
     },
   };
 });
