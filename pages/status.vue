@@ -396,6 +396,7 @@ const summaryStats = computed(() => {
                 <div v-if="detailed" class="mt-4">
                   <h4 class="font-medium text-sm mb-2">{{ $t('status.detailedStats') }}</h4>
                   <div class="overflow-x-auto">
+                    <!-- This table should automatically update when statusData changes -->
                     <table class="min-w-full text-xs">
                       <thead>
                         <tr>
@@ -410,7 +411,7 @@ const summaryStats = computed(() => {
                             class="border-t border-gray-200 dark:border-gray-700">
                           <td class="py-1 capitalize">{{ queue }}</td>
                           <td v-for="period in timePeriods" :key="period.value" class="py-1 px-1 text-right font-mono">
-                            {{ data[period.value] }}
+                            {{ formatNumber(data[period.value]) }}
                           </td>
                         </tr>
                       </tbody>
