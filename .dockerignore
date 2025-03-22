@@ -1,8 +1,6 @@
 .github/
 .husky/
 .nuxt/
-.output/
 .vscode/
 .env
 dist/
-node_modules/
