@@ -120,7 +120,7 @@ async function loadAllCustomPrices(): Promise<void> {
 }
 
 // Use a direct boolean or default to true if in production
-const enabledRuntimeCache = process.env.ENABLE_RUNTIME_CACHE !== 'false' && process.env.NODE_ENV === 'production';
+const enabledRuntimeCache = process.env.ENABLE_RUNTIME_CACHE !== 'false';
 
 if (enabledRuntimeCache) {
   // Load at startup
