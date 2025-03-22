@@ -62,11 +62,6 @@ export default defineNuxtConfig({
                 database: process.env.REDIS_DB || 0,
             },
         },
-        debug: process.env.NODE_ENV !== 'production',
-        devProxy: {
-            // If your API is on a different host in development
-            // '/api': { target: 'http://localhost:3001/api', changeOrigin: true }
-        }
     },
 
     runtimeConfig: {
