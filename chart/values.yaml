@@ -74,7 +74,7 @@ thessia:
     resources:
         requests:
             cpu: 500m
-            memory: 128Mi
+            memory: 256Mi
         limits:
             cpu: 8000m
             memory: 1024Mi
@@ -94,7 +94,7 @@ processEntities:
     resources:
         requests:
             cpu: 250m
-            memory: 128Mi
+            memory: 256Mi
         limits:
             cpu: 4000m
             memory: 1024Mi
@@ -111,7 +111,7 @@ processWars:
     resources:
         requests:
             cpu: 250m
-            memory: 128Mi
+            memory: 256Mi
         limits:
             cpu: 4000m
             memory: 1024Mi
@@ -128,10 +128,10 @@ processKillmails:
     resources:
         requests:
             cpu: 250m
-            memory: 1512Mi
+            memory: 256Mi
         limits:
             cpu: 4000m
-            memory: 4096Mi
+            memory: 1024Mi
     securityContext:
         runAsUser: 1000
         runAsGroup: 1000
