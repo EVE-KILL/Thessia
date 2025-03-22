@@ -6,6 +6,8 @@ import {
     getCacheSize,
     getCacheHitCount
 } from "../../helpers/RuntimeCache";
+import { RedisStorage } from "../../helpers/Storage";
+import { cliLogger } from "../../helpers/Logger";
 
 const startTime = new Date();
 export default defineEventHandler(async () => {
@@ -113,6 +115,40 @@ export default defineEventHandler(async () => {
     alliance: cacheStats[22]
   };
 
+  // Get Redis stats
+  let redisStats = {};
+  try {
+    const redisStorage = RedisStorage.getInstance();
+    const fullRedisStats = await redisStorage.getRedisStats();
+
+    // Extract only the Redis stats we need for the UI
+    redisStats = {
+      server: {
+        redis_version: fullRedisStats.server?.redis_version,
+        redis_mode: fullRedisStats.server?.redis_mode,
+        os: fullRedisStats.server?.os,
+        uptime_in_seconds: fullRedisStats.server?.uptime_in_seconds
+      },
+      clients: {
+        connected_clients: fullRedisStats.clients?.connected_clients
+      },
+      memory: {
+        used_memory: fullRedisStats.memory?.used_memory,
+        used_memory_peak: fullRedisStats.memory?.used_memory_peak,
+        mem_fragmentation_ratio: fullRedisStats.memory?.mem_fragmentation_ratio
+      },
+      stats: {
+        total_connections_received: fullRedisStats.stats?.total_connections_received,
+        total_commands_processed: fullRedisStats.stats?.total_commands_processed,
+        keyspace_hits: fullRedisStats.stats?.keyspace_hits,
+        keyspace_misses: fullRedisStats.stats?.keyspace_misses
+      },
+      keyspace: fullRedisStats.keyspace || {}
+    };
+  } catch (err) {
+    cliLogger.error('Failed to get Redis stats:', err);
+  }
+
   return {
     uptime: Math.floor(process.uptime()),
     upSince: startTime,
@@ -191,7 +227,7 @@ export default defineEventHandler(async () => {
           .reduce((acc, cur) => Number(acc) + Number(cur), 0)),
         "1month": Number((await allianceQueue.getMetrics("completed", 0, MetricsTime.ONE_MONTH)).data
           .slice(1)
-          .reduce((acc, cur) => Number(acc) + Number(cur), 0)),
+          .reduce((acc, cur) => Number(acc) + Number(cur), 0))
       },
       corporations: {
         "1min": Number((await corporationQueue.getMetrics("completed", 0, MetricsTime.ONE_MINUTE)).data[0]) || 0,
@@ -218,7 +254,7 @@ export default defineEventHandler(async () => {
           .reduce((acc, cur) => Number(acc) + Number(cur), 0)),
         "1month": Number((await corporationQueue.getMetrics("completed", 0, MetricsTime.ONE_MONTH)).data
           .slice(1)
-          .reduce((acc, cur) => Number(acc) + Number(cur), 0)),
+          .reduce((acc, cur) => Number(acc) + Number(cur), 0))
       },
       characters: {
         "1min": Number((await characterQueue.getMetrics("completed", 0, MetricsTime.ONE_MINUTE)).data[0]) || 0,
@@ -245,7 +281,7 @@ export default defineEventHandler(async () => {
           .reduce((acc, cur) => Number(acc) + Number(cur), 0)),
         "1month": Number((await characterQueue.getMetrics("completed", 0, MetricsTime.ONE_MONTH)).data
           .slice(1)
-          .reduce((acc, cur) => Number(acc) + Number(cur), 0)),
+          .reduce((acc, cur) => Number(acc) + Number(cur), 0))
       },
       characterhistory: {
         "1min": Number((await characterHistoryQueue.getMetrics("completed", 0, MetricsTime.ONE_MINUTE)).data[0]) || 0,
@@ -272,7 +308,7 @@ export default defineEventHandler(async () => {
           .reduce((acc, cur) => Number(acc) + Number(cur), 0)),
         "1month": Number((await characterHistoryQueue.getMetrics("completed", 0, MetricsTime.ONE_MONTH)).data
           .slice(1)
-          .reduce((acc, cur) => Number(acc) + Number(cur), 0)),
+          .reduce((acc, cur) => Number(acc) + Number(cur), 0))
       },
       corporationhistory: {
         "1min": Number((await corporationHistoryQueue.getMetrics("completed", 0, MetricsTime.ONE_MINUTE)).data[0]) || 0,
@@ -299,7 +335,7 @@ export default defineEventHandler(async () => {
           .reduce((acc, cur) => Number(acc) + Number(cur), 0)),
         "1month": Number((await corporationHistoryQueue.getMetrics("completed", 0, MetricsTime.ONE_MONTH)).data
           .slice(1)
-          .reduce((acc, cur) => Number(acc) + Number(cur), 0)),
+          .reduce((acc, cur) => Number(acc) + Number(cur), 0))
       },
       wars: {
         "1min": Number((await warQueue.getMetrics("completed", 0, MetricsTime.ONE_MINUTE)).data[0]) || 0,
@@ -326,8 +362,8 @@ export default defineEventHandler(async () => {
           .reduce((acc, cur) => Number(acc) + Number(cur), 0)),
         "1month": Number((await warQueue.getMetrics("completed", 0, MetricsTime.ONE_MONTH)).data
           .slice(1)
-          .reduce((acc, cur) => Number(acc) + Number(cur), 0)),
-      },
+          .reduce((acc, cur) => Number(acc) + Number(cur), 0))
+      }
     },
     databaseCounts: {
       alliances: allianceCount,
@@ -364,5 +400,6 @@ export default defineEventHandler(async () => {
       allianceCache: cacheStats[11],
     },
     cacheHits,
+    redis: redisStats
   };
 });

@@ -54,6 +54,40 @@ export class RedisStorage {
     await this.client.del(key);
   }
 
+  // Get Redis statistics
+  async getRedisStats(): Promise<Record<string, any>> {
+    try {
+      const info = await this.client.info();
+      const parsedInfo: Record<string, any> = {};
+
+      // Parse the INFO command output which is formatted as string with sections
+      const sections = info.split('#');
+
+      sections.forEach(section => {
+        const lines = section.split('\r\n').filter(Boolean);
+        if (lines.length > 0) {
+          const sectionName = lines[0].toLowerCase().trim();
+          parsedInfo[sectionName] = {};
+
+          for (let i = 1; i < lines.length; i++) {
+            const line = lines[i];
+            if (line && line.includes(':')) {
+              const [key, value] = line.split(':');
+              // Convert numeric values to numbers
+              const numValue = Number(value);
+              parsedInfo[sectionName][key] = isNaN(numValue) ? value : numValue;
+            }
+          }
+        }
+      });
+
+      return parsedInfo;
+    } catch (err) {
+      cliLogger.error('Failed to get Redis stats:', err);
+      return {};
+    }
+  }
+
   // Redis Pub/Sub operations
   /**
    * Publish a message to a Redis channel

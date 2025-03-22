@@ -245,6 +245,75 @@ const summaryStats = computed(() => {
     unprocessedItems: statusData.value.databaseCounts.unprocessedCount || 0
   }
 })
+
+// Format bytes to human readable format
+const formatBytes = (bytes?: number): string => {
+  if (bytes === undefined) return 'N/A';
+
+  const units = ['B', 'KB', 'MB', 'GB', 'TB'];
+  let value = bytes;
+  let unitIndex = 0;
+
+  while (value >= 1024 && unitIndex < units.length - 1) {
+    value /= 1024;
+    unitIndex++;
+  }
+
+  return `${value.toFixed(2)} ${units[unitIndex]}`;
+};
+
+// Format Redis uptime
+const formatRedisUptime = (seconds?: number): string => {
+  if (!seconds) return 'N/A';
+
+  const days = Math.floor(seconds / (24 * 60 * 60));
+  const hours = Math.floor((seconds % (24 * 60 * 60)) / (60 * 60));
+  const minutes = Math.floor((seconds % (60 * 60)) / 60);
+  const remainingSeconds = Math.floor(seconds % 60);
+
+  return t('status.redis.uptimeFormat', { days, hours, minutes, seconds: remainingSeconds });
+};
+
+// Format time in milliseconds to human readable format
+const formatTime = (ms?: number): string => {
+  if (!ms) return 'N/A';
+
+  if (ms < 1000) return `${ms} ms`;
+  if (ms < 60000) return `${(ms / 1000).toFixed(2)} s`;
+  if (ms < 3600000) return `${(ms / 60000).toFixed(2)} min`;
+
+  return `${(ms / 3600000).toFixed(2)} h`;
+};
+
+// Calculate hit ratio
+const calculateHitRatio = (hits?: number, misses?: number): string => {
+  if (!hits || !misses) return 'N/A';
+  const total = hits + misses;
+  if (total === 0) return '0.00';
+
+  return ((hits / total) * 100).toFixed(2);
+};
+
+// Parse keyspace info string
+const parseKeyspaceInfo = (info: string) => {
+  const result = { keys: 0, expires: 0, avg_ttl: 0 };
+
+  if (typeof info === 'string') {
+    const parts = info.split(',');
+    parts.forEach(part => {
+      if (part.includes('keys=')) result.keys = parseInt(part.split('=')[1], 10);
+      if (part.includes('expires=')) result.expires = parseInt(part.split('=')[1], 10);
+      if (part.includes('avg_ttl=')) result.avg_ttl = parseInt(part.split('=')[1], 10);
+    });
+  }
+
+  return result;
+};
+
+// Check if keyspace info exists
+const hasKeyspaceInfo = computed(() => {
+  return statusData.value?.redis?.keyspace && Object.keys(statusData.value.redis.keyspace).length > 0;
+});
 </script>
 
 <template>
@@ -303,6 +372,7 @@ const summaryStats = computed(() => {
               { label: isMobile ? '' : $t('status.tabs.processing'), icon: 'lucide:bar-chart-2', slot: 'processing' },
               { label: isMobile ? '' : $t('status.tabs.database'), icon: 'lucide:database', slot: 'database' },
               { label: isMobile ? '' : $t('status.tabs.cache'), icon: 'lucide:hard-drive', slot: 'cache' },
+              { label: isMobile ? '' : $t('status.tabs.redis'), icon: 'lucide:database', slot: 'redis' },
             ]"
             class="mb-6"
           >
@@ -503,6 +573,147 @@ const summaryStats = computed(() => {
                             class="border-t border-gray-200 dark:border-gray-700">
                           <td class="py-1 text-sm">{{ cache }}</td>
                           <td class="py-1 text-right font-mono text-sm">{{ formatNumber(hits) }}</td>
+                        </tr>
+                      </tbody>
+                    </table>
+                  </div>
+                </UCard>
+              </div>
+            </template>
+
+            <template #redis>
+              <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                <!-- Redis Server Information -->
+                <UCard>
+                  <template #header>
+                    <div class="flex items-center">
+                      <UIcon name="lucide:server" class="mr-2" />
+                      <h3 class="font-bold">{{ $t('status.redis.server') }}</h3>
+                    </div>
+                  </template>
+
+                  <div class="overflow-x-auto">
+                    <table class="min-w-full">
+                      <tbody>
+                        <tr class="border-t border-gray-200 dark:border-gray-700">
+                          <td class="py-1 text-sm">{{ $t('status.redis.version') }}</td>
+                          <td class="py-1 text-right font-mono text-sm">{{ statusData.redis.server.redis_version || 'N/A' }}</td>
+                        </tr>
+                        <tr class="border-t border-gray-200 dark:border-gray-700">
+                          <td class="py-1 text-sm">{{ $t('status.redis.mode') }}</td>
+                          <td class="py-1 text-right font-mono text-sm">{{ statusData.redis.server.redis_mode || 'N/A' }}</td>
+                        </tr>
+                        <tr class="border-t border-gray-200 dark:border-gray-700">
+                          <td class="py-1 text-sm">{{ $t('status.redis.os') }}</td>
+                          <td class="py-1 text-right font-mono text-sm">{{ statusData.redis.server.os || 'N/A' }}</td>
+                        </tr>
+                        <tr class="border-t border-gray-200 dark:border-gray-700">
+                          <td class="py-1 text-sm">{{ $t('status.redis.uptime') }}</td>
+                          <td class="py-1 text-right font-mono text-sm">{{ formatRedisUptime(statusData.redis.server.uptime_in_seconds) }}</td>
+                        </tr>
+                      </tbody>
+                    </table>
+                  </div>
+                </UCard>
+
+                <!-- Redis Memory Information -->
+                <UCard>
+                  <template #header>
+                    <div class="flex items-center">
+                      <UIcon name="lucide:memory-stick" class="mr-2" />
+                      <h3 class="font-bold">{{ $t('status.redis.memory') }}</h3>
+                    </div>
+                  </template>
+
+                  <div class="overflow-x-auto">
+                    <table class="min-w-full">
+                      <tbody>
+                        <tr class="border-t border-gray-200 dark:border-gray-700">
+                          <td class="py-1 text-sm">{{ $t('status.redis.usedMemory') }}</td>
+                          <td class="py-1 text-right font-mono text-sm">{{ formatBytes(statusData.redis.memory.used_memory) }}</td>
+                        </tr>
+                        <tr class="border-t border-gray-200 dark:border-gray-700">
+                          <td class="py-1 text-sm">{{ $t('status.redis.usedMemoryPeak') }}</td>
+                          <td class="py-1 text-right font-mono text-sm">{{ formatBytes(statusData.redis.memory.used_memory_peak) }}</td>
+                        </tr>
+                        <tr class="border-t border-gray-200 dark:border-gray-700">
+                          <td class="py-1 text-sm">{{ $t('status.redis.memFragmentationRatio') }}</td>
+                          <td class="py-1 text-right font-mono text-sm">{{ formatNumber(statusData.redis.memory.mem_fragmentation_ratio) }}</td>
+                        </tr>
+                      </tbody>
+                    </table>
+                  </div>
+                </UCard>
+
+                <!-- Redis Statistics -->
+                <UCard>
+                  <template #header>
+                    <div class="flex items-center">
+                      <UIcon name="lucide:bar-chart" class="mr-2" />
+                      <h3 class="font-bold">{{ $t('status.redis.stats') }}</h3>
+                    </div>
+                  </template>
+
+                  <div class="overflow-x-auto">
+                    <table class="min-w-full">
+                      <tbody>
+                        <tr class="border-t border-gray-200 dark:border-gray-700">
+                          <td class="py-1 text-sm">{{ $t('status.redis.connectedClients') }}</td>
+                          <td class="py-1 text-right font-mono text-sm">{{ formatNumber(statusData.redis.clients.connected_clients) }}</td>
+                        </tr>
+                        <tr class="border-t border-gray-200 dark:border-gray-700">
+                          <td class="py-1 text-sm">{{ $t('status.redis.totalConnections') }}</td>
+                          <td class="py-1 text-right font-mono text-sm">{{ formatNumber(statusData.redis.stats.total_connections_received) }}</td>
+                        </tr>
+                        <tr class="border-t border-gray-200 dark:border-gray-700">
+                          <td class="py-1 text-sm">{{ $t('status.redis.totalCommands') }}</td>
+                          <td class="py-1 text-right font-mono text-sm">{{ formatNumber(statusData.redis.stats.total_commands_processed) }}</td>
+                        </tr>
+                        <tr class="border-t border-gray-200 dark:border-gray-700">
+                          <td class="py-1 text-sm">{{ $t('status.redis.keyspaceHits') }}</td>
+                          <td class="py-1 text-right font-mono text-sm">{{ formatNumber(statusData.redis.stats.keyspace_hits) }}</td>
+                        </tr>
+                        <tr class="border-t border-gray-200 dark:border-gray-700">
+                          <td class="py-1 text-sm">{{ $t('status.redis.keyspaceMisses') }}</td>
+                          <td class="py-1 text-right font-mono text-sm">{{ formatNumber(statusData.redis.stats.keyspace_misses) }}</td>
+                        </tr>
+                        <tr class="border-t border-gray-200 dark:border-gray-700">
+                          <td class="py-1 text-sm">{{ $t('status.redis.hitRatio') }}</td>
+                          <td class="py-1 text-right font-mono text-sm">
+                            {{ calculateHitRatio(statusData.redis.stats.keyspace_hits, statusData.redis.stats.keyspace_misses) }}%
+                          </td>
+                        </tr>
+                      </tbody>
+                    </table>
+                  </div>
+                </UCard>
+
+                <!-- Redis Keyspace -->
+                <UCard v-if="hasKeyspaceInfo">
+                  <template #header>
+                    <div class="flex items-center">
+                      <UIcon name="lucide:key" class="mr-2" />
+                      <h3 class="font-bold">{{ $t('status.redis.keyspace') }}</h3>
+                    </div>
+                  </template>
+
+                  <div class="overflow-x-auto">
+                    <table class="min-w-full">
+                      <thead>
+                        <tr>
+                          <th class="text-left text-xs">{{ $t('status.redis.database') }}</th>
+                          <th class="text-right text-xs">{{ $t('status.redis.keys') }}</th>
+                          <th class="text-right text-xs">{{ $t('status.redis.expires') }}</th>
+                          <th class="text-right text-xs">{{ $t('status.redis.avgTtl') }}</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        <tr v-for="(info, db) in statusData.redis.keyspace" :key="db"
+                            class="border-t border-gray-200 dark:border-gray-700">
+                          <td class="py-1 text-sm">{{ db }}</td>
+                          <td class="py-1 text-right font-mono text-sm">{{ formatNumber(parseKeyspaceInfo(info).keys) }}</td>
+                          <td class="py-1 text-right font-mono text-sm">{{ formatNumber(parseKeyspaceInfo(info).expires) }}</td>
+                          <td class="py-1 text-right font-mono text-sm">{{ formatTime(parseKeyspaceInfo(info).avg_ttl) }}</td>
                         </tr>
                       </tbody>
                     </table>
