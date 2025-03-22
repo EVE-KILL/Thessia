@@ -223,8 +223,8 @@ onUnmounted(() => {
 // Add active tab tracking - explicitly set to 'overview' as default
 const activeTab = ref('overview')
 
-// Simplify chart options
-const simplified = ref(true)
+// Invert the logic - change from simplified to detailed
+const detailed = ref(false)
 
 // Add summary stats computed property with fixed number conversion
 const summaryStats = computed(() => {
@@ -369,8 +369,8 @@ const summaryStats = computed(() => {
                       <h3 class="font-bold">{{ $t('status.processingStatistics.title') }}</h3>
                     </div>
                     <div class="flex items-center gap-2">
-                      <USwitch v-model="simplified" size="sm" />
-                      <span class="text-xs">{{ simplified ? $t('status.simplified') : $t('status.detailed') }}</span>
+                      <USwitch v-model="detailed" size="sm" />
+                      <span class="text-xs">{{ detailed ? $t('status.detailed') : $t('status.simplified') }}</span>
                     </div>
                   </div>
                 </template>
@@ -394,31 +394,31 @@ const summaryStats = computed(() => {
                   <v-chart class="w-full h-full" :option="chartOptions" autoresize />
                 </div>
 
-                <UAccordion v-if="!simplified" :items="[{ label: $t('status.detailedStats'), slot: 'details', icon: 'lucide:table' }]">
-                  <template #details>
-                    <div class="overflow-x-auto">
-                      <table class="min-w-full text-xs">
-                        <thead>
-                          <tr>
-                            <th class="py-1 text-left">{{ $t('status.queueCounts.queue') }}</th>
-                            <th v-for="period in timePeriods" :key="period.value" class="py-1 px-1 text-right">
-                              {{ period.label }}
-                            </th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          <tr v-for="(data, queue) in statusData.processedCounts" :key="queue"
-                              class="border-t border-gray-200 dark:border-gray-700">
-                            <td class="py-1 capitalize">{{ queue }}</td>
-                            <td v-for="period in timePeriods" :key="period.value" class="py-1 px-1 text-right font-mono">
-                              {{ data[period.value] }}
-                            </td>
-                          </tr>
-                        </tbody>
-                      </table>
-                    </div>
-                  </template>
-                </UAccordion>
+                <!-- Show detailed stats directly when detailed is true -->
+                <div v-if="detailed" class="mt-4">
+                  <h4 class="font-medium text-sm mb-2">{{ $t('status.detailedStats') }}</h4>
+                  <div class="overflow-x-auto">
+                    <table class="min-w-full text-xs">
+                      <thead>
+                        <tr>
+                          <th class="py-1 text-left">{{ $t('status.queueCounts.queue') }}</th>
+                          <th v-for="period in timePeriods" :key="period.value" class="py-1 px-1 text-right">
+                            {{ period.label }}
+                          </th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        <tr v-for="(data, queue) in statusData.processedCounts" :key="queue"
+                            class="border-t border-gray-200 dark:border-gray-700">
+                          <td class="py-1 capitalize">{{ queue }}</td>
+                          <td v-for="period in timePeriods" :key="period.value" class="py-1 px-1 text-right font-mono">
+                            {{ data[period.value] }}
+                          </td>
+                        </tr>
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
               </UCard>
             </template>
 
