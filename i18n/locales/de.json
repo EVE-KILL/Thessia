@@ -136,7 +136,8 @@
             "overview": "Übersicht",
             "processing": "Verarbeitung",
             "database": "Datenbank",
-            "cache": "Cache"
+            "cache": "Cache",
+            "redis": "Redis"
         },
         "uptime": {
             "title": "Systemlaufzeit",
@@ -191,6 +192,30 @@
             "24hours": "24 Stunden",
             "1week": "1 Woche",
             "1month": "1 Monat"
+        },
+        "redis": {
+            "server": "Redis-Server",
+            "version": "Version",
+            "mode": "Modus",
+            "os": "Betriebssystem",
+            "uptime": "Betriebszeit",
+            "uptimeFormat": "{days}T {hours}Std {minutes}Min {seconds}Sek",
+            "memory": "Speicher",
+            "usedMemory": "Verwendeter Speicher",
+            "usedMemoryPeak": "Maximale Speichernutzung",
+            "memFragmentationRatio": "Fragmentierungsgrad des Speichers",
+            "stats": "Statistik",
+            "connectedClients": "Vernetzte Kunden",
+            "totalConnections": "Verbindungen insgesamt",
+            "totalCommands": "Befehle insgesamt",
+            "keyspaceHits": "Keyspace-Hits",
+            "keyspaceMisses": "Tastenfeld verfehlt",
+            "hitRatio": "Trefferquote",
+            "keyspace": "Schlüsselbereich",
+            "database": "Datenbank",
+            "keys": "Tasten",
+            "expires": "Abgelaufen",
+            "avgTtl": "Avg TTL"
         }
     },
     "auth": {
