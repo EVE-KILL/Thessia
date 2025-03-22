@@ -443,16 +443,16 @@ const isCombinedLoss = (kill: any): boolean => {
 };
 
 const getSecurityColor = (security: number): string => {
-  if (security >= 0.9) return '#009868';
-  if (security >= 0.8) return '#00cf78';
-  if (security >= 0.7) return '#00f088';
-  if (security >= 0.6) return '#8bff8b';
-  if (security >= 0.5) return '#efef8f';
-  if (security >= 0.4) return '#ffcf3f';
-  if (security >= 0.3) return '#ff9000';
-  if (security >= 0.2) return '#ff5a00';
-  if (security >= 0.1) return '#ff2a00';
-  return '#ff0000';
+  if (security >= 0.9) return 'dark:text-yellow-400 text-yellow-600';
+  if (security >= 0.8) return 'dark:text-green-400 text-green-600';
+  if (security >= 0.7) return 'dark:text-green-500 text-green-700';
+  if (security >= 0.6) return 'dark:text-lime-400 text-lime-600';
+  if (security >= 0.5) return 'dark:text-yellow-300 text-yellow-500';
+  if (security >= 0.4) return 'dark:text-amber-400 text-amber-600';
+  if (security >= 0.3) return 'dark:text-orange-400 text-orange-600';
+  if (security >= 0.2) return 'dark:text-orange-500 text-orange-700';
+  if (security >= 0.1) return 'dark:text-red-400 text-red-600';
+  return 'dark:text-red-500 text-red-700';
 };
 
 // Navigation handler
@@ -492,10 +492,10 @@ const columnsDesktop: TableColumn<IKillList>[] = [
           class: 'rounded w-10 mx-2'
         }),
         h('div', { class: 'flex flex-col items-start' }, [
-          h('span', { class: 'text-sm' },
+          h('span', { class: 'text-black dark:text-white text-sm' },
             truncateString(getLocalizedString(row.original.victim.ship_name, currentLocale.value), 20)),
           row.original.total_value > 50
-            ? h('span', { class: 'text-background-400 text-xs' }, `${formatIsk(row.original.total_value)} ISK`)
+            ? h('span', { class: 'text-gray-600 dark:text-gray-400 text-xs' }, `${formatIsk(row.original.total_value)} ISK`)
             : null
         ])
       ]);
@@ -516,8 +516,8 @@ const columnsDesktop: TableColumn<IKillList>[] = [
           class: 'rounded w-10 mx-2'
         }),
         h('div', { class: 'flex flex-col items-start' }, [
-          h('span', { class: 'text-sm' }, row.original.victim.character_name),
-          h('span', { class: 'text-background-400 text-xs whitespace-nowrap' },
+          h('span', { class: 'text-black dark:text-white text-sm' }, row.original.victim.character_name),
+          h('span', { class: 'text-gray-600 dark:text-gray-400 text-xs whitespace-nowrap' },
             truncateString(row.original.victim.corporation_name, 22))
         ])
       ]);
@@ -540,9 +540,9 @@ const columnsDesktop: TableColumn<IKillList>[] = [
           class: 'rounded w-10 mx-2'
         }),
         h('div', { class: 'flex flex-col items-start' }, [
-          h('span', { class: 'text-sm' },
+          h('span', { class: 'text-black dark:text-white text-sm' },
             row.original.is_npc ? row.original.finalblow.faction_name : row.original.finalblow.character_name),
-          h('span', { class: 'text-background-400 text-xs' },
+          h('span', { class: 'text-gray-600 dark:text-gray-400 text-xs' },
             truncateString(getLocalizedString(row.original.finalblow.ship_group_name, currentLocale.value), 22))
         ])
       ]);
@@ -555,13 +555,12 @@ const columnsDesktop: TableColumn<IKillList>[] = [
     meta: { width: '15%' },
     cell: ({ row }) => {
       return h('div', { class: 'flex flex-col items-start py-1 text-sm px-2' }, [
-        h('span', { class: 'text-sm whitespace-nowrap' },
+        h('span', { class: 'text-black dark:text-white text-sm whitespace-nowrap' },
           getLocalizedString(row.original.region_name, currentLocale.value)),
-        h('div', { class: 'text-background-400 text-xs whitespace-nowrap' }, [
+        h('div', { class: 'text-gray-600 dark:text-gray-400 text-xs whitespace-nowrap' }, [
           h('span', null, row.original.system_name),
           h('span', null, ' ('),
-          h('span', { style: `color: ${getSecurityColor(row.original.system_security)}` },
-            row.original.system_security.toFixed(1)),
+          h('span', { class: getSecurityColor(row.original.system_security) }, row.original.system_security.toFixed(1)),
           h('span', null, ')')
         ])
       ]);
@@ -575,17 +574,17 @@ const columnsDesktop: TableColumn<IKillList>[] = [
     cell: ({ row }) => {
       return h('div', { class: 'flex flex-col items-end py-1 text-sm whitespace-nowrap px-2' }, [
         h(resolveComponent('ClientOnly'), {}, {
-          default: () => h('div', { class: 'text-background-500' }, formatDate(row.original.kill_time)),
-          fallback: () => h('div', { class: 'text-background-500' }, '—')
+          default: () => h('div', { class: 'text-black dark:text-white' }, formatDate(row.original.kill_time)),
+          fallback: () => h('div', { class: 'text-black dark:text-white' }, '—')
         }),
         h('div', { class: 'flex gap-1 items-center' }, [
-          h('span', { class: 'text-background-400' }, row.original.attackerCount),
+          h('span', { class: 'text-gray-600 dark:text-gray-400' }, row.original.attackerCount),
           h('img', {
             src: '/images/involved.png',
             alt: `${row.original.attackerCount} Involved`,
             class: 'h-4'
           }),
-          h('span', { class: 'text-background-400' }, row.original.commentCount || 0),
+          h('span', { class: 'text-gray-600 dark:text-gray-400' }, row.original.commentCount || 0),
           h('img', { src: '/images/comment.gif', alt: 'Comments', class: 'h-4' })
         ])
       ]);
@@ -619,24 +618,23 @@ const columnsMobile: TableColumn<IKillList>[] = [
         h('div', { class: 'flex flex-col justify-center mr-3 min-w-0 flex-grow' }, [
           // Top Line: Victim Name + ISK Value
           h('div', { class: 'flex justify-between items-center' }, [
-            h('span', { class: 'text-sm font-medium truncate mr-1' }, row.original.victim.character_name),
+            h('span', { class: 'text-black dark:text-white text-sm font-medium truncate mr-1' }, row.original.victim.character_name),
             row.original.total_value > 50
-              ? h('span', { class: 'text-background-400 text-xs whitespace-nowrap' }, `${formatIsk(row.original.total_value)} ISK`)
+              ? h('span', { class: 'text-gray-600 dark:text-gray-400 text-xs whitespace-nowrap' }, `${formatIsk(row.original.total_value)} ISK`)
               : null
           ]),
 
           // Middle Line: Victim Corp
-          h('span', { class: 'text-background-400 text-xs truncate' }, row.original.victim.corporation_name),
+          h('span', { class: 'text-gray-600 dark:text-gray-400 text-xs truncate' }, row.original.victim.corporation_name),
 
           // Bottom Line: Attacker Name + Location
           h('div', { class: 'flex justify-between items-center' }, [
-            h('span', { class: 'text-background-400 text-xs truncate mr-1' },
+            h('span', { class: 'text-gray-600 dark:text-gray-400 text-xs truncate mr-1' },
               row.original.is_npc ? row.original.finalblow.faction_name : row.original.finalblow.character_name),
-            h('div', { class: 'text-background-400 text-xs whitespace-nowrap flex items-center' }, [
+            h('div', { class: 'text-gray-600 dark:text-gray-400 text-xs whitespace-nowrap flex items-center' }, [
               h('span', null, row.original.system_name),
               h('span', null, ' ('),
-              h('span', { style: `color: ${getSecurityColor(row.original.system_security)}` },
-                row.original.system_security.toFixed(1)),
+              h('span', { class: getSecurityColor(row.original.system_security) }, row.original.system_security.toFixed(1)),
               h('span', null, ')')
             ])
           ]),
@@ -648,7 +646,7 @@ const columnsMobile: TableColumn<IKillList>[] = [
               fallback: () => h('span', { class: 'text-background-500 text-xs' }, '—')
             }),
             h('div', { class: 'flex gap-1 items-center' }, [
-              h('span', { class: 'text-background-400 text-xs' }, row.original.attackerCount),
+              h('span', { class: 'text-gray-600 dark:text-gray-400 text-xs' }, row.original.attackerCount),
               h('img', {
                 src: '/images/involved.png',
                 alt: `${row.original.attackerCount} Involved`,
@@ -701,7 +699,7 @@ watch(locale, () => {
 
         <span
           v-if="wsNewKillCount > 0 && !wsDisabled && !useExternalData"
-          class="ml-2 px-2 py-0.5 bg-primary-500 text-white text-xs rounded-full cursor-pointer"
+          class="ml-2 px-2 py-0.5 bg-primary-500 text-black dark:text-white text-xs rounded-full cursor-pointer"
           @click="resetNewKillCount"
         >
           +{{ wsNewKillCount }}
@@ -728,15 +726,15 @@ watch(locale, () => {
 
     <div class="flex justify-between items-center mb-3">
       <button
-        class="px-4 py-2 text-sm font-medium text-white bg-background-800 rounded-md hover:bg-background-700 disabled:opacity-50"
+        class="px-4 py-2 text-sm font-medium text-black dark:text-white bg-background-800 rounded-md hover:bg-background-700 disabled:opacity-50"
         :disabled="pagination.pageIndex === 0"
         @click="pagination.pageIndex = Math.max(0, pagination.pageIndex - 1)"
       >
         {{ $t('common.previous') }}
       </button>
-      <span class="text-white">{{ $t('common.page') }} {{ pagination.pageIndex + 1 }}</span>
+      <span class="text-black dark:text-white">{{ $t('common.page') }} {{ pagination.pageIndex + 1 }}</span>
       <button
-        class="px-4 py-2 text-sm font-medium text-white bg-background-800 rounded-md hover:bg-background-700 disabled:opacity-50"
+        class="px-4 py-2 text-sm font-medium text-black dark:text-white bg-background-800 rounded-md hover:bg-background-700 disabled:opacity-50"
         @click="pagination.pageIndex++"
       >
         {{ $t('common.next') }}
@@ -758,13 +756,13 @@ watch(locale, () => {
         :empty-state="{ icon: 'i-lucide-file-text', label: t('killList.noKills') }"
         :loading-state="{ icon: 'i-lucide-refresh-cw', label: t('killList.loading') }"
         :ui="{
-          base: 'min-w-full table-fixed bg-transparent text-white',
-          thead: 'hidden', // Always hide header on mobile
+          base: 'min-w-full table-fixed text-black dark:text-white',
+          thead: 'hidden',
           tbody: 'divide-y divide-background-700',
-          tr: 'hover:bg-background-800 transition-colors duration-300 cursor-pointer',
+          tr: 'transition-colors duration-300 cursor-pointer',
           th: 'text-left py-1 px-2 uppercase text-xs font-medium',
           td: 'p-0 text-xs',
-          empty: 'py-4 text-center text-background-400',
+          empty: 'py-4 text-center text-black dark:text-white',
           loading: 'py-4 text-center',
           root: 'relative overflow-hidden rounded-sm bg-background-900',
         }"
@@ -787,13 +785,13 @@ watch(locale, () => {
         :empty-state="{ icon: 'i-lucide-file-text', label: t('killList.noKills') }"
         :loading-state="{ icon: 'i-lucide-refresh-cw', label: t('killList.loading') }"
         :ui="{
-          base: 'min-w-full table-fixed bg-transparent text-white',
-          thead: 'bg-background-800 border-b border-background-700',
+          base: 'min-w-full table-fixed text-black dark:text-white',
+          thead: 'border-b border-background-700',
           tbody: 'divide-y divide-background-700',
-          tr: 'hover:bg-background-800 transition-colors duration-300 cursor-pointer',
+          tr: 'transition-colors duration-300 cursor-pointer',
           th: 'text-left py-1 px-2 uppercase text-xs font-medium',
           td: 'p-0 text-xs',
-          empty: 'py-4 text-center text-background-400',
+          empty: 'py-4 text-center text-black dark:text-white',
           loading: 'py-4 text-center',
           root: 'relative overflow-hidden rounded-sm bg-background-900',
         }"
@@ -803,15 +801,15 @@ watch(locale, () => {
 
     <div class="flex justify-between items-center mt-3">
       <button
-        class="px-4 py-2 text-sm font-medium text-white bg-background-800 rounded-md hover:bg-background-700 disabled:opacity-50"
+        class="px-4 py-2 text-sm font-medium text-black dark:text-white bg-background-800 rounded-md hover:bg-background-700 disabled:opacity-50"
         :disabled="pagination.pageIndex === 0"
         @click="pagination.pageIndex = Math.max(0, pagination.pageIndex - 1)"
       >
         {{ $t('common.previous') }}
       </button>
-      <span class="text-white">{{ $t('common.page') }} {{ pagination.pageIndex + 1 }}</span>
+      <span class="text-black dark:text-white">{{ $t('common.page') }} {{ pagination.pageIndex + 1 }}</span>
       <button
-        class="px-4 py-2 text-sm font-medium text-white bg-background-800 rounded-md hover:bg-background-700 disabled:opacity-50"
+        class="px-4 py-2 text-sm font-medium text-black dark:text-white bg-background-800 rounded-md hover:bg-background-700 disabled:opacity-50"
         @click="pagination.pageIndex++"
       >
         {{ $t('common.next') }}

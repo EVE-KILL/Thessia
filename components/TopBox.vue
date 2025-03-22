@@ -144,7 +144,7 @@ const columns: TableColumn<ITopEntity>[] = [
         alt: `${props.type}: ${getEntityDisplayName(row.original)}`,
         class: 'w-7 flex-shrink-0 mr-2'
       }),
-      h('div', { class: 'text-sm text-left text-white truncate min-w-0 overflow-hidden' },
+      h('div', { class: 'text-sm text-left text-black dark:text-white truncate min-w-0 overflow-hidden' },
         getEntityDisplayName(row.original))
     ])
   },
@@ -190,10 +190,10 @@ const handleRowClick = (row) => {
         :empty-state="{ icon: 'i-lucide-file-text', label: t('topBox.noData') }"
         :loading-state="{ icon: 'i-lucide-refresh-cw', label: t('common.loading') }"
         :ui="{
-          base: 'min-w-full table-fixed bg-transparent text-white',
+          base: 'min-w-full table-fixed text-black dark:text-white',
           thead: 'hidden',
           tbody: 'divide-y divide-background-700',
-          tr: 'hover:bg-background-800 transition-colors duration-300 cursor-pointer',
+          tr: 'hover:bg-background-400 transition-colors duration-300 cursor-pointer',
           th: 'text-center py-1 px-2 uppercase text-xs font-medium',
           td: 'p-0 text-xs',
           empty: 'py-4 text-center text-background-400',

@@ -102,7 +102,7 @@ const tabsUi = computed(() => {
       size: 'text-xs',
       font: 'font-medium',
       base: 'flex items-center justify-center py-2 px-4 text-center',
-      active: 'text-white border-b-2 border-white font-bold',
+      active: 'text-white font-bold',
       inactive: 'text-gray-400 hover:text-gray-300'
     }
   };
