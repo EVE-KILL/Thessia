@@ -5,67 +5,67 @@
         "menuTools": "도구",
         "home": {
             "text": "홈",
-            "label": "홈페이지로 이동"
+            "label": "홈 페이지로 이동"
         },
         "kills": {
             "text": "킬",
             "label": "킬 페이지로 이동",
             "latest": "최신",
-            "latestLabel": "최신 킬 페이지로 이동",
-            "abyssal": "어비설",
-            "abyssalLabel": "어비설 킬 페이지로 이동",
+            "latestLabel": "최근 킬 페이지로 이동",
+            "abyssal": "심연",
+            "abyssalLabel": "심연 처치 페이지로 이동",
             "wspace": "웜홀",
             "wspaceLabel": "웜홀 킬 페이지로 이동",
-            "highsec": "하이섹",
+            "highsec": "HighSec",
             "highsecLabel": "하이섹 킬 페이지로 이동",
-            "lowsec": "로우섹",
-            "lowsecLabel": "로우섹 킬 페이지로 이동",
-            "nullsec": "널섹",
+            "lowsec": "LowSec",
+            "lowsecLabel": "저속 킬 페이지로 이동",
+            "nullsec": "0.0",
             "nullsecLabel": "널섹 킬 페이지로 이동",
-            "big": "빅킬",
-            "bigLabel": "빅킬 페이지로 이동",
+            "big": "Big",
+            "bigLabel": "빅 킬 페이지로 이동",
             "solo": "솔로",
             "soloLabel": "솔로 킬 페이지로 이동",
             "npc": "NPC",
-            "npcLabel": "NPC 킬 페이지로 이동",
+            "npcLabel": "NPC 처치 페이지로 이동",
             "5b": "5B+",
             "5bLabel": "5B+ 킬 페이지로 이동",
             "10b": "10B+",
-            "10bLabel": "10B+ 킬 페이지로 이동",
+            "10bLabel": "10억 이상 킬 페이지로 이동",
             "citadels": "시타델",
-            "citadelsLabel": "시타델 킬 페이지로 이동",
+            "citadelsLabel": "성채 처치 페이지로 이동",
             "t1": "T1",
             "t1Label": "T1 킬 페이지로 이동",
             "t2": "T2",
             "t2Label": "T2 킬 페이지로 이동",
             "t3": "T3",
             "t3Label": "T3 킬 페이지로 이동",
-            "frigates": "프리깃",
-            "frigatesLabel": "프리깃 킬 페이지로 이동",
-            "destroyers": "디스트로이어",
-            "destroyersLabel": "디스트로이어 킬 페이지로 이동",
+            "frigates": "프리깃함",
+            "frigatesLabel": "호위함 처치 페이지로 이동",
+            "destroyers": "파괴자",
+            "destroyersLabel": "구축함 처치 페이지로 이동",
             "cruisers": "크루저",
-            "cruisersLabel": "크루저 킬 페이지로 이동",
-            "battlecruisers": "배틀크루저",
-            "battlecruisersLabel": "배틀크루저 킬 페이지로 이동",
-            "battleships": "배틀쉽",
-            "battleshipsLabel": "배틀쉽 킬 페이지로 이동",
-            "capitals": "캐피탈",
+            "cruisersLabel": "순양함 처치 페이지로 이동",
+            "battlecruisers": "배틀 크루저",
+            "battlecruisersLabel": "배틀크루저 처치 페이지로 이동",
+            "battleships": "전함",
+            "battleshipsLabel": "전함 처치 페이지로 이동",
+            "capitals": "수도",
             "capitalsLabel": "캐피탈 킬 페이지로 이동",
-            "freighters": "프레이터",
-            "freightersLabel": "프레이터 킬 페이지로 이동",
-            "supercarriers": "슈퍼캐리어",
-            "supercarriersLabel": "슈퍼캐리어 킬 페이지로 이동",
+            "freighters": "화물차",
+            "freightersLabel": "화물차 킬 페이지로 이동",
+            "supercarriers": "슈퍼 캐리어",
+            "supercarriersLabel": "슈퍼 캐리어 킬 페이지로 이동",
             "titans": "타이탄",
-            "titansLabel": "타이탄 킬 페이지로 이동"
+            "titansLabel": "타이탄 처치 페이지로 이동"
         },
         "faq": {
-            "text": "FAQ",
+            "text": "자주 묻는 질문",
             "label": "FAQ 페이지로 이동"
         },
         "about": {
-            "text": "소개",
-            "label": "소개 페이지로 이동"
+            "text": "정보",
+            "label": "정보 페이지로 이동"
         },
         "status": {
             "text": "상태",
@@ -80,81 +80,96 @@
     },
     "search": {
         "title": "검색",
-        "placeholder": "검색...",
-        "results": "{query}에 대한 검색 결과",
+        "placeholder": "검색 ...",
+        "results": "검색 결과 {query}",
         "searchButton": "검색",
         "searching": "검색 중...",
         "noResults": "결과 없음",
-        "noResultsTitle": "검색 결과가 없습니다",
-        "noResultsDesc": "검색어와 일치하는 항목을 찾을 수 없습니다. 다른 키워드로 시도하거나 검색 범위를 넓혀보세요.",
-        "initialMessage": "검색을 시작하려면 검색창에 입력하세요",
-        "more": "더보기",
-        "moreType": "더 많은 {type} ({count})",
-        "showMoreType": "더 많은 {type} 보기",
-        "viewAllResults": "모든 결과 보기 ({count})",
-        "found": "{count}개의 결과를 찾았습니다",
+        "noResultsTitle": "결과를 찾을 수 없습니다.",
+        "noResultsDesc": "검색어와 일치하는 항목을 찾을 수 없습니다. 다른 키워드를 사용하거나 검색 범위를 넓혀 보세요.",
+        "initialMessage": "검색창에 검색어를 입력하여 검색을 시작하세요.",
+        "more": "자세히 보기",
+        "moreType": "자세히 보기 {type} ({count})",
+        "showMoreType": "자세히 보기 {type}",
+        "viewAllResults": "전체 결과 보기 ({count})",
+        "found": "찾은 {count} 결과",
         "processingTimeMs": "처리 시간: {time} ms",
-        "showMoreCategory": "더 많은 {category} 보기 ({count})",
+        "showMoreCategory": "더보기 {category} ({count})",
         "category": {
-            "character": "캐릭터",
-            "corporation": "코퍼레이션",
-            "alliance": "얼라이언스",
-            "item": "아이템",
+            "character": "문자",
+            "corporation": "기업",
+            "alliance": "제휴",
+            "item": "항목",
             "system": "시스템",
             "region": "지역"
         }
     },
     "background": {
         "title": "배경",
-        "toggleVisibility": "배경 표시 전환",
-        "loading": "로딩 중...",
-        "randomReddit": "r/EVEPorn에서 무작위로 가져오기",
+        "toggleVisibility": "배경 표시 여부 전환",
+        "loading": "로드 중...",
+        "randomReddit": "r/EVEPorn에서 무작위",
         "viewSource": "Reddit에서 소스 보기"
     },
     "status": {
         "pageTitle": "시스템 상태",
         "title": "시스템 상태",
-        "loading": "상태 정보 로딩 중...",
-        "autoRefresh": "{seconds}초마다 자동 새로고침",
-        "refreshNow": "지금 새로고침",
+        "loading": "상태 정보 로드 중...",
+        "autoRefresh": "{seconds}초마다 자동 새로 고침",
+        "refreshNow": "지금 새로 고침",
         "retry": "다시 시도",
-        "lastUpdated": "마지막 업데이트: {time}",
-        "autoRefreshing": "{seconds}초마다 자동으로 새로고침 중",
-        "timePeriod": "시간 기간 선택",
-        "selectTimePeriod": "시간 기간",
+        "lastUpdated": "마지막으로 업데이트되었습니다: {time}",
+        "autoRefreshing": "{seconds} 초마다 자동 새로 고침",
+        "timePeriod": "기간 선택",
+        "selectTimePeriod": "기간",
         "processedItems": "처리된 항목 ({period})",
+        "simplified": "단순화",
+        "detailed": "상세",
+        "detailedStats": "상세 통계",
+        "systemInfo": "시스템 정보",
+        "summary": {
+            "uptime": "시스템 가동 시간",
+            "processedLast5m": "처리됨(최근 5분)",
+            "queuedItems": "대기열에 추가된 항목"
+        },
+        "tabs": {
+            "overview": "개요",
+            "processing": "처리",
+            "database": "데이터베이스",
+            "cache": "캐시"
+        },
         "uptime": {
             "title": "시스템 가동 시간",
-            "format": "{days}일 {hours}시간 {minutes}분 {seconds}초",
-            "since": "시작 시간",
+            "format": "{days}D {hours}H {minutes}M {seconds}S",
+            "since": "이후 증가",
             "localTime": "현지 시간"
         },
         "environment": {
             "title": "환경",
-            "nodeEnv": "Node 환경",
-            "nodeVersion": "Node 버전",
+            "nodeEnv": "노드 환경",
+            "nodeVersion": "노드 버전",
             "process": "프로세스"
         },
         "operatingSystem": {
             "title": "운영 체제",
             "platform": "플랫폼",
             "architecture": "아키텍처",
-            "loadAverage": "평균 부하",
+            "loadAverage": "로드 평균",
             "totalCPUs": "CPU 코어",
-            "memory": "메모리 (GB)"
+            "memory": "메모리(GB)"
         },
         "queueCounts": {
-            "title": "활성 큐 항목",
-            "queue": "큐 이름",
-            "count": "개수"
+            "title": "활성 대기열 항목",
+            "queue": "대기열 이름",
+            "count": "Count"
         },
         "processingStatistics": {
-            "title": "처리 통계"
+            "title": "통계 처리"
         },
         "databaseCounts": {
             "title": "데이터베이스 컬렉션",
             "collection": "컬렉션",
-            "count": "개수"
+            "count": "Count"
         },
         "cacheSizes": {
             "title": "캐시 크기",
@@ -164,56 +179,41 @@
         "cacheHits": {
             "title": "캐시 성능",
             "cache": "캐시 이름",
-            "hits": "히트 수"
+            "hits": "조회수"
         },
         "timePeriods": {
             "1min": "1분",
             "5min": "5분",
             "15min": "15분",
-            "1hour": "1시간",
+            "1hour": "1 시간",
             "6hours": "6시간",
             "12hours": "12시간",
             "24hours": "24시간",
-            "1week": "1주",
+            "1week": "1 주",
             "1month": "1개월"
-        },
-        "simplified": "간소화",
-        "detailed": "상세",
-        "detailedStats": "상세 통계",
-        "systemInfo": "시스템 정보",
-        "summary": {
-            "uptime": "시스템 가동 시간",
-            "processedLast5m": "처리됨 (최근 5분)",
-            "queuedItems": "대기 중인 항목"
-        },
-        "tabs": {
-            "overview": "개요",
-            "processing": "처리",
-            "database": "데이터베이스",
-            "cache": "캐시"
         }
     },
     "auth": {
         "signIn": "로그인",
-        "signInWithEve": "EVE Online 계정으로 로그인",
-        "useEveSSOToLogin": "EVE Online SSO를 사용하여 계정에 로그인하세요",
-        "loading": "로딩 중...",
-        "loggingOut": "로그아웃 중...",
-        "ssoRequiredForLogin": "로그인을 위해 EVE SSO가 필요합니다",
-        "alreadySignedIn": "이미 로그인되어 있습니다",
-        "signedInAs": "{name}(으)로 로그인됨",
-        "privacyNote": "당사 서비스를 이용함으로써, 귀하는 요청된 권한에 따라 귀하의 EVE Online 캐릭터 데이터에 접근할 권한을 당사에 부여합니다.",
-        "error": {
-            "general": "인증에 실패했습니다. 다시 시도해주세요.",
-            "tokenExpired": "세션이 만료되었습니다. 다시 로그인해주세요.",
-            "missingScope": "필요한 권한이 없습니다: {scope}"
-        },
+        "signInWithEve": "EVE 온라인 계정으로 로그인",
+        "useEveSSOToLogin": "EVE 온라인 SSO를 사용하여 계정에 로그인하기",
+        "loading": "로드 중...",
+        "loggingOut": "로그아웃...",
+        "ssoRequiredForLogin": "로그인하려면 EVE SSO가 필요합니다.",
+        "alreadySignedIn": "이미 로그인되어 있습니다.",
+        "signedInAs": "다음 계정으로 로그인 {name}",
         "customizeScopes": "로그인 범위 사용자 지정",
         "loginTitle": "EVE Online으로 로그인",
         "quickLoginInfo": "권장 범위로 로그인",
-        "customizeScopesInfo": "EVE Kill이 액세스할 수 있는 정보 사용자 지정:",
+        "customizeScopesInfo": "EVE Kill이 액세스할 수 있는 정보를 사용자 지정합니다:",
         "loginWithSelectedScopes": "선택한 범위로 로그인",
-        "required": "필수"
+        "required": "필수",
+        "privacyNote": "로그인하면 선택한 정보를 이브 킬과 공유하는 데 동의하는 것입니다. 당사는 이 데이터를 귀하에게 서비스를 제공하기 위해서만 사용합니다.",
+        "error": {
+            "general": "인증에 실패했습니다. 다시 시도해 주세요.",
+            "tokenExpired": "세션이 만료되었습니다. 다시 로그인해 주세요.",
+            "missingScope": "필요한 권한이 누락되었습니다: {scope}"
+        }
     },
     "user": {
         "pageTitle": "사용자 계정",
@@ -222,154 +222,159 @@
         "profile": "프로필",
         "settings": "설정",
         "logout": "로그아웃",
-        "characterDetails": "캐릭터 세부정보",
+        "characterDetails": "캐릭터 세부 정보",
         "characterId": "캐릭터 ID",
-        "registeredSince": "등록일",
+        "registeredSince": "등록 이후",
         "tokenExpires": "토큰 만료",
         "permissions": "권한",
         "needHelp": "계정에 도움이 필요하신가요? 지원팀에 문의하세요.",
-        "profileDescription": "EVE Online 캐릭터 정보를 보고 관리하세요"
+        "profileDescription": "EVE 온라인 캐릭터 정보 보기 및 관리"
     },
     "common": {
-        "loading": "로딩 중...",
+        "loading": "로드 중...",
         "error": "오류",
         "tryAgain": "다시 시도",
-        "goHome": "홈으로",
+        "goHome": "홈으로 이동",
         "cancel": "취소",
         "save": "저장",
         "selectLanguage": "언어 선택",
         "page": "페이지",
-        "previous": "이전",
+        "previous": "이전 게시물",
         "next": "다음"
     },
     "settings": {
         "description": "계정 설정 및 권한 관리",
         "accountSettings": "계정 설정",
-        "permissions": "EVE Online 권한",
-        "permissionsDescription": "EVE SSO를 통해 이 애플리케이션에 부여한 권한입니다:",
-        "permissionsNote": "이러한 권한을 수정하려면 EVE SSO를 통해 재인증해야 합니다.",
-        "dataPrivacy": "데이터 개인정보",
-        "dataPrivacyDescription": "당사가 귀하의 EVE Online 데이터를 처리하는 방법에 관한 정보:",
+        "permissions": "EVE 온라인 권한",
+        "permissionsDescription": "다음은 EVE SSO를 통해 이 애플리케이션에 부여한 권한입니다:",
+        "permissionsNote": "이러한 권한을 수정하려면 EVE SSO를 통해 다시 인증해야 합니다.",
+        "dataPrivacy": "데이터 개인 정보 보호",
+        "dataPrivacyDescription": "EVE 온라인 데이터를 처리하는 방법에 대한 정보:",
         "authenticationStatus": "인증 상태",
         "authenticated": "인증됨",
-        "expiringToken": "토큰이 곧 만료됩니다",
-        "refreshToken": "토큰 새로고침",
+        "expiringToken": "곧 만료되는 토큰",
+        "refreshToken": "토큰 새로 고침",
         "reauthenticate": "재인증",
-        "storesCharacterData": "당사는 ID, 이름 및 부여된 권한을 포함한 캐릭터 정보를 저장합니다.",
+        "defaultScopes": "기본 범위",
+        "customizeScopes": "범위 사용자 지정",
+        "storesCharacterData": "당사는 아이디, 이름, 부여된 권한을 포함한 회원님의 캐릭터 정보를 저장합니다.",
         "tokensEncrypted": "인증 토큰은 암호화되어 안전하게 저장됩니다.",
-        "removeDataByRevoking": "EVE Online 웹사이트를 통해 언제든지 접근 권한을 취소할 수 있습니다.",
+        "removeDataByRevoking": "EVE 온라인 웹사이트를 통해 언제든지 액세스 권한을 취소할 수 있습니다.",
         "deleteData": "내 데이터 삭제",
-        "deleteError": "계정 데이터 삭제 실패",
+        "deleteError": "계정 데이터를 삭제하지 못했습니다.",
         "deleteAccountConfirmTitle": "계정 데이터 삭제",
         "deleteAccountConfirmMessage": "계정 데이터를 삭제하시겠습니까? 이 작업은 취소할 수 없습니다.",
-        "confirmDelete": "예, 내 데이터를 삭제합니다",
-        "permanentActionWarning": "이것은 설정 및 환경설정을 포함한 모든 데이터를 시스템에서 영구적으로 제거합니다.",
+        "confirmDelete": "예, 내 데이터 삭제",
+        "permanentActionWarning": "이렇게 하면 설정 및 환경설정을 포함한 모든 데이터가 시스템에서 영구적으로 삭제됩니다.",
         "esi": "EVE SSO 인증",
-        "permissionDescription": "이 권한이 허용하는 사항:"
+        "permissionDescription": "이 권한으로 허용되는 사항:"
     },
     "permissions": {
-        "publicData": "공개 캐릭터 정보 접근",
-        "readKillmails": "킬메일 접근",
-        "readCorporationKillmails": "법인 킬메일 접근"
+        "publicData": "공개 캐릭터 정보에 액세스",
+        "readKillmails": "킬메일에 액세스",
+        "readCorporationKillmails": "회사 킬메일에 액세스"
     },
     "footer": {
-        "legal": "법적 정보"
+        "legal": "법률"
     },
     "legal": {
-        "pageTitle": "법적 정보",
-        "title": "법적 정보",
+        "pageTitle": "법률 정보",
+        "title": "법률 정보",
         "disclaimer": {
             "title": "면책 조항",
-            "p1": "Thessia는 EVE Online의 서드파티 도구이며 CCP Games와 제휴하거나 승인받지 않았습니다.",
-            "p2": "이 서비스는 어떠한 종류의 보증 없이 '있는 그대로' 제공됩니다. 제시된 데이터의 정확성이나 신뢰성에 대해 어떠한 보증도 하지 않습니다."
+            "p1": "테시아는 EVE 온라인을 위한 타사 도구이며 CCP Games와 제휴하거나 보증하지 않습니다.",
+            "p2": "이 서비스는 어떠한 종류의 보증도 없이 '있는 그대로' 제공됩니다. 당사는 제공된 데이터의 정확성이나 신뢰성에 대해 어떠한 보증도 하지 않습니다."
         },
         "license": {
             "title": "라이선스",
-            "p1": "Thessia / EVE-KILL은 MIT 라이선스 하에 라이선스가 부여되었으며 해당 라이선스 조건에 따라 자유롭게 사용, 수정 및 배포될 수 있습니다.",
-            "p2": "이는 소프트웨어의 모든 사본 또는 상당 부분에 저작권 고지 및 허가 고지가 포함되어 있는 한, 소프트웨어의 사본을 자유롭게 사용, 복사, 수정, 병합, 출판, 배포, 서브라이선스 및/또는 판매할 수 있음을 의미합니다.",
+            "p1": "테시아/이브킬은 MIT 라이선스에 따라 라이선스가 부여되며 해당 라이선스 조건에 따라 자유롭게 사용, 수정 및 배포할 수 있습니다.",
+            "p2": "즉, 소프트웨어의 모든 사본 또는 상당 부분에 저작권 고지 및 사용권 고지를 포함한다는 조건 하에 소프트웨어의 사본을 자유롭게 사용, 복사, 수정, 병합, 게시, 배포, 재라이선스 및/또는 판매할 수 있습니다.",
             "viewLicense": "GitHub에서 전체 라이선스 보기"
         },
         "ownership": {
-            "title": "지적 재산권",
-            "p1": "EVE Online, EVE 로고, EVE 및 관련된 모든 로고와 디자인은 CCP hf의 지적 재산입니다. 이러한 상표와 관련된 모든 아트워크, 스크린샷, 캐릭터, 차량, 스토리라인, 세계 사실 또는 기타 인식 가능한 지적 재산의 특징 역시 CCP hf의 지적 재산입니다.",
-            "ccpLink": "CCP Games 방문"
+            "title": "지적 재산",
+            "p1": "이브 온라인, 이브 로고, 이브 및 모든 관련 로고와 디자인은 CCP hf의 지적 재산입니다. 이러한 상표와 관련된 모든 아트워크, 스크린샷, 캐릭터, 탈것, 스토리라인, 세계관 또는 기타 인식 가능한 지적 재산의 특징도 마찬가지로 CCP hf의 지적 재산입니다.",
+            "ccpLink": "CCP 게임 방문하기"
         },
         "data": {
             "title": "데이터 사용 및 개인정보 보호",
-            "p1": "Thessia는 EVE Online API 및 기타 공개 소스에서 데이터를 수집하고 처리합니다. 이 데이터는 이 웹사이트가 제공하는 서비스를 위해서만 사용됩니다.",
-            "p2": "저희는 귀하의 개인정보를 존중하며 개인정보를 제3자와 공유하지 않습니다. 수집한 모든 데이터는 표준 개인정보 보호 관행에 따라 사용됩니다."
+            "p1": "테시아는 EVE 온라인 API 및 기타 공개 소스에서 데이터를 수집하고 처리합니다. 이 데이터는 본 웹사이트에서 제공하는 서비스를 제공하기 위한 목적으로만 사용됩니다.",
+            "p2": "당사는 사용자의 개인정보를 존중하며 제3자와 개인정보를 공유하지 않습니다. 당사가 수집하는 모든 데이터는 표준 개인정보 보호 관행에 따라 사용됩니다."
         },
         "contact": {
             "title": "연락처 정보",
-            "p1": "Thessia와 관련된 법적 문제에 대해 질문이나 우려사항이 있으시면 GitHub 이슈를 통해 연락해 주세요:",
+            "p1": "테시아와 관련된 법적 문제에 대한 질문이나 우려 사항이 있는 경우 GitHub 이슈를 통해 문의하시기 바랍니다:",
             "githubIssues": "GitHub에 이슈 제출"
         }
     },
     "about": {
         "pageTitle": "EVE-KILL 소개",
         "title": "EVE-KILL 소개",
-        "description": "EVE-KILL은 EVE Online을 위한 종합적인 킬보드 서비스로, 뉴 에덴 전역의 전투 활동에 대한 상세한 통계와 분석을 플레이어에게 제공합니다.",
+        "description": "EVE-KILL은 EVE 온라인의 종합적인 킬 보드 서비스로, 플레이어에게 뉴 에덴에서의 전투 활동에 대한 자세한 통계와 분석을 제공합니다.",
         "mission": {
-            "title": "우리의 미션",
-            "text": "우리의 미션은 EVE Online 커뮤니티에 가장 정확하고, 최신이며, 사용자 친화적인 킬보드 경험을 제공하는 것입니다. 우리는 모든 플레이어에게 신뢰할 수 있고 빠른 서비스를 유지하면서 PVP 전투에 대한 가치 있는 통찰력을 제공하기 위해 노력합니다."
+            "title": "우리의 사명",
+            "text": "저희의 임무는 이브 온라인 커뮤니티에 가장 정확하고 최신의 사용자 친화적인 킬보드 경험을 제공하는 것입니다. 저희는 모든 플레이어에게 안정적이고 빠른 서비스를 유지하면서 PVP 전투에 대한 가치 있는 통찰력을 제공하기 위해 노력합니다."
         },
         "history": {
             "title": "역사",
-            "text": "EVE-KILL은 2007년에 설립되었으며, 이후 뉴 에덴에서 가장 신뢰받는 킬보드 서비스 중 하나로 발전했습니다. 지속적인 업데이트와 개선을 통해, 우리는 신뢰할 수 있는 전투 추적과 통계로 EVE 커뮤니티를 계속 지원하고 있습니다."
+            "text": "EVE-KILL은 2007년에 설립되었으며, 이후 뉴에덴에서 가장 신뢰받는 킬보드 서비스 중 하나로 발전해 왔습니다. 지속적인 업데이트와 개선을 통해 신뢰할 수 있는 전투 추적 및 통계로 EVE 커뮤니티에 지속적으로 서비스를 제공하고 있습니다."
         },
         "contact": {
-            "title": "연락처",
-            "text": "질문, 제안, 또는 지원이 필요하신가요? 저희 Discord 서버에 가입하시거나 GitHub에서 이슈를 생성해 주세요"
+            "title": "문의하기",
+            "text": "질문이나 제안이 있거나 지원이 필요하신가요? Discord 서버에 참여하거나 GitHub에서 이슈를 만들어 주세요."
         },
         "links": {
             "discord": "Discord 가입하기",
-            "github": "GitHub 저장소"
+            "github": "GitHub 리포지토리"
         }
     },
     "scopes": {
         "publicData": "공개 데이터",
         "publicDataDesc": "기본 캐릭터 정보",
         "readKillmails": "킬메일 읽기",
-        "readKillmailsDesc": "캐릭터의 킬메일 접근",
-        "readCorpKillmails": "법인 킬메일 읽기",
-        "readCorpKillmailsDesc": "법인의 킬메일 접근"
+        "readKillmailsDesc": "캐릭터의 킬메일에 액세스",
+        "readCorpKillmails": "기업 킬메일 읽기",
+        "readCorpKillmailsDesc": "기업의 킬메일에 액세스하기"
     },
     "home": {
         "pageTitle": "홈"
     },
     "kills": {
-        "pageTitle": "킬메일 세부정보",
+        "pageTitle": "킬메일 세부 정보",
         "listPageTitle": "킬보드"
     },
     "faq": {
         "pageTitle": "자주 묻는 질문"
     },
     "killList": {
-        "ship": "함선",
+        "ship": "Ship",
         "victim": "피해자",
-        "finalBlow": "최후의 일격",
+        "finalBlow": "최종 타격",
         "location": "위치",
-        "details": "세부정보",
-        "noKills": "킬 기록이 없습니다",
-        "loading": "킬 기록 로딩 중...",
+        "details": "세부 정보",
+        "noKills": "킬이 발견되지 않음",
+        "loading": "킬 수 로드 중...",
         "type": "유형",
-        "itemsPerPage": "페이지당 항목 수",
-        "wsConnected": "WebSocket 연결됨",
-        "wsDisconnected": "WebSocket 연결 해제됨",
+        "itemsPerPage": "페이지당 항목",
+        "wsConnected": "웹소켓 연결",
+        "wsDisconnected": "웹 소켓 연결 끊김",
         "showing": "표시"
     },
+    "topBox": {
+        "killsOver": "지난 {days} 일"
+    },
     "tabs": {
-        "topLists": "상위 목록",
+        "topLists": "인기 목록",
         "kills": "킬",
         "overview": "개요"
     },
     "top": {
-        "characters": "상위 캐릭터",
-        "corporations": "상위 법인",
-        "alliances": "상위 얼라이언스",
-        "ships": "상위 함선",
+        "characters": "인기 캐릭터",
+        "corporations": "상위 기업",
+        "alliances": "상위 제휴사",
+        "ships": "상위 선박",
         "systems": "상위 시스템",
-        "constellations": "상위 성단",
-        "regions": "상위 지역"
+        "constellations": "상위 별자리",
+        "regions": "인기 지역"
     }
 }
