@@ -245,6 +245,7 @@ export default defineNuxtConfig({
         autoImport: true,
     },
 });
+
 function routeRuleGenerator(debug = false): Record<string, any> {
   // Build route rules as an object with a default rule for /api/**
   const rules: Record<string, any> = {
