@@ -136,7 +136,8 @@
             "overview": "Visión general",
             "processing": "Tratamiento",
             "database": "Base de datos",
-            "cache": "Caché"
+            "cache": "Caché",
+            "redis": "Redis"
         },
         "uptime": {
             "title": "Tiempo de actividad del sistema",
@@ -191,6 +192,30 @@
             "24hours": "24 horas",
             "1week": "1 semana",
             "1month": "1 mes"
+        },
+        "redis": {
+            "server": "Servidor Redis",
+            "version": "Versión",
+            "mode": "Modo",
+            "os": "Sistema operativo",
+            "uptime": "Tiempo de actividad",
+            "uptimeFormat": "{days}d {hours}h {minutes}m {seconds}s",
+            "memory": "Memoria",
+            "usedMemory": "Memoria usada",
+            "usedMemoryPeak": "Pico de uso de memoria",
+            "memFragmentationRatio": "Ratio de fragmentación de la memoria",
+            "stats": "Estadísticas",
+            "connectedClients": "Clientes conectados",
+            "totalConnections": "Conexiones totales",
+            "totalCommands": "Total de comandos",
+            "keyspaceHits": "Éxitos de Keyspace",
+            "keyspaceMisses": "Errores en el espacio clave",
+            "hitRatio": "Ratio de aciertos",
+            "keyspace": "Espacio clave",
+            "database": "Base de datos",
+            "keys": "Claves",
+            "expires": "Expira en",
+            "avgTtl": "TTL medio"
         }
     },
     "auth": {
