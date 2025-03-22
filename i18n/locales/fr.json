@@ -190,7 +190,9 @@
             "overview": "Aperçu",
             "processing": "Traitement",
             "database": "Base de Données",
-            "cache": "Cache"
+            "cache": "Cache",
+            "topLists": "Classements",
+            "kills": "Éliminations"
         }
     },
     "auth": {
@@ -357,5 +359,14 @@
         "wsConnected": "WebSocket Connecté",
         "wsDisconnected": "WebSocket Déconnecté",
         "showing": "Affichage"
+    },
+    "top": {
+        "characters": "Meilleurs Personnages",
+        "corporations": "Meilleures Corporations",
+        "alliances": "Meilleures Alliances",
+        "ships": "Meilleurs Vaisseaux",
+        "systems": "Meilleurs Systèmes",
+        "constellations": "Meilleures Constellations",
+        "regions": "Meilleures Régions"
     }
 }

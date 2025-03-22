@@ -357,5 +357,19 @@
         "wsConnected": "WebSocket 接続済み",
         "wsDisconnected": "WebSocket 切断済み",
         "showing": "表示中"
+    },
+    "tabs": {
+        "topLists": "トップリスト",
+        "kills": "キル",
+        "overview": "概要"
+    },
+    "top": {
+        "characters": "トップキャラクター",
+        "corporations": "トップコーポレーション",
+        "alliances": "トップアライアンス",
+        "ships": "トップシップ",
+        "systems": "トップシステム",
+        "constellations": "トップ星座",
+        "regions": "トップリージョン"
     }
 }

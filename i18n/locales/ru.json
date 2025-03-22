@@ -190,7 +190,9 @@
             "overview": "Обзор",
             "processing": "Обработка",
             "database": "База данных",
-            "cache": "Кэш"
+            "cache": "Кэш",
+            "topLists": "Топ-списки",
+            "kills": "Уничтожения"
         }
     },
     "auth": {
@@ -357,5 +359,14 @@
         "wsConnected": "WebSocket подключен",
         "wsDisconnected": "WebSocket отключен",
         "showing": "Показано"
+    },
+    "top": {
+        "characters": "Лучшие персонажи",
+        "corporations": "Лучшие корпорации",
+        "alliances": "Лучшие альянсы",
+        "ships": "Лучшие корабли",
+        "systems": "Лучшие системы",
+        "constellations": "Лучшие созвездия",
+        "regions": "Лучшие регионы"
     }
 }

@@ -190,7 +190,9 @@
             "overview": "Resumen",
             "processing": "Procesamiento",
             "database": "Base de Datos",
-            "cache": "Caché"
+            "cache": "Caché",
+            "topLists": "Listas Top",
+            "kills": "Bajas"
         }
     },
     "auth": {
@@ -357,5 +359,14 @@
         "wsConnected": "WebSocket Conectado",
         "wsDisconnected": "WebSocket Desconectado",
         "showing": "Mostrando"
+    },
+    "top": {
+        "characters": "Personajes Top",
+        "corporations": "Corporaciones Top",
+        "alliances": "Alianzas Top",
+        "ships": "Naves Top",
+        "systems": "Sistemas Top",
+        "constellations": "Constelaciones Top",
+        "regions": "Regiones Top"
     }
 }

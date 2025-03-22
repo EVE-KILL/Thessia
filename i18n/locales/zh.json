@@ -190,7 +190,9 @@
             "overview": "概览",
             "processing": "处理",
             "database": "数据库",
-            "cache": "缓存"
+            "cache": "缓存",
+            "topLists": "排行榜",
+            "kills": "击杀"
         }
     },
     "auth": {
@@ -357,5 +359,14 @@
         "wsConnected": "WebSocket 已连接",
         "wsDisconnected": "WebSocket 已断开",
         "showing": "显示"
+    },
+    "top": {
+        "characters": "角色排行",
+        "corporations": "公司排行",
+        "alliances": "联盟排行",
+        "ships": "舰船排行",
+        "systems": "星系排行",
+        "constellations": "星座排行",
+        "regions": "星域排行"
     }
 }

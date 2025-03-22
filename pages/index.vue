@@ -1,72 +1,157 @@
 <template>
     <div class="layout-container">
-        <div class="top-row">
+        <!-- Desktop View - Only shown on desktop -->
+        <div v-if="!isMobile" class="desktop-layout">
+            <div class="top-row">
+                <!-- Content for the top row -->
+            </div>
 
+            <div class="main-content">
+                <div class="left-column">
+                    <div class="mt-25"></div>
+                    <TopBox
+                        type="character"
+                        :limit="10"
+                        :days="7"
+                        :title="t('top.characters')"
+                    />
+                    <TopBox
+                        type="corporation"
+                        :limit="10"
+                        :days="7"
+                        :title="t('top.corporations')"
+                    />
+                    <TopBox
+                        type="alliance"
+                        :limit="10"
+                        :days="7"
+                        :title="t('top.alliances')"
+                    />
+                    <TopBox
+                        type="ship"
+                        :limit="10"
+                        :days="7"
+                        :title="t('top.ships')"
+                    />
+                    <TopBox
+                        type="solarsystem"
+                        :limit="10"
+                        :days="7"
+                        :title="t('top.systems')"
+                    />
+                    <TopBox
+                        type="constellation"
+                        :limit="10"
+                        :days="7"
+                        :title="t('top.constellations')"
+                    />
+                    <TopBox
+                        type="region"
+                        :limit="10"
+                        :days="7"
+                        :title="t('top.regions')"
+                    />
+                </div>
+
+                <div class="right-column">
+                    <KillList :killlistType="'latest'" />
+                </div>
+            </div>
         </div>
 
-        <div class="main-content">
-            <div class="left-column">
-                <!-- Add padding to match KillList controls height - approximately 122px -->
-                <div class="mt-25"></div>
-                <TopBox
-                    type="character"
-                    :limit="10"
-                    :days="7"
-                    title="Top Characters"
-                />
-                <TopBox
-                    type="corporation"
-                    :limit="10"
-                    :days="7"
-                    title="Top Corporations"
-                />
-                <TopBox
-                    type="alliance"
-                    :limit="10"
-                    :days="7"
-                    title="Top Alliances"
-                />
-                <TopBox
-                    type="ship"
-                    :limit="10"
-                    :days="7"
-                    title="Top Ships"
-                />
-                <TopBox
-                    type="solarsystem"
-                    :limit="10"
-                    :days="7"
-                    title="Top Systems"
-                />
-                <TopBox
-                    type="constellation"
-                    :limit="10"
-                    :days="7"
-                    title="Top Constellations"
-                />
-                <TopBox
-                    type="region"
-                    :limit="10"
-                    :days="7"
-                    title="Top Regions"
-                />
-            </div>
+        <!-- Mobile View with Tabs - Only shown on mobile -->
+        <div v-else class="mobile-layout">
+            <UTabs :items="tabItems" class="w-full" default-selected="kills" default-value="1">
+                <template #content="{ item }">
+                    <div class="tab-content">
+                        <!-- Top Lists tab content -->
+                        <template v-if="item.key === 'topLists'">
+                            <TopBox
+                                type="character"
+                                :limit="10"
+                                :days="7"
+                                :title="t('top.characters')"
+                            />
+                            <TopBox
+                                type="corporation"
+                                :limit="10"
+                                :days="7"
+                                :title="t('top.corporations')"
+                            />
+                            <TopBox
+                                type="alliance"
+                                :limit="10"
+                                :days="7"
+                                :title="t('top.alliances')"
+                            />
+                            <TopBox
+                                type="ship"
+                                :limit="10"
+                                :days="7"
+                                :title="t('top.ships')"
+                            />
+                            <TopBox
+                                type="solarsystem"
+                                :limit="10"
+                                :days="7"
+                                :title="t('top.systems')"
+                            />
+                            <TopBox
+                                type="constellation"
+                                :limit="10"
+                                :days="7"
+                                :title="t('top.constellations')"
+                            />
+                            <TopBox
+                                type="region"
+                                :limit="10"
+                                :days="7"
+                                :title="t('top.regions')"
+                            />
+                        </template>
 
-            <div class="right-column">
-                <KillList :killlistType="'latest'" />
-            </div>
+                        <!-- Kills tab content -->
+                        <template v-else-if="item.key === 'kills'">
+                            <KillList :killlistType="'latest'" />
+                        </template>
+
+                        <!-- Overview tab content -->
+                        <template v-else-if="item.key === 'overview'">
+                            <div>Overview content will go here</div>
+                        </template>
+                    </div>
+                </template>
+            </UTabs>
         </div>
     </div>
 </template>
 
 <script setup lang="ts">
-
 const { t } = useI18n();
+const { isMobile } = useResponsive();
+
+// Create the tabs configuration for mobile view
+const tabItems = ref([
+    {
+        key: 'topLists',
+        label: t('tabs.topLists'),
+        icon: 'i-lucide-list-ordered'
+    },
+    {
+        key: 'kills',
+        label: t('tabs.kills'),
+        icon: 'i-lucide-swords'
+    },
+    {
+        key: 'overview',
+        label: t('tabs.overview'),
+        icon: 'i-lucide-layout-dashboard'
+    }
+]);
+
 useSeoMeta({
-  title: t('home.pageTitle')
+    title: t('home.pageTitle')
 });
-
-
 </script>
 
 <style scoped>
@@ -97,15 +182,13 @@ useSeoMeta({
     flex: 1;
 }
 
-/* Media query for responsive design */
-@media (max-width: 768px) {
-    .main-content {
-        grid-template-columns: 1fr;
-    }
+/* Tab content spacing */
+.tab-content {
+    padding-top: 1rem;
+}
 
-    .left-column {
-        max-width: 100%;
-        width: 100%;
-    }
+/* Mobile-specific styling */
+.mobile-layout {
+    width: 100%;
 }
 </style>

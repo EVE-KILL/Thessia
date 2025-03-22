@@ -357,5 +357,19 @@
         "wsConnected": "WebSocket 연결됨",
         "wsDisconnected": "WebSocket 연결 해제됨",
         "showing": "표시"
+    },
+    "tabs": {
+        "topLists": "상위 목록",
+        "kills": "킬",
+        "overview": "개요"
+    },
+    "top": {
+        "characters": "상위 캐릭터",
+        "corporations": "상위 법인",
+        "alliances": "상위 얼라이언스",
+        "ships": "상위 함선",
+        "systems": "상위 시스템",
+        "constellations": "상위 성단",
+        "regions": "상위 지역"
     }
 }

@@ -357,5 +357,19 @@
         "wsConnected": "WebSocket Verbunden",
         "wsDisconnected": "WebSocket Getrennt",
         "showing": "Anzeigen"
+    },
+    "tabs": {
+        "topLists": "Top-Listen",
+        "kills": "Abschüsse",
+        "overview": "Übersicht"
+    },
+    "top": {
+        "characters": "Top Charaktere",
+        "corporations": "Top Korporationen",
+        "alliances": "Top Allianzen",
+        "ships": "Top Schiffe",
+        "systems": "Top Systeme",
+        "constellations": "Top Konstellationen",
+        "regions": "Top Regionen"
     }
 }

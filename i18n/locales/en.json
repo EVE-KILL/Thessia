@@ -362,5 +362,19 @@
     },
     "topBox": {
         "killsOver": "Last {days} days"
+    },
+    "tabs": {
+        "topLists": "Top Lists",
+        "kills": "Kills",
+        "overview": "Overview"
+    },
+    "top": {
+        "characters": "Top Characters",
+        "corporations": "Top Corporations",
+        "alliances": "Top Alliances",
+        "ships": "Top Ships",
+        "systems": "Top Systems",
+        "constellations": "Top Constellations",
+        "regions": "Top Regions"
     }
 }
