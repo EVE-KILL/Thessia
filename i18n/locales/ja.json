@@ -8,64 +8,64 @@
             "label": "ホームページへ"
         },
         "kills": {
-            "text": "キル",
-            "label": "キルページへ",
+            "text": "キルズ",
+            "label": "キルスのページへ",
             "latest": "最新",
-            "latestLabel": "最新キルページへ",
-            "abyssal": "アビサル",
-            "abyssalLabel": "アビサルキルページへ",
+            "latestLabel": "最新のキルスのページへ",
+            "abyssal": "深淵",
+            "abyssalLabel": "深淵の殺戮のページへ",
             "wspace": "ワームホール",
-            "wspaceLabel": "ワームホールキルページへ",
-            "highsec": "ハイセク",
-            "highsecLabel": "ハイセクキルページへ",
-            "lowsec": "ローセク",
-            "lowsecLabel": "ローセクキルページへ",
-            "nullsec": "ヌルセク",
-            "nullsecLabel": "ヌルセクキルページへ",
-            "big": "ビッグキル",
-            "bigLabel": "ビッグキルページへ",
+            "wspaceLabel": "ワームホール・キルのページへ",
+            "highsec": "ハイセック",
+            "highsecLabel": "ハイセック・キルのページへ",
+            "lowsec": "ローセック",
+            "lowsecLabel": "ローセクのキル数ページへ",
+            "nullsec": "0.0",
+            "nullsecLabel": "ヌルセック・キルのページへ",
+            "big": "大きい",
+            "bigLabel": "大殺界ページへ",
             "solo": "ソロ",
-            "soloLabel": "ソロキルページへ",
-            "npc": "NPC",
-            "npcLabel": "NPCキルページへ",
+            "soloLabel": "ソロ・キルスのページへ",
+            "npc": "正規化投影座標系",
+            "npcLabel": "NPCキルスのページへ",
             "5b": "5B+",
-            "5bLabel": "5B+キルページへ",
+            "5bLabel": "5B+キルのページへ",
             "10b": "10B+",
-            "10bLabel": "10B+キルページへ",
+            "10bLabel": "10B以上のキル数ページへ",
             "citadels": "シタデル",
-            "citadelsLabel": "シタデルキルページへ",
+            "citadelsLabel": "シタデルのキルページへ",
             "t1": "T1",
-            "t1Label": "T1キルページへ",
+            "t1Label": "T1キルスのページへ",
             "t2": "T2",
-            "t2Label": "T2キルページへ",
+            "t2Label": "T2キルスのページへ",
             "t3": "T3",
-            "t3Label": "T3キルページへ",
+            "t3Label": "T3のキルスのページへ",
             "frigates": "フリゲート",
-            "frigatesLabel": "フリゲートキルページへ",
-            "destroyers": "デストロイヤー",
-            "destroyersLabel": "デストロイヤーキルページへ",
+            "frigatesLabel": "フリゲート・キルのページへ",
+            "destroyers": "デストロイヤーズ",
+            "destroyersLabel": "駆逐艦キルスのページへ",
             "cruisers": "クルーザー",
-            "cruisersLabel": "クルーザーキルページへ",
+            "cruisersLabel": "クルーザーのキルスのページへ",
             "battlecruisers": "バトルクルーザー",
-            "battlecruisersLabel": "バトルクルーザーキルページへ",
-            "battleships": "バトルシップ",
-            "battleshipsLabel": "バトルシップキルページへ",
+            "battlecruisersLabel": "バトルクルーザーのキル数ページへ",
+            "battleships": "戦艦",
+            "battleshipsLabel": "戦艦キルスのページへ",
             "capitals": "キャピタル",
-            "capitalsLabel": "キャピタルキルページへ",
-            "freighters": "フレイター",
-            "freightersLabel": "フレイターキルページへ",
+            "capitalsLabel": "キャピタル・キルのページへ",
+            "freighters": "貨物船",
+            "freightersLabel": "貨物船キルスのページへ",
             "supercarriers": "スーパーキャリア",
-            "supercarriersLabel": "スーパーキャリアキルページへ",
-            "titans": "タイタン",
-            "titansLabel": "タイタンキルページへ"
+            "supercarriersLabel": "スーパーキャリアのキルスのページへ",
+            "titans": "ティターンズ",
+            "titansLabel": "タイタン・キルのページへ"
         },
         "faq": {
-            "text": "FAQ",
+            "text": "よくあるご質問",
             "label": "FAQページへ"
         },
         "about": {
             "text": "について",
-            "label": "についてのページへ"
+            "label": "アバウトページへ"
         },
         "status": {
             "text": "ステータス",
@@ -75,86 +75,101 @@
             "label": "背景"
         },
         "information": {
-            "label": "情報"
+            "label": "インフォメーション"
         }
     },
     "search": {
         "title": "検索",
         "placeholder": "検索 ...",
-        "results": "{query}の検索結果",
+        "results": "検索結果{query}",
         "searchButton": "検索",
-        "searching": "検索中...",
+        "searching": "検索...",
         "noResults": "結果なし",
-        "noResultsTitle": "結果が見つかりません",
-        "noResultsDesc": "検索に一致するものが見つかりませんでした。異なるキーワードを試すか、検索範囲を広げてください。",
-        "initialMessage": "検索を開始するには検索ボックスに入力してください",
-        "more": "もっと",
-        "moreType": "もっと{type}（{count}）",
-        "showMoreType": "{type}をもっと表示",
-        "viewAllResults": "全ての結果を表示（{count}）",
-        "found": "{count}件の結果が見つかりました",
-        "processingTimeMs": "処理時間：{time}ミリ秒",
-        "showMoreCategory": "もっと{category}を表示（{count}）",
+        "noResultsTitle": "結果は見つかりませんでした",
+        "noResultsDesc": "検索条件に一致するものが見つかりませんでした。別のキーワードで検索するか、検索範囲を広げてみてください。",
+        "initialMessage": "検索ボックスに何かを入力して検索を開始する",
+        "more": "もっと見る",
+        "moreType": "その他{type} ({count})",
+        "showMoreType": "もっと見る{type}",
+        "viewAllResults": "すべての結果を見る ({count})",
+        "found": "{count} 検索結果",
+        "processingTimeMs": "処理時間：{time} ms",
+        "showMoreCategory": "もっと見る{category} ({count})",
         "category": {
-            "character": "キャラクター",
-            "corporation": "コーポレーション",
+            "character": "登場人物",
+            "corporation": "企業",
             "alliance": "アライアンス",
             "item": "アイテム",
             "system": "システム",
-            "region": "リージョン"
+            "region": "地域"
         }
     },
     "background": {
         "title": "背景",
-        "toggleVisibility": "背景の表示切り替え",
+        "toggleVisibility": "背景の表示を切り替える",
         "loading": "読み込み中...",
-        "randomReddit": "r/EVEPornからランダム",
+        "randomReddit": "r/EVEPornからのランダム",
         "viewSource": "Redditでソースを見る"
     },
     "status": {
-        "pageTitle": "システムステータス",
-        "title": "システムステータス",
-        "loading": "ステータス情報を読み込み中...",
+        "pageTitle": "システム状況",
+        "title": "システム状況",
+        "loading": "ステータス情報の読み込み中",
         "autoRefresh": "{seconds}秒ごとに自動更新",
-        "refreshNow": "今すぐ更新",
-        "retry": "再試行",
-        "lastUpdated": "最終更新：{time}",
-        "autoRefreshing": "{seconds}秒ごとに自動更新中",
-        "timePeriod": "期間を選択",
+        "refreshNow": "今すぐリフレッシュ",
+        "retry": "再挑戦",
+        "lastUpdated": "最終更新日{time}",
+        "autoRefreshing": "{seconds} 秒ごとに自動更新",
+        "timePeriod": "期間選択",
         "selectTimePeriod": "期間",
-        "processedItems": "処理アイテム（{period}）",
+        "processedItems": "加工品 ({period})",
+        "simplified": "簡易版",
+        "detailed": "詳細",
+        "detailedStats": "詳細統計",
+        "systemInfo": "システム情報",
+        "summary": {
+            "uptime": "システム稼働時間",
+            "processedLast5m": "処理済み（直近5m）",
+            "queuedItems": "キューに入れられたアイテム"
+        },
+        "tabs": {
+            "overview": "概要",
+            "processing": "加工",
+            "database": "データベース",
+            "cache": "キャッシュ"
+        },
         "uptime": {
             "title": "システム稼働時間",
-            "format": "{days}日 {hours}時間 {minutes}分 {seconds}秒",
-            "since": "稼働開始",
+            "format": "{days}D{hours}H{minutes}M{seconds}S",
+            "since": "以来",
             "localTime": "現地時間"
         },
         "environment": {
             "title": "環境",
-            "nodeEnv": "Node環境",
-            "nodeVersion": "Nodeバージョン",
+            "nodeEnv": "ノード環境",
+            "nodeVersion": "ノードバージョン",
             "process": "プロセス"
         },
         "operatingSystem": {
             "title": "オペレーティングシステム",
             "platform": "プラットフォーム",
-            "architecture": "アーキテクチャ",
+            "architecture": "建築",
             "loadAverage": "平均負荷",
             "totalCPUs": "CPUコア",
-            "memory": "メモリ（GB）"
+            "memory": "メモリ (GB)"
         },
         "queueCounts": {
-            "title": "アクティブキューアイテム",
+            "title": "アクティブキュー項目",
             "queue": "キュー名",
-            "count": "数"
+            "count": "カウント"
         },
         "processingStatistics": {
-            "title": "処理統計"
+            "title": "加工統計"
         },
         "databaseCounts": {
-            "title": "データベースコレクション",
+            "title": "データベース・コレクション",
             "collection": "コレクション",
-            "count": "数"
+            "count": "カウント"
         },
         "cacheSizes": {
             "title": "キャッシュサイズ",
@@ -162,7 +177,7 @@
             "size": "サイズ"
         },
         "cacheHits": {
-            "title": "キャッシュパフォーマンス",
+            "title": "キャッシュ・パフォーマンス",
             "cache": "キャッシュ名",
             "hits": "ヒット数"
         },
@@ -176,44 +191,29 @@
             "24hours": "24時間",
             "1week": "1週間",
             "1month": "1ヶ月"
-        },
-        "simplified": "簡易表示",
-        "detailed": "詳細表示",
-        "detailedStats": "詳細統計",
-        "systemInfo": "システム情報",
-        "summary": {
-            "uptime": "システム稼働時間",
-            "processedLast5m": "処理済み（過去5分）",
-            "queuedItems": "キュー内アイテム"
-        },
-        "tabs": {
-            "overview": "概要",
-            "processing": "処理",
-            "database": "データベース",
-            "cache": "キャッシュ"
         }
     },
     "auth": {
         "signIn": "サインイン",
-        "signInWithEve": "EVE Onlineアカウントでサインイン",
-        "useEveSSOToLogin": "EVE Online SSOを使用してアカウントにサインイン",
+        "signInWithEve": "EVEオンラインアカウントでサインインする",
+        "useEveSSOToLogin": "EVE Online SSOを使用してアカウントにサインインする",
         "loading": "読み込み中...",
-        "loggingOut": "ログアウト中...",
+        "loggingOut": "ログアウト...",
         "ssoRequiredForLogin": "ログインにはEVE SSOが必要です",
         "alreadySignedIn": "すでにサインインしています",
-        "signedInAs": "{name}としてサインイン中",
-        "privacyNote": "当サービスを利用することで、リクエストされた権限に従ってEVE Onlineキャラクターデータへのアクセスを許可したことになります。",
-        "error": {
-            "general": "認証に失敗しました。もう一度お試しください。",
-            "tokenExpired": "セッションの有効期限が切れました。もう一度サインインしてください。",
-            "missingScope": "必要な権限がありません: {scope}"
-        },
-        "customizeScopes": "ログインスコープをカスタマイズ",
+        "signedInAs": "ログイン名{name}",
+        "customizeScopes": "ログインスコープのカスタマイズ",
         "loginTitle": "EVE Onlineでログイン",
         "quickLoginInfo": "推奨スコープでログイン",
-        "customizeScopesInfo": "EVE Killがアクセスできる情報をカスタマイズ:",
+        "customizeScopesInfo": "EVE Killがアクセスできる情報をカスタマイズできます：",
         "loginWithSelectedScopes": "選択したスコープでログイン",
-        "required": "必須"
+        "required": "必須",
+        "privacyNote": "ログインすることで、選択した情報をEVE Killと共有することに同意したことになります。このデータはお客様へのサービス提供のためにのみ使用します。",
+        "error": {
+            "general": "認証に失敗しました。もう一度お試しください。",
+            "tokenExpired": "セッションの有効期限が切れました。再度サインインしてください。",
+            "missingScope": "必要な許可がない：{scope}"
+        }
     },
     "user": {
         "pageTitle": "ユーザーアカウント",
@@ -225,120 +225,122 @@
         "characterDetails": "キャラクター詳細",
         "characterId": "キャラクターID",
         "registeredSince": "登録日",
-        "tokenExpires": "トークン有効期限",
-        "permissions": "権限",
-        "needHelp": "アカウントについて助けが必要ですか？サポートにお問い合わせください。",
-        "profileDescription": "EVE Onlineキャラクター情報の閲覧と管理"
+        "tokenExpires": "トークンの有効期限",
+        "permissions": "アクセス許可",
+        "needHelp": "アカウントに関するヘルプが必要ですか？サポートにご連絡ください。",
+        "profileDescription": "EVE Onlineのキャラクター情報の表示と管理"
     },
     "common": {
         "loading": "読み込み中...",
         "error": "エラー",
-        "tryAgain": "再試行",
+        "tryAgain": "再挑戦",
         "goHome": "ホームへ",
         "cancel": "キャンセル",
-        "save": "保存",
+        "save": "セーブ",
         "selectLanguage": "言語を選択",
         "page": "ページ",
         "previous": "前へ",
-        "next": "次へ"
+        "next": "次のページ"
     },
     "settings": {
-        "description": "アカウント設定と権限を管理",
+        "description": "アカウント設定と権限の管理",
         "accountSettings": "アカウント設定",
-        "permissions": "EVE Online権限",
-        "permissionsDescription": "EVE SSOを通じてこのアプリケーションに付与した権限:",
-        "permissionsNote": "これらの権限を変更するには、EVE SSOを通じて再認証する必要があります。",
+        "permissions": "EVE Onlineのパーミッション",
+        "permissionsDescription": "これらは、EVE SSOを通じてこのアプリケーションに付与された権限です：",
+        "permissionsNote": "これらの権限を変更するには、EVE SSOで再認証する必要があります。",
         "dataPrivacy": "データプライバシー",
-        "dataPrivacyDescription": "EVE Onlineデータの取り扱いに関する情報:",
+        "dataPrivacyDescription": "お客様のEVE Onlineデータの取り扱いに関する情報：",
         "authenticationStatus": "認証ステータス",
         "authenticated": "認証済み",
-        "expiringToken": "トークンの有効期限が近づいています",
-        "refreshToken": "トークンを更新",
+        "expiringToken": "トークンの有効期限が間もなく切れる",
+        "refreshToken": "リフレッシュ・トークン",
         "reauthenticate": "再認証",
-        "storesCharacterData": "ID、名前、付与された権限を含むキャラクター情報を保存します。",
-        "tokensEncrypted": "認証トークンは暗号化され安全に保存されています。",
-        "removeDataByRevoking": "EVE Onlineウェブサイトを通じていつでもアクセスを取り消すことができます。",
-        "deleteData": "データを削除",
+        "defaultScopes": "デフォルトのスコープ",
+        "customizeScopes": "スコープのカスタマイズ",
+        "storesCharacterData": "ID、名前、付与された権限などのキャラクター情報を保存します。",
+        "tokensEncrypted": "認証トークンは暗号化され、安全に保管されます。",
+        "removeDataByRevoking": "EVE Onlineのウェブサイトからいつでもアクセスを取り消すことができます。",
+        "deleteData": "マイデータの削除",
         "deleteError": "アカウントデータの削除に失敗しました",
-        "deleteAccountConfirmTitle": "アカウントデータ削除",
-        "deleteAccountConfirmMessage": "アカウントデータを削除してもよろしいですか？この操作は元に戻せません。",
-        "confirmDelete": "はい、データを削除します",
-        "permanentActionWarning": "これにより、設定や環境設定を含むすべてのデータがシステムから完全に削除されます。",
+        "deleteAccountConfirmTitle": "アカウントデータの削除",
+        "deleteAccountConfirmMessage": "本当にアカウントデータを削除しますか？この操作は元に戻せません。",
+        "confirmDelete": "はい、マイデータを削除してください",
+        "permanentActionWarning": "これにより、設定やプリファレンスを含む、お客様のすべてのデータが当社のシステムから永久に削除されます。",
         "esi": "EVE SSO認証",
-        "permissionDescription": "この権限が許可すること："
+        "permissionDescription": "この許可は何を許可するのか："
     },
     "permissions": {
-        "publicData": "公開キャラクター情報へのアクセス",
-        "readKillmails": "キルメールへのアクセス",
-        "readCorporationKillmails": "コーポレーションキルメールへのアクセス"
+        "publicData": "公共キャラクター情報へのアクセス",
+        "readKillmails": "キルメールにアクセスする",
+        "readCorporationKillmails": "企業のキルメールにアクセスする"
     },
     "footer": {
-        "legal": "法的情報"
+        "legal": "リーガル"
     },
     "legal": {
         "pageTitle": "法的情報",
         "title": "法的情報",
         "disclaimer": {
             "title": "免責事項",
-            "p1": "ThessiaはEVE Onlineのサードパーティツールであり、CCP Gamesと提携または承認されていません。",
-            "p2": "このサービスはいかなる種類の保証もなく「現状のまま」提供されています。提示されたデータの正確性または信頼性について保証はいたしません。"
+            "p1": "ThessiaはEVE Online用のサードパーティツールであり、CCP Gamesと提携または推奨しているものではありません。",
+            "p2": "このサービスは、いかなる保証もなく「現状のまま」提供されます。また、掲載されているデータの正確性、信頼性については一切保証いたしません。"
         },
         "license": {
             "title": "ライセンス",
-            "p1": "Thessia / EVE-KILLはMITライセンスの下でライセンスされており、そのライセンスの条件に従って自由に使用、変更、配布することができます。",
-            "p2": "これは、ソフトウェアのすべてのコピーまたは実質的な部分に著作権表示と許可表示を含めることを条件に、ソフトウェアのコピーを自由に使用、コピー、変更、マージ、公開、配布、サブライセンス、および/または販売することができることを意味します。",
-            "viewLicense": "GitHubで完全なライセンスを表示"
+            "p1": "Thessia / EVE-KILLはMITライセンスの下でライセンスされており、同ライセンスの条項に従って自由に使用、変更、配布することができます。",
+            "p2": "これは、ソフトウェアのすべてのコピーまたは相当部分に著作権表示および許可表示を含めることを条件に、ソフトウェアのコピーを自由に使用、コピー、変更、マージ、公開、配布、サブライセンス、および/または販売できることを意味します。",
+            "viewLicense": "フルライセンスをGitHubで見る"
         },
         "ownership": {
             "title": "知的財産",
-            "p1": "EVE Online、EVEロゴ、EVEおよび関連するすべてのロゴとデザインはCCP hfの知的財産です。これらの商標に関連するすべてのアートワーク、スクリーンショット、キャラクター、車両、ストーリーライン、世界の事実、またはその他の認識可能な知的財産の特徴も同様にCCP hfの知的財産です。",
-            "ccpLink": "CCP Gamesにアクセス"
+            "p1": "EVE Online、EVEのロゴ、EVEおよび関連するすべてのロゴとデザインはCCP hfの知的財産です。これらの商標に関連する知的財産のすべてのアートワーク、スクリーンショット、キャラクター、乗り物、ストーリー、世界の事実、またはその他の認識可能な特徴も同様にCCP hfの知的財産です。",
+            "ccpLink": "CCP Gamesを訪問する"
         },
         "data": {
-            "title": "データ使用とプライバシー",
-            "p1": "ThessiaはEVE Online APIおよびその他の公開ソースからデータを収集し処理します。このデータは、このウェブサイトが提供するサービスの目的のためだけに使用されます。",
-            "p2": "私たちはあなたのプライバシーを尊重し、個人情報を第三者と共有することはありません。私たちが収集するデータはすべて標準的なプライバシー慣行に従って使用されます。"
+            "title": "データ利用とプライバシー",
+            "p1": "Thessiaは、EVE Online APIおよびその他の公開ソースからデータを収集し、処理します。このデータは、当ウェブサイトが提供するサービスを提供する目的のみに使用されます。",
+            "p2": "当社はお客様のプライバシーを尊重し、個人情報を第三者と共有することはありません。当社が収集したデータは、標準的なプライバシー慣行に従って使用されます。"
         },
         "contact": {
-            "title": "連絡先情報",
-            "p1": "Thessiaに関連する法的事項について質問や懸念がある場合は、GitHubの問題を通じてお問い合わせください：",
-            "githubIssues": "GitHubで問題を提出する"
+            "title": "連絡先",
+            "p1": "Thessiaに関する法的事項についてご質問やご不明な点がございましたら、GitHub issuesよりお問い合わせください：",
+            "githubIssues": "GitHubに課題を提出する"
         }
     },
     "about": {
         "pageTitle": "EVE-KILLについて",
         "title": "EVE-KILLについて",
-        "description": "EVE-KILLは、EVE Onlineのための包括的なキルボードサービスで、ニューエデン全域の戦闘活動に関する詳細な統計と分析をプレイヤーに提供しています。",
+        "description": "EVE-KILLはEVE Onlineの総合的なキルボードサービスで、プレイヤーにニューエデン全域での戦闘活動に関する詳細な統計と分析を提供します。",
         "mission": {
-            "title": "私たちのミッション",
-            "text": "私たちのミッションは、EVE Onlineコミュニティに最も正確で最新かつユーザーフレンドリーなキルボード体験を提供することです。すべてのプレイヤーに対して信頼性の高い迅速なサービスを維持しながら、PVP戦闘に関する貴重な洞察を提供するよう努めています。"
+            "title": "私たちの使命",
+            "text": "私たちの使命は、EVE Onlineコミュニティに最も正確で、最新かつユーザーフレンドリーなキルボードを提供することです。すべてのプレイヤーに信頼できる迅速なサービスを維持しながら、PVP戦闘に関する貴重な洞察を提供するよう努めています。"
         },
         "history": {
             "title": "歴史",
-            "text": "EVE-KILLは2007年に設立され、以来、ニューエデンで最も信頼されるキルボードサービスの一つに発展しました。絶え間ない更新と改善により、私たちはEVEコミュニティに信頼性の高い戦闘追跡と統計を提供し続けています。"
+            "text": "EVE-KILLは2007年に設立され、以来ニューエデンで最も信頼されるキルボードサービスの1つに発展してきました。絶え間ない更新と改善により、信頼できる戦闘追跡と統計でEVEコミュニティに貢献し続けています。"
         },
         "contact": {
             "title": "お問い合わせ",
-            "text": "質問、提案、またはサポートが必要ですか？私たちのDiscordサーバーに参加するか、GitHubで問題を提起してください"
+            "text": "ご質問、ご提案、サポートが必要ですか？私たちのDiscordサーバーに参加するか、私たちのGitHubで課題を作成してください。"
         },
         "links": {
-            "discord": "Discordに参加する",
+            "discord": "ディスコードに参加する",
             "github": "GitHubリポジトリ"
         }
     },
     "scopes": {
         "publicData": "公開データ",
-        "publicDataDesc": "基本的なキャラクター情報",
-        "readKillmails": "キルメール読み取り",
-        "readKillmailsDesc": "あなたのキャラクターのキルメールへのアクセス",
-        "readCorpKillmails": "コーポレーションキルメール読み取り",
-        "readCorpKillmailsDesc": "あなたのコーポレーションのキルメールへのアクセス"
+        "publicDataDesc": "キャラクター基本情報",
+        "readKillmails": "キルメールを読む",
+        "readKillmailsDesc": "自分のキャラクターのキルメールにアクセスできる。",
+        "readCorpKillmails": "株式会社キルメールを読む",
+        "readCorpKillmailsDesc": "企業のキルメールにアクセスする"
     },
     "home": {
         "pageTitle": "ホーム"
     },
     "kills": {
-        "pageTitle": "キルメール詳細",
+        "pageTitle": "キルメールの詳細",
         "listPageTitle": "キルボード"
     },
     "faq": {
@@ -346,21 +348,24 @@
     },
     "killList": {
         "ship": "船",
-        "victim": "犠牲者",
+        "victim": "被害者",
         "finalBlow": "最後の一撃",
-        "location": "場所",
+        "location": "所在地",
         "details": "詳細",
-        "noKills": "キルが見つかりません",
-        "loading": "キルを読み込み中...",
+        "noKills": "死者なし",
+        "loading": "キルをロードする...",
         "type": "タイプ",
-        "itemsPerPage": "ページあたりのアイテム数",
-        "wsConnected": "WebSocket 接続済み",
-        "wsDisconnected": "WebSocket 切断済み",
-        "showing": "表示中"
+        "itemsPerPage": "ページごとの項目",
+        "wsConnected": "ウェブソケット接続",
+        "wsDisconnected": "ウェブソケット切断",
+        "showing": "ショーイング"
+    },
+    "topBox": {
+        "killsOver": "直近の{days} 日"
     },
     "tabs": {
         "topLists": "トップリスト",
-        "kills": "キル",
+        "kills": "キルズ",
         "overview": "概要"
     },
     "top": {
