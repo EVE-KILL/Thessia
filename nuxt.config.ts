@@ -237,6 +237,11 @@ function routeRuleGenerator(debug = false): Record<string, any> {
   // Build route rules as an object with a default rule for /api/**
   const rules: Record<string, any> = {
     "/api/**": { cors: true },
+    "/_ipx/**": {
+        maxAge: 604800,
+        staleMaxAge: 86400,
+        swr: true
+    }
   };
 
   if (debug === true) {

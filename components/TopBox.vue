@@ -169,7 +169,7 @@ const columns: TableColumn<ITopEntity>[] = [
       };
 
       const imageType = imageTypeMap[props.type];
-      const entityId = getEntityId(row.original);
+      const entityId = Number(getEntityId(row.original));
       const entityName = getEntityDisplayName(row.original);
 
       // For entity types not directly supported by the Image component

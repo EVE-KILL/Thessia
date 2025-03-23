@@ -26,9 +26,12 @@ const props = defineProps({
   },
   // Image size in pixels - will be normalized to nearest valid EVE image size
   size: {
-    type: Number,
+    type: [Number, String],
     default: null,
-    validator: (value: number) => value > 0
+    validator: (value: number | string) => {
+      const numValue = typeof value === 'string' ? parseInt(value, 10) : value;
+      return numValue > 0;
+    }
   },
   // Custom CSS classes
   class: {
@@ -118,8 +121,13 @@ const eveSize = computed(() => {
     'type-render': 512
   };
 
+  // Convert size to number if it's a string
+  const sizeAsNumber = props.size !== null
+    ? (typeof props.size === 'string' ? parseInt(props.size, 10) : props.size)
+    : null;
+
   // Use prop size or default for type
-  const requestedSize = props.size || defaults[props.type];
+  const requestedSize = sizeAsNumber || defaults[props.type];
 
   // Return the nearest valid EVE image size
   return eveImages.normalizeSize(requestedSize);
@@ -144,8 +152,15 @@ const src = computed(() => {
 });
 
 // Define dimensions for the image display (can differ from actual EVE image size)
-const imgWidth = computed(() => props.width || props.size || eveSize.value);
-const imgHeight = computed(() => props.height || props.size || eveSize.value);
+const imgWidth = computed(() => {
+  const width = props.width || props.size || eveSize.value;
+  return typeof width === 'string' ? parseInt(width, 10) : width;
+});
+
+const imgHeight = computed(() => {
+  const height = props.height || props.size || eveSize.value;
+  return typeof height === 'string' ? parseInt(height, 10) : height;
+});
 
 // Calculate image quality based on device
 const effectiveQuality = computed(() => {

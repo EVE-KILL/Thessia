@@ -26,3 +26,6 @@ logs
 # K8s
 k8s/.config.yaml
 values.yaml
+
+# Cache
+.ipx-cache/
