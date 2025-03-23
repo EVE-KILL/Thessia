@@ -1,15 +1,8 @@
-import { readFileSync } from "node:fs";
-import yaml from "yaml";
-
-// Load apiCacheTimes.yaml
-const apiCacheTimes = readFileSync("./apiCacheTimes.yaml", "utf8");
-
 // https://nuxt.com/docs/api/configuration/nuxt-config
 export default defineNuxtConfig({
     site: {
         url: 'https://eve-kill.net'
     },
-    sourcemap: true,
     logLevel: process.env.NODE_ENV !== 'production' ? 'info' : 'silent',
     nitro: {
         preset: "bun",
@@ -22,10 +15,64 @@ export default defineNuxtConfig({
             },
         },
 
-        routeRules: process.env.NODE_ENV === 'production' ? routeRuleGenerator() : {},
+        routeRules: process.env.NODE_ENV === 'development' ? {} : {
+            "/api/**": { cors: true },
+            "/api/alliances/*": { cors: true, cache: { maxAge: 3600, staleMaxAge: -1, swr: true } },
+            "/api/alliances/*/members": { cors: true, cache: { maxAge: 3600, staleMaxAge: -1, swr: true } },
+            "/api/alliances/*/coalition": { cors: true, cache: { maxAge: 3600, staleMaxAge: -1, swr: true } },
+            "/api/alliances/count": { cors: true, cache: { maxAge: 300, staleMaxAge: -1, swr: true } },
+            "/api/alliances": { cors: true, cache: { maxAge: 3600, staleMaxAge: -1, swr: true } },
+            "/api/characters/*": { cors: true, cache: { maxAge: 3600, staleMaxAge: -1, swr: true } },
+            "/api/characters/*/corporationhistory": { cors: true, cache: { maxAge: 3600, staleMaxAge: -1, swr: true } },
+            "/api/characters/*/shortstats": { cors: true, cache: { maxAge: 3600, staleMaxAge: -1, swr: true } },
+            "/api/characters/*/stats": { cors: true, cache: { maxAge: 3600, staleMaxAge: -1, swr: true } },
+            "/api/characters/*/top": { cors: true, cache: { maxAge: 3600, staleMaxAge: -1, swr: true } },
+            "/api/characters/count": { cors: true, cache: { maxAge: 300, staleMaxAge: -1, swr: true } },
+            "/api/characters": { cors: true, cache: { maxAge: 3600, staleMaxAge: -1, swr: true } },
+            "/api/corporations/*": { cors: true, cache: { maxAge: 3600, staleMaxAge: -1, swr: true } },
+            "/api/corporations/*/alliancehistory": { cors: true, cache: { maxAge: 3600, staleMaxAge: -1, swr: true } },
+            "/api/corporations/*/members": { cors: true, cache: { maxAge: 3600, staleMaxAge: -1, swr: true } },
+            "/api/corporations/count": { cors: true, cache: { maxAge: 300, staleMaxAge: -1, swr: true } },
+            "/api/corporations": { cors: true, cache: { maxAge: 3600, staleMaxAge: -1, swr: true } },
+            "/api/factions/*": { cors: true, cache: { maxAge: 3600, staleMaxAge: -1, swr: true } },
+            "/api/factions/count": { cors: true, cache: { maxAge: 300, staleMaxAge: -1, swr: true } },
+            "/api/factions": { cors: true, cache: { maxAge: 3600, staleMaxAge: -1, swr: true } },
+            "/api/fitting/*": { cors: true, cache: { maxAge: 3600, staleMaxAge: -1, swr: true } },
+            "/api/items/*": { cors: true, cache: { maxAge: 3600, staleMaxAge: -1, swr: true } },
+            "/api/items/*/killmails": { cors: true, cache: { maxAge: 300, staleMaxAge: -1, swr: true } },
+            "/api/items/*/pricing": { cors: true, cache: { maxAge: 300, staleMaxAge: -1, swr: true } },
+            "/api/items/count": { cors: true, cache: { maxAge: 300, staleMaxAge: -1, swr: true } },
+            "/api/items": { cors: true, cache: { maxAge: 3600, staleMaxAge: -1, swr: true } },
+            "/api/killlist/attacker/**": { cors: true, cache: { maxAge: 30, staleMaxAge: 0, swr: true } },
+            "/api/killlist/combined/**": { cors: true, cache: { maxAge: 30, staleMaxAge: 0, swr: true } },
+            "/api/killlist/losses/**": { cors: true, cache: { maxAge: 30, staleMaxAge: 0, swr: true } },
+            "/api/killlist": { cors: true, cache: { maxAge: 5, staleMaxAge: 0, swr: true } },
+            "/api/killmail/*/get": { cors: true, cache: { maxAge: 3600, staleMaxAge: -1, swr: true } },
+            "/api/killmail/*/esi": { cors: true, cache: { maxAge: 3600, staleMaxAge: -1, swr: true } },
+            "/api/killmail/*/inbattle": { cors: true, cache: { maxAge: 300, staleMaxAge: -1, swr: true } },
+            "/api/killmail/*/sibling": { cors: true, cache: { maxAge: 300, staleMaxAge: -1, swr: true } },
+            "/api/killmail/history": { cors: true, cache: { maxAge: 3600, staleMaxAge: -1, swr: true } },
+            "/api/killmail/history/*": { cors: true, cache: { maxAge: 3600, staleMaxAge: -1, swr: true } },
+            "/api/killmail/count": { cors: true, cache: { maxAge: 300, staleMaxAge: -1, swr: true } },
+            "/api/killmail/latest": { cors: true, cache: { maxAge: 300, staleMaxAge: -1, swr: true } },
+            "/api/killmail/nearCelestial": { cors: true, cache: { maxAge: 300, staleMaxAge: -1, swr: true } },
+            "/api/killmail/nearCoordinates": { cors: true, cache: { maxAge: 300, staleMaxAge: -1, swr: true } },
+            "/api/prices": { cors: true, cache: { maxAge: 300, staleMaxAge: -1, swr: true } },
+            "/api/prices/region/*": { cors: true, cache: { maxAge: 300, staleMaxAge: -1, swr: true } },
+            "/api/prices/type_id/*": { cors: true, cache: { maxAge: 300, staleMaxAge: -1, swr: true } },
+            "/api/prices/count": { cors: true, cache: { maxAge: 300, staleMaxAge: -1, swr: true } },
+            "/api/search/*": { cors: true, cache: { maxAge: 30, staleMaxAge: -1, swr: true } },
+            "/api/stats": { cors: true, cache: { maxAge: 300, staleMaxAge: -1, swr: true } },
+            "/api/wars/*/killmails": { cors: true, cache: { maxAge: 300, staleMaxAge: -1, swr: true } },
+            "/api/wars/*": { cors: true, cache: { maxAge: 3600, staleMaxAge: -1, swr: true } },
+            "/api/wars": { cors: true, cache: { maxAge: 3600, staleMaxAge: -1, swr: true } },
+            "/api/status": { cors: true, cache: { maxAge: 300, staleMaxAge: 0, swr: false } }
+        },
 
         imports: {
-            dirs: ["server/models/**"],
+            dirs: [
+                "server/models/**"
+            ],
         },
 
         experimental: {
@@ -232,31 +279,3 @@ export default defineNuxtConfig({
         autoImport: true,
     },
 });
-
-function routeRuleGenerator(debug = false): Record<string, any> {
-  // Build route rules as an object with a default rule for /api/**
-  const rules: Record<string, any> = {
-    "/api/**": { cors: true },
-  };
-
-  if (debug === true) {
-    return rules;
-  }
-
-  // Parse YAML
-  const cacheTimes = yaml.parse(apiCacheTimes);
-
-  // Merge routes from YAML:
-  for (const route in cacheTimes) {
-    rules[`/api${route}`] = {
-      cors: true,
-      cache: {
-        maxAge: cacheTimes[route].maxAge || 60,
-        staleMaxAge: cacheTimes[route].staleMaxAge || -1,
-        swr: cacheTimes[route].swr || true,
-      },
-    };
-  }
-
-  return rules;
-}

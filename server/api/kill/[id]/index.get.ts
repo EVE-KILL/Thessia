@@ -11,5 +11,3 @@ export default defineEventHandler(async (event) => {
 
   return killmail || { error: "Killmail not found" };
 });
-
-// This for some reason doesn't work once it's built ?!

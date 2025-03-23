@@ -272,7 +272,7 @@ const mobileTabs = computed(() => [
 
 // Fetch killmail data with useFetch instead of useAsyncData
 const { data: fetchedKillmail, pending } = useFetch<IKillmail>(
-  () => route.params.id ? `/api/killmail/${route.params.id}` : null,
+  () => route.params.id ? `/api/kill/${route.params.id}` : null,
   {
     key: `killmail-${route.params.id?.[0] || 'none'}`, // Fixed: Use function returning string instead of computed
     watch: [() => route.params.id],
