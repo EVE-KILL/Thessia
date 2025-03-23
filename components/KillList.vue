@@ -676,44 +676,42 @@ watch(locale, () => {
     }
   });
 });
+
+// Update the pagination structure to work with UPagination
+const currentPageIndex = ref(1);
+
+// Calculate dynamic total based on current page
+const dynamicTotal = computed(() => {
+  return 100 + currentPageIndex.value * 10;
+});
+
+// Watch currentPageIndex changes to update pagination.pageIndex
+watch(currentPageIndex, (newPageIndex) => {
+  pagination.value.pageIndex = newPageIndex;
+
+  // Ensure page change reactivity triggers appropriate actions
+  if (newPageIndex > 0) {
+    pauseWebSocket('pagination');
+  } else if (!manuallyPaused.value) {
+    resumeWebSocket();
+  }
+});
+
+// Watch pagination.pageIndex changes to keep currentPageIndex in sync
+watch(() => pagination.value.pageIndex, (newPageIndex) => {
+  if (currentPageIndex.value !== newPageIndex) {
+    currentPageIndex.value = newPageIndex;
+  }
+});
 </script>
 
 <template>
   <div class="w-full">
-    <div class="flex justify-between items-center mb-3 px-2 py-2 bg-background-800 rounded-md">
+    <!-- Top navigation bar with limit selector, WebSocket status, and pagination -->
+    <div class="flex justify-between items-center mb-3">
+      <!-- Left side: Limit selector and WebSocket status -->
       <div class="flex items-center">
-        <div
-          v-if="!wsDisabled && !useExternalData"
-          :class="[
-            'w-3 h-3 rounded-full mr-2 cursor-pointer',
-            !isConnected ? 'bg-red-500' :
-            (isWebSocketPaused ? 'bg-yellow-500' : 'bg-green-500')
-          ]"
-          :title="isConnected
-            ? (isWebSocketPaused
-                ? t('killList.wsPaused')
-                : t('killList.wsConnected'))
-            : t('killList.wsDisconnected')"
-          @click="toggleWebSocketMode"
-        ></div>
-
-        <span
-          v-if="wsNewKillCount > 0 && !wsDisabled && !useExternalData"
-          class="ml-2 px-2 py-0.5 bg-primary-500 text-black dark:text-white text-xs rounded-full cursor-pointer"
-          @click="resetNewKillCount"
-        >
-          +{{ wsNewKillCount }}
-        </span>
-
-        <span
-          v-if="isWebSocketPaused && pendingMessages.length > 0 && !wsDisabled && !useExternalData"
-          class="ml-2 text-xs text-yellow-400"
-        >
-          {{ pendingMessages.length }} pending
-        </span>
-      </div>
-
-      <div class="flex items-center">
+        <!-- Limit selector -->
         <USelect
           v-model="selectedPageSize"
           value-key="id"
@@ -721,24 +719,69 @@ watch(locale, () => {
           size="sm"
           class="w-24"
         />
-      </div>
-    </div>
 
-    <div class="flex justify-between items-center mb-3">
-      <button
-        class="px-4 py-2 text-sm font-medium text-black dark:text-white bg-background-800 rounded-md hover:bg-background-700 disabled:opacity-50"
-        :disabled="pagination.pageIndex === 0"
-        @click="pagination.pageIndex = Math.max(0, pagination.pageIndex - 1)"
+        <!-- WebSocket status indicator -->
+        <div v-if="!wsDisabled && !useExternalData" class="flex items-center ml-4">
+          <div
+            :class="[
+              'w-3 h-3 rounded-full mr-1 cursor-pointer',
+              !isConnected ? 'bg-red-500' :
+              (isWebSocketPaused ? 'bg-yellow-500' : 'bg-green-500')
+            ]"
+            :title="isConnected
+              ? (isWebSocketPaused
+                  ? t('killList.wsPaused')
+                  : t('killList.wsConnected'))
+              : t('killList.wsDisconnected')"
+            @click="toggleWebSocketMode"
+          ></div>
+
+          <span
+            v-if="wsNewKillCount > 0"
+            class="ml-1 px-2 py-0.5 bg-primary-500 text-black dark:text-white text-xs rounded-full cursor-pointer"
+            @click="resetNewKillCount"
+          >
+            +{{ wsNewKillCount }}
+          </span>
+
+          <span
+            v-if="isWebSocketPaused && pendingMessages.length > 0"
+            class="ml-1 text-xs text-yellow-400"
+          >
+            {{ pendingMessages.length }}
+          </span>
+        </div>
+      </div>
+
+      <!-- Right side: UPagination component with correct v-model binding -->
+      <UPagination
+        v-model:page="currentPageIndex"
+        :total="dynamicTotal"
+        :page-size="1"
+        :ui="{
+          wrapper: 'flex items-center',
+          rounded: 'rounded-md',
+          default: {
+            base: 'text-sm border-y border-r first:border-l border-gray-200 dark:border-gray-800 focus:z-10 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500',
+            inactive: 'bg-background-800 hover:bg-background-700',
+            padding: 'px-3 py-2',
+            disabled: 'opacity-50 cursor-not-allowed'
+          }
+        }"
+        :prev-button="{
+          icon: 'i-lucide-chevron-left',
+          label: '',
+          disabled: currentPageIndex === 0
+        }"
+        :next-button="{
+          icon: 'i-lucide-chevron-right',
+          label: ''
+        }"
       >
-        {{ $t('common.previous') }}
-      </button>
-      <span class="text-black dark:text-white">{{ $t('common.page') }} {{ pagination.pageIndex + 1 }}</span>
-      <button
-        class="px-4 py-2 text-sm font-medium text-black dark:text-white bg-background-800 rounded-md hover:bg-background-700 disabled:opacity-50"
-        @click="pagination.pageIndex++"
-      >
-        {{ $t('common.next') }}
-      </button>
+        <template #default>
+          <span class="mx-2">{{ $t('common.page') }} {{ currentPageIndex + 1 }}</span>
+        </template>
+      </UPagination>
     </div>
 
     <!-- Mobile Table -->
@@ -799,21 +842,36 @@ watch(locale, () => {
       />
     </div>
 
-    <div class="flex justify-between items-center mt-3">
-      <button
-        class="px-4 py-2 text-sm font-medium text-black dark:text-white bg-background-800 rounded-md hover:bg-background-700 disabled:opacity-50"
-        :disabled="pagination.pageIndex === 0"
-        @click="pagination.pageIndex = Math.max(0, pagination.pageIndex - 1)"
+    <!-- Bottom pagination - simplified UPagination with correct v-model binding -->
+    <div class="flex justify-end items-center mt-3">
+      <UPagination
+        v-model:page="currentPageIndex"
+        :total="dynamicTotal"
+        :page-size="1"
+        :ui="{
+          wrapper: 'flex items-center',
+          rounded: 'rounded-md',
+          default: {
+            base: 'text-sm border-y border-r first:border-l border-gray-200 dark:border-gray-800 focus:z-10 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500',
+            inactive: 'bg-background-800 hover:bg-background-700',
+            padding: 'px-3 py-2',
+            disabled: 'opacity-50 cursor-not-allowed'
+          }
+        }"
+        :prev-button="{
+          icon: 'i-lucide-chevron-left',
+          label: '',
+          disabled: currentPageIndex === 0
+        }"
+        :next-button="{
+          icon: 'i-lucide-chevron-right',
+          label: ''
+        }"
       >
-        {{ $t('common.previous') }}
-      </button>
-      <span class="text-black dark:text-white">{{ $t('common.page') }} {{ pagination.pageIndex + 1 }}</span>
-      <button
-        class="px-4 py-2 text-sm font-medium text-black dark:text-white bg-background-800 rounded-md hover:bg-background-700 disabled:opacity-50"
-        @click="pagination.pageIndex++"
-      >
-        {{ $t('common.next') }}
-      </button>
+        <template #default>
+          <span class="mx-2">{{ $t('common.page') }} {{ currentPageIndex + 1 }}</span>
+        </template>
+      </UPagination>
     </div>
   </div>
 </template>
