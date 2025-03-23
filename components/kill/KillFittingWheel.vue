@@ -110,10 +110,11 @@
              class="slot high-slot"
              :style="getSlotPosition(index, highSlots.length, 'top')"
              :class="{ 'empty-slot-container': !item }">
-          <img v-if="item"
-               :src="`https://images.evetech.net/types/${item.type_id}/icon?size=64`"
-               :alt="getLocalizedName(item.name)"
-               class="module-icon" />
+          <div v-if="item" class="module-container" @mouseenter="showTooltip($event, item, 'top')" @mouseleave="hideTooltip">
+            <img :src="`https://images.evetech.net/types/${item.type_id}/icon?size=64`"
+                 :alt="getLocalizedName(item.name)"
+                 class="module-icon" />
+          </div>
           <div v-else class="empty-slot"></div>
         </div>
 
@@ -122,10 +123,11 @@
              class="slot mid-slot"
              :style="getSlotPosition(index, midSlots.length, 'right')"
              :class="{ 'empty-slot-container': !item }">
-          <img v-if="item"
-               :src="`https://images.evetech.net/types/${item.type_id}/icon?size=64`"
-               :alt="getLocalizedName(item.name)"
-               class="module-icon" />
+          <div v-if="item" class="module-container" @mouseenter="showTooltip($event, item, 'right')" @mouseleave="hideTooltip">
+            <img :src="`https://images.evetech.net/types/${item.type_id}/icon?size=64`"
+                 :alt="getLocalizedName(item.name)"
+                 class="module-icon" />
+          </div>
           <div v-else class="empty-slot"></div>
         </div>
 
@@ -134,10 +136,11 @@
              class="slot low-slot"
              :style="getSlotPosition(index, lowSlots.length, 'bottom')"
              :class="{ 'empty-slot-container': !item }">
-          <img v-if="item"
-               :src="`https://images.evetech.net/types/${item.type_id}/icon?size=64`"
-               :alt="getLocalizedName(item.name)"
-               class="module-icon" />
+          <div v-if="item" class="module-container" @mouseenter="showTooltip($event, item, 'bottom')" @mouseleave="hideTooltip">
+            <img :src="`https://images.evetech.net/types/${item.type_id}/icon?size=64`"
+                 :alt="getLocalizedName(item.name)"
+                 class="module-icon" />
+          </div>
           <div v-else class="empty-slot"></div>
         </div>
 
@@ -146,10 +149,11 @@
              class="slot rig-slot"
              :style="getSlotPosition(index, rigSlots.length, 'left')"
              :class="{ 'empty-slot-container': !item }">
-          <img v-if="item"
-               :src="`https://images.evetech.net/types/${item.type_id}/icon?size=64`"
-               :alt="getLocalizedName(item.name)"
-               class="module-icon" />
+          <div v-if="item" class="module-container" @mouseenter="showTooltip($event, item, 'left')" @mouseleave="hideTooltip">
+            <img :src="`https://images.evetech.net/types/${item.type_id}/icon?size=64`"
+                 :alt="getLocalizedName(item.name)"
+                 class="module-icon" />
+          </div>
           <div v-else class="empty-slot"></div>
         </div>
 
@@ -159,14 +163,26 @@
                class="slot subsystem-slot"
                :style="getSlotPosition(index, subsystemSlots.length, 'subsystem')"
                :class="{ 'empty-slot-container': !item }">
-            <img v-if="item"
-                 :src="`https://images.evetech.net/types/${item.type_id}/icon?size=64`"
-                 :alt="getLocalizedName(item.name)"
-                 class="module-icon" />
+            <div v-if="item" class="module-container" @mouseenter="showTooltip($event, item, 'top')" @mouseleave="hideTooltip">
+              <img :src="`https://images.evetech.net/types/${item.type_id}/icon?size=64`"
+                   :alt="getLocalizedName(item.name)"
+                   class="module-icon" />
+            </div>
             <div v-else class="empty-slot"></div>
           </div>
         </template>
       </div>
+    </div>
+
+    <!-- Custom tooltip -->
+    <div v-if="activeTooltip.visible"
+         class="item-tooltip"
+         :style="activeTooltip.style"
+         @mouseenter="keepTooltip"
+         @mouseleave="hideTooltip">
+      <div class="tooltip-name">{{ activeTooltip.name }}</div>
+      <div class="tooltip-value">{{ activeTooltip.value }} ISK</div>
+      <div class="tooltip-status" v-if="activeTooltip.status" v-html="activeTooltip.status"></div>
     </div>
   </div>
 </template>
@@ -310,6 +326,149 @@ const hasSubsystems = computed(() => {
   if (!props.killmail || !props.killmail.items) return false;
   return subsystemSlots.value.some(item => item !== null);
 });
+
+/**
+ * Formats a number with commas as thousands separators
+ */
+function formatNumber(num: number): string {
+  return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+}
+
+/**
+ * Generates tooltip text for an item showing name, value, and status
+ */
+function getItemTooltip(item: IItem): string {
+  const itemName = getLocalizedName(item.name);
+  const valueFormatted = formatNumber(item.value);
+
+  let status = '';
+  if (item.qty_dropped > 0 && item.qty_destroyed > 0) {
+    status = `${item.qty_dropped} dropped, ${item.qty_destroyed} destroyed`;
+  } else if (item.qty_dropped > 0) {
+    status = `${item.qty_dropped} dropped`;
+  } else if (item.qty_destroyed > 0) {
+    status = `${item.qty_destroyed} destroyed`;
+  }
+
+  return `${itemName}\n${valueFormatted} ISK\n${status}`;
+}
+
+// Tooltip state
+const activeTooltip = reactive({
+  visible: false,
+  name: '',
+  value: '',
+  status: '',
+  style: {
+    top: '0px',
+    left: '0px'
+  }
+});
+
+// Tooltip delay handling
+let tooltipTimer: NodeJS.Timeout | null = null;
+let currentItem: IItem | null = null;
+
+/**
+ * Shows the tooltip with item information after a delay
+ */
+function showTooltip(event: MouseEvent, item: IItem, position: string) {
+  // Store current item for delay handling
+  currentItem = item;
+
+  // Capture DOM element and position immediately (events are reused by browser)
+  const targetElement = event.currentTarget as HTMLElement;
+  const rect = targetElement ? targetElement.getBoundingClientRect() : null;
+
+  // If we couldn't get the element, don't proceed
+  if (!rect) return;
+
+  // Clear any existing timer
+  if (tooltipTimer) {
+    clearTimeout(tooltipTimer);
+  }
+
+  // Set new timer with 500ms delay
+  tooltipTimer = setTimeout(() => {
+    // Only show if this is still the current item
+    if (currentItem === item && rect) {
+      // Calculate item status text
+      let status = '';
+      if (item.qty_dropped > 0 && item.qty_destroyed > 0) {
+        status = `<span class="status-dropped">${item.qty_dropped} dropped</span>, <span class="status-destroyed">${item.qty_destroyed} destroyed</span>`;
+      } else if (item.qty_dropped > 0) {
+        status = `<span class="status-dropped">${item.qty_dropped} dropped</span>`;
+      } else if (item.qty_destroyed > 0) {
+        status = `<span class="status-destroyed">${item.qty_destroyed} destroyed</span>`;
+      }
+
+      // Position calculations
+      let top, left;
+
+      switch (position) {
+        case 'top':
+          top = rect.top - 100;
+          left = rect.left + (rect.width / 2) - 100;
+          break;
+        case 'right':
+          top = rect.top - 10;
+          left = rect.right + 10;
+          break;
+        case 'bottom':
+          top = rect.bottom + 10;
+          left = rect.left + (rect.width / 2) - 100;
+          break;
+        case 'left':
+          top = rect.top - 10;
+          left = rect.left - 210;
+          break;
+        default:
+          top = rect.top - 100;
+          left = rect.left - 100;
+      }
+
+      // Set tooltip content and position
+      activeTooltip.name = getLocalizedName(item.name);
+      activeTooltip.value = formatNumber(item.value);
+      activeTooltip.status = status;
+      activeTooltip.style = {
+        top: `${top + window.scrollY}px`,
+        left: `${left + window.scrollX}px`
+      };
+      activeTooltip.visible = true;
+    }
+  }, 500); // 500ms delay
+}
+
+/**
+ * Keeps the tooltip visible when hovering over it
+ */
+function keepTooltip() {
+  if (tooltipTimer) {
+    clearTimeout(tooltipTimer);
+    tooltipTimer = null;
+  }
+  activeTooltip.visible = true;
+}
+
+/**
+ * Hides the tooltip
+ */
+function hideTooltip() {
+  if (tooltipTimer) {
+    clearTimeout(tooltipTimer);
+    tooltipTimer = null;
+  }
+  currentItem = null;
+  activeTooltip.visible = false;
+}
+
+// Clean up timer on component unmount
+onBeforeUnmount(() => {
+  if (tooltipTimer) {
+    clearTimeout(tooltipTimer);
+  }
+});
 </script>
 
 <style scoped>
@@ -424,6 +583,12 @@ const hasSubsystems = computed(() => {
   height: 100%;
   object-fit: contain;
   border-radius: 50%;
+  transition: transform 0.1s ease-in-out;
+}
+
+.module-icon:hover {
+  transform: scale(1.05);
+  cursor: pointer;
 }
 
 .empty-slot {
@@ -496,5 +661,90 @@ const hasSubsystems = computed(() => {
     width: 30px;
     height: 30px;
   }
+}
+
+/* Make sure tooltips appear above everything */
+:deep(.u-tooltip) {
+  z-index: 100;
+}
+
+/* Override button styles to preserve icon appearance */
+:deep(.u-button) {
+  background: transparent;
+  border: none;
+  padding: 0;
+  box-shadow: none;
+}
+
+:deep(.u-button):hover, :deep(.u-button):focus {
+  background: transparent;
+  transform: none;
+}
+
+/* Custom tooltip styling */
+.item-tooltip {
+  position: fixed; /* Changed from absolute to fixed for better positioning */
+  z-index: 1000;
+  min-width: 200px;
+  padding: 8px 12px;
+  background-color: rgba(30, 30, 30, 0.95);
+  border: 1px solid rgba(60, 60, 60, 0.6);
+  border-radius: 4px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+  pointer-events: auto;
+  transition: opacity 0.15s ease-in-out;
+}
+
+.tooltip-name {
+  font-size: 0.95rem;
+  font-weight: bold;
+  margin-bottom: 4px;
+  color: #ffffff;
+  word-break: break-word;
+}
+
+.tooltip-value {
+  font-size: 0.85rem;
+  color: #4fc3f7; /* Light blue for ISK values */
+  margin-bottom: 4px;
+}
+
+.tooltip-status {
+  font-size: 0.85rem;
+}
+
+.status-dropped {
+  color: #81c784; /* Green for dropped items */
+}
+
+.status-destroyed {
+  color: #e57373; /* Red for destroyed items */
+}
+
+/* Fix for mobile devices */
+@media (max-width: 500px) {
+  .item-tooltip {
+    min-width: 150px;
+    font-size: 0.85rem;
+  }
+}
+
+/* Module container for hover detection */
+.module-container {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  cursor: pointer;
+}
+
+/* Allow HTML content inside tooltip status */
+:deep(.tooltip-status .status-dropped) {
+  color: #81c784; /* Green for dropped items */
+}
+
+:deep(.tooltip-status .status-destroyed) {
+  color: #e57373; /* Red for destroyed items */
 }
 </style>

@@ -270,10 +270,11 @@ const mobileTabs = computed(() => [
   }
 ]);
 
-// Fetch killmail data but allow SSR with initial skeleton
-const { data: fetchedKillmail, pending } = useAsyncData(
-  () => route.params.id ? $fetch(`/api/killmail/${route.params.id[0]}`) : null,
+// Fetch killmail data with useFetch instead of useAsyncData
+const { data: fetchedKillmail, pending } = useFetch<IKillmail>(
+  () => route.params.id ? `/api/killmail/${route.params.id[0]}` : null,
   {
+    key: `killmail-${route.params.id?.[0] || 'none'}`, // Fixed: Use function returning string instead of computed
     watch: [() => route.params.id],
     immediate: true
   }
@@ -287,15 +288,25 @@ watch(pending, (newPending) => {
 // Watch for changes in the fetched killmail data
 watch(fetchedKillmail, async (newData) => {
   if (newData) {
-    killmail.value = newData as IKillmail;
+    killmail.value = newData;
 
     try {
-      // Fetch sibling killmail if it exists
-      const siblingResponse = await $fetch(`/api/killmail/${route.params.id[0]}/sibling`);
+      // Fetch sibling killmail if it exists using useFetch
+      const { data: siblingResponse } = await useFetch<string[]>(
+        `/api/killmail/${route.params.id[0]}/sibling`,
+        {
+          key: `killmail-sibling-${route.params.id[0]}` // Added explicit key
+        }
+      );
 
-      if (siblingResponse && Array.isArray(siblingResponse) && siblingResponse.length > 0) {
-        const siblingData = await $fetch(`/api/killmail/${siblingResponse[0]}`);
-        sibling.value = siblingData as IKillmail;
+      if (siblingResponse.value && Array.isArray(siblingResponse.value) && siblingResponse.value.length > 0) {
+        const { data: siblingData } = await useFetch<IKillmail>(
+          `/api/killmail/${siblingResponse.value[0]}`,
+          {
+            key: `killmail-sibling-data-${siblingResponse.value[0]}` // Added explicit key
+          }
+        );
+        sibling.value = siblingData.value || null;
       } else {
         sibling.value = null;
       }
