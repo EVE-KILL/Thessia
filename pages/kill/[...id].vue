@@ -1,207 +1,188 @@
 <template>
   <KillNavbar />
 
-  <!-- Wrap entire content in ClientOnly to prevent hydration issues -->
-  <ClientOnly>
-    <!-- Desktop Layout -->
-    <div v-if="!isMobile" class="flex flex-wrap mt-4 gap-4">
-      <!-- Left Container -->
-      <div class="flex-1 min-w-0 text-black dark:text-white bg-background-900 rounded-md overflow-hidden">
-        <!-- Header -->
-        <div class="px-4 py-3">
-          <div id="information-area" class="flex flex-wrap md:flex-nowrap justify-around">
-            <!-- Fitting Wheel - Fixed width container -->
-            <div class="w-full flex justify-center items-center">
-              <template v-if="isLoading">
-                <div class="fitting-wheel-skeleton">
-                  <!-- Outer ring skeleton -->
-                  <div class="skeleton-ring outer-skeleton-ring"></div>
-                  <!-- Inner ring skeleton -->
-                  <div class="skeleton-ring inner-skeleton-ring"></div>
-                  <!-- Ship skeleton -->
-                  <div class="skeleton-ship">
-                    <USkeleton class="h-full w-full rounded-full" />
-                  </div>
-                  <!-- Slot skeletons for modules -->
-                  <div v-for="i in 8" :key="`high-${i}`" :style="getSkeletonSlotPosition(i-1, 8, 'top')" class="skeleton-slot"></div>
-                  <div v-for="i in 8" :key="`mid-${i}`" :style="getSkeletonSlotPosition(i-1, 8, 'right')" class="skeleton-slot"></div>
-                  <div v-for="i in 8" :key="`low-${i}`" :style="getSkeletonSlotPosition(i-1, 8, 'bottom')" class="skeleton-slot"></div>
-                  <div v-for="i in 3" :key="`rig-${i}`" :style="getSkeletonSlotPosition(i-1, 3, 'left')" class="skeleton-slot"></div>
+  <!-- Desktop Layout -->
+  <div v-if="!isMobile" class="flex flex-wrap mt-4 gap-4">
+    <!-- Left Container -->
+    <div class="flex-1 min-w-0 text-black dark:text-white bg-background-900 rounded-md overflow-hidden">
+      <!-- Header -->
+      <div class="px-4 py-3">
+        <div id="information-area" class="flex flex-wrap md:flex-nowrap justify-around">
+          <!-- Fitting Wheel - Fixed width container -->
+          <div class="w-full flex justify-center items-center">
+            <template v-if="!killmail || isLoading">
+              <div class="fitting-wheel-skeleton">
+                <!-- Outer ring skeleton -->
+                <div class="skeleton-ring outer-skeleton-ring"></div>
+                <!-- Inner ring skeleton -->
+                <div class="skeleton-ring inner-skeleton-ring"></div>
+                <!-- Ship skeleton -->
+                <div class="skeleton-ship">
+                  <USkeleton class="h-full w-full rounded-full" />
                 </div>
-              </template>
-              <KillFittingWheel v-else :killmail="killmail" />
-            </div>
-
-            <!-- Kill Information -->
-            <div class="information-box ml-0 md:ml-5 mt-4 md:mt-0 w-full md:w-2/3">
-              <template v-if="isLoading">
-                <div class="grid gap-4">
-                  <USkeleton class="h-8 w-full" />
-                  <div class="grid grid-cols-2 gap-4">
-                    <USkeleton v-for="i in 6" :key="i" class="h-6" />
-                  </div>
-                  <USkeleton class="h-12 w-full" />
-                  <div class="grid grid-cols-2 gap-2">
-                    <USkeleton v-for="i in 4" :key="i" class="h-6" />
-                  </div>
-                </div>
-              </template>
-              <KillInformationBox v-else />
-            </div>
+                <!-- Slot skeletons for modules -->
+                <div v-for="i in 8" :key="`high-${i}`" :style="getSkeletonSlotPosition(i-1, 8, 'top')" class="skeleton-slot"></div>
+                <div v-for="i in 8" :key="`mid-${i}`" :style="getSkeletonSlotPosition(i-1, 8, 'right')" class="skeleton-slot"></div>
+                <div v-for="i in 8" :key="`low-${i}`" :style="getSkeletonSlotPosition(i-1, 8, 'bottom')" class="skeleton-slot"></div>
+                <div v-for="i in 3" :key="`rig-${i}`" :style="getSkeletonSlotPosition(i-1, 3, 'left')" class="skeleton-slot"></div>
+              </div>
+            </template>
+            <KillFittingWheel v-else :killmail="killmail" />
           </div>
-        </div>
 
-        <!-- Divider -->
-        <div class="h-px bg-background-700"></div>
-
-        <!-- Body -->
-        <div class="p-4 sm:p-6">
-          <template v-if="isLoading">
-            <div class="grid gap-4">
-              <div class="flex items-center justify-between">
-                <USkeleton class="h-6 w-48" />
-                <USkeleton class="h-6 w-24" />
-              </div>
-              <div class="grid gap-2">
-                <div v-for="i in 8" :key="i" class="flex items-center gap-4 p-2">
-                  <USkeleton class="h-10 w-10 rounded-md" />
-                  <USkeleton class="h-5 w-48" />
-                  <USkeleton class="h-5 w-24 ml-auto" />
+          <!-- Kill Information -->
+          <div class="information-box ml-0 md:ml-5 mt-4 md:mt-0 w-full md:w-2/3">
+            <template v-if="!killmail || isLoading">
+              <div class="grid gap-4">
+                <USkeleton class="h-8 w-full" />
+                <div class="grid grid-cols-2 gap-4">
+                  <USkeleton v-for="i in 6" :key="i" class="h-6" />
+                </div>
+                <USkeleton class="h-12 w-full" />
+                <div class="grid grid-cols-2 gap-2">
+                  <USkeleton v-for="i in 4" :key="i" class="h-6" />
                 </div>
               </div>
-            </div>
-          </template>
-          <KillItems v-else />
+            </template>
+            <KillInformationBox v-else />
+          </div>
         </div>
       </div>
 
-      <!-- Right Container -->
-      <div class="w-full md:w-2/5 lg:w-1/3 xl:max-w-md text-black dark:text-white bg-background-900 rounded-md overflow-hidden">
-        <template v-if="isLoading">
-          <!-- Skeleton tabs -->
-          <div class="border-b border-background-700">
-            <div class="flex gap-4 p-2">
-              <USkeleton v-for="i in 2" :key="i" class="h-8 w-24" />
+      <!-- Divider -->
+      <div class="h-px bg-background-700"></div>
+
+      <!-- Body -->
+      <div class="p-4 sm:p-6">
+        <template v-if="!killmail || isLoading">
+          <div class="grid gap-4">
+            <div class="flex items-center justify-between">
+              <USkeleton class="h-6 w-48" />
+              <USkeleton class="h-6 w-24" />
             </div>
-          </div>
-          <!-- Skeleton content -->
-          <div class="p-4">
-            <div class="grid gap-4">
-              <div v-for="i in 5" :key="i" class="flex items-center gap-4">
-                <USkeleton class="h-10 w-10 rounded-full" />
-                <div class="grid gap-1 flex-1">
-                  <USkeleton class="h-5 w-32" />
-                  <USkeleton class="h-4 w-full" />
-                </div>
+            <div class="grid gap-2">
+              <div v-for="i in 8" :key="i" class="flex items-center gap-4 p-2">
+                <USkeleton class="h-10 w-10 rounded-md" />
+                <USkeleton class="h-5 w-48" />
+                <USkeleton class="h-5 w-24 ml-auto" />
               </div>
             </div>
           </div>
         </template>
-        <UTabs
-          v-else-if="killmail"
-          :items="rightSideTabs"
-          :ui="tabsUi"
-        >
-          <template #comments="{ item }">
-            <KillComments />
-          </template>
-
-          <template #attackers="{ item }">
-            <KillAttackers />
-          </template>
-        </UTabs>
+        <KillItems v-else />
       </div>
     </div>
 
-    <!-- Mobile Layout -->
-    <div v-else class="mt-4">
-      <div class="text-black dark:text-white bg-background-900 rounded-md overflow-hidden">
-        <template v-if="isLoading">
-          <!-- Skeleton tabs -->
-          <div class="border-b border-background-700">
-            <div class="flex gap-2 p-2 overflow-x-auto">
-              <USkeleton v-for="i in 5" :key="i" class="h-8 w-20 flex-shrink-0" />
-            </div>
+    <!-- Right Container -->
+    <div class="w-full md:w-2/5 lg:w-1/3 xl:max-w-md text-black dark:text-white bg-background-900 rounded-md overflow-hidden">
+      <template v-if="!killmail || isLoading">
+        <!-- Skeleton tabs -->
+        <div class="border-b border-background-700">
+          <div class="flex gap-4 p-2">
+            <USkeleton v-for="i in 2" :key="i" class="h-8 w-24" />
           </div>
-          <!-- Skeleton content -->
-          <div class="p-4">
-            <!-- Use the same fitting wheel skeleton -->
-            <div class="fitting-wheel-skeleton mx-auto mb-4">
-              <!-- Outer ring skeleton -->
-              <div class="skeleton-ring outer-skeleton-ring"></div>
-              <!-- Inner ring skeleton -->
-              <div class="skeleton-ring inner-skeleton-ring"></div>
-              <!-- Ship skeleton -->
-              <div class="skeleton-ship">
-                <USkeleton class="h-full w-full rounded-full" />
+        </div>
+        <!-- Skeleton content -->
+        <div class="p-4">
+          <div class="grid gap-4">
+            <div v-for="i in 5" :key="i" class="flex items-center gap-4">
+              <USkeleton class="h-10 w-10 rounded-full" />
+              <div class="grid gap-1 flex-1">
+                <USkeleton class="h-5 w-32" />
+                <USkeleton class="h-4 w-full" />
               </div>
-              <!-- Slot skeletons for modules -->
-              <div v-for="i in 8" :key="`high-${i}`" :style="getSkeletonSlotPosition(i-1, 8, 'top')" class="skeleton-slot"></div>
-              <div v-for="i in 8" :key="`mid-${i}`" :style="getSkeletonSlotPosition(i-1, 8, 'right')" class="skeleton-slot"></div>
-              <div v-for="i in 8" :key="`low-${i}`" :style="getSkeletonSlotPosition(i-1, 8, 'bottom')" class="skeleton-slot"></div>
-              <div v-for="i in 3" :key="`rig-${i}`" :style="getSkeletonSlotPosition(i-1, 3, 'left')" class="skeleton-slot"></div>
             </div>
           </div>
+        </div>
+      </template>
+      <UTabs
+        v-else
+        :items="rightSideTabs"
+        :ui="tabsUi"
+      >
+        <template #comments="{ item }">
+          <KillComments />
         </template>
-        <UTabs
-          v-else-if="killmail"
-          :items="mobileTabs"
-          :ui="tabsUi"
-        >
-          <!-- Fitting Wheel Tab -->
-          <template #fitting="{ item }">
-            <div class="p-4 flex justify-center">
-              <KillFittingWheel v-if="killmail" :key="killmail.killmail_id" :killmail="killmail" />
-            </div>
-          </template>
 
-          <!-- Items Tab -->
-          <template #items="{ item }">
-            <div class="p-4">
-              <KillItems v-if="killmail" :killmail="killmail" />
-            </div>
-          </template>
-
-          <!-- Info Tab -->
-          <template #info="{ item }">
-            <div class="p-4">
-              <KillInformationBox v-if="killmail" :killmail="killmail" />
-            </div>
-          </template>
-
-          <!-- Attackers Tab -->
-          <template #attackers="{ item }">
-            <div class="p-4">
-              <KillAttackers v-if="killmail" :attackers="killmail.attackers" />
-            </div>
-          </template>
-
-          <!-- Comments Tab -->
-          <template #comments="{ item }">
-            <div class="p-4">
-              <KillComments :identifier="`kill:${killmail.killmail_id}`" @count="updateCommentCount" />
-            </div>
-          </template>
-        </UTabs>
-      </div>
+        <template #attackers="{ item }">
+          <KillAttackers />
+        </template>
+      </UTabs>
     </div>
+  </div>
 
-    <!-- Fallback content for server-side rendering -->
-    <template #fallback>
-      <div class="mt-4 bg-background-900 rounded-md overflow-hidden p-4">
-        <div class="grid gap-4">
-          <USkeleton class="h-12 w-4/5 mx-auto" />
-          <div class="fitting-wheel-skeleton mx-auto">
+  <!-- Mobile Layout -->
+  <div v-else class="mt-4">
+    <div class="text-black dark:text-white bg-background-900 rounded-md overflow-hidden">
+      <template v-if="!killmail || isLoading">
+        <!-- Skeleton tabs -->
+        <div class="border-b border-background-700">
+          <div class="flex gap-2 p-2 overflow-x-auto">
+            <USkeleton v-for="i in 5" :key="i" class="h-8 w-20 flex-shrink-0" />
+          </div>
+        </div>
+        <!-- Skeleton content -->
+        <div class="p-4">
+          <!-- Use the same fitting wheel skeleton -->
+          <div class="fitting-wheel-skeleton mx-auto mb-4">
+            <!-- Outer ring skeleton -->
             <div class="skeleton-ring outer-skeleton-ring"></div>
+            <!-- Inner ring skeleton -->
             <div class="skeleton-ring inner-skeleton-ring"></div>
+            <!-- Ship skeleton -->
             <div class="skeleton-ship">
               <USkeleton class="h-full w-full rounded-full" />
             </div>
+            <!-- Slot skeletons for modules -->
+            <div v-for="i in 8" :key="`high-${i}`" :style="getSkeletonSlotPosition(i-1, 8, 'top')" class="skeleton-slot"></div>
+            <div v-for="i in 8" :key="`mid-${i}`" :style="getSkeletonSlotPosition(i-1, 8, 'right')" class="skeleton-slot"></div>
+            <div v-for="i in 8" :key="`low-${i}`" :style="getSkeletonSlotPosition(i-1, 8, 'bottom')" class="skeleton-slot"></div>
+            <div v-for="i in 3" :key="`rig-${i}`" :style="getSkeletonSlotPosition(i-1, 3, 'left')" class="skeleton-slot"></div>
           </div>
         </div>
-      </div>
-    </template>
-  </ClientOnly>
+      </template>
+      <UTabs
+        v-else
+        :items="mobileTabs"
+        :ui="tabsUi"
+      >
+        <!-- Fitting Wheel Tab -->
+        <template #fitting="{ item }">
+          <div class="p-4 flex justify-center">
+            <KillFittingWheel v-if="killmail" :key="killmail.killmail_id" :killmail="killmail" />
+          </div>
+        </template>
+
+        <!-- Items Tab -->
+        <template #items="{ item }">
+          <div class="p-4">
+            <KillItems v-if="killmail" :killmail="killmail" />
+          </div>
+        </template>
+
+        <!-- Info Tab -->
+        <template #info="{ item }">
+          <div class="p-4">
+            <KillInformationBox v-if="killmail" :killmail="killmail" />
+          </div>
+        </template>
+
+        <!-- Attackers Tab -->
+        <template #attackers="{ item }">
+          <div class="p-4">
+            <KillAttackers v-if="killmail" :attackers="killmail.attackers" />
+          </div>
+        </template>
+
+        <!-- Comments Tab -->
+        <template #comments="{ item }">
+          <div class="p-4">
+            <KillComments :identifier="`kill:${killmail.killmail_id}`" @count="updateCommentCount" />
+          </div>
+        </template>
+      </UTabs>
+    </div>
+  </div>
 </template>
 
 <script setup lang="ts">
@@ -289,12 +270,11 @@ const mobileTabs = computed(() => [
   }
 ]);
 
-// Use top-level composable for killmail data - make it client-side only
+// Fetch killmail data but allow SSR with initial skeleton
 const { data: fetchedKillmail, pending } = useAsyncData(
   () => route.params.id ? $fetch(`/api/killmail/${route.params.id[0]}`) : null,
   {
     watch: [() => route.params.id],
-    server: false,
     immediate: true
   }
 );
@@ -323,7 +303,6 @@ watch(fetchedKillmail, async (newData) => {
       console.error('Error fetching sibling killmail:', error);
       sibling.value = null;
     } finally {
-      // Fix the loading state here - set to false when complete
       isLoading.value = false;
     }
   }
@@ -338,7 +317,8 @@ function updateCommentCount(count: number) {
  * Calculates the position for skeleton slots
  */
 function getSkeletonSlotPosition(index: number, total: number, position: string): Record<string, string> {
-  let radius = 42; // match the same radius as the real component
+  // Use the same radius as the actual component for consistency
+  const radius = 42;
   let angle = 0;
 
   switch (position) {
@@ -420,7 +400,7 @@ function getSkeletonSlotPosition(index: number, total: number, position: string)
   }
 }
 
-/* Enhanced fitting wheel skeleton styles */
+/* Simplified fitting wheel skeleton styles */
 .fitting-wheel-skeleton {
   position: relative;
   width: 100%;
@@ -428,20 +408,23 @@ function getSkeletonSlotPosition(index: number, total: number, position: string)
   height: 0;
   padding-bottom: 100%; /* Maintain 1:1 aspect ratio */
   margin: 0 auto;
+  border-radius: 50%;
+  overflow: hidden;
+  background-color: rgba(128, 128, 128, 0.1);
 }
 
 /* Skeleton rings */
 .skeleton-ring {
   position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
   border-radius: 50%;
   background-color: transparent;
 }
 
 .outer-skeleton-ring {
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
   border: 8px solid rgba(128, 128, 128, 0.2);
 }
 
@@ -450,7 +433,7 @@ function getSkeletonSlotPosition(index: number, total: number, position: string)
   left: 15%;
   width: 70%;
   height: 70%;
-  border: 8px solid rgba(128, 128, 128, 0.15);
+  border: 6px solid rgba(128, 128, 128, 0.15);
 }
 
 /* Ship skeleton */
@@ -471,5 +454,19 @@ function getSkeletonSlotPosition(index: number, total: number, position: string)
   height: 30px;
   border-radius: 50%;
   background-color: rgba(128, 128, 128, 0.2);
+}
+
+/* Responsive adjustments */
+@media (max-width: 500px) {
+  .skeleton-slot {
+    width: 24px;
+    height: 24px;
+  }
+}
+
+@media (max-width: 768px) {
+  .fitting-wheel-skeleton {
+    max-width: 300px;
+  }
 }
 </style>
