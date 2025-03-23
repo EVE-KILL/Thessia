@@ -1,0 +1,3 @@
+<template>
+information box
+</template>

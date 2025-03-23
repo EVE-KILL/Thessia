@@ -441,5 +441,14 @@
         "serverError": "Server Error",
         "notFound": "Page Not Found",
         "generic": "An error occurred"
+    },
+    "kill": {
+        "fitting": {
+            "highSlots": "High Slots",
+            "midSlots": "Mid Slots",
+            "lowSlots": "Low Slots",
+            "rigSlots": "Rig Slots",
+            "subsystems": "Subsystems"
+        }
     }
 }
