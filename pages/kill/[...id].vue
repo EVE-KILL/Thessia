@@ -12,12 +12,41 @@
           <div id="information-area" class="flex flex-wrap md:flex-nowrap justify-around">
             <!-- Fitting Wheel - Fixed width container -->
             <div class="w-full flex justify-center items-center">
-              <KillFittingWheel :killmail="killmail" />
+              <template v-if="isLoading">
+                <div class="fitting-wheel-skeleton">
+                  <!-- Outer ring skeleton -->
+                  <div class="skeleton-ring outer-skeleton-ring"></div>
+                  <!-- Inner ring skeleton -->
+                  <div class="skeleton-ring inner-skeleton-ring"></div>
+                  <!-- Ship skeleton -->
+                  <div class="skeleton-ship">
+                    <USkeleton class="h-full w-full rounded-full" />
+                  </div>
+                  <!-- Slot skeletons for modules -->
+                  <div v-for="i in 8" :key="`high-${i}`" :style="getSkeletonSlotPosition(i-1, 8, 'top')" class="skeleton-slot"></div>
+                  <div v-for="i in 8" :key="`mid-${i}`" :style="getSkeletonSlotPosition(i-1, 8, 'right')" class="skeleton-slot"></div>
+                  <div v-for="i in 8" :key="`low-${i}`" :style="getSkeletonSlotPosition(i-1, 8, 'bottom')" class="skeleton-slot"></div>
+                  <div v-for="i in 3" :key="`rig-${i}`" :style="getSkeletonSlotPosition(i-1, 3, 'left')" class="skeleton-slot"></div>
+                </div>
+              </template>
+              <KillFittingWheel v-else :killmail="killmail" />
             </div>
 
             <!-- Kill Information -->
             <div class="information-box ml-0 md:ml-5 mt-4 md:mt-0 w-full md:w-2/3">
-              <KillInformationBox/>
+              <template v-if="isLoading">
+                <div class="grid gap-4">
+                  <USkeleton class="h-8 w-full" />
+                  <div class="grid grid-cols-2 gap-4">
+                    <USkeleton v-for="i in 6" :key="i" class="h-6" />
+                  </div>
+                  <USkeleton class="h-12 w-full" />
+                  <div class="grid grid-cols-2 gap-2">
+                    <USkeleton v-for="i in 4" :key="i" class="h-6" />
+                  </div>
+                </div>
+              </template>
+              <KillInformationBox v-else />
             </div>
           </div>
         </div>
@@ -27,14 +56,49 @@
 
         <!-- Body -->
         <div class="p-4 sm:p-6">
-          <KillItems />
+          <template v-if="isLoading">
+            <div class="grid gap-4">
+              <div class="flex items-center justify-between">
+                <USkeleton class="h-6 w-48" />
+                <USkeleton class="h-6 w-24" />
+              </div>
+              <div class="grid gap-2">
+                <div v-for="i in 8" :key="i" class="flex items-center gap-4 p-2">
+                  <USkeleton class="h-10 w-10 rounded-md" />
+                  <USkeleton class="h-5 w-48" />
+                  <USkeleton class="h-5 w-24 ml-auto" />
+                </div>
+              </div>
+            </div>
+          </template>
+          <KillItems v-else />
         </div>
       </div>
 
       <!-- Right Container -->
       <div class="w-full md:w-2/5 lg:w-1/3 xl:max-w-md text-black dark:text-white bg-background-900 rounded-md overflow-hidden">
+        <template v-if="isLoading">
+          <!-- Skeleton tabs -->
+          <div class="border-b border-background-700">
+            <div class="flex gap-4 p-2">
+              <USkeleton v-for="i in 2" :key="i" class="h-8 w-24" />
+            </div>
+          </div>
+          <!-- Skeleton content -->
+          <div class="p-4">
+            <div class="grid gap-4">
+              <div v-for="i in 5" :key="i" class="flex items-center gap-4">
+                <USkeleton class="h-10 w-10 rounded-full" />
+                <div class="grid gap-1 flex-1">
+                  <USkeleton class="h-5 w-32" />
+                  <USkeleton class="h-4 w-full" />
+                </div>
+              </div>
+            </div>
+          </div>
+        </template>
         <UTabs
-          v-if="killmail"
+          v-else-if="killmail"
           :items="rightSideTabs"
           :ui="tabsUi"
         >
@@ -52,8 +116,35 @@
     <!-- Mobile Layout -->
     <div v-else class="mt-4">
       <div class="text-black dark:text-white bg-background-900 rounded-md overflow-hidden">
+        <template v-if="isLoading">
+          <!-- Skeleton tabs -->
+          <div class="border-b border-background-700">
+            <div class="flex gap-2 p-2 overflow-x-auto">
+              <USkeleton v-for="i in 5" :key="i" class="h-8 w-20 flex-shrink-0" />
+            </div>
+          </div>
+          <!-- Skeleton content -->
+          <div class="p-4">
+            <!-- Use the same fitting wheel skeleton -->
+            <div class="fitting-wheel-skeleton mx-auto mb-4">
+              <!-- Outer ring skeleton -->
+              <div class="skeleton-ring outer-skeleton-ring"></div>
+              <!-- Inner ring skeleton -->
+              <div class="skeleton-ring inner-skeleton-ring"></div>
+              <!-- Ship skeleton -->
+              <div class="skeleton-ship">
+                <USkeleton class="h-full w-full rounded-full" />
+              </div>
+              <!-- Slot skeletons for modules -->
+              <div v-for="i in 8" :key="`high-${i}`" :style="getSkeletonSlotPosition(i-1, 8, 'top')" class="skeleton-slot"></div>
+              <div v-for="i in 8" :key="`mid-${i}`" :style="getSkeletonSlotPosition(i-1, 8, 'right')" class="skeleton-slot"></div>
+              <div v-for="i in 8" :key="`low-${i}`" :style="getSkeletonSlotPosition(i-1, 8, 'bottom')" class="skeleton-slot"></div>
+              <div v-for="i in 3" :key="`rig-${i}`" :style="getSkeletonSlotPosition(i-1, 3, 'left')" class="skeleton-slot"></div>
+            </div>
+          </div>
+        </template>
         <UTabs
-          v-if="killmail"
+          v-else-if="killmail"
           :items="mobileTabs"
           :ui="tabsUi"
         >
@@ -98,8 +189,15 @@
     <!-- Fallback content for server-side rendering -->
     <template #fallback>
       <div class="mt-4 bg-background-900 rounded-md overflow-hidden p-4">
-        <div class="loading-container flex justify-center items-center" style="height: 300px;">
-          <div class="loading-spinner"></div>
+        <div class="grid gap-4">
+          <USkeleton class="h-12 w-4/5 mx-auto" />
+          <div class="fitting-wheel-skeleton mx-auto">
+            <div class="skeleton-ring outer-skeleton-ring"></div>
+            <div class="skeleton-ring inner-skeleton-ring"></div>
+            <div class="skeleton-ship">
+              <USkeleton class="h-full w-full rounded-full" />
+            </div>
+          </div>
         </div>
       </div>
     </template>
@@ -113,6 +211,7 @@ const route = useRoute();
 const killmail = ref<IKillmail | null>(null);
 const sibling = ref<IKillmail | null>(null);
 const commentCount = ref(0);
+const isLoading = ref(true);
 
 // Responsive layout
 const { isMobile } = useResponsive();
@@ -191,14 +290,19 @@ const mobileTabs = computed(() => [
 ]);
 
 // Use top-level composable for killmail data - make it client-side only
-const { data: fetchedKillmail } = useAsyncData(
+const { data: fetchedKillmail, pending } = useAsyncData(
   () => route.params.id ? $fetch(`/api/killmail/${route.params.id[0]}`) : null,
   {
     watch: [() => route.params.id],
-    server: false, // Disable server-side rendering for this call
+    server: false,
     immediate: true
   }
 );
+
+// Track loading state
+watch(pending, (newPending) => {
+  isLoading.value = newPending;
+});
 
 // Watch for changes in the fetched killmail data
 watch(fetchedKillmail, async (newData) => {
@@ -218,6 +322,9 @@ watch(fetchedKillmail, async (newData) => {
     } catch (error) {
       console.error('Error fetching sibling killmail:', error);
       sibling.value = null;
+    } finally {
+      // Fix the loading state here - set to false when complete
+      isLoading.value = false;
     }
   }
 }, { immediate: true });
@@ -225,6 +332,41 @@ watch(fetchedKillmail, async (newData) => {
 // Update comment count from child component
 function updateCommentCount(count: number) {
   commentCount.value = count;
+}
+
+/**
+ * Calculates the position for skeleton slots
+ */
+function getSkeletonSlotPosition(index: number, total: number, position: string): Record<string, string> {
+  let radius = 42; // match the same radius as the real component
+  let angle = 0;
+
+  switch (position) {
+    case 'top':
+      angle = -125 + (index * 10);
+      break;
+    case 'right':
+      angle = 0 - 35 + (index * 10);
+      break;
+    case 'bottom':
+      angle = 90 - 35 + (index * 10);
+      break;
+    case 'left':
+      angle = 218 - 20 + (index * 10);
+      break;
+    default:
+      angle = 0;
+  }
+
+  const rad = angle * (Math.PI / 180);
+  const x = 50 + radius * Math.cos(rad);
+  const y = 50 + radius * Math.sin(rad);
+
+  return {
+    left: `${x}%`,
+    top: `${y}%`,
+    transform: 'translate(-50%, -50%)'
+  };
 }
 </script>
 
@@ -278,18 +420,56 @@ function updateCommentCount(count: number) {
   }
 }
 
-/* Add loading spinner styles */
-.loading-spinner {
-  width: 48px;
-  height: 48px;
-  border: 4px solid rgba(150, 150, 150, 0.3);
-  border-radius: 50%;
-  border-top-color: rgba(150, 150, 150, 0.8);
-  animation: spin 1s linear infinite;
+/* Enhanced fitting wheel skeleton styles */
+.fitting-wheel-skeleton {
+  position: relative;
+  width: 100%;
+  max-width: 500px;
+  height: 0;
+  padding-bottom: 100%; /* Maintain 1:1 aspect ratio */
+  margin: 0 auto;
 }
 
-@keyframes spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
+/* Skeleton rings */
+.skeleton-ring {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  background-color: transparent;
+}
+
+.outer-skeleton-ring {
+  border: 8px solid rgba(128, 128, 128, 0.2);
+}
+
+.inner-skeleton-ring {
+  top: 15%;
+  left: 15%;
+  width: 70%;
+  height: 70%;
+  border: 8px solid rgba(128, 128, 128, 0.15);
+}
+
+/* Ship skeleton */
+.skeleton-ship {
+  position: absolute;
+  top: 20%;
+  left: 20%;
+  width: 60%;
+  height: 60%;
+  border-radius: 50%;
+  overflow: hidden;
+}
+
+/* Module slot skeletons */
+.skeleton-slot {
+  position: absolute;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background-color: rgba(128, 128, 128, 0.2);
 }
 </style>
