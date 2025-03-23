@@ -39,7 +39,7 @@ use([
 // Chart options
 const chartOptions = ref({})
 
-// Time period options for chart display with proper formatting for USelect
+// Time period options for chart display
 const timePeriods = [
   { value: '1min', label: t('status.timePeriods.1min') },
   { value: '5min', label: t('status.timePeriods.5min') },
@@ -51,7 +51,7 @@ const timePeriods = [
   { value: '1week', label: t('status.timePeriods.1week') },
   { value: '1month', label: t('status.timePeriods.1month') }
 ]
-// Change the default to 5min instead of 24hours
+// Default time period
 const selectedTimePeriod = ref('5min')
 
 // Auto refresh settings
@@ -59,22 +59,28 @@ const autoRefresh = ref(true)
 const autoRefreshInterval = ref(10) // seconds
 const scrollPosition = ref(0)
 
-// Use VueUse to track document visibility without directly accessing document
+// Use VueUse to track document visibility
 const isVisible = useDocumentVisibility()
 
-// Use Nuxt's useLazyFetch for initial data loading
+// Track change stats for UI display
+const prevProcessedCount = ref(0);
+const prevQueuedCount = ref(0);
+const processedDiff = ref(0);
+const queuedDiff = ref(0);
+
+// Fetch status data
 const { data: statusData, pending: loading, error, refresh: refreshData } = useLazyFetch('/api/status', {
   server: false // Only fetch on client-side
 })
 
-// Custom refresh function
+// Custom refresh function with change tracking
 const refresh = async () => {
   try {
     if (import.meta.client) {
       scrollPosition.value = window.scrollY
     }
 
-    // Store current values before refresh to calculate difference later
+    // Store current values to calculate difference
     if (statusData.value) {
       prevProcessedCount.value = summaryStats.value?.totalProcessed || 0;
       prevQueuedCount.value = summaryStats.value?.totalQueued || 0;
@@ -82,7 +88,7 @@ const refresh = async () => {
 
     await refreshData()
 
-    // Calculate differences after new data is loaded
+    // Calculate differences
     if (statusData.value) {
       processedDiff.value = (summaryStats.value?.totalProcessed || 0) - prevProcessedCount.value;
       queuedDiff.value = (summaryStats.value?.totalQueued || 0) - prevQueuedCount.value;
@@ -101,7 +107,7 @@ const refresh = async () => {
   }
 }
 
-// Setup auto-refresh using VueUse's useIntervalFn
+// Setup auto-refresh
 const { pause, resume } = useIntervalFn(() => {
   if (import.meta.client && isVisible.value === 'visible' && autoRefresh.value) {
     refresh()
@@ -136,7 +142,7 @@ const formatDate = (dateString) => {
   return new Date(dateString).toLocaleString()
 }
 
-// Format numbers using the browser's locale system
+// Format numbers using locale
 const formatNumber = (value: number): string => {
   return value.toLocaleString("da-DK");
 };
@@ -149,17 +155,16 @@ const updateChartOptions = () => {
   const processedCounts = statusData.value.processedCounts
   const categories = Object.keys(processedCounts)
 
-  // Extract data for the selected time period - now handling numeric values directly
+  // Extract data for the selected time period
   const dataPoints = categories.map(category => {
     const value = processedCounts[category][period]
-    // Values are now already numbers from the API, no need for string conversion
     return {
       name: category,
       value: typeof value === 'number' ? value : 0
     }
   })
 
-  // Sort by value for better visualization (descending order)
+  // Sort by value (descending order)
   dataPoints.sort((a, b) => b.value - a.value)
 
   // Colors for the bars
@@ -169,7 +174,7 @@ const updateChartOptions = () => {
     '#1982C4', '#6A4C93', '#FFCA3A', '#FF595E'
   ]
 
-  // Create simplified chart options
+  // Create chart options
   chartOptions.value = {
     title: {
       text: t('status.processedItems', { period: period }),
@@ -215,7 +220,7 @@ watch([statusData, selectedTimePeriod], () => {
   }
 }, { immediate: true })
 
-// Watch visibility changes to pause/resume auto-refresh
+// Watch visibility changes
 watch(isVisible, (newValue) => {
   if (newValue === 'visible' && autoRefresh.value) {
     resume()
@@ -238,13 +243,11 @@ onUnmounted(() => {
   window.removeEventListener('resize', checkIfMobile);
 });
 
-// Add active tab tracking - explicitly set to 'overview' as default
+// Tab state
 const activeTab = ref('overview')
-
-// Invert the logic - change from simplified to detailed
 const detailed = ref(false)
 
-// Add summary stats computed property with number handling
+// Summary stats computed property
 const summaryStats = computed(() => {
   if (!statusData.value) return null
 
@@ -252,7 +255,6 @@ const summaryStats = computed(() => {
     totalQueued: Object.values(statusData.value.queueCounts).reduce(
       (sum, val) => sum + (typeof val === 'number' ? val : 0), 0
     ),
-    // Values are now numbers directly from the API
     totalProcessed: Object.values(statusData.value.processedCounts).reduce(
       (sum, val) => sum + (val['5min'] || 0), 0
     ),
@@ -328,12 +330,6 @@ const parseKeyspaceInfo = (info: string) => {
 const hasKeyspaceInfo = computed(() => {
   return statusData.value?.redis?.keyspace && Object.keys(statusData.value.redis.keyspace).length > 0;
 });
-
-// Add refs to track previous values for change display
-const prevProcessedCount = ref(0);
-const prevQueuedCount = ref(0);
-const processedDiff = ref(0);
-const queuedDiff = ref(0);
 </script>
 
 <template>
