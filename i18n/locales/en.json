@@ -145,6 +145,19 @@
             "since": "Up since",
             "localTime": "Local time"
         },
+        "overview": {
+            "systemInfo": "System Information",
+            "loadAverage": "Load Average",
+            "nodeVersion": "Node Version",
+            "redisVersion": "Redis Version",
+            "redisMemory": "Redis Memory",
+            "redisClients": "Redis Clients",
+            "hitRatio": "Cache Hit Ratio",
+            "totalKeys": "Total Redis Keys",
+            "processing": "Processing Statistics",
+            "queueCounts": "Active Queues",
+            "cache": "Cache Statistics (Size / Hits)"
+        },
         "environment": {
             "title": "Environment",
             "nodeEnv": "Node Environment",

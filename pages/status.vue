@@ -377,54 +377,129 @@ const hasKeyspaceInfo = computed(() => {
             class="mb-6"
           >
             <template #overview>
-              <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
-                <!-- System Information -->
-                <UCard>
-                  <template #header>
-                    <div class="flex items-center">
-                      <UIcon name="lucide:cpu" class="mr-2" />
-                      <h3 class="font-bold">{{ $t('status.systemInfo') }}</h3>
+              <!-- Overview with refined 3-column layout -->
+              <div class="space-y-4">
+                <!-- Top row: 3 cards -->
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <!-- Improved System Information - Using overview-specific keys -->
+                  <UCard>
+                    <template #header>
+                      <div class="flex items-center">
+                        <UIcon name="lucide:cpu" class="mr-2" />
+                        <h3 class="font-bold">{{ $t('status.overview.systemInfo') }}</h3>
+                      </div>
+                    </template>
+                    <div class="space-y-2 text-sm">
+                      <div class="flex justify-between">
+                        <span>{{ $t('status.overview.loadAverage') }}:</span>
+                        <span class="font-mono">{{ statusData.operatingSystem.loadAvg.join(' | ') }}</span>
+                      </div>
+                      <div class="flex justify-between">
+                        <span>{{ $t('status.overview.nodeVersion') }}:</span>
+                        <span class="font-mono">{{ statusData.env.nodeVersion }}</span>
+                      </div>
+                      <div class="flex justify-between">
+                        <span>{{ $t('status.overview.redisVersion') }}:</span>
+                        <span class="font-mono">{{ statusData.redis?.server?.redis_version || 'N/A' }}</span>
+                      </div>
+                      <div class="flex justify-between">
+                        <span>{{ $t('status.overview.redisMemory') }}:</span>
+                        <span class="font-mono">{{ formatBytes(statusData.redis?.memory?.used_memory) }}</span>
+                      </div>
+                      <div class="flex justify-between">
+                        <span>{{ $t('status.overview.redisClients') }}:</span>
+                        <span class="font-mono">{{ formatNumber(statusData.redis?.clients?.connected_clients) }}</span>
+                      </div>
+                        <div class="flex justify-between">
+                          <span>{{ $t('status.overview.hitRatio') }}:</span>
+                          <span class="font-mono">{{ calculateHitRatio(statusData.redis?.stats?.keyspace_hits, statusData.redis?.stats?.keyspace_misses) }}%</span>
+                        </div>
+                        <div class="flex justify-between">
+                          <span>{{ $t('status.overview.totalKeys') }}:</span>
+                          <span class="font-mono">{{
+                            statusData.redis?.keyspace ? formatNumber(Object.values(statusData.redis.keyspace).reduce((total, info) => total + parseKeyspaceInfo(info as string).keys, 0)) : 'N/A'
+                          }}</span>
+                        </div>
                     </div>
-                  </template>
+                  </UCard>
 
-                  <div class="space-y-3 text-sm">
-                    <div><span class="font-semibold">{{ $t('status.uptime.since') }}:</span> {{ formatDate(statusData.upSince) }}</div>
-                    <div><span class="font-semibold">{{ $t('status.operatingSystem.platform') }}:</span> {{ statusData.operatingSystem.systemPlatform }} ({{ statusData.operatingSystem.systemArch }})</div>
-                    <div><span class="font-semibold">{{ $t('status.operatingSystem.loadAverage') }}:</span> {{ statusData.operatingSystem.loadAvg.join(' | ') }}</div>
-                    <div><span class="font-semibold">{{ $t('status.operatingSystem.totalCPUs') }}:</span> {{ statusData.operatingSystem.totalCPUs }}</div>
-                    <div><span class="font-semibold">{{ $t('status.operatingSystem.memory') }}:</span> {{ statusData.operatingSystem.totalMemoryGB }}</div>
-                    <div><span class="font-semibold">{{ $t('status.environment.nodeVersion') }}:</span> {{ statusData.env.nodeVersion }}</div>
-                    <div><span class="font-semibold">{{ $t('status.environment.nodeEnv') }}:</span> {{ statusData.env.nodeEnv }}</div>
-                  </div>
-                </UCard>
-
-                <!-- Queue Counts -->
-                <UCard>
-                  <template #header>
-                    <div class="flex items-center">
-                      <UIcon name="lucide:list" class="mr-2" />
-                      <h3 class="font-bold">{{ $t('status.queueCounts.title') }}</h3>
+                  <!-- Processing Stats - Using overview-specific keys -->
+                  <UCard>
+                    <template #header>
+                      <div class="flex items-center">
+                        <UIcon name="lucide:bar-chart-2" class="mr-2" />
+                        <h3 class="font-bold">{{ $t('status.overview.processing') }}</h3>
+                      </div>
+                    </template>
+                    <div class="space-y-2 text-sm">
+                      <!-- Top 3 processed items in 5min -->
+                    <div v-for="(queue, index) in Object.keys(statusData.processedCounts).sort((a, b) => (statusData.processedCounts[b]['5min'] || 0) - (statusData.processedCounts[a]['5min'] || 0))" :key="queue" class="flex justify-between">
+                        <span class="capitalize">{{ queue }}:</span>
+                        <span class="font-mono">{{ formatNumber(statusData.processedCounts[queue]['5min'] || 0) }}</span>
                     </div>
-                  </template>
+                    </div>
+                  </UCard>
 
-                  <div class="overflow-x-auto">
-                    <table class="min-w-full">
-                      <thead>
-                        <tr>
-                          <th class="text-left text-xs">{{ $t('status.queueCounts.queue') }}</th>
-                          <th class="text-right text-xs">{{ $t('status.queueCounts.count') }}</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        <tr v-for="(count, queue) in statusData.queueCounts" :key="queue"
-                            class="border-t border-gray-200 dark:border-gray-700">
-                          <td class="py-1 capitalize text-sm">{{ queue }}</td>
-                          <td class="py-1 text-right font-mono text-sm">{{ formatNumber(count) }}</td>
-                        </tr>
-                      </tbody>
-                    </table>
-                  </div>
-                </UCard>
+                  <!-- Queue Counts - Using overview-specific keys -->
+                  <UCard>
+                    <template #header>
+                      <div class="flex items-center">
+                        <UIcon name="lucide:list" class="mr-2" />
+                        <h3 class="font-bold">{{ $t('status.overview.queueCounts') }}</h3>
+                      </div>
+                    </template>
+
+                    <div class="space-y-2 text-sm">
+                      <!-- Top 5 queues -->
+                      <div v-for="(queue, index) in Object.entries(statusData.queueCounts || {}).sort(([,a], [,b]) => Number(b) - Number(a))" :key="queue[0]" class="flex justify-between">
+                        <span class="capitalize">{{ queue[0] }}:</span>
+                        <span class="font-mono">{{ formatNumber(queue[1]) }}</span>
+                      </div>
+                    </div>
+                  </UCard>
+                </div>
+
+                <!-- Bottom row: 1 card (cache info only) -->
+                <div class="grid grid-cols-1 md:grid-cols-1 gap-4">
+                  <!-- Cache Overview - Using overview-specific keys -->
+                  <UCard>
+                    <template #header>
+                      <div class="flex items-center">
+                        <UIcon name="lucide:zap" class="mr-2" />
+                        <h3 class="font-bold">{{ $t('status.overview.cache') }}</h3>
+                      </div>
+                    </template>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <!-- Cache stats -->
+                      <div class="space-y-2 text-sm">
+                        <div class="overflow-y-auto">
+                          <div v-for="cacheName in Object.keys(statusData.cacheSizes || {}).splice(0, 6)" :key="cacheName" class="flex justify-between py-1">
+                            <span class="truncate" :title="cacheName">{{ cacheName }}:</span>
+                            <span class="font-mono">
+                              {{ formatNumber(statusData.cacheSizes[cacheName]) }} /
+                              <!-- cacheName below should have Cache stripped from the end of the string -->
+                              {{ formatNumber(statusData.cacheHits[cacheName.endsWith('Cache') ? cacheName.slice(0, -5) : cacheName] || 0) }}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+
+                      <!-- Additional cache stats or chart could go here -->
+                      <div class="space-y-2 text-sm">
+                        <div class="overflow-y-auto">
+                          <div v-for="cacheName in Object.keys(statusData.cacheSizes || {}).splice(6)" :key="cacheName" class="flex justify-between py-1">
+                            <span class="truncate" :title="cacheName">{{ cacheName }}:</span>
+                            <span class="font-mono">
+                              {{ formatNumber(statusData.cacheSizes[cacheName]) }} /
+                              <!-- cacheName below should have Cache stripped from the end of the string -->
+                              {{ formatNumber(statusData.cacheHits[cacheName.endsWith('Cache') ? cacheName.slice(0, -5) : cacheName] || 0) }}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </UCard>
+                </div>
               </div>
             </template>
 
