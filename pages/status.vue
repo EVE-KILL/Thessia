@@ -73,7 +73,21 @@ const refresh = async () => {
     if (import.meta.client) {
       scrollPosition.value = window.scrollY
     }
+
+    // Store current values before refresh to calculate difference later
+    if (statusData.value) {
+      prevProcessedCount.value = summaryStats.value?.totalProcessed || 0;
+      prevQueuedCount.value = summaryStats.value?.totalQueued || 0;
+    }
+
     await refreshData()
+
+    // Calculate differences after new data is loaded
+    if (statusData.value) {
+      processedDiff.value = (summaryStats.value?.totalProcessed || 0) - prevProcessedCount.value;
+      queuedDiff.value = (summaryStats.value?.totalQueued || 0) - prevQueuedCount.value;
+    }
+
     if (import.meta.client) {
       nextTick(() => {
         window.scrollTo({
@@ -314,6 +328,12 @@ const parseKeyspaceInfo = (info: string) => {
 const hasKeyspaceInfo = computed(() => {
   return statusData.value?.redis?.keyspace && Object.keys(statusData.value.redis.keyspace).length > 0;
 });
+
+// Add refs to track previous values for change display
+const prevProcessedCount = ref(0);
+const prevQueuedCount = ref(0);
+const processedDiff = ref(0);
+const queuedDiff = ref(0);
 </script>
 
 <template>
@@ -357,11 +377,25 @@ const hasKeyspaceInfo = computed(() => {
             </div>
             <div class="bg-emerald-50 dark:bg-emerald-900/30 rounded-lg shadow p-3">
               <div class="text-xs uppercase text-emerald-700 dark:text-emerald-300">{{ $t('status.summary.processedLast5m') }}</div>
-              <div class="text-xl font-mono">{{ formatNumber(summaryStats?.totalProcessed) }}</div>
+              <div class="text-xl font-mono">
+                {{ formatNumber(summaryStats?.totalProcessed) }}
+                <span v-if="processedDiff !== 0"
+                      :class="processedDiff > 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'"
+                      class="text-sm ml-1">
+                  ({{ processedDiff > 0 ? '+' : '' }}{{ formatNumber(processedDiff) }})
+                </span>
+              </div>
             </div>
             <div class="bg-amber-50 dark:bg-amber-900/30 rounded-lg shadow p-3">
               <div class="text-xs uppercase text-amber-700 dark:text-amber-300">{{ $t('status.summary.queuedItems') }}</div>
-              <div class="text-xl font-mono">{{ formatNumber(summaryStats?.totalQueued) }}</div>
+              <div class="text-xl font-mono">
+                {{ formatNumber(summaryStats?.totalQueued) }}
+                <span v-if="queuedDiff !== 0"
+                      :class="queuedDiff > 0 ? 'text-amber-600 dark:text-amber-400' : 'text-green-600 dark:text-green-400'"
+                      class="text-sm ml-1">
+                  ({{ queuedDiff > 0 ? '+' : '' }}{{ formatNumber(queuedDiff) }})
+                </span>
+              </div>
             </div>
           </div>
 
