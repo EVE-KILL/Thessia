@@ -148,35 +148,35 @@
       >
         <!-- Fitting Wheel Tab -->
         <template #fitting="{ item }">
-          <div class="p-4 flex justify-center">
+          <div class="flex justify-center">
             <KillFittingWheel v-if="killmail" :key="killmail.killmail_id" :killmail="killmail" />
           </div>
         </template>
 
         <!-- Items Tab -->
         <template #items="{ item }">
-          <div class="p-4">
+          <div class="">
             <KillItems v-if="killmail" :killmail="killmail" />
           </div>
         </template>
 
         <!-- Info Tab -->
         <template #info="{ item }">
-          <div class="p-4">
+          <div class="">
             <KillInformationBox v-if="killmail" :killmail="killmail" />
           </div>
         </template>
 
         <!-- Attackers Tab -->
         <template #attackers="{ item }">
-          <div class="p-4">
+          <div class="">
             <KillAttackers v-if="killmail" :attackers="killmail.attackers" />
           </div>
         </template>
 
         <!-- Comments Tab -->
         <template #comments="{ item }">
-          <div class="p-4">
+          <div class="">
             <KillComments :identifier="`kill:${killmail.killmail_id}`" @count="updateCommentCount" />
           </div>
         </template>
