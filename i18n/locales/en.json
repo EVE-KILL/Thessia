@@ -265,7 +265,8 @@
         "selectLanguage": "Select language",
         "page": "Page",
         "previous": "Previous",
-        "next": "Next"
+        "next": "Next",
+        "backToHome": "Back to Home"
     },
     "settings": {
         "description": "Manage your account settings and permissions",
@@ -383,10 +384,25 @@
         "itemsPerPage": "Items per page",
         "wsConnected": "WebSocket Connected",
         "wsDisconnected": "WebSocket Disconnected",
-        "showing": "Showing"
+        "showing": "Showing",
+        "noKillmails": "No killmails found",
+        "wsPaused": "Paused",
+        "wsPausedManually": "Manually Paused",
+        "wsReconnecting": "Reconnecting {attempt}/{max}",
+        "retrying": "Retry {attempt}",
+        "wsError": "Error"
     },
     "topBox": {
-        "killsOver": "Last {days} days"
+        "killsOver": "Last {days} days",
+        "top": "Top",
+        "characters": "Characters",
+        "corporations": "Corporations",
+        "alliances": "Alliances",
+        "ships": "Ships",
+        "systems": "Systems",
+        "constellations": "Constellations",
+        "regions": "Regions",
+        "noData": "No data available"
     },
     "tabs": {
         "topLists": "Top Lists",
@@ -407,5 +423,10 @@
         "structures": "Structures",
         "ships": "Ships",
         "noData": "No valuable items found"
+    },
+    "error": {
+        "serverError": "Server Error",
+        "notFound": "Page Not Found",
+        "generic": "An error occurred"
     }
 }

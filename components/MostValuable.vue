@@ -69,10 +69,6 @@ const formatIsk = (value: number): string => {
   return value.toString();
 };
 
-const getImageUrl = (shipId: number): string => {
-  return `https://images.evetech.net/types/${shipId}/render?size=256`;
-};
-
 const getShipName = (item: IMostValuableItem): string => {
   return getLocalizedString(item.victim.ship_name, currentLocale.value);
 };
@@ -107,6 +103,21 @@ const tabsUi = computed(() => {
     }
   };
 });
+
+// Generate skeleton items for loading state
+const generateSkeletonItems = (count: number) => {
+  return Array(count).fill(0).map((_, index) => ({
+    id: `skeleton-${index}`,
+    isLoading: true,
+  }));
+};
+
+const skeletonItems = computed(() => generateSkeletonItems(props.limit));
+
+// Prioritize images in the viewport
+const isPriorityImage = (index: number): boolean => {
+  return index < 3; // First 3 images are prioritized for immediate loading
+};
 </script>
 
 <template>
@@ -119,10 +130,36 @@ const tabsUi = computed(() => {
       default-selected="1"
     />
 
-    <!-- Loading state -->
-    <div v-if="pending" class="flex justify-center items-center py-12">
-      <UIcon name="i-lucide-refresh-cw" class="animate-spin text-2xl text-gray-400 dark:text-background-400" />
-      <span class="ml-2 text-gray-400 dark:text-background-400">{{ t('common.loading') }}</span>
+    <!-- Loading state with skeletons -->
+    <div v-if="pending">
+      <!-- Desktop skeleton grid -->
+      <div v-if="!isMobile" class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-3 p-4">
+        <div
+          v-for="(_, index) in skeletonItems"
+          :key="`skeleton-${index}`"
+          class="flex flex-col items-center p-2 rounded"
+        >
+          <USkeleton class="rounded w-24 h-24 md:w-32 md:h-32 mb-2" />
+          <USkeleton class="h-4 w-20 mt-1" />
+          <USkeleton class="h-3 w-16 mt-1" />
+        </div>
+      </div>
+
+      <!-- Mobile skeleton list -->
+      <div v-else class="flex flex-col divide-y divide-gray-200 dark:divide-background-700">
+        <div
+          v-for="(_, index) in skeletonItems"
+          :key="`skeleton-mobile-${index}`"
+          class="flex items-center p-3"
+        >
+          <USkeleton class="rounded w-14 h-14 mr-3" />
+          <div class="flex flex-col flex-grow">
+            <USkeleton class="h-4 w-32 mb-1" />
+            <USkeleton class="h-3 w-24" />
+          </div>
+          <UIcon name="i-lucide-chevron-right" class="text-gray-400 dark:text-background-400" />
+        </div>
+      </div>
     </div>
 
     <!-- Error state -->
@@ -140,17 +177,20 @@ const tabsUi = computed(() => {
       <!-- Desktop Grid Layout -->
       <div v-if="!isMobile" class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-3 p-4">
         <div
-          v-for="item in items"
+          v-for="(item, index) in items"
           :key="item.killmail_id"
           class="flex flex-col items-center p-2 rounded transition-colors duration-300 cursor-pointer hover:bg-gray-200 dark:hover:bg-gray-900"
           @click="handleItemClick(item.killmail_id)"
         >
-          <NuxtImg
-            :src="getImageUrl(item.victim.ship_id)"
-            loading="lazy"
-            format="webp"
+          <EveImage
+            type="type-render"
+            :id="item.victim.ship_id"
             :alt="`Ship: ${getShipName(item)}`"
             class="rounded w-24 h-24 md:w-32 md:h-32 object-contain mb-2"
+            size="256"
+            format="webp"
+            :loading="index < 7 ? 'eager' : 'lazy'"
+            :priority="isPriorityImage(index)"
           />
           <div class="text-center text-sm mt-1 max-w-full truncate text-gray-900 dark:text-white">
             {{ getShipName(item) }}
@@ -164,17 +204,20 @@ const tabsUi = computed(() => {
       <!-- Mobile Vertical Layout -->
       <div v-else class="flex flex-col divide-y divide-gray-200 dark:divide-background-700">
         <div
-          v-for="item in items"
+          v-for="(item, index) in items"
           :key="item.killmail_id"
           class="flex items-center p-3 cursor-pointer hover:bg-gray-100 dark:hover:bg-background-800 transition-colors duration-300"
           @click="handleItemClick(item.killmail_id)"
         >
-          <NuxtImg
-            :src="getImageUrl(item.victim.ship_id)"
-            loading="lazy"
-            format="webp"
+          <EveImage
+            type="type-render"
+            :id="item.victim.ship_id"
             :alt="`Ship: ${getShipName(item)}`"
             class="rounded w-14 h-14 object-contain mr-3"
+            size="64"
+            format="webp"
+            :loading="index < 4 ? 'eager' : 'lazy'"
+            :priority="index < 2"
           />
           <div class="flex flex-col flex-grow">
             <div class="text-sm truncate text-gray-900 dark:text-white">

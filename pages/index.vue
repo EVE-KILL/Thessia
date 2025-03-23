@@ -8,7 +8,7 @@
 
             <div class="main-content">
                 <div class="left-column">
-                    <div class="mt-25"></div>
+                    <div class="mt-[48.39px]"></div>
                     <TopBox
                         type="character"
                         :limit="10"

@@ -98,13 +98,183 @@ watch(selectedPageSize, async (newSize) => {
 let socket: WebSocket | null = null;
 const isConnected = ref(false);
 const wsNewKillCount = ref(0);
+const pendingMessages = ref<IKillmail[]>([]);
+const wsConnectionAttempts = ref(0);
+const MAX_RECONNECT_ATTEMPTS = 5;
+let reconnectTimer: NodeJS.Timeout | null = null;
+const wsErrorMessage = ref<string | null>(null);
 
 // WebSocket pausing functionality
 const isWebSocketPaused = ref(false);
 const mouseMoveTimer = ref<NodeJS.Timeout | null>(null);
-const pendingMessages = ref<IKillmail[]>([]);
 const router = useRouter();
 const manuallyPaused = ref(false);
+
+// Establish WebSocket connection with simplified error handling
+const connectWebSocket = () => {
+  // Don't connect if WebSocket is disabled or we're using external data
+  if (props.wsDisabled || useExternalData.value || !process.client) {
+    return;
+  }
+
+  try {
+    // Close any existing connection
+    if (socket) {
+      socket.close();
+      socket = null;
+    }
+
+    wsErrorMessage.value = null;
+    console.debug('Opening WebSocket connection...');
+
+    // Wrap WebSocket creation in try-catch
+    try {
+      socket = new WebSocket('wss://eve-kill.com/killmails');
+    } catch (wsErr) {
+      console.error('Failed to create WebSocket:', wsErr);
+      wsErrorMessage.value = 'Failed to create WebSocket connection';
+      isConnected.value = false;
+      return;
+    }
+
+    socket.onopen = () => {
+      console.debug('WebSocket connection established');
+      isConnected.value = true;
+      wsNewKillCount.value = 0;
+      wsConnectionAttempts.value = 0;
+      wsErrorMessage.value = null;
+
+      // Send filter after connection is established
+      try {
+        const filterToUse = props.wsFilter === 'latest' ? 'all' : props.wsFilter;
+        socket?.send(filterToUse);
+      } catch (sendErr) {
+        console.error('Error sending filter:', sendErr);
+      }
+    };
+
+    socket.onmessage = (event) => {
+      try {
+        const data = JSON.parse(event.data);
+        if (data.type !== 'killmail') return;
+
+        const killmail: IKillmail = data.data;
+
+        // Process or queue killmail only if it's newer than current newest
+        if (!isNewerThanLatestKill(killmail)) {
+          return;
+        }
+
+        // Either queue or process the killmail
+        if (isWebSocketPaused.value) {
+          pendingMessages.value.push(killmail);
+        } else {
+          processKillmail(killmail);
+        }
+      } catch (err) {
+        console.error('Error processing WebSocket message:', err);
+        // Don't set error state for message processing failures
+      }
+    };
+
+    socket.onerror = (error) => {
+      console.error('WebSocket error:', error);
+      isConnected.value = false;
+      wsErrorMessage.value = 'Connection error';
+      // Don't attempt to reconnect here - let onclose handle it
+    };
+
+    socket.onclose = (event) => {
+      isConnected.value = false;
+      console.debug(`WebSocket closed with code: ${event.code}`);
+
+      // Only attempt reconnect if it wasn't a clean close and we haven't reached max attempts
+      if (!event.wasClean && !props.wsDisabled && wsConnectionAttempts.value < MAX_RECONNECT_ATTEMPTS) {
+        scheduleReconnect();
+      }
+    };
+  } catch (err) {
+    console.error('Error establishing WebSocket connection:', err);
+    isConnected.value = false;
+    wsErrorMessage.value = 'Failed to establish connection';
+  }
+};
+
+// Simplified reconnect scheduler with exponential backoff
+const scheduleReconnect = () => {
+  if (reconnectTimer) {
+    clearTimeout(reconnectTimer);
+  }
+
+  wsConnectionAttempts.value++;
+  // Exponential backoff: 1s, 2s, 4s, 8s, 16s (capped at 30s)
+  const backoffTime = Math.min(1000 * Math.pow(2, wsConnectionAttempts.value - 1), 30000);
+
+  console.debug(`Scheduling WebSocket reconnection attempt ${wsConnectionAttempts.value} in ${backoffTime/1000}s`);
+
+  reconnectTimer = setTimeout(() => {
+    console.debug(`Attempting WebSocket reconnection (${wsConnectionAttempts.value}/${MAX_RECONNECT_ATTEMPTS})`);
+    connectWebSocket();
+  }, backoffTime);
+};
+
+// Close WebSocket connection
+const closeWebSocket = () => {
+  // Cancel any pending reconnect
+  if (reconnectTimer) {
+    clearTimeout(reconnectTimer);
+    reconnectTimer = null;
+  }
+
+  // Close socket if it exists
+  if (socket) {
+    // Only attempt to close if the socket is open or connecting
+    if (socket.readyState === WebSocket.OPEN || socket.readyState === WebSocket.CONNECTING) {
+      socket.close();
+    }
+    socket = null;
+    isConnected.value = false;
+  }
+};
+
+// Pause WebSocket processing with reason
+const pauseWebSocket = (reason = 'hover') => {
+  isWebSocketPaused.value = true;
+
+  if (reason === 'manual') {
+    manuallyPaused.value = true;
+  }
+
+  if (reason !== 'hover') {
+    console.debug(`WebSocket paused (${reason})`);
+  }
+};
+
+// Resume WebSocket processing
+const resumeWebSocket = () => {
+  // Don't resume if we're not on page 1 (pageIndex 0) or manually paused
+  if (pagination.value.pageIndex > 0 || manuallyPaused.value) {
+    return;
+  }
+
+  isWebSocketPaused.value = false;
+
+  // Process any pending messages
+  if (pendingMessages.value.length > 0 && !useExternalData.value) {
+    console.debug(`Processing ${pendingMessages.value.length} pending messages`);
+
+    // Sort by kill time to maintain chronological order
+    pendingMessages.value.sort((a, b) =>
+      new Date(b.kill_time).getTime() - new Date(a.kill_time).getTime()
+    );
+
+    pendingMessages.value.forEach(killmail => {
+      processKillmail(killmail);
+    });
+
+    pendingMessages.value = [];
+  }
+};
 
 // Watch page changes to control WebSocket pausing
 watch(() => pagination.value.pageIndex, (newPageIndex) => {
@@ -116,43 +286,6 @@ watch(() => pagination.value.pageIndex, (newPageIndex) => {
     resumeWebSocket();
   }
 });
-
-// Pause WebSocket processing with reason
-const pauseWebSocket = (reason = 'hover') => {
-  isWebSocketPaused.value = true;
-  if (reason === 'manual') {
-    manuallyPaused.value = true;
-  }
-  console.debug(`WebSocket processing paused (${reason})`);
-};
-
-// Resume WebSocket processing
-const resumeWebSocket = () => {
-  // Don't resume if we're not on page 1
-  if (pagination.value.pageIndex > 0) {
-    console.debug('Cannot resume WebSocket on pages > 1');
-    return;
-  }
-
-  isWebSocketPaused.value = false;
-  console.debug('WebSocket processing resumed, processing pending messages:', pendingMessages.value.length);
-
-  // Process any pending messages
-  if (pendingMessages.value.length > 0 && !useExternalData.value) {
-    // Sort by kill time to maintain chronological order
-    pendingMessages.value.sort((a, b) =>
-      new Date(b.kill_time).getTime() - new Date(a.kill_time).getTime()
-    );
-
-    // Process each pending message
-    pendingMessages.value.forEach(killmail => {
-      processKillmail(killmail);
-    });
-
-    // Clear pending messages
-    pendingMessages.value = [];
-  }
-};
 
 // Toggle WebSocket mode (manually pause/resume)
 const toggleWebSocketMode = () => {
@@ -198,16 +331,11 @@ const handleMouseMove = () => {
 const processKillmail = (killmail: IKillmail) => {
   const formattedKill = formatKillmail(killmail);
 
-  // Check if we have any data and if the new killmail is newer than our current newest
-  // This is redundant with the isNewerThanLatestKill check but keeping as a safety measure
+  // If no data or empty killlist
   if (!killlistData.value || killlistData.value.length === 0) {
-    // If we have no data, just add it
     if (useExternalData.value) {
-      // Can't modify external data, just log
-      console.debug('Cannot add new killmail to external data source');
       return;
     } else if (fetchedData.value) {
-      // Update the fetched data
       fetchedData.value = [formattedKill, ...(fetchedData.value || [])];
       wsNewKillCount.value++;
       ensureKillListLimit();
@@ -221,17 +349,12 @@ const processKillmail = (killmail: IKillmail) => {
 
   if (newKillTime > latestKillTime) {
     if (useExternalData.value) {
-      // Can't modify external data, just log
-      console.debug('Cannot add new killmail to external data source');
       return;
     } else if (fetchedData.value) {
-      // Update the fetched data
       fetchedData.value = [formattedKill, ...(fetchedData.value || [])];
       wsNewKillCount.value++;
       ensureKillListLimit();
     }
-  } else {
-    console.debug('Ignoring killmail as it\'s older than or equal to current newest');
   }
 };
 
@@ -295,106 +418,37 @@ const isNewerThanLatestKill = (killmail: IKillmail): boolean => {
   return killmailTime > latestKillTime;
 };
 
-// Establish WebSocket connection
-const connectWebSocket = () => {
-  // Don't connect if WebSocket is disabled or we're using external data
-  if (props.wsDisabled || useExternalData.value) {
-    console.debug('WebSocket disabled by props.wsDisabled or using external data');
-    return;
-  }
-
-  try {
-    if (socket) {
-      socket.close();
-    }
-
-    socket = new WebSocket('wss://eve-kill.com/killmails');
-
-    socket.addEventListener('open', () => {
-      isConnected.value = true;
-      wsNewKillCount.value = 0;
-
-      const filterToUse = props.wsFilter === 'latest' ? 'all' : props.wsFilter;
-      socket.send(filterToUse);
-    });
-
-    socket.addEventListener('message', (event) => {
-      try {
-        const data = JSON.parse(event.data);
-        if (data.type !== 'killmail') return;
-
-        const killmail: IKillmail = data.data;
-
-        // Always check if this killmail is newer before processing or queuing
-        if (!isNewerThanLatestKill(killmail)) {
-          console.debug('Ignoring killmail as it\'s older than current newest');
-          return;
-        }
-
-        // If WebSocket is paused, add to pending messages
-        if (isWebSocketPaused.value) {
-          pendingMessages.value.push(killmail);
-          return;
-        }
-
-        processKillmail(killmail);
-      } catch (err) {
-        console.error('Error processing WebSocket message:', err);
-      }
-    });
-
-    socket.addEventListener('error', (error) => {
-      console.error('WebSocket error:', error);
-      isConnected.value = false;
-    });
-
-    socket.addEventListener('close', () => {
-      isConnected.value = false;
-    });
-  } catch (err) {
-    console.error('Error establishing WebSocket connection:', err);
-    isConnected.value = false;
-  }
-};
-
-// Close WebSocket connection
-const closeWebSocket = () => {
-  if (socket) {
-    socket.close();
-    socket = null;
-    isConnected.value = false;
-  }
-};
-
 // Reset new kill counter
 const resetNewKillCount = () => {
   wsNewKillCount.value = 0;
 };
 
-// Ensure kill list size when page size changes
-watch(selectedPageSize, () => {
-  ensureKillListLimit();
-});
-
 // WebSocket lifecycle management
 onMounted(() => {
   if (process.client && !props.wsDisabled && !useExternalData.value) {
-    connectWebSocket();
+    try {
+      // Connect with a slight delay to ensure component is fully mounted
+      setTimeout(() => {
+        connectWebSocket();
+      }, 100);
 
-    // Add router navigation guards to pause WebSocket on page changes
-    router.beforeEach((to, from) => {
-      if (to.path !== from.path) {
-        pauseWebSocket('navigation');
-      }
-      return true;
-    });
+      // Add router navigation guards to pause WebSocket on page changes
+      router.beforeEach((to, from) => {
+        if (to.path !== from.path) {
+          pauseWebSocket('navigation');
+        }
+        return true;
+      });
+    } catch (err) {
+      console.error('Error setting up WebSocket in onMounted:', err);
+    }
   }
 });
 
 onBeforeUnmount(() => {
+  // Clean up all resources
   closeWebSocket();
 
-  // Clear any timers
   if (mouseMoveTimer.value) {
     clearTimeout(mouseMoveTimer.value);
     mouseMoveTimer.value = null;
@@ -457,6 +511,7 @@ const getSecurityColor = (security: number): string => {
 
 // Navigation handler
 const handleKillClick = (row: any) => {
+  if (row.original.isLoading) return;
   navigateTo(`/kill/${row.original.killmail_id}`);
 };
 
@@ -468,9 +523,76 @@ const columns = computed<TableColumn<IKillList>[]>(() => {
   return isMobile.value ? columnsMobile : columnsDesktop;
 });
 
-// Add a watcher to debug when isMobile changes
+// Watch isMobile for responsive changes
 watch(isMobile, (newValue) => {
-  console.debug('isMobile changed to:', newValue);
+  // Removed debug log
+});
+
+// Create skeleton rows for loading state
+const generateSkeletonRows = (count: number) => {
+  return Array(count).fill(0).map((_, index) => ({
+    id: `skeleton-${index}`,
+    isLoading: true,
+    killmail_id: 0,
+    // Add minimal structure needed for rendering
+    victim: {},
+    finalblow: {}
+  }));
+};
+
+const skeletonRows = computed(() => generateSkeletonRows(selectedPageSize.value));
+
+// Update the pagination structure to work with UPagination
+const currentPageIndex = ref(1); // Start at 1 for UPagination display
+
+// Calculate dynamic total based on current page
+const dynamicTotal = computed(() => {
+  return 100 + currentPageIndex.value * 10;
+});
+
+// Helper function to convert between 1-based and 0-based indexing
+const pageToPageIndex = (page: number): number => page - 1;
+const pageIndexToPage = (pageIndex: number): number => pageIndex + 1;
+
+// Watch currentPageIndex changes to update pagination.pageIndex
+watch(currentPageIndex, (newPage) => {
+  // Convert 1-based page to 0-based pageIndex
+  const newPageIndex = pageToPageIndex(newPage);
+  pagination.value.pageIndex = newPageIndex;
+
+  // Handle WebSocket state based on page
+  if (newPageIndex > 0) {
+    pauseWebSocket('pagination');
+  } else if (!manuallyPaused.value) {
+    resumeWebSocket();
+  }
+});
+
+// Watch pagination.pageIndex changes to keep currentPageIndex in sync
+watch(() => pagination.value.pageIndex, (newPageIndex) => {
+  // Convert 0-based pageIndex to 1-based page
+  const newPage = pageIndexToPage(newPageIndex);
+  if (currentPageIndex.value !== newPage) {
+    currentPageIndex.value = newPage;
+  }
+});
+
+// Reset WebSocket state when returning to page 1
+const resetWebSocketState = () => {
+  // Only reset on page 1
+  if (currentPageIndex.value === 1) {
+    manuallyPaused.value = false;
+    resumeWebSocket();
+  }
+};
+
+// Initialize pagination correctly on mount
+onMounted(() => {
+  // Initialize pagination indices correctly
+  pagination.value.pageIndex = 0; // Internal index starts at 0
+  currentPageIndex.value = 1;  // UI page starts at 1
+
+  // ...existing WebSocket connection code...
 });
 
 // Desktop Column definitions
@@ -481,15 +603,28 @@ const columnsDesktop: TableColumn<IKillList>[] = [
     id: 'ship',
     meta: { width: '20%' },
     cell: ({ row }) => {
+      if (row.original.isLoading) {
+        return h('div', { class: 'flex items-center py-1' }, [
+          h(resolveComponent('USkeleton'), {
+            class: 'rounded w-10 h-10 mx-2'
+          }),
+          h('div', { class: 'flex flex-col items-start' }, [
+            h(resolveComponent('USkeleton'), { class: 'h-4 w-32 mb-1' }),
+            h(resolveComponent('USkeleton'), { class: 'h-3 w-16' })
+          ])
+        ]);
+      }
+
       return h('div', {
         class: { 'flex items-center py-1': true, 'bg-darkred': isCombinedLoss(row.original) }
       }, [
-        h(resolveComponent('NuxtImg'), {
-          src: `https://images.evetech.net/types/${row.original.victim.ship_id}/render?size=64`,
-          loading: 'lazy',
+        h(resolveComponent('EveImage'), {
+          type: 'type-render',
+          id: row.original.victim.ship_id,
           format: 'webp',
           alt: `Ship: ${getLocalizedString(row.original.victim.ship_name, currentLocale.value)}`,
-          class: 'rounded w-10 mx-2'
+          class: 'rounded w-10 mx-2',
+          size: 64
         }),
         h('div', { class: 'flex flex-col items-start' }, [
           h('span', { class: 'text-black dark:text-white text-sm' },
@@ -507,13 +642,26 @@ const columnsDesktop: TableColumn<IKillList>[] = [
     id: 'victim',
     meta: { width: '25%' },
     cell: ({ row }) => {
+      if (row.original.isLoading) {
+        return h('div', { class: 'flex items-center py-1' }, [
+          h(resolveComponent('USkeleton'), {
+            class: 'rounded w-10 h-10 mx-2'
+          }),
+          h('div', { class: 'flex flex-col items-start' }, [
+            h(resolveComponent('USkeleton'), { class: 'h-4 w-36 mb-1' }),
+            h(resolveComponent('USkeleton'), { class: 'h-3 w-24' })
+          ])
+        ]);
+      }
+
       return h('div', { class: 'flex items-center py-1' }, [
-        h(resolveComponent('NuxtImg'), {
-          src: `https://images.evetech.net/characters/${row.original.victim.character_id}/portrait?size=64`,
-          loading: 'lazy',
+        h(resolveComponent('EveImage'), {
+          type: 'character',
+          id: row.original.victim.character_id,
           format: 'webp',
           alt: `Character: ${row.original.victim.character_name}`,
-          class: 'rounded w-10 mx-2'
+          class: 'rounded w-10 mx-2',
+          size: 64
         }),
         h('div', { class: 'flex flex-col items-start' }, [
           h('span', { class: 'text-black dark:text-white text-sm' }, row.original.victim.character_name),
@@ -529,19 +677,45 @@ const columnsDesktop: TableColumn<IKillList>[] = [
     id: 'finalBlow',
     meta: { width: '25%' },
     cell: ({ row }) => {
+      if (row.original.isLoading) {
+        return h('div', { class: 'flex items-center py-1' }, [
+          h(resolveComponent('USkeleton'), {
+            class: 'rounded w-10 h-10 mx-2'
+          }),
+          h('div', { class: 'flex flex-col items-start' }, [
+            h(resolveComponent('USkeleton'), { class: 'h-4 w-32 mb-1' }),
+            h(resolveComponent('USkeleton'), { class: 'h-3 w-24' })
+          ])
+        ]);
+      }
+
+      // For NPC attackers, use a fallback image
+      if (row.original.is_npc) {
+        return h('div', { class: 'flex items-center py-1 whitespace-nowrap' }, [
+          h('img', {
+            src: 'https://images.evetech.net/characters/0/portrait?size=128',
+            alt: 'NPC',
+            class: 'rounded w-10 mx-2'
+          }),
+          h('div', { class: 'flex flex-col items-start' }, [
+            h('span', { class: 'text-black dark:text-white text-sm' }, row.original.finalblow.faction_name),
+            h('span', { class: 'text-gray-600 dark:text-gray-400 text-xs' },
+              truncateString(getLocalizedString(row.original.finalblow.ship_group_name, currentLocale.value), 22))
+          ])
+        ]);
+      }
+
       return h('div', { class: 'flex items-center py-1 whitespace-nowrap' }, [
-        h(resolveComponent('NuxtImg'), {
-          src: !row.original.is_npc
-            ? `https://images.evetech.net/characters/${row.original.finalblow.character_id}/portrait?size=64`
-            : 'https://images.evetech.net/characters/0/portrait?size=128',
-          loading: 'lazy',
+        h(resolveComponent('EveImage'), {
+          type: 'character',
+          id: row.original.finalblow.character_id,
           format: 'webp',
-          alt: !row.original.is_npc ? `Character: ${row.original.finalblow.character_name}` : 'Unknown',
-          class: 'rounded w-10 mx-2'
+          alt: `Character: ${row.original.finalblow.character_name}`,
+          class: 'rounded w-10 mx-2',
+          size: 64
         }),
         h('div', { class: 'flex flex-col items-start' }, [
-          h('span', { class: 'text-black dark:text-white text-sm' },
-            row.original.is_npc ? row.original.finalblow.faction_name : row.original.finalblow.character_name),
+          h('span', { class: 'text-black dark:text-white text-sm' }, row.original.finalblow.character_name),
           h('span', { class: 'text-gray-600 dark:text-gray-400 text-xs' },
             truncateString(getLocalizedString(row.original.finalblow.ship_group_name, currentLocale.value), 22))
         ])
@@ -554,6 +728,13 @@ const columnsDesktop: TableColumn<IKillList>[] = [
     id: 'location',
     meta: { width: '15%' },
     cell: ({ row }) => {
+      if (row.original.isLoading) {
+        return h('div', { class: 'flex flex-col items-start py-1 px-2' }, [
+          h(resolveComponent('USkeleton'), { class: 'h-4 w-28 mb-1' }),
+          h(resolveComponent('USkeleton'), { class: 'h-3 w-20' })
+        ]);
+      }
+
       return h('div', { class: 'flex flex-col items-start py-1 text-sm px-2' }, [
         h('span', { class: 'text-black dark:text-white text-sm whitespace-nowrap' },
           getLocalizedString(row.original.region_name, currentLocale.value)),
@@ -572,6 +753,15 @@ const columnsDesktop: TableColumn<IKillList>[] = [
     id: 'details',
     meta: { width: '15%' },
     cell: ({ row }) => {
+      if (row.original.isLoading) {
+        return h('div', { class: 'flex flex-col items-end py-1 px-2' }, [
+          h(resolveComponent('USkeleton'), { class: 'h-4 w-20 mb-1' }),
+          h('div', { class: 'flex gap-1 items-center' }, [
+            h(resolveComponent('USkeleton'), { class: 'h-3 w-16' })
+          ])
+        ]);
+      }
+
       return h('div', { class: 'flex flex-col items-end py-1 text-sm whitespace-nowrap px-2' }, [
         h(resolveComponent('ClientOnly'), {}, {
           default: () => h('div', { class: 'text-black dark:text-white' }, formatDate(row.original.kill_time)),
@@ -599,6 +789,37 @@ const columnsMobile: TableColumn<IKillList>[] = [
     id: 'mobile-view',
     meta: { width: '100%' },
     cell: ({ row }) => {
+      if (row.original.isLoading) {
+        return h('div', { class: 'flex items-center py-3 w-full' }, [
+          // Ship Image Skeleton
+          h(resolveComponent('USkeleton'), { class: 'rounded w-16 h-16 mr-2' }),
+
+          // Content Skeleton
+          h('div', { class: 'flex flex-col justify-center mr-3 min-w-0 flex-grow' }, [
+            // Top Line
+            h('div', { class: 'flex justify-between items-center mb-1' }, [
+              h(resolveComponent('USkeleton'), { class: 'h-4 w-32 mr-2' }),
+              h(resolveComponent('USkeleton'), { class: 'h-4 w-16' })
+            ]),
+
+            // Middle Line
+            h(resolveComponent('USkeleton'), { class: 'h-3 w-40 mb-1' }),
+
+            // Bottom Line
+            h('div', { class: 'flex justify-between items-center mb-1' }, [
+              h(resolveComponent('USkeleton'), { class: 'h-3 w-20 mr-2' }),
+              h(resolveComponent('USkeleton'), { class: 'h-3 w-24' })
+            ]),
+
+            // Last Line
+            h('div', { class: 'flex justify-between items-center' }, [
+              h(resolveComponent('USkeleton'), { class: 'h-3 w-20' }),
+              h(resolveComponent('USkeleton'), { class: 'h-3 w-10' })
+            ])
+          ])
+        ]);
+      }
+
       return h('div', {
         class: {
           'flex items-center py-3 w-full': true,
@@ -606,12 +827,13 @@ const columnsMobile: TableColumn<IKillList>[] = [
         }
       }, [
         // Ship Image
-        h(resolveComponent('NuxtImg'), {
-          src: `https://images.evetech.net/types/${row.original.victim.ship_id}/render?size=64`,
-          loading: 'lazy',
+        h(resolveComponent('EveImage'), {
+          type: 'type-render',
+          id: row.original.victim.ship_id,
           format: 'webp',
           alt: `Ship: ${getLocalizedString(row.original.victim.ship_name, currentLocale.value)}`,
-          class: 'rounded w-16 h-16 mr-2'
+          class: 'rounded w-16 h-16 mr-2',
+          size: 128
         }),
 
         // Victim Info
@@ -677,40 +899,35 @@ watch(locale, () => {
   });
 });
 
-// Update the pagination structure to work with UPagination
-const currentPageIndex = ref(1);
-
-// Calculate dynamic total based on current page
-const dynamicTotal = computed(() => {
-  return 100 + currentPageIndex.value * 10;
-});
-
-// Watch currentPageIndex changes to update pagination.pageIndex
-watch(currentPageIndex, (newPageIndex) => {
-  pagination.value.pageIndex = newPageIndex;
-
-  // Ensure page change reactivity triggers appropriate actions
-  if (newPageIndex > 0) {
-    pauseWebSocket('pagination');
-  } else if (!manuallyPaused.value) {
-    resumeWebSocket();
+// Add a computed property to provide connection status message
+const wsStatusMessage = computed(() => {
+  if (wsErrorMessage.value) {
+    return `${t('killList.wsError')}: ${wsErrorMessage.value}`;
   }
-});
 
-// Watch pagination.pageIndex changes to keep currentPageIndex in sync
-watch(() => pagination.value.pageIndex, (newPageIndex) => {
-  if (currentPageIndex.value !== newPageIndex) {
-    currentPageIndex.value = newPageIndex;
+  if (!isConnected.value) {
+    if (wsConnectionAttempts.value > 0) {
+      return t('killList.wsReconnecting', { attempt: wsConnectionAttempts.value, max: MAX_RECONNECT_ATTEMPTS });
+    }
+    return t('killList.wsDisconnected');
   }
+
+  if (isWebSocketPaused.value) {
+    return manuallyPaused.value
+      ? t('killList.wsPausedManually')
+      : t('killList.wsPaused');
+  }
+
+  return t('killList.wsConnected');
 });
 </script>
 
 <template>
   <div class="w-full">
-    <!-- Top navigation bar with limit selector, WebSocket status, and pagination -->
-    <div class="flex justify-between items-center mb-3">
+    <!-- Top navigation bar with responsive layout -->
+    <div class="flex flex-col sm:flex-row justify-between items-center mb-3">
       <!-- Left side: Limit selector and WebSocket status -->
-      <div class="flex items-center">
+      <div class="flex items-center w-full sm:w-auto mb-3 sm:mb-0">
         <!-- Limit selector -->
         <USelect
           v-model="selectedPageSize"
@@ -720,19 +937,15 @@ watch(() => pagination.value.pageIndex, (newPageIndex) => {
           class="w-24"
         />
 
-        <!-- WebSocket status indicator -->
+        <!-- WebSocket status indicator with clearer state indication -->
         <div v-if="!wsDisabled && !useExternalData" class="flex items-center ml-4">
           <div
             :class="[
               'w-3 h-3 rounded-full mr-1 cursor-pointer',
-              !isConnected ? 'bg-red-500' :
+              !isConnected ? (wsConnectionAttempts > 0 ? 'bg-orange-500' : 'bg-red-500') :
               (isWebSocketPaused ? 'bg-yellow-500' : 'bg-green-500')
             ]"
-            :title="isConnected
-              ? (isWebSocketPaused
-                  ? t('killList.wsPaused')
-                  : t('killList.wsConnected'))
-              : t('killList.wsDisconnected')"
+            :title="wsStatusMessage"
             @click="toggleWebSocketMode"
           ></div>
 
@@ -750,10 +963,18 @@ watch(() => pagination.value.pageIndex, (newPageIndex) => {
           >
             {{ pendingMessages.length }}
           </span>
+
+          <!-- Show reconnection status if applicable -->
+          <span
+            v-if="!isConnected && wsConnectionAttempts > 0"
+            class="ml-1 text-xs text-orange-400"
+          >
+            ({{ t('killList.retrying', { attempt: wsConnectionAttempts }) }})
+          </span>
         </div>
       </div>
 
-      <!-- Right side: UPagination component with correct v-model binding -->
+      <!-- Right side: UPagination component with correct disabled state -->
       <UPagination
         v-model:page="currentPageIndex"
         :total="dynamicTotal"
@@ -771,15 +992,16 @@ watch(() => pagination.value.pageIndex, (newPageIndex) => {
         :prev-button="{
           icon: 'i-lucide-chevron-left',
           label: '',
-          disabled: currentPageIndex === 0
+          disabled: currentPageIndex === 1  // Disable prev when on page 1
         }"
         :next-button="{
           icon: 'i-lucide-chevron-right',
           label: ''
         }"
+        @change="resetWebSocketState"
       >
         <template #default>
-          <span class="mx-2">{{ $t('common.page') }} {{ currentPageIndex + 1 }}</span>
+          <span class="mx-2">{{ $t('common.page') }} {{ currentPageIndex }}</span>
         </template>
       </UPagination>
     </div>
@@ -793,11 +1015,10 @@ watch(() => pagination.value.pageIndex, (newPageIndex) => {
     >
       <UTable
         v-model:pagination="pagination"
-        :data="killlistData || []"
+        :data="pending ? skeletonRows : (killlistData || [])"
         :columns="columnsMobile"
-        :loading="pending"
+        :loading="false"
         :empty-state="{ icon: 'i-lucide-file-text', label: t('killList.noKills') }"
-        :loading-state="{ icon: 'i-lucide-refresh-cw', label: t('killList.loading') }"
         :ui="{
           base: 'min-w-full table-fixed text-black dark:text-white',
           thead: 'hidden',
@@ -822,11 +1043,10 @@ watch(() => pagination.value.pageIndex, (newPageIndex) => {
     >
       <UTable
         v-model:pagination="pagination"
-        :data="killlistData || []"
+        :data="pending ? skeletonRows : (killlistData || [])"
         :columns="columnsDesktop"
-        :loading="pending"
+        :loading="false"
         :empty-state="{ icon: 'i-lucide-file-text', label: t('killList.noKills') }"
-        :loading-state="{ icon: 'i-lucide-refresh-cw', label: t('killList.loading') }"
         :ui="{
           base: 'min-w-full table-fixed text-black dark:text-white',
           thead: 'border-b border-background-700',
@@ -842,7 +1062,7 @@ watch(() => pagination.value.pageIndex, (newPageIndex) => {
       />
     </div>
 
-    <!-- Bottom pagination - simplified UPagination with correct v-model binding -->
+    <!-- Bottom pagination - ensure same behavior as top pagination -->
     <div class="flex justify-end items-center mt-3">
       <UPagination
         v-model:page="currentPageIndex"
@@ -861,15 +1081,16 @@ watch(() => pagination.value.pageIndex, (newPageIndex) => {
         :prev-button="{
           icon: 'i-lucide-chevron-left',
           label: '',
-          disabled: currentPageIndex === 0
+          disabled: currentPageIndex === 1  // Disable prev when on page 1
         }"
         :next-button="{
           icon: 'i-lucide-chevron-right',
           label: ''
         }"
+        @change="resetWebSocketState"
       >
         <template #default>
-          <span class="mx-2">{{ $t('common.page') }} {{ currentPageIndex + 1 }}</span>
+          <span class="mx-2">{{ $t('common.page') }} {{ currentPageIndex }}</span>
         </template>
       </UPagination>
     </div>

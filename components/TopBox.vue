@@ -129,6 +129,15 @@ const getUrlPath = (type: string): string => {
     return urlPathMap[type] || type;
 };
 
+const generateSkeletonRows = (count: number) => {
+  return Array(count).fill(0).map((_, index) => ({
+    id: `skeleton-${index}`,
+    isLoading: true
+  }));
+};
+
+const skeletonRows = computed(() => generateSkeletonRows(props.limit));
+
 const columns: TableColumn<ITopEntity>[] = [
   {
     key: 'entity',
@@ -136,17 +145,60 @@ const columns: TableColumn<ITopEntity>[] = [
     label: '',
     sortable: false,
     class: 'w-full',
-    cell: ({ row }) => h('div', { class: 'flex items-center py-1' }, [
-      h(resolveComponent('NuxtImg'), {
-        src: getImageUrl(row.original),
-        loading: 'lazy',
-        format: 'webp',
-        alt: `${props.type}: ${getEntityDisplayName(row.original)}`,
-        class: 'w-7 flex-shrink-0 mr-2'
-      }),
-      h('div', { class: 'text-sm text-left text-black dark:text-white truncate min-w-0 overflow-hidden' },
-        getEntityDisplayName(row.original))
-    ])
+    cell: ({ row }) => {
+      if (row.original.isLoading) {
+        return h('div', { class: 'flex items-center py-1' }, [
+          h(resolveComponent('USkeleton'), {
+            class: 'w-7 h-7 flex-shrink-0 mr-2 rounded'
+          }),
+          h(resolveComponent('USkeleton'), {
+            class: 'h-4 w-[150px]'
+          })
+        ]);
+      }
+
+      // Determine the image type based on entity type
+      const imageTypeMap = {
+        'character': 'character',
+        'corporation': 'corporation',
+        'alliance': 'alliance',
+        'ship': 'type-render',
+        'solarsystem': null, // Use direct URL for these
+        'constellation': null,
+        'region': null
+      };
+
+      const imageType = imageTypeMap[props.type];
+      const entityId = getEntityId(row.original);
+      const entityName = getEntityDisplayName(row.original);
+
+      // For entity types not directly supported by the Image component
+      if (!imageType) {
+        return h('div', { class: 'flex items-center py-1' }, [
+          h('img', {
+            src: getImageUrl(row.original),
+            alt: `${props.type}: ${entityName}`,
+            class: 'w-7 flex-shrink-0 mr-2'
+          }),
+          h('div', { class: 'text-sm text-left text-black dark:text-white truncate min-w-0 overflow-hidden' },
+            entityName)
+        ]);
+      }
+
+      // Use the EVE Image component for supported types
+      return h('div', { class: 'flex items-center py-1' }, [
+        h(resolveComponent('EveImage'), {
+          type: imageType,
+          id: entityId,
+          alt: `${props.type}: ${entityName}`,
+          class: 'w-7 flex-shrink-0 mr-2',
+          size: 32,
+          format: 'webp'
+        }),
+        h('div', { class: 'text-sm text-left text-black dark:text-white truncate min-w-0 overflow-hidden' },
+          entityName)
+      ]);
+    }
   },
   {
     key: 'count',
@@ -154,11 +206,20 @@ const columns: TableColumn<ITopEntity>[] = [
     label: '',
     sortable: false,
     class: 'w-16 text-right',
-    cell: ({ row }) => h('div', { class: 'text-sm text-right text-background-200 pr-2 whitespace-nowrap' }, row.original.count)
+    cell: ({ row }) => {
+      if (row.original.isLoading) {
+        return h(resolveComponent('USkeleton'), {
+          class: 'h-4 w-10 ml-auto mr-2'
+        });
+      }
+
+      return h('div', { class: 'text-sm text-right text-background-200 pr-2 whitespace-nowrap' }, row.original.count);
+    }
   }
 ];
 
 const handleRowClick = (row) => {
+  if (row.original.isLoading) return;
   navigateTo(`/${getUrlPath(props.type)}/${getEntityId(row.original)}`);
 };
 </script>
@@ -169,40 +230,32 @@ const handleRowClick = (row) => {
       {{ displayTitle }}
     </div>
 
-    <div v-if="pending" class="text-center py-4 text-background-400">
-      <UIcon name="i-lucide-refresh-cw" class="animate-spin mr-2" />
-      {{ t('common.loading') }}
-    </div>
+    <UTable
+      :columns="columns"
+      :data="pending ? skeletonRows : (entities || [])"
+      :loading="false"
+      :empty-state="{ icon: 'i-lucide-file-text', label: t('topBox.noData') }"
+      :ui="{
+        base: 'min-w-full table-fixed text-black dark:text-white',
+        thead: 'hidden',
+        tbody: 'divide-y divide-background-700',
+        tr: 'hover:bg-gray-200 dark:hover:bg-gray-900 transition-colors duration-300 cursor-pointer',
+        th: 'text-left py-1 px-2 uppercase text-xs font-medium bg-gray-200 dark:bg-gray-900',
+        td: 'p-0 text-xs',
+        empty: 'py-4 text-center text-black dark:text-white',
+        loading: 'py-4 text-center',
+        root: 'relative overflow-hidden rounded-sm bg-background-900',
+      }"
+      @select="handleRowClick"
+    />
 
-    <div v-else-if="error" class="text-center py-4 text-red-400">
+    <div v-if="error" class="text-center py-4 text-red-400">
       {{ t('common.error') }}: {{ error.message }}
     </div>
 
-    <div v-else-if="!entities || entities.length === 0" class="text-center py-4 text-background-400">
+    <div v-if="!pending && (!entities || entities.length === 0)" class="text-center py-4 text-background-400">
       {{ t('topBox.noData') }}
     </div>
-
-    <template v-else>
-      <UTable
-        :columns="columns"
-        :data="entities || []"
-        :loading="pending"
-        :empty-state="{ icon: 'i-lucide-file-text', label: t('topBox.noData') }"
-        :loading-state="{ icon: 'i-lucide-refresh-cw', label: t('common.loading') }"
-        :ui="{
-          base: 'min-w-full table-fixed text-black dark:text-white',
-          thead: 'hidden',
-          tbody: 'divide-y divide-background-700',
-          tr: 'hover:bg-gray-200 dark:hover:bg-gray-900 transition-colors duration-300 cursor-pointer',
-          th: 'text-left py-1 px-2 uppercase text-xs font-medium bg-gray-200 dark:bg-gray-900',
-          td: 'p-0 text-xs',
-          empty: 'py-4 text-center text-black dark:text-white',
-          loading: 'py-4 text-center',
-          root: 'relative overflow-hidden rounded-sm bg-background-900',
-        }"
-        @select="handleRowClick"
-      />
-    </template>
 
     <div class="text-sm text-center text-background-300 py-1 rounded-br-lg rounded-bl-lg">
       ({{ t('topBox.killsOver', { days: props.days }) }})

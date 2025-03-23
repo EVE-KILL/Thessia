@@ -141,6 +141,9 @@ export default defineNuxtConfig({
                 file: "zh.json",
             },
         ],
+        bundle: {
+            optimizeTranslationDirective: false
+        },
         defaultLocale: "en",
         strategy: "no_prefix",
         lazy: true,
