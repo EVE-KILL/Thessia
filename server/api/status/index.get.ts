@@ -71,6 +71,16 @@ export default defineEventHandler(async () => {
     Wars.estimatedDocumentCount(),
   ]);
 
+  // Get IPX cache count from Redis
+  let ipxCacheCount = 0;
+  try {
+    const redisStorage = RedisStorage.getInstance();
+    // Count keys with the 'ipx:image:' prefix
+    ipxCacheCount = await redisStorage.client.keys('ipx:image:*').then(keys => keys.length);
+  } catch (err) {
+    console.error('Failed to get IPX cache stats:', err);
+  }
+
   // Get cache sizes and hits directly from Redis
   const cacheStats = await Promise.all([
     // Cache sizes
@@ -398,6 +408,7 @@ export default defineEventHandler(async () => {
       characterCache: cacheStats[9],
       corporationCache: cacheStats[10],
       allianceCache: cacheStats[11],
+      ipxImageCache: ipxCacheCount,
     },
     cacheHits,
     redis: redisStats
