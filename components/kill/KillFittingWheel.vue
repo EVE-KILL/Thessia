@@ -34,7 +34,7 @@
         </svg>
       </div>
 
-      <!-- Ship image as background -->
+      <!-- Ship image -->
       <div class="ship-container">
         <img
           v-if="killmail && killmail.victim"
@@ -45,7 +45,7 @@
         <div v-else class="empty-ship"></div>
       </div>
 
-      <!-- Module slots container (positioned above the ship) -->
+      <!-- Module slots container -->
       <div class="slots-container">
         <!-- Slot indicators -->
         <div class="slot-indicator high-indicator" :style="getIndicatorPosition('top')">
@@ -105,7 +105,7 @@
           </svg>
         </div>
 
-        <!-- High slots - Keep slots but only show content when item exists -->
+        <!-- High slots -->
         <div v-for="(item, index) in highSlots" :key="`high-${index}`"
              class="slot high-slot"
              :style="getSlotPosition(index, highSlots.length, 'top')"
@@ -114,9 +114,10 @@
                :src="`https://images.evetech.net/types/${item.type_id}/icon?size=64`"
                :alt="getLocalizedName(item.name)"
                class="module-icon" />
+          <div v-else class="empty-slot"></div>
         </div>
 
-        <!-- Mid slots - Keep slots but only show content when item exists -->
+        <!-- Mid slots -->
         <div v-for="(item, index) in midSlots" :key="`mid-${index}`"
              class="slot mid-slot"
              :style="getSlotPosition(index, midSlots.length, 'right')"
@@ -125,9 +126,10 @@
                :src="`https://images.evetech.net/types/${item.type_id}/icon?size=64`"
                :alt="getLocalizedName(item.name)"
                class="module-icon" />
+          <div v-else class="empty-slot"></div>
         </div>
 
-        <!-- Low slots - Keep slots but only show content when item exists -->
+        <!-- Low slots -->
         <div v-for="(item, index) in lowSlots" :key="`low-${index}`"
              class="slot low-slot"
              :style="getSlotPosition(index, lowSlots.length, 'bottom')"
@@ -136,9 +138,10 @@
                :src="`https://images.evetech.net/types/${item.type_id}/icon?size=64`"
                :alt="getLocalizedName(item.name)"
                class="module-icon" />
+          <div v-else class="empty-slot"></div>
         </div>
 
-        <!-- Rig slots - Keep slots but only show content when item exists -->
+        <!-- Rig slots -->
         <div v-for="(item, index) in rigSlots" :key="`rig-${index}`"
              class="slot rig-slot"
              :style="getSlotPosition(index, rigSlots.length, 'left')"
@@ -147,9 +150,10 @@
                :src="`https://images.evetech.net/types/${item.type_id}/icon?size=64`"
                :alt="getLocalizedName(item.name)"
                class="module-icon" />
+          <div v-else class="empty-slot"></div>
         </div>
 
-        <!-- Subsystem slots - Keep slots but only show content when item exists -->
+        <!-- Subsystem slots for T3 cruisers -->
         <template v-if="hasSubsystems">
           <div v-for="(item, index) in subsystemSlots" :key="`subsystem-${index}`"
                class="slot subsystem-slot"
@@ -159,6 +163,7 @@
                  :src="`https://images.evetech.net/types/${item.type_id}/icon?size=64`"
                  :alt="getLocalizedName(item.name)"
                  class="module-icon" />
+            <div v-else class="empty-slot"></div>
           </div>
         </template>
       </div>
@@ -183,23 +188,18 @@ const SUBSYSTEM_FLAGS = [125, 126, 127, 128];
 
 /**
  * Gets the localized name from a translation object
- * @param translation The translation object
- * @returns Localized string
  */
 const getLocalizedName = (translation: ITranslation | string | undefined): string => {
   if (!translation) return 'Unknown';
 
-  // If translation is a string (for backward compatibility)
   if (typeof translation === 'string') {
     return translation;
   }
 
-  // Default to English if available
   if (translation.en) {
     return translation.en;
   }
 
-  // Fallback to first available language
   const keys = Object.keys(translation);
   if (keys.length > 0) {
     return translation[keys[0]];
@@ -210,19 +210,14 @@ const getLocalizedName = (translation: ITranslation | string | undefined): strin
 
 /**
  * Organizes items into slot positions based on flag values
- * @param flagRange Array of flag values to look for
- * @param maxSlots Maximum number of slots for this type
- * @returns Array of items or null for empty slots
  */
 function organizeSlots(flagRange: number[], maxSlots: number): (IItem | null)[] {
-  // Initialize array with all null slots
   const slots = Array(maxSlots).fill(null);
 
   if (!props.killmail || !props.killmail.items || !Array.isArray(props.killmail.items)) {
     return slots;
   }
 
-  // Find items matching flag values
   props.killmail.items.forEach(item => {
     if (!item) return;
 
@@ -237,45 +232,32 @@ function organizeSlots(flagRange: number[], maxSlots: number): (IItem | null)[] 
 
 /**
  * Calculates the position of a slot in the circular layout
- * @param index Slot index (0-based)
- * @param total Total number of slots
- * @param position Position category (top, right, bottom, left)
- * @returns CSS style object
  */
 function getSlotPosition(index: number, total: number, position: string): Record<string, string> {
-  // Adjust radius values for different slot types
-  let radius = 42; // default radius for high/mid/low slots
+  let radius = 42;
   let angle = 0;
 
   switch (position) {
-    case 'top': // High slots at top
-        angle = -125 + (index * 10);
+    case 'top':
+      angle = -125 + (index * 10);
       break;
-
-    case 'right': // Mid slots at right
-        angle = 0 - 35 + (index * 10);
+    case 'right':
+      angle = 0 - 35 + (index * 10);
       break;
-
-    case 'bottom': // Low slots at bottom
-        angle = 90 - 35 + (index * 10);
+    case 'bottom':
+      angle = 90 - 35 + (index * 10);
       break;
-
-    case 'left': // MOVE RIGS TO LEFT SIDE
-        angle = 218 - 20 + (index * 10);
+    case 'left':
+      angle = 218 - 20 + (index * 10);
       break;
-
-    case 'subsystem': // MOVE SUBSYSTEMS ABOVE LOW SLOTS
-        angle = 170 - 25 + (index * 12);
+    case 'subsystem':
+      angle = 170 - 25 + (index * 12);
       break;
-
     default:
       angle = 0;
   }
 
-  // Convert angle to radians
   const rad = angle * (Math.PI / 180);
-
-  // Calculate position
   const x = 50 + radius * Math.cos(rad);
   const y = 50 + radius * Math.sin(rad);
 
@@ -288,31 +270,26 @@ function getSlotPosition(index: number, total: number, position: string): Record
 
 /**
  * Calculates the position for slot type indicators
- * @param position Position category (top, right, bottom)
- * @returns CSS style object
  */
 function getIndicatorPosition(position: string): Record<string, string> {
-  const radius = 42; // Slightly larger than the slots radius
+  const radius = 42;
   let angle = 0;
 
   switch (position) {
-    case 'top': // High slots indicator
-      angle = -125 - 9; // Just before the first high slot
+    case 'top':
+      angle = -125 - 9;
       break;
-    case 'right': // Mid slots indicator
-      angle = -35 - 10; // Just before the first mid slot
+    case 'right':
+      angle = -35 - 10;
       break;
-    case 'bottom': // Low slots indicator
-      angle = 90 - 35 - 10; // Just before the first low slot
+    case 'bottom':
+      angle = 90 - 35 - 10;
       break;
     default:
       angle = 0;
   }
 
-  // Convert angle to radians
   const rad = angle * (Math.PI / 180);
-
-  // Calculate position
   const x = 50 + radius * Math.cos(rad);
   const y = 50 + radius * Math.sin(rad);
 
@@ -348,14 +325,13 @@ const hasSubsystems = computed(() => {
 .fitting-wheel {
   position: relative;
   width: 100%;
-  padding-bottom: 100%; /* Maintain 1:1 aspect ratio */
+  padding-bottom: 100%;
   border-radius: 50%;
   background-color: transparent;
   border: none;
-  overflow: hidden; /* Prevent overflow */
+  overflow: hidden;
 }
 
-/* Add a circular border just inside the outer ring */
 .fitting-wheel::after {
   content: '';
   position: absolute;
@@ -369,7 +345,6 @@ const hasSubsystems = computed(() => {
   pointer-events: none;
 }
 
-/* Outer ring SVG styling - positioned at the edge */
 .outer-ring {
   position: absolute;
   top: 0;
@@ -380,18 +355,16 @@ const hasSubsystems = computed(() => {
   pointer-events: none;
 }
 
-/* Inner ring SVG styling - positioned inside the outer ring */
 .inner-ring {
   position: absolute;
-  top: 0%;
-  left: 0%;
+  top: 0;
+  left: 0;
   width: 100%;
   height: 100%;
   z-index: 3;
   pointer-events: none;
 }
 
-/* Fix ship container to be perfectly circular and not overflow */
 .ship-container {
   position: absolute;
   top: 2px;
@@ -403,17 +376,16 @@ const hasSubsystems = computed(() => {
   align-items: center;
   z-index: 1;
   border-radius: 50%;
-  overflow: hidden; /* Ensure image is clipped to circle */
+  overflow: hidden;
   background-color: transparent;
 }
 
-/* Make ship image fill circular container perfectly */
 .ship-image {
   width: 100%;
   height: 100%;
-  object-fit: cover; /* Changed from contain to cover to fill completely */
-  border-radius: 50%; /* Ensure image is circular */
-  clip-path: circle(49%); /* Additional clipping to prevent edge bleeding */
+  object-fit: cover;
+  border-radius: 50%;
+  clip-path: circle(49%);
 }
 
 .empty-ship {
@@ -429,7 +401,7 @@ const hasSubsystems = computed(() => {
   left: 0;
   width: 100%;
   height: 100%;
-  z-index: 5; /* Modules above both rings */
+  z-index: 5;
   pointer-events: none;
 }
 
@@ -444,7 +416,7 @@ const hasSubsystems = computed(() => {
   align-items: center;
   z-index: 6;
   box-shadow: 0 0 5px rgba(0, 0, 0, 0.3);
-  pointer-events: auto; /* Allow interaction with slots */
+  pointer-events: auto;
 }
 
 .module-icon {
@@ -458,36 +430,34 @@ const hasSubsystems = computed(() => {
   width: 100%;
   height: 100%;
   border-radius: 50%;
-  background-color: rgba(10, 10, 10, 0.3); /* Darker empty slots */
+  background-color: rgba(10, 10, 10, 0.3);
   border: 1px dashed rgba(60, 60, 60, 0.5);
 }
 
-/* Different visual treatments for different slot types */
 .high-slot {
-  border-color: rgba(180, 60, 60, 0.8); /* Slightly darker red */
+  border-color: rgba(180, 60, 60, 0.8);
 }
 
 .mid-slot {
-  border-color: rgba(60, 120, 180, 0.8); /* Slightly darker blue */
+  border-color: rgba(60, 120, 180, 0.8);
 }
 
 .low-slot {
-  border-color: rgba(180, 140, 60, 0.8); /* Slightly darker yellow */
+  border-color: rgba(180, 140, 60, 0.8);
 }
 
 .rig-slot {
-  border-color: rgba(150, 150, 150, 0.9); /* More distinct gray */
-  background-color: rgba(40, 40, 40, 0.7); /* Darker gray background */
-  box-shadow: 0 0 6px rgba(100, 100, 100, 0.5); /* Gray glow */
+  border-color: rgba(150, 150, 150, 0.9);
+  background-color: rgba(40, 40, 40, 0.7);
+  box-shadow: 0 0 6px rgba(100, 100, 100, 0.5);
 }
 
 .subsystem-slot {
-  border-color: rgba(140, 60, 140, 0.9); /* More distinct purple */
-  background-color: rgba(40, 20, 40, 0.7); /* Darker purple background */
-  box-shadow: 0 0 6px rgba(120, 40, 120, 0.5); /* Purple glow */
+  border-color: rgba(140, 60, 140, 0.9);
+  background-color: rgba(40, 20, 40, 0.7);
+  box-shadow: 0 0 6px rgba(120, 40, 120, 0.5);
 }
 
-/* Slot type indicators */
 .slot-indicator {
   position: absolute;
   width: 18px;
@@ -498,24 +468,22 @@ const hasSubsystems = computed(() => {
 }
 
 .high-indicator svg {
-  transform: rotate(-125deg); /* Align with high slots */
+  transform: rotate(-125deg);
 }
 
 .mid-indicator svg {
-  transform: rotate(-35deg); /* Align with mid slots */
+  transform: rotate(-35deg);
 }
 
 .low-indicator svg {
-  transform: rotate(55deg); /* Align with low slots */
+  transform: rotate(55deg);
 }
 
-/* Make empty slots invisible but keep them in layout */
 .empty-slot-container {
   opacity: 0;
   pointer-events: none;
 }
 
-/* Responsive adjustments */
 @media (max-width: 500px) {
   .slot {
     width: 36px;

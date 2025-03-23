@@ -1,98 +1,109 @@
 <template>
-
   <KillNavbar />
 
-  <!-- Desktop Layout -->
-  <div v-if="!isMobile" class="flex flex-wrap mt-4 gap-4">
-    <!-- Left Container -->
-    <div class="flex-1 min-w-0 text-black dark:text-white bg-background-900 rounded-md overflow-hidden">
-      <!-- Header -->
-      <div class="px-4 py-3">
-        <div id="information-area" class="flex flex-wrap md:flex-nowrap justify-around">
-          <!-- Fitting Wheel - Fixed width container -->
-          <div class="w-full flex justify-center items-center">
-            <KillFittingWheel :killmail="killmail" />
-          </div>
+  <!-- Wrap entire content in ClientOnly to prevent hydration issues -->
+  <ClientOnly>
+    <!-- Desktop Layout -->
+    <div v-if="!isMobile" class="flex flex-wrap mt-4 gap-4">
+      <!-- Left Container -->
+      <div class="flex-1 min-w-0 text-black dark:text-white bg-background-900 rounded-md overflow-hidden">
+        <!-- Header -->
+        <div class="px-4 py-3">
+          <div id="information-area" class="flex flex-wrap md:flex-nowrap justify-around">
+            <!-- Fitting Wheel - Fixed width container -->
+            <div class="w-full flex justify-center items-center">
+              <KillFittingWheel :killmail="killmail" />
+            </div>
 
-          <!-- Kill Information -->
-          <div class="information-box ml-0 md:ml-5 mt-4 md:mt-0 w-full md:w-2/3">
-            <KillInformationBox/>
+            <!-- Kill Information -->
+            <div class="information-box ml-0 md:ml-5 mt-4 md:mt-0 w-full md:w-2/3">
+              <KillInformationBox/>
+            </div>
           </div>
+        </div>
+
+        <!-- Divider -->
+        <div class="h-px bg-background-700"></div>
+
+        <!-- Body -->
+        <div class="p-4 sm:p-6">
+          <KillItems />
         </div>
       </div>
 
-      <!-- Divider -->
-      <div class="h-px bg-background-700"></div>
+      <!-- Right Container -->
+      <div class="w-full md:w-2/5 lg:w-1/3 xl:max-w-md text-black dark:text-white bg-background-900 rounded-md overflow-hidden">
+        <UTabs
+          v-if="killmail"
+          :items="rightSideTabs"
+          :ui="tabsUi"
+        >
+          <template #comments="{ item }">
+            <KillComments />
+          </template>
 
-      <!-- Body -->
-      <div class="p-4 sm:p-6">
-        <KillItems />
+          <template #attackers="{ item }">
+            <KillAttackers />
+          </template>
+        </UTabs>
       </div>
     </div>
 
-    <!-- Right Container -->
-    <div class="w-full md:w-2/5 lg:w-1/3 xl:max-w-md text-black dark:text-white bg-background-900 rounded-md overflow-hidden">
-      <UTabs
-        v-if="killmail"
-        :items="rightSideTabs"
-        :ui="tabsUi"
-      >
-        <template #comments="{ item }">
-          <KillComments />
-        </template>
+    <!-- Mobile Layout -->
+    <div v-else class="mt-4">
+      <div class="text-black dark:text-white bg-background-900 rounded-md overflow-hidden">
+        <UTabs
+          v-if="killmail"
+          :items="mobileTabs"
+          :ui="tabsUi"
+        >
+          <!-- Fitting Wheel Tab -->
+          <template #fitting="{ item }">
+            <div class="p-4 flex justify-center">
+              <KillFittingWheel v-if="killmail" :key="killmail.killmail_id" :killmail="killmail" />
+            </div>
+          </template>
 
-        <template #attackers="{ item }">
-          <KillAttackers />
-        </template>
-      </UTabs>
+          <!-- Items Tab -->
+          <template #items="{ item }">
+            <div class="p-4">
+              <KillItems v-if="killmail" :killmail="killmail" />
+            </div>
+          </template>
+
+          <!-- Info Tab -->
+          <template #info="{ item }">
+            <div class="p-4">
+              <KillInformationBox v-if="killmail" :killmail="killmail" />
+            </div>
+          </template>
+
+          <!-- Attackers Tab -->
+          <template #attackers="{ item }">
+            <div class="p-4">
+              <KillAttackers v-if="killmail" :attackers="killmail.attackers" />
+            </div>
+          </template>
+
+          <!-- Comments Tab -->
+          <template #comments="{ item }">
+            <div class="p-4">
+              <KillComments :identifier="`kill:${killmail.killmail_id}`" @count="updateCommentCount" />
+            </div>
+          </template>
+        </UTabs>
+      </div>
     </div>
-  </div>
 
-  <!-- Mobile Layout -->
-  <div v-else class="mt-4">
-    <div class="text-black dark:text-white bg-background-900 rounded-md overflow-hidden">
-      <UTabs
-        v-if="killmail"
-        :items="mobileTabs"
-        :ui="tabsUi"
-      >
-        <!-- Fitting Wheel Tab -->
-        <template #fitting="{ item }">
-          <div class="p-4 flex justify-center">
-            <KillFittingWheel v-if="killmail" :key="killmail.killmail_id" :killmail="killmail" />
-          </div>
-        </template>
-
-        <!-- Items Tab -->
-        <template #items="{ item }">
-          <div class="p-4">
-            <KillItems v-if="killmail" :killmail="killmail" />
-          </div>
-        </template>
-
-        <!-- Info Tab -->
-        <template #info="{ item }">
-          <div class="p-4">
-            <KillInformationBox v-if="killmail" :killmail="killmail" />
-          </div>
-        </template>
-
-        <!-- Attackers Tab -->
-        <template #attackers="{ item }">
-          <div class="p-4">
-            <KillAttackers v-if="killmail" :attackers="killmail.attackers" />
-          </div>
-        </template>
-
-        <!-- Comments Tab -->
-        <template #comments="{ item }">
-          <div class="p-4">
-            <KillComments :identifier="`kill:${killmail.killmail_id}`" @count="updateCommentCount" />
-          </div>
-        </template>
-      </UTabs>
-    </div>
-  </div>
+    <!-- Fallback content for server-side rendering -->
+    <template #fallback>
+      <div class="mt-4 bg-background-900 rounded-md overflow-hidden p-4">
+        <div class="loading-container flex justify-center items-center" style="height: 300px;">
+          <div class="loading-spinner"></div>
+        </div>
+      </div>
+    </template>
+  </ClientOnly>
 </template>
 
 <script setup lang="ts">
@@ -179,11 +190,12 @@ const mobileTabs = computed(() => [
   }
 ]);
 
-// Use top-level composable for killmail data
+// Use top-level composable for killmail data - make it client-side only
 const { data: fetchedKillmail } = useAsyncData(
   () => route.params.id ? $fetch(`/api/killmail/${route.params.id[0]}`) : null,
   {
     watch: [() => route.params.id],
+    server: false, // Disable server-side rendering for this call
     immediate: true
   }
 );
@@ -264,5 +276,20 @@ function updateCommentCount(count: number) {
     padding-left: 0.75rem;
     padding-right: 0.75rem;
   }
+}
+
+/* Add loading spinner styles */
+.loading-spinner {
+  width: 48px;
+  height: 48px;
+  border: 4px solid rgba(150, 150, 150, 0.3);
+  border-radius: 50%;
+  border-top-color: rgba(150, 150, 150, 0.8);
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
 }
 </style>
