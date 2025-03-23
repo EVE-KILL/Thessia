@@ -19,7 +19,6 @@ A modern application for EVE Online killmail tracking and analysis, built with N
 - **Search Engine**: Meilisearch
 - **Containerization**: Docker
 - **Orchestration**: Kubernetes
-- **Monitoring**: Sentry
 
 ## 📋 Prerequisites
 
@@ -65,12 +64,6 @@ EVE_CLIENT_REDIRECT=http://localhost:3000/auth/callback
 EVE_CLIENT_ID_DEV=your-client-id-dev
 EVE_CLIENT_SECRET_DEV=your-client-secret-dev
 EVE_CLIENT_REDIRECT_DEV=http://localhost:3000/auth/callback
-
-# Monitoring
-SENTRY_DSN=your-sentry-dsn
-SENTRY_ORG=your-org
-SENTRY_PROJECT=your-project
-SENTRY_AUTH_TOKEN=your-auth-token
 
 # RedisQ
 REDISQ_ID=your-redisq-id

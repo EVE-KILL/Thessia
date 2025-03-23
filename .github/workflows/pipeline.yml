@@ -38,11 +38,6 @@ jobs:
               run: bun install
 
             - name: Build application
-              env:
-                  SENTRY_DSN: ${{ secrets.SENTRY_DSN }}
-                  SENTRY_ORG: ${{ secrets.SENTRY_ORG }}
-                  SENTRY_PROJECT: ${{ secrets.SENTRY_PROJECT }}
-                  SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
               run: bun run build
 
             - name: Set up Docker Buildx
@@ -110,11 +105,7 @@ jobs:
                       --set global.env.sensitive.eveClientId=${{ secrets.EVE_CLIENT_ID }} \
                       --set global.env.sensitive.eveClientSecret=${{ secrets.EVE_CLIENT_SECRET }} \
                       --set global.env.sensitive.eveClientRedirect=${{ secrets.EVE_CLIENT_REDIRECT }} \
-                      --set global.env.sensitive.backendDiscordUrl=${{ secrets.BACKEND_DISCORD_URL }} \
-                      --set global.env.sensitive.sentryDsn=${{ secrets.SENTRY_DSN }} \
-                      --set global.env.sensitive.sentryOrg=${{ secrets.SENTRY_ORG }} \
-                      --set global.env.sensitive.sentryProject=${{ secrets.SENTRY_PROJECT }} \
-                      --set global.env.sensitive.sentryAuthToken=${{ secrets.SENTRY_AUTH_TOKEN }}
+                      --set global.env.sensitive.backendDiscordUrl=${{ secrets.BACKEND_DISCORD_URL }}
 
     purge-cloudflare-cache:
         runs-on: ubuntu-latest

@@ -66,12 +66,6 @@ export default defineNuxtConfig({
 
     runtimeConfig: {
         public: {
-            sentry: {
-                dsn: process.env.SENTRY_DSN,
-                environment: process.env.NODE_ENV,
-                organization: process.env.SENTRY_ORG,
-                project: process.env.SENTRY_PROJECT,
-            }
         }
     },
     // Ensure modern compatibility mode
@@ -99,18 +93,8 @@ export default defineNuxtConfig({
       "@nuxtjs/seo",
       //"nuxt-security",
       "@nuxtjs/color-mode",
-      "@nuxtjs/device",
-      "@sentry/nuxt/module"
+      "@nuxtjs/device"
     ],
-
-    // Sentry configuration
-    sentry: {
-        sourceMapsUploadOptions: {
-            org: process.env.SENTRY_ORG,
-            project: process.env.SENTRY_PROJECT,
-            authToken: process.env.SENTRY_AUTH_TOKEN,
-        },
-    },
 
     // i18n configuration
     i18n: {

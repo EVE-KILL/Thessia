@@ -5,19 +5,9 @@ import path from 'node:path';
 import fs from 'node:fs/promises';
 import mongoose from 'mongoose';
 import { initMongooseConnection } from '../server/helpers/Mongoose';
-import * as Sentry from "@sentry/bun";
 
 const program = new Command();
 await initMongooseConnection();
-
-// If we are bun, we can use Sentry
-if (process.versions.bun !== undefined && process.env.SENTRY_DSN !== undefined) {
-    console.log('✔ Sentry initialized');
-    Sentry.init({
-        dsn: process.env.SENTRY_DSN,
-        tracesSampleRate: 1.0,
-    });
-}
 
 async function main() {
     const cliPath = path.join(__dirname, '../console');

@@ -64,18 +64,6 @@
             "sensitive": {
               "type": "object",
               "properties": {
-                "sentryDsn": {
-                  "type": "string"
-                },
-                "sentryOrg": {
-                  "type": "string"
-                },
-                "sentryProject": {
-                  "type": "string"
-                },
-                "sentryAuthToken": {
-                  "type": "string"
-                },
                 "eveClientId": {
                   "type": "string"
                 },
