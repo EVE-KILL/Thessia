@@ -136,13 +136,27 @@
             "overview": "Aperçu",
             "processing": "Traitement",
             "database": "Base de Données",
-            "cache": "Cache"
+            "cache": "Cache",
+            "redis": "Redis"
         },
         "uptime": {
             "title": "Temps de Fonctionnement",
             "format": "{days}j {hours}h {minutes}m {seconds}s",
             "since": "En service depuis",
             "localTime": "Heure locale"
+        },
+        "overview": {
+            "systemInfo": "Informations Système",
+            "loadAverage": "Charge Moyenne",
+            "nodeVersion": "Version de Node",
+            "redisVersion": "Version de Redis",
+            "redisMemory": "Mémoire Redis",
+            "redisClients": "Clients Redis",
+            "hitRatio": "Taux de réussite de la mémoire cache",
+            "totalKeys": "Total des clés Redis",
+            "processing": "Statistiques de Traitement",
+            "queueCounts": "Files d'attente actives",
+            "cache": "Statistiques du cache (taille / nombre de hits)"
         },
         "environment": {
             "title": "Environnement",
@@ -191,6 +205,30 @@
             "24hours": "24 Heures",
             "1week": "1 Semaine",
             "1month": "1 Mois"
+        },
+        "redis": {
+            "server": "Serveur Redis",
+            "version": "Version",
+            "mode": "Mode",
+            "os": "Système d'Exploitation",
+            "uptime": "Temps de fonctionnement",
+            "uptimeFormat": "{days}j {hours}h {minutes}m {seconds}s",
+            "memory": "Mémoire",
+            "usedMemory": "Mémoire utilisée",
+            "usedMemoryPeak": "Utilisation maximale de la mémoire",
+            "memFragmentationRatio": "Taux de fragmentation de la mémoire",
+            "stats": "Statistiques",
+            "connectedClients": "Clients connectés",
+            "totalConnections": "Total des connexions",
+            "totalCommands": "Total des commandes",
+            "keyspaceHits": "Les succès de l'espace-clé",
+            "keyspaceMisses": "Manquements à l'espace-clé",
+            "hitRatio": "Taux de réussite",
+            "keyspace": "Espace-clé",
+            "database": "Base de Données",
+            "keys": "Clés",
+            "expires": "Expiration",
+            "avgTtl": "Moyenne TTL"
         }
     },
     "auth": {
@@ -240,7 +278,9 @@
         "selectLanguage": "Sélectionner la langue",
         "page": "Page",
         "previous": "Précédent",
-        "next": "Suivant"
+        "next": "Suivant",
+        "backToHome": "Retour à l'accueil",
+        "isk": "ISK"
     },
     "settings": {
         "description": "Gérez les paramètres de votre compte et vos autorisations",
@@ -358,15 +398,30 @@
         "itemsPerPage": "Éléments par page",
         "wsConnected": "WebSocket Connecté",
         "wsDisconnected": "WebSocket Déconnecté",
-        "showing": "Affichage"
+        "showing": "Affichage",
+        "noKillmails": "Pas de killmails trouvés",
+        "wsPaused": "En pause",
+        "wsPausedManually": "Mise en pause manuelle",
+        "wsReconnecting": "Reconnexion de {attempt}/{max}",
+        "retrying": "Réessayer {attempt}",
+        "wsError": "Erreur"
     },
     "topBox": {
-        "killsOver": "Derniers {days} jours"
+        "killsOver": "Derniers {days} jours",
+        "top": "Haut de page",
+        "characters": "Personnages",
+        "corporations": "Corporations",
+        "alliances": "Alliances",
+        "ships": "Navires",
+        "systems": "Systèmes",
+        "constellations": "Constellations",
+        "regions": "Régions",
+        "noData": "Pas de données disponibles"
     },
     "tabs": {
         "topLists": "Top Lists",
         "kills": "Tue",
-        "overview": "Vue d'ensemble"
+        "most-valuable": "Le plus précieux"
     },
     "top": {
         "characters": "Meilleurs Personnages",
@@ -376,5 +431,105 @@
         "systems": "Meilleurs Systèmes",
         "constellations": "Meilleures Constellations",
         "regions": "Meilleures Régions"
+    },
+    "mostValuable": {
+        "kills": "Tue",
+        "structures": "Structures",
+        "ships": "Navires",
+        "noData": "Aucun objet de valeur n'a été trouvé"
+    },
+    "error": {
+        "serverError": "Erreur du serveur",
+        "notFound": "Page non trouvée",
+        "generic": "Une erreur s'est produite"
+    },
+    "kill": {
+        "fitting": {
+            "highSlots": "Grandes machines à sous",
+            "midSlots": "Machines à sous moyennes",
+            "lowSlots": "Fentes basses",
+            "rigSlots": "Machines à sous",
+            "subsystems": "Sous-systèmes"
+        }
+    },
+    "killItems": {
+        "item": "Objet",
+        "dropped": "Abandonné",
+        "destroyed": "Détruit",
+        "value": "Valeur",
+        "hull": "Coque",
+        "subtotal": "Sous-total",
+        "total": "Total",
+        "slots": {
+            "High Slot": "Fente haute",
+            "Medium Slot": "Fente moyenne",
+            "Low Slot": "Fente basse",
+            "Rig Slot": "Emplacement de l'appareil",
+            "Subsystem": "Sous-système",
+            "Drone Bay": "Baie des drones",
+            "Cargo Bay": "Baie de chargement",
+            "Fuel Bay": "Baie de carburant",
+            "Fleet Hangar": "Hangar de la flotte",
+            "Fighter Bay": "Baie des chasseurs",
+            "Fighter Launch Tubes": "Tubes de lancement des chasseurs",
+            "Ship Hangar": "Hangar à bateaux",
+            "Ore Hold": "Maintien du minerai",
+            "Gas hold": "Maintien du gaz",
+            "Mineral hold": "Tenue minérale",
+            "Salvage Hold": "Cale de récupération",
+            "Ship Hold": "Cale du navire",
+            "Small Ship Hold": "Cale du petit navire",
+            "Medium Ship Hold": "Cale pour navire moyen",
+            "Large Ship Hold": "Grande cale de navire",
+            "Industrial Ship Hold": "Cale industrielle",
+            "Ammo Hold": "Réserve de munitions",
+            "Quafe Bay": "Baie de Quafe",
+            "Structure Services": "Services de structure",
+            "Structure Fuel": "Structure Carburant",
+            "Infrastructure Hangar": "Hangar à infrastructures",
+            "Core Room": "Salle principale",
+            "Moon Material Bay": "Baie des matériaux de la lune",
+            "Implants": "Implants"
+        },
+        "slotTypes": {
+            "highSlot": "Fente haute",
+            "mediumSlot": "Fente moyenne",
+            "lowSlot": "Fente basse",
+            "rigSlot": "Emplacement de l'appareil",
+            "subsystem": "Sous-système",
+            "droneBay": "Baie des drones",
+            "cargoBay": "Baie de chargement",
+            "fuelBay": "Baie de carburant",
+            "fleetHangar": "Hangar de la flotte",
+            "fighterBay": "Baie des chasseurs",
+            "fighterLaunchTubes": "Tubes de lancement des chasseurs",
+            "shipHangar": "Hangar à bateaux",
+            "oreHold": "Maintien du minerai",
+            "gasHold": "Maintien du gaz",
+            "mineralHold": "Tenue minérale",
+            "salvageHold": "Cale de récupération",
+            "shipHold": "Cale du navire",
+            "smallShipHold": "Cale du petit navire",
+            "mediumShipHold": "Cale pour navire moyen",
+            "largeShipHold": "Grande cale de navire",
+            "industrialShipHold": "Cale industrielle",
+            "ammoHold": "Réserve de munitions",
+            "quafeBay": "Baie de Quafe",
+            "structureServices": "Services de structure",
+            "structureFuel": "Structure Carburant",
+            "infrastructureHangar": "Hangar à infrastructures",
+            "coreRoom": "Salle principale",
+            "moonMaterialBay": "Baie des matériaux de la lune",
+            "implants": "Implants"
+        }
+    },
+    "killFittingWheel": {
+        "dropped": "a chuté",
+        "destroyed": "détruit",
+        "highSlots": "Grandes machines à sous",
+        "midSlots": "Machines à sous moyennes",
+        "lowSlots": "Fentes basses",
+        "rigSlots": "Machines à sous",
+        "subsystems": "Sous-systèmes"
     }
 }
