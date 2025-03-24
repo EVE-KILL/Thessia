@@ -39,7 +39,7 @@
         <img
           v-if="killmail && killmail.victim"
           :src="`https://images.evetech.net/types/${killmail.victim.ship_id}/render?size=1024`"
-          :alt="getLocalizedName(killmail?.victim?.ship_name)"
+          :alt="getLocalizedString(killmail?.victim?.ship_name, currentLocale.value)"
           class="ship-image"
         />
         <div v-else class="empty-ship"></div>
@@ -112,7 +112,7 @@
              :class="{ 'empty-slot-container': !item }">
           <div v-if="item" class="module-container" @mouseenter="showTooltip($event, item, 'top')" @mouseleave="hideTooltip">
             <img :src="`https://images.evetech.net/types/${item.type_id}/icon?size=64`"
-                 :alt="getLocalizedName(item.name)"
+                 :alt="getLocalizedString(item.name, currentLocale.value)"
                  class="module-icon" />
           </div>
           <div v-else class="empty-slot"></div>
@@ -123,7 +123,7 @@
                @mouseenter="showTooltip($event, getAmmoForSlot(index, 'high'), 'top')"
                @mouseleave="hideTooltip">
             <img :src="`https://images.evetech.net/types/${getAmmoForSlot(index, 'high').type_id}/icon?size=64`"
-                 :alt="getLocalizedName(getAmmoForSlot(index, 'high').name)"
+                 :alt="getLocalizedString(getAmmoForSlot(index, 'high').name, currentLocale.value)"
                  class="ammo-icon" />
           </div>
         </div>
@@ -135,7 +135,7 @@
              :class="{ 'empty-slot-container': !item }">
           <div v-if="item" class="module-container" @mouseenter="showTooltip($event, item, 'right')" @mouseleave="hideTooltip">
             <img :src="`https://images.evetech.net/types/${item.type_id}/icon?size=64`"
-                 :alt="getLocalizedName(item.name)"
+                 :alt="getLocalizedString(item.name, currentLocale.value)"
                  class="module-icon" />
           </div>
           <div v-else class="empty-slot"></div>
@@ -146,7 +146,7 @@
                @mouseenter="showTooltip($event, getAmmoForSlot(index, 'mid'), 'right')"
                @mouseleave="hideTooltip">
             <img :src="`https://images.evetech.net/types/${getAmmoForSlot(index, 'mid').type_id}/icon?size=64`"
-                 :alt="getLocalizedName(getAmmoForSlot(index, 'mid').name)"
+                 :alt="getLocalizedString(getAmmoForSlot(index, 'mid').name, currentLocale.value)"
                  class="ammo-icon" />
           </div>
         </div>
@@ -158,7 +158,7 @@
              :class="{ 'empty-slot-container': !item }">
           <div v-if="item" class="module-container" @mouseenter="showTooltip($event, item, 'bottom')" @mouseleave="hideTooltip">
             <img :src="`https://images.evetech.net/types/${item.type_id}/icon?size=64`"
-                 :alt="getLocalizedName(item.name)"
+                 :alt="getLocalizedString(item.name, currentLocale.value)"
                  class="module-icon" />
           </div>
           <div v-else class="empty-slot"></div>
@@ -169,7 +169,7 @@
                @mouseenter="showTooltip($event, getAmmoForSlot(index, 'low'), 'bottom')"
                @mouseleave="hideTooltip">
             <img :src="`https://images.evetech.net/types/${getAmmoForSlot(index, 'low').type_id}/icon?size=64`"
-                 :alt="getLocalizedName(getAmmoForSlot(index, 'low').name)"
+                 :alt="getLocalizedString(getAmmoForSlot(index, 'low').name, currentLocale.value)"
                  class="ammo-icon" />
           </div>
         </div>
@@ -181,7 +181,7 @@
              :class="{ 'empty-slot-container': !item }">
           <div v-if="item" class="module-container" @mouseenter="showTooltip($event, item, 'left')" @mouseleave="hideTooltip">
             <img :src="`https://images.evetech.net/types/${item.type_id}/icon?size=64`"
-                 :alt="getLocalizedName(item.name)"
+                 :alt="getLocalizedString(item.name, currentLocale.value)"
                  class="module-icon" />
           </div>
           <div v-else class="empty-slot"></div>
@@ -195,7 +195,7 @@
                :class="{ 'empty-slot-container': !item }">
             <div v-if="item" class="module-container" @mouseenter="showTooltip($event, item, 'top')" @mouseleave="hideTooltip">
               <img :src="`https://images.evetech.net/types/${item.type_id}/icon?size=64`"
-                   :alt="getLocalizedName(item.name)"
+                   :alt="getLocalizedString(item.name, currentLocale.value)"
                    class="module-icon" />
             </div>
             <div v-else class="empty-slot"></div>
@@ -211,7 +211,7 @@
          @mouseenter="keepTooltip"
          @mouseleave="hideTooltip">
       <div class="tooltip-name">{{ activeTooltip.name }}</div>
-      <div class="tooltip-value">{{ activeTooltip.value }} ISK</div>
+      <div class="tooltip-value">{{ activeTooltip.value }} {{ $t('common.isk') }}</div>
       <div class="tooltip-status" v-if="activeTooltip.status" v-html="activeTooltip.status"></div>
     </div>
   </div>
@@ -219,7 +219,9 @@
 
 <script setup lang="ts">
 import type { IKillmail, IItem } from '~/server/interfaces/IKillmail';
-import type { ITranslation } from '~/server/interfaces/ITranslation';
+
+const { t, locale } = useI18n();
+const currentLocale = computed(() => locale.value);
 
 const props = defineProps<{
   killmail: IKillmail | null;
@@ -248,25 +250,11 @@ const AMMO_CATEGORY_ID = 8;   // Charges/Ammo
 const ammoByFlag = ref<Record<number, IItem>>({});
 
 /**
- * Gets the localized name from a translation object
+ * Gets the localized string from a translation object using the current locale
  */
-const getLocalizedName = (translation: ITranslation | string | undefined): string => {
-  if (!translation) return 'Unknown';
-
-  if (typeof translation === 'string') {
-    return translation;
-  }
-
-  if (translation.en) {
-    return translation.en;
-  }
-
-  const keys = Object.keys(translation);
-  if (keys.length > 0) {
-    return translation[keys[0]];
-  }
-
-  return 'Unknown';
+const getLocalizedString = (obj: any, locale: string): string => {
+  if (!obj) return '';
+  return obj[locale] || obj['en'] || '';
 };
 
 /**
@@ -453,9 +441,33 @@ const activeTooltip = reactive({
 let tooltipTimer: NodeJS.Timeout | null = null;
 let currentItem: IItem | null = null;
 
-/**
- * Shows the tooltip with item information after a delay
- */
+// Create reactive tooltip translations for dropped/destroyed text
+const tooltipText = computed(() => ({
+  dropped: t('killFittingWheel.dropped'),
+  destroyed: t('killFittingWheel.destroyed')
+}));
+
+// Update tooltip properties when locale changes
+watch(locale, () => {
+  // Force refresh tooltip content if it's visible
+  if (activeTooltip.visible && currentItem) {
+    // Rebuild the status text with new translations
+    let status = '';
+    if (currentItem.qty_dropped > 0 && currentItem.qty_destroyed > 0) {
+      status = `<span class="status-dropped">${currentItem.qty_dropped} ${tooltipText.value.dropped}</span>, <span class="status-destroyed">${currentItem.qty_destroyed} ${tooltipText.value.destroyed}</span>`;
+    } else if (currentItem.qty_dropped > 0) {
+      status = `<span class="status-dropped">${currentItem.qty_dropped} ${tooltipText.value.dropped}</span>`;
+    } else if (currentItem.qty_destroyed > 0) {
+      status = `<span class="status-destroyed">${currentItem.qty_destroyed} ${tooltipText.value.destroyed}</span>`;
+    }
+
+    // Update tooltip with new localized content
+    activeTooltip.name = getLocalizedString(currentItem.name, currentLocale.value);
+    activeTooltip.status = status;
+  }
+});
+
+// Update the showTooltip function to use the reactive tooltip text
 function showTooltip(event: MouseEvent, item: IItem, position: string) {
   // Store current item for delay handling
   currentItem = item;
@@ -479,11 +491,11 @@ function showTooltip(event: MouseEvent, item: IItem, position: string) {
       // Calculate item status text
       let status = '';
       if (item.qty_dropped > 0 && item.qty_destroyed > 0) {
-        status = `<span class="status-dropped">${item.qty_dropped} dropped</span>, <span class="status-destroyed">${item.qty_destroyed} destroyed</span>`;
+        status = `<span class="status-dropped">${item.qty_dropped} ${tooltipText.value.dropped}</span>, <span class="status-destroyed">${item.qty_destroyed} ${tooltipText.value.destroyed}</span>`;
       } else if (item.qty_dropped > 0) {
-        status = `<span class="status-dropped">${item.qty_dropped} dropped</span>`;
+        status = `<span class="status-dropped">${item.qty_dropped} ${tooltipText.value.dropped}</span>`;
       } else if (item.qty_destroyed > 0) {
-        status = `<span class="status-destroyed">${item.qty_destroyed} destroyed</span>`;
+        status = `<span class="status-destroyed">${item.qty_destroyed} ${tooltipText.value.destroyed}</span>`;
       }
 
       // Position calculations
@@ -512,7 +524,7 @@ function showTooltip(event: MouseEvent, item: IItem, position: string) {
       }
 
       // Set tooltip content and position
-      activeTooltip.name = getLocalizedName(item.name);
+      activeTooltip.name = getLocalizedString(item.name, currentLocale.value);
       activeTooltip.value = formatNumber(item.value);
       activeTooltip.status = status;
       activeTooltip.style = {
