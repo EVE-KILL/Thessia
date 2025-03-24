@@ -136,13 +136,27 @@
             "overview": "Обзор",
             "processing": "Обработка",
             "database": "База данных",
-            "cache": "Кэш"
+            "cache": "Кэш",
+            "redis": "Redis"
         },
         "uptime": {
             "title": "Время безотказной работы системы",
             "format": "{days}d {hours}h {minutes}m {seconds}s",
             "since": "С момента",
             "localTime": "Местное время"
+        },
+        "overview": {
+            "systemInfo": "Информация о системе",
+            "loadAverage": "Средняя нагрузка",
+            "nodeVersion": "Версия узла",
+            "redisVersion": "Версия Redis",
+            "redisMemory": "Память Redis",
+            "redisClients": "Клиенты Redis",
+            "hitRatio": "Коэффициент попадания в кэш",
+            "totalKeys": "Всего ключей Redis",
+            "processing": "Статистика обработки",
+            "queueCounts": "Активные очереди",
+            "cache": "Статистика кэша (размер / хиты)"
         },
         "environment": {
             "title": "Окружающая среда",
@@ -191,6 +205,30 @@
             "24hours": "24 часа",
             "1week": "1 неделя",
             "1month": "1 месяц"
+        },
+        "redis": {
+            "server": "Сервер Redis",
+            "version": "Версия",
+            "mode": "Режим",
+            "os": "Операционная система",
+            "uptime": "Время работы",
+            "uptimeFormat": "{days}d {hours}h {minutes}m {seconds}s",
+            "memory": "Память",
+            "usedMemory": "Используемая память",
+            "usedMemoryPeak": "Пиковое использование памяти",
+            "memFragmentationRatio": "Коэффициент фрагментации памяти",
+            "stats": "Статистика",
+            "connectedClients": "Подключенные клиенты",
+            "totalConnections": "Всего соединений",
+            "totalCommands": "Всего команд",
+            "keyspaceHits": "Хиты в пространстве ключей",
+            "keyspaceMisses": "Пропуски в пространстве ключей",
+            "hitRatio": "Коэффициент попадания",
+            "keyspace": "Keyspace",
+            "database": "База данных",
+            "keys": "Ключи",
+            "expires": "Срок действия:",
+            "avgTtl": "Avg TTL"
         }
     },
     "auth": {
@@ -240,7 +278,9 @@
         "selectLanguage": "Выберите язык",
         "page": "Страница",
         "previous": "Предыдущий",
-        "next": "Следующий"
+        "next": "Следующий",
+        "backToHome": "Назад к дому",
+        "isk": "ISK"
     },
     "settings": {
         "description": "Управление настройками и разрешениями учетной записи",
@@ -358,15 +398,30 @@
         "itemsPerPage": "Элементы на странице",
         "wsConnected": "WebSocket подключен",
         "wsDisconnected": "WebSocket отключен",
-        "showing": "Показать"
+        "showing": "Показать",
+        "noKillmails": "Киллмейлы не найдены",
+        "wsPaused": "Пауза",
+        "wsPausedManually": "Вручную приостановлено",
+        "wsReconnecting": "Повторное подключение {attempt}/{max}",
+        "retrying": "Повторная попытка {attempt}",
+        "wsError": "Ошибка"
     },
     "topBox": {
-        "killsOver": "Последние {days} дней"
+        "killsOver": "Последние {days} дней",
+        "top": "Топ",
+        "characters": "Персонажи",
+        "corporations": "Корпорации",
+        "alliances": "Альянсы",
+        "ships": "Корабли",
+        "systems": "Системы",
+        "constellations": "Созвездия",
+        "regions": "Регионы",
+        "noData": "Нет данных"
     },
     "tabs": {
         "topLists": "Лучшие списки",
         "kills": "Убивает",
-        "overview": "Обзор"
+        "most-valuable": "Самый ценный"
     },
     "top": {
         "characters": "Лучшие персонажи",
@@ -376,5 +431,105 @@
         "systems": "Топ-системы",
         "constellations": "Лучшие созвездия",
         "regions": "Топ-регионы"
+    },
+    "mostValuable": {
+        "kills": "Убивает",
+        "structures": "Конструкции",
+        "ships": "Корабли",
+        "noData": "Ценных вещей не обнаружено"
+    },
+    "error": {
+        "serverError": "Ошибка сервера",
+        "notFound": "Страница не найдена",
+        "generic": "Произошла ошибка"
+    },
+    "kill": {
+        "fitting": {
+            "highSlots": "Высокие слоты",
+            "midSlots": "Средние слоты",
+            "lowSlots": "Низкие слоты",
+            "rigSlots": "Слоты для буровых установок",
+            "subsystems": "Подсистемы"
+        }
+    },
+    "killItems": {
+        "item": "Артикул",
+        "dropped": "Упал",
+        "destroyed": "Разрушенный",
+        "value": "Значение",
+        "hull": "Корпус",
+        "subtotal": "Итого",
+        "total": "Всего",
+        "slots": {
+            "High Slot": "Высокий слот",
+            "Medium Slot": "Средний слот",
+            "Low Slot": "Низкий слот",
+            "Rig Slot": "Слот для буровой установки",
+            "Subsystem": "Подсистема",
+            "Drone Bay": "Залив для дронов",
+            "Cargo Bay": "Грузовой отсек",
+            "Fuel Bay": "Топливный отсек",
+            "Fleet Hangar": "Ангар флота",
+            "Fighter Bay": "Истребительный отсек",
+            "Fighter Launch Tubes": "Пусковые трубы для истребителей",
+            "Ship Hangar": "Корабельный ангар",
+            "Ore Hold": "Удержание руды",
+            "Gas hold": "Удержание газа",
+            "Mineral hold": "Минеральный холд",
+            "Salvage Hold": "Спасение",
+            "Ship Hold": "Корабельный трюм",
+            "Small Ship Hold": "Трюм малого корабля",
+            "Medium Ship Hold": "Трюм среднего корабля",
+            "Large Ship Hold": "Большой трюм корабля",
+            "Industrial Ship Hold": "Трюм промышленного корабля",
+            "Ammo Hold": "Держатель патронов",
+            "Quafe Bay": "Куаф-Бей",
+            "Structure Services": "Структурные услуги",
+            "Structure Fuel": "Структура Топливо",
+            "Infrastructure Hangar": "Инфраструктурный ангар",
+            "Core Room": "Основная комната",
+            "Moon Material Bay": "Залив Лунных Материалов",
+            "Implants": "Имплантаты"
+        },
+        "slotTypes": {
+            "highSlot": "Высокий слот",
+            "mediumSlot": "Средний слот",
+            "lowSlot": "Низкий слот",
+            "rigSlot": "Слот для буровой установки",
+            "subsystem": "Подсистема",
+            "droneBay": "Залив для дронов",
+            "cargoBay": "Грузовой отсек",
+            "fuelBay": "Топливный отсек",
+            "fleetHangar": "Ангар флота",
+            "fighterBay": "Истребительный отсек",
+            "fighterLaunchTubes": "Пусковые трубы для истребителей",
+            "shipHangar": "Корабельный ангар",
+            "oreHold": "Удержание руды",
+            "gasHold": "Удержание газа",
+            "mineralHold": "Минеральный холд",
+            "salvageHold": "Спасение",
+            "shipHold": "Корабельный трюм",
+            "smallShipHold": "Трюм малого корабля",
+            "mediumShipHold": "Трюм среднего корабля",
+            "largeShipHold": "Большой трюм корабля",
+            "industrialShipHold": "Трюм промышленного корабля",
+            "ammoHold": "Держатель патронов",
+            "quafeBay": "Куаф-Бей",
+            "structureServices": "Структурные услуги",
+            "structureFuel": "Структура Топливо",
+            "infrastructureHangar": "Инфраструктурный ангар",
+            "coreRoom": "Основная комната",
+            "moonMaterialBay": "Залив Лунных Материалов",
+            "implants": "Имплантаты"
+        }
+    },
+    "killFittingWheel": {
+        "dropped": "упал",
+        "destroyed": "уничтожено",
+        "highSlots": "Высокие слоты",
+        "midSlots": "Средние слоты",
+        "lowSlots": "Низкие слоты",
+        "rigSlots": "Слоты для буровых установок",
+        "subsystems": "Подсистемы"
     }
 }
