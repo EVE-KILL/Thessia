@@ -6,12 +6,12 @@
     <!-- Left Container -->
     <div class="flex-1 min-w-0 text-black dark:text-white bg-background-900 rounded-md overflow-hidden">
       <!-- Header -->
-      <div class="px-4 py-3">
-        <div id="information-area" class="flex flex-wrap md:flex-nowrap justify-around">
-          <!-- Fitting Wheel - Fixed width container -->
+      <div>
+        <div id="information-area" class="flex flex-col md:flex-row justify-around">
+          <!-- Fitting Wheel - Increased size container -->
           <div class="w-full flex justify-center items-center">
             <template v-if="!killmail || isLoading">
-              <div class="fitting-wheel-skeleton">
+              <div class="fitting-wheel-skeleton max-w-[600px]">
                 <!-- Outer ring skeleton -->
                 <div class="skeleton-ring outer-skeleton-ring"></div>
                 <!-- Inner ring skeleton -->
@@ -27,11 +27,11 @@
                 <div v-for="i in 3" :key="`rig-${i}`" :style="getSkeletonSlotPosition(i-1, 3, 'left')" class="skeleton-slot"></div>
               </div>
             </template>
-            <KillFittingWheel v-else :killmail="killmail" />
+            <KillFittingWheel v-else :killmail="killmail" :max-width="1000" style="min-width: 500px"/>
           </div>
 
-          <!-- Kill Information -->
-          <div class="information-box ml-0 md:ml-5 mt-4 md:mt-0 w-full md:w-2/3">
+          <!-- Kill Information - Adjusted width -->
+          <div class="information-box ml-0 md:ml-5 mt-4 md:mt-0 w-full md:w-3/5 lg:w-1/2 p-4">
             <template v-if="!killmail || isLoading">
               <div class="grid gap-4">
                 <USkeleton class="h-8 w-full" />
@@ -69,7 +69,7 @@
             </div>
           </div>
         </template>
-        <KillItems v-else />
+        <KillItems v-else :killmail="killmail" />
       </div>
     </div>
 
@@ -415,7 +415,7 @@ function getSkeletonSlotPosition(index: number, total: number, position: string)
 .fitting-wheel-skeleton {
   position: relative;
   width: 100%;
-  max-width: 500px;
+  max-width: 600px; /* Increased from 500px */
   height: 0;
   padding-bottom: 100%; /* Maintain 1:1 aspect ratio */
   margin: 0 auto;
@@ -477,7 +477,7 @@ function getSkeletonSlotPosition(index: number, total: number, position: string)
 
 @media (max-width: 768px) {
   .fitting-wheel-skeleton {
-    max-width: 300px;
+    max-width: 400px; /* Increased from 300px */
   }
 }
 </style>

@@ -1,5 +1,5 @@
 <template>
-  <div class="fitting-wheel-container">
+  <div class="fitting-wheel-container" :style="containerStyle">
     <div class="fitting-wheel">
       <!-- Outer SVG Ring -->
       <div class="outer-ring">
@@ -116,6 +116,16 @@
                  class="module-icon" />
           </div>
           <div v-else class="empty-slot"></div>
+
+          <!-- Ammo for high slots -->
+          <div v-if="getAmmoForSlot(index, 'high')"
+               class="ammo-container"
+               @mouseenter="showTooltip($event, getAmmoForSlot(index, 'high'), 'top')"
+               @mouseleave="hideTooltip">
+            <img :src="`https://images.evetech.net/types/${getAmmoForSlot(index, 'high').type_id}/icon?size=64`"
+                 :alt="getLocalizedName(getAmmoForSlot(index, 'high').name)"
+                 class="ammo-icon" />
+          </div>
         </div>
 
         <!-- Mid slots -->
@@ -129,6 +139,16 @@
                  class="module-icon" />
           </div>
           <div v-else class="empty-slot"></div>
+
+          <!-- Ammo for mid slots -->
+          <div v-if="getAmmoForSlot(index, 'mid')"
+               class="ammo-container"
+               @mouseenter="showTooltip($event, getAmmoForSlot(index, 'mid'), 'right')"
+               @mouseleave="hideTooltip">
+            <img :src="`https://images.evetech.net/types/${getAmmoForSlot(index, 'mid').type_id}/icon?size=64`"
+                 :alt="getLocalizedName(getAmmoForSlot(index, 'mid').name)"
+                 class="ammo-icon" />
+          </div>
         </div>
 
         <!-- Low slots -->
@@ -142,6 +162,16 @@
                  class="module-icon" />
           </div>
           <div v-else class="empty-slot"></div>
+
+          <!-- Ammo for low slots -->
+          <div v-if="getAmmoForSlot(index, 'low')"
+               class="ammo-container"
+               @mouseenter="showTooltip($event, getAmmoForSlot(index, 'low'), 'bottom')"
+               @mouseleave="hideTooltip">
+            <img :src="`https://images.evetech.net/types/${getAmmoForSlot(index, 'low').type_id}/icon?size=64`"
+                 :alt="getLocalizedName(getAmmoForSlot(index, 'low').name)"
+                 class="ammo-icon" />
+          </div>
         </div>
 
         <!-- Rig slots -->
@@ -193,7 +223,15 @@ import type { ITranslation } from '~/server/interfaces/ITranslation';
 
 const props = defineProps<{
   killmail: IKillmail | null;
+  maxWidth?: number; // New prop to control the max width
 }>();
+
+// Computed style for container to allow dynamic sizing
+const containerStyle = computed(() => {
+  return {
+    maxWidth: props.maxWidth ? `${props.maxWidth}px` : '500px'
+  };
+});
 
 // EVE Online flag values for different slot types
 const HIGH_SLOT_FLAGS = [27, 28, 29, 30, 31, 32, 33, 34];
@@ -201,6 +239,13 @@ const MID_SLOT_FLAGS = [19, 20, 21, 22, 23, 24, 25, 26];
 const LOW_SLOT_FLAGS = [11, 12, 13, 14, 15, 16, 17, 18];
 const RIG_SLOT_FLAGS = [92, 93, 94];
 const SUBSYSTEM_FLAGS = [125, 126, 127, 128];
+
+// Item category IDs
+const MODULE_CATEGORY_ID = 7; // Modules/Equipment
+const AMMO_CATEGORY_ID = 8;   // Charges/Ammo
+
+// Ammo lookup map by flag
+const ammoByFlag = ref<Record<number, IItem>>({});
 
 /**
  * Gets the localized name from a translation object
@@ -226,6 +271,7 @@ const getLocalizedName = (translation: ITranslation | string | undefined): strin
 
 /**
  * Organizes items into slot positions based on flag values
+ * Only returns module items (not ammo)
  */
 function organizeSlots(flagRange: number[], maxSlots: number): (IItem | null)[] {
   const slots = Array(maxSlots).fill(null);
@@ -237,6 +283,9 @@ function organizeSlots(flagRange: number[], maxSlots: number): (IItem | null)[] 
   props.killmail.items.forEach(item => {
     if (!item) return;
 
+    // Skip ammo items (category_id: 8)
+    if (item.category_id === AMMO_CATEGORY_ID) return;
+
     const flagIndex = flagRange.indexOf(item.flag);
     if (flagIndex !== -1 && flagIndex < maxSlots) {
       slots[flagIndex] = item;
@@ -247,27 +296,74 @@ function organizeSlots(flagRange: number[], maxSlots: number): (IItem | null)[] 
 }
 
 /**
+ * Organizes all ammo items and maps them by flag
+ */
+function organizeAmmo() {
+  if (!props.killmail || !props.killmail.items || !Array.isArray(props.killmail.items)) {
+    return;
+  }
+
+  // Clear previous ammo data
+  ammoByFlag.value = {};
+
+  // Organize ammo by flag
+  props.killmail.items.forEach(item => {
+    if (!item || item.category_id !== AMMO_CATEGORY_ID) return;
+
+    // Store ammo by its flag
+    ammoByFlag.value[item.flag] = item;
+  });
+}
+
+/**
+ * Gets ammo for a specific slot position
+ */
+function getAmmoForSlot(slotIndex: number, slotType: 'high' | 'mid' | 'low'): IItem | null {
+  let flagValue: number;
+
+  // Get the flag value for this slot
+  switch (slotType) {
+    case 'high':
+      flagValue = HIGH_SLOT_FLAGS[slotIndex];
+      break;
+    case 'mid':
+      flagValue = MID_SLOT_FLAGS[slotIndex];
+      break;
+    case 'low':
+      flagValue = LOW_SLOT_FLAGS[slotIndex];
+      break;
+    default:
+      return null;
+  }
+
+  // Return the ammo for this flag (if it exists)
+  return ammoByFlag.value[flagValue] || null;
+}
+
+/**
  * Calculates the position of a slot in the circular layout
  */
 function getSlotPosition(index: number, total: number, position: string): Record<string, string> {
+  // Adjust radius to ensure proper curve
   let radius = 42;
   let angle = 0;
 
+  // Fine-tune angles for each slot type to create a smoother curve
   switch (position) {
     case 'top':
-      angle = -125 + (index * 10);
+      angle = -125 + (index * 10.5);
       break;
     case 'right':
-      angle = 0 - 35 + (index * 10);
+      angle = 0 - 37 + (index * 10.5);
       break;
     case 'bottom':
-      angle = 90 - 35 + (index * 10);
+      angle = 90 - 36 + (index * 10.5);
       break;
     case 'left':
-      angle = 218 - 20 + (index * 10);
+      angle = 218 - 22 + (index * 10.5);
       break;
     case 'subsystem':
-      angle = 170 - 25 + (index * 12);
+      angle = 170 - 30 + (index * 10.5);
       break;
     default:
       angle = 0;
@@ -327,30 +423,18 @@ const hasSubsystems = computed(() => {
   return subsystemSlots.value.some(item => item !== null);
 });
 
+// Initialize ammo when killmail changes
+watch(() => props.killmail, () => {
+  if (props.killmail) {
+    organizeAmmo();
+  }
+}, { immediate: true });
+
 /**
  * Formats a number with commas as thousands separators
  */
 function formatNumber(num: number): string {
   return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',');
-}
-
-/**
- * Generates tooltip text for an item showing name, value, and status
- */
-function getItemTooltip(item: IItem): string {
-  const itemName = getLocalizedName(item.name);
-  const valueFormatted = formatNumber(item.value);
-
-  let status = '';
-  if (item.qty_dropped > 0 && item.qty_destroyed > 0) {
-    status = `${item.qty_dropped} dropped, ${item.qty_destroyed} destroyed`;
-  } else if (item.qty_dropped > 0) {
-    status = `${item.qty_dropped} dropped`;
-  } else if (item.qty_destroyed > 0) {
-    status = `${item.qty_destroyed} destroyed`;
-  }
-
-  return `${itemName}\n${valueFormatted} ISK\n${status}`;
 }
 
 // Tooltip state
@@ -477,7 +561,7 @@ onBeforeUnmount(() => {
   justify-content: center;
   align-items: center;
   width: 100%;
-  max-width: 500px;
+  /* max-width is now controlled by the inline style */
   margin: 0 auto;
 }
 
@@ -568,14 +652,25 @@ onBeforeUnmount(() => {
   position: absolute;
   width: 42px;
   height: 42px;
-  background-color: rgba(20, 20, 20, 1);
+  background-color: rgba(20, 20, 20, 0.2); /* Much more transparent background */
   border-radius: 50%;
   display: flex;
   justify-content: center;
   align-items: center;
   z-index: 6;
-  box-shadow: 0 0 5px rgba(0, 0, 0, 0.3);
+  box-shadow: 0 0 5px rgba(0, 0, 0, 0.2); /* Softer shadow */
   pointer-events: auto;
+}
+
+.module-container {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  cursor: pointer;
+  z-index: 7; /* Higher than slot background */
+  position: relative; /* Needed for z-index to work */
 }
 
 .module-icon {
@@ -584,6 +679,8 @@ onBeforeUnmount(() => {
   object-fit: contain;
   border-radius: 50%;
   transition: transform 0.1s ease-in-out;
+  position: relative; /* Needed for z-index to work */
+  z-index: 8; /* Higher than module-container */
 }
 
 .module-icon:hover {
@@ -591,36 +688,102 @@ onBeforeUnmount(() => {
   cursor: pointer;
 }
 
+/* Ammo styling */
+.ammo-container {
+  position: absolute;
+  width: 24px;
+  height: 24px;
+  background-color: rgba(20, 20, 20, 0.3);
+  border-radius: 50%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 9;
+  box-shadow: 0 0 3px rgba(0, 0, 0, 0.2);
+  cursor: pointer;
+  border: 1px solid rgba(80, 80, 80, 0.3);
+  transition: transform 0.1s ease-in-out;
+}
+
+.ammo-icon {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  border-radius: 50%;
+  position: relative;
+  z-index: 10;
+}
+
+.ammo-container:hover {
+  transform: scale(1.1);
+}
+
+/* Position adjustments for different slot types - moved INSIDE the modules */
+.high-slot .ammo-container {
+  bottom: -12px;
+  left: 50%;
+  transform: translateX(-80%);
+}
+
+.mid-slot .ammo-container {
+  left: -12px;
+  top: 50%;
+  transform: translateY(-80%);
+}
+
+.low-slot .ammo-container {
+  top: -12px;
+  left: 50%;
+  transform: translateX(-80%);
+}
+
+/* Position adjustments for different slot types */
+.high-slot .ammo-container {
+  top: 28px;
+  left: 30px;
+  background-color: rgba(0, 0, 0, 0.3)
+}
+
+.mid-slot .ammo-container {
+  top: 35px;
+  left: -5px;
+}
+
+.low-slot .ammo-container {
+  top: 16px;
+  right: -16px;
+}
+
 .empty-slot {
   width: 100%;
   height: 100%;
   border-radius: 50%;
-  background-color: rgba(10, 10, 10, 0.3);
-  border: 1px dashed rgba(60, 60, 60, 0.5);
+  background-color: rgba(10, 10, 10, 0.15); /* More transparent */
+  border: 1px dashed rgba(60, 60, 60, 0.3); /* Lighter border */
 }
 
 .high-slot {
-  border-color: rgba(180, 60, 60, 0.8);
+  border-color: rgba(180, 60, 60, 0.4); /* More transparent */
 }
 
 .mid-slot {
-  border-color: rgba(60, 120, 180, 0.8);
+  border-color: rgba(60, 120, 180, 0.4); /* More transparent */
 }
 
 .low-slot {
-  border-color: rgba(180, 140, 60, 0.8);
+  border-color: rgba(180, 140, 60, 0.4); /* More transparent */
 }
 
 .rig-slot {
-  border-color: rgba(150, 150, 150, 0.9);
-  background-color: rgba(40, 40, 40, 0.7);
-  box-shadow: 0 0 6px rgba(100, 100, 100, 0.5);
+  border-color: rgba(150, 150, 150, 0.4); /* More transparent */
+  background-color: rgba(40, 40, 40, 0.2); /* More transparent */
+  box-shadow: 0 0 6px rgba(100, 100, 100, 0.3); /* Softer shadow */
 }
 
 .subsystem-slot {
-  border-color: rgba(140, 60, 140, 0.9);
-  background-color: rgba(40, 20, 40, 0.7);
-  box-shadow: 0 0 6px rgba(120, 40, 120, 0.5);
+  border-color: rgba(140, 60, 140, 0.4); /* More transparent */
+  background-color: rgba(40, 20, 40, 0.2); /* More transparent */
+  box-shadow: 0 0 6px rgba(120, 40, 120, 0.3); /* Softer shadow */
 }
 
 .slot-indicator {
@@ -647,20 +810,6 @@ onBeforeUnmount(() => {
 .empty-slot-container {
   opacity: 0;
   pointer-events: none;
-}
-
-@media (max-width: 500px) {
-  .slot {
-    width: 36px;
-    height: 36px;
-  }
-}
-
-@media (max-width: 350px) {
-  .slot {
-    width: 30px;
-    height: 30px;
-  }
 }
 
 /* Make sure tooltips appear above everything */
@@ -746,5 +895,32 @@ onBeforeUnmount(() => {
 
 :deep(.tooltip-status .status-destroyed) {
   color: #e57373; /* Red for destroyed items */
+}
+
+@media (max-width: 500px) {
+  .slot {
+    width: 36px;
+    height: 36px;
+  }
+
+  .ammo-container {
+    width: 20px;
+    height: 20px;
+  }
+
+  .high-slot .ammo-container {
+    top: 25px;
+    right: -20px;
+  }
+
+  .mid-slot .ammo-container {
+    top: 25px;
+    right: -20px;
+  }
+
+  .low-slot .ammo-container {
+    top: 14px;
+    right: -14px;
+  }
 }
 </style>
