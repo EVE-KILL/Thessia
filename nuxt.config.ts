@@ -29,7 +29,7 @@ export default defineNuxtConfig({
             "/api/search/**": { cors: true, cache: { maxAge: 30, staleMaxAge: -1, swr: true } },
             "/api/stats": { cors: true, cache: { maxAge: 300, staleMaxAge: -1, swr: true } },
             "/api/wars/**": { cors: true, cache: { maxAge: 3600, staleMaxAge: -1, swr: true } },
-            "/api/status": { cors: true, cache: { maxAge: 300, staleMaxAge: 0, swr: false } }
+            "/api/status": { cors: true, cache: { maxAge: 10, staleMaxAge: 0, swr: false } }
         },
 
         imports: {
