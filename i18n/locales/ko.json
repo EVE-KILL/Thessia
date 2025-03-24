@@ -136,13 +136,27 @@
             "overview": "개요",
             "processing": "처리",
             "database": "데이터베이스",
-            "cache": "캐시"
+            "cache": "캐시",
+            "redis": "Redis"
         },
         "uptime": {
             "title": "시스템 가동 시간",
             "format": "{days}D {hours}H {minutes}M {seconds}S",
             "since": "이후 증가",
             "localTime": "현지 시간"
+        },
+        "overview": {
+            "systemInfo": "시스템 정보",
+            "loadAverage": "로드 평균",
+            "nodeVersion": "노드 버전",
+            "redisVersion": "Redis 버전",
+            "redisMemory": "Redis 메모리",
+            "redisClients": "Redis 클라이언트",
+            "hitRatio": "캐시 적중률",
+            "totalKeys": "총 Redis 키",
+            "processing": "통계 처리",
+            "queueCounts": "활성 대기열",
+            "cache": "캐시 통계(크기/횟수)"
         },
         "environment": {
             "title": "환경",
@@ -191,6 +205,30 @@
             "24hours": "24시간",
             "1week": "1 주",
             "1month": "1개월"
+        },
+        "redis": {
+            "server": "Redis 서버",
+            "version": "버전",
+            "mode": "모드",
+            "os": "운영 체제",
+            "uptime": "가동 시간",
+            "uptimeFormat": "{days}D {hours}H {minutes}M {seconds}S",
+            "memory": "메모리",
+            "usedMemory": "사용한 메모리",
+            "usedMemoryPeak": "최대 메모리 사용량",
+            "memFragmentationRatio": "메모리 조각화 비율",
+            "stats": "통계",
+            "connectedClients": "연결된 클라이언트",
+            "totalConnections": "총 연결 수",
+            "totalCommands": "총 명령어",
+            "keyspaceHits": "키스페이스 조회수",
+            "keyspaceMisses": "키 스페이스 누락",
+            "hitRatio": "적중률",
+            "keyspace": "키 스페이스",
+            "database": "데이터베이스",
+            "keys": "키",
+            "expires": "만료",
+            "avgTtl": "평균 TTL"
         }
     },
     "auth": {
@@ -240,7 +278,9 @@
         "selectLanguage": "언어 선택",
         "page": "페이지",
         "previous": "이전 게시물",
-        "next": "다음"
+        "next": "다음",
+        "backToHome": "홈으로 돌아가기",
+        "isk": "ISK"
     },
     "settings": {
         "description": "계정 설정 및 권한 관리",
@@ -358,15 +398,30 @@
         "itemsPerPage": "페이지당 항목",
         "wsConnected": "웹소켓 연결",
         "wsDisconnected": "웹 소켓 연결 끊김",
-        "showing": "표시"
+        "showing": "표시",
+        "noKillmails": "킬메일을 찾을 수 없음",
+        "wsPaused": "일시 중지됨",
+        "wsPausedManually": "수동으로 일시 중지",
+        "wsReconnecting": "다시 연결하기 {attempt}/{max}",
+        "retrying": "다시 시도 {attempt}",
+        "wsError": "오류"
     },
     "topBox": {
-        "killsOver": "지난 {days} 일"
+        "killsOver": "지난 {days} 일",
+        "top": "Top",
+        "characters": "문자",
+        "corporations": "기업",
+        "alliances": "제휴",
+        "ships": "선박",
+        "systems": "시스템",
+        "constellations": "별자리",
+        "regions": "지역",
+        "noData": "사용 가능한 데이터 없음"
     },
     "tabs": {
         "topLists": "인기 목록",
         "kills": "킬",
-        "overview": "개요"
+        "most-valuable": "가장 가치 있는"
     },
     "top": {
         "characters": "인기 캐릭터",
@@ -376,5 +431,105 @@
         "systems": "상위 시스템",
         "constellations": "상위 별자리",
         "regions": "인기 지역"
+    },
+    "mostValuable": {
+        "kills": "킬",
+        "structures": "구조",
+        "ships": "선박",
+        "noData": "귀중품이 발견되지 않음"
+    },
+    "error": {
+        "serverError": "서버 오류",
+        "notFound": "페이지를 찾을 수 없음",
+        "generic": "오류가 발생했습니다."
+    },
+    "kill": {
+        "fitting": {
+            "highSlots": "높은 슬롯",
+            "midSlots": "미드 슬롯",
+            "lowSlots": "낮은 슬롯",
+            "rigSlots": "리그 슬롯",
+            "subsystems": "하위 시스템"
+        }
+    },
+    "killItems": {
+        "item": "항목",
+        "dropped": "떨어뜨림",
+        "destroyed": "파괴됨",
+        "value": "가치",
+        "hull": "Hull",
+        "subtotal": "소계",
+        "total": "합계",
+        "slots": {
+            "High Slot": "높은 슬롯",
+            "Medium Slot": "중간 슬롯",
+            "Low Slot": "낮은 슬롯",
+            "Rig Slot": "리그 슬롯",
+            "Subsystem": "하위 시스템",
+            "Drone Bay": "드론 베이",
+            "Cargo Bay": "카고 베이",
+            "Fuel Bay": "연료 베이",
+            "Fleet Hangar": "함대 격납고",
+            "Fighter Bay": "파이터 베이",
+            "Fighter Launch Tubes": "전투기 발사관",
+            "Ship Hangar": "선박 격납고",
+            "Ore Hold": "광석 홀드",
+            "Gas hold": "가스 홀드",
+            "Mineral hold": "미네랄 홀드",
+            "Salvage Hold": "구출 보류",
+            "Ship Hold": "선박 보류",
+            "Small Ship Hold": "소형 선박 홀드",
+            "Medium Ship Hold": "중간 선박 홀드",
+            "Large Ship Hold": "대형 선박 홀드",
+            "Industrial Ship Hold": "산업용 선박 홀드",
+            "Ammo Hold": "탄약 홀드",
+            "Quafe Bay": "콰페 베이",
+            "Structure Services": "구조 서비스",
+            "Structure Fuel": "구조 연료",
+            "Infrastructure Hangar": "인프라 격납고",
+            "Core Room": "코어 룸",
+            "Moon Material Bay": "달 소재 베이",
+            "Implants": "임플란트"
+        },
+        "slotTypes": {
+            "highSlot": "높은 슬롯",
+            "mediumSlot": "중간 슬롯",
+            "lowSlot": "낮은 슬롯",
+            "rigSlot": "리그 슬롯",
+            "subsystem": "하위 시스템",
+            "droneBay": "드론 베이",
+            "cargoBay": "카고 베이",
+            "fuelBay": "연료 베이",
+            "fleetHangar": "함대 격납고",
+            "fighterBay": "파이터 베이",
+            "fighterLaunchTubes": "전투기 발사관",
+            "shipHangar": "선박 격납고",
+            "oreHold": "광석 홀드",
+            "gasHold": "가스 홀드",
+            "mineralHold": "미네랄 홀드",
+            "salvageHold": "구출 보류",
+            "shipHold": "선박 보류",
+            "smallShipHold": "소형 선박 홀드",
+            "mediumShipHold": "중간 선박 홀드",
+            "largeShipHold": "대형 선박 홀드",
+            "industrialShipHold": "산업용 선박 홀드",
+            "ammoHold": "탄약 홀드",
+            "quafeBay": "콰페 베이",
+            "structureServices": "구조 서비스",
+            "structureFuel": "구조 연료",
+            "infrastructureHangar": "인프라 격납고",
+            "coreRoom": "코어 룸",
+            "moonMaterialBay": "달 소재 베이",
+            "implants": "임플란트"
+        }
+    },
+    "killFittingWheel": {
+        "dropped": "dropped",
+        "destroyed": "파괴됨",
+        "highSlots": "높은 슬롯",
+        "midSlots": "미드 슬롯",
+        "lowSlots": "낮은 슬롯",
+        "rigSlots": "리그 슬롯",
+        "subsystems": "하위 시스템"
     }
 }
