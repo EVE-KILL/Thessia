@@ -726,7 +726,6 @@ function getTotalCorporationsCount(): number {
 .table-row {
   display: grid;
   grid-template-columns: minmax(200px, 2fr) minmax(150px, 1fr) minmax(150px, 1fr) minmax(100px, 0.5fr);
-  padding: 0.5rem;
   border-bottom: 1px solid light-dark(#e5e7eb, rgb(40, 40, 40));
   align-items: center;
 }
@@ -952,7 +951,6 @@ function getTotalCorporationsCount(): number {
   display: grid;
   grid-template-columns: auto auto 1fr auto;
   border-bottom: 1px solid light-dark(#e5e7eb, rgb(40, 40, 40));
-  padding: 0.5rem 0.25rem;
   align-items: center;
   transition: background-color 0.3s ease;
 }
