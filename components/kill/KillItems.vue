@@ -111,11 +111,128 @@ const { isMobile } = useResponsive();
 
 const props = defineProps<{
     killmail: IKillmail | null;
-    maxWidth?: number;
 }>();
 
 const groupedItems = ref();
 const data = ref<Item[]>();
+const collapsible = {
+    'High Slot': {
+        collapsible: false,
+        defaultCollapsed: false
+    },
+    'Medium Slot': {
+        collapsible: false,
+        defaultCollapsed: false
+    },
+    'Low Slot': {
+        collapsible: false,
+        defaultCollapsed: false
+    },
+    'Rig Slot': {
+        collapsible: false,
+        defaultCollapsed: false
+    },
+    'Subsystem': {
+        collapsible: false,
+        defaultCollapsed: false
+    },
+    'Drone Bay': {
+        collapsible: false,
+        defaultCollapsed: false
+    },
+    'Cargo Bay': {
+        collapsible: false,
+        defaultCollapsed: false
+    },
+    'Fuel Bay': {
+        collapsible: false,
+        defaultCollapsed: false
+    },
+    'Fleet Hangar': {
+        collapsible: false,
+        defaultCollapsed: false
+    },
+    'Fighter Bay': {
+        collapsible: false,
+        defaultCollapsed: false
+    },
+    'Fighter Launch Tubes': {
+        collapsible: false,
+        defaultCollapsed: false
+    },
+    'Ship Hangar': {
+        collapsible: false,
+        defaultCollapsed: false
+    },
+    'Ore Hold': {
+        collapsible: false,
+        defaultCollapsed: false
+    },
+    'Gas Hold': {
+        collapsible: false,
+        defaultCollapsed: false
+    },
+    'Mineral Hold': {
+        collapsible: false,
+        defaultCollapsed: false
+    },
+    'Salvage Hold': {
+        collapsible: false,
+        defaultCollapsed: false
+    },
+    'Ship Hold': {
+        collapsible: false,
+        defaultCollapsed: false
+    },
+    'Small Ship Hold': {
+        collapsible: false,
+        defaultCollapsed: false
+    },
+    'Medium Ship Hold': {
+        collapsible: false,
+        defaultCollapsed: false
+    },
+    'Large Ship Hold': {
+        collapsible: false,
+        defaultCollapsed: false
+    },
+    'Industrial Ship Hold': {
+        collapsible: false,
+        defaultCollapsed: false
+    },
+    'Ammo Hold': {
+        collapsible: false,
+        defaultCollapsed: false
+    },
+    'Quafe Bay': {
+        collapsible: false,
+        defaultCollapsed: false
+    },
+    'Structure Services': {
+        collapsible: false,
+        defaultCollapsed: false
+    },
+    'Structure Fuel': {
+        collapsible: false,
+        defaultCollapsed: false
+    },
+    'Implants': {
+        collapsible: false,
+        defaultCollapsed: false
+    },
+    'Infrastructure Hangar': {
+        collapsible: false,
+        defaultCollapsed: false
+    },
+    'Core Room': {
+        collapsible: false,
+        defaultCollapsed: false
+    },
+    'Moon Material Bay': {
+        collapsible: false,
+        defaultCollapsed: false
+    },
+};
 
 /**
  * Gets the localized string from a translation object using the current locale

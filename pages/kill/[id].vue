@@ -1,8 +1,7 @@
 <template>
-  <KillNavbar :killmail="killmail"/>
-
   <!-- Desktop Layout -->
   <div v-if="!isMobile" class="flex flex-wrap mt-4 gap-4">
+    <KillNavbar :killmail="killmail"/>
     <!-- Left Container -->
     <div class="flex-1 min-w-0 text-black dark:text-white bg-background-900 rounded-md overflow-hidden">
       <!-- Header -->
@@ -20,11 +19,30 @@
                 <div class="skeleton-ship">
                   <USkeleton class="h-full w-full rounded-full" />
                 </div>
+                <!-- Slot indicators -->
+                <div class="skeleton-indicator high-indicator" :style="getSkeletonSlotPosition('indicator', 'top')">
+                  <USkeleton class="h-4 w-4" />
+                </div>
+                <div class="skeleton-indicator mid-indicator" :style="getSkeletonSlotPosition('indicator', 'right')">
+                  <USkeleton class="h-4 w-4" />
+                </div>
+                <div class="skeleton-indicator low-indicator" :style="getSkeletonSlotPosition('indicator', 'bottom')">
+                  <USkeleton class="h-4 w-4" />
+                </div>
+
                 <!-- Slot skeletons for modules -->
-                <div v-for="i in 8" :key="`high-${i}`" :style="getSkeletonSlotPosition(i-1, 8, 'top')" class="skeleton-slot"></div>
-                <div v-for="i in 8" :key="`mid-${i}`" :style="getSkeletonSlotPosition(i-1, 8, 'right')" class="skeleton-slot"></div>
-                <div v-for="i in 8" :key="`low-${i}`" :style="getSkeletonSlotPosition(i-1, 8, 'bottom')" class="skeleton-slot"></div>
-                <div v-for="i in 3" :key="`rig-${i}`" :style="getSkeletonSlotPosition(i-1, 3, 'left')" class="skeleton-slot"></div>
+                <div v-for="i in 8" :key="`high-${i}`" :style="getSkeletonSlotPosition(i-1, 8, 'top')" class="skeleton-slot high-slot">
+                  <USkeleton class="h-full w-full rounded-full" />
+                </div>
+                <div v-for="i in 8" :key="`mid-${i}`" :style="getSkeletonSlotPosition(i-1, 8, 'right')" class="skeleton-slot mid-slot">
+                  <USkeleton class="h-full w-full rounded-full" />
+                </div>
+                <div v-for="i in 8" :key="`low-${i}`" :style="getSkeletonSlotPosition(i-1, 8, 'bottom')" class="skeleton-slot low-slot">
+                  <USkeleton class="h-full w-full rounded-full" />
+                </div>
+                <div v-for="i in 3" :key="`rig-${i}`" :style="getSkeletonSlotPosition(i-1, 3, 'left')" class="skeleton-slot rig-slot">
+                  <USkeleton class="h-full w-full rounded-full" />
+                </div>
               </div>
             </template>
             <KillFittingWheel v-else :killmail="killmail" :max-width="1000" style="min-width: 550px"/>
@@ -34,13 +52,72 @@
           <div class="information-box ml-0 md:ml-4 md:mt-0 w-full md:w-3/5 lg:w-1/2 max-w-[325px]">
             <template v-if="!killmail || isLoading">
               <div class="grid gap-4">
-                <USkeleton class="h-8 w-full" />
-                <div class="grid grid-cols-2 gap-4">
-                  <USkeleton v-for="i in 6" :key="i" class="h-6" />
+                <!-- Ship section skeleton -->
+                <div class="section p-3 rounded-lg bg-background-800 bg-opacity-30">
+                  <div class="flex items-center gap-3">
+                    <USkeleton class="h-16 w-16 rounded-md flex-shrink-0" />
+                    <div class="flex flex-col gap-2 flex-grow min-w-0">
+                      <USkeleton class="h-6 w-full" />
+                      <div class="flex justify-between">
+                        <USkeleton class="h-5 w-24" />
+                        <div class="flex gap-1">
+                          <USkeleton class="h-5 w-12 rounded-full" />
+                        </div>
+                      </div>
+                    </div>
+                  </div>
                 </div>
-                <USkeleton class="h-12 w-full" />
-                <div class="grid grid-cols-2 gap-2">
-                  <USkeleton v-for="i in 4" :key="i" class="h-6" />
+
+                <!-- Victim section skeleton -->
+                <div class="section p-3 rounded-lg bg-background-800 bg-opacity-30">
+                  <USkeleton class="h-5 w-24 mb-2" />
+                  <div class="flex items-start gap-3 mb-2">
+                    <div class="relative">
+                      <USkeleton class="h-12 w-12 rounded-full" />
+                      <USkeleton class="h-8 w-8 rounded-full absolute bottom-[-4px] right-[-4px]" />
+                    </div>
+                    <div class="flex flex-col gap-1 flex-grow min-w-0">
+                      <USkeleton class="h-5 w-32" />
+                      <USkeleton class="h-4 w-28" />
+                    </div>
+                  </div>
+                  <div class="flex items-center gap-1 mb-2">
+                    <USkeleton class="h-6 w-6 rounded-full" />
+                    <USkeleton class="h-4 w-32" />
+                  </div>
+                  <div class="grid grid-cols-2 gap-2">
+                    <div class="flex items-center gap-1">
+                      <USkeleton class="h-4 w-4" />
+                      <USkeleton class="h-4 w-full" />
+                    </div>
+                    <div class="flex items-center gap-1">
+                      <USkeleton class="h-4 w-4" />
+                      <USkeleton class="h-4 w-full" />
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Details section skeleton -->
+                <div class="section p-3 rounded-lg bg-background-800 bg-opacity-30">
+                  <div class="grid gap-3">
+                    <div class="flex items-start gap-2">
+                      <USkeleton class="h-4 w-4 mt-1 flex-shrink-0" />
+                      <div class="flex flex-col gap-1 min-w-0">
+                        <USkeleton class="h-5 w-40" />
+                        <USkeleton class="h-4 w-32" />
+                      </div>
+                    </div>
+                    <div class="flex items-start gap-2">
+                      <USkeleton class="h-4 w-4 mt-1 flex-shrink-0" />
+                      <div class="flex flex-col gap-1 min-w-0">
+                        <div class="flex items-center gap-1">
+                          <USkeleton class="h-5 w-28" />
+                          <USkeleton class="h-5 w-8 rounded-md" />
+                        </div>
+                        <USkeleton class="h-4 w-36" />
+                      </div>
+                    </div>
+                  </div>
                 </div>
               </div>
             </template>
@@ -52,16 +129,105 @@
       <!-- Body -->
       <div class="mt-4">
         <template v-if="!killmail || isLoading">
-          <div class="grid gap-4">
-            <div class="flex items-center justify-between">
-              <USkeleton class="h-6 w-48" />
-              <USkeleton class="h-6 w-24" />
+          <div class="custom-table-skeleton">
+            <!-- Table header skeleton -->
+            <div class="table-header-skeleton">
+              <div class="cell image-cell"></div>
+              <div class="cell name-cell">
+                <USkeleton class="h-5 w-16" />
+              </div>
+              <div class="cell quantity-cell">
+                <USkeleton class="h-5 w-24" />
+              </div>
+              <div class="cell value-cell">
+                <USkeleton class="h-5 w-16" />
+              </div>
             </div>
-            <div class="grid gap-2">
-              <div v-for="i in 8" :key="i" class="flex items-center gap-4 p-2">
-                <USkeleton class="h-10 w-10 rounded-md" />
-                <USkeleton class="h-5 w-48" />
-                <USkeleton class="h-5 w-24 ml-auto" />
+
+            <!-- Header row -->
+            <div class="table-row-skeleton header-row">
+              <div class="cell image-cell"></div>
+              <div class="cell name-cell">
+                <USkeleton class="h-5 w-32" />
+              </div>
+              <div class="cell quantity-cell"></div>
+              <div class="cell value-cell"></div>
+            </div>
+
+            <!-- Ship row -->
+            <div class="table-row-skeleton">
+              <div class="cell image-cell">
+                <USkeleton class="h-8 w-8 rounded-md" />
+              </div>
+              <div class="cell name-cell">
+                <USkeleton class="h-5 w-40" />
+              </div>
+              <div class="cell quantity-cell">
+                <USkeleton class="h-5 w-10 rounded-full" />
+              </div>
+              <div class="cell value-cell">
+                <USkeleton class="h-5 w-24" />
+              </div>
+            </div>
+
+            <!-- Repeat for other sections -->
+            <div v-for="section in 3" :key="`section-${section}`">
+              <!-- Section header -->
+              <div class="table-row-skeleton header-row mt-2">
+                <div class="cell image-cell"></div>
+                <div class="cell name-cell">
+                  <USkeleton class="h-5 w-36" />
+                </div>
+                <div class="cell quantity-cell"></div>
+                <div class="cell value-cell"></div>
+              </div>
+
+              <!-- Item rows -->
+              <div v-for="i in 3" :key="`item-${section}-${i}`" class="table-row-skeleton">
+                <div class="cell image-cell">
+                  <USkeleton class="h-6 w-6 rounded-md" />
+                </div>
+                <div class="cell name-cell">
+                  <USkeleton class="h-5 w-48" />
+                </div>
+                <div class="cell quantity-cell">
+                  <div class="flex gap-2">
+                    <USkeleton class="h-5 w-8 rounded-full" />
+                    <USkeleton class="h-5 w-8 rounded-full" />
+                  </div>
+                </div>
+                <div class="cell value-cell">
+                  <USkeleton class="h-5 w-20" />
+                </div>
+              </div>
+
+              <!-- Subtotal row -->
+              <div class="table-row-skeleton value-row">
+                <div class="cell image-cell"></div>
+                <div class="cell name-cell">
+                  <USkeleton class="h-5 w-20" />
+                </div>
+                <div class="cell quantity-cell">
+                  <div class="flex gap-2">
+                    <USkeleton class="h-5 w-8 rounded-full" />
+                    <USkeleton class="h-5 w-8 rounded-full" />
+                  </div>
+                </div>
+                <div class="cell value-cell">
+                  <USkeleton class="h-5 w-24" />
+                </div>
+              </div>
+            </div>
+
+            <!-- Total row -->
+            <div class="table-row-skeleton value-row mt-2">
+              <div class="cell image-cell"></div>
+              <div class="cell name-cell">
+                <USkeleton class="h-5 w-16" />
+              </div>
+              <div class="cell quantity-cell"></div>
+              <div class="cell value-cell">
+                <USkeleton class="h-5 w-28" />
               </div>
             </div>
           </div>
@@ -76,17 +242,31 @@
         <!-- Skeleton tabs -->
         <div class="border-b border-background-700">
           <div class="flex gap-4 p-2">
-            <USkeleton v-for="i in 2" :key="i" class="h-8 w-24" />
+            <USkeleton class="h-8 w-32" />
+            <USkeleton class="h-8 w-32" />
           </div>
         </div>
-        <!-- Skeleton content -->
+        <!-- Skeleton content for attackers -->
         <div class="p-4">
           <div class="grid gap-4">
-            <div v-for="i in 5" :key="i" class="flex items-center gap-4">
-              <USkeleton class="h-10 w-10 rounded-full" />
-              <div class="grid gap-1 flex-1">
-                <USkeleton class="h-5 w-32" />
-                <USkeleton class="h-4 w-full" />
+            <div v-for="i in 8" :key="i" class="flex items-center gap-3 p-2 border-b border-background-800">
+              <div class="relative">
+                <USkeleton class="h-10 w-10 rounded-full" />
+                <USkeleton class="h-6 w-6 rounded-full absolute -bottom-1 -right-1" />
+              </div>
+              <div class="grid gap-1 flex-1 min-w-0">
+                <div class="flex justify-between">
+                  <USkeleton class="h-5 w-32" />
+                  <USkeleton class="h-5 w-16" />
+                </div>
+                <div class="flex justify-between">
+                  <USkeleton class="h-4 w-24" />
+                  <USkeleton class="h-4 w-12" />
+                </div>
+                <div class="flex items-center gap-1">
+                  <USkeleton class="h-4 w-4 rounded-full" />
+                  <USkeleton class="h-4 w-20" />
+                </div>
               </div>
             </div>
           </div>
@@ -102,7 +282,7 @@
         </template>
 
         <template #attackers="{ item }">
-          <KillAttackers />
+          <KillAttackers :killmail="killmail" />
         </template>
       </UTabs>
     </div>
@@ -120,7 +300,7 @@
         </div>
         <!-- Skeleton content -->
         <div class="p-4">
-          <!-- Use the same fitting wheel skeleton -->
+          <!-- Use enhanced fitting wheel skeleton -->
           <div class="fitting-wheel-skeleton mx-auto mb-4">
             <!-- Outer ring skeleton -->
             <div class="skeleton-ring outer-skeleton-ring"></div>
@@ -130,11 +310,30 @@
             <div class="skeleton-ship">
               <USkeleton class="h-full w-full rounded-full" />
             </div>
+            <!-- Slot indicators -->
+            <div class="skeleton-indicator high-indicator" :style="getSkeletonSlotPosition('indicator', 'top')">
+              <USkeleton class="h-4 w-4" />
+            </div>
+            <div class="skeleton-indicator mid-indicator" :style="getSkeletonSlotPosition('indicator', 'right')">
+              <USkeleton class="h-4 w-4" />
+            </div>
+            <div class="skeleton-indicator low-indicator" :style="getSkeletonSlotPosition('indicator', 'bottom')">
+              <USkeleton class="h-4 w-4" />
+            </div>
+
             <!-- Slot skeletons for modules -->
-            <div v-for="i in 8" :key="`high-${i}`" :style="getSkeletonSlotPosition(i-1, 8, 'top')" class="skeleton-slot"></div>
-            <div v-for="i in 8" :key="`mid-${i}`" :style="getSkeletonSlotPosition(i-1, 8, 'right')" class="skeleton-slot"></div>
-            <div v-for="i in 8" :key="`low-${i}`" :style="getSkeletonSlotPosition(i-1, 8, 'bottom')" class="skeleton-slot"></div>
-            <div v-for="i in 3" :key="`rig-${i}`" :style="getSkeletonSlotPosition(i-1, 3, 'left')" class="skeleton-slot"></div>
+            <div v-for="i in 8" :key="`mobile-high-${i}`" :style="getSkeletonSlotPosition(i-1, 8, 'top')" class="skeleton-slot high-slot">
+              <USkeleton class="h-full w-full rounded-full" />
+            </div>
+            <div v-for="i in 8" :key="`mobile-mid-${i}`" :style="getSkeletonSlotPosition(i-1, 8, 'right')" class="skeleton-slot mid-slot">
+              <USkeleton class="h-full w-full rounded-full" />
+            </div>
+            <div v-for="i in 8" :key="`mobile-low-${i}`" :style="getSkeletonSlotPosition(i-1, 8, 'bottom')" class="skeleton-slot low-slot">
+              <USkeleton class="h-full w-full rounded-full" />
+            </div>
+            <div v-for="i in 3" :key="`mobile-rig-${i}`" :style="getSkeletonSlotPosition(i-1, 3, 'left')" class="skeleton-slot rig-slot">
+              <USkeleton class="h-full w-full rounded-full" />
+            </div>
           </div>
         </div>
       </template>
@@ -223,16 +422,16 @@ const tabsUi = {
 // Desktop tabs
 const rightSideTabs = computed(() => [
   {
-    label: 'Comments',
-    slot: 'comments',
-    icon: 'i-lucide-message-square',
-    trailing: commentCount.value ? `(${commentCount.value})` : undefined
-  },
-  {
     label: 'Attackers',
     slot: 'attackers',
     icon: 'i-lucide-users',
     trailing: killmail.value?.attackers?.length ? `(${killmail.value.attackers.length})` : undefined
+  },
+  {
+    label: 'Comments',
+    slot: 'comments',
+    icon: 'i-lucide-message-square',
+    trailing: commentCount.value ? `(${commentCount.value})` : undefined
   }
 ]);
 
@@ -349,21 +548,37 @@ function getSkeletonSlotPosition(index: number, total: number, position: string)
   const radius = 42;
   let angle = 0;
 
-  switch (position) {
-    case 'top':
-      angle = -125 + (index * 10);
-      break;
-    case 'right':
-      angle = 0 - 35 + (index * 10);
-      break;
-    case 'bottom':
-      angle = 90 - 35 + (index * 10);
-      break;
-    case 'left':
-      angle = 218 - 20 + (index * 10);
-      break;
-    default:
-      angle = 0;
+  if (position === 'indicator') {
+    switch (index) {
+      case 'top':
+        angle = -125 - 9;
+        break;
+      case 'right':
+        angle = -35 - 10;
+        break;
+      case 'bottom':
+        angle = 90 - 35 - 10;
+        break;
+      default:
+        angle = 0;
+    }
+  } else {
+    switch (position) {
+      case 'top':
+        angle = -125 + (index * 10.5);
+        break;
+      case 'right':
+        angle = 0 - 37 + (index * 10.5);
+        break;
+      case 'bottom':
+        angle = 90 - 36 + (index * 10.5);
+        break;
+      case 'left':
+        angle = 218 - 22 + (index * 10.5);
+        break;
+      default:
+        angle = 0;
+    }
   }
 
   const rad = angle * (Math.PI / 180);
@@ -495,6 +710,152 @@ function getSkeletonSlotPosition(index: number, total: number, position: string)
 @media (max-width: 768px) {
   .fitting-wheel-skeleton {
     max-width: 400px; /* Increased from 300px */
+  }
+}
+
+/* Enhanced fitting wheel skeleton styles */
+.fitting-wheel-skeleton {
+  position: relative;
+  width: 100%;
+  max-width: 600px;
+  height: 0;
+  padding-bottom: 100%; /* Maintain 1:1 aspect ratio */
+  margin: 0 auto;
+  border-radius: 50%;
+  overflow: hidden;
+  background-color: rgba(30, 30, 30, 0.2);
+}
+
+/* Skeleton rings */
+.skeleton-ring {
+  position: absolute;
+  border-radius: 50%;
+  background-color: transparent;
+}
+
+.outer-skeleton-ring {
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  border: 8px solid rgba(40, 40, 40, 0.3);
+}
+
+.inner-skeleton-ring {
+  top: 15%;
+  left: 15%;
+  width: 70%;
+  height: 70%;
+  border: 6px solid rgba(40, 40, 40, 0.2);
+}
+
+/* Ship skeleton */
+.skeleton-ship {
+  position: absolute;
+  top: 20%;
+  left: 20%;
+  width: 60%;
+  height: 60%;
+  border-radius: 50%;
+  overflow: hidden;
+}
+
+/* Module slot skeletons */
+.skeleton-slot {
+  position: absolute;
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  overflow: hidden;
+}
+
+.skeleton-slot.high-slot {
+  border: 1px solid rgba(180, 60, 60, 0.2);
+}
+
+.skeleton-slot.mid-slot {
+  border: 1px solid rgba(60, 120, 180, 0.2);
+}
+
+.skeleton-slot.low-slot {
+  border: 1px solid rgba(180, 140, 60, 0.2);
+}
+
+.skeleton-slot.rig-slot {
+  border: 1px solid rgba(150, 150, 150, 0.2);
+}
+
+/* Slot indicators */
+.skeleton-indicator {
+  position: absolute;
+  width: 18px;
+  height: 18px;
+  z-index: 6;
+  transform-origin: center;
+}
+
+/* Custom table skeleton styles */
+.custom-table-skeleton {
+  width: 100%;
+}
+
+.table-header-skeleton {
+  display: grid;
+  grid-template-columns: 80px 1fr 120px 120px;
+  padding: 0.5rem 1rem;
+  border-bottom: 1px solid rgb(40, 40, 40);
+  background-color: rgba(26, 26, 26, 0.5);
+}
+
+.table-row-skeleton {
+  display: grid;
+  grid-template-columns: 80px 1fr 120px 120px;
+  padding: 0.4rem 1rem;
+  border-bottom: 1px solid rgb(40, 40, 40);
+  align-items: center;
+}
+
+.table-row-skeleton.header-row {
+  background-color: rgba(26, 26, 26, 0.7);
+  padding: 0.3rem 1rem;
+  height: 2rem;
+}
+
+.table-row-skeleton.value-row {
+  background-color: rgba(40, 40, 40, 0.3);
+  font-weight: 600;
+}
+
+.cell {
+  display: flex;
+  align-items: center;
+}
+
+.value-cell {
+  justify-content: flex-end;
+}
+
+/* Responsive adjustments */
+@media (max-width: 500px) {
+  .skeleton-slot {
+    width: 36px;
+    height: 36px;
+  }
+}
+
+@media (max-width: 768px) {
+  .fitting-wheel-skeleton {
+    max-width: 400px;
+  }
+
+  .table-header-skeleton {
+    grid-template-columns: 50px 1fr 100px;
+    padding: 0.4rem 0.75rem;
+  }
+
+  .table-row-skeleton {
+    grid-template-columns: 50px 1fr 100px;
+    padding: 0.35rem 0.75rem;
   }
 }
 </style>
