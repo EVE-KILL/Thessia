@@ -1,5 +1,5 @@
 <template>
-  <KillNavbar />
+  <KillNavbar :killmail="killmail"/>
 
   <!-- Desktop Layout -->
   <div v-if="!isMobile" class="flex flex-wrap mt-4 gap-4">
