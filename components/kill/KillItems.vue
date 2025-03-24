@@ -31,7 +31,7 @@
                     <img v-if="(row.type === 'item' || row.type === 'container-item') && row.image"
                          :src="row.image"
                          :alt="row.itemName || ''"
-                         class="w-8 h-8 rounded-md" />
+                         class="w-6 h-6 rounded-md" />
                 </div>
 
                 <!-- Name cell -->
@@ -410,7 +410,7 @@ watch(locale, () => {
     grid-template-columns: 80px 1fr 100px 100px 120px;
     background-color: light-dark(rgba(245, 245, 245, 0.1), rgba(26, 26, 26, 0.5));
     /* Semi-transparent header */
-    padding: 0.75rem 1rem;
+    padding: 0.5rem 1rem; /* Reduced from 0.75rem */
     border-bottom: 1px solid light-dark(#e5e7eb, rgb(40, 40, 40));
 }
 
@@ -435,7 +435,7 @@ watch(locale, () => {
 .table-row {
     display: grid;
     grid-template-columns: 80px 1fr 100px 100px 120px;
-    padding: 0.75rem 1rem;
+    padding: 0.4rem 1rem; /* Reduced from 0.75rem */
     border-bottom: 1px solid light-dark(#e5e7eb, rgb(40, 40, 40));
     align-items: center;
     color: light-dark(#111827, white);
@@ -448,8 +448,8 @@ watch(locale, () => {
     background-color: light-dark(rgba(229, 231, 235, 0.5), rgba(26, 26, 26, 0.7));
     /* Semi-transparent header */
     color: light-dark(#111827, white);
-    padding: 0.5rem 1rem;
-    height: 2.5rem;
+    padding: 0.3rem 1rem; /* Reduced from 0.5rem */
+    height: 2rem; /* Reduced from 2.5rem */
 }
 
 /* Styling for value rows */
@@ -555,8 +555,8 @@ watch(locale, () => {
 }
 
 .connector-icon {
-  width: 14px;
-  height: 14px;
+  width: 12px; /* Reduced from 14px */
+  height: 12px; /* Reduced from 14px */
   color: light-dark(#6b7280, #9ca3af);
   margin-right: 2px;
 }
@@ -574,5 +574,11 @@ watch(locale, () => {
 /* Make the image cell position relative to properly position the connector */
 .container-item-row .image-cell {
   position: relative;
+}
+
+/* Compact styling for badges */
+:deep(.u-badge) {
+    padding: 0.1rem 0.4rem;
+    font-size: 0.7rem;
 }
 </style>
