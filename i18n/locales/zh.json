@@ -136,13 +136,27 @@
             "overview": "概述",
             "processing": "加工",
             "database": "数据库",
-            "cache": "缓存"
+            "cache": "缓存",
+            "redis": "Redis"
         },
         "uptime": {
             "title": "系统正常运行时间",
             "format": "{days}D{hours}H{minutes}M{seconds}S",
             "since": "自",
             "localTime": "当地时间"
+        },
+        "overview": {
+            "systemInfo": "系统信息",
+            "loadAverage": "平均负载",
+            "nodeVersion": "节点版本",
+            "redisVersion": "Redis 版本",
+            "redisMemory": "Redis 内存",
+            "redisClients": "Redis 客户端",
+            "hitRatio": "缓存命中率",
+            "totalKeys": "Redis 密钥总数",
+            "processing": "处理统计",
+            "queueCounts": "活动队列",
+            "cache": "缓存统计（大小/点击数）"
         },
         "environment": {
             "title": "环境",
@@ -191,6 +205,30 @@
             "24hours": "24 小时",
             "1week": "1 周",
             "1month": "1 个月"
+        },
+        "redis": {
+            "server": "Redis 服务器",
+            "version": "版本",
+            "mode": "模式",
+            "os": "操作系统",
+            "uptime": "正常运行时间",
+            "uptimeFormat": "{days}D{hours}H{minutes}M{seconds}S",
+            "memory": "内存",
+            "usedMemory": "使用过的内存",
+            "usedMemoryPeak": "内存使用峰值",
+            "memFragmentationRatio": "内存碎片率",
+            "stats": "统计资料",
+            "connectedClients": "连接客户",
+            "totalConnections": "连接总数",
+            "totalCommands": "命令总数",
+            "keyspaceHits": "关键空间点击",
+            "keyspaceMisses": "关键空间失误",
+            "hitRatio": "命中率",
+            "keyspace": "钥匙空间",
+            "database": "数据库",
+            "keys": "钥匙",
+            "expires": "到期",
+            "avgTtl": "平均 TTL"
         }
     },
     "auth": {
@@ -240,7 +278,9 @@
         "selectLanguage": "选择语言",
         "page": "页次",
         "previous": "上一页",
-        "next": "下一页"
+        "next": "下一页",
+        "backToHome": "返回首页",
+        "isk": "ISK"
     },
     "settings": {
         "description": "管理账户设置和权限",
@@ -358,15 +398,30 @@
         "itemsPerPage": "每页项目",
         "wsConnected": "已连接 WebSocket",
         "wsDisconnected": "断开 WebSocket 连接",
-        "showing": "显示"
+        "showing": "显示",
+        "noKillmails": "未找到 killmails",
+        "wsPaused": "暂停",
+        "wsPausedManually": "手动暂停",
+        "wsReconnecting": "重新连接{attempt}/{max}",
+        "retrying": "重试{attempt}",
+        "wsError": "错误"
     },
     "topBox": {
-        "killsOver": "最后{days} 天"
+        "killsOver": "最后{days} 天",
+        "top": "返回顶部",
+        "characters": "人物",
+        "corporations": "公司",
+        "alliances": "联盟",
+        "ships": "船舶",
+        "systems": "系统",
+        "constellations": "星座",
+        "regions": "地区",
+        "noData": "无数据"
     },
     "tabs": {
         "topLists": "热门列表",
         "kills": "击毙",
-        "overview": "概述"
+        "most-valuable": "最有价值"
     },
     "top": {
         "characters": "顶级人物",
@@ -376,5 +431,105 @@
         "systems": "顶级系统",
         "constellations": "顶级星座",
         "regions": "顶级地区"
+    },
+    "mostValuable": {
+        "kills": "击毙",
+        "structures": "结构",
+        "ships": "船舶",
+        "noData": "未发现贵重物品"
+    },
+    "error": {
+        "serverError": "服务器错误",
+        "notFound": "页面未找到",
+        "generic": "发生错误"
+    },
+    "kill": {
+        "fitting": {
+            "highSlots": "高老虎机",
+            "midSlots": "中间插槽",
+            "lowSlots": "低插槽",
+            "rigSlots": "钻机插槽",
+            "subsystems": "子系统"
+        }
+    },
+    "killItems": {
+        "item": "项目",
+        "dropped": "掉线",
+        "destroyed": "已销毁",
+        "value": "价值",
+        "hull": "船体",
+        "subtotal": "小计",
+        "total": "总计",
+        "slots": {
+            "High Slot": "高插槽",
+            "Medium Slot": "中型插槽",
+            "Low Slot": "低槽",
+            "Rig Slot": "钻机插槽",
+            "Subsystem": "子系统",
+            "Drone Bay": "无人机湾",
+            "Cargo Bay": "货舱",
+            "Fuel Bay": "燃料湾",
+            "Fleet Hangar": "舰队机库",
+            "Fighter Bay": "战斗机湾",
+            "Fighter Launch Tubes": "战斗机发射管",
+            "Ship Hangar": "船库",
+            "Ore Hold": "矿石储备",
+            "Gas hold": "气体保持",
+            "Mineral hold": "矿物保持",
+            "Salvage Hold": "打捞保持",
+            "Ship Hold": "船舱",
+            "Small Ship Hold": "小型船舱",
+            "Medium Ship Hold": "中型船舱",
+            "Large Ship Hold": "大型船舱",
+            "Industrial Ship Hold": "工业船舱",
+            "Ammo Hold": "弹药舱",
+            "Quafe Bay": "卡夫湾",
+            "Structure Services": "结构服务",
+            "Structure Fuel": "结构燃料",
+            "Infrastructure Hangar": "基础设施机库",
+            "Core Room": "核心室",
+            "Moon Material Bay": "月亮材料湾",
+            "Implants": "植入物"
+        },
+        "slotTypes": {
+            "highSlot": "高插槽",
+            "mediumSlot": "中型插槽",
+            "lowSlot": "低槽",
+            "rigSlot": "钻机插槽",
+            "subsystem": "子系统",
+            "droneBay": "无人机湾",
+            "cargoBay": "货舱",
+            "fuelBay": "燃料湾",
+            "fleetHangar": "舰队机库",
+            "fighterBay": "战斗机湾",
+            "fighterLaunchTubes": "战斗机发射管",
+            "shipHangar": "船库",
+            "oreHold": "矿石储备",
+            "gasHold": "气体保持",
+            "mineralHold": "矿物保持",
+            "salvageHold": "打捞保持",
+            "shipHold": "船舱",
+            "smallShipHold": "小型船舱",
+            "mediumShipHold": "中型船舱",
+            "largeShipHold": "大型船舱",
+            "industrialShipHold": "工业船舱",
+            "ammoHold": "弹药舱",
+            "quafeBay": "卡夫湾",
+            "structureServices": "结构服务",
+            "structureFuel": "结构燃料",
+            "infrastructureHangar": "基础设施机库",
+            "coreRoom": "核心室",
+            "moonMaterialBay": "月亮材料湾",
+            "implants": "植入物"
+        }
+    },
+    "killFittingWheel": {
+        "dropped": "下降",
+        "destroyed": "圮",
+        "highSlots": "高老虎机",
+        "midSlots": "中间插槽",
+        "lowSlots": "低插槽",
+        "rigSlots": "钻机插槽",
+        "subsystems": "子系统"
     }
 }
