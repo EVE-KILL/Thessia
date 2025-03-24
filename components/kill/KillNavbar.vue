@@ -120,7 +120,7 @@ const items = ref([
     ]
   },
   {
-    label: 'ZKillboard',
+    label: 'zKillboard',
     children: [
         {
             label: 'Killmail',
