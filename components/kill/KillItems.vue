@@ -11,18 +11,34 @@
 
         <!-- Table body -->
         <div class="table-body">
-            <div v-for="(row, index) in data" :key="index" class="table-row" :class="row.type">
+            <div v-for="(row, index) in data" :key="index"
+                 class="table-row"
+                 :class="[
+                    row.type,
+                    { 'cursor-pointer': (row.type === 'item' || row.type === 'container-item') && row.itemId },
+                    { 'container-item-row': row.isNested }
+                 ]"
+                 @click="(row.type === 'item' || row.type === 'container-item') && row.itemId ? navigateToItem(row.itemId) : null">
 
-                <!-- Image cell -->
-                <div class="body-cell image-cell">
-                    <img v-if="row.type === 'item' && row.image" :src="row.image" :alt="row.itemName || ''"
-                        class="w-8 h-8 rounded-md" />
+                <!-- Image cell with indentation and connector icon for container items -->
+                <div class="body-cell image-cell" :class="{ 'indented-image': row.isNested }">
+                    <template v-if="row.isNested">
+                        <div class="connector-line">
+                            <Icon name="lucide:corner-down-right" class="connector-icon" />
+                        </div>
+                    </template>
+
+                    <img v-if="(row.type === 'item' || row.type === 'container-item') && row.image"
+                         :src="row.image"
+                         :alt="row.itemName || ''"
+                         class="w-8 h-8 rounded-md" />
                 </div>
 
-                <!-- Name cell - Always visible for headers and items -->
+                <!-- Name cell - removed the pl-5 class -->
                 <div class="body-cell name-cell">
                     <div v-if="row.type === 'header'" class="font-bold text-sm uppercase">{{ row.itemName }}</div>
-                    <div v-else-if="row.type === 'item'" class="font-medium">{{ row.itemName }}</div>
+                    <div v-else-if="row.type === 'item' || row.type === 'container-item'"
+                         class="font-medium">{{ row.itemName }}</div>
                 </div>
 
                 <!-- Dropped cell - Only for items and value rows -->
@@ -107,6 +123,7 @@ watch(() => props.killmail, (killmail: IKillmail) => {
         dropped: 0,
         destroyed: 1,
         value: killmail.ship_value,
+        itemId: killmail.victim.ship_id // Add ship_id as itemId
     });
 
     groupedItems.value.forEach((group) => {
@@ -122,15 +139,37 @@ watch(() => props.killmail, (killmail: IKillmail) => {
 
         let innerValue = 0;
         items.forEach((item) => {
+            // Add the main item
             data.value?.push({
                 type: 'item',
                 image: 'https://images.evetech.net/types/' + item.type_id + '/icon?size=64',
-                itemName: item.name.en, // @TODO fix translation handling here
+                itemName: item.name.en,
                 dropped: item.qty_dropped,
                 destroyed: item.qty_destroyed,
                 value: item.value,
+                itemId: item.type_id
             });
-            innerValue += item.value || 0;
+
+            // If this is a container with items, add all contained items with indentation
+            if (item.isContainer && item.items && item.items.length > 0) {
+                item.items.forEach(containerItem => {
+                    data.value?.push({
+                        type: 'container-item',  // Special type for contained items
+                        image: 'https://images.evetech.net/types/' + containerItem.type_id + '/icon?size=64',
+                        itemName: containerItem.type_name || containerItem.name?.en || 'Unknown Item',
+                        dropped: containerItem.qty_dropped,
+                        destroyed: containerItem.qty_destroyed,
+                        value: containerItem.value * (containerItem.qty_dropped + containerItem.qty_destroyed),
+                        itemId: containerItem.type_id,
+                        isNested: true  // For indentation
+                    });
+                });
+            }
+
+            // Calculate value including container items
+            const itemValue = (item.value || 0) * ((item.qty_destroyed || 0) + (item.qty_dropped || 0));
+            const containerValue = item.containerItemsValue || 0;
+            innerValue += itemValue + containerValue;
         });
 
         data.value?.push({
@@ -159,14 +198,21 @@ watch(() => props.killmail, (killmail: IKillmail) => {
 const UBadge = resolveComponent('UBadge')
 
 type Item = {
-    type: 'header' | 'value' | 'item'
+    type: 'header' | 'value' | 'item' | 'container-item'  // Added container-item type
     image: string | null
     itemName: string | null
     dropped: number | null
     destroyed: number | null
     value: number | null
+    itemId?: number | null
+    isNested?: boolean  // For indentation
 }
 
+// Add navigation function
+function navigateToItem(itemId: number) {
+    if (!itemId) return;
+    navigateTo(`/item/${itemId}`);
+}
 
 /**
  * Format ISK values to human-readable form
@@ -361,5 +407,78 @@ function itemSlotTypes() {
 /* Ensure transparency works in both themes */
 :deep(tbody tr):hover {
     background: light-dark(#e5e7eb, #1a1a1a);
+}
+
+/* Add cursor style for clickable rows */
+.cursor-pointer {
+    cursor: pointer;
+}
+
+/* Add hover effect to indicate clickability */
+.table-row.item.cursor-pointer:hover {
+    background-color: light-dark(rgba(229, 231, 235, 0.7), rgba(26, 26, 26, 0.7));
+}
+
+/* Highlight dropped and destroyed items similar to old implementation */
+.table-row.container-item {
+    background-color: rgba(40, 40, 40, 0.2);
+}
+
+/* Indentation and styling for nested items */
+.nested-item .name-cell {
+    padding-left: 1.25rem !important;
+}
+
+/* Container item hover effect */
+.container-item:hover {
+    background-color: light-dark(rgba(229, 231, 235, 0.6), rgba(26, 26, 26, 0.6)) !important;
+}
+
+/* Make the image cell position relative to properly position the connector */
+.container-item-row .image-cell {
+  position: relative;
+}
+
+/* Adjust indentation to focus on the image cell */
+.container-item-row {
+  position: relative;
+  border-left: 1px dashed rgba(100, 100, 100, 0.2);
+  background-color: light-dark(rgba(250, 250, 250, 0.1), rgba(40, 40, 40, 0.15));
+  padding-left: 0 !important; /* Remove the row indentation */
+}
+
+/* Add indentation to the image cell instead */
+.indented-image {
+  padding-left: 35px !important; /* Increased padding to make indentation more visible */
+}
+
+/* Style for the connector icon */
+.connector-line {
+  position: absolute;
+  left: 5px; /* Adjust position to work with indented image */
+  display: flex;
+  align-items: center;
+}
+
+.connector-icon {
+  width: 14px;
+  height: 14px;
+  color: light-dark(#6b7280, #9ca3af);
+  margin-right: 2px;
+}
+
+/* Modify the container-item base styling */
+.table-row.container-item {
+  transition: background-color 0.2s ease;
+}
+
+/* Enhanced hover effect for container items */
+.container-item-row:hover {
+  background-color: light-dark(rgba(229, 231, 235, 0.7), rgba(50, 50, 50, 0.4)) !important;
+}
+
+/* Make the image cell position relative to properly position the connector */
+.container-item-row .image-cell {
+  position: relative;
 }
 </style>
