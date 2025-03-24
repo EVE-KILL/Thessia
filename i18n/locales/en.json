@@ -456,6 +456,7 @@
         "item": "Item",
         "dropped": "Dropped",
         "destroyed": "Destroyed",
+        "quantity": "Quantity",
         "value": "Value",
         "hull": "Hull",
         "subtotal": "Subtotal",
@@ -531,5 +532,24 @@
         "lowSlots": "Low Slots",
         "rigSlots": "Rig Slots",
         "subsystems": "Subsystems"
+    },
+    "killInfo": {
+        "details": "Kill Details",
+        "victim": "Victim",
+        "finalBlow": "Final Blow",
+        "character": "Character",
+        "corporation": "Corporation",
+        "alliance": "Alliance",
+        "faction": "Faction",
+        "ship": "Ship",
+        "time": "Time",
+        "system": "System",
+        "region": "Region",
+        "attackers": "Attackers",
+        "solo": "Solo Kill",
+        "npc": "NPC Kill",
+        "highValue": "High Value",
+        "damageTaken": "Damage Taken",
+        "location": "Location"
     }
 }

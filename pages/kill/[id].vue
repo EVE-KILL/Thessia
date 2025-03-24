@@ -44,7 +44,7 @@
                 </div>
               </div>
             </template>
-            <KillInformationBox v-else />
+            <KillInformationBox v-else :killmail="killmail"/>
           </div>
         </div>
       </div>
@@ -286,8 +286,28 @@ watch(pending, (newPending) => {
 });
 
 // Watch for changes in the fetched killmail data
-watch(fetchedKillmail, async (newData) => {
+watch(fetchedKillmail, async (newData: IKillmail) => {
   if (newData) {
+    // SEO
+    useSeoMeta({
+        title: newData.killmail_id + ' | ' + newData.victim.character_name + ' | ' + newData.victim.ship_name.en + ' | ' + newData.system_name,
+        ogImage: 'https://images.evetech.net/types/' + newData.victim.ship_id + '/render?size=512',
+        ogTitle: newData.killmail_id + ' | ' + newData.victim.character_name + ' | ' + newData.victim.ship_name.en + ' | ' + newData.system_name,
+        ogDescription: `${newData.victim.character_name} lost ${newData.victim.ship_name.en} in ${newData.system_name} to ${newData.attackers[newData.attackers.length - 1].character_name} in ${newData.attackers[newData.attackers.length - 1].ship_name.en} - ${formatIsk(newData.total_value)}`,
+        ogType: 'website',
+        ogSiteName: 'EVE-KILL',
+        ogUrl: 'https://eve-kill.net/kill/' + newData.killmail_id,
+        ogLocale: 'en_US',
+        twitterCard: 'summary_large_image',
+        twitterSite: '@eve_kill',
+        twitterTitle: newData.killmail_id + ' | ' + newData.victim.character_name + ' | ' + newData.victim.ship_name.en + ' | ' + newData.system_name,
+        twitterDescription: `${newData.victim.character_name} lost ${newData.victim.ship_name.en} in ${newData.system_name} to ${newData.attackers[newData.attackers.length - 1].character_name} in ${newData.attackers[newData.attackers.length - 1].ship_name.en} - ${formatIsk(newData.total_value)}`,
+        twitterImage: 'https://images.evetech.net/types/' + newData.victim.ship_id + '/render?size=512',
+        twitterImageAlt: newData.victim.ship_name.en,
+        twitterImageWidth: '512',
+        twitterImageHeight: '512',
+        twitterCreator: '@eve_kill',
+    })
     killmail.value = newData;
 
     try {

@@ -4,8 +4,7 @@
         <div class="table-header">
             <div class="header-cell image-cell"></div>
             <div class="header-cell name-cell">{{ headers.item }}</div>
-            <div class="header-cell dropped-cell">{{ headers.dropped }}</div>
-            <div class="header-cell destroyed-cell">{{ headers.destroyed }}</div>
+            <div class="header-cell quantity-cell">{{ headers.quantity }}</div>
             <div class="header-cell value-cell">{{ headers.value }}</div>
         </div>
 
@@ -41,21 +40,20 @@
                          class="font-medium">{{ row.itemName }}</div>
                 </div>
 
-                <!-- Dropped cell -->
-                <div class="body-cell dropped-cell">
+                <!-- Combined Quantity cell (Dropped & Destroyed) -->
+                <div class="body-cell quantity-cell">
                     <template v-if="row.type === 'item' || row.type === 'value'">
-                        <UBadge variant="subtle" :color="row.dropped && row.dropped > 0 ? 'success' : 'warning'">
-                            {{ row.dropped || 0 }}
-                        </UBadge>
-                    </template>
-                </div>
+                        <div class="quantity-badges">
+                            <!-- Dropped badge -->
+                            <UBadge v-if="row.dropped > 0" variant="solid" color="success" class="item-badge">
+                                <span class="badge-text">{{ row.dropped }}</span>
+                            </UBadge>
 
-                <!-- Destroyed cell -->
-                <div class="body-cell destroyed-cell">
-                    <template v-if="row.type === 'item' || row.type === 'value'">
-                        <UBadge variant="subtle" :color="row.destroyed && row.destroyed > 0 ? 'error' : 'warning'">
-                            {{ row.destroyed || 0 }}
-                        </UBadge>
+                            <!-- Destroyed badge -->
+                            <UBadge v-if="row.destroyed > 0" variant="solid" color="error" class="item-badge">
+                                <span class="badge-text">{{ row.destroyed }}</span>
+                            </UBadge>
+                        </div>
                     </template>
                 </div>
 
@@ -278,23 +276,6 @@ function navigateToItem(itemId: number) {
 }
 
 /**
- * Format ISK values to human-readable form
- */
-function formatIsk(value: number): string {
-    if (!value || typeof value !== 'number') return '0 ISK';
-
-    if (value >= 1000000000) {
-        return `${(value / 1000000000).toFixed(2)} B`;
-    } else if (value >= 1000000) {
-        return `${(value / 1000000).toFixed(2)} M`;
-    } else if (value >= 1000) {
-        return `${(value / 1000).toFixed(2)} K`;
-    }
-
-    return `${value.toFixed(2)} ISK`;
-}
-
-/**
  * Groups similar items together
  */
 function groupByQty(items: any[]) {
@@ -379,8 +360,7 @@ function itemSlotTypes() {
 // Create reactive header translations
 const headers = computed(() => ({
   item: t('killItems.item'),
-  dropped: t('killItems.dropped'),
-  destroyed: t('killItems.destroyed'),
+  quantity: t('killItems.quantity'), // New combined header for dropped/destroyed
   value: t('killItems.value'),
 }));
 
@@ -407,7 +387,7 @@ watch(locale, () => {
 /* Table Header */
 .table-header {
     display: grid;
-    grid-template-columns: 80px 1fr 100px 100px 120px;
+    grid-template-columns: 80px 1fr 120px 120px; /* Updated to 4 columns */
     background-color: light-dark(rgba(245, 245, 245, 0.1), rgba(26, 26, 26, 0.5));
     /* Semi-transparent header */
     padding: 0.5rem 1rem; /* Reduced from 0.75rem */
@@ -434,7 +414,7 @@ watch(locale, () => {
 
 .table-row {
     display: grid;
-    grid-template-columns: 80px 1fr 100px 100px 120px;
+    grid-template-columns: 80px 1fr 120px 120px; /* Updated to 4 columns */
     padding: 0.4rem 1rem; /* Reduced from 0.75rem */
     border-bottom: 1px solid light-dark(#e5e7eb, rgb(40, 40, 40));
     align-items: center;
@@ -580,5 +560,28 @@ watch(locale, () => {
 :deep(.u-badge) {
     padding: 0.1rem 0.4rem;
     font-size: 0.7rem;
+}
+
+/* Quantity badges container */
+.quantity-badges {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+}
+
+/* Custom badge styling to ensure black text */
+.item-badge {
+    border: none;
+}
+
+.badge-text {
+    color: #000000 !important; /* Force black text for both light and dark modes */
+    font-weight: 600;
+}
+
+/* Fix UBadge styling to ensure black text is visible */
+:deep(.u-badge.bg-success),
+:deep(.u-badge.bg-error) {
+    color: #000000 !important;
 }
 </style>
