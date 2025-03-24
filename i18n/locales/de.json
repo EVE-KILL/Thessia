@@ -136,13 +136,27 @@
             "overview": "Übersicht",
             "processing": "Verarbeitung",
             "database": "Datenbank",
-            "cache": "Cache"
+            "cache": "Cache",
+            "redis": "Redis"
         },
         "uptime": {
             "title": "Systemlaufzeit",
             "format": "{days}T {hours}Std {minutes}Min {seconds}Sek",
             "since": "Aktiv seit",
             "localTime": "Lokale Zeit"
+        },
+        "overview": {
+            "systemInfo": "Systeminformationen",
+            "loadAverage": "Durchschnittliche Last",
+            "nodeVersion": "Node-Version",
+            "redisVersion": "Redis-Version",
+            "redisMemory": "Redis-Speicher",
+            "redisClients": "Redis-Kunden",
+            "hitRatio": "Cache-Trefferrate",
+            "totalKeys": "Redis-Schlüssel insgesamt",
+            "processing": "Verarbeitungsstatistiken",
+            "queueCounts": "Aktive Warteschlangen",
+            "cache": "Cache-Statistiken (Größe/Treffer)"
         },
         "environment": {
             "title": "Umgebung",
@@ -191,6 +205,30 @@
             "24hours": "24 Stunden",
             "1week": "1 Woche",
             "1month": "1 Monat"
+        },
+        "redis": {
+            "server": "Redis-Server",
+            "version": "Version",
+            "mode": "Modus",
+            "os": "Betriebssystem",
+            "uptime": "Betriebszeit",
+            "uptimeFormat": "{days}T {hours}Std {minutes}Min {seconds}Sek",
+            "memory": "Speicher",
+            "usedMemory": "Verwendeter Speicher",
+            "usedMemoryPeak": "Maximale Speichernutzung",
+            "memFragmentationRatio": "Fragmentierungsgrad des Speichers",
+            "stats": "Statistik",
+            "connectedClients": "Vernetzte Kunden",
+            "totalConnections": "Verbindungen insgesamt",
+            "totalCommands": "Befehle insgesamt",
+            "keyspaceHits": "Keyspace-Hits",
+            "keyspaceMisses": "Tastenfeld verfehlt",
+            "hitRatio": "Trefferquote",
+            "keyspace": "Schlüsselbereich",
+            "database": "Datenbank",
+            "keys": "Tasten",
+            "expires": "Abgelaufen",
+            "avgTtl": "Avg TTL"
         }
     },
     "auth": {
@@ -240,7 +278,9 @@
         "selectLanguage": "Sprache auswählen",
         "page": "Seite",
         "previous": "Vorherige",
-        "next": "Nächste"
+        "next": "Nächste",
+        "backToHome": "Zurück zu Home",
+        "isk": "ISK"
     },
     "settings": {
         "description": "Verwalten Sie Ihre Kontoeinstellungen und Berechtigungen",
@@ -358,15 +398,30 @@
         "itemsPerPage": "Elemente pro Seite",
         "wsConnected": "WebSocket Verbunden",
         "wsDisconnected": "WebSocket Getrennt",
-        "showing": "Anzeigen"
+        "showing": "Anzeigen",
+        "noKillmails": "Keine Killmails gefunden",
+        "wsPaused": "Pausiert",
+        "wsPausedManually": "Manuell pausiert",
+        "wsReconnecting": "Wiederherstellung der Verbindung {attempt}/{max}",
+        "retrying": "Wiederholung {attempt}",
+        "wsError": "Fehler"
     },
     "topBox": {
-        "killsOver": "Letzte {days} Tage"
+        "killsOver": "Letzte {days} Tage",
+        "top": "Top",
+        "characters": "Charaktere",
+        "corporations": "Corporations",
+        "alliances": "Allianzen",
+        "ships": "Schiffe",
+        "systems": "Systeme",
+        "constellations": "Konstellationen",
+        "regions": "Regionen",
+        "noData": "Keine Daten verfügbar"
     },
     "tabs": {
         "topLists": "Top-Listen",
         "kills": "Abschüsse",
-        "overview": "Übersicht"
+        "most-valuable": "Am wertvollsten"
     },
     "top": {
         "characters": "Top Charaktere",
@@ -376,5 +431,105 @@
         "systems": "Top Systeme",
         "constellations": "Top Konstellationen",
         "regions": "Top Regionen"
+    },
+    "mostValuable": {
+        "kills": "Abschüsse",
+        "structures": "Strukturen",
+        "ships": "Schiffe",
+        "noData": "Keine wertvollen Gegenstände gefunden"
+    },
+    "error": {
+        "serverError": "Server-Fehler",
+        "notFound": "Seite nicht gefunden",
+        "generic": "Es ist ein Fehler aufgetreten"
+    },
+    "kill": {
+        "fitting": {
+            "highSlots": "Hohe Slots",
+            "midSlots": "Mittlere Schlitze",
+            "lowSlots": "Niedrige Slots",
+            "rigSlots": "Rig Slots",
+            "subsystems": "Teilsysteme"
+        }
+    },
+    "killItems": {
+        "item": "Artikel",
+        "dropped": "Fallengelassen",
+        "destroyed": "Zerstörte",
+        "value": "Wert",
+        "hull": "Rumpf",
+        "subtotal": "Zwischensumme",
+        "total": "Insgesamt",
+        "slots": {
+            "High Slot": "Hoher Schlitz",
+            "Medium Slot": "Mittlerer Schlitz",
+            "Low Slot": "Niedriger Schlitz",
+            "Rig Slot": "Rig Slot",
+            "Subsystem": "Teilsystem",
+            "Drone Bay": "Drohnenbucht",
+            "Cargo Bay": "Frachtraum",
+            "Fuel Bay": "Tankbucht",
+            "Fleet Hangar": "Flottenhangar",
+            "Fighter Bay": "Kampfraum",
+            "Fighter Launch Tubes": "Abschussrohre für Kampfflugzeuge",
+            "Ship Hangar": "Schiffshangar",
+            "Ore Hold": "Erzhalt",
+            "Gas hold": "Gas halten",
+            "Mineral hold": "Mineralischer Halt",
+            "Salvage Hold": "Bergung halten",
+            "Ship Hold": "Schiffsraum",
+            "Small Ship Hold": "Kleiner Schiffsraum",
+            "Medium Ship Hold": "Medium Ship Hold",
+            "Large Ship Hold": "Großer Schiffsraum",
+            "Industrial Ship Hold": "Industrieller Schiffsraum",
+            "Ammo Hold": "Munitionslager",
+            "Quafe Bay": "Quafe-Bucht",
+            "Structure Services": "Struktur Dienstleistungen",
+            "Structure Fuel": "Struktur Kraftstoff",
+            "Infrastructure Hangar": "Infrastruktur-Hangar",
+            "Core Room": "Kernraum",
+            "Moon Material Bay": "Mondmaterial Bucht",
+            "Implants": "Implantate"
+        },
+        "slotTypes": {
+            "highSlot": "Hoher Schlitz",
+            "mediumSlot": "Mittlerer Schlitz",
+            "lowSlot": "Niedriger Schlitz",
+            "rigSlot": "Rig Slot",
+            "subsystem": "Teilsystem",
+            "droneBay": "Drohnenbucht",
+            "cargoBay": "Frachtraum",
+            "fuelBay": "Tankbucht",
+            "fleetHangar": "Flottenhangar",
+            "fighterBay": "Kampfraum",
+            "fighterLaunchTubes": "Abschussrohre für Kampfflugzeuge",
+            "shipHangar": "Schiffshangar",
+            "oreHold": "Erzhalt",
+            "gasHold": "Gas halten",
+            "mineralHold": "Mineralischer Halt",
+            "salvageHold": "Bergung halten",
+            "shipHold": "Schiffsraum",
+            "smallShipHold": "Kleiner Schiffsraum",
+            "mediumShipHold": "Medium Ship Hold",
+            "largeShipHold": "Großer Schiffsraum",
+            "industrialShipHold": "Industrieller Schiffsraum",
+            "ammoHold": "Munitionslager",
+            "quafeBay": "Quafe-Bucht",
+            "structureServices": "Struktur Dienstleistungen",
+            "structureFuel": "Struktur Kraftstoff",
+            "infrastructureHangar": "Infrastruktur-Hangar",
+            "coreRoom": "Kernraum",
+            "moonMaterialBay": "Mondmaterial Bucht",
+            "implants": "Implantate"
+        }
+    },
+    "killFittingWheel": {
+        "dropped": "fallen gelassen",
+        "destroyed": "zerstört",
+        "highSlots": "Hohe Slots",
+        "midSlots": "Mittlere Schlitze",
+        "lowSlots": "Niedrige Slots",
+        "rigSlots": "Rig Slots",
+        "subsystems": "Teilsysteme"
     }
 }
