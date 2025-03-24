@@ -136,13 +136,27 @@
             "overview": "概要",
             "processing": "加工",
             "database": "データベース",
-            "cache": "キャッシュ"
+            "cache": "キャッシュ",
+            "redis": "レディス"
         },
         "uptime": {
             "title": "システム稼働時間",
             "format": "{days}D{hours}H{minutes}M{seconds}S",
             "since": "以来",
             "localTime": "現地時間"
+        },
+        "overview": {
+            "systemInfo": "システム情報",
+            "loadAverage": "平均負荷",
+            "nodeVersion": "ノードバージョン",
+            "redisVersion": "Redisバージョン",
+            "redisMemory": "レディスメモリー",
+            "redisClients": "Redisクライアント",
+            "hitRatio": "キャッシュ・ヒット率",
+            "totalKeys": "Redisのキー合計",
+            "processing": "加工統計",
+            "queueCounts": "アクティブキュー",
+            "cache": "キャッシュ統計（サイズ／ヒット数）"
         },
         "environment": {
             "title": "環境",
@@ -191,6 +205,30 @@
             "24hours": "24時間",
             "1week": "1週間",
             "1month": "1ヶ月"
+        },
+        "redis": {
+            "server": "レディス・サーバー",
+            "version": "バージョン",
+            "mode": "モード",
+            "os": "オペレーティングシステム",
+            "uptime": "アップタイム",
+            "uptimeFormat": "{days}D{hours}H{minutes}M{seconds}S",
+            "memory": "メモリー",
+            "usedMemory": "中古メモリー",
+            "usedMemoryPeak": "ピーク時のメモリ使用量",
+            "memFragmentationRatio": "メモリの断片化率",
+            "stats": "統計",
+            "connectedClients": "コネクテッド・クライアント",
+            "totalConnections": "総接続数",
+            "totalCommands": "総コマンド数",
+            "keyspaceHits": "キースペース・ヒット",
+            "keyspaceMisses": "キースペースのミス",
+            "hitRatio": "ヒット率",
+            "keyspace": "キースペース",
+            "database": "データベース",
+            "keys": "鍵",
+            "expires": "期限切れ",
+            "avgTtl": "平均TTL"
         }
     },
     "auth": {
@@ -240,7 +278,9 @@
         "selectLanguage": "言語を選択",
         "page": "ページ",
         "previous": "前へ",
-        "next": "次のページ"
+        "next": "次のページ",
+        "backToHome": "ホームへ戻る",
+        "isk": "ISK"
     },
     "settings": {
         "description": "アカウント設定と権限の管理",
@@ -358,15 +398,30 @@
         "itemsPerPage": "ページごとの項目",
         "wsConnected": "ウェブソケット接続",
         "wsDisconnected": "ウェブソケット切断",
-        "showing": "ショーイング"
+        "showing": "ショーイング",
+        "noKillmails": "killmailが見つかりません。",
+        "wsPaused": "休止",
+        "wsPausedManually": "手動で一時停止",
+        "wsReconnecting": "再接続{attempt}/{max}",
+        "retrying": "リトライ{attempt}",
+        "wsError": "エラー"
     },
     "topBox": {
-        "killsOver": "直近の{days} 日"
+        "killsOver": "直近の{days} 日",
+        "top": "トップ",
+        "characters": "登場人物",
+        "corporations": "企業",
+        "alliances": "アライアンス",
+        "ships": "船舶",
+        "systems": "システム",
+        "constellations": "星座",
+        "regions": "地域",
+        "noData": "データなし"
     },
     "tabs": {
         "topLists": "トップリスト",
         "kills": "キルズ",
-        "overview": "概要"
+        "most-valuable": "最も価値あるもの"
     },
     "top": {
         "characters": "トップキャラクター",
@@ -376,5 +431,105 @@
         "systems": "トップシステム",
         "constellations": "トップ星座",
         "regions": "トップ"
+    },
+    "mostValuable": {
+        "kills": "キルズ",
+        "structures": "構造",
+        "ships": "船舶",
+        "noData": "貴重品なし"
+    },
+    "error": {
+        "serverError": "サーバーエラー",
+        "notFound": "ページが見つかりません",
+        "generic": "エラーが発生しました"
+    },
+    "kill": {
+        "fitting": {
+            "highSlots": "ハイスロット",
+            "midSlots": "ミッドスロット",
+            "lowSlots": "低スロット",
+            "rigSlots": "リグスロット",
+            "subsystems": "サブシステム"
+        }
+    },
+    "killItems": {
+        "item": "項目",
+        "dropped": "落選",
+        "destroyed": "破壊された",
+        "value": "価値",
+        "hull": "船体",
+        "subtotal": "小計",
+        "total": "合計",
+        "slots": {
+            "High Slot": "ハイスロット",
+            "Medium Slot": "ミディアムスロット",
+            "Low Slot": "ロースロット",
+            "Rig Slot": "リグスロット",
+            "Subsystem": "サブシステム",
+            "Drone Bay": "ドローン・ベイ",
+            "Cargo Bay": "カーゴベイ",
+            "Fuel Bay": "燃料ベイ",
+            "Fleet Hangar": "艦隊格納庫",
+            "Fighter Bay": "ファイターベイ",
+            "Fighter Launch Tubes": "戦闘機発射管",
+            "Ship Hangar": "船舶格納庫",
+            "Ore Hold": "鉱石ホールド",
+            "Gas hold": "ガス・ホールド",
+            "Mineral hold": "ミネラル・ホールド",
+            "Salvage Hold": "サルベージ・ホールド",
+            "Ship Hold": "船倉",
+            "Small Ship Hold": "小型船倉",
+            "Medium Ship Hold": "中型船ホールド",
+            "Large Ship Hold": "大型船倉",
+            "Industrial Ship Hold": "産業用船倉",
+            "Ammo Hold": "弾薬庫",
+            "Quafe Bay": "クアフェ湾",
+            "Structure Services": "構造サービス",
+            "Structure Fuel": "構造 燃料",
+            "Infrastructure Hangar": "インフラ格納庫",
+            "Core Room": "コア・ルーム",
+            "Moon Material Bay": "ムーン・マテリアル・ベイ",
+            "Implants": "インプラント"
+        },
+        "slotTypes": {
+            "highSlot": "ハイスロット",
+            "mediumSlot": "ミディアムスロット",
+            "lowSlot": "ロースロット",
+            "rigSlot": "リグスロット",
+            "subsystem": "サブシステム",
+            "droneBay": "ドローン・ベイ",
+            "cargoBay": "カーゴベイ",
+            "fuelBay": "燃料ベイ",
+            "fleetHangar": "艦隊格納庫",
+            "fighterBay": "ファイターベイ",
+            "fighterLaunchTubes": "戦闘機発射管",
+            "shipHangar": "船舶格納庫",
+            "oreHold": "鉱石ホールド",
+            "gasHold": "ガス・ホールド",
+            "mineralHold": "ミネラル・ホールド",
+            "salvageHold": "サルベージ・ホールド",
+            "shipHold": "船倉",
+            "smallShipHold": "小型船倉",
+            "mediumShipHold": "中型船ホールド",
+            "largeShipHold": "大型船倉",
+            "industrialShipHold": "産業用船倉",
+            "ammoHold": "弾薬庫",
+            "quafeBay": "クアフェ湾",
+            "structureServices": "構造サービス",
+            "structureFuel": "構造 燃料",
+            "infrastructureHangar": "インフラ格納庫",
+            "coreRoom": "コア・ルーム",
+            "moonMaterialBay": "ムーン・マテリアル・ベイ",
+            "implants": "インプラント"
+        }
+    },
+    "killFittingWheel": {
+        "dropped": "ドロップ",
+        "destroyed": "破壊された",
+        "highSlots": "ハイスロット",
+        "midSlots": "ミッドスロット",
+        "lowSlots": "低スロット",
+        "rigSlots": "リグスロット",
+        "subsystems": "サブシステム"
     }
 }
