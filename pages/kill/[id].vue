@@ -11,7 +11,7 @@
           <!-- Fitting Wheel - Increased size container -->
           <div class="w-full flex justify-center items-center">
             <template v-if="!killmail || isLoading">
-              <div class="fitting-wheel-skeleton max-w-[600px]">
+              <div class="fitting-wheel-skeleton max-w-[650px]">
                 <!-- Outer ring skeleton -->
                 <div class="skeleton-ring outer-skeleton-ring"></div>
                 <!-- Inner ring skeleton -->
@@ -27,11 +27,11 @@
                 <div v-for="i in 3" :key="`rig-${i}`" :style="getSkeletonSlotPosition(i-1, 3, 'left')" class="skeleton-slot"></div>
               </div>
             </template>
-            <KillFittingWheel v-else :killmail="killmail" :max-width="1000" style="min-width: 500px"/>
+            <KillFittingWheel v-else :killmail="killmail" :max-width="1000" style="min-width: 550px"/>
           </div>
 
           <!-- Kill Information - Adjusted width -->
-          <div class="information-box ml-0 md:ml-5 mt-4 md:mt-0 w-full md:w-3/5 lg:w-1/2 p-4">
+          <div class="information-box ml-0 md:ml-4 md:mt-0 w-full md:w-3/5 lg:w-1/2 max-w-[325px]">
             <template v-if="!killmail || isLoading">
               <div class="grid gap-4">
                 <USkeleton class="h-8 w-full" />
@@ -49,11 +49,8 @@
         </div>
       </div>
 
-      <!-- Divider -->
-      <div class="h-px bg-background-700"></div>
-
       <!-- Body -->
-      <div class="p-4 sm:p-6">
+      <div class="mt-4">
         <template v-if="!killmail || isLoading">
           <div class="grid gap-4">
             <div class="flex items-center justify-between">

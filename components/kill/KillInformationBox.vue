@@ -1,17 +1,24 @@
 <template>
-  <div class="kill-information-box" :class="{ 'is-solo-kill': killmail?.is_solo }">
+  <div class="kill-information-box md:max-w-[325px]" :class="{ 'is-solo-kill': killmail?.is_solo }">
     <!-- Ship & Basic Info Section (combined) -->
     <div class="section ship-section">
       <div class="ship-image-container">
-        <EveImage v-if="killmail?.victim?.ship_id"
-                 :type="'type-render'"
-                 :id="killmail.victim.ship_id"
-                 :size="96"
-                 :alt="getLocalizedString(killmail?.victim?.ship_name, currentLocale.value)"
-                 class="ship-image" />
+        <NuxtLink v-if="killmail?.victim?.ship_id" :to="`/item/${killmail.victim.ship_id}`">
+          <EveImage
+             :type="'type-render'"
+             :id="killmail.victim.ship_id"
+             :size="96"
+             :alt="getLocalizedString(killmail?.victim?.ship_name, currentLocale.value)"
+             class="ship-image" />
+        </NuxtLink>
       </div>
       <div class="ship-info">
-        <h3 class="ship-name">{{ getLocalizedString(killmail?.victim?.ship_name, currentLocale.value) }}</h3>
+        <h3 class="ship-name">
+          <NuxtLink v-if="killmail?.victim?.ship_id" :to="`/item/${killmail.victim.ship_id}`" class="entity-link truncate">
+            {{ getLocalizedString(killmail?.victim?.ship_name, currentLocale.value) }}
+          </NuxtLink>
+          <span v-else class="truncate">{{ getLocalizedString(killmail?.victim?.ship_name, currentLocale.value) }}</span>
+        </h3>
         <div class="meta-row">
           <div class="kill-value">{{ formatIsk(killmail?.total_value || 0) }}</div>
           <div class="kill-labels">
@@ -34,19 +41,36 @@
             <!-- Character with Corp -->
             <div v-if="killmail?.victim?.character_id" class="compact-entity-row">
               <div class="entity-portraits">
-                <EveImage :type="'character'" :id="killmail.victim.character_id" :size="48" class="portrait-image" />
-                <EveImage v-if="killmail.victim.corporation_id" :type="'corporation'" :id="killmail.victim.corporation_id" :size="32" class="portrait-image corporation-image" />
+                <NuxtLink :to="`/character/${killmail.victim.character_id}`">
+                  <EveImage :type="'character'" :id="killmail.victim.character_id" :size="48" class="portrait-image" />
+                </NuxtLink>
+                <NuxtLink v-if="killmail.victim.corporation_id" :to="`/corporation/${killmail.victim.corporation_id}`">
+                  <EveImage :type="'corporation'" :id="killmail.victim.corporation_id" :size="32" class="portrait-image corporation-image" />
+                </NuxtLink>
               </div>
               <div class="entity-details">
-                <div class="entity-name primary">{{ killmail.victim.character_name }}</div>
-                <div class="entity-name secondary" v-if="killmail.victim.corporation_name">{{ killmail.victim.corporation_name }}</div>
+                <div class="entity-name primary">
+                  <NuxtLink :to="`/character/${killmail.victim.character_id}`" class="entity-link truncate">
+                    {{ killmail.victim.character_name }}
+                  </NuxtLink>
+                </div>
+                <div v-if="killmail.victim.corporation_name" class="entity-name secondary">
+                  <NuxtLink v-if="killmail.victim.corporation_id" :to="`/corporation/${killmail.victim.corporation_id}`" class="entity-link truncate">
+                    {{ killmail.victim.corporation_name }}
+                  </NuxtLink>
+                  <span v-else class="truncate">{{ killmail.victim.corporation_name }}</span>
+                </div>
               </div>
             </div>
 
             <!-- Alliance -->
             <div v-if="killmail?.victim?.alliance_id" class="alliance-row">
-              <EveImage :type="'alliance'" :id="killmail.victim.alliance_id" :size="24" class="small-icon" />
-              <span class="alliance-name">{{ killmail.victim.alliance_name }}</span>
+              <NuxtLink :to="`/alliance/${killmail.victim.alliance_id}`">
+                <EveImage :type="'alliance'" :id="killmail.victim.alliance_id" :size="24" class="small-icon" />
+              </NuxtLink>
+              <NuxtLink :to="`/alliance/${killmail.victim.alliance_id}`" class="entity-link alliance-name truncate">
+                {{ killmail.victim.alliance_name }}
+              </NuxtLink>
             </div>
 
             <!-- Damage Taken + Attackers Count (combined) -->
@@ -58,7 +82,8 @@
                   <span class="damage-value">{{ formatNumber(totalDamageTaken) }}</span>
                 </div>
               </div>
-
+            </div>
+            <div class="stats-row">
               <div class="stat-item">
                 <div class="detail-icon"><Icon name="lucide:users" /></div>
                 <div class="stat-info">
@@ -92,12 +117,21 @@
           <div class="detail-item">
             <div class="detail-icon"><Icon name="lucide:map-pin" /></div>
             <div class="detail-content">
-              <div class="detail-primary">{{ killmail?.system_name }}
+              <div class="detail-primary">
+                <NuxtLink v-if="killmail?.system_id" :to="`/system/${killmail.system_id}`" class="entity-link truncate">
+                  {{ killmail?.system_name }}
+                </NuxtLink>
+                <span v-else class="truncate">{{ killmail?.system_name }}</span>
                 <span :class="['security-status', getSecurityClass(killmail?.system_security)]">
                   {{ formatSecurity(killmail?.system_security) }}
                 </span>
               </div>
-              <div class="detail-secondary">{{ getLocalizedString(killmail?.region_name, currentLocale.value) }}</div>
+              <div class="detail-secondary">
+                <NuxtLink v-if="killmail?.region_id" :to="`/region/${killmail.region_id}`" class="entity-link truncate">
+                  {{ getLocalizedString(killmail?.region_name, currentLocale.value) }}
+                </NuxtLink>
+                <span v-else class="truncate">{{ getLocalizedString(killmail?.region_name, currentLocale.value) }}</span>
+              </div>
             </div>
           </div>
 
@@ -105,11 +139,10 @@
           <div v-if="killmail?.near" class="detail-item">
             <div class="detail-icon"><Icon name="lucide:compass" /></div>
             <div class="detail-content">
-              <div class="detail-secondary location-text">{{ killmail.near }}</div>
+              <div class="detail-secondary location-text truncate">{{ killmail.near }}</div>
             </div>
           </div>
         </div>
-
       </div>
     </div>
   </div>
@@ -236,11 +269,18 @@ watch(locale, (newLocale) => {
   display: flex;
   flex-direction: column;
   width: 100%;
-  max-height: 600px;
-  overflow-y: auto;
   color: light-dark(#111827, white);
   background-color: transparent;
-  gap: 0.75rem;
+  gap: 0.25rem;
+}
+
+/* Universal truncation class */
+.truncate {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+  display: inline-block;
 }
 
 .section {
@@ -279,9 +319,20 @@ watch(locale, (newLocale) => {
   font-size: 1.2rem;
   font-weight: 600;
   margin: 0 0 0.25rem;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  width: 100%;
+}
+
+/* Links styling */
+.entity-link {
+  color: inherit;
+  text-decoration: none;
+  transition: color 0.2s ease;
+  max-width: 100%;
+}
+
+.entity-link:hover {
+  color: #4fc3f7;
+  text-decoration: underline;
 }
 
 .meta-row {
@@ -330,8 +381,12 @@ watch(locale, (newLocale) => {
 /* Combined entity section */
 .section-grid {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: 1fr; /* Single column layout */
   gap: 1rem;
+}
+
+.entity-column {
+  width: 100%; /* Ensure column takes full width */
 }
 
 .column-title {
@@ -346,42 +401,32 @@ watch(locale, (newLocale) => {
   display: flex;
   flex-direction: column;
   gap: 0.75rem;
+  width: 100%; /* Ensure it takes full width */
 }
 
 .compact-entity-row {
   display: flex;
   align-items: center;
   gap: 0.75rem;
+  width: 100%; /* Ensure full width */
 }
 
 .entity-portraits {
   position: relative;
   width: 48px;
   height: 48px;
-}
-
-.portrait-image {
-  border-radius: 50%;
-}
-
-.corporation-image {
-  position: absolute;
-  width: 24px;
-  height: 24px;
-  bottom: -4px;
-  right: -4px;
-  border: 1px solid light-dark(white, #1f2937);
+  flex-shrink: 0; /* Prevent shrinking */
 }
 
 .entity-details {
   min-width: 0;
+  flex-grow: 1; /* Allow to grow and fill space */
+  width: calc(100% - 60px); /* Account for portrait width and gap */
 }
 
 .entity-name {
   font-size: 0.95rem;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  width: 100%; /* Ensure full width */
 }
 
 .entity-name.primary {
@@ -393,23 +438,19 @@ watch(locale, (newLocale) => {
   color: light-dark(#6b7280, #9ca3af);
 }
 
+/* Alliance row specific */
 .alliance-row, .ship-row {
   display: flex;
   align-items: center;
   gap: 0.5rem;
   font-size: 0.85rem;
   color: light-dark(#4b5563, #d1d5db);
+  width: 100%; /* Ensure full width */
+  overflow: hidden;
 }
 
-.small-icon {
-  width: 20px;
-  height: 20px;
-  border-radius: 50%;
-}
-
-.ship-icon {
-  width: 32px;
-  height: 32px;
+.alliance-name {
+  max-width: calc(100% - 30px); /* Account for icon and gap */
 }
 
 /* Stats row for damage & attackers */
@@ -418,32 +459,16 @@ watch(locale, (newLocale) => {
   flex-wrap: wrap;
   gap: 0.75rem;
   margin-top: 0.25rem;
+  width: 100%; /* Ensure full width */
+  justify-content: space-between; /* Distribute items evenly */
 }
 
 .stat-item {
   display: flex;
   align-items: center;
   gap: 0.5rem;
-}
-
-.stat-info {
-  display: flex;
-  align-items: center;
-  font-size: 0.85rem;
-}
-
-.stat-label {
-  color: light-dark(#6b7280, #9ca3af);
-}
-
-.damage-value {
-  font-weight: 600;
-  color: #f97316; /* Orange color for damage */
-}
-
-.attackers-value {
-  font-weight: 600;
-  color: #4f46e5; /* Indigo for attackers */
+  flex-grow: 1; /* Allow items to grow */
+  max-width: calc(50% - 0.375rem); /* Half width minus half the gap */
 }
 
 /* Details section styles */
@@ -451,6 +476,7 @@ watch(locale, (newLocale) => {
   display: grid;
   grid-template-columns: 1fr;
   gap: 0.85rem;
+  width: 100%; /* Ensure full width */
 }
 
 /* Location container with system and near */
@@ -458,12 +484,14 @@ watch(locale, (newLocale) => {
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
+  width: 100%; /* Ensure full width */
 }
 
 .detail-item {
   display: flex;
   align-items: flex-start;
   gap: 0.5rem;
+  width: 100%; /* Ensure full width */
 }
 
 .detail-icon {
@@ -473,27 +501,18 @@ watch(locale, (newLocale) => {
   color: light-dark(#6b7280, #9ca3af);
   margin-top: 2px;
   width: 16px;
+  flex-shrink: 0; /* Prevent shrinking */
 }
 
 .detail-content {
   min-width: 0;
-}
-
-.detail-primary {
-  font-size: 0.95rem;
-  font-weight: 500;
-  white-space: nowrap;
+  flex-grow: 1; /* Allow to grow and fill space */
+  width: calc(100% - 24px); /* Account for icon width and gap */
   overflow: hidden;
-  text-overflow: ellipsis;
 }
 
-.detail-secondary {
-  font-size: 0.85rem;
-  color: light-dark(#6b7280, #9ca3af);
-}
-
-.location-text {
-  font-style: italic;
+.detail-primary, .detail-secondary {
+  width: 100%; /* Ensure full width */
 }
 
 /* Security status colors */
@@ -514,6 +533,26 @@ watch(locale, (newLocale) => {
 .nullsec-high { color: #fc8181; }
 .nullsec-low { color: #f56565; }
 .unknown { color: #a0aec0; }
+
+/* Image sizes and positioning */
+.portrait-image {
+  border-radius: 50%;
+}
+
+.corporation-image {
+  position: absolute;
+  bottom: -5px;
+  right: -5px;
+  border: 2px solid light-dark(white, #1a1a1a);
+  border-radius: 50%;
+  background-color: light-dark(white, #1a1a1a);
+}
+
+.small-icon {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+}
 
 /* Responsive adjustments */
 @media (max-width: 768px) {

@@ -1,11 +1,14 @@
 <template>
-    <div class="custom-table">
+    <div class="custom-table" :class="{ 'mobile-view': isMobile }">
         <!-- Table header - using computed translations -->
         <div class="table-header">
             <div class="header-cell image-cell"></div>
             <div class="header-cell name-cell">{{ headers.item }}</div>
-            <div class="header-cell quantity-cell">{{ headers.quantity }}</div>
-            <div class="header-cell value-cell">{{ headers.value }}</div>
+            <template v-if="!isMobile">
+                <div class="header-cell quantity-cell">{{ headers.quantity }}</div>
+                <div class="header-cell value-cell">{{ headers.value }}</div>
+            </template>
+            <div v-else class="header-cell mobile-details-cell">{{ headers.details }}</div>
         </div>
 
         <!-- Table body -->
@@ -38,32 +41,58 @@
                     <div v-if="row.type === 'header'" class="font-bold text-sm uppercase">{{ row.itemName }}</div>
                     <div v-else-if="row.type === 'item' || row.type === 'container-item'"
                          class="font-medium">{{ row.itemName }}</div>
+                    <div v-else-if="row.type === 'value'" class="font-medium">{{ row.itemName }}</div>
                 </div>
 
-                <!-- Combined Quantity cell (Dropped & Destroyed) -->
-                <div class="body-cell quantity-cell">
-                    <template v-if="row.type === 'item' || row.type === 'value'">
-                        <div class="quantity-badges">
-                            <!-- Dropped badge -->
-                            <UBadge v-if="row.dropped > 0" variant="solid" color="success" class="item-badge">
-                                <span class="badge-text">{{ row.dropped }}</span>
-                            </UBadge>
+                <!-- Desktop view: Separate quantity and value columns -->
+                <template v-if="!isMobile">
+                    <!-- Combined Quantity cell (Dropped & Destroyed) -->
+                    <div class="body-cell quantity-cell">
+                        <template v-if="row.type === 'item' || row.type === 'value'">
+                            <div class="quantity-badges">
+                                <!-- Dropped badge -->
+                                <UBadge v-if="row.dropped > 0" variant="solid" color="success" class="item-badge">
+                                    <span class="badge-text">{{ row.dropped }}</span>
+                                </UBadge>
 
-                            <!-- Destroyed badge -->
-                            <UBadge v-if="row.destroyed > 0" variant="solid" color="error" class="item-badge">
-                                <span class="badge-text">{{ row.destroyed }}</span>
-                            </UBadge>
-                        </div>
-                    </template>
-                </div>
+                                <!-- Destroyed badge -->
+                                <UBadge v-if="row.destroyed > 0" variant="solid" color="error" class="item-badge">
+                                    <span class="badge-text">{{ row.destroyed }}</span>
+                                </UBadge>
+                            </div>
+                        </template>
+                    </div>
 
-                <!-- Value cell -->
-                <div class="body-cell value-cell justify-end">
+                    <!-- Value cell -->
+                    <div class="body-cell value-cell justify-end">
+                        <template v-if="row.type === 'item' || row.type === 'value'">
+                            <div v-if="row.value" class="text-right font-medium">
+                                {{ formatIsk(row.value) }}
+                            </div>
+                            <div v-else class="text-right">-</div>
+                        </template>
+                    </div>
+                </template>
+
+                <!-- Mobile view: Combined details cell -->
+                <div v-else class="body-cell mobile-details-cell">
                     <template v-if="row.type === 'item' || row.type === 'value'">
-                        <div v-if="row.value" class="text-right font-medium">
-                            {{ formatIsk(row.value) }}
+                        <div class="mobile-details-wrapper">
+                            <!-- Badges for dropped/destroyed -->
+                            <div v-if="row.dropped > 0 || row.destroyed > 0" class="mobile-badges">
+                                <UBadge v-if="row.dropped > 0" variant="solid" color="success" class="item-badge item-badge-mobile">
+                                    <span class="badge-text">{{ row.dropped }}</span>
+                                </UBadge>
+                                <UBadge v-if="row.destroyed > 0" variant="solid" color="error" class="item-badge item-badge-mobile">
+                                    <span class="badge-text">{{ row.destroyed }}</span>
+                                </UBadge>
+                            </div>
+
+                            <!-- Value -->
+                            <div v-if="row.value" class="mobile-value">
+                                {{ formatIsk(row.value) }}
+                            </div>
                         </div>
-                        <div v-else class="text-right">-</div>
                     </template>
                 </div>
             </div>
@@ -78,6 +107,7 @@ import type { IKillmail } from '~/server/interfaces/IKillmail';
 
 const { t, locale } = useI18n();
 const currentLocale = computed(() => locale.value);
+const { isMobile } = useResponsive();
 
 const props = defineProps<{
     killmail: IKillmail | null;
@@ -360,8 +390,9 @@ function itemSlotTypes() {
 // Create reactive header translations
 const headers = computed(() => ({
   item: t('killItems.item'),
-  quantity: t('killItems.quantity'), // New combined header for dropped/destroyed
+  quantity: t('killItems.quantity'),
   value: t('killItems.value'),
+  details: t('killItems.details') // New header for mobile view
 }));
 
 // Refresh the table headers when locale changes
@@ -394,6 +425,12 @@ watch(locale, () => {
     border-bottom: 1px solid light-dark(#e5e7eb, rgb(40, 40, 40));
 }
 
+/* Mobile Table Header */
+.mobile-view .table-header {
+    grid-template-columns: 50px 1fr 100px; /* Mobile 3 columns */
+    padding: 0.4rem 0.75rem;
+}
+
 .header-cell {
     font-weight: 600;
     font-size: 0.875rem;
@@ -401,6 +438,10 @@ watch(locale, () => {
 }
 
 .value-cell {
+    text-align: right;
+}
+
+.mobile-details-cell {
     text-align: right;
 }
 
@@ -423,6 +464,12 @@ watch(locale, () => {
     /* Transparent row backgrounds */
 }
 
+/* Mobile Table Row */
+.mobile-view .table-row {
+    grid-template-columns: 50px 1fr 100px; /* Mobile 3 columns */
+    padding: 0.35rem 0.75rem;
+}
+
 /* Styling for header rows */
 .table-row.header {
     background-color: light-dark(rgba(229, 231, 235, 0.5), rgba(26, 26, 26, 0.7));
@@ -430,6 +477,11 @@ watch(locale, () => {
     color: light-dark(#111827, white);
     padding: 0.3rem 1rem; /* Reduced from 0.5rem */
     height: 2rem; /* Reduced from 2.5rem */
+}
+
+.mobile-view .table-row.header {
+    padding: 0.25rem 0.75rem;
+    height: 1.75rem;
 }
 
 /* Styling for value rows */
@@ -449,6 +501,24 @@ watch(locale, () => {
 .body-cell {
     display: flex;
     align-items: center;
+}
+
+/* Mobile details cell styling */
+.mobile-details-wrapper {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 0.25rem;
+}
+
+.mobile-badges {
+    display: flex;
+    gap: 0.25rem;
+}
+
+.mobile-value {
+    font-size: 0.8rem;
+    font-weight: 500;
 }
 
 /* Add space between sections */
@@ -526,6 +596,11 @@ watch(locale, () => {
   padding-left: 35px !important; /* Increased padding to make indentation more visible */
 }
 
+/* Mobile adjustments for indentation */
+.mobile-view .indented-image {
+  padding-left: 25px !important;
+}
+
 /* Style for the connector icon */
 .connector-line {
   position: absolute;
@@ -541,6 +616,11 @@ watch(locale, () => {
   margin-right: 2px;
 }
 
+.mobile-view .connector-icon {
+  width: 10px;
+  height: 10px;
+}
+
 /* Modify the container-item base styling */
 .table-row.container-item {
   transition: background-color 0.2s ease;
@@ -551,15 +631,16 @@ watch(locale, () => {
   background-color: light-dark(rgba(229, 231, 235, 0.7), rgba(50, 50, 50, 0.4)) !important;
 }
 
-/* Make the image cell position relative to properly position the connector */
-.container-item-row .image-cell {
-  position: relative;
-}
-
 /* Compact styling for badges */
 :deep(.u-badge) {
     padding: 0.1rem 0.4rem;
     font-size: 0.7rem;
+}
+
+/* Mobile badges adjustments */
+:deep(.item-badge-mobile) {
+    padding: 0.05rem 0.3rem;
+    font-size: 0.65rem;
 }
 
 /* Quantity badges container */
@@ -583,5 +664,29 @@ watch(locale, () => {
 :deep(.u-badge.bg-success),
 :deep(.u-badge.bg-error) {
     color: #000000 !important;
+}
+
+/* Mobile specific adjustments for text and spacing */
+@media (max-width: 768px) {
+    .custom-table {
+        font-size: 0.9rem;
+    }
+
+    .name-cell {
+        font-size: 0.85rem;
+    }
+
+    .table-row.header {
+        font-size: 0.8rem;
+    }
+
+    .font-medium {
+        font-weight: 500;
+    }
+
+    .image-cell img {
+        max-width: 24px;
+        max-height: 24px;
+    }
 }
 </style>
