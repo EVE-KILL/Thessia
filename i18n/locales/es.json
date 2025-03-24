@@ -136,13 +136,27 @@
             "overview": "Visión general",
             "processing": "Tratamiento",
             "database": "Base de datos",
-            "cache": "Caché"
+            "cache": "Caché",
+            "redis": "Redis"
         },
         "uptime": {
             "title": "Tiempo de actividad del sistema",
             "format": "{days}d {hours}h {minutes}m {seconds}s",
             "since": "Arriba desde",
             "localTime": "Hora local"
+        },
+        "overview": {
+            "systemInfo": "Información del sistema",
+            "loadAverage": "Carga Media",
+            "nodeVersion": "Versión del nodo",
+            "redisVersion": "Versión de Redis",
+            "redisMemory": "Memoria Redis",
+            "redisClients": "Clientes Redis",
+            "hitRatio": "Índice de aciertos de caché",
+            "totalKeys": "Claves totales de Redis",
+            "processing": "Estadísticas de tratamiento",
+            "queueCounts": "Colas activas",
+            "cache": "Estadísticas de caché (Tamaño / Accesos)"
         },
         "environment": {
             "title": "Medio ambiente",
@@ -191,6 +205,30 @@
             "24hours": "24 horas",
             "1week": "1 semana",
             "1month": "1 mes"
+        },
+        "redis": {
+            "server": "Servidor Redis",
+            "version": "Versión",
+            "mode": "Modo",
+            "os": "Sistema operativo",
+            "uptime": "Tiempo de actividad",
+            "uptimeFormat": "{days}d {hours}h {minutes}m {seconds}s",
+            "memory": "Memoria",
+            "usedMemory": "Memoria usada",
+            "usedMemoryPeak": "Pico de uso de memoria",
+            "memFragmentationRatio": "Ratio de fragmentación de la memoria",
+            "stats": "Estadísticas",
+            "connectedClients": "Clientes conectados",
+            "totalConnections": "Conexiones totales",
+            "totalCommands": "Total de comandos",
+            "keyspaceHits": "Éxitos de Keyspace",
+            "keyspaceMisses": "Errores en el espacio clave",
+            "hitRatio": "Ratio de aciertos",
+            "keyspace": "Espacio clave",
+            "database": "Base de datos",
+            "keys": "Claves",
+            "expires": "Expira en",
+            "avgTtl": "TTL medio"
         }
     },
     "auth": {
@@ -240,7 +278,9 @@
         "selectLanguage": "Seleccionar idioma",
         "page": "Página",
         "previous": "Anterior",
-        "next": "Siguiente"
+        "next": "Siguiente",
+        "backToHome": "Volver al inicio",
+        "isk": "ISK"
     },
     "settings": {
         "description": "Gestione la configuración y los permisos de su cuenta",
@@ -358,15 +398,30 @@
         "itemsPerPage": "Artículos por página",
         "wsConnected": "WebSocket conectado",
         "wsDisconnected": "WebSocket desconectado",
-        "showing": "Mostrar"
+        "showing": "Mostrar",
+        "noKillmails": "No se han encontrado killmails",
+        "wsPaused": "En pausa",
+        "wsPausedManually": "Pausa manual",
+        "wsReconnecting": "Reconectando {attempt}/{max}",
+        "retrying": "Reintentar {attempt}",
+        "wsError": "Error"
     },
     "topBox": {
-        "killsOver": "Últimos {days} días"
+        "killsOver": "Últimos {days} días",
+        "top": "Top",
+        "characters": "Personajes",
+        "corporations": "Empresas",
+        "alliances": "Alianzas",
+        "ships": "Barcos",
+        "systems": "Sistemas",
+        "constellations": "Constelaciones",
+        "regions": "Regiones",
+        "noData": "No hay datos disponibles"
     },
     "tabs": {
         "topLists": "Listas principales",
         "kills": "Mata",
-        "overview": "Visión general"
+        "most-valuable": "Lo más valioso"
     },
     "top": {
         "characters": "Personajes principales",
@@ -376,5 +431,105 @@
         "systems": "Sistemas superiores",
         "constellations": "Top Constelaciones",
         "regions": "Regiones principales"
+    },
+    "mostValuable": {
+        "kills": "Mata",
+        "structures": "Estructuras",
+        "ships": "Barcos",
+        "noData": "No se encontraron objetos de valor"
+    },
+    "error": {
+        "serverError": "Error del servidor",
+        "notFound": "Página no encontrada",
+        "generic": "Se ha producido un error"
+    },
+    "kill": {
+        "fitting": {
+            "highSlots": "Ranuras altas",
+            "midSlots": "Ranuras intermedias",
+            "lowSlots": "Ranuras bajas",
+            "rigSlots": "Ranuras",
+            "subsystems": "Subsistemas"
+        }
+    },
+    "killItems": {
+        "item": "Artículo",
+        "dropped": "Se ha caído",
+        "destroyed": "Destruido",
+        "value": "Valor",
+        "hull": "Casco",
+        "subtotal": "Subtotal",
+        "total": "Total",
+        "slots": {
+            "High Slot": "Ranura alta",
+            "Medium Slot": "Ranura mediana",
+            "Low Slot": "Ranura baja",
+            "Rig Slot": "Ranura",
+            "Subsystem": "Subsistema",
+            "Drone Bay": "Bahía de drones",
+            "Cargo Bay": "Muelle de carga",
+            "Fuel Bay": "Depósito de combustible",
+            "Fleet Hangar": "Hangar de la flota",
+            "Fighter Bay": "Bahía de combate",
+            "Fighter Launch Tubes": "Tubos de lanzamiento de cazas",
+            "Ship Hangar": "Hangar de barcos",
+            "Ore Hold": "Retención de mineral",
+            "Gas hold": "Retención de gas",
+            "Mineral hold": "Mineral Hold",
+            "Salvage Hold": "Retención de salvamento",
+            "Ship Hold": "Bodega del barco",
+            "Small Ship Hold": "Pequeña bodega de barco",
+            "Medium Ship Hold": "Bodega de barcos medianos",
+            "Large Ship Hold": "Gran bodega de barco",
+            "Industrial Ship Hold": "Bodega de la nave industrial",
+            "Ammo Hold": "Munición",
+            "Quafe Bay": "Bahía de Quafe",
+            "Structure Services": "Servicios de estructura",
+            "Structure Fuel": "Estructura Combustible",
+            "Infrastructure Hangar": "Hangar de infraestructuras",
+            "Core Room": "Sala central",
+            "Moon Material Bay": "Bahía de Material Lunar",
+            "Implants": "Implantes"
+        },
+        "slotTypes": {
+            "highSlot": "Ranura alta",
+            "mediumSlot": "Ranura mediana",
+            "lowSlot": "Ranura baja",
+            "rigSlot": "Ranura",
+            "subsystem": "Subsistema",
+            "droneBay": "Bahía de drones",
+            "cargoBay": "Muelle de carga",
+            "fuelBay": "Depósito de combustible",
+            "fleetHangar": "Hangar de la flota",
+            "fighterBay": "Bahía de combate",
+            "fighterLaunchTubes": "Tubos de lanzamiento de cazas",
+            "shipHangar": "Hangar de barcos",
+            "oreHold": "Retención de mineral",
+            "gasHold": "Retención de gas",
+            "mineralHold": "Mineral Hold",
+            "salvageHold": "Retención de salvamento",
+            "shipHold": "Bodega del barco",
+            "smallShipHold": "Pequeña bodega de barco",
+            "mediumShipHold": "Bodega de barcos medianos",
+            "largeShipHold": "Gran bodega de barco",
+            "industrialShipHold": "Bodega de la nave industrial",
+            "ammoHold": "Munición",
+            "quafeBay": "Bahía de Quafe",
+            "structureServices": "Servicios de estructura",
+            "structureFuel": "Estructura Combustible",
+            "infrastructureHangar": "Hangar de infraestructuras",
+            "coreRoom": "Sala central",
+            "moonMaterialBay": "Bahía de Material Lunar",
+            "implants": "Implantes"
+        }
+    },
+    "killFittingWheel": {
+        "dropped": "dejó",
+        "destroyed": "destruido",
+        "highSlots": "Ranuras altas",
+        "midSlots": "Ranuras intermedias",
+        "lowSlots": "Ranuras bajas",
+        "rigSlots": "Ranuras",
+        "subsystems": "Subsistemas"
     }
 }
