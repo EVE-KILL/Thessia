@@ -40,7 +40,7 @@ const items = ref([
         {
             label: 'System',
             description: props.killmail?.system_name,
-            to: `https://evemissioneer.com/s/${encodeURIComponent(props.killmail?.system_id || '')}`,
+            to: `https://evemissioneer.com/s/${encodeURIComponent(props.killmail?.system_name || '')}`,
             disabled: false
         },
         {
@@ -114,7 +114,7 @@ const items = ref([
         {
             label: 'Alliance',
             description: props.killmail?.victim.alliance_name,
-            to: `https://evewho.com/alliances/${props.killmail?.victim.alliance_id || ''}`,
+            to: `https://evewho.com/alliance/${props.killmail?.victim.alliance_id || ''}`,
             disabled: props.killmail?.victim.alliance_id === 0
         }
     ]
@@ -166,7 +166,7 @@ const items = ref([
         {
             label: 'Alliance',
             description: props.killmail?.victim.alliance_name,
-            to: `https://zkillboard.com/alliances/${props.killmail?.victim.alliance_id || ''}`,
+            to: `https://zkillboard.com/alliance/${props.killmail?.victim.alliance_id || ''}`,
             disabled: props.killmail?.victim.alliance_id === 0
         }
     ]

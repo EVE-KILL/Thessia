@@ -29,7 +29,7 @@ const redis = RedisStorage.getInstance().getClient();
 // Define TTLs for different cache types (in seconds)
 const STATIC_DATA_TTL = 86400 * 7; // 7 days for rarely changing data
 const ENTITY_DATA_TTL = 3600 * 6;  // 6 hours for entities
-const PRICE_DATA_TTL = 86400;      // 1 day for prices
+const PRICE_DATA_TTL = 3600;      // 1 hour for prices
 
 // Define cache namespaces for consistent usage
 export const CACHE_NAMESPACES = {
