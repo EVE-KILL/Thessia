@@ -12,12 +12,26 @@ const props = defineProps({
   type: {
     type: String,
     required: true,
-    validator: (value: string) => ['character', 'corporation', 'alliance', 'type-icon', 'type-render'].includes(value)
+    validator: (value: string) => [
+      'character',
+      'corporation',
+      'alliance',
+      'type-icon',
+      'type-render',
+      'blueprint',
+      'blueprint-copy',
+      'item' // For automatic detection based on name
+    ].includes(value)
   },
   // The ID for the image (character ID, corporation ID, etc.)
   id: {
     type: Number,
     required: true
+  },
+  // Item name - used for detecting blueprint status for 'item' type
+  name: {
+    type: String,
+    default: ''
   },
   // Alt text for accessibility
   alt: {
@@ -118,7 +132,10 @@ const eveSize = computed(() => {
     'corporation': 64,
     'alliance': 64,
     'type-icon': 64,
-    'type-render': 512
+    'type-render': 512,
+    'blueprint': 64,
+    'blueprint-copy': 64,
+    'item': 64
   };
 
   // Convert size to number if it's a string
@@ -146,6 +163,13 @@ const src = computed(() => {
       return eveImages.getTypeIcon(props.id, eveSize.value);
     case 'type-render':
       return eveImages.getTypeRender(props.id, eveSize.value);
+    case 'blueprint':
+      return eveImages.getBlueprintIcon(props.id, eveSize.value);
+    case 'blueprint-copy':
+      return eveImages.getBlueprintCopyIcon(props.id, eveSize.value);
+    case 'item':
+      // Auto-detect image type based on name
+      return eveImages.getItemImageUrl(props.id, props.name, 'icon', eveSize.value);
     default:
       return null;
   }

@@ -84,6 +84,73 @@ export function useEveImages() {
     return `https://images.evetech.net/types/${typeId}/render?size=${validSize}`;
   };
 
+  /**
+   * Get blueprint icon URL
+   * @param typeId - EVE type ID
+   * @param size - Image size (default: 64, will be normalized to nearest valid size)
+   * @returns Blueprint icon URL
+   */
+  const getBlueprintIcon = (typeId: number | null, size = 64): string | null => {
+    if (!typeId) return null;
+    const validSize = normalizeSize(size);
+    return `https://images.evetech.net/types/${typeId}/bp?size=${validSize}`;
+  };
+
+  /**
+   * Get blueprint copy icon URL
+   * @param typeId - EVE type ID
+   * @param size - Image size (default: 64, will be normalized to nearest valid size)
+   * @returns Blueprint copy icon URL
+   */
+  const getBlueprintCopyIcon = (typeId: number | null, size = 64): string | null => {
+    if (!typeId) return null;
+    const validSize = normalizeSize(size);
+    return `https://images.evetech.net/types/${typeId}/bpc?size=${validSize}`;
+  };
+
+  /**
+   * Check if an item name represents a blueprint
+   * @param name - Item name to check
+   * @returns True if the name indicates a blueprint
+   */
+  const isBlueprint = (name: string | null | undefined): boolean => {
+    if (!name) return false;
+    return name.includes('Blueprint');
+  };
+
+  /**
+   * Check if an item name represents a blueprint copy
+   * @param name - Item name to check
+   * @returns True if the name indicates a blueprint copy
+   */
+  const isBlueprintCopy = (name: string | null | undefined): boolean => {
+    if (!name) return false;
+    return name.includes('Blueprint Copy');
+  };
+
+  /**
+   * Get appropriate image URL based on item type and name
+   * @param typeId - EVE type ID
+   * @param name - Item name (used to detect if it's a blueprint)
+   * @param imageType - Requested image type (icon, render)
+   * @param size - Image size
+   * @returns URL for the appropriate image type
+   */
+  const getItemImageUrl = (typeId: number | null, name: string | null | undefined, imageType = 'icon', size = 64): string | null => {
+    if (!typeId) return null;
+
+    // Determine the correct image type based on the name
+    if (isBlueprintCopy(name)) {
+      return getBlueprintCopyIcon(typeId, size);
+    } else if (isBlueprint(name)) {
+      return getBlueprintIcon(typeId, size);
+    } else if (imageType === 'render') {
+      return getTypeRender(typeId, size);
+    } else {
+      return getTypeIcon(typeId, size);
+    }
+  };
+
   return {
     VALID_SIZES,
     normalizeSize,
@@ -91,6 +158,11 @@ export function useEveImages() {
     getCorporationLogo,
     getAllianceLogo,
     getTypeIcon,
-    getTypeRender
+    getTypeRender,
+    getBlueprintIcon,
+    getBlueprintCopyIcon,
+    isBlueprint,
+    isBlueprintCopy,
+    getItemImageUrl
   };
 }

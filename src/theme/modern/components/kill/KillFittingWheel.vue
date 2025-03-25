@@ -36,10 +36,11 @@
 
       <!-- Ship image -->
       <div class="ship-container" :class="{ 'darkened': activeTooltip.visible }">
-        <img
+        <EveImage
           v-if="killmail && killmail.victim"
-          :src="`https://images.evetech.net/types/${killmail.victim.ship_id}/render?size=1024`"
-          :alt="getLocalizedString(killmail?.victim?.ship_name, currentLocale.value)"
+          :type="'type-render'"
+          :id="killmail.victim.ship_id"
+          :size="1024"
           class="ship-image"
         />
         <div v-else class="empty-ship"></div>
@@ -124,9 +125,14 @@
                @mouseenter="showTooltip(item)"
                @mouseleave="prepareToHideTooltip"
                @click="togglePinnedTooltip(item)">
-            <img :src="`https://images.evetech.net/types/${item.type_id}/icon?size=64`"
-                 :alt="getLocalizedString(item.name, currentLocale.value)"
-                 class="module-icon" />
+            <EveImage
+              :type="'item'"
+              :id="item.type_id"
+              :name="getLocalizedString(item.name, currentLocale.value)"
+              :size="64"
+              :alt="getLocalizedString(item.name, currentLocale.value)"
+              class="module-icon"
+            />
           </div>
           <div v-else class="empty-slot"></div>
 
@@ -135,9 +141,14 @@
                class="ammo-container"
                @mouseenter="showTooltip(getAmmoForSlot(index, 'high'))"
                @mouseleave="prepareToHideTooltip">
-            <img :src="`https://images.evetech.net/types/${getAmmoForSlot(index, 'high').type_id}/icon?size=64`"
-                 :alt="getLocalizedString(getAmmoForSlot(index, 'high').name, currentLocale.value)"
-                 class="ammo-icon" />
+            <EveImage
+              :type="'item'"
+              :id="getAmmoForSlot(index, 'high').type_id"
+              :name="getLocalizedString(getAmmoForSlot(index, 'high').name, currentLocale.value)"
+              :size="64"
+              :alt="getLocalizedString(getAmmoForSlot(index, 'high').name, currentLocale.value)"
+              class="ammo-icon"
+            />
           </div>
         </div>
 
@@ -151,9 +162,14 @@
                @mouseenter="showTooltip(item)"
                @mouseleave="prepareToHideTooltip"
                @click="togglePinnedTooltip(item)">
-            <img :src="`https://images.evetech.net/types/${item.type_id}/icon?size=64`"
-                 :alt="getLocalizedString(item.name, currentLocale.value)"
-                 class="module-icon" />
+            <EveImage
+              :type="'item'"
+              :id="item.type_id"
+              :name="getLocalizedString(item.name, currentLocale.value)"
+              :size="64"
+              :alt="getLocalizedString(item.name, currentLocale.value)"
+              class="module-icon"
+            />
           </div>
           <div v-else class="empty-slot"></div>
 
@@ -161,9 +177,14 @@
                class="ammo-container"
                @mouseenter="showTooltip(getAmmoForSlot(index, 'mid'))"
                @mouseleave="prepareToHideTooltip">
-            <img :src="`https://images.evetech.net/types/${getAmmoForSlot(index, 'mid').type_id}/icon?size=64`"
-                 :alt="getLocalizedString(getAmmoForSlot(index, 'mid').name, currentLocale.value)"
-                 class="ammo-icon" />
+            <EveImage
+              :type="'item'"
+              :id="getAmmoForSlot(index, 'mid').type_id"
+              :name="getLocalizedString(getAmmoForSlot(index, 'mid').name, currentLocale.value)"
+              :size="64"
+              :alt="getLocalizedString(getAmmoForSlot(index, 'mid').name, currentLocale.value)"
+              class="ammo-icon"
+            />
           </div>
         </div>
 
@@ -177,9 +198,14 @@
                @mouseenter="showTooltip(item)"
                @mouseleave="prepareToHideTooltip"
                @click="togglePinnedTooltip(item)">
-            <img :src="`https://images.evetech.net/types/${item.type_id}/icon?size=64`"
-                 :alt="getLocalizedString(item.name, currentLocale.value)"
-                 class="module-icon" />
+            <EveImage
+              :type="'item'"
+              :id="item.type_id"
+              :name="getLocalizedString(item.name, currentLocale.value)"
+              :size="64"
+              :alt="getLocalizedString(item.name, currentLocale.value)"
+              class="module-icon"
+            />
           </div>
           <div v-else class="empty-slot"></div>
 
@@ -187,9 +213,14 @@
                class="ammo-container"
                @mouseenter="showTooltip(getAmmoForSlot(index, 'low'))"
                @mouseleave="prepareToHideTooltip">
-            <img :src="`https://images.evetech.net/types/${getAmmoForSlot(index, 'low').type_id}/icon?size=64`"
-                 :alt="getLocalizedString(getAmmoForSlot(index, 'low').name, currentLocale.value)"
-                 class="ammo-icon" />
+            <EveImage
+              :type="'item'"
+              :id="getAmmoForSlot(index, 'low').type_id"
+              :name="getLocalizedString(getAmmoForSlot(index, 'low').name, currentLocale.value)"
+              :size="64"
+              :alt="getLocalizedString(getAmmoForSlot(index, 'low').name, currentLocale.value)"
+              class="ammo-icon"
+            />
           </div>
         </div>
 
@@ -203,27 +234,39 @@
                @mouseenter="showTooltip(item)"
                @mouseleave="prepareToHideTooltip"
                @click="togglePinnedTooltip(item)">
-            <img :src="`https://images.evetech.net/types/${item.type_id}/icon?size=64`"
-                 :alt="getLocalizedString(item.name, currentLocale.value)"
-                 class="module-icon" />
+            <EveImage
+              :type="'item'"
+              :id="item.type_id"
+              :name="getLocalizedString(item.name, currentLocale.value)"
+              :size="64"
+              :alt="getLocalizedString(item.name, currentLocale.value)"
+              class="module-icon"
+            />
           </div>
           <div v-else class="empty-slot"></div>
         </div>
 
-        <!-- Subsystem slots for T3 cruisers -->
-        <template v-if="hasSubsystems">
-          <div v-for="(item, index) in subsystemSlots" :key="`subsystem-${index}`"
-               class="slot subsystem-slot"
-               :style="getSlotPosition(index, subsystemSlots.length, 'subsystem')"
-               :class="{ 'empty-slot-container': !item }">
-            <div v-if="item" class="module-container" @mouseenter="showTooltip(item)" @mouseleave="prepareToHideTooltip" @click="togglePinnedTooltip(item)">
-              <img :src="`https://images.evetech.net/types/${item.type_id}/icon?size=64`"
-                   :alt="getLocalizedString(item.name, currentLocale.value)"
-                   class="module-icon" />
-            </div>
-            <div v-else class="empty-slot"></div>
+        <!-- Subsystem slots for T3 Cruisers -->
+        <div v-if="hasSubsystems" v-for="(item, index) in subsystemSlots" :key="`subsystem-${index}`"
+             class="slot subsystem-slot"
+             :style="getSlotPosition(index, subsystemSlots.length, 'subsystem')"
+             :class="{ 'empty-slot-container': !item }">
+          <div v-if="item"
+               class="module-container"
+               @mouseenter="showTooltip(item)"
+               @mouseleave="prepareToHideTooltip"
+               @click="togglePinnedTooltip(item)">
+            <EveImage
+              :type="'item'"
+              :id="item.type_id"
+              :name="getLocalizedString(item.name, currentLocale.value)"
+              :size="64"
+              :alt="getLocalizedString(item.name, currentLocale.value)"
+              class="module-icon subsystem-icon"
+            />
           </div>
-        </template>
+          <div v-else class="empty-slot"></div>
+        </div>
       </div>
     </div>
   </div>
