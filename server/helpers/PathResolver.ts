@@ -1,6 +1,5 @@
 import { fileURLToPath } from 'node:url';
 import path from 'node:path';
-// Import the package as a whole instead of trying to import a named export
 import moduleAlias from 'module-alias';
 
 /**
@@ -13,10 +12,32 @@ export function registerPathAliases() {
   const currentFilePath = fileURLToPath(currentFileUrl);
   const projectRoot = path.resolve(path.dirname(currentFilePath), '../../');
 
-  // Use addAliases method from the imported module
+  console.log(`Registering path alias '~' to ${projectRoot}`);
+
+  // Register the module alias
   moduleAlias.addAliases({
     '~': projectRoot
   });
+
+  // For ESM support, we need to patch the module resolution
+  // This is a workaround for ESM limitations with module-alias
+  const originalResolveFilename = (moduleAlias as any)._moduleResolver;
+  if (originalResolveFilename) {
+    (moduleAlias as any)._moduleResolver = function(request: string, parent: any) {
+      console.debug(`Resolving path: ${request}`);
+      try {
+        return originalResolveFilename(request, parent);
+      } catch (error) {
+        // If resolution fails and it's an aliased path, try a direct path resolution
+        if (request.startsWith('~/')) {
+          const directPath = path.join(projectRoot, request.substring(2));
+          console.debug(`Trying direct path resolution: ${directPath}`);
+          return directPath;
+        }
+        throw error;
+      }
+    };
+  }
 
   return projectRoot;
 }
@@ -34,11 +55,18 @@ export function resolvePath(pathWithAlias: string): string {
 }
 
 /**
- * Helper for importing modules with path alias support
- * @param modulePath Path that may contain the '~' alias
- * @returns The imported module
+ * For direct importing in ESM context, a helper that uses dynamic import
+ * with resolved paths
+ * @param modulePath Path with potential alias
+ * @returns The module default export
  */
-export async function importWithPathResolution(modulePath: string) {
-  const resolvedPath = resolvePath(modulePath);
-  return await import(resolvedPath);
+export async function importWithAlias(modulePath: string) {
+  if (modulePath.startsWith('~/')) {
+    const currentFileUrl = import.meta.url;
+    const currentFilePath = fileURLToPath(currentFileUrl);
+    const projectRoot = path.resolve(path.dirname(currentFilePath), '../../');
+    const resolvedPath = path.join(projectRoot, modulePath.substring(2));
+    return await import(resolvedPath);
+  }
+  return await import(modulePath);
 }

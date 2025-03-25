@@ -1,8 +1,7 @@
 #!/usr/bin/env bun
 
-// Register path aliases before other imports
-import { registerPathAliases } from '../server/helpers/PathResolver';
-registerPathAliases();
+// Import the register file before any other imports
+import '../server/register-alias.js';
 
 import { Command } from 'commander';
 import path from 'node:path';
