@@ -524,9 +524,14 @@ renderer.link = (href, title, text) => {
   // Imgur gallery or album - any gallery URL pattern
   const imgurGalleryMatch = href.match(/^https?:\/\/(www\.)?imgur\.com\/(gallery|a)\/([^\/\s]+)/i);
 
-  // Check if it's a Giphy link
-  const giphyMatch = href.match(/^https?:\/\/(www\.)?giphy\.com\/gifs\/([a-zA-Z0-9]+-)*([a-zA-Z0-9]+)/) ||
-                      href.match(/^https?:\/\/media[0-9]?\.giphy\.com\/media\/([a-zA-Z0-9]+)/);
+  // Check if it's a complex versioned Giphy link
+  const complexGiphyMatch = href.match(/^https?:\/\/media[0-9]?\.giphy\.com\/media\/v[0-9]\..*?\/.*?\/giphy\.gif/);
+
+  // Check if it's a simpler Giphy link
+  const simpleGiphyMatch = !complexGiphyMatch && (
+    href.match(/^https?:\/\/(www\.)?giphy\.com\/gifs\/([a-zA-Z0-9]+-)*([a-zA-Z0-9]+)/) ||
+    href.match(/^https?:\/\/media[0-9]?\.giphy\.com\/media\/([a-zA-Z0-9]+)/)
+  );
 
   // Check if it's a Tenor link
   const tenorMatch = href.match(/^https?:\/\/(www\.)?tenor\.com\/view\/[a-zA-Z0-9-]+-([0-9]+)/);
@@ -646,8 +651,21 @@ renderer.link = (href, title, text) => {
               </video>
             </div>`;
   }
-  else if (giphyMatch) {
-    const giphyId = giphyMatch[3] || giphyMatch[1];
+  // Handle complex versioned GIPHY URLs directly
+  else if (complexGiphyMatch) {
+    return `<div class="gif-container">
+              <img src="${href}" alt="GIPHY" class="max-w-full h-auto" />
+              <div class="media-source">
+                <a href="${href}" target="_blank" rel="noopener noreferrer" class="source-link">
+                  <span class="flex items-center"><svg class="w-4 h-4 mr-1" viewBox="0 0 24 24" fill="currentColor"><path d="M2.666 0v24h18.668V0H2.666zm16.668 22H4.666V2h14.668v20zm-4.335-5.917a1.458 1.458 0 0 1-1.458 1.458h-4.083a1.458 1.458 0 0 1-1.458-1.458V10a1.458 1.458 0 0 1 1.458-1.458h4.083A1.458 1.458 0 0 1 15 10v6.083z"></path></svg>View on GIPHY</span>
+                </a>
+              </div>
+            </div>`;
+  }
+  // Handle simple GIPHY URLs with ID extraction
+  else if (simpleGiphyMatch) {
+    // Use the last capture group from whichever regex matched
+    const giphyId = simpleGiphyMatch[simpleGiphyMatch.length - 1];
     return `<div class="gif-container">
               <img src="https://media.giphy.com/media/${giphyId}/giphy.gif" alt="GIPHY" class="max-w-full h-auto" />
               <div class="media-source">

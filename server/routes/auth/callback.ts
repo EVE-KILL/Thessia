@@ -48,8 +48,7 @@ export default defineEventHandler(async (event) => {
         characterOwnerHash: userData.characterOwnerHash,
         uniqueIdentifier: uniqueIdentifier,
         lastChecked: new Date(),
-        canFetchCorporationKillmails: userData.scopes.includes("esi-killmails.read_corporation_killmails.v1"),
-        administrator: false
+        canFetchCorporationKillmails: userData.scopes.includes("esi-killmails.read_corporation_killmails.v1")
     };
 
     const user = new Users(payload);
