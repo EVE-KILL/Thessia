@@ -1109,12 +1109,66 @@ function loginToComment() {
   login();
 }
 
+// Function to handle scrolling to comment fragment in URL
+function scrollToCommentFragment() {
+  if (import.meta.client) {
+    const fragment = window.location.hash;
+    if (fragment && fragment.startsWith('#comment-')) {
+      nextTick(() => {
+        const commentId = fragment.slice(1); // Remove the # symbol
+        const commentElement = document.getElementById(commentId);
+        if (commentElement) {
+          commentElement.scrollIntoView({ behavior: 'smooth' });
+          // Add a highlight effect
+          commentElement.classList.add('highlighted-comment');
+          setTimeout(() => {
+            commentElement.classList.remove('highlighted-comment');
+          }, 2000);
+        }
+      });
+    }
+  }
+}
+
 // Initialize the component
 onMounted(() => {
   fetchComments();
 
   if (import.meta.client) {
     initWebSocket();
+
+    // Handle comment fragment after comments are loaded
+    watch(() => comments.value.length, () => {
+      scrollToCommentFragment();
+    }, { immediate: true });
+
+    // Also listen for hash changes
+    window.addEventListener('hashchange', scrollToCommentFragment);
+  }
+});
+
+onBeforeUnmount(() => {
+  window.removeEventListener('hashchange', scrollToCommentFragment);
+
+  // ...existing cleanup code...
+
+  if (wsSocket.value) {
+    // Decrement the reference count
+    if (globalWsRef.value.count > 0) {
+      globalWsRef.value.count--;
+    }
+
+    // Only close the socket if this is the last instance using it
+    if (globalWsRef.value.count === 0 && globalWsRef.value.socket) {
+      globalWsRef.value.socket.close();
+      globalWsRef.value.socket = null;
+      wsSocket.value = null;
+    }
+  }
+
+  if (wsReconnectTimeout.value) {
+    clearTimeout(wsReconnectTimeout.value);
+    wsReconnectTimeout.value = null;
   }
 });
 </script>
@@ -1244,6 +1298,8 @@ onMounted(() => {
   border-radius: 0.5rem;
   padding: 0.5rem;
   background-color: light-dark(rgba(245, 245, 245, 0.05), rgba(31, 41, 55, 0.3));
+  min-height: 200px; /* Base minimum height */
+  transition: none; /* Disable transitions to prevent animation during typing */
 }
 
 .editor-toolbar {
@@ -1254,6 +1310,9 @@ onMounted(() => {
 
 .preview-container {
   border-color: light-dark(rgba(229, 231, 235, 0.3), rgba(75, 85, 99, 0.2));
+  min-height: 200px; /* Match editor height */
+  overflow-y: auto; /* Allow scrolling if content is taller */
+  transition: none; /* Disable transitions to prevent animation during tab switching */
 }
 
 .video-container video {
@@ -1346,18 +1405,6 @@ onMounted(() => {
   transition: filter 0.3s ease;
 }
 
-/* Fix for editor juddering */
-.editor-container {
-  min-height: 200px; /* Base minimum height */
-  transition: none; /* Disable transitions to prevent animation during typing */
-}
-
-.preview-container {
-  min-height: 200px; /* Match editor height */
-  overflow-y: auto; /* Allow scrolling if content is taller */
-  transition: none; /* Disable transitions to prevent animation during tab switching */
-}
-
 /* WebSocket status styles */
 .websocket-status {
   display: flex;
@@ -1383,5 +1430,16 @@ onMounted(() => {
 
 .error {
   background-color: #ef4444;
+}
+
+/* Comment highlight effect for navigation */
+:deep(.highlighted-comment) {
+  animation: highlight-pulse 2s ease-in-out;
+}
+
+@keyframes highlight-pulse {
+  0% { background-color: transparent; }
+  30% { background-color: rgba(79, 195, 247, 0.2); }
+  100% { background-color: transparent; }
 }
 </style>

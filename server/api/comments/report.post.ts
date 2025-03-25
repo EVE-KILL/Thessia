@@ -1,5 +1,6 @@
 import { cliLogger } from "~/server/helpers/Logger";
 import { Comments } from "~/server/models/Comments";
+import { DiscordWebhooks } from "~/server/helpers/DiscordWebhooks";
 
 export default defineEventHandler(async (event) => {
   // Get the authentication cookie
@@ -82,6 +83,16 @@ export default defineEventHandler(async (event) => {
     comment.reportMessages.push(report);
 
     await comment.save();
+
+    // Send notification to Discord
+    await DiscordWebhooks.sendReportedComment(
+      comment.toJSON(),
+      reportMessage.trim(),
+      {
+        characterId: user.characterId,
+        characterName: user.characterName
+      }
+    );
 
     cliLogger.debug(`Comment ${identifier} reported by ${user.characterName}: ${reportMessage}`);
 

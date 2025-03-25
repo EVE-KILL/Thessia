@@ -276,6 +276,7 @@
         v-else
         :items="rightSideTabs"
         :ui="tabsUi"
+        v-model="defaultDesktopTabIndex"
       >
         <template #comments="{ item }">
           <KillComments :killId="killmail.killmail_id" />
@@ -341,6 +342,7 @@
         v-else
         :items="mobileTabs"
         :ui="tabsUi"
+        :default-index="defaultMobileTabIndex"
       >
         <!-- Fitting Wheel Tab -->
         <template #fitting="{ item }">
@@ -591,6 +593,49 @@ function getSkeletonSlotPosition(index: number, position: string): Record<string
     transform: 'translate(-50%, -50%)'
   };
 }
+
+// Default tab selections
+const defaultDesktopTabIndex = ref('0'); // First tab (Attackers)
+const defaultMobileTabIndex = ref('0');  // First tab (Fitting)
+
+// Handle comment fragment navigation
+function handleCommentFragment() {
+  if (import.meta.client) {
+    const fragment = window.location.hash;
+    if (fragment && fragment.startsWith('#comment-')) {
+      // If we have a comment fragment, switch to the comments tab
+      if (isMobile.value) {
+        // Comments is the 5th tab (index 4) on mobile
+        defaultMobileTabIndex.value = '4';
+      } else {
+        // Comments is the 2nd tab (index 1) on desktop
+        defaultDesktopTabIndex.value = '1';
+      }
+    }
+  }
+}
+
+// Update UTabs to use the defaultIndex
+watch(() => killmail.value, () => {
+  if (killmail.value && import.meta.client) {
+    nextTick(() => {
+      handleCommentFragment();
+    });
+  }
+}, { immediate: true });
+
+// Listen for hash changes to update tab selection when fragments change
+onMounted(() => {
+  if (import.meta.client) {
+    window.addEventListener('hashchange', handleCommentFragment);
+  }
+});
+
+onBeforeUnmount(() => {
+  if (import.meta.client) {
+    window.removeEventListener('hashchange', handleCommentFragment);
+  }
+});
 </script>
 
 <style scoped>
@@ -636,7 +681,6 @@ function getSkeletonSlotPosition(index: number, position: string): Record<string
   :deep(.u-tabs-list) {
     justify-content: flex-start;
   }
-
   :deep(.u-tab-item) {
     padding-left: 0.75rem;
     padding-right: 0.75rem;
@@ -656,7 +700,6 @@ function getSkeletonSlotPosition(index: number, position: string): Record<string
   background-color: rgba(128, 128, 128, 0.1);
 }
 
-/* Skeleton rings */
 .skeleton-ring {
   position: absolute;
   border-radius: 50%;
@@ -679,7 +722,6 @@ function getSkeletonSlotPosition(index: number, position: string): Record<string
   border: 6px solid rgba(128, 128, 128, 0.15);
 }
 
-/* Ship skeleton */
 .skeleton-ship {
   position: absolute;
   top: 20%;
@@ -688,85 +730,15 @@ function getSkeletonSlotPosition(index: number, position: string): Record<string
   height: 60%;
   border-radius: 50%;
   overflow: hidden;
+  background-color: rgba(128, 128, 128, 0.1);
 }
 
-/* Module slot skeletons */
 .skeleton-slot {
   position: absolute;
   width: 30px;
   height: 30px;
   border-radius: 50%;
-  background-color: rgba(128, 128, 128, 0.2);
-}
-
-/* Responsive adjustments */
-@media (max-width: 500px) {
-  .skeleton-slot {
-    width: 24px;
-    height: 24px;
-  }
-}
-
-@media (max-width: 768px) {
-  .fitting-wheel-skeleton {
-    max-width: 400px; /* Increased from 300px */
-  }
-}
-
-/* Enhanced fitting wheel skeleton styles */
-.fitting-wheel-skeleton {
-  position: relative;
-  width: 100%;
-  max-width: 600px;
-  height: 0;
-  padding-bottom: 100%; /* Maintain 1:1 aspect ratio */
-  margin: 0 auto;
-  border-radius: 50%;
-  overflow: hidden;
-  background-color: rgba(30, 30, 30, 0.2);
-}
-
-/* Skeleton rings */
-.skeleton-ring {
-  position: absolute;
-  border-radius: 50%;
   background-color: transparent;
-}
-
-.outer-skeleton-ring {
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  border: 8px solid rgba(40, 40, 40, 0.3);
-}
-
-.inner-skeleton-ring {
-  top: 15%;
-  left: 15%;
-  width: 70%;
-  height: 70%;
-  border: 6px solid rgba(40, 40, 40, 0.2);
-}
-
-/* Ship skeleton */
-.skeleton-ship {
-  position: absolute;
-  top: 20%;
-  left: 20%;
-  width: 60%;
-  height: 60%;
-  border-radius: 50%;
-  overflow: hidden;
-}
-
-/* Module slot skeletons */
-.skeleton-slot {
-  position: absolute;
-  width: 42px;
-  height: 42px;
-  border-radius: 50%;
-  overflow: hidden;
 }
 
 .skeleton-slot.high-slot {
@@ -785,7 +757,6 @@ function getSkeletonSlotPosition(index: number, position: string): Record<string
   border: 1px solid rgba(150, 150, 150, 0.2);
 }
 
-/* Slot indicators */
 .skeleton-indicator {
   position: absolute;
   width: 18px;
@@ -826,36 +797,23 @@ function getSkeletonSlotPosition(index: number, position: string): Record<string
   font-weight: 600;
 }
 
-.cell {
+.cell.value-cell {
   display: flex;
-  align-items: center;
-}
-
-.value-cell {
   justify-content: flex-end;
+  align-items: center;
 }
 
 /* Responsive adjustments */
 @media (max-width: 500px) {
   .skeleton-slot {
-    width: 36px;
-    height: 36px;
+    width: 24px;
+    height: 24px;
   }
 }
 
 @media (max-width: 768px) {
   .fitting-wheel-skeleton {
-    max-width: 400px;
-  }
-
-  .table-header-skeleton {
-    grid-template-columns: 50px 1fr 100px;
-    padding: 0.4rem 0.75rem;
-  }
-
-  .table-row-skeleton {
-    grid-template-columns: 50px 1fr 100px;
-    padding: 0.35rem 0.75rem;
+    max-width: 400px; /* Increased from 300px */
   }
 }
 </style>

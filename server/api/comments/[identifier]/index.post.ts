@@ -2,6 +2,7 @@ import { cliLogger } from "~/server/helpers/Logger";
 import { Comments } from "~/server/models/Comments";
 import { v4 as uuidv4 } from "uuid";
 import { broadcastCommentEvent } from "~/server/helpers/WSClientManager";
+import { DiscordWebhooks } from "~/server/helpers/DiscordWebhooks";
 
 /**
  * Interface for OpenAI moderation API response
@@ -186,6 +187,9 @@ export default defineEventHandler(async (event) => {
 
     // Broadcast the new comment via WebSocket
     await broadcastCommentEvent('new', newComment.toJSON());
+
+    // Send notification to Discord
+    await DiscordWebhooks.sendNewComment(newComment.toJSON());
 
     return newComment.toJSON();
   } catch (error) {
