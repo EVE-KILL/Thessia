@@ -512,9 +512,10 @@ async function resolveImgurUrl(url: string): Promise<{url: string, type: string}
 }
 
 renderer.link = (href, title, text) => {
-  // Check if it's a YouTube link
+  // Check if it's a YouTube link (including shorts)
   const youtubeMatch = href.match(/^https?:\/\/(www\.)?youtube\.com\/watch\?v=([a-zA-Z0-9_-]+)/) ||
-                        href.match(/^https?:\/\/(www\.)?youtu\.be\/([a-zA-Z0-9_-]+)/);
+                        href.match(/^https?:\/\/(www\.)?youtu\.be\/([a-zA-Z0-9_-]+)/) ||
+                        href.match(/^https?:\/\/(www\.)?youtube\.com\/shorts\/([a-zA-Z0-9_-]+)/);
 
   // Simplified Imgur regex patterns
   // Direct imgur image
@@ -1137,7 +1138,12 @@ onMounted(() => {
   if (import.meta.client) {
     initWebSocket();
 
-    // Handle comment fragment after comments are loaded
+    // Handle fragment navigation after a short delay to ensure DOM is ready
+    setTimeout(() => {
+      scrollToCommentFragment();
+    }, 500);
+
+    // Also watch for comments loading and try again
     watch(() => comments.value.length, () => {
       scrollToCommentFragment();
     }, { immediate: true });

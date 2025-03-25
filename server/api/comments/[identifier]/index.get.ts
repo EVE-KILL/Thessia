@@ -29,8 +29,6 @@ export default defineEventHandler(async (event) => {
       .lean()
       .exec();
 
-    cliLogger.debug(`Found ${comments.length} comments for killIdentifier ${identifier}`);
-
     return comments;
   } catch (error) {
     cliLogger.error(`Error fetching comments: ${error}`);
