@@ -34,7 +34,7 @@ spec:
             - /bin/sh
             - -c
             - |
-              ./bin/queue process:entities
+              ./bin/queue processEntities
           resources:
             {{- toYaml .Values.processEntities.resources | nindent 12 }}
           envFrom:

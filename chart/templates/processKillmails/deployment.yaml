@@ -34,7 +34,7 @@ spec:
             - /bin/sh
             - -c
             - |
-              ./bin/queue process:killmails
+              ./bin/queue processKillmails
           resources:
             {{- toYaml .Values.processKillmails.resources | nindent 12 }}
           env:

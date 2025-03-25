@@ -34,7 +34,7 @@ spec:
             - /bin/sh
             - -c
             - |
-              ./bin/queue process:wars
+              ./bin/queue processWars
           resources:
             {{- toYaml .Values.processWars.resources | nindent 12 }}
           envFrom:
