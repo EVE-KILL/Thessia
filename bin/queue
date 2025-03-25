@@ -1,32 +1,20 @@
-#!/usr/bin/env bun
+#!/usr/bin/env sh
 
-import { Command } from 'commander';
-import path from 'node:path';
-import fs from 'node:fs/promises';
-import { initMongooseConnection } from '../server/helpers/Mongoose';
+# Find the project root (go up one directory from where this script is)
+SCRIPT_DIR=$(dirname "$0")
+PROJECT_ROOT=$(cd "$SCRIPT_DIR/.." && pwd)
 
-const program = new Command();
-await initMongooseConnection();
-
-async function main() {
-    const cliPath = path.join(__dirname, '../src/queue');
-    const files = await fs.readdir(cliPath);
-
-    for (const file of files) {
-        const { default: commandModule } = await import(path.join(cliPath, file));
-        program
-            .command(commandModule.name)
-            .description(commandModule.description)
-            .action((...args) => commandModule.run(args));
-    }
-
-    program.parse(process.argv);
-    program.exitOverride((error) => {
-        console.log(error);
-    });
-}
-
-main().catch((error) => {
-    console.error(error);
-    process.exit(1);
-});
+# Check for various possible queue locations, in order of preference
+if [ -f "$PROJECT_ROOT/queue.ts" ]; then
+    cd "$PROJECT_ROOT" && bun --bun run queue.ts "$@"
+elif [ -f "$PROJECT_ROOT/.output/queue/queue.js" ]; then
+    cd "$PROJECT_ROOT" && bun --bun run .output/queue/queue.js "$@"
+elif [ -f "$PROJECT_ROOT/queue/queue.js" ]; then
+    cd "$PROJECT_ROOT" && bun --bun run queue/queue.js "$@"
+else
+    echo "Error: Could not find queue executable in any of the expected locations:"
+    echo "  - $PROJECT_ROOT/queue.ts"
+    echo "  - $PROJECT_ROOT/.output/queue/queue.js"
+    echo "  - $PROJECT_ROOT/queue/queue.js"
+    exit 1
+fi

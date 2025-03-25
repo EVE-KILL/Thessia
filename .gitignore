@@ -29,3 +29,6 @@ values.yaml
 
 # Cache
 .ipx-cache/
+
+# Ignore the console/cron/queue loaders
+.loader.ts

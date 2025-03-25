@@ -3,12 +3,15 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "build": "nuxt build",
+    "build": "nuxt build && bun run build-cli && bun run build-cron && bun run build-queue",
     "dev": "nuxt dev",
     "generate": "nuxt generate",
     "preview": "nuxt preview",
     "postinstall": "nuxt prepare",
-    "debug": "nuxt dev --inspect --host 0.0.0.0"
+    "debug": "nuxt dev --inspect --host 0.0.0.0",
+    "build-cli": "bun run build-cli.ts",
+    "build-cron": "bun run build-cron.ts",
+    "build-queue": "bun run build-queue.ts"
   },
   "dependencies": {
     "@nuxtjs/color-mode": "3.5.2",
@@ -32,8 +35,6 @@
     "nuxt-security": "2.2.0",
     "server-health": "^6.0.2",
     "sharp": "^0.33.5",
-    "sqlite": "^5.1.1",
-    "sqlite3": "^5.1.7",
     "stream-json": "^1.9.1",
     "tar-stream": "^3.1.7",
     "typescript": "^5.8.2",
@@ -61,6 +62,8 @@
     "@types/unbzip2-stream": "^1.4.3",
     "@vueuse/nuxt": "^13.0.0",
     "husky": "^9.1.7",
-    "lint-staged": "^15.5.0"
+    "lint-staged": "^15.5.0",
+    "@types/glob": "^8.1.0",
+    "glob": "^10.4.5"
   }
 }

@@ -1,4 +1,9 @@
 const theme = process.env.THEME || "modern";
+// Import CLI loader generators
+import { generateCliLoader } from './build-cli';
+import { generateCronLoader } from './build-cron';
+import { generateQueueLoader } from './build-queue';
+
 // https://nuxt.com/docs/api/configuration/nuxt-config
 export default defineNuxtConfig({
     extends: ["./src/theme/" + theme],
@@ -284,4 +289,20 @@ export default defineNuxtConfig({
             ],
         },
     },
+
+    hooks: {
+        // Generate loaders before build
+        'build:before': () => {
+            const cliCount = generateCliLoader();
+            const cronCount = generateCronLoader();
+            const queueCount = generateQueueLoader();
+        },
+
+        // Also generate loaders on dev server start
+        'app:resolve': () => {
+            generateCliLoader();
+            generateCronLoader();
+            generateQueueLoader();
+        },
+    }
 });
