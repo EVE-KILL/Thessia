@@ -10,4 +10,14 @@ export interface IComments {
   allianceName?: string;
   createdAt?: Date;
   updatedAt?: Date;
+
+  // New fields for deletion and reporting
+  deleted?: boolean;
+  reported?: boolean;
+  reportMessages?: Array<{
+    reporterId: number;
+    reporterName: string;
+    message: string;
+    timestamp?: Date;
+  }>;
 }

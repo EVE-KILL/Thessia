@@ -1,15 +1,107 @@
 import { cliLogger } from "~/server/helpers/Logger";
 import { Comments } from "~/server/models/Comments";
 import { v4 as uuidv4 } from "uuid";
+import { broadcastCommentEvent } from "~/server/helpers/WSClientManager";
 
 /**
- * Simple AI moderation function (placeholder)
- * @param text Comment text to moderate
- * @returns True if the comment passes moderation
+ * Interface for OpenAI moderation API response
  */
-function aiModeration(text: string): boolean {
-  // For now, this always returns true
-  return true;
+interface ModerationResponse {
+  id: string;
+  model: string;
+  results: Array<{
+    flagged: boolean;
+    categories: {
+      'sexual': boolean;
+      'hate': boolean;
+      'harassment': boolean;
+      'self-harm': boolean;
+      'sexual/minors': boolean;
+      'hate/threatening': boolean;
+      'violence/graphic': boolean;
+      'self-harm/intent': boolean;
+      'self-harm/instructions': boolean;
+      'harassment/threatening': boolean;
+      'violence': boolean;
+    };
+    category_scores: Record<string, number>;
+    flagged_categories: string[];
+  }>;
+}
+
+/**
+ * Check if the moderation results contain prohibited content
+ * @param result Moderation result from OpenAI
+ * @returns Whether the content contains prohibited material
+ */
+function isFlagged(result: ModerationResponse['results'][0]): boolean {
+  return result.categories['self-harm'] ||
+    result.categories['sexual/minors'] ||
+    result.categories['self-harm/intent'] ||
+    result.categories['self-harm/instructions'];
+}
+
+/**
+ * Use OpenAI's moderation API to check comment for prohibited content
+ * @param text Comment text to moderate
+ * @returns Object containing moderation result and possible error message
+ */
+async function aiModeration(text: string): Promise<{ allowed: boolean; message?: string }> {
+  const apiKey = process.env.OPENAI_API_KEY;
+
+  if (!apiKey) {
+    cliLogger.warn('OpenAI API key not configured, skipping moderation');
+    return { allowed: true };
+  }
+
+  try {
+    const response = await fetch('https://api.openai.com/v1/moderations', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${apiKey}`
+      },
+      body: JSON.stringify({ input: text })
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      cliLogger.error(`Moderation API error: ${response.status} - ${errorText}`);
+      // Fail open if the moderation service is unavailable
+      return { allowed: true };
+    }
+
+    const data = await response.json() as ModerationResponse;
+
+    if (data.results.length > 0) {
+      const result = data.results[0];
+
+      if (isFlagged(result)) {
+        // Get the names of flagged categories for better error messages
+        const flaggedCategories = Object.entries(result.categories)
+          .filter(([category, flagged]) =>
+            flagged && (
+              category === 'self-harm' ||
+              category === 'sexual/minors' ||
+              category === 'self-harm/intent' ||
+              category === 'self-harm/instructions'
+            )
+          )
+          .map(([category]) => category);
+
+        return {
+          allowed: false,
+          message: `Comment contains potentially harmful content (${flaggedCategories.join(', ')}) and cannot be posted.`
+        };
+      }
+    }
+
+    return { allowed: true };
+  } catch (error) {
+    cliLogger.error(`Error during content moderation: ${error}`);
+    // Fail open in case of errors
+    return { allowed: true };
+  }
 }
 
 export default defineEventHandler(async (event) => {
@@ -64,11 +156,11 @@ export default defineEventHandler(async (event) => {
     }
 
     // Check comment with AI moderation
-    const passesModeration = aiModeration(comment);
-    if (!passesModeration) {
+    const moderationResult = await aiModeration(comment);
+    if (!moderationResult.allowed) {
       return createError({
         statusCode: 400,
-        statusMessage: 'Comment did not pass AI moderation'
+        statusMessage: moderationResult.message || 'Comment did not pass content moderation'
       });
     }
 
@@ -91,6 +183,9 @@ export default defineEventHandler(async (event) => {
     await newComment.save();
 
     cliLogger.debug(`New comment saved for killIdentifier: ${killIdentifier}`);
+
+    // Broadcast the new comment via WebSocket
+    await broadcastCommentEvent('new', newComment.toJSON());
 
     return newComment.toJSON();
   } catch (error) {

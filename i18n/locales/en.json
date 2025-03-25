@@ -579,7 +579,37 @@
         "code": "Code",
         "image": "Image",
         "youtube": "YouTube",
+        "imgur": "Imgur",
+        "giphy": "Giphy",
+        "tenor": "Tenor",
         "image_url_prompt": "Enter image URL:",
-        "youtube_url_prompt": "Enter YouTube URL:"
+        "youtube_url_prompt": "Enter YouTube URL:",
+        "imgur_url_prompt": "Enter Imgur URL:",
+        "giphy_url_prompt": "Enter Giphy URL:",
+        "tenor_url_prompt": "Enter Tenor URL:"
+    },
+    "comment": {
+        "no_comments": "No comments yet. Be the first to comment!",
+        "report": "Report Comment",
+        "delete": "Delete Comment",
+        "delete_comment": "Delete Comment",
+        "hard_delete": "Permanently Delete",
+        "hard_delete_comment": "Permanently Delete Comment",
+        "report_comment": "Report Comment",
+        "report_reason": "Why are you reporting this comment?",
+        "report_placeholder": "Please explain why this comment should be reviewed by moderators...",
+        "submit_report": "Submit Report",
+        "report_success": "Comment has been reported and will be reviewed by moderators.",
+        "report_success_title": "Comment Reported",
+        "report_error": "Failed to report comment. Please try again.",
+        "confirm_delete": "Delete",
+        "confirm_delete_message": "Are you sure you want to delete this comment? The comment will still be visible to moderators.",
+        "confirm_hard_delete": "Permanently Delete",
+        "confirm_hard_delete_message": "Are you sure you want to permanently delete this comment? This action cannot be undone and will remove the comment from the database.",
+        "delete_error": "Failed to delete comment. Please try again.",
+        "delete_success": "Comment has been deleted.",
+        "delete_success_title": "Comment Deleted",
+        "hard_delete_success": "Comment has been permanently deleted.",
+        "deleted": "This comment has been deleted"
     }
 }

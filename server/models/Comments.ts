@@ -2,7 +2,6 @@
 
 import { Schema, model, type Document, type Model } from "mongoose";
 import type { IComments } from "~/server/interfaces/IComments";
-import { v4 as uuidv4 } from "uuid";
 
 // Extend the IComments interface with Mongoose's Document interface
 export interface ICommentsDocument extends IComments, Document {}
@@ -14,7 +13,6 @@ const commentsSchema = new Schema<ICommentsDocument>(
       type: String,
       required: true,
       unique: true,
-      default: () => uuidv4() // Generate a unique UUID for each comment
     },
     killIdentifier: {
       type: String,
@@ -28,6 +26,16 @@ const commentsSchema = new Schema<ICommentsDocument>(
     corporationName: { type: String, required: true },
     allianceId: { type: Number },
     allianceName: { type: String },
+
+    // New fields for deletion and reporting
+    deleted: { type: Boolean, default: false },
+    reported: { type: Boolean, default: false },
+    reportMessages: [{
+      reporterId: { type: Number, required: true },
+      reporterName: { type: String, required: true },
+      message: { type: String, required: true },
+      timestamp: { type: Date, default: Date.now }
+    }]
   },
   {
     collection: "comments",
