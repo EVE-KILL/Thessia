@@ -1,4 +1,9 @@
 #!/usr/bin/env bun
+
+// Register path aliases before other imports
+import { registerPathAliases } from '../server/helpers/PathResolver';
+registerPathAliases();
+
 import path from "node:path";
 import fs from "node:fs/promises";
 import { CronExpressionParser } from "cron-parser";
