@@ -1,8 +1,4 @@
 #!/usr/bin/env bun
-
-// Import the register file before any other imports
-import '../server/register-alias.js';
-
 import path from "node:path";
 import fs from "node:fs/promises";
 import { CronExpressionParser } from "cron-parser";

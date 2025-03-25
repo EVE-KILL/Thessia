@@ -1,25 +1,23 @@
-const theme = process.env.THEME || 'modern';
+const theme = process.env.THEME || "modern";
 // https://nuxt.com/docs/api/configuration/nuxt-config
 export default defineNuxtConfig({
-    extends: [
-        './src/theme/' + theme
-    ],
+    extends: ["./src/theme/" + theme],
     dir: {
         // core
-        modules: 'src/core/modules',
-        middleware: 'src/core/middleware',
-        plugins: 'src/core/plugins',
+        modules: "src/core/modules",
+        middleware: "src/core/middleware",
+        plugins: "src/core/plugins",
 
         // site
-        assets: 'src/theme/' + theme + '/assets',
-        layouts: 'src/theme/' + theme + '/layouts',
-        pages: 'src/theme/' + theme + '/pages',
-        public: 'src/theme/' + theme + '/public',
+        assets: "src/theme/" + theme + "/assets",
+        layouts: "src/theme/" + theme + "/layouts",
+        pages: "src/theme/" + theme + "/pages",
+        public: "src/theme/" + theme + "/public",
     },
     site: {
-        url: 'https://eve-kill.net'
+        url: "https://eve-kill.net",
     },
-    logLevel: process.env.NODE_ENV !== 'production' ? 'info' : 'silent',
+    logLevel: process.env.NODE_ENV !== "production" ? "info" : "silent",
     nitro: {
         preset: "bun",
         srcDir: "server",
@@ -31,27 +29,67 @@ export default defineNuxtConfig({
             },
         },
 
-        routeRules: process.env.NODE_ENV === 'development' ? {} : {
-            "/api/**": { cors: true },
-            "/api/alliances/**": { cors: true, cache: { maxAge: 3600, staleMaxAge: -1, swr: true } },
-            "/api/characters/**": { cors: true, cache: { maxAge: 3600, staleMaxAge: -1, swr: true } },
-            "/api/corporations/**": { cors: true, cache: { maxAge: 3600, staleMaxAge: -1, swr: true } },
-            "/api/factions/**": { cors: true, cache: { maxAge: 3600, staleMaxAge: -1, swr: true } },
-            "/api/fitting/**": { cors: true, cache: { maxAge: 3600, staleMaxAge: -1, swr: true } },
-            "/api/items/**": { cors: true, cache: { maxAge: 3600, staleMaxAge: -1, swr: true } },
-            "/api/killlist/**": { cors: true, cache: { maxAge: 30, staleMaxAge: 0, swr: true } },
-            "/api/killmail/**": { cors: true, cache: { maxAge: 300, staleMaxAge: -1, swr: true } },
-            "/api/prices/**": { cors: true, cache: { maxAge: 300, staleMaxAge: -1, swr: true } },
-            "/api/search/**": { cors: true, cache: { maxAge: 30, staleMaxAge: -1, swr: true } },
-            "/api/stats": { cors: true, cache: { maxAge: 300, staleMaxAge: -1, swr: true } },
-            "/api/wars/**": { cors: true, cache: { maxAge: 3600, staleMaxAge: -1, swr: true } },
-            "/api/status": { cors: true, cache: { maxAge: 10, staleMaxAge: 0, swr: false } }
-        },
+        routeRules:
+            process.env.NODE_ENV === "development"
+                ? {}
+                : {
+                      "/api/**": { cors: true },
+                      "/api/alliances/**": {
+                          cors: true,
+                          cache: { maxAge: 3600, staleMaxAge: -1, swr: true },
+                      },
+                      "/api/characters/**": {
+                          cors: true,
+                          cache: { maxAge: 3600, staleMaxAge: -1, swr: true },
+                      },
+                      "/api/corporations/**": {
+                          cors: true,
+                          cache: { maxAge: 3600, staleMaxAge: -1, swr: true },
+                      },
+                      "/api/factions/**": {
+                          cors: true,
+                          cache: { maxAge: 3600, staleMaxAge: -1, swr: true },
+                      },
+                      "/api/fitting/**": {
+                          cors: true,
+                          cache: { maxAge: 3600, staleMaxAge: -1, swr: true },
+                      },
+                      "/api/items/**": {
+                          cors: true,
+                          cache: { maxAge: 3600, staleMaxAge: -1, swr: true },
+                      },
+                      "/api/killlist/**": {
+                          cors: true,
+                          cache: { maxAge: 30, staleMaxAge: 0, swr: true },
+                      },
+                      "/api/killmail/**": {
+                          cors: true,
+                          cache: { maxAge: 300, staleMaxAge: -1, swr: true },
+                      },
+                      "/api/prices/**": {
+                          cors: true,
+                          cache: { maxAge: 300, staleMaxAge: -1, swr: true },
+                      },
+                      "/api/search/**": {
+                          cors: true,
+                          cache: { maxAge: 30, staleMaxAge: -1, swr: true },
+                      },
+                      "/api/stats": {
+                          cors: true,
+                          cache: { maxAge: 300, staleMaxAge: -1, swr: true },
+                      },
+                      "/api/wars/**": {
+                          cors: true,
+                          cache: { maxAge: 3600, staleMaxAge: -1, swr: true },
+                      },
+                      "/api/status": {
+                          cors: true,
+                          cache: { maxAge: 10, staleMaxAge: 0, swr: false },
+                      },
+                  },
 
         imports: {
-            dirs: [
-                "server/models/**"
-            ],
+            dirs: ["server/models/**"],
         },
 
         experimental: {
@@ -92,15 +130,14 @@ export default defineNuxtConfig({
     },
 
     runtimeConfig: {
-        public: {
-        }
+        public: {},
     },
     // Ensure modern compatibility mode
     compatibilityDate: "2024-11-01",
 
     // Development tools
     devtools: {
-        enabled: process.env.NODE_ENV !== 'production',
+        enabled: process.env.NODE_ENV !== "production",
         timeline: {
             enabled: true,
         },
@@ -111,18 +148,22 @@ export default defineNuxtConfig({
 
     // Modules with automatic TypeScript support
     modules: [
-      "@nuxt/ui",
-      "@nuxt/icon",
-      "@nuxt/image",
-      "@nuxtjs/i18n",
-      "@vueuse/nuxt",
-      "@nuxtjs/sitemap",
-      "@nuxtjs/seo",
-      // Uncomment next line if you need it, but make sure it's installed
-      // "nuxt-security",
-      "@nuxtjs/color-mode",
-      "@nuxtjs/device"
+        "@nuxt/ui",
+        "@nuxt/icon",
+        "@nuxt/image",
+        "@nuxtjs/i18n",
+        "@vueuse/nuxt",
+        "@nuxtjs/sitemap",
+        "@nuxtjs/seo",
+        // Uncomment next line if you need it, but make sure it's installed
+        // "nuxt-security",
+        "@nuxtjs/color-mode",
+        "@nuxtjs/device",
     ],
+
+    imports: {
+        dirs: ["src/core/utils/**"],
+    },
 
     // i18n configuration
     i18n: {
@@ -170,7 +211,7 @@ export default defineNuxtConfig({
             },
         ],
         bundle: {
-            optimizeTranslationDirective: false
+            optimizeTranslationDirective: false,
         },
         defaultLocale: "en",
         strategy: "no_prefix",
@@ -198,7 +239,12 @@ export default defineNuxtConfig({
             "2xl": 1536,
         },
         // Updated providers configuration
-        domains: ["i.redd.it", "i.imgur.com", "preview.redd.it", "images.evetech.net"],
+        domains: [
+            "i.redd.it",
+            "i.imgur.com",
+            "preview.redd.it",
+            "images.evetech.net",
+        ],
         // Use ipx as default provider - it handles both local and remote images
         provider: "ipx",
         providers: {
