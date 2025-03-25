@@ -1,6 +1,7 @@
 import { fileURLToPath } from 'node:url';
 import path from 'node:path';
-import { register } from 'module-alias';
+// Import the package as a whole instead of trying to import a named export
+import moduleAlias from 'module-alias';
 
 /**
  * Registers the '~' path alias to point to the project root
@@ -12,8 +13,8 @@ export function registerPathAliases() {
   const currentFilePath = fileURLToPath(currentFileUrl);
   const projectRoot = path.resolve(path.dirname(currentFilePath), '../../');
 
-  // Register the '~' alias to point to the project root
-  register({
+  // Use addAliases method from the imported module
+  moduleAlias.addAliases({
     '~': projectRoot
   });
 
