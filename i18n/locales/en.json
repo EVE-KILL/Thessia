@@ -561,5 +561,25 @@
         "noFinalBlow": "No final blow attacker found",
         "noTopDamage": "No top damage attacker found",
         "corporationsWithoutAlliance": "Corporations without Alliance"
+    },
+    "characters_remaining": "characters remaining",
+    "post_comment": "Post Comment",
+    "login_to_comment": "You need to login to post a comment",
+    "login": "Log in",
+    "comment_post_error": "An error occurred while posting your comment",
+    "duplicate_comment_error": "You cannot post the same comment consecutively",
+    "markdown_editor": {
+        "write": "Write",
+        "preview": "Preview",
+        "preview_empty": "Nothing to preview yet",
+        "placeholder": "Write a comment... (Markdown supported)",
+        "bold": "Bold",
+        "italic": "Italic",
+        "link": "Link",
+        "code": "Code",
+        "image": "Image",
+        "youtube": "YouTube",
+        "image_url_prompt": "Enter image URL:",
+        "youtube_url_prompt": "Enter YouTube URL:"
     }
 }

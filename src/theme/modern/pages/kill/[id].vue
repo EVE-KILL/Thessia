@@ -278,7 +278,7 @@
         :ui="tabsUi"
       >
         <template #comments="{ item }">
-          <KillComments />
+          <KillComments :killId="killmail.killmail_id" />
         </template>
 
         <template #attackers="{ item }">

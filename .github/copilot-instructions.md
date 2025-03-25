@@ -14,11 +14,11 @@ This project uses:
 
 - **API:** `/server/api`
 - **Nitro Routes:** `/server/routes`
-- **Vue Pages:** `/pages`
+- **Vue Pages:** `/src/theme/modern/pages`
 - **MongoDB Models:** `/server/models`
-- **Queues:** `/queue`
-- **Cron Jobs:** `/cron`
-- **Console Commands:** `/console`
+- **Queues:** `/src/queue`
+- **Cron Jobs:** `/src/cron`
+- **Console Commands:** `/src/console`
 - **i18n Files:** `/i18n/locales`
 
 ## Code Conventions
