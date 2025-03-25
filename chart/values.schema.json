@@ -84,6 +84,21 @@
                 },
                 "jwtSecret": {
                   "type": "string"
+                },
+                "backendDiscordUrl": {
+                  "type": "string"
+                },
+                "discordNewComment": {
+                  "type": "string"
+                },
+                "discordReportComment": {
+                  "type": "string"
+                },
+                "openAIAPIKey": {
+                  "type": "string"
+                },
+                "tenorAPIKey": {
+                  "type": "string"
                 }
               }
             }

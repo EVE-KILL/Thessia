@@ -40,6 +40,15 @@ global:
 
             # Discord webhooks
             backendDiscordUrl: ""
+            # Discord webhooks
+            discordNewComment: ""
+            discordReportComment: ""
+
+            # OpenAI Moderation
+            openAIAPIKey: ""
+
+            # Tenor API
+            tenorAPIKey: ""
 
             # Monitoring
             sentryDsn: ""

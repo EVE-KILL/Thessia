@@ -56,8 +56,18 @@ The following table lists the configurable parameters of the Thessia chart and t
 | `global.env.esiUrl` | EVE ESI API URL | `https://esi.evetech.net` |
 | `global.env.esiRateLimit` | ESI API rate limit | `25` |
 | `global.env.redisqId` | RedisQ ID | `""` |
-| `global.env.backendDiscordUrl` | Discord webhook URL | `""` |
-| `global.env.sensitive.*` | Sensitive configuration values | `""` |
+| `global.env.sensitive.eveClientId` | EVE Online OAuth Client ID | `""` |
+| `global.env.sensitive.eveClientSecret` | EVE Online OAuth Client Secret | `""` |
+| `global.env.sensitive.eveClientRedirect` | EVE Online OAuth Redirect URI | `""` |
+| `global.env.sensitive.eveClientIdDev` | EVE Online OAuth Client ID (dev) | `""` |
+| `global.env.sensitive.eveClientSecretDev` | EVE Online OAuth Client Secret (dev) | `""` |
+| `global.env.sensitive.eveClientRedirectDev` | EVE Online OAuth Redirect URI (dev) | `""` |
+| `global.env.sensitive.backendDiscordUrl` | Discord webhook URL for backend notifications | `""` |
+| `global.env.sensitive.discordNewComment` | Discord webhook URL for new comments | `""` |
+| `global.env.sensitive.discordReportComment` | Discord webhook URL for reported comments | `""` |
+| `global.env.sensitive.openAIAPIKey` | OpenAI API key for content moderation | `""` |
+| `global.env.sensitive.tenorAPIKey` | Tenor API key for GIF support | `""` |
+| `global.env.sensitive.*` | Other sensitive configuration values | `""` |
 
 ### Service Account Configuration
 

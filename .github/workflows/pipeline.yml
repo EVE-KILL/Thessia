@@ -99,7 +99,11 @@ jobs:
                       --set global.env.sensitive.eveClientId=${{ secrets.EVE_CLIENT_ID }} \
                       --set global.env.sensitive.eveClientSecret=${{ secrets.EVE_CLIENT_SECRET }} \
                       --set global.env.sensitive.eveClientRedirect=${{ secrets.EVE_CLIENT_REDIRECT }} \
-                      --set global.env.sensitive.backendDiscordUrl=${{ secrets.BACKEND_DISCORD_URL }}
+                      --set global.env.sensitive.backendDiscordUrl=${{ secrets.BACKEND_DISCORD_URL }} \
+                      --set global.env.sensitive.discordNewComment=${{ secrets.DISCORD_NEW_COMMENT }} \
+                      --set global.env.sensitive.discordReportComment=${{ secrets.DISCORD_REPORT_COMMENT }} \
+                      --set global.env.sensitive.openAIAPIKey=${{ secrets.OPENAI_API_KEY }} \
+                      --set global.env.sensitive.tenorAPIKey=${{ secrets.TENOR_API_KEY }}
 
     purge-cloudflare-cache:
         runs-on: ubuntu-latest
