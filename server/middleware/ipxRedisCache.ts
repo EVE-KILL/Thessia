@@ -2,7 +2,7 @@ import { defineEventHandler, sendStream } from 'h3'
 import { PassThrough, Readable, Writable } from 'stream'
 import { Buffer } from 'node:buffer'
 import { ServerResponse } from 'http'
-import { RedisStorage } from '../helpers/Storage'
+import { RedisStorage } from '~/server/helpers/Storage'
 
 // Cache duration constants in seconds
 const CACHE_MAX_AGE = 604800 // 7 days

@@ -1,5 +1,5 @@
 import { nitroApp } from "nitropack/runtime/internal/app";
-import { cliLogger } from "../helpers/Logger";
+import { cliLogger } from "~/server/helpers/Logger";
 
 export default defineNitroPlugin(() => {
   nitroApp.hooks.hook("request", (event) => {

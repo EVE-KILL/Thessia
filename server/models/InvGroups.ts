@@ -1,7 +1,7 @@
 // models/InvGroups.ts
 
 import { type Document, type Model, Schema, model } from "mongoose";
-import type { IInvGroup } from "../interfaces/IInvGroup"; // Adjust the path as necessary
+import type { IInvGroup } from "~/server/interfaces/IInvGroup"; // Adjust the path as necessary
 
 // Extend the IInvGroup interface with Mongoose's Document interface
 export interface IInvGroupDocument extends IInvGroup, Document {}

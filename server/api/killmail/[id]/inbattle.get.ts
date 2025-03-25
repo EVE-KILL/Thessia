@@ -1,6 +1,6 @@
 import type { PipelineStage } from "mongoose";
-import type { IKillmail } from "../../../interfaces/IKillmail";
-import { Killmails } from "../../../models/Killmails";
+import type { IKillmail } from "~/server/interfaces/IKillmail";
+import { Killmails } from "~/server/models/Killmails";
 
 export default defineEventHandler(async (event) => {
   const killmail_id = event.context.params?.id;

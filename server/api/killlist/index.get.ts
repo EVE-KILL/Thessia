@@ -1,5 +1,5 @@
-import { Killmails } from "../../models/Killmails";
-import type { IKillmail } from "../../interfaces/IKillmail";
+import { Killmails } from "~/server/models/Killmails";
+import type { IKillmail } from "~/server/interfaces/IKillmail";
 
 interface QueryConfig {
   find: Record<string, unknown>;

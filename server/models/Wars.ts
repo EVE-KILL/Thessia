@@ -1,5 +1,5 @@
 import { Schema, model, type Document, type Model } from "mongoose";
-import type { IWar } from "../interfaces/IWar";
+import type { IWar } from "~/server/interfaces/IWar";
 
 export interface IWarDocument extends IWar, Document {}
 

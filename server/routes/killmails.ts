@@ -1,4 +1,4 @@
-import { addClient, removeClient, initializeKillmailSubscription } from "../helpers/WSClientManager";
+import { addClient, removeClient, initializeKillmailSubscription } from "~/server/helpers/WSClientManager";
 
 const validTopics = [
   "all",

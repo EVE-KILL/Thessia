@@ -1,5 +1,5 @@
-import type { IPrice } from "../interfaces/IPrice";
-import { Prices } from "../models/Prices";
+import type { IPrice } from "~/server/interfaces/IPrice";
+import { Prices } from "~/server/models/Prices";
 import { customPriceCache } from "./RuntimeCache";
 
 async function getPrice(typeId: number, date: Date, regionId = 10000002): Promise<number> {

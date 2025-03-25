@@ -1,5 +1,5 @@
 import { defineEventHandler } from "h3";
-import { topRegions, topShips, topSystems } from "../../../helpers/TopLists";
+import { topRegions, topShips, topSystems } from "~/server/helpers/TopLists";
 
 export default defineEventHandler(async (event) => {
   const query = getQuery(event);

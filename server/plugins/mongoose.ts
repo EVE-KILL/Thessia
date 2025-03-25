@@ -1,5 +1,5 @@
-import { initMongooseConnection } from "../helpers/Mongoose";
-import { cliLogger } from "../helpers/Logger";
+import { initMongooseConnection } from "~/server/helpers/Mongoose";
+import { cliLogger } from "~/server/helpers/Logger";
 
 export default defineNitroPlugin(() => {
   initMongooseConnection().then(() => {

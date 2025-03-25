@@ -1,4 +1,4 @@
-import { Meilisearch } from "../../../helpers/Meilisearch";
+import { Meilisearch } from "~/server/helpers/Meilisearch";
 
 export default defineEventHandler(async (event) => {
   let searchTerm = event.context.params?.searchTerm;

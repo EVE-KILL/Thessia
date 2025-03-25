@@ -1,5 +1,5 @@
-import { Killmails } from "../../models/Killmails";
-import { Celestials } from "../../models/Celestials";
+import { Killmails } from "~/server/models/Killmails";
+import { Celestials } from "~/server/models/Celestials";
 
 export default defineEventHandler(async (event) => {
   const query = getQuery(event);

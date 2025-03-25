@@ -1,5 +1,5 @@
 import { type Document, type Model, Schema, model } from "mongoose";
-import type { IInvType } from "../interfaces/IInvType"; // Adjust the path as necessary
+import type { IInvType } from "~/server/interfaces/IInvType"; // Adjust the path as necessary
 
 export interface IInvTypeDocument extends IInvType, Document {}
 

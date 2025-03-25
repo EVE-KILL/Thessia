@@ -1,4 +1,4 @@
-import { getCorporation } from "../../../helpers/ESIData";
+import { getCorporation } from "~/server/helpers/ESIData";
 import { defineEventHandler } from "h3";
 
 export default defineEventHandler(async (event) => {

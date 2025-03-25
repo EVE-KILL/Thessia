@@ -1,5 +1,5 @@
-import { getCorporation, getCorporationHistory } from "../helpers/ESIData";
-import { createQueue } from "../helpers/Queue";
+import { getCorporation, getCorporationHistory } from "~/server/helpers/ESIData";
+import { createQueue } from "~/server/helpers/Queue";
 
 const corporationQueue = createQueue("corporation");
 const corporationHistoryQueue = createQueue("corporationhistory");

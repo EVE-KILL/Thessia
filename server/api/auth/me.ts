@@ -1,5 +1,5 @@
 import { getAlliance, getCharacter, getCorporation } from "~/server/helpers/ESIData";
-import { Users } from "../../models/Users";
+import { Users } from "~/server/models/Users";
 import { IAlliance } from "~/server/interfaces/IAlliance";
 
 export default defineEventHandler(async (event) => {

@@ -1,4 +1,4 @@
-import { getAlliance } from "../../../helpers/ESIData";
+import { getAlliance } from "~/server/helpers/ESIData";
 import { defineEventHandler } from "h3";
 
 export default defineEventHandler(async (event) => {

@@ -1,4 +1,4 @@
-import { getFaction } from "../../../helpers/ESIData";
+import { getFaction } from "~/server/helpers/ESIData";
 import { defineEventHandler } from "h3";
 
 export default defineEventHandler(async (event) => {

@@ -1,25 +1,25 @@
 import type {
-    IESIAttacker,
-    IESIKillmail,
-    IESIVictim,
-    IESIVictimItem,
-} from "../interfaces/IESIKillmail";
-import type { IAttacker, IItem, IKillmail, IVictim } from "../interfaces/IKillmail";
-import type { ITranslation } from "../interfaces/ITranslation";
-import { Celestials } from "../models/Celestials";
-import { Characters } from "../models/Characters";
+  IESIAttacker,
+  IESIKillmail,
+  IESIVictim,
+  IESIVictimItem,
+} from "~/server/interfaces/IESIKillmail";
+import type { IAttacker, IItem, IKillmail, IVictim } from "~/server/interfaces/IKillmail";
+import type { ITranslation } from "~/server/interfaces/ITranslation";
+import { Celestials } from "~/server/models/Celestials";
+import { Characters } from "~/server/models/Characters";
 
 import {
-    getCachedAlliance,
-    getCachedCharacter,
-    getCachedConstellation,
-    getCachedCorporation,
-    getCachedFaction,
-    getCachedInvGroup,
-    getCachedItem,
-    getCachedPrice,
-    getCachedRegion,
-    getCachedSolarSystem
+  getCachedAlliance,
+  getCachedCharacter,
+  getCachedConstellation,
+  getCachedCorporation,
+  getCachedFaction,
+  getCachedInvGroup,
+  getCachedItem,
+  getCachedPrice,
+  getCachedRegion,
+  getCachedSolarSystem
 } from "./RuntimeCache";
 
 async function parseKillmail(killmail: IESIKillmail, warId = 0): Promise<Partial<IKillmail>> {

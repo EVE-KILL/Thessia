@@ -1,5 +1,5 @@
-import { queueUpdateCorporationHistory } from "../../../queue/Corporation";
-import { getAlliance, getCorporation } from "../../../helpers/ESIData";
+import { queueUpdateCorporationHistory } from "~/server/queue/Corporation";
+import { getAlliance, getCorporation } from "~/server/helpers/ESIData";
 import { defineEventHandler } from "h3";
 
 export default defineEventHandler(async (event) => {

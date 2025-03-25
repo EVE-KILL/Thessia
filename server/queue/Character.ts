@@ -1,5 +1,5 @@
-import { getCharacter, getCharacterHistory } from "../helpers/ESIData";
-import { createQueue } from "../helpers/Queue";
+import { getCharacter, getCharacterHistory } from "~/server/helpers/ESIData";
+import { createQueue } from "~/server/helpers/Queue";
 
 const characterQueue = createQueue("character");
 const characterHistoryQueue = createQueue("characterhistory");

@@ -1,7 +1,7 @@
 // models/Comments.ts
 
 import { Schema, model, type Document, type Model } from "mongoose";
-import type { IComments } from "../interfaces/IComments";
+import type { IComments } from "~/server/interfaces/IComments";
 
 // Extend the IConfig interface with Mongoose's Document interface
 export interface ICommentsDocument extends IComments, Document {}

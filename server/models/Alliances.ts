@@ -1,7 +1,7 @@
 // models/Alliances.ts
 
 import { Schema, model, type Document, type Model } from "mongoose";
-import type { IAlliance } from "../interfaces/IAlliance"; // Adjust the path as necessary
+import type { IAlliance } from "~/server/interfaces/IAlliance"; // Adjust the path as necessary
 
 // Extend the IAlliance interface with Mongoose's Document interface
 export interface IAllianceDocument extends IAlliance, Document {}

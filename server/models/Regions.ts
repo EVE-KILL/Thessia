@@ -1,5 +1,5 @@
 import { type Document, type Model, Schema, model } from "mongoose";
-import type { IRegion } from "../interfaces/IRegion"; // Adjust the path as necessary
+import type { IRegion } from "~/server/interfaces/IRegion"; // Adjust the path as necessary
 
 export interface IRegionDocument extends IRegion, Document {}
 

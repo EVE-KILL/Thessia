@@ -1,7 +1,7 @@
 // models/Prices.ts
 
 import { Schema, model, type Document, type Model } from "mongoose";
-import type { IPrice } from "../interfaces/IPrice"; // Adjust the path as necessary
+import type { IPrice } from "~/server/interfaces/IPrice"; // Adjust the path as necessary
 
 export interface IPriceDocument extends IPrice, Document {}
 

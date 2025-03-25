@@ -1,7 +1,7 @@
 // models/Config.ts
 
 import { Schema, model, type Document, type Model } from "mongoose";
-import type { IConfig } from "../interfaces/IConfig"; // Adjust the path as necessary
+import type { IConfig } from "~/server/interfaces/IConfig"; // Adjust the path as necessary
 
 // Extend the IConfig interface with Mongoose's Document interface
 export interface IConfigDocument extends IConfig, Document {}

@@ -4,7 +4,7 @@ import type {
   IESIKillmail,
   IESIVictim,
   IESIVictimItem,
-} from "../interfaces/IESIKillmail";
+} from "~/server/interfaces/IESIKillmail";
 
 // Extend the IESIKillmail interface with Mongoose's Document interface
 export interface IESIKillmailDocument extends IESIKillmail, Document {}

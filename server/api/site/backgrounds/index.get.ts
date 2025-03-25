@@ -8,8 +8,9 @@ import { defineEventHandler } from 'h3';
  * @returns Array of background image objects
  */
 export default defineEventHandler(async () => {
+    const theme = process.env.THEME || 'modern';
     // Path to the public backgrounds directory
-    const publicDir = path.resolve(process.cwd() + '/public/backgrounds');
+    const publicDir = path.resolve(process.cwd() + '/src/theme/' + theme + '/public/backgrounds');
 
     // Read the directory
     const files = await fs.promises.readdir(publicDir);

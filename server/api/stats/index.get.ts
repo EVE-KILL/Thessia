@@ -1,18 +1,18 @@
 import {
-    topCharacters,
-    topCorporations,
-    topAlliances,
-    topSystems,
-    topConstellations,
-    topRegions,
-    topShips,
-    topSolo,
-    mostValuableKills,
-    mostValuableStructures,
-    mostValuableShips,
-    killCount,
-    newCharacters,
-} from "../../helpers/TopLists"; // Adjust path as needed
+  topCharacters,
+  topCorporations,
+  topAlliances,
+  topSystems,
+  topConstellations,
+  topRegions,
+  topShips,
+  topSolo,
+  mostValuableKills,
+  mostValuableStructures,
+  mostValuableShips,
+  killCount,
+  newCharacters,
+} from "~/server/helpers/TopLists"; // Adjust path as needed
 
 export default defineEventHandler(async (event) => {
   const query = getQuery(event);

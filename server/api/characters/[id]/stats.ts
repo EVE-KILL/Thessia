@@ -1,4 +1,4 @@
-import { calculateFullStats } from "../../../helpers/Stats";
+import { calculateFullStats } from "~/server/helpers/Stats";
 
 export default defineEventHandler(async (event) => {
   const characterId: number | null = event.context.params?.id

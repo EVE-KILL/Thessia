@@ -10,7 +10,7 @@ const program = new Command();
 await initMongooseConnection();
 
 async function main() {
-    const cliPath = path.join(__dirname, '../console');
+    const cliPath = path.join(__dirname, '../src/console');
     const files = await fs.readdir(cliPath);
 
     // Keep track of command metadata

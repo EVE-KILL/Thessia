@@ -1,4 +1,4 @@
-import { Prices } from "../../models/Prices";
+import { Prices } from "~/server/models/Prices";
 import { defineEventHandler } from "h3";
 
 export default defineEventHandler(async () => {

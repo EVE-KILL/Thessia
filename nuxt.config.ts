@@ -1,5 +1,21 @@
+const theme = process.env.THEME || 'modern';
 // https://nuxt.com/docs/api/configuration/nuxt-config
 export default defineNuxtConfig({
+    extends: [
+        './src/theme/' + theme
+    ],
+    dir: {
+        // core
+        modules: 'src/core/modules',
+        middleware: 'src/core/middleware',
+        plugins: 'src/core/plugins',
+
+        // site
+        assets: 'src/theme/' + theme + '/assets',
+        layouts: 'src/theme/' + theme + '/layouts',
+        pages: 'src/theme/' + theme + '/pages',
+        public: 'src/theme/' + theme + '/public',
+    },
     site: {
         url: 'https://eve-kill.net'
     },
@@ -168,9 +184,6 @@ export default defineNuxtConfig({
         },
     },
 
-    // CSS imports with proper path
-    css: ["~/app.css"],
-
     // Image optimization settings - Fixed configuration
     image: {
         format: ["webp"],
@@ -225,12 +238,4 @@ export default defineNuxtConfig({
             ],
         },
     },
-
-    colorMode: {
-        classSuffix: "",
-        storage: "cookie",
-        storageKey: "theme",
-        preference: "system",
-        fallback: "dark",
-    }
 });

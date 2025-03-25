@@ -1,4 +1,4 @@
-import { Killmails } from "../../models/Killmails";
+import { Killmails } from "~/server/models/Killmails";
 
 export default defineEventHandler(async () => {
   const count: number = await Killmails.estimatedDocumentCount();

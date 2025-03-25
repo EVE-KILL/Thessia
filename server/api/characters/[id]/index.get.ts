@@ -1,4 +1,4 @@
-import { getCharacter } from "../../../helpers/ESIData";
+import { getCharacter } from "~/server/helpers/ESIData";
 import { defineEventHandler } from "h3";
 
 export default defineEventHandler(async (event) => {

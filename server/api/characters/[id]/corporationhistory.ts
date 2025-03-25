@@ -1,8 +1,8 @@
-import type { ICorporation } from "../../../interfaces/ICorporation";
-import { getAlliance, getCharacter, getCorporation } from "../../../helpers/ESIData";
+import type { ICorporation } from "~/server/interfaces/ICorporation";
+import { getAlliance, getCharacter, getCorporation } from "~/server/helpers/ESIData";
 import { defineEventHandler } from "h3";
-import type { IAlliance } from "../../../interfaces/IAlliance";
-import { queueUpdateCharacterHistory } from "../../../queue/Character";
+import type { IAlliance } from "~/server/interfaces/IAlliance";
+import { queueUpdateCharacterHistory } from "~/server/queue/Character";
 
 export default defineEventHandler(async (event) => {
   const characterId: number | null = event.context.params?.id

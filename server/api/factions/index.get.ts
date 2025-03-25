@@ -1,5 +1,5 @@
 import { defineEventHandler } from "h3";
-import type { IFaction } from "../../interfaces/IFaction";
+import type { IFaction } from "~/server/interfaces/IFaction";
 
 export default defineEventHandler(async () => {
   const factions: IFaction[] = await Factions.find({}, { faction_id: 1 });

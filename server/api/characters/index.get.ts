@@ -1,5 +1,5 @@
 import { defineEventHandler } from "h3";
-import type { ICharacter } from "../../interfaces/ICharacter";
+import type { ICharacter } from "~/server/interfaces/ICharacter";
 
 export default defineEventHandler(async (event) => {
   const query = getQuery(event);

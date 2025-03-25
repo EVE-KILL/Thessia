@@ -5,7 +5,7 @@ import type { ICorporation } from "~/interfaces/ICorporation";
 import type { IInvType } from "~/interfaces/IInvType";
 import type { IRegion } from "~/interfaces/IRegion";
 import type { ISolarSystem } from "~/interfaces/ISolarSystem";
-import { Killmails } from "../models/Killmails";
+import { Killmails } from "~/server/models/Killmails";
 
 // Earliest known killmail is from 2007-12-05
 const timeSinceEarlyDays: Date = new Date("2007-12-05T00:00:00Z");

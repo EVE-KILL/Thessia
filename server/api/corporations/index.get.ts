@@ -1,5 +1,5 @@
 import { defineEventHandler } from "h3";
-import type { ICorporation } from "../../interfaces/ICorporation";
+import type { ICorporation } from "~/server/interfaces/ICorporation";
 
 export default defineEventHandler(async (event) => {
   const query = getQuery(event);

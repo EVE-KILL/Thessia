@@ -1,5 +1,5 @@
 import { Schema, model, type Document, type Model } from "mongoose";
-import type { ICustomPrice } from "../interfaces/ICustomPrice";
+import type { ICustomPrice } from "~/server/interfaces/ICustomPrice";
 
 export interface ICustomPriceDocument extends ICustomPrice, Document {}
 

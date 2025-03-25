@@ -1,5 +1,5 @@
-import { getAlliance } from "../helpers/ESIData";
-import { createQueue } from "../helpers/Queue";
+import { getAlliance } from "~/server/helpers/ESIData";
+import { createQueue } from "~/server/helpers/Queue";
 
 const allianceQueue = createQueue("alliance");
 

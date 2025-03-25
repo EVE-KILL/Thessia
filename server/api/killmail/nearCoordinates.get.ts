@@ -1,4 +1,4 @@
-import { Killmails } from "../../models/Killmails";
+import { Killmails } from "~/server/models/Killmails";
 
 export default defineEventHandler(async (event) => {
   const query = getQuery(event);

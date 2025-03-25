@@ -1,8 +1,8 @@
 // models/Killmails.ts
 
 import { type Document, type Model, Schema, model } from "mongoose";
-import type { IAttacker, IItem, IKillmail, IVictim } from "../interfaces/IKillmail"; // Adjust the path as necessary
-import { cliLogger } from "../helpers/Logger";
+import type { IAttacker, IItem, IKillmail, IVictim } from "~/server/interfaces/IKillmail"; // Adjust the path as necessary
+import { cliLogger } from "~/server/helpers/Logger";
 
 export interface IKillmailDocument extends IKillmail, Document {}
 

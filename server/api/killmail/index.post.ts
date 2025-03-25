@@ -1,7 +1,7 @@
-import { fetchESIKillmail } from "../../helpers/ESIData";
-import { parseKillmail } from "../../helpers/KillmailParser";
-import type { IESIKillmail } from "../../interfaces/IESIKillmail";
-import type { IKillmail } from "../../interfaces/IKillmail";
+import { fetchESIKillmail } from "~/server/helpers/ESIData";
+import { parseKillmail } from "~/server/helpers/KillmailParser";
+import type { IESIKillmail } from "~/server/interfaces/IESIKillmail";
+import type { IKillmail } from "~/server/interfaces/IKillmail";
 
 export default defineEventHandler(async (event) => {
   const body = await readBody(event);

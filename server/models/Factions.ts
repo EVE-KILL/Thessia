@@ -1,7 +1,7 @@
 // models/Factions.ts
 
 import { Schema, model, type Document, type Model } from "mongoose";
-import type { IFaction } from "../interfaces/IFaction"; // Adjust the path as necessary
+import type { IFaction } from "~/server/interfaces/IFaction"; // Adjust the path as necessary
 
 // Extend the IFaction interface with Mongoose's Document interface
 export interface IFactionDocument extends IFaction, Document {}
