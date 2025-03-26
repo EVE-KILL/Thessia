@@ -155,7 +155,7 @@
     <!-- WebSocket connection status indicator -->
     <div v-if="!wsConnected" class="text-xs text-amber-500 mb-2 flex items-center justify-end gap-1">
       <div class="w-2 h-2 rounded-full bg-amber-500 animate-pulse"></div>
-      <span>{{ $t('killList.wsReconnecting', { attempt: wsReconnectAttempts, max: MAX_RECONNECT_ATTEMPTS }) }}</span>
+      <span>{{ $t('killList.wsReconnecting', { attempt: wsReconnectAttempts, max: 5 }) }}</span>
     </div>
 
     <!-- Comment Input Box for authenticated users -->
@@ -296,6 +296,17 @@
       <p class="mb-2">{{ $t('login_to_comment') }}</p>
       <UButton color="primary" @click="loginToComment">{{ $t('login') }}</UButton>
     </div>
+
+    <!-- WebSocket connection management -->
+    <Websocket
+      ref="wsRef"
+      url="/comments"
+      :auto-connect="true"
+      :handle-bfCache="true"
+      :use-global-instance="true"
+      global-ref-key="comments"
+      @message="handleWebSocketMessage"
+    />
   </div>
 </template>
 
@@ -304,14 +315,11 @@ import { useAuth } from '~/src/theme/modern/composables/useAuth';
 import { useI18n } from 'vue-i18n';
 import { marked } from 'marked';
 import DOMPurify from 'dompurify';
-
-// Create a global ref for tracking websocket instances
-// This helps prevent multiple connections on the same page
-const globalWsRef = ref<{socket: WebSocket | null, count: number}>({socket: null, count: 0});
+import { useWebSocket } from '~/src/theme/modern/composables/useWebsocket';
 
 const { t } = useI18n();
 const route = useRoute();
-const { isAuthenticated, currentUser, login } = useAuth();
+const { isAuthenticated, currentUser, login, isAdministrator } = useAuth();
 
 // Props
 const props = defineProps({
@@ -332,12 +340,20 @@ const activeTab = ref('write'); // 'write' or 'preview'
 const charactersRemaining = computed(() => commentLimit - newComment.value.length);
 const killIdentifier = computed(() => `kill:${props.killId}`);
 
-// WebSocket State
-const wsConnected = ref(false);
-const wsSocket = ref<WebSocket | null>(null);
-const wsReconnectAttempts = ref(0);
-const MAX_RECONNECT_ATTEMPTS = 5;
-const wsReconnectTimeout = ref<NodeJS.Timeout | null>(null);
+// WebSocket connection with composable
+const {
+  isConnected: wsConnected,
+  connectionAttempts: wsReconnectAttempts,
+  isPaused: wsIsPaused,
+  sendMessage: wsSendMessage
+} = useWebSocket({
+  url: "/comments",
+  autoConnect: true,
+  handleBfCache: true,
+  useGlobalInstance: true,
+  globalRefKey: "comments",
+  onMessage: handleWebSocketMessage
+});
 
 // Fix layout juddering
 const editorContainerHeight = ref<number | null>(null);
@@ -532,7 +548,7 @@ function renderImgurDirect(imgurId: string, extension: string, originalUrl: stri
               <img src="https://i.imgur.com/${imgurId}${extension}" alt="Imgur Image" class="max-w-full h-auto" />
               <div class="media-source">
                 <a href="${originalUrl}" target="_blank" rel="noopener noreferrer" class="source-link">
-                  <span class="flex items-center"><svg class="w-4 h-4 mr-1" viewBox="0 0 24 24" fill="currentColor"><path d="M22 16V5c0-1.1-.9-2-2-2H8c-1.1 0-2 .9-2 2v11c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2zm-11 5v-1h-4v1c0 .55.45 1 1 1h2c.55 0 1-.45 1-1zm7 0v-1h-4v1c0 .55.45 1 1 1h2c.55 0 1-.45 1-1z"></path></svg>View on Imgur</span>
+                  <span class="flex items-center"><svg class="w-4 h-4 mr-1" viewBox="0 0 24 24" fill="currentColor"><path d="M22 16V5c0-1.1-.9-2-2-2H8c-1.1 0-2 .9-2 2v11c0 1.1.9 2 2 2h12c.1 0 2-.9 2-2zm-11 5v-1h-4v1c0 .55.45 1 1 1h2c.55 0 1-.45 1-1zm7 0v-1h-4v1c0 .55.45 1 1 1h2c.55 0 1-.45 1-1z"></path></svg>View on Imgur</span>
                 </a>
               </div>
             </div>`;
@@ -596,7 +612,7 @@ function renderImgurGallery(originalUrl: string): string {
           </div>
           <div class="media-source">
             <a href="${originalUrl}" target="_blank" rel="noopener noreferrer" class="source-link">
-              <span class="flex items-center"><svg class="w-4 h-4 mr-1" viewBox="0 0 24 24" fill="currentColor"><path d="M22 16V5c0-1.1-.9-2-2-2H8c-1.1 0-2 .9-2 2v11c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2zm-11 5v-1h-4v1c0 .55.45 1 1 1h2c.55 0 1-.45 1-1zm7 0v-1h-4v1c0 .55.45 1 1 1h2c.55 0 1-.45 1-1z"></path></svg>View on Imgur</span>
+              <span class="flex items-center"><svg class="w-4 h-4 mr-1" viewBox="0 0 24 24" fill="currentColor"><path d="M22 16V5c0-1.1-.9-2-2-2H8c-1.1 0-2 .9-2 2v11c0 1.1.9 2 2 2h12c.1 0 2-.9 2-2zm-11 5v-1h-4v1c0 .55.45 1 1 1h2c.55 0 1-.45 1-1zm7 0v-1h-4v1c0 .55.45 1 1 1h2c.55 0 1-.45 1-1z"></path></svg>View on Imgur</span>
             </a>
           </div>
         </div>`;
@@ -614,7 +630,6 @@ function renderGiphy(url: string, giphyId?: string): string {
             <img src="${imgSrc}" alt="GIPHY" class="max-w-full h-auto" />
             <div class="media-source">
               <a href="${url}" target="_blank" rel="noopener noreferrer" class="source-link">
-                <span class="flex items-center"><svg class="w-4 h-4 mr-1" viewBox="0 0 24 24" fill="currentColor"><path d="M2.666 0v24h18.668V0H2.666zm16.668 22H4.666V2h14.668v20zm-4.335-5.917a1.458 1.458 0 0 1-1.458 1.458h-4.083a1.458 1.458 0 0 1-1.458-1.458V10a1.458 1.458 0 0 1 1.458-1.458h4.083A1.458 1.458 0 0 1 15 10v6.083z"></path></svg>View on GIPHY</span>
               </a>
             </div>
           </div>`;
@@ -706,40 +721,6 @@ renderer.link = function(href: any, title: any, text: any): string {
 marked.use({ renderer });
 
 /**
- * Fetch and process Imgur JSON data directly
- */
-async function fetchImgurData(url: string): Promise<{url: string, type: string} | null> {
-  try {
-    // Convert URL to JSON endpoint
-    const jsonUrl = convertImgurToJsonUrl(url);
-
-    // Fetch the JSON data
-    const response = await fetch(jsonUrl, {
-      headers: {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
-      },
-      cache: 'no-store' // Avoid caching
-    });
-
-    if (!response.ok) {
-      return null;
-    }
-
-    const data = await response.json();
-
-    // Validate response data
-    if (!data?.data?.image) {
-      return null;
-    }
-
-    // Extract media information
-    return extractImgurMedia(data.data.image);
-  } catch (error) {
-    return null;
-  }
-}
-
-/**
  * Convert a regular Imgur URL to its JSON API endpoint
  */
 function convertImgurToJsonUrl(url: string): string {
@@ -809,9 +790,6 @@ function extractImgurMedia(imageData: any): {url: string, type: string} | null {
   }
 }
 
-// Create a map to store processed Imgur content to avoid duplicates
-const processedImgurContent = new Map<string, {url: string, type: string}>();
-
 // Create a reactive map to store resolved Imgur URLs with media type information
 const resolvedImgurMedia = ref(new Map<string, {url: string, type: string}>());
 
@@ -869,15 +847,6 @@ const isSubmittingDisabled = computed(() => {
 });
 
 // Methods
-function getInfoString(corporationName: string, allianceName?: string) {
-  if (corporationName && allianceName) {
-    return `${corporationName} / ${allianceName}`;
-  } else if (corporationName) {
-    return corporationName;
-  }
-  return '';
-}
-
 function formatDate(dateString: string) {
   if (!dateString) return '';
 
@@ -982,6 +951,7 @@ async function fetchComments() {
 
     comments.value = data.value || [];
   } catch (err) {
+    console.error('Error fetching comments:', err);
   }
 }
 
@@ -1064,73 +1034,21 @@ function updateEditorHeight() {
   });
 }
 
-// Initialize WebSocket connection
-function initWebSocket() {
+// Handler functions for WebSocket events
+function handleWebSocketMessage(data) {
   try {
-    // If there's already a global socket connection, use it
-    if (globalWsRef.value.socket && globalWsRef.value.socket.readyState === WebSocket.OPEN) {
-      wsSocket.value = globalWsRef.value.socket;
-      wsConnected.value = true;
-      globalWsRef.value.count++;
-      return;
+    // Process event based on type
+    if (data.eventType === 'new') {
+      handleNewComment(data.comment);
+    } else if (data.eventType === 'deleted') {
+      handleDeletedComment(data.comment);
     }
-
-    // If there's a socket but it's closing, wait a moment and try again
-    if (globalWsRef.value.socket && globalWsRef.value.socket.readyState === WebSocket.CLOSING) {
-      setTimeout(() => initWebSocket(), 500);
-      return;
-    }
-
-    const socket = new WebSocket('/comments');
-    wsSocket.value = socket;
-    globalWsRef.value.socket = socket;
-    globalWsRef.value.count++;
-
-    socket.onopen = () => {
-      wsConnected.value = true;
-      wsReconnectAttempts.value = 0;
-    };
-
-    socket.onclose = (event) => {
-      wsConnected.value = false;
-
-      // Only attempt to reconnect from one instance
-      if (globalWsRef.value.socket === socket) {
-        // Reset the global reference
-        globalWsRef.value.socket = null;
-
-        // Attempt to reconnect with exponential backoff
-        if (wsReconnectAttempts.value < MAX_RECONNECT_ATTEMPTS) {
-          const delay = Math.min(1000 * Math.pow(2, wsReconnectAttempts.value), 10000);
-          wsReconnectTimeout.value = setTimeout(() => {
-            wsReconnectAttempts.value++;
-            initWebSocket();
-          }, delay);
-        }
-      }
-    };
-
-    socket.onerror = (error) => {
-    };
-
-    socket.onmessage = (event) => {
-      try {
-        const data = JSON.parse(event.data);
-
-        // Process event based on type
-        if (data.eventType === 'new') {
-          handleNewComment(data.comment);
-        } else if (data.eventType === 'deleted') {
-          handleDeletedComment(data.comment);
-        }
-      } catch (err) {
-      }
-    };
   } catch (err) {
+    console.error('❌ Comments: Error processing WebSocket message:', err);
   }
 }
 
-// Handler functions for WebSocket events
+// Function to handle new comments from WebSocket
 function handleNewComment(comment: any) {
   // Only process if this comment is for the current kill
   if (comment.killIdentifier === killIdentifier.value) {
@@ -1142,6 +1060,7 @@ function handleNewComment(comment: any) {
   }
 }
 
+// Function to handle deleted comments from WebSocket
 function handleDeletedComment(comment: any) {
   // Only process if this comment is for the current kill
   if (comment.killIdentifier === killIdentifier.value) {
@@ -1150,62 +1069,26 @@ function handleDeletedComment(comment: any) {
   }
 }
 
-// Add onMounted hook to fetch comments when component initializes
-onMounted(() => {
-  fetchComments();
-});
-
-// Fix for layout juddering
-updateEditorHeight();
-
-// Add Imgur embed script to handle album embeds after removing the script tag from the template
-if (window && !document.getElementById('imgur-embed-script')) {
-  const imgurScript = document.createElement('script');
-  imgurScript.id = 'imgur-embed-script';
-  imgurScript.async = true;
-  imgurScript.src = '//s.imgur.com/min/embed.js';
-  document.head.appendChild(imgurScript);
+// Function to scroll to comment fragment in URL
+function scrollToCommentFragment() {
+  if (import.meta.client) {
+    const fragment = window.location.hash;
+    if (fragment && fragment.startsWith('#comment-')) {
+      nextTick(() => {
+        const commentId = fragment.slice(1); // Remove the # symbol
+        const commentElement = document.getElementById(commentId);
+        if (commentElement) {
+          commentElement.scrollIntoView({ behavior: 'smooth' });
+          // Add a highlight effect
+          commentElement.classList.add('highlighted-comment');
+          setTimeout(() => {
+            commentElement.classList.remove('highlighted-comment');
+          }, 2000);
+        }
+      });
+    }
+  }
 }
-
-const handleKeyDown = (event: KeyboardEvent) => {
-  if (event.key === 'Escape' && activeModal.value) {
-    closeModal();
-  }
-};
-
-window.addEventListener('keydown', handleKeyDown);
-
-onBeforeUnmount(() => {
-  window.removeEventListener('keydown', handleKeyDown);
-
-  // Clean up WebSocket
-  if (wsSocket.value) {
-    // Decrement the reference count
-    if (globalWsRef.value.count > 0) {
-      globalWsRef.value.count--;
-    }
-
-    // Only close the socket if this is the last instance using it
-    if (globalWsRef.value.count === 0 && globalWsRef.value.socket) {
-      globalWsRef.value.socket.close();
-      globalWsRef.value.socket = null;
-      wsSocket.value = null;
-    }
-  }
-
-  if (wsReconnectTimeout.value) {
-    clearTimeout(wsReconnectTimeout.value);
-    wsReconnectTimeout.value = null;
-  }
-});
-
-// Watch for tab changes and update preview height
-watch(activeTab, () => {
-  updateEditorHeight();
-});
-
-// Add to existing computed properties
-const isAdministrator = computed(() => currentUser.value?.administrator === true);
 
 // Modal control functions
 function openReportModal(identifier: string) {
@@ -1292,34 +1175,22 @@ function loginToComment() {
   login();
 }
 
-// Function to handle scrolling to comment fragment in URL
-function scrollToCommentFragment() {
-  if (import.meta.client) {
-    const fragment = window.location.hash;
-    if (fragment && fragment.startsWith('#comment-')) {
-      nextTick(() => {
-        const commentId = fragment.slice(1); // Remove the # symbol
-        const commentElement = document.getElementById(commentId);
-        if (commentElement) {
-          commentElement.scrollIntoView({ behavior: 'smooth' });
-          // Add a highlight effect
-          commentElement.classList.add('highlighted-comment');
-          setTimeout(() => {
-            commentElement.classList.remove('highlighted-comment');
-          }, 2000);
-        }
-      });
-    }
+// Event handlers for keyboard events
+const handleKeyDown = (event: KeyboardEvent) => {
+  if (event.key === 'Escape' && activeModal.value) {
+    closeModal();
   }
-}
+};
 
-// Initialize the component
+// Fetch comments and set up event listeners on mount
 onMounted(() => {
+  console.log('🏗️ Comments: Component mounted');
+
+  // Fetch initial comments
   fetchComments();
 
+  // Initialize client-side functionality
   if (import.meta.client) {
-    initWebSocket();
-
     // Handle fragment navigation after a short delay to ensure DOM is ready
     setTimeout(() => {
       scrollToCommentFragment();
@@ -1330,35 +1201,34 @@ onMounted(() => {
       scrollToCommentFragment();
     }, { immediate: true });
 
-    // Also listen for hash changes
+    // Listen for hash changes
     window.addEventListener('hashchange', scrollToCommentFragment);
+
+    // Add keyboard event listeners
+    window.addEventListener('keydown', handleKeyDown);
   }
+
+  // Fix for layout juddering
+  updateEditorHeight();
 });
 
+// Complete cleanup on unmount
 onBeforeUnmount(() => {
+  console.log('🗑️ Comments: Component unmounting');
+
+  // Remove all event listeners
   window.removeEventListener('hashchange', scrollToCommentFragment);
-
-  // ...existing cleanup code...
-
-  if (wsSocket.value) {
-    // Decrement the reference count
-    if (globalWsRef.value.count > 0) {
-      globalWsRef.value.count--;
-    }
-
-    // Only close the socket if this is the last instance using it
-    if (globalWsRef.value.count === 0 && globalWsRef.value.socket) {
-      globalWsRef.value.socket.close();
-      globalWsRef.value.socket = null;
-      wsSocket.value = null;
-    }
-  }
-
-  if (wsReconnectTimeout.value) {
-    clearTimeout(wsReconnectTimeout.value);
-    wsReconnectTimeout.value = null;
-  }
+  window.removeEventListener('keydown', handleKeyDown);
 });
+
+// Add Imgur embed script to handle album embeds
+if (import.meta.client && !document.getElementById('imgur-embed-script')) {
+  const imgurScript = document.createElement('script');
+  imgurScript.id = 'imgur-embed-script';
+  imgurScript.async = true;
+  imgurScript.src = '//s.imgur.com/min/embed.js';
+  document.head.appendChild(imgurScript);
+}
 </script>
 
 <style scoped>
@@ -1591,33 +1461,6 @@ onBeforeUnmount(() => {
 .blur-sm {
   filter: blur(4px);
   transition: filter 0.3s ease;
-}
-
-/* WebSocket status styles */
-.websocket-status {
-  display: flex;
-  align-items: center;
-  font-size: 0.75rem;
-  margin-bottom: 0.5rem;
-}
-
-.status-indicator {
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  margin-right: 0.5rem;
-}
-
-.connected {
-  background-color: #10b981;
-}
-
-.disconnected {
-  background-color: #f59e0b;
-}
-
-.error {
-  background-color: #ef4444;
 }
 
 /* Comment highlight effect for navigation */

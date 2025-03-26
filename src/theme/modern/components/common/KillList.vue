@@ -3,6 +3,7 @@ import type { IKillList } from '~/interfaces/IKillList';
 import type { IKillmail } from '~/interfaces/IKillmail';
 import type { IAttacker } from '~/interfaces/IAttacker';
 import moment from 'moment';
+import { useWebSocket } from '~/src/theme/modern/composables/useWebsocket';
 
 const { t, locale } = useI18n();
 const currentLocale = computed(() => locale.value);
@@ -93,174 +94,59 @@ watch(selectedPageSize, async (newSize) => {
   }
 });
 
-// WebSocket connection
-let socket: WebSocket | null = null;
-const isConnected = ref(false);
+// WebSocket state
 const wsNewKillCount = ref(0);
 const pendingMessages = ref<IKillmail[]>([]);
-const wsConnectionAttempts = ref(0);
-const MAX_RECONNECT_ATTEMPTS = 5;
-let reconnectTimer: NodeJS.Timeout | null = null;
-const wsErrorMessage = ref<string | null>(null);
-
-// WebSocket pausing functionality
-const isWebSocketPaused = ref(false);
-const mouseMoveTimer = ref<NodeJS.Timeout | null>(null);
-const router = useRouter();
 const manuallyPaused = ref(false);
+const mouseMoveTimer = ref<NodeJS.Timeout | null>(null);
 
-// Establish WebSocket connection with simplified error handling
-const connectWebSocket = () => {
-  // Don't connect if WebSocket is disabled or we're using external data
-  if (props.wsDisabled || useExternalData.value || !process.client) {
-    return;
-  }
-
-  try {
-    // Close any existing connection
-    if (socket) {
-      socket.close();
-      socket = null;
-    }
-
-    wsErrorMessage.value = null;
-    console.debug('Opening WebSocket connection...');
-
-    // Wrap WebSocket creation in try-catch
-    try {
-      socket = new WebSocket('wss://eve-kill.com/killmails');
-    } catch (wsErr) {
-      console.error('Failed to create WebSocket:', wsErr);
-      wsErrorMessage.value = 'Failed to create WebSocket connection';
-      isConnected.value = false;
-      return;
-    }
-
-    socket.onopen = () => {
-      console.debug('WebSocket connection established');
-      isConnected.value = true;
-      wsNewKillCount.value = 0;
-      wsConnectionAttempts.value = 0;
-      wsErrorMessage.value = null;
-
-      // Send filter after connection is established
-      try {
-        const filterToUse = props.wsFilter === 'latest' ? 'all' : props.wsFilter;
-        socket?.send(filterToUse);
-      } catch (sendErr) {
-        console.error('Error sending filter:', sendErr);
-      }
-    };
-
-    socket.onmessage = (event) => {
-      try {
-        const data = JSON.parse(event.data);
-        if (data.type !== 'killmail') return;
-
-        const killmail: IKillmail = data.data;
-
-        // Process or queue killmail only if it's newer than current newest
-        if (!isNewerThanLatestKill(killmail)) {
-          return;
-        }
-
-        // Either queue or process the killmail
-        if (isWebSocketPaused.value) {
-          pendingMessages.value.push(killmail);
-        } else {
-          processKillmail(killmail);
-        }
-      } catch (err) {
-        console.error('Error processing WebSocket message:', err);
-        // Don't set error state for message processing failures
-      }
-    };
-
-    socket.onerror = (error) => {
-      console.error('WebSocket error:', error);
-      isConnected.value = false;
-      wsErrorMessage.value = 'Connection error';
-      // Don't attempt to reconnect here - let onclose handle it
-    };
-
-    socket.onclose = (event) => {
-      isConnected.value = false;
-      console.debug(`WebSocket closed with code: ${event.code}`);
-
-      // Only attempt reconnect if it wasn't a clean close and we haven't reached max attempts
-      if (!event.wasClean && !props.wsDisabled && wsConnectionAttempts.value < MAX_RECONNECT_ATTEMPTS) {
-        scheduleReconnect();
-      }
-    };
-  } catch (err) {
-    console.error('Error establishing WebSocket connection:', err);
-    isConnected.value = false;
-    wsErrorMessage.value = 'Failed to establish connection';
-  }
-};
-
-// Simplified reconnect scheduler with exponential backoff
-const scheduleReconnect = () => {
-  if (reconnectTimer) {
-    clearTimeout(reconnectTimer);
-  }
-
-  wsConnectionAttempts.value++;
-  // Exponential backoff: 1s, 2s, 4s, 8s, 16s (capped at 30s)
-  const backoffTime = Math.min(1000 * Math.pow(2, wsConnectionAttempts.value - 1), 30000);
-
-  console.debug(`Scheduling WebSocket reconnection attempt ${wsConnectionAttempts.value} in ${backoffTime/1000}s`);
-
-  reconnectTimer = setTimeout(() => {
-    console.debug(`Attempting WebSocket reconnection (${wsConnectionAttempts.value}/${MAX_RECONNECT_ATTEMPTS})`);
-    connectWebSocket();
-  }, backoffTime);
-};
-
-// Close WebSocket connection
-const closeWebSocket = () => {
-  // Cancel any pending reconnect
-  if (reconnectTimer) {
-    clearTimeout(reconnectTimer);
-    reconnectTimer = null;
-  }
-
-  // Close socket if it exists
-  if (socket) {
-    // Only attempt to close if the socket is open or connecting
-    if (socket.readyState === WebSocket.OPEN || socket.readyState === WebSocket.CONNECTING) {
-      socket.close();
-    }
-    socket = null;
-    isConnected.value = false;
-  }
-};
+// Initialize WebSocket using the composable
+const {
+  isConnected: wsConnected,
+  connectionAttempts: wsReconnectAttempts,
+  isPaused: isWebSocketPaused,
+  pause: pauseWs,
+  resume: resumeWs,
+  sendMessage: wsSendMessage
+} = useWebSocket({
+  url: "wss://eve-kill.com/killmails",
+  initialMessage: props.wsFilter === 'latest' ? 'all' : props.wsFilter,
+  autoConnect: !props.wsDisabled && !useExternalData.value,
+  handleBfCache: true,
+  useGlobalInstance: true,
+  globalRefKey: "killList",
+  onMessage: handleWebSocketMessage
+});
 
 // Pause WebSocket processing with reason
 const pauseWebSocket = (reason = 'hover') => {
-  isWebSocketPaused.value = true;
+  if (props.wsDisabled || useExternalData.value) return;
+
+  pauseWs();
 
   if (reason === 'manual') {
     manuallyPaused.value = true;
   }
 
   if (reason !== 'hover') {
-    console.debug(`WebSocket paused (${reason})`);
+    console.log(`⏸️ KillList: WebSocket paused (${reason})`);
   }
 };
 
 // Resume WebSocket processing
 const resumeWebSocket = () => {
+  if (props.wsDisabled || useExternalData.value) return;
+
   // Don't resume if we're not on page 1 (pageIndex 0) or manually paused
   if (pagination.value.pageIndex > 0 || manuallyPaused.value) {
     return;
   }
 
-  isWebSocketPaused.value = false;
+  resumeWs();
 
   // Process any pending messages
   if (pendingMessages.value.length > 0 && !useExternalData.value) {
-    console.debug(`Processing ${pendingMessages.value.length} pending messages`);
+    console.log(`▶️ KillList: Processing ${pendingMessages.value.length} pending messages`);
 
     // Sort by kill time to maintain chronological order
     pendingMessages.value.sort((a, b) =>
@@ -288,7 +174,7 @@ watch(() => pagination.value.pageIndex, (newPageIndex) => {
 
 // Toggle WebSocket mode (manually pause/resume)
 const toggleWebSocketMode = () => {
-  if (!isConnected.value || props.wsDisabled) return;
+  if (props.wsDisabled || useExternalData.value) return;
 
   if (isWebSocketPaused.value) {
     // Only allow toggling on page 1
@@ -303,28 +189,58 @@ const toggleWebSocketMode = () => {
 
 // Mouse event handlers
 const handleMouseEnter = () => {
-  if (pagination.value.pageIndex === 0 && !manuallyPaused.value && !props.wsDisabled) {
+  if (pagination.value.pageIndex === 0 && !manuallyPaused.value && !props.wsDisabled && !useExternalData.value) {
     pauseWebSocket('hover');
-    clearTimeout(mouseMoveTimer.value);
+    clearMouseMoveTimer();
   }
 };
 
 const handleMouseLeave = () => {
-  if (pagination.value.pageIndex === 0 && !manuallyPaused.value && !props.wsDisabled) {
+  if (pagination.value.pageIndex === 0 && !manuallyPaused.value && !props.wsDisabled && !useExternalData.value) {
     resumeWebSocket();
-    clearTimeout(mouseMoveTimer.value);
+    clearMouseMoveTimer();
   }
 };
 
 const handleMouseMove = () => {
   if (isWebSocketPaused.value && pagination.value.pageIndex === 0 &&
-      !manuallyPaused.value && !props.wsDisabled) {
-    clearTimeout(mouseMoveTimer.value);
+      !manuallyPaused.value && !props.wsDisabled && !useExternalData.value) {
+    clearMouseMoveTimer();
     mouseMoveTimer.value = setTimeout(() => {
       resumeWebSocket();
     }, 10000); // 10 seconds
   }
 };
+
+const clearMouseMoveTimer = () => {
+  if (mouseMoveTimer.value) {
+    clearTimeout(mouseMoveTimer.value);
+    mouseMoveTimer.value = null;
+  }
+};
+
+// Handle WebSocket messages
+function handleWebSocketMessage(data) {
+  try {
+    if (data.type !== 'killmail') return;
+
+    const killmail: IKillmail = data.data;
+
+    // Process or queue killmail only if it's newer than current newest
+    if (!isNewerThanLatestKill(killmail)) {
+      return;
+    }
+
+    // Either queue or process the killmail
+    if (isWebSocketPaused.value) {
+      pendingMessages.value.push(killmail);
+    } else {
+      processKillmail(killmail);
+    }
+  } catch (err) {
+    console.error('❌ KillList: Error processing WebSocket message:', err);
+  }
+}
 
 // Function to process a killmail
 const processKillmail = (killmail: IKillmail) => {
@@ -422,51 +338,6 @@ const resetNewKillCount = () => {
   wsNewKillCount.value = 0;
 };
 
-// WebSocket lifecycle management
-onMounted(() => {
-  if (process.client && !props.wsDisabled && !useExternalData.value) {
-    try {
-      // Connect with a slight delay to ensure component is fully mounted
-      setTimeout(() => {
-        connectWebSocket();
-      }, 100);
-
-      // Add router navigation guards to pause WebSocket on page changes
-      router.beforeEach((to, from) => {
-        if (to.path !== from.path) {
-          pauseWebSocket('navigation');
-        }
-        return true;
-      });
-    } catch (err) {
-      console.error('Error setting up WebSocket in onMounted:', err);
-    }
-  }
-});
-
-onBeforeUnmount(() => {
-  // Clean up all resources
-  closeWebSocket();
-
-  if (mouseMoveTimer.value) {
-    clearTimeout(mouseMoveTimer.value);
-    mouseMoveTimer.value = null;
-  }
-});
-
-// Update pagination page size based on props.limit
-onMounted(() => {
-  pagination.value.pageSize = props.limit;
-});
-
-// Watch for changes to the limit prop
-watch(() => props.limit, (newLimit) => {
-  if (selectedPageSize.value !== newLimit) {
-    selectedPageSize.value = newLimit;
-    pagination.value.pageSize = newLimit;
-  }
-});
-
 // Helper functions for data formatting
 const getLocalizedString = (obj: any, locale: string): string => {
   if (!obj) return '';
@@ -513,28 +384,6 @@ const openInNewTab = (url: string) => {
   window.open(url, '_blank', 'noopener');
 };
 
-/**
- * Enhanced handleKillClick function that correctly processes middle-clicks
- * @param item - The item data object
- * @param event - The mouse event
- */
-const handleRowClick = ({ item, event }) => {
-  // Skip if missing killmail_id
-  if (!item || !item.killmail_id) return;
-
-  const url = `/kill/${item.killmail_id}`;
-
-  // If Ctrl/Cmd key is pressed or middle button is clicked, open in new tab
-  if (event.ctrlKey || event.metaKey || event.button === 1) {
-    event.preventDefault();
-    openInNewTab(url);
-    return;
-  }
-
-  // Standard navigation for normal clicks
-  navigateTo(url);
-};
-
 // Update pagination structure to work with UPagination
 const currentPageIndex = ref(1); // Start at 1 for UPagination display
 
@@ -579,15 +428,6 @@ const resetWebSocketState = () => {
   }
 };
 
-// Initialize pagination correctly on mount
-onMounted(() => {
-  // Initialize pagination indices correctly
-  pagination.value.pageIndex = 0; // Internal index starts at 0
-  currentPageIndex.value = 1;  // UI page starts at 1
-
-  // ...existing WebSocket connection code...
-});
-
 // Define table columns for the EkTable component
 const tableColumns = [
   {
@@ -623,10 +463,10 @@ const getRowClass = (item) => {
   return isCombinedLoss(item) ? 'bg-darkred' : '';
 };
 
-// Add missing wsStatusMessage computed property
+// WebSocket status message
 const wsStatusMessage = computed(() => {
-  if (!isConnected.value) {
-    return wsConnectionAttempts.value > 0
+  if (!wsConnected.value) {
+    return wsReconnectAttempts.value > 0
       ? t('killList.reconnecting')
       : t('killList.disconnected');
   } else {
@@ -636,15 +476,43 @@ const wsStatusMessage = computed(() => {
   }
 });
 
-// Replace the handleRowClick function with a simple link generator function
+// Generate kill link
 const generateKillLink = (item: any): string | null => {
   if (!item || !item.killmail_id) return null;
   return `/kill/${item.killmail_id}`;
 };
+
+// Set up mouse event handlers for the table container on mounted
+onMounted(() => {
+  // Only set up mouse handlers if WebSocket is enabled and we're not using external data
+  if (!props.wsDisabled && !useExternalData.value) {
+    const tableContainer = document.querySelector('.kill-list-container');
+    if (tableContainer) {
+      tableContainer.addEventListener('mouseenter', handleMouseEnter);
+      tableContainer.addEventListener('mouseleave', handleMouseLeave);
+      tableContainer.addEventListener('mousemove', handleMouseMove);
+    }
+  }
+});
+
+// Clean up event listeners on unmount
+onBeforeUnmount(() => {
+  clearMouseMoveTimer();
+
+  // Remove mouse event listeners
+  if (!props.wsDisabled && !useExternalData.value) {
+    const tableContainer = document.querySelector('.kill-list-container');
+    if (tableContainer) {
+      tableContainer.removeEventListener('mouseenter', handleMouseEnter);
+      tableContainer.removeEventListener('mouseleave', handleMouseLeave);
+      tableContainer.removeEventListener('mousemove', handleMouseMove);
+    }
+  }
+});
 </script>
 
 <template>
-  <div class="w-full">
+  <div class="w-full kill-list-container">
     <!-- Top navigation bar with responsive layout -->
     <div class="flex flex-col sm:flex-row justify-between items-center mb-3">
       <!-- Left side: Limit selector and WebSocket status -->
@@ -663,7 +531,7 @@ const generateKillLink = (item: any): string | null => {
           <div
             :class="[
               'w-3 h-3 rounded-full mr-1 cursor-pointer',
-              !isConnected ? (wsConnectionAttempts > 0 ? 'bg-orange-500' : 'bg-red-500') :
+              !wsConnected ? (wsReconnectAttempts > 0 ? 'bg-orange-500' : 'bg-red-500') :
               (isWebSocketPaused ? 'bg-yellow-500' : 'bg-green-500')
             ]"
             :title="wsStatusMessage"
@@ -687,10 +555,10 @@ const generateKillLink = (item: any): string | null => {
 
           <!-- Show reconnection status if applicable -->
           <span
-            v-if="!isConnected && wsConnectionAttempts > 0"
+            v-if="!wsConnected && wsReconnectAttempts > 0"
             class="ml-1 text-xs text-orange-400"
           >
-            ({{ t('killList.retrying', { attempt: wsConnectionAttempts }) }})
+            ({{ t('killList.retrying', { attempt: wsReconnectAttempts }) }})
           </span>
         </div>
       </div>

@@ -597,7 +597,7 @@ function prepareToHideTooltip() {
 
 // Add a click handler to unpin tooltip when clicking outside
 onMounted(() => {
-  if (process.client) {
+  if (import.meta.client) {
     document.addEventListener('click', (e) => {
       // If clicking outside the fitting wheel, unpin the tooltip
       const target = e.target as HTMLElement;
@@ -618,7 +618,7 @@ onBeforeUnmount(() => {
   }
 
   // Remove document click handler
-  if (process.client) {
+  if (import.meta.client) {
     document.removeEventListener('click', () => {});
   }
 });

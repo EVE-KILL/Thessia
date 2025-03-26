@@ -312,7 +312,7 @@ const wasObserved = ref(false); // Track if the element was successfully observe
 
 // Modify the onMounted hook to only set up visibility detection when needed
 onMounted(() => {
-  if (process.client) {
+  if (import.meta.client) {
     // First check - immediate position detection for initial prioritization
     setTimeout(() => {
       try {
@@ -390,7 +390,7 @@ onMounted(() => {
 });
 
 onBeforeUnmount(() => {
-  if (process.client) {
+  if (import.meta.client) {
     // Clean up observer with better error handling
     if (observer) {
       // Only try to unobserve if the element was successfully observed
