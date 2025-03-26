@@ -21,7 +21,7 @@ useSeoMeta({
     ogType: 'website',
     twitterCard: 'summary_large_image',
     twitterTitle: 'EVE-KILL',
-    ogUrl: 'https://eve-kill.net',
+    ogUrl: 'https://eve-kill.com',
     ogSiteName: 'EVE-KILL',
     twitterSite: '@eve_kill',
     twitterCreator: '@eve_kill',

@@ -494,7 +494,7 @@ watch(fetchedKillmail, async (newData: IKillmail) => {
         ogDescription: `${newData.victim.character_name} lost ${newData.victim.ship_name.en} in ${newData.system_name} to ${newData.attackers[newData.attackers.length - 1].character_name} in ${newData.attackers[newData.attackers.length - 1].ship_name.en} - ${formatIsk(newData.total_value)}`,
         ogType: 'website',
         ogSiteName: 'EVE-KILL',
-        ogUrl: 'https://eve-kill.net/kill/' + newData.killmail_id,
+        ogUrl: 'https://eve-kill.com/kill/' + newData.killmail_id,
         ogLocale: 'en_US',
         twitterCard: 'summary_large_image',
         twitterSite: '@eve_kill',

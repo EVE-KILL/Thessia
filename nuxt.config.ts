@@ -20,7 +20,7 @@ export default defineNuxtConfig({
         public: "src/theme/" + theme + "/public",
     },
     site: {
-        url: "https://eve-kill.net",
+        url: "https://eve-kill.com",
     },
     logLevel: process.env.NODE_ENV !== "production" ? "info" : "silent",
     nitro: {
@@ -288,11 +288,6 @@ export default defineNuxtConfig({
                 },
             ],
         },
-    },
-    router: {
-        options: {
-            scrollBehaviorType: 'smooth'
-        }
     },
     hooks: {
         // Generate loaders before build
