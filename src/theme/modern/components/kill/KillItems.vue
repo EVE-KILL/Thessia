@@ -23,7 +23,8 @@
                     { 'section-header-row': row.type === 'header' },
                     { 'section-total-row': row.type === 'value' && row.itemName !== t('killItems.total') }
                  ]"
-                 @click="handleRowClick(row)">
+                 @click="(event) => handleRowClick(row, event)"
+                 @mousedown="(event) => event.button === 1 && handleRowClick(row, event)">
 
                 <!-- Image cell with indentation and connector icon for container items -->
                 <div class="body-cell image-cell" :class="{ 'indented-image': row.isNested }">
@@ -367,11 +368,31 @@ function toggleSectionCollapse(sectionName: string) {
 }
 
 // Handle row click - for collapsible headers and item links
-function handleRowClick(row: Item) {
+function handleRowClick(row: Item, event: MouseEvent) {
+    // Skip if this isn't a clickable row type
+    if (!((row.type === 'item' || row.type === 'container-item') && row.itemId)) {
+        return;
+    }
+
+    // Handle collapsible section headers
     if (row.type === 'header' && isCollapsible(row.itemName)) {
         toggleSectionCollapse(row.itemName);
-    } else if ((row.type === 'item' || row.type === 'container-item') && row.itemId) {
-        navigateToItem(row.itemId);
+        return;
+    }
+
+    // Construct the URL we're navigating to
+    const url = `/item/${row.itemId}`;
+
+    // If Ctrl/Cmd key is pressed or middle button is clicked, open in new tab
+    if (event.ctrlKey || event.metaKey || event.button === 1) {
+        // Prevent default to avoid any unintended behavior
+        event.preventDefault();
+
+        // Open in new tab
+        window.open(url, '_blank');
+    } else {
+        // Normal navigation - use navigateTo
+        navigateTo(url);
     }
 }
 
