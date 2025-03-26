@@ -62,3 +62,5 @@ This project uses:
 - As much as possible use the components located in the `/src/theme/modern/components` folder.
 - Use the `useI18n` composable for translations.
 - As much as possible, implement SEO using useSeoMeta
+- Never omit code and leave behind `Existing Code` comments.
+- Always use `async/await` for asynchronous operations.

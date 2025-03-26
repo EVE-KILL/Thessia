@@ -162,7 +162,7 @@
                @mouseenter="showTooltip(item)"
                @mouseleave="prepareToHideTooltip"
                @click="togglePinnedTooltip(item)">
-            <Imageage
+            <Image
               :type="'item'"
               :id="item.type_id"
               :name="getLocalizedString(item.name, currentLocale.value)"
