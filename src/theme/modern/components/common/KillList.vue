@@ -934,6 +934,74 @@ const generateKillLink = (item: any): string | null => {
           </div>
         </template>
       </template>
+
+      <!-- Custom skeleton rendering for consistent layout -->
+      <template #skeleton>
+        <div class="skeleton-container">
+          <div
+            v-for="i in selectedPageSize"
+            :key="`skeleton-${i}`"
+            class="killlist-skeleton-row"
+          >
+            <!-- Ship column -->
+            <div class="killlist-skeleton-cell" style="width: 20%">
+              <div class="flex items-center">
+                <div class="killlist-skeleton-image"></div>
+                <div class="flex flex-col">
+                  <div class="killlist-skeleton-title"></div>
+                  <div class="killlist-skeleton-subtitle"></div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Victim column -->
+            <div class="killlist-skeleton-cell" style="width: 25%">
+              <div class="flex items-center">
+                <div class="killlist-skeleton-image"></div>
+                <div class="flex flex-col">
+                  <div class="killlist-skeleton-title"></div>
+                  <div class="killlist-skeleton-subtitle"></div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Final blow column -->
+            <div class="killlist-skeleton-cell" style="width: 25%">
+              <div class="flex items-center">
+                <div class="killlist-skeleton-image"></div>
+                <div class="flex flex-col">
+                  <div class="killlist-skeleton-title"></div>
+                  <div class="killlist-skeleton-subtitle"></div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Location column -->
+            <div class="killlist-skeleton-cell" style="width: 15%">
+              <div class="flex flex-col px-2">
+                <div class="killlist-skeleton-title"></div>
+                <div class="flex items-center gap-1 mt-1">
+                  <div class="killlist-skeleton-system"></div>
+                  <div class="killlist-skeleton-security"></div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Details column -->
+            <div class="killlist-skeleton-cell" style="width: 15%; justify-content: flex-end;">
+              <div class="flex flex-col items-end w-full">
+                <div class="killlist-skeleton-title mb-1" style="width: 60px"></div>
+                <div class="flex items-center gap-1">
+                  <div class="killlist-skeleton-count"></div>
+                  <div class="killlist-skeleton-icon"></div>
+                  <div class="killlist-skeleton-count"></div>
+                  <div class="killlist-skeleton-icon"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </template>
     </Table>
 
     <!-- Bottom pagination - ensure same behavior as top pagination -->
@@ -1038,5 +1106,135 @@ const generateKillLink = (item: any): string | null => {
   font-weight: 600;
   padding-left: 4px;
   padding-right: 4px;
+}
+
+/* Consistent animation timing for all skeleton elements */
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+.animate-pulse {
+  animation: pulse 1.5s ease-in-out infinite;
+}
+
+/* Ensure our skeleton row maintains the proper layout */
+.skeleton-row {
+  display: flex;
+  width: 100%;
+  background-color: light-dark(rgba(255, 255, 255, 0.4), rgba(26, 26, 26, 0.3));
+  border-radius: 0.375rem;
+  margin-bottom: 0.25rem;
+  padding: 0.35rem 0.75rem;
+  border-bottom: 1px solid light-dark(rgba(229, 231, 235, 0.3), rgba(75, 85, 99, 0.2));
+}
+
+/* Make sure skeleton cells have the right dimensions */
+.skeleton-row .body-cell {
+  flex-shrink: 0;
+  flex-grow: 0;
+  display: flex;
+  align-items: center;
+}
+
+/* Make the skeleton images look right */
+.rounded-lg {
+  border-radius: 0.375rem;
+}
+
+/* Custom skeleton styles for KillList */
+.skeleton-container {
+  width: 100%;
+}
+
+.killlist-skeleton-row {
+  display: flex;
+  width: 100%;
+  min-height: 60px;
+  padding: 8px 12px;
+  margin-bottom: 4px;
+  border-radius: 6px;
+  background-color: light-dark(rgba(255, 255, 255, 0.4), rgba(26, 26, 26, 0.3));
+  border-bottom: 1px solid light-dark(rgba(229, 231, 235, 0.3), rgba(75, 85, 99, 0.2));
+}
+
+.killlist-skeleton-cell {
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+  flex-grow: 0;
+}
+
+.killlist-skeleton-image {
+  width: 40px;
+  height: 40px;
+  flex-shrink: 0;
+  margin: 0 8px;
+  border-radius: 6px;
+  background-color: light-dark(#e5e7eb, #374151);
+  animation: pulse 1.5s ease-in-out infinite;
+}
+
+.killlist-skeleton-title {
+  height: 16px;
+  width: 100px;
+  border-radius: 4px;
+  background-color: light-dark(#e5e7eb, #374151);
+  animation: pulse 1.5s ease-in-out infinite;
+}
+
+.killlist-skeleton-subtitle {
+  height: 12px;
+  width: 80px;
+  margin-top: 4px;
+  border-radius: 4px;
+  background-color: light-dark(#e5e7eb, #374151);
+  animation: pulse 1.5s ease-in-out infinite;
+}
+
+.killlist-skeleton-system {
+  height: 12px;
+  width: 70px;
+  border-radius: 4px;
+  background-color: light-dark(#e5e7eb, #374151);
+  animation: pulse 1.5s ease-in-out infinite;
+}
+
+.killlist-skeleton-security {
+  height: 12px;
+  width: 24px;
+  border-radius: 4px;
+  background-color: light-dark(#e5e7eb, #374151);
+  animation: pulse 1.5s ease-in-out infinite;
+}
+
+.killlist-skeleton-count {
+  height: 12px;
+  width: 20px;
+  border-radius: 4px;
+  background-color: light-dark(#e5e7eb, #374151);
+  animation: pulse 1.5s ease-in-out infinite;
+}
+
+.killlist-skeleton-icon {
+  height: 16px;
+  width: 16px;
+  border-radius: 4px;
+  background-color: light-dark(#e5e7eb, #374151);
+  animation: pulse 1.5s ease-in-out infinite;
+}
+
+/* Enhanced pulse animation */
+@keyframes pulse {
+  0%, 100% {
+    opacity: 0.7;
+  }
+  50% {
+    opacity: 0.4;
+  }
 }
 </style>

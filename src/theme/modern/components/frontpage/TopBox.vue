@@ -309,15 +309,25 @@ const imageTypeMap = {
         </div>
       </template>
 
-      <template #loading="{ index }">
-        <div class="body-cell entity w-full">
-          <div class="flex items-center py-1">
-            <div class="w-7 h-7 flex-shrink-0 mr-2 rounded bg-gray-200 dark:bg-gray-700 animate-pulse"></div>
-            <div class="h-4 w-[150px] bg-gray-200 dark:bg-gray-700 rounded animate-pulse"></div>
+      <!-- Custom skeleton to match the final layout -->
+      <template #skeleton>
+        <div
+          v-for="i in props.limit"
+          :key="`skeleton-${i}`"
+          class="table-row density-compact bordered bg-transparent skeleton-row"
+        >
+          <!-- Entity column skeleton - Need to limit width to prevent overflow -->
+          <div class="body-cell entity" style="width: 80%; display: flex; align-items: center;">
+            <div class="flex items-center py-1 w-full">
+              <div class="w-7 h-7 flex-shrink-0 mr-2 rounded bg-gray-200 dark:bg-gray-700 animate-pulse"></div>
+              <div class="h-4 w-24 max-w-[70%] bg-gray-200 dark:bg-gray-700 rounded animate-pulse"></div>
+            </div>
           </div>
-        </div>
-        <div class="body-cell count w-16 text-right">
-          <div class="h-4 w-10 ml-auto mr-2 bg-gray-200 dark:bg-gray-700 rounded animate-pulse"></div>
+
+          <!-- Count column skeleton - Fixed to prevent wrapping -->
+          <div class="body-cell count" style="width: 20%; display: flex; justify-content: flex-end; align-items: center;">
+            <div class="h-4 w-8 bg-gray-200 dark:bg-gray-700 rounded animate-pulse mr-2"></div>
+          </div>
         </div>
       </template>
     </Table>
@@ -389,7 +399,6 @@ const imageTypeMap = {
 :deep(.table-header) {
   background-color: light-dark(rgba(245, 245, 245, 0.05), rgba(26, 26, 26, 0.5)) !important;
   padding: 0.5rem 1rem !important;
-  font-weight: 600;
 }
 
 :deep(.header-cell) {
@@ -402,7 +411,6 @@ const imageTypeMap = {
   background-color: light-dark(rgba(245, 245, 245, 0.05), rgba(26, 26, 26, 0.5)) !important;
   font-size: 0.75rem !important;
   color: light-dark(#4b5563, #9ca3af) !important;
-  font-weight: 600;
   padding: 0.5rem 1rem !important;
   border-bottom: 1px solid light-dark(rgba(229, 231, 235, 0.3), rgba(75, 85, 99, 0.2));
 }
@@ -412,7 +420,6 @@ const imageTypeMap = {
   width: 100%;
   text-align: center;
   font-size: 0.875rem !important;
-  font-weight: 600 !important;
   color: light-dark(#111827, white) !important;
 }
 
@@ -420,7 +427,6 @@ const imageTypeMap = {
 :deep(.table-header-title) {
   background-color: light-dark(rgba(245, 245, 245, 0.05), rgba(26, 26, 26, 0.5)) !important;
   padding: 0.5rem 1rem !important;
-  font-weight: 600 !important;
   border-bottom: 1px solid light-dark(rgba(229, 231, 235, 0.3), rgba(75, 85, 99, 0.2));
 }
 
@@ -434,20 +440,17 @@ const imageTypeMap = {
 :deep(.title-header) {
   font-size: 0.875rem !important;
   color: light-dark(#111827, white) !important;
-  font-weight: 600 !important;
 }
 
 :deep(.title-text) {
   width: 100%;
   text-align: center;
-  font-weight: 600;
 }
 
 /* Style for table header */
 :deep(.topbox-header) {
   background-color: light-dark(rgba(245, 245, 245, 0.05), rgba(26, 26, 26, 0.5)) !important;
   padding: 0.5rem 1rem !important;
-  font-weight: 600;
   /* Remove border-bottom to eliminate the line */
   border-bottom: none !important;
 }
@@ -461,7 +464,6 @@ const imageTypeMap = {
 :deep(.topbox-header) {
   background-color: light-dark(rgba(245, 245, 245, 0.05), rgba(26, 26, 26, 0.5)) !important;
   padding: 0.5rem 1rem !important;
-  font-weight: 600;
   border-bottom: none !important;
 }
 
@@ -469,7 +471,6 @@ const imageTypeMap = {
 :deep(.title-header) {
   font-size: 0.875rem !important;
   color: light-dark(#111827, white) !important;
-  font-weight: 600 !important;
   text-align: center !important;
 }
 
@@ -477,6 +478,7 @@ const imageTypeMap = {
 :deep(.title-text) {
   width: 100%;
   text-align: center;
+  font-size: 0.75rem;
   font-weight: 600;
 }
 
@@ -484,5 +486,45 @@ const imageTypeMap = {
 :deep(.count-header) {
   visibility: hidden;
   width: 20%;
+}
+
+/* Consistent animation timing for all skeleton elements */
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+.animate-pulse {
+  animation: pulse 1.5s ease-in-out infinite;
+}
+
+/* Ensure proper alignment for count column */
+.body-cell.count {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+}
+
+/* Position count column properly */
+.body-cell.entity {
+  overflow: hidden;
+}
+
+.body-cell.count {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+/* For skeletons, ensure we don't overflow */
+.skeleton-row {
+  display: flex;
+  align-items: center;
+  flex-wrap: nowrap;
 }
 </style>

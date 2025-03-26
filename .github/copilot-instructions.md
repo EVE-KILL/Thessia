@@ -59,3 +59,6 @@ This project uses:
 - Include appropriate error handling for async operations.
 - Consider performance implications, especially with MongoDB queries.
 - Use proper index definitions when querying MongoDB.
+- As much as possible use the components located in the `/src/theme/modern/components` folder.
+- Use the `useI18n` composable for translations.
+- As much as possible, implement SEO using useSeoMeta

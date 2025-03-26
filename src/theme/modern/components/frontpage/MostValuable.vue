@@ -104,15 +104,11 @@ const tabsUi = computed(() => {
   };
 });
 
-// Generate skeleton items for loading state
-const generateSkeletonItems = (count: number) => {
-  return Array(count).fill(0).map((_, index) => ({
-    id: `skeleton-${index}`,
-    isLoading: true,
-  }));
+// Generate link for Table component
+const generateKillLink = (item: IMostValuableItem): string | null => {
+  if (!item || !item.killmail_id) return null;
+  return `/kill/${item.killmail_id}`;
 };
-
-const skeletonItems = computed(() => generateSkeletonItems(props.limit));
 
 // Prioritize images in the viewport
 const isPriorityImage = (index: number): boolean => {
@@ -130,58 +126,23 @@ const isPriorityImage = (index: number): boolean => {
       default-selected="1"
     />
 
-    <!-- Loading state with skeletons -->
-    <div v-if="pending">
-      <!-- Desktop skeleton grid -->
-      <div v-if="!isMobile" class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-3 p-4">
-        <div
-          v-for="(_, index) in skeletonItems"
-          :key="`skeleton-${index}`"
-          class="flex flex-col items-center p-2 rounded"
-        >
-          <USkeleton class="rounded w-24 h-24 md:w-32 md:h-32 mb-2" />
-          <USkeleton class="h-4 w-20 mt-1" />
-          <USkeleton class="h-3 w-16 mt-1" />
-        </div>
-      </div>
-
-      <!-- Mobile skeleton list -->
-      <div v-else class="flex flex-col divide-y divide-gray-200 dark:divide-background-700">
-        <div
-          v-for="(_, index) in skeletonItems"
-          :key="`skeleton-mobile-${index}`"
-          class="flex items-center p-3"
-        >
-          <USkeleton class="rounded w-14 h-14 mr-3" />
-          <div class="flex flex-col flex-grow">
-            <USkeleton class="h-4 w-32 mb-1" />
-            <USkeleton class="h-3 w-24" />
-          </div>
-          <UIcon name="i-lucide-chevron-right" class="text-gray-400 dark:text-background-400" />
-        </div>
-      </div>
-    </div>
-
-    <!-- Error state -->
-    <div v-else-if="error" class="text-center py-8 text-red-600 dark:text-red-400">
-      {{ t('common.error') }}: {{ error.message }}
-    </div>
-
-    <!-- Empty state -->
-    <div v-else-if="!items || items.length === 0" class="text-center py-8 text-gray-400 dark:text-background-400">
-      {{ t('mostValuable.noData') }}
-    </div>
-
-    <!-- Content - Displayed differently based on device -->
-    <template v-else>
-      <!-- Desktop Grid Layout -->
-      <div v-if="!isMobile" class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-3 p-4">
-        <div
-          v-for="(item, index) in items"
-          :key="item.killmail_id"
-          class="flex flex-col items-center p-2 rounded transition-colors duration-300 cursor-pointer hover:bg-gray-200 dark:hover:bg-gray-900"
-          @click="handleItemClick(item.killmail_id)"
-        >
+    <!-- Use our custom Table component with horizontal layout -->
+    <Table
+      :columns="[]"
+      :items="items || []"
+      :loading="pending"
+      :skeleton-count="props.limit"
+      :empty-text="t('mostValuable.noData')"
+      :empty-icon="'i-lucide-file-text'"
+      horizontal
+      :horizontal-items-per-row="7"
+      :link-fn="generateKillLink"
+      background="transparent"
+      hover
+    >
+      <!-- Custom horizontal item template -->
+      <template #horizontal-item="{ item, index }">
+        <div class="flex flex-col items-center">
           <Image
             type="type-render"
             :id="item.victim.ship_id"
@@ -199,42 +160,29 @@ const isPriorityImage = (index: number): boolean => {
             {{ formatIsk(item.total_value) }} ISK
           </div>
         </div>
-      </div>
+      </template>
 
-      <!-- Mobile Vertical Layout -->
-      <div v-else class="flex flex-col divide-y divide-gray-200 dark:divide-background-700">
-        <div
-          v-for="(item, index) in items"
-          :key="item.killmail_id"
-          class="flex items-center p-3 cursor-pointer hover:bg-gray-100 dark:hover:bg-background-800 transition-colors duration-300"
-          @click="handleItemClick(item.killmail_id)"
-        >
-          <Image
-            type="type-render"
-            :id="item.victim.ship_id"
-            :alt="`Ship: ${getShipName(item)}`"
-            class="rounded w-14 h-14 object-contain mr-3"
-            size="64"
-            format="webp"
-            :loading="index < 4 ? 'eager' : 'lazy'"
-            :priority="index < 2"
-          />
-          <div class="flex flex-col flex-grow">
-            <div class="text-sm truncate text-gray-900 dark:text-white">
-              {{ getShipName(item) }}
-            </div>
-            <div class="text-xs text-gray-500 dark:text-background-300">
-              {{ formatIsk(item.total_value) }} ISK
+      <!-- Custom horizontal skeleton that matches final layout -->
+      <template #horizontal-skeleton>
+        <div class="horizontal-grid" :class="[`grid-cols-${isMobile ? 2 : props.limit}`]">
+          <div
+            v-for="i in props.limit"
+            :key="`skeleton-${i}`"
+            class="horizontal-item"
+          >
+            <div class="flex flex-col items-center">
+              <div class="rounded w-24 h-24 md:w-32 md:h-32 bg-gray-200 dark:bg-gray-700 animate-pulse mb-2"></div>
+              <div class="h-4 w-20 mt-1 bg-gray-200 dark:bg-gray-700 rounded animate-pulse"></div>
+              <div class="h-3 w-16 mt-1 bg-gray-200 dark:bg-gray-700 rounded animate-pulse"></div>
             </div>
           </div>
-          <UIcon name="i-lucide-chevron-right" class="text-gray-400 dark:text-background-400" />
         </div>
-      </div>
+      </template>
+    </Table>
 
-      <div class="text-sm text-center mt-2 text-gray-500 dark:text-background-400 pb-4">
-        ({{ t('topBox.killsOver', { days: props.days }) }})
-      </div>
-    </template>
+    <div class="text-sm text-center mt-2 text-gray-500 dark:text-background-400 pb-4">
+      ({{ t('topBox.killsOver', { days: props.days }) }})
+    </div>
   </div>
 </template>
 
@@ -256,11 +204,6 @@ const isPriorityImage = (index: number): boolean => {
 
 /* Responsive adjustments */
 @media (max-width: 768px) {
-  .grid {
-    gap: 0.5rem;
-    padding: 0.5rem;
-  }
-
   :deep(.text-sm) {
     font-size: 0.85rem;
   }
@@ -283,4 +226,49 @@ const isPriorityImage = (index: number): boolean => {
     background: light-dark(#e5e7eb, #1a1a1a);
 }
 
+/* Consistent animation timing for all skeleton elements */
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+.animate-pulse {
+  animation: pulse 1.5s ease-in-out infinite;
+}
+
+/* Fix grid columns for skeleton */
+.horizontal-grid {
+  display: grid;
+  grid-template-columns: repeat(var(--cols, 7), 1fr);
+  gap: 0.75rem;
+  padding: 0.5rem;
+}
+
+.grid-cols-2 {
+  --cols: 2;
+}
+
+.grid-cols-3 {
+  --cols: 3;
+}
+
+.grid-cols-4 {
+  --cols: 4;
+}
+
+.grid-cols-5 {
+  --cols: 5;
+}
+
+.grid-cols-6 {
+  --cols: 6;
+}
+
+.grid-cols-7 {
+  --cols: 7;
+}
 </style>

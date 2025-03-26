@@ -185,7 +185,23 @@ const props = defineProps({
   showBothHeaders: {
     type: Boolean,
     default: false
-  }
+  },
+
+  /**
+   * Whether to display table in horizontal layout (items as columns)
+   */
+  horizontal: {
+    type: Boolean,
+    default: false
+  },
+
+  /**
+   * Number of items to display per row in horizontal mode
+   */
+  horizontalItemsPerRow: {
+    type: Number,
+    default: 7
+  },
 });
 
 const emit = defineEmits(['row-click']);
@@ -275,6 +291,10 @@ const tableContainerClasses = computed(() => {
     classes.push('mobile-view');
   }
 
+  if (props.horizontal) {
+    classes.push('horizontal-layout');
+  }
+
   if (props.tableClass) {
     classes.push(props.tableClass);
   }
@@ -329,7 +349,7 @@ const getRowUrl = (item: any): string | null => {
   <div :class="tableContainerClasses">
     <!-- Only keep the column headers section -->
     <div
-      v-if="!useMobileView && showHeader"
+      v-if="!useMobileView && showHeader && !horizontal"
       :class="[tableHeaderClasses, { 'special-header': specialHeader }]"
     >
       <div
@@ -345,44 +365,49 @@ const getRowUrl = (item: any): string | null => {
       </div>
     </div>
 
-    <!-- Table Body -->
-    <div class="table-body">
+    <!-- Table Body - Vertical Layout (Default) -->
+    <div v-if="!horizontal" class="table-body">
       <!-- Loading State -->
-      <div
-        v-if="loading"
-        v-for="(skeleton, index) in skeletonRows"
-        :key="`skeleton-${index}`"
-        :class="[tableRowClasses, 'skeleton-row']"
-      >
-        <slot name="loading" :mobile="useMobileView" :index="index">
-          <template v-if="useMobileView">
-            <!-- Mobile Loading Skeleton -->
-            <div class="mobile-skeleton-container">
-              <div :class="['skeleton-ship', 'rounded-md', skeletonClass]"></div>
-              <div class="skeleton-content">
-                <div :class="['skeleton-line-full', skeletonClass]"></div>
-                <div :class="['skeleton-line-med', skeletonClass]"></div>
-                <div :class="['skeleton-line-wide', skeletonClass]"></div>
-                <div :class="['skeleton-line-small', skeletonClass]"></div>
-              </div>
-            </div>
-          </template>
-          <template v-else>
-            <!-- Desktop Loading Skeletons -->
-            <div
-              v-for="column in columns"
-              :key="column.id"
-              class="body-cell skeleton"
-              :class="[column.id, column.cellClass]"
-              :style="column.width ? { width: column.width } : {}"
-            >
-              <slot :name="`loading-${column.id}`" :column="column">
-                <div :class="['skeleton-item', skeletonClass]"></div>
-              </slot>
-            </div>
-          </template>
+      <template v-if="loading">
+        <!-- First check for custom skeleton template -->
+        <slot name="skeleton" :mobile="useMobileView" :columns="columns" :count="skeletonCount">
+          <!-- Default skeleton fallback -->
+          <div
+            v-for="(skeleton, index) in skeletonRows"
+            :key="`skeleton-${index}`"
+            :class="[tableRowClasses, 'skeleton-row']"
+          >
+            <slot name="loading" :mobile="useMobileView" :index="index" :columns="columns">
+              <template v-if="useMobileView">
+                <!-- Mobile Loading Skeleton -->
+                <div class="mobile-skeleton-container">
+                  <div :class="['skeleton-ship', 'rounded-md', skeletonClass]"></div>
+                  <div class="skeleton-content">
+                    <div :class="['skeleton-line-full', skeletonClass]"></div>
+                    <div :class="['skeleton-line-med', skeletonClass]"></div>
+                    <div :class="['skeleton-line-wide', skeletonClass]"></div>
+                    <div :class="['skeleton-line-small', skeletonClass]"></div>
+                  </div>
+                </div>
+              </template>
+              <template v-else>
+                <!-- Desktop Loading Skeletons -->
+                <div
+                  v-for="column in columns"
+                  :key="column.id"
+                  class="body-cell skeleton"
+                  :class="[column.id, column.cellClass]"
+                  :style="column.width ? { width: column.width } : {}"
+                >
+                  <slot :name="`loading-${column.id}`" :column="column">
+                    <div :class="['skeleton-item', skeletonClass]"></div>
+                  </slot>
+                </div>
+              </template>
+            </slot>
+          </div>
         </slot>
-      </div>
+      </template>
 
       <!-- Empty State -->
       <div v-else-if="items.length === 0" class="empty-state">
@@ -440,6 +465,60 @@ const getRowUrl = (item: any): string | null => {
         </template>
       </component>
     </div>
+
+    <!-- Horizontal Layout -->
+    <div v-else class="horizontal-body">
+      <!-- Horizontal Loading State -->
+      <template v-if="loading">
+        <!-- First check for custom horizontal skeleton template -->
+        <slot name="horizontal-skeleton" :mobile="useMobileView" :count="skeletonCount">
+          <div class="horizontal-grid">
+            <slot name="horizontal-loading" :mobile="useMobileView">
+              <div
+                v-for="(skeleton, index) in skeletonRows"
+                :key="`skeleton-${index}`"
+                class="horizontal-item skeleton-item-container"
+              >
+                <div class="skeleton-item-box">
+                  <div :class="['skeleton-image rounded-md', skeletonClass]"></div>
+                  <div :class="['skeleton-line-full mt-2', skeletonClass]"></div>
+                  <div :class="['skeleton-line-med mt-1', skeletonClass]"></div>
+                </div>
+              </div>
+            </slot>
+          </div>
+        </slot>
+      </template>
+
+      <!-- Horizontal Empty State -->
+      <div v-else-if="items.length === 0" class="empty-state">
+        <slot name="empty">
+          <Icon :name="emptyIcon" class="empty-icon" />
+          <span>{{ emptyText }}</span>
+        </slot>
+      </div>
+
+      <!-- Horizontal Items Grid -->
+      <div v-else class="horizontal-grid" :class="[`grid-cols-${useMobileView ? 2 : horizontalItemsPerRow}`]">
+        <component
+          v-for="(item, index) in items"
+          :key="item.id || `item-${index}`"
+          :is="props.linkFn && props.linkFn(item) ? 'a' : 'div'"
+          :href="props.linkFn && props.linkFn(item) ? props.linkFn(item) : null"
+          :target="props.openInNewTab ? '_blank' : null"
+          :rel="props.openInNewTab ? 'noopener' : null"
+          class="horizontal-item"
+          :class="[getRowClasses(item, index), { 'has-link': props.linkFn && props.linkFn(item) }]"
+          @click="(e) => handleRowClick(item, e)"
+        >
+          <slot name="horizontal-item" :item="item" :index="index">
+            <div class="horizontal-item-content">
+              {{ item.name || 'Item' }}
+            </div>
+          </slot>
+        </component>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -452,6 +531,88 @@ const getRowUrl = (item: any): string | null => {
   gap: 0.25rem;
   border-radius: 0.5rem;
   overflow: hidden;
+}
+
+/* Horizontal Layout */
+.horizontal-body {
+  width: 100%;
+}
+
+.horizontal-grid {
+  display: grid;
+  grid-template-columns: repeat(var(--cols, 7), 1fr);
+  gap: 0.75rem;
+  padding: 0.5rem;
+}
+
+.grid-cols-2 {
+  --cols: 2;
+}
+
+.grid-cols-3 {
+  --cols: 3;
+}
+
+.grid-cols-4 {
+  --cols: 4;
+}
+
+.grid-cols-5 {
+  --cols: 5;
+}
+
+.grid-cols-6 {
+  --cols: 6;
+}
+
+.grid-cols-7 {
+  --cols: 7;
+}
+
+.horizontal-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 0.5rem;
+  border-radius: 0.375rem;
+  transition: background-color 0.2s;
+  cursor: pointer;
+  text-decoration: none;
+  color: inherit;
+}
+
+.horizontal-item.has-link:hover {
+  background-color: light-dark(rgba(229, 231, 235, 0.25), rgba(45, 45, 45, 0.6));
+}
+
+.horizontal-item-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  width: 100%;
+}
+
+/* Skeleton styles for horizontal layout */
+.skeleton-item-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 0.5rem;
+}
+
+.skeleton-item-box {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+}
+
+.skeleton-image {
+  width: 100%;
+  aspect-ratio: 1/1;
+  background-color: light-dark(#e5e7eb, #2d3748);
+  animation: pulse 1.5s ease-in-out infinite;
 }
 
 /* Fit content width */
@@ -497,7 +658,6 @@ const getRowUrl = (item: any): string | null => {
 }
 
 .header-cell {
-  font-weight: 600;
   font-size: 0.75rem;
   color: light-dark(#4b5563, #9ca3af);
 }
@@ -733,13 +893,11 @@ const getRowUrl = (item: any): string | null => {
 /* Special header styling */
 .table-header.special-header {
   background-color: light-dark(rgba(229, 231, 235, 0.5), rgba(31, 41, 55, 0.5));
-  font-weight: 600;
 }
 
 .table-header.special-header {
   background-color: light-dark(rgba(245, 245, 245, 0.05), rgba(26, 26, 26, 0.5)) !important;
   padding: 0.5rem 1rem !important;
-  font-weight: 600;
 }
 
 /* Ensure special header cells have consistent styling */
@@ -785,5 +943,13 @@ const getRowUrl = (item: any): string | null => {
 /* Enhance hover effect for clickable rows */
 .has-link:hover {
   background-color: light-dark(rgba(229, 231, 235, 0.25), rgba(45, 45, 45, 0.6));
+}
+
+/* Make horizontal skeleton grid responsive */
+.horizontal-skeleton-grid {
+  display: grid;
+  grid-template-columns: repeat(var(--cols, 7), 1fr);
+  gap: 0.75rem;
+  padding: 0.5rem;
 }
 </style>
