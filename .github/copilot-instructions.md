@@ -51,7 +51,7 @@ This project uses:
 - Follow project structure and conventions.
 - Use `useFetch` or `useAsyncData` for API calls.
 - Handle errors with try-catch blocks.
-- Use `console.debug` for logging.
+- Use `console.log` for logging.
 - Implement proper TypeScript typing for all functions and variables.
 - Follow the single responsibility principle.
 - Utilize existing composables and utilities before creating new ones.

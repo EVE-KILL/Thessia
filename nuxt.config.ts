@@ -289,7 +289,11 @@ export default defineNuxtConfig({
             ],
         },
     },
-
+    router: {
+        options: {
+            scrollBehaviorType: 'smooth'
+        }
+    },
     hooks: {
         // Generate loaders before build
         'build:before': () => {
