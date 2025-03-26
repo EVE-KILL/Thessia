@@ -94,6 +94,7 @@ export default defineNuxtConfig({
                   },
 
         imports: {
+            autoImport: true,
             dirs: ["server/models/**"],
         },
 
@@ -164,6 +165,13 @@ export default defineNuxtConfig({
         "@nuxtjs/color-mode",
         "@nuxtjs/device",
     ],
+
+    colorMode: {
+        preference: "system",
+        fallback: "dark",
+        storage: "cookie",
+        storageKey: "theme"
+    },
 
     imports: {
         dirs: ["src/core/utils/**"],
@@ -291,9 +299,9 @@ export default defineNuxtConfig({
     hooks: {
         // Generate loaders before build
         'build:before': () => {
-            const cliCount = generateCliLoader();
-            const cronCount = generateCronLoader();
-            const queueCount = generateQueueLoader();
+            generateCliLoader();
+            generateCronLoader();
+            generateQueueLoader();
         },
 
         // Also generate loaders on dev server start
