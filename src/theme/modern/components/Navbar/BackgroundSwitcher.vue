@@ -1,7 +1,5 @@
 <script setup lang="ts">
 import { ref, computed, onUnmounted } from 'vue';
-import CustomDropdown from './CustomDropdown.vue';
-import MobileFullscreenModal from '../Modal/MobileFullscreenModal.vue';
 
 // Import the composable properly
 const { currentBackground, setSiteBackground } = siteBackground();
@@ -128,9 +126,9 @@ onUnmounted(() => {
 
 <template>
   <div class="background-switcher">
-    <!-- For desktop: Use CustomDropdown -->
+    <!-- For desktop: Use Dropdown -->
     <div v-if="!isMobileView" class="desktop-switcher">
-      <CustomDropdown
+      <Dropdown
         v-model="isDropdownOpen"
         width="320px"
         :max-height="80"
@@ -197,7 +195,7 @@ onUnmounted(() => {
             </button>
           </div>
         </div>
-      </CustomDropdown>
+      </Dropdown>
     </div>
 
     <!-- For mobile: Just show the button that opens fullscreen view -->
@@ -214,7 +212,7 @@ onUnmounted(() => {
     </div>
 
     <!-- Mobile Fullscreen Modal -->
-    <MobileFullscreenModal
+    <MobileFullscreen
       :open="isFullscreen"
       :title="$t('background.title', 'Select Background')"
       @close="closeFullscreen"
@@ -259,7 +257,7 @@ onUnmounted(() => {
           </div>
         </button>
       </div>
-    </MobileFullscreenModal>
+    </MobileFullscreen>
   </div>
 </template>
 

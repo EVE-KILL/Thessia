@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import type { TableColumn } from '@nuxt/ui';
 import type { IKillList } from '~/interfaces/IKillList';
 import type { IKillmail } from '~/interfaces/IKillmail';
 import type { IAttacker } from '~/interfaces/IAttacker';
@@ -510,39 +509,33 @@ const getSecurityColor = (security: number): string => {
 };
 
 // Navigation handler
-const handleKillClick = (row: any) => {
-  if (row.original.isLoading) return;
-  navigateTo(`/kill/${row.original.killmail_id}`);
+const openInNewTab = (url: string) => {
+  window.open(url, '_blank', 'noopener');
 };
 
-// Responsive design - clean implementation with device module
-const { isMobile } = useResponsive();
+/**
+ * Enhanced handleKillClick function that correctly processes middle-clicks
+ * @param item - The item data object
+ * @param event - The mouse event
+ */
+const handleRowClick = ({ item, event }) => {
+  // Skip if missing killmail_id
+  if (!item || !item.killmail_id) return;
 
-// Force reactive computation by making columns directly reactive
-const columns = computed<TableColumn<IKillList>[]>(() => {
-  return isMobile.value ? columnsMobile : columnsDesktop;
-});
+  const url = `/kill/${item.killmail_id}`;
 
-// Watch isMobile for responsive changes
-watch(isMobile, (newValue) => {
-  // Removed debug log
-});
+  // If Ctrl/Cmd key is pressed or middle button is clicked, open in new tab
+  if (event.ctrlKey || event.metaKey || event.button === 1) {
+    event.preventDefault();
+    openInNewTab(url);
+    return;
+  }
 
-// Create skeleton rows for loading state
-const generateSkeletonRows = (count: number) => {
-  return Array(count).fill(0).map((_, index) => ({
-    id: `skeleton-${index}`,
-    isLoading: true,
-    killmail_id: 0,
-    // Add minimal structure needed for rendering
-    victim: {},
-    finalblow: {}
-  }));
+  // Standard navigation for normal clicks
+  navigateTo(url);
 };
 
-const skeletonRows = computed(() => generateSkeletonRows(selectedPageSize.value));
-
-// Update the pagination structure to work with UPagination
+// Update pagination structure to work with UPagination
 const currentPageIndex = ref(1); // Start at 1 for UPagination display
 
 // Calculate dynamic total based on current page
@@ -595,331 +588,59 @@ onMounted(() => {
   // ...existing WebSocket connection code...
 });
 
-// Desktop Column definitions
-const columnsDesktop: TableColumn<IKillList>[] = [
+// Define table columns for the EkTable component
+const tableColumns = [
   {
-    accessorKey: 'ship',
-    header: t('killList.ship'),
     id: 'ship',
-    meta: { width: '20%' },
-    cell: ({ row }) => {
-      if (row.original.isLoading) {
-        return h('div', { class: 'flex items-center py-1' }, [
-          h(resolveComponent('USkeleton'), {
-            class: 'rounded w-10 h-10 mx-2'
-          }),
-          h('div', { class: 'flex flex-col items-start' }, [
-            h(resolveComponent('USkeleton'), { class: 'h-4 w-32 mb-1' }),
-            h(resolveComponent('USkeleton'), { class: 'h-3 w-16' })
-          ])
-        ]);
-      }
-
-      return h('div', {
-        class: { 'flex items-center py-1': true, 'bg-darkred': isCombinedLoss(row.original) }
-      }, [
-        h(resolveComponent('EveImage'), {
-          type: 'type-render',
-          id: row.original.victim.ship_id,
-          format: 'webp',
-          alt: `Ship: ${getLocalizedString(row.original.victim.ship_name, currentLocale.value)}`,
-          class: 'rounded w-10 mx-2',
-          size: 64
-        }),
-        h('div', { class: 'flex flex-col items-start' }, [
-          h('span', { class: 'text-black dark:text-white text-sm' },
-            truncateString(getLocalizedString(row.original.victim.ship_name, currentLocale.value), 20)),
-          row.original.total_value > 50
-            ? h('span', { class: 'text-gray-600 dark:text-gray-400 text-xs' }, `${formatIsk(row.original.total_value)} ISK`)
-            : null
-        ])
-      ]);
-    }
+    header: computed(() => t('killList.ship')),
+    width: '20%'
   },
   {
-    accessorKey: 'victim',
-    header: t('killList.victim'),
     id: 'victim',
-    meta: { width: '25%' },
-    cell: ({ row }) => {
-      if (row.original.isLoading) {
-        return h('div', { class: 'flex items-center py-1' }, [
-          h(resolveComponent('USkeleton'), {
-            class: 'rounded w-10 h-10 mx-2'
-          }),
-          h('div', { class: 'flex flex-col items-start' }, [
-            h(resolveComponent('USkeleton'), { class: 'h-4 w-36 mb-1' }),
-            h(resolveComponent('USkeleton'), { class: 'h-3 w-24' })
-          ])
-        ]);
-      }
-
-      return h('div', { class: 'flex items-center py-1' }, [
-        h(resolveComponent('EveImage'), {
-          type: 'character',
-          id: row.original.victim.character_id,
-          format: 'webp',
-          alt: `Character: ${row.original.victim.character_name}`,
-          class: 'rounded w-10 mx-2',
-          size: 64
-        }),
-        h('div', { class: 'flex flex-col items-start' }, [
-          h('span', { class: 'text-black dark:text-white text-sm' }, row.original.victim.character_name),
-          h('span', { class: 'text-gray-600 dark:text-gray-400 text-xs whitespace-nowrap' },
-            truncateString(row.original.victim.corporation_name, 22))
-        ])
-      ]);
-    }
+    header: computed(() => t('killList.victim')),
+    width: '25%'
   },
   {
-    accessorKey: 'finalBlow',
-    header: t('killList.finalBlow'),
     id: 'finalBlow',
-    meta: { width: '25%' },
-    cell: ({ row }) => {
-      if (row.original.isLoading) {
-        return h('div', { class: 'flex items-center py-1' }, [
-          h(resolveComponent('USkeleton'), {
-            class: 'rounded w-10 h-10 mx-2'
-          }),
-          h('div', { class: 'flex flex-col items-start' }, [
-            h(resolveComponent('USkeleton'), { class: 'h-4 w-32 mb-1' }),
-            h(resolveComponent('USkeleton'), { class: 'h-3 w-24' })
-          ])
-        ]);
-      }
-
-      // For NPC attackers, use a fallback image
-      if (row.original.is_npc) {
-        return h('div', { class: 'flex items-center py-1 whitespace-nowrap' }, [
-          h('img', {
-            src: 'https://images.evetech.net/characters/0/portrait?size=128',
-            alt: 'NPC',
-            class: 'rounded w-10 mx-2'
-          }),
-          h('div', { class: 'flex flex-col items-start' }, [
-            h('span', { class: 'text-black dark:text-white text-sm' }, row.original.finalblow.faction_name),
-            h('span', { class: 'text-gray-600 dark:text-gray-400 text-xs' },
-              truncateString(getLocalizedString(row.original.finalblow.ship_group_name, currentLocale.value), 22))
-          ])
-        ]);
-      }
-
-      return h('div', { class: 'flex items-center py-1 whitespace-nowrap' }, [
-        h(resolveComponent('EveImage'), {
-          type: 'character',
-          id: row.original.finalblow.character_id,
-          format: 'webp',
-          alt: `Character: ${row.original.finalblow.character_name}`,
-          class: 'rounded w-10 mx-2',
-          size: 64
-        }),
-        h('div', { class: 'flex flex-col items-start' }, [
-          h('span', { class: 'text-black dark:text-white text-sm' }, row.original.finalblow.character_name),
-          h('span', { class: 'text-gray-600 dark:text-gray-400 text-xs' },
-            truncateString(getLocalizedString(row.original.finalblow.ship_group_name, currentLocale.value), 22))
-        ])
-      ]);
-    }
+    header: computed(() => t('killList.finalBlow')),
+    width: '25%'
   },
   {
-    accessorKey: 'location',
-    header: t('killList.location'),
     id: 'location',
-    meta: { width: '15%' },
-    cell: ({ row }) => {
-      if (row.original.isLoading) {
-        return h('div', { class: 'flex flex-col items-start py-1 px-2' }, [
-          h(resolveComponent('USkeleton'), { class: 'h-4 w-28 mb-1' }),
-          h(resolveComponent('USkeleton'), { class: 'h-3 w-20' })
-        ]);
-      }
-
-      return h('div', { class: 'flex flex-col items-start py-1 text-sm px-2' }, [
-        h('span', { class: 'text-black dark:text-white text-sm whitespace-nowrap' },
-          getLocalizedString(row.original.region_name, currentLocale.value)),
-        h('div', { class: 'text-gray-600 dark:text-gray-400 text-xs whitespace-nowrap' }, [
-          h('span', null, row.original.system_name),
-          h('span', null, ' ('),
-          h('span', { class: getSecurityColor(row.original.system_security) }, row.original.system_security.toFixed(1)),
-          h('span', null, ')')
-        ])
-      ]);
-    }
+    header: computed(() => t('killList.location')),
+    width: '15%'
   },
   {
-    accessorKey: 'details',
-    header: () => h('div', { class: 'text-right' }, t('killList.details')),
     id: 'details',
-    meta: { width: '15%' },
-    cell: ({ row }) => {
-      if (row.original.isLoading) {
-        return h('div', { class: 'flex flex-col items-end py-1 px-2' }, [
-          h(resolveComponent('USkeleton'), { class: 'h-4 w-20 mb-1' }),
-          h('div', { class: 'flex gap-1 items-center' }, [
-            h(resolveComponent('USkeleton'), { class: 'h-3 w-16' })
-          ])
-        ]);
-      }
-
-      return h('div', { class: 'flex flex-col items-end py-1 text-sm whitespace-nowrap px-2' }, [
-        h(resolveComponent('ClientOnly'), {}, {
-          default: () => h('div', { class: 'text-black dark:text-white' }, formatDate(row.original.kill_time)),
-          fallback: () => h('div', { class: 'text-black dark:text-white' }, '—')
-        }),
-        h('div', { class: 'flex gap-1 items-center' }, [
-          h('span', { class: 'text-gray-600 dark:text-gray-400' }, row.original.attackerCount),
-          h('img', {
-            src: '/images/involved.png',
-            alt: `${row.original.attackerCount} Involved`,
-            class: 'h-4'
-          }),
-          h('span', { class: 'text-gray-600 dark:text-gray-400' }, row.original.commentCount || 0),
-          h('img', { src: '/images/comment.gif', alt: 'Comments', class: 'h-4' })
-        ])
-      ]);
-    }
-  }
+    header: computed(() => t('killList.details')),
+    headerClass: 'text-right',
+    width: '15%'
+  },
 ];
 
-// Mobile Column definitions - Simplified for mobile view
-const columnsMobile: TableColumn<IKillList>[] = [
-  {
-    accessorKey: 'mobile-view',
-    id: 'mobile-view',
-    meta: { width: '100%' },
-    cell: ({ row }) => {
-      if (row.original.isLoading) {
-        return h('div', { class: 'flex items-center py-3 w-full' }, [
-          // Ship Image Skeleton
-          h(resolveComponent('USkeleton'), { class: 'rounded w-16 h-16 mr-2' }),
+// Get row class based on whether it's a combined loss
+const getRowClass = (item) => {
+  return isCombinedLoss(item) ? 'bg-darkred' : '';
+};
 
-          // Content Skeleton
-          h('div', { class: 'flex flex-col justify-center mr-3 min-w-0 flex-grow' }, [
-            // Top Line
-            h('div', { class: 'flex justify-between items-center mb-1' }, [
-              h(resolveComponent('USkeleton'), { class: 'h-4 w-32 mr-2' }),
-              h(resolveComponent('USkeleton'), { class: 'h-4 w-16' })
-            ]),
-
-            // Middle Line
-            h(resolveComponent('USkeleton'), { class: 'h-3 w-40 mb-1' }),
-
-            // Bottom Line
-            h('div', { class: 'flex justify-between items-center mb-1' }, [
-              h(resolveComponent('USkeleton'), { class: 'h-3 w-20 mr-2' }),
-              h(resolveComponent('USkeleton'), { class: 'h-3 w-24' })
-            ]),
-
-            // Last Line
-            h('div', { class: 'flex justify-between items-center' }, [
-              h(resolveComponent('USkeleton'), { class: 'h-3 w-20' }),
-              h(resolveComponent('USkeleton'), { class: 'h-3 w-10' })
-            ])
-          ])
-        ]);
-      }
-
-      return h('div', {
-        class: {
-          'flex items-center py-3 w-full': true,
-          'bg-darkred': isCombinedLoss(row.original)
-        }
-      }, [
-        // Ship Image
-        h(resolveComponent('EveImage'), {
-          type: 'type-render',
-          id: row.original.victim.ship_id,
-          format: 'webp',
-          alt: `Ship: ${getLocalizedString(row.original.victim.ship_name, currentLocale.value)}`,
-          class: 'rounded w-16 h-16 mr-2',
-          size: 128
-        }),
-
-        // Victim Info
-        h('div', { class: 'flex flex-col justify-center mr-3 min-w-0 flex-grow' }, [
-          // Top Line: Victim Name + ISK Value
-          h('div', { class: 'flex justify-between items-center' }, [
-            h('span', { class: 'text-black dark:text-white text-sm font-medium truncate mr-1' }, row.original.victim.character_name),
-            row.original.total_value > 50
-              ? h('span', { class: 'text-gray-600 dark:text-gray-400 text-xs whitespace-nowrap' }, `${formatIsk(row.original.total_value)} ISK`)
-              : null
-          ]),
-
-          // Middle Line: Victim Corp
-          h('span', { class: 'text-gray-600 dark:text-gray-400 text-xs truncate' }, row.original.victim.corporation_name),
-
-          // Bottom Line: Attacker Name + Location
-          h('div', { class: 'flex justify-between items-center' }, [
-            h('span', { class: 'text-gray-600 dark:text-gray-400 text-xs truncate mr-1' },
-              row.original.is_npc ? row.original.finalblow.faction_name : row.original.finalblow.character_name),
-            h('div', { class: 'text-gray-600 dark:text-gray-400 text-xs whitespace-nowrap flex items-center' }, [
-              h('span', null, row.original.system_name),
-              h('span', null, ' ('),
-              h('span', { class: getSecurityColor(row.original.system_security) }, row.original.system_security.toFixed(1)),
-              h('span', null, ')')
-            ])
-          ]),
-
-          // Last Line: Time + Attacker Count
-          h('div', { class: 'flex justify-between items-center mt-1' }, [
-            h(resolveComponent('ClientOnly'), {}, {
-              default: () => h('span', { class: 'text-background-500 text-xs' }, formatDate(row.original.kill_time)),
-              fallback: () => h('span', { class: 'text-background-500 text-xs' }, '—')
-            }),
-            h('div', { class: 'flex gap-1 items-center' }, [
-              h('span', { class: 'text-gray-600 dark:text-gray-400 text-xs' }, row.original.attackerCount),
-              h('img', {
-                src: '/images/involved.png',
-                alt: `${row.original.attackerCount} Involved`,
-                class: 'h-3'
-              }),
-            ])
-          ])
-        ])
-      ]);
-    }
-  }
-];
-
-// Update column headers when locale changes
-watch(locale, () => {
-  columnsDesktop.forEach((column, index) => {
-    if (column.id === 'ship') {
-      columnsDesktop[index].header = t('killList.ship');
-    } else if (column.id === 'victim') {
-      columnsDesktop[index].header = t('killList.victim');
-    } else if (column.id === 'finalBlow') {
-      columnsDesktop[index].header = t('killList.finalBlow');
-    } else if (column.id === 'location') {
-      columnsDesktop[index].header = t('killList.location');
-    } else if (column.id === 'details') {
-      columnsDesktop[index].header = () => h('div', { class: 'text-right' }, t('killList.details'));
-    }
-  });
-});
-
-// Add a computed property to provide connection status message
+// Add missing wsStatusMessage computed property
 const wsStatusMessage = computed(() => {
-  if (wsErrorMessage.value) {
-    return `${t('killList.wsError')}: ${wsErrorMessage.value}`;
-  }
-
   if (!isConnected.value) {
-    if (wsConnectionAttempts.value > 0) {
-      return t('killList.wsReconnecting', { attempt: wsConnectionAttempts.value, max: MAX_RECONNECT_ATTEMPTS });
-    }
-    return t('killList.wsDisconnected');
+    return wsConnectionAttempts.value > 0
+      ? t('killList.reconnecting')
+      : t('killList.disconnected');
+  } else {
+    return isWebSocketPaused.value
+      ? t('killList.paused')
+      : t('killList.connected');
   }
-
-  if (isWebSocketPaused.value) {
-    return manuallyPaused.value
-      ? t('killList.wsPausedManually')
-      : t('killList.wsPaused');
-  }
-
-  return t('killList.wsConnected');
 });
+
+// Replace the handleRowClick function with a simple link generator function
+const generateKillLink = (item: any): string | null => {
+  if (!item || !item.killmail_id) return null;
+  return `/kill/${item.killmail_id}`;
+};
 </script>
 
 <template>
@@ -951,7 +672,7 @@ const wsStatusMessage = computed(() => {
 
           <span
             v-if="wsNewKillCount > 0"
-            class="ml-1 px-2 py-0.5 bg-primary-500 text-black dark:text-white text-xs rounded-full cursor-pointer"
+            class="ml-1 px-1.5 py-0 bg-primary-500 text-black dark:text-white text-2xs rounded-full cursor-pointer kill-count-badge"
             @click="resetNewKillCount"
           >
             +{{ wsNewKillCount }}
@@ -1006,61 +727,214 @@ const wsStatusMessage = computed(() => {
       </UPagination>
     </div>
 
-    <!-- Mobile Table -->
-    <div
-      v-if="isMobile"
-      @mouseenter="handleMouseEnter"
-      @mouseleave="handleMouseLeave"
-      @mousemove="handleMouseMove"
+    <!-- Use our enhanced EkTable component with specialized headers -->
+    <Table
+      :columns="tableColumns"
+      :items="killlistData"
+      :loading="pending"
+      :skeleton-count="selectedPageSize"
+      :empty-text="t('killList.noKills')"
+      :row-class="getRowClass"
+      :special-header="true"
+      :bordered="true"
+      :link-fn="generateKillLink"
+      background="transparent"
     >
-      <UTable
-        v-model:pagination="pagination"
-        :data="pending ? skeletonRows : (killlistData || [])"
-        :columns="columnsMobile"
-        :loading="false"
-        :empty-state="{ icon: 'i-lucide-file-text', label: t('killList.noKills') }"
-        :ui="{
-          base: 'min-w-full table-fixed text-black dark:text-white',
-          thead: 'hidden',
-          tbody: 'divide-y divide-background-700',
-          tr: 'transition-colors duration-300 cursor-pointer',
-          th: 'text-left py-1 px-2 uppercase text-xs font-medium',
-          td: 'p-0 text-xs',
-          empty: 'py-4 text-center text-black dark:text-white',
-          loading: 'py-4 text-center',
-          root: 'relative overflow-hidden rounded-sm bg-background-900',
-        }"
-        @select="handleKillClick"
-      />
-    </div>
+      <!-- Ship column -->
+      <template #cell-ship="{ item }">
+        <div class="flex items-center py-1">
+          <Image
+            type="type-render"
+            :id="item.victim.ship_id"
+            format="webp"
+            :alt="`Ship: ${getLocalizedString(item.victim.ship_name, currentLocale)}`"
+            class="rounded w-10 mx-2"
+            size="64"
+          />
+          <div class="flex flex-col items-start">
+            <span class="text-sm text-black dark:text-white">
+              {{ truncateString(getLocalizedString(item.victim.ship_name, currentLocale), 20) }}
+            </span>
+            <span v-if="item.total_value > 50" class="text-xs text-gray-600 dark:text-gray-400">
+              {{ formatIsk(item.total_value) }} ISK
+            </span>
+          </div>
+        </div>
+      </template>
 
-    <!-- Desktop Table -->
-    <div
-      v-else
-      @mouseenter="handleMouseEnter"
-      @mouseleave="handleMouseLeave"
-      @mousemove="handleMouseMove"
-    >
-      <UTable
-        v-model:pagination="pagination"
-        :data="pending ? skeletonRows : (killlistData || [])"
-        :columns="columnsDesktop"
-        :loading="false"
-        :empty-state="{ icon: 'i-lucide-file-text', label: t('killList.noKills') }"
-        :ui="{
-          base: 'min-w-full table-fixed text-black dark:text-white',
-          thead: 'border-b border-background-700',
-          tbody: 'divide-y divide-background-700',
-          tr: 'hover:bg-gray-200 dark:hover:bg-gray-900 transition-colors duration-300 cursor-pointer',
-          th: 'text-left py-1 px-2 uppercase text-xs font-medium bg-gray-200 dark:bg-gray-900',
-          td: 'p-0 text-xs',
-          empty: 'py-4 text-center text-black dark:text-white',
-          loading: 'py-4 text-center',
-          root: 'relative overflow-hidden rounded-sm bg-background-900',
-        }"
-        @select="handleKillClick"
-      />
-    </div>
+      <!-- Victim column -->
+      <template #cell-victim="{ item }">
+        <div class="flex items-center py-1">
+          <Image
+            type="character"
+            :id="item.victim.character_id"
+            format="webp"
+            :alt="`Character: ${item.victim.character_name}`"
+            class="rounded w-10 mx-2"
+            size="64"
+          />
+          <div class="flex flex-col items-start">
+            <span class="text-sm text-black dark:text-white">{{ item.victim.character_name }}</span>
+            <span class="text-xs text-gray-600 dark:text-gray-400 whitespace-nowrap">
+              {{ truncateString(item.victim.corporation_name, 22) }}
+            </span>
+          </div>
+        </div>
+      </template>
+
+      <!-- Final Blow column -->
+      <template #cell-finalBlow="{ item }">
+        <div class="flex items-center py-1 whitespace-nowrap">
+          <!-- NPC Fallback Image or Character Image -->
+          <template v-if="item.is_npc">
+            <img
+              src="https://images.evetech.net/characters/0/portrait?size=128"
+              alt="NPC"
+              class="rounded w-10 mx-2"
+            />
+            <div class="flex flex-col items-start">
+              <span class="text-sm text-black dark:text-white">{{ item.finalblow.faction_name }}</span>
+              <span class="text-xs text-gray-600 dark:text-gray-400">
+                {{ truncateString(getLocalizedString(item.finalblow.ship_group_name, currentLocale), 22) }}
+              </span>
+            </div>
+          </template>
+          <template v-else>
+            <Image
+              type="character"
+              :id="item.finalblow.character_id"
+              format="webp"
+              :alt="`Character: ${item.finalblow.character_name}`"
+              class="rounded w-10 mx-2"
+              size="64"
+            />
+            <div class="flex flex-col items-start">
+              <span class="text-sm text-black dark:text-white">{{ item.finalblow.character_name }}</span>
+              <span class="text-xs text-gray-600 dark:text-gray-400">
+                {{ truncateString(getLocalizedString(item.finalblow.ship_group_name, currentLocale), 22) }}
+              </span>
+            </div>
+          </template>
+        </div>
+      </template>
+
+      <!-- Location column -->
+      <template #cell-location="{ item }">
+        <div class="flex flex-col items-start py-1 text-sm px-2">
+          <span class="text-sm text-black dark:text-white whitespace-nowrap">
+            {{ getLocalizedString(item.region_name, currentLocale) }}
+          </span>
+          <div class="text-xs text-gray-600 dark:text-gray-400 whitespace-nowrap">
+            <span>{{ item.system_name }}</span>
+            <span> (</span>
+            <span :class="getSecurityColor(item.system_security)">{{ item.system_security.toFixed(1) }}</span>
+            <span>)</span>
+          </div>
+        </div>
+      </template>
+
+      <!-- Details column -->
+      <template #cell-details="{ item }">
+        <div class="flex flex-col items-end w-full">
+          <ClientOnly>
+            <div class="text-sm text-black dark:text-white">{{ formatDate(item.kill_time) }}</div>
+            <template #fallback>
+              <div class="text-black dark:text-white">—</div>
+            </template>
+          </ClientOnly>
+          <div class="flex gap-1 items-center">
+            <span class="text-xs text-gray-600 dark:text-gray-400">{{ item.attackerCount }}</span>
+            <img
+              src="/images/involved.png"
+              :alt="`${item.attackerCount} Involved`"
+              class="h-4"
+            />
+            <span class="text-xs text-gray-600 dark:text-gray-400">{{ item.commentCount || 0 }}</span>
+            <img src="/images/comment.gif" alt="Comments" class="h-4" />
+          </div>
+        </div>
+      </template>
+
+      <!-- Mobile view -->
+      <template #mobile-row="{ item }">
+        <div class="mobile-container">
+          <!-- Ship Image -->
+          <Image
+            type="type-render"
+            :id="item.victim.ship_id"
+            format="webp"
+            :alt="`Ship: ${getLocalizedString(item.victim.ship_name, currentLocale)}`"
+            class="rounded w-16 h-16"
+            size="128"
+          />
+
+          <!-- Victim Info -->
+          <div class="mobile-content">
+            <!-- Top Line: Victim Name + ISK Value -->
+            <div class="mobile-header">
+              <span class="victim-name truncate">{{ item.victim.character_name }}</span>
+              <span v-if="item.total_value > 50" class="isk-value text-xs text-gray-600 dark:text-gray-400">
+                {{ formatIsk(item.total_value) }} ISK
+              </span>
+            </div>
+
+            <!-- Corporation -->
+            <div class="mobile-corporation truncate text-xs text-gray-600 dark:text-gray-400">
+              {{ item.victim.corporation_name }}
+            </div>
+
+            <!-- Final Blow + Location -->
+            <div class="mobile-meta flex justify-between text-xs text-gray-600 dark:text-gray-400">
+              <span class="final-blow truncate max-w-[50%]">
+                {{ item.is_npc ? item.finalblow.faction_name : item.finalblow.character_name }}
+              </span>
+              <div class="system-info flex whitespace-nowrap">
+                <span>{{ item.system_name }}</span>
+                <span> (</span>
+                <span :class="getSecurityColor(item.system_security)">{{ item.system_security.toFixed(1) }}</span>
+                <span>)</span>
+              </div>
+            </div>
+
+            <!-- Time + Attacker Count -->
+            <div class="mobile-footer flex justify-between items-center mt-1">
+              <ClientOnly>
+                <span class="kill-time text-xs text-gray-600 dark:text-gray-400">{{ formatDate(item.kill_time) }}</span>
+                <template #fallback>
+                  <span class="kill-time text-xs text-gray-600 dark:text-gray-400">—</span>
+                </template>
+              </ClientOnly>
+              <div class="attacker-count flex items-center gap-1">
+                <span class="text-xs text-gray-600 dark:text-gray-400">{{ item.attackerCount }}</span>
+                <img src="/images/involved.png" :alt="`${item.attackerCount} Involved`" class="h-3" />
+              </div>
+            </div>
+          </div>
+        </div>
+      </template>
+
+      <!-- Loading skeleton customization -->
+      <template #loading="{ mobile }">
+        <template v-if="mobile">
+          <!-- Mobile loading skeleton -->
+          <div class="mobile-container">
+            <div class="rounded-md w-16 h-16 bg-gray-200 dark:bg-gray-700 animate-pulse"></div>
+            <div class="flex-1 space-y-2">
+              <div class="flex justify-between">
+                <div class="h-4 bg-gray-200 dark:bg-gray-700 rounded w-32 animate-pulse"></div>
+                <div class="h-3 bg-gray-200 dark:bg-gray-700 rounded w-16 animate-pulse"></div>
+              </div>
+              <div class="h-3 bg-gray-200 dark:bg-gray-700 rounded w-40 animate-pulse"></div>
+              <div class="flex justify-between">
+                <div class="h-3 bg-gray-200 dark:bg-gray-700 rounded w-24 animate-pulse"></div>
+                <div class="h-3 bg-gray-200 dark:bg-gray-700 rounded w-20 animate-pulse"></div>
+              </div>
+              <div class="h-3 bg-gray-200 dark:bg-gray-700 rounded w-16 animate-pulse"></div>
+            </div>
+          </div>
+        </template>
+      </template>
+    </Table>
 
     <!-- Bottom pagination - ensure same behavior as top pagination -->
     <div class="flex justify-end items-center mt-3">
@@ -1098,67 +972,71 @@ const wsStatusMessage = computed(() => {
 </template>
 
 <style scoped>
+/* Additional mobile-specific styles for slots */
+.victim-name {
+  font-weight: 500;
+  font-size: 0.875rem; /* Ensure consistent medium size */
+  color: light-dark(#111827, white);
+  max-width: 70%;
+}
+
+.isk-value {
+  font-size: 0.75rem; /* Small font for ISK */
+  white-space: nowrap;
+}
+
+.mobile-corporation {
+  margin-bottom: 0.25rem;
+  font-size: 0.75rem; /* Ensure XS size */
+}
+
+.mobile-meta {
+  margin-bottom: 0.25rem;
+  font-size: 0.75rem; /* Ensure XS size */
+}
+
+.mobile-footer {
+  margin-top: 0.25rem;
+  font-size: 0.75rem; /* Ensure XS size */
+}
+
+/* Custom color class */
 .bg-darkred {
-  background-color: rgb(40, 0, 0);
+  background-color: rgba(100, 0, 0, 0.3);
 }
 
-:deep(.text-sm) {
-  font-size: 1rem;
-  line-height: 1rem;
+/* Override pagination text size */
+:deep(.u-pagination) {
+  font-size: 0.875rem;
 }
 
-:deep(.text-xs) {
-  font-size: 0.8rem;
-  line-height: 1rem;
+/* Add these styles to match the original header styling */
+:deep(.table-header) {
+  background-color: light-dark(rgba(245, 245, 245, 0.05), rgba(26, 26, 26, 0.5)) !important;
+  padding: 0.5rem 1rem !important;
+  font-weight: 600;
 }
 
-:deep(table) {
-  border-collapse: collapse;
-  width: 100%;
-  table-layout: fixed;
+:deep(.header-cell) {
+  font-size: 0.75rem;
+  color: light-dark(#4b5563, #9ca3af) !important;
 }
 
-/* Desktop column sizes */
-@media (min-width: 768px) {
-  :deep(th:nth-child(1)), :deep(td:nth-child(1)) { width: 20%; }
-  :deep(th:nth-child(2)), :deep(td:nth-child(2)) { width: 25%; }
-  :deep(th:nth-child(3)), :deep(td:nth-child(3)) { width: 25%; }
-  :deep(th:nth-child(4)), :deep(td:nth-child(4)) { width: 15%; }
-  :deep(th:nth-child(5)), :deep(td:nth-child(5)) { width: 15%; }
+/* Add text-2xs class for very small text */
+.text-2xs {
+  font-size: 0.65rem;
+  line-height: 0.85rem;
 }
 
-/* Mobile optimizations */
-@media (max-width: 767px) {
-  :deep(td > div) {
-    padding: 0.5rem;
-  }
-
-  :deep(.text-sm) {
-    font-size: 0.9rem;
-  }
-
-  :deep(.text-xs) {
-    font-size: 0.75rem;
-  }
+/* Make the kill count badge smaller and more compact */
+.kill-count-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 16px;
+  height: 16px;
+  font-weight: 600;
+  padding-left: 4px;
+  padding-right: 4px;
 }
-
-:deep(td > div) {
-  max-width: 100%;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-/* Table styles */
-:deep(tbody tr) {
-  border-color: rgb(40, 40, 40) !important;
-}
-
-:deep(tbody tr + tr) {
-  border-top: 1px solid rgb(40, 40, 40) !important;
-}
-
-:deep(tbody tr):hover {
-    background: light-dark(#e5e7eb, #1a1a1a);
-}
-
 </style>

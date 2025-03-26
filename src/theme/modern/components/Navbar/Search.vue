@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import { ref, computed, nextTick, watch, onMounted, onUnmounted } from 'vue';
 import { useSearch } from '~/composables/useSearch';
-import MobileFullscreenModal from '../Modal/MobileFullscreenModal.vue';
 
 const { t } = useI18n();
 
@@ -368,7 +367,7 @@ onUnmounted(() => {
     </div>
 
     <!-- Mobile Fullscreen Search using the shared modal component -->
-    <MobileFullscreenModal
+    <MobileFullscreen
       :open="isFullscreenMobile"
       :title="t('search.title', 'Search')"
       @close="closeMobileSearch"
@@ -471,7 +470,7 @@ onUnmounted(() => {
           </button>
         </div>
       </template>
-    </MobileFullscreenModal>
+    </MobileFullscreen>
   </div>
 </template>
 

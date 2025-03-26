@@ -36,7 +36,7 @@
 
       <!-- Ship image -->
       <div class="ship-container" :class="{ 'darkened': activeTooltip.visible }">
-        <EveImage
+        <Image
           v-if="killmail && killmail.victim"
           :type="'type-render'"
           :id="killmail.victim.ship_id"
@@ -125,7 +125,7 @@
                @mouseenter="showTooltip(item)"
                @mouseleave="prepareToHideTooltip"
                @click="togglePinnedTooltip(item)">
-            <EveImage
+            <Image
               :type="'item'"
               :id="item.type_id"
               :name="getLocalizedString(item.name, currentLocale.value)"
@@ -141,7 +141,7 @@
                class="ammo-container"
                @mouseenter="showTooltip(getAmmoForSlot(index, 'high'))"
                @mouseleave="prepareToHideTooltip">
-            <EveImage
+            <Image
               :type="'item'"
               :id="getAmmoForSlot(index, 'high').type_id"
               :name="getLocalizedString(getAmmoForSlot(index, 'high').name, currentLocale.value)"
@@ -162,7 +162,7 @@
                @mouseenter="showTooltip(item)"
                @mouseleave="prepareToHideTooltip"
                @click="togglePinnedTooltip(item)">
-            <EveImage
+            <Imageage
               :type="'item'"
               :id="item.type_id"
               :name="getLocalizedString(item.name, currentLocale.value)"
@@ -177,7 +177,7 @@
                class="ammo-container"
                @mouseenter="showTooltip(getAmmoForSlot(index, 'mid'))"
                @mouseleave="prepareToHideTooltip">
-            <EveImage
+            <Image
               :type="'item'"
               :id="getAmmoForSlot(index, 'mid').type_id"
               :name="getLocalizedString(getAmmoForSlot(index, 'mid').name, currentLocale.value)"
@@ -198,7 +198,7 @@
                @mouseenter="showTooltip(item)"
                @mouseleave="prepareToHideTooltip"
                @click="togglePinnedTooltip(item)">
-            <EveImage
+            <Image
               :type="'item'"
               :id="item.type_id"
               :name="getLocalizedString(item.name, currentLocale.value)"
@@ -213,7 +213,7 @@
                class="ammo-container"
                @mouseenter="showTooltip(getAmmoForSlot(index, 'low'))"
                @mouseleave="prepareToHideTooltip">
-            <EveImage
+            <Image
               :type="'item'"
               :id="getAmmoForSlot(index, 'low').type_id"
               :name="getLocalizedString(getAmmoForSlot(index, 'low').name, currentLocale.value)"
@@ -234,7 +234,7 @@
                @mouseenter="showTooltip(item)"
                @mouseleave="prepareToHideTooltip"
                @click="togglePinnedTooltip(item)">
-            <EveImage
+            <Image
               :type="'item'"
               :id="item.type_id"
               :name="getLocalizedString(item.name, currentLocale.value)"
@@ -256,7 +256,7 @@
                @mouseenter="showTooltip(item)"
                @mouseleave="prepareToHideTooltip"
                @click="togglePinnedTooltip(item)">
-            <EveImage
+            <Image
               :type="'item'"
               :id="item.type_id"
               :name="getLocalizedString(item.name, currentLocale.value)"

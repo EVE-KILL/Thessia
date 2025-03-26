@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import { computed, onMounted, nextTick } from 'vue';
-import CustomDropdown from './CustomDropdown.vue';
 
 // Component props
 const props = defineProps({
@@ -75,11 +74,11 @@ const ssoImageDimensions = computed(() => {
     <div v-if="!isMobileView" class="navbar-user">
         <div class="hidden md:block">
             <!-- User dropdown menu -->
-            <CustomDropdown v-model="isDropdownOpen" :smart-position="true" position="bottom" align="end">
+            <Dropdown v-model="isDropdownOpen" :smart-position="true" position="bottom" align="end">
                 <template #trigger>
                     <UButton color="neutral" variant="ghost" size="sm" class="flex items-center" aria-label="User menu">
                         <UIcon v-if="!auth.isAuthenticated.value" name="lucide:user" class="text-lg" />
-                        <EveImage
+                        <Image
                             v-else
                             type="character"
                             :id="auth.user.value.characterId"
@@ -139,7 +138,7 @@ const ssoImageDimensions = computed(() => {
                         <!-- User Profile -->
                         <div class="px-4 py-3 border-b border-gray-100 dark:border-gray-800">
                             <div class="flex flex-col items-center text-center">
-                                <EveImage
+                                <Image
                                     type="character"
                                     :id="auth.user.value.characterId"
                                     :alt="auth.user.value.characterName"
@@ -154,7 +153,7 @@ const ssoImageDimensions = computed(() => {
 
                                 <div v-if="auth.user.value.corporationName"
                                     class="text-xs text-gray-500 dark:text-gray-400 flex items-center mt-1 w-full justify-center">
-                                    <EveImage
+                                    <Image
                                         type="corporation"
                                         :id="auth.user.value.corporationId"
                                         :alt="auth.user.value.corporationName"
@@ -166,7 +165,7 @@ const ssoImageDimensions = computed(() => {
 
                                 <div v-if="auth.user.value.allianceName"
                                     class="text-xs text-gray-500 dark:text-gray-400 flex items-center mt-1 w-full justify-center">
-                                    <EveImage
+                                    <Image
                                         type="alliance"
                                         :id="auth.user.value.allianceId"
                                         :alt="auth.user.value.allianceName"
@@ -214,7 +213,7 @@ const ssoImageDimensions = computed(() => {
                         </div>
                     </template>
                 </div>
-            </CustomDropdown>
+            </Dropdown>
         </div>
 
         <!-- Mobile Header Dropdown -->
@@ -306,7 +305,7 @@ const ssoImageDimensions = computed(() => {
         <div v-else>
             <!-- User Profile -->
             <div class="flex flex-col items-center text-center px-2 py-3 mb-3 border-b border-gray-100 dark:border-gray-800">
-                <EveImage
+                <Image
                     type="character"
                     :id="auth.user.value.characterId"
                     :alt="auth.user.value.characterName"
@@ -321,7 +320,7 @@ const ssoImageDimensions = computed(() => {
 
                 <div v-if="auth.user.value.corporationName"
                     class="text-sm text-gray-500 dark:text-gray-400 flex items-center mt-1 w-full justify-center">
-                    <EveImage
+                    <Image
                         type="corporation"
                         :id="auth.user.value.corporationId"
                         :alt="auth.user.value.corporationName"
@@ -333,7 +332,7 @@ const ssoImageDimensions = computed(() => {
 
                 <div v-if="auth.user.value.allianceName"
                     class="text-sm text-gray-500 dark:text-gray-400 flex items-center mt-1 w-full justify-center">
-                    <EveImage
+                    <Image
                         type="alliance"
                         :id="auth.user.value.allianceId"
                         :alt="auth.user.value.allianceName"

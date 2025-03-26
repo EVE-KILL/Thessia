@@ -1,7 +1,7 @@
 <template>
   <div class="language-selector">
-    <!-- Desktop dropdown with CustomDropdown -->
-    <CustomDropdown
+    <!-- Desktop dropdown with Dropdown -->
+    <Dropdown
       v-model="isDropdownOpen"
       :smart-position="true"
       position="bottom"
@@ -41,7 +41,7 @@
           <span class="text-xs ml-auto text-gray-500">{{ locale.code.toUpperCase() }}</span>
         </button>
       </div>
-    </CustomDropdown>
+    </Dropdown>
 
     <!-- Mobile view version (simplified display) -->
     <div v-if="isMobileView" class="flex flex-col gap-2 w-full">
@@ -73,7 +73,6 @@
 <script setup lang="ts">
 import type { LocaleObject } from '@nuxtjs/i18n';
 import type { Locale } from 'vue-i18n';
-import CustomDropdown from './CustomDropdown.vue';
 
 // Props
 const props = defineProps({

@@ -3,6 +3,17 @@ const theme = process.env.THEME || 'modern';
 export default defineNuxtConfig({
     css: [ '~/src/theme/' + theme + '/assets/main.css' ],
 
+    components: [
+        {
+            path: '~/src/theme/modern/components',
+            pathPrefix: false,
+        },
+        {
+            path: '~/src/theme/modern/components/common',
+            pathPrefix: false,
+        }
+    ],
+
     colorMode: {
         classSuffix: "",
         storage: "cookie",

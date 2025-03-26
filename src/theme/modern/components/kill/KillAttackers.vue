@@ -14,17 +14,17 @@
             <!-- Character with Corporation Portrait -->
             <div class="portraits-container">
               <NuxtLink v-if="finalBlowAttacker.character_id" :to="`/character/${finalBlowAttacker.character_id}`">
-                <EveImage :type="'character'" :id="finalBlowAttacker.character_id" :size="64" class="portrait-image" />
+                <Image :type="'character'" :id="finalBlowAttacker.character_id" :size="64" class="portrait-image" />
               </NuxtLink>
               <NuxtLink v-if="finalBlowAttacker.corporation_id" :to="`/corporation/${finalBlowAttacker.corporation_id}`">
-                <EveImage :type="'corporation'" :id="finalBlowAttacker.corporation_id" :size="32" class="portrait-image corporation-image" />
+                <Image :type="'corporation'" :id="finalBlowAttacker.corporation_id" :size="32" class="portrait-image corporation-image" />
               </NuxtLink>
             </div>
 
             <!-- Ship Portrait -->
             <div class="ship-portrait">
               <NuxtLink v-if="finalBlowAttacker.ship_id" :to="`/item/${finalBlowAttacker.ship_id}`">
-                <EveImage :type="'type-render'" :id="finalBlowAttacker.ship_id" :size="64" class="portrait-image ship-image" />
+                <Image :type="'type-render'" :id="finalBlowAttacker.ship_id" :size="64" class="portrait-image ship-image" />
               </NuxtLink>
             </div>
           </div>
@@ -74,17 +74,17 @@
             <!-- Character with Corporation Portrait -->
             <div class="portraits-container">
               <NuxtLink v-if="topDamageAttacker.character_id" :to="`/character/${topDamageAttacker.character_id}`">
-                <EveImage :type="'character'" :id="topDamageAttacker.character_id" :size="64" class="portrait-image" />
+                <Image :type="'character'" :id="topDamageAttacker.character_id" :size="64" class="portrait-image" />
               </NuxtLink>
               <NuxtLink v-if="topDamageAttacker.corporation_id" :to="`/corporation/${topDamageAttacker.corporation_id}`">
-                <EveImage :type="'corporation'" :id="topDamageAttacker.corporation_id" :size="32" class="portrait-image corporation-image" />
+                <Image :type="'corporation'" :id="topDamageAttacker.corporation_id" :size="32" class="portrait-image corporation-image" />
               </NuxtLink>
             </div>
 
             <!-- Ship Portrait -->
             <div class="ship-portrait">
               <NuxtLink v-if="topDamageAttacker.ship_id" :to="`/item/${topDamageAttacker.ship_id}`">
-                <EveImage :type="'type-render'" :id="topDamageAttacker.ship_id" :size="64" class="portrait-image ship-image" />
+                <Image :type="'type-render'" :id="topDamageAttacker.ship_id" :size="64" class="portrait-image ship-image" />
               </NuxtLink>
             </div>
           </div>
@@ -143,7 +143,7 @@
         <div v-for="(alliance, index) in organizationsTree.alliances" :key="`alliance-${index}`" class="alliance-group">
           <div class="alliance-name">
             <NuxtLink v-if="alliance.id" :to="`/alliance/${alliance.id}`" class="entity-link">
-              <EveImage v-if="alliance.id" :type="'alliance'" :id="alliance.id" :size="24" class="org-icon" />
+              <Image v-if="alliance.id" :type="'alliance'" :id="alliance.id" :size="24" class="org-icon" />
               <span>{{ alliance.name }}</span>
               <span class="count">({{ alliance.count }})</span>
             </NuxtLink>
@@ -157,7 +157,7 @@
           <div class="corporation-list">
             <div v-for="(corp, corpIndex) in alliance.corporations" :key="`corp-${alliance.id}-${corpIndex}`" class="corporation-item">
               <NuxtLink v-if="corp.id" :to="`/corporation/${corp.id}`" class="entity-link corporation-name">
-                <EveImage v-if="corp.id" :type="'corporation'" :id="corp.id" :size="24" class="org-icon" />
+                <Image v-if="corp.id" :type="'corporation'" :id="corp.id" :size="24" class="org-icon" />
                 <span>{{ corp.name }}</span>
                 <span class="count">({{ corp.count }})</span>
               </NuxtLink>
@@ -176,7 +176,7 @@
           <div class="corporation-list">
             <div v-for="(corp, index) in organizationsTree.noAllianceCorporations" :key="`no-alliance-corp-${index}`" class="corporation-item standalone">
               <NuxtLink v-if="corp.id" :to="`/corporation/${corp.id}`" class="entity-link corporation-name">
-                <EveImage v-if="corp.id" :type="'corporation'" :id="corp.id" :size="24" class="org-icon" />
+                <Image v-if="corp.id" :type="'corporation'" :id="corp.id" :size="24" class="org-icon" />
                 <span>{{ corp.name }}</span>
                 <span class="count">({{ corp.count }})</span>
               </NuxtLink>
@@ -204,7 +204,7 @@
             <!-- Character portrait column -->
             <div class="body-cell">
               <NuxtLink v-if="attacker.character_id" :to="`/character/${attacker.character_id}`">
-                <EveImage :type="'character'" :id="attacker.character_id" :size="64" class="character-portrait" />
+                <Image :type="'character'" :id="attacker.character_id" :size="64" class="character-portrait" />
               </NuxtLink>
               <div v-else class="character-portrait placeholder-portrait"></div>
             </div>
@@ -213,10 +213,10 @@
             <div class="body-cell ship-images-cell -ml-1">
               <div class="ship-images-container">
                 <NuxtLink v-if="attacker.ship_id" :to="`/item/${attacker.ship_id}`">
-                  <EveImage :type="'type-render'" :id="attacker.ship_id" :size="32" class="ship-render" />
+                  <Image :type="'type-render'" :id="attacker.ship_id" :size="32" class="ship-render" />
                 </NuxtLink>
                 <NuxtLink v-if="attacker.weapon_type_id" :to="`/item/${attacker.weapon_type_id}`">
-                  <EveImage :type="'type-icon'" :id="attacker.weapon_type_id" :size="32" class="type-icon" />
+                  <Image :type="'type-icon'" :id="attacker.weapon_type_id" :size="32" class="type-icon" />
                 </NuxtLink>
               </div>
             </div>
@@ -260,7 +260,7 @@
 
                 <div class="corporation-logo">
                   <NuxtLink v-if="attacker.corporation_id" :to="`/corporation/${attacker.corporation_id}`">
-                    <EveImage :type="'corporation'" :id="attacker.corporation_id" :size="32" class="corp-logo" />
+                    <Image :type="'corporation'" :id="attacker.corporation_id" :size="32" class="corp-logo" />
                   </NuxtLink>
                 </div>
               </div>

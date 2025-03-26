@@ -161,7 +161,7 @@ const hasScope = (scope: string) => {
                             v-if="auth.user.value.characterId"
                             :to="`/characters/${auth.user.value.characterId}`"
                             class="block w-full h-full">
-                            <EveImage
+                            <Image
                                 type="character"
                                 :id="auth.user.value.characterId"
                                 :alt="auth.user.value.characterName"
@@ -194,7 +194,7 @@ const hasScope = (scope: string) => {
                         <NuxtLink v-if="auth.user.value.corporationName" class="flex items-center hover:underline"
                             :to="`/corporations/${auth.user.value.corporationId}`"
                             :class="auth.user.value.allianceName ? 'text-gray-700 dark:text-gray-300' : 'hidden'">
-                            <EveImage
+                            <Image
                                 type="corporation"
                                 :id="auth.user.value.corporationId"
                                 :alt="auth.user.value.corporationName"
@@ -210,7 +210,7 @@ const hasScope = (scope: string) => {
                         <NuxtLink v-if="auth.user.value.allianceId" :to="`/alliances/${auth.user.value.allianceId}`"
                             class="flex items-center hover:underline"
                             :class="auth.user.value.allianceName ? 'text-gray-700 dark:text-gray-300' : 'hidden'">
-                            <EveImage
+                            <Image
                                 type="alliance"
                                 :id="auth.user.value.allianceId"
                                 :alt="auth.user.value.allianceName"

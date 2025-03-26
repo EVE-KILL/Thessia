@@ -4,7 +4,7 @@
     <div class="section ship-section">
       <div class="ship-image-container">
         <NuxtLink v-if="killmail?.victim?.ship_id" :to="`/item/${killmail.victim.ship_id}`">
-          <EveImage
+          <Image
              :type="'type-render'"
              :id="killmail.victim.ship_id"
              :size="96"
@@ -42,10 +42,10 @@
             <div v-if="killmail?.victim?.character_id" class="compact-entity-row">
               <div class="entity-portraits">
                 <NuxtLink :to="`/character/${killmail.victim.character_id}`">
-                  <EveImage :type="'character'" :id="killmail.victim.character_id" :size="48" class="portrait-image" />
+                  <Image :type="'character'" :id="killmail.victim.character_id" :size="48" class="portrait-image" />
                 </NuxtLink>
                 <NuxtLink v-if="killmail.victim.corporation_id" :to="`/corporation/${killmail.victim.corporation_id}`">
-                  <EveImage :type="'corporation'" :id="killmail.victim.corporation_id" :size="32" class="portrait-image corporation-image" />
+                  <Image :type="'corporation'" :id="killmail.victim.corporation_id" :size="32" class="portrait-image corporation-image" />
                 </NuxtLink>
               </div>
               <div class="entity-details">
@@ -66,7 +66,7 @@
             <!-- Alliance -->
             <div v-if="killmail?.victim?.alliance_id" class="alliance-row">
               <NuxtLink :to="`/alliance/${killmail.victim.alliance_id}`">
-                <EveImage :type="'alliance'" :id="killmail.victim.alliance_id" :size="24" class="small-icon" />
+                <Image :type="'alliance'" :id="killmail.victim.alliance_id" :size="24" class="small-icon" />
               </NuxtLink>
               <NuxtLink :to="`/alliance/${killmail.victim.alliance_id}`" class="entity-link alliance-name truncate">
                 {{ killmail.victim.alliance_name }}

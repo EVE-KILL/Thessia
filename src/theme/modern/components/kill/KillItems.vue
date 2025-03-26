@@ -369,31 +369,23 @@ function toggleSectionCollapse(sectionName: string) {
 
 // Handle row click - for collapsible headers and item links
 function handleRowClick(row: Item, event: MouseEvent) {
-    // Skip if this isn't a clickable row type
-    if (!((row.type === 'item' || row.type === 'container-item') && row.itemId)) {
-        return;
-    }
+  // Handle collapsible section headers
+  if (row.type === 'header' && isCollapsible(row.itemName)) {
+    toggleSectionCollapse(row.itemName);
+    return;
+  }
 
-    // Handle collapsible section headers
-    if (row.type === 'header' && isCollapsible(row.itemName)) {
-        toggleSectionCollapse(row.itemName);
-        return;
-    }
+  // Generate link URL if applicable
+  const url = generateItemLink(row);
+  if (!url) return;
 
-    // Construct the URL we're navigating to
-    const url = `/item/${row.itemId}`;
-
-    // If Ctrl/Cmd key is pressed or middle button is clicked, open in new tab
-    if (event.ctrlKey || event.metaKey || event.button === 1) {
-        // Prevent default to avoid any unintended behavior
-        event.preventDefault();
-
-        // Open in new tab
-        window.open(url, '_blank');
-    } else {
-        // Normal navigation - use navigateTo
-        navigateTo(url);
-    }
+  // Handle link navigation with middle-click support
+  if (event.ctrlKey || event.metaKey || event.button === 1) {
+    event.preventDefault();
+    window.open(url, '_blank');
+  } else {
+    navigateTo(url);
+  }
 }
 
 // Get the count of items in a section for display
@@ -696,6 +688,17 @@ watch(locale, () => {
   // This ensures the template will refresh with new translations
   console.debug('Locale changed, updating headers');
 }, { immediate: false });
+
+/**
+ * Generates a link URL for an item if it should be clickable
+ */
+function generateItemLink(row: Item): string | null {
+  // Only certain row types with itemId are clickable
+  if ((row.type === 'item' || row.type === 'container-item') && row.itemId) {
+    return `/item/${row.itemId}`;
+  }
+  return null;
+}
 
 </script>
 

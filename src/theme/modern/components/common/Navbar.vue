@@ -3,12 +3,10 @@ import { markRaw } from 'vue';
 const { t } = useI18n();
 const colorMode = useColorMode();
 
-import SearchComponent from './Navbar/Search.vue';
-import CustomDropdown from './Navbar/CustomDropdown.vue';
-import MobileFullscreenModal from './Modal/MobileFullscreenModal.vue';
-import NavbarUser from './Navbar/User.vue';
-import LanguageSelector from './Navbar/LanguageSelector.vue';
-import BackgroundSwitcher from './Navbar/BackgroundSwitcher.vue';
+import SearchComponent from '../navbar/Search.vue';
+import NavbarUser from '../navbar/User.vue';
+import LanguageSelector from '../navbar/LanguageSelector.vue';
+import BackgroundSwitcher from '../navbar/BackgroundSwitcher.vue';
 
 const Search = markRaw(SearchComponent);
 
@@ -21,13 +19,133 @@ const dropdownStates = ref<Record<string, boolean>>({});
 // Track which menu sections are expanded on mobile
 const expandedMobileMenus = ref<Record<string, boolean>>({});
 
+/**
+ * Navbar link interface
+ */
+interface NavLink {
+  name?: string;
+  label?: string;
+  to?: string;
+  icon?: string;
+  component?: any;
+  inline?: boolean;
+  mobile?: boolean;
+  position: 'left' | 'center' | 'right';
+  collapse?: boolean;
+  onClick?: () => void;
+  children?: NavLink[];
+}
+
+/**
+ * Left navigation items
+ */
+const leftNavItems = computed<NavLink[]>(() => [
+  {
+    name: t('navbar.home.text'),
+    label: t('navbar.home.label'),
+    icon: 'lucide:house',
+    to: '/',
+    position: 'left'
+  },
+  {
+    name: t('navbar.kills.text'),
+    label: t('navbar.kills.label'),
+    position: 'left',
+    children: [
+      { name: t('navbar.kills.latest'), label: t('navbar.kills.latestLabel'), to: '/kills/latest' },
+      { name: t('navbar.kills.abyssal'), label: t('navbar.kills.abyssalLabel'), to: '/kills/abyssal' },
+      { name: t('navbar.kills.wspace'), label: t('navbar.kills.wspaceLabel'), to: '/kills/wspace' },
+      { name: t('navbar.kills.highsec'), label: t('navbar.kills.highsecLabel'), to: '/kills/highsec' },
+      { name: t('navbar.kills.lowsec'), label: t('navbar.kills.lowsecLabel'), to: '/kills/lowsec' },
+      { name: t('navbar.kills.nullsec'), label: t('navbar.kills.nullsecLabel'), to: '/kills/nullsec' },
+      { name: t('navbar.kills.big'), label: t('navbar.kills.bigLabel'), to: '/kills/big' },
+      { name: t('navbar.kills.solo'), label: t('navbar.kills.soloLabel'), to: '/kills/solo' },
+      { name: t('navbar.kills.npc'), label: t('navbar.kills.npcLabel'), to: '/kills/npc' },
+      { name: t('navbar.kills.5b'), label: t('navbar.kills.5bLabel'), to: '/kills/5b' },
+      { name: t('navbar.kills.10b'), label: t('navbar.kills.10bLabel'), to: '/kills/10b' },
+      { name: t('navbar.kills.citadels'), label: t('navbar.kills.citadelsLabel'), to: '/kills/citadels' },
+      { name: t('navbar.kills.t1'), label: t('navbar.kills.t1Label'), to: '/kills/t1' },
+      { name: t('navbar.kills.t2'), label: t('navbar.kills.t2Label'), to: '/kills/t2' },
+      { name: t('navbar.kills.t3'), label: t('navbar.kills.t3Label'), to: '/kills/t3' },
+      { name: t('navbar.kills.frigates'), label: t('navbar.kills.frigatesLabel'), to: '/kills/frigates' },
+      { name: t('navbar.kills.destroyers'), label: t('navbar.kills.destroyersLabel'), to: '/kills/destroyers' },
+      { name: t('navbar.kills.cruisers'), label: t('navbar.kills.cruisersLabel'), to: '/kills/cruisers' },
+      { name: t('navbar.kills.battlecruisers'), label: t('navbar.kills.battlecruisersLabel'), to: '/kills/battlecruisers' },
+      { name: t('navbar.kills.battleships'), label: t('navbar.kills.battleshipsLabel'), to: '/kills/battleships' },
+      { name: t('navbar.kills.capitals'), label: t('navbar.kills.capitalsLabel'), to: '/kills/capitals' },
+      { name: t('navbar.kills.freighters'), label: t('navbar.kills.freightersLabel'), to: '/kills/freighters' },
+      { name: t('navbar.kills.supercarriers'), label: t('navbar.kills.supercarriersLabel'), to: '/kills/supercarriers' },
+      { name: t('navbar.kills.titans'), label: t('navbar.kills.titansLabel'), to: '/kills/titans' }
+    ]
+  }
+]);
+
+/**
+ * Center navigation items
+ */
+const centerNavItems = computed<NavLink[]>(() => [
+  {
+    component: Search,
+    inline: true,
+    position: 'center',
+  }
+]);
+
+/**
+ * Right navigation items
+ */
+const rightNavItems = computed<NavLink[]>(() => [
+  {
+    position: 'right',
+    component: LanguageSelector,
+    mobile: true,
+  },
+  {
+    icon: 'lucide:sun-moon',
+    position: 'right',
+    mobile: true,
+    onClick: () => {
+      colorMode.preference = colorMode.preference === 'dark' ? 'light' : 'dark';
+    },
+  },
+  {
+    label: t('navbar.backgroundSelector.label'),
+    icon: 'lucide:book-image',
+    component: BackgroundSwitcher,
+    position: 'right',
+    mobile: true,
+  },
+  {
+    label: t('navbar.information.label'),
+    icon: 'lucide:info',
+    position: 'right',
+    collapse: false,
+    children: [
+      { name: t('navbar.faq.text'), label: t('navbar.faq.label'), to: '/faq' },
+      { name: t('navbar.status.text'), label: t('navbar.status.label'), to: '/status' },
+      { name: t('navbar.about.text'), label: t('navbar.about.label'), to: '/about' }
+    ],
+  },
+  {
+    component: NavbarUser,
+    position: 'right',
+  }
+]);
+
+/**
+ * All navigation items combined
+ */
+const allNavItems = computed<NavLink[]>(() => [
+  ...leftNavItems.value,
+  ...centerNavItems.value,
+  ...rightNavItems.value
+]);
+
 // Initialize expanded menus based on collapse property
 onMounted(() => {
-  // We now only track collapsible items
-  navbarLinks.value.forEach(link => {
-    // Only set initial state for collapsible items (those without collapse: false)
+  allNavItems.value.forEach(link => {
     if (link.children && link.collapse !== false) {
-      expandedMobileMenus.value[link.name || link.label] = false; // Start collapsed by default
+      expandedMobileMenus.value[link.name || link.label || ''] = false; // Start collapsed by default
     }
   });
 });
@@ -41,199 +159,6 @@ const toggleMobileMenuSection = (menuName: string) => {
 const closeMobileMenu = () => {
   isMobileMenuOpen.value = false;
 };
-
-// Convert navbarLinks to a computed property to make it reactive to language changes
-const navbarLinks = computed(() => {
-  // This computed property will re-evaluate whenever locale changes
-  return [
-    {
-      name: t('navbar.home.text'),
-      label: t('navbar.home.label'),
-      icon: 'lucide:house',
-      to: '/',
-      position: 'left'
-    },
-    {
-      name: t('navbar.kills.text'),
-      label: t('navbar.kills.label'),
-      position: 'left',
-      children: [
-        {
-          name: t('navbar.kills.latest'),
-          label: t('navbar.kills.latestLabel'),
-          to: '/kills/latest'
-        },
-        {
-          name: t('navbar.kills.abyssal'),
-          label: t('navbar.kills.abyssalLabel'),
-          to: '/kills/abyssal'
-        },
-        {
-          name: t('navbar.kills.wspace'),
-          label: t('navbar.kills.wspaceLabel'),
-          to: '/kills/wspace'
-        },
-        {
-          name: t('navbar.kills.highsec'),
-          label: t('navbar.kills.highsecLabel'),
-          to: '/kills/highsec'
-        },
-        {
-          name: t('navbar.kills.lowsec'),
-          label: t('navbar.kills.lowsecLabel'),
-          to: '/kills/lowsec'
-        },
-        {
-          name: t('navbar.kills.nullsec'),
-          label: t('navbar.kills.nullsecLabel'),
-          to: '/kills/nullsec'
-        },
-        {
-          name: t('navbar.kills.big'),
-          label: t('navbar.kills.bigLabel'),
-          to: '/kills/big'
-        },
-        {
-          name: t('navbar.kills.solo'),
-          label: t('navbar.kills.soloLabel'),
-          to: '/kills/solo'
-        },
-        {
-          name: t('navbar.kills.npc'),
-          label: t('navbar.kills.npcLabel'),
-          to: '/kills/npc'
-        },
-        {
-          name: t('navbar.kills.5b'),
-          label: t('navbar.kills.5bLabel'),
-          to: '/kills/5b'
-        },
-        {
-          name: t('navbar.kills.10b'),
-          label: t('navbar.kills.10bLabel'),
-          to: '/kills/10b'
-        },
-        {
-          name: t('navbar.kills.citadels'),
-          label: t('navbar.kills.citadelsLabel'),
-          to: '/kills/citadels'
-        },
-        {
-          name: t('navbar.kills.t1'),
-          label: t('navbar.kills.t1Label'),
-          to: '/kills/t1'
-        },
-        {
-          name: t('navbar.kills.t2'),
-          label: t('navbar.kills.t2Label'),
-          to: '/kills/t2'
-        },
-        {
-          name: t('navbar.kills.t3'),
-          label: t('navbar.kills.t3Label'),
-          to: '/kills/t3'
-        },
-        {
-          name: t('navbar.kills.frigates'),
-          label: t('navbar.kills.frigatesLabel'),
-          to: '/kills/frigates'
-        },
-        {
-          name: t('navbar.kills.destroyers'),
-          label: t('navbar.kills.destroyersLabel'),
-          to: '/kills/destroyers'
-        },
-        {
-          name: t('navbar.kills.cruisers'),
-          label: t('navbar.kills.cruisersLabel'),
-          to: '/kills/cruisers'
-        },
-        {
-          name: t('navbar.kills.battlecruisers'),
-          label: t('navbar.kills.battlecruisersLabel'),
-          to: '/kills/battlecruisers'
-        },
-        {
-          name: t('navbar.kills.battleships'),
-          label: t('navbar.kills.battleshipsLabel'),
-          to: '/kills/battleships'
-        },
-        {
-          name: t('navbar.kills.capitals'),
-          label: t('navbar.kills.capitalsLabel'),
-          to: '/kills/capitals'
-        },
-        {
-          name: t('navbar.kills.freighters'),
-          label: t('navbar.kills.freightersLabel'),
-          to: '/kills/freighters'
-        },
-        {
-          name: t('navbar.kills.supercarriers'),
-          label: t('navbar.kills.supercarriersLabel'),
-          to: '/kills/supercarriers'
-        },
-        {
-          name: t('navbar.kills.titans'),
-          label: t('navbar.kills.titansLabel'),
-          to: '/kills/titans'
-        }
-      ]
-    },
-    {
-      component: Search,
-      inline: true,
-      position: 'center',
-    },
-    {
-      position: 'right',
-      component: LanguageSelector,
-      mobile: true,
-    },
-    {
-      icon: 'lucide:sun-moon',
-      position: 'right',
-      mobile: true,
-      onClick: () => {
-        colorMode.preference = colorMode.preference === 'dark' ? 'light' : 'dark';
-      },
-    },
-    {
-      label: t('navbar.backgroundSelector.label'),
-      icon: 'lucide:book-image',
-      component: BackgroundSwitcher,
-      position: 'right',
-      mobile: true,
-    },
-    {
-      label: t('navbar.information.label'),
-      icon: 'lucide:info',
-      position: 'right',
-      collapse: false,
-      children: [
-        {
-          name: t('navbar.faq.text'),
-          label: t('navbar.faq.label'),
-          to: '/faq'
-        },
-        {
-          name: t('navbar.status.text'),
-          label: t('navbar.status.label'),
-          to: '/status'
-        },
-        {
-          name: t('navbar.about.text'),
-          label: t('navbar.about.label'),
-          to: '/about'
-        }
-      ],
-    },
-    {
-      component: NavbarUser,
-      position: 'right',
-    }
-  ];
-});
 </script>
 
 <template>
@@ -242,7 +167,7 @@ const navbarLinks = computed(() => {
     <!-- Left items -->
     <div class="flex items-center space-x-4">
       <div class="flex items-center space-x-2">
-        <template v-for="(link, index) in navbarLinks.filter(l => l.position === 'left')" :key="index">
+        <template v-for="(link, index) in leftNavItems" :key="index">
           <!-- Regular links -->
           <NuxtLink v-if="link.to && !link.children" :to="link.to"
             class="flex items-center px-3 py-2 rounded-md text-sm font-medium hover:bg-gray-700 dark:hover:bg-gray-700"
@@ -252,7 +177,7 @@ const navbarLinks = computed(() => {
           </NuxtLink>
 
           <!-- Dropdown menus with column distribution -->
-          <CustomDropdown
+          <Dropdown
             v-else-if="link.children"
             v-model="dropdownStates[link.name || link.label || '']"
             :use-column-distribution="true"
@@ -282,7 +207,7 @@ const navbarLinks = computed(() => {
                 {{ item.name }}
               </NuxtLink>
             </template>
-          </CustomDropdown>
+          </Dropdown>
 
           <!-- Inline components -->
           <component v-else-if="link.component && link.inline" :is="link.component" />
@@ -299,7 +224,7 @@ const navbarLinks = computed(() => {
 
     <!-- Center items -->
     <div class="flex items-center">
-      <template v-for="(link, index) in navbarLinks.filter(l => l.position === 'center')" :key="index">
+      <template v-for="(link, index) in centerNavItems" :key="index">
         <component v-if="link.component && link.inline" :is="link.component" />
         <UButton v-else-if="link.onClick" color="neutral" variant="ghost" :aria-label="link.label"
           @click="link.onClick">
@@ -311,7 +236,7 @@ const navbarLinks = computed(() => {
 
     <!-- Right items -->
     <div class="flex items-center space-x-2">
-      <template v-for="(link, index) in navbarLinks.filter(l => l.position === 'right')" :key="index">
+      <template v-for="(link, index) in rightNavItems" :key="index">
         <!-- Inline components -->
         <component v-if="link.component && link.inline" :is="link.component" />
 
@@ -319,9 +244,9 @@ const navbarLinks = computed(() => {
         <component v-else-if="link.component" :is="link.component" />
 
         <!-- Dropdown menus for right side -->
-        <CustomDropdown
+        <Dropdown
           v-else-if="link.children"
-          v-model="dropdownStates[link.label]"
+          v-model="dropdownStates[link.label || '']"
           position="bottom"
           align="end"
           :smart-position="true"
@@ -339,7 +264,7 @@ const navbarLinks = computed(() => {
               :to="item.to"
               class="block px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-md"
               :aria-label="item.label"
-              @click="dropdownStates[link.label] = false"
+              @click="dropdownStates[link.label || ''] = false"
             >
               <div class="flex items-center">
                 <UIcon v-if="item.icon" :name="item.icon" class="mr-2 text-sm" />
@@ -347,7 +272,7 @@ const navbarLinks = computed(() => {
               </div>
             </NuxtLink>
           </template>
-        </CustomDropdown>
+        </Dropdown>
 
         <!-- Buttons with click handlers -->
         <UButton
@@ -375,7 +300,7 @@ const navbarLinks = computed(() => {
 
       <!-- Center mobile items (typically search) -->
       <div class="flex items-center mx-2 flex-grow">
-        <template v-for="(link, index) in navbarLinks.filter(l => l.position === 'center')" :key="index">
+        <template v-for="(link, index) in centerNavItems" :key="index">
           <component
             v-if="link.component && link.inline"
             :is="link.component"
@@ -386,7 +311,7 @@ const navbarLinks = computed(() => {
 
       <!-- Mobile header actions for items marked with mobile: true -->
       <div class="flex items-center gap-3">
-        <template v-for="(link, index) in navbarLinks.filter(l => l.mobile === true)" :key="index">
+        <template v-for="(link, index) in allNavItems.filter(l => l.mobile === true)" :key="index">
           <!-- Regular component buttons -->
           <component
             v-if="link.component"
@@ -419,7 +344,7 @@ const navbarLinks = computed(() => {
   </nav>
 
   <!-- Mobile Fullscreen Menu Modal -->
-  <MobileFullscreenModal
+  <MobileFullscreen
     :open="isMobileMenuOpen"
     :title="t('navbar.menuTitle')"
     @close="closeMobileMenu"
@@ -431,7 +356,7 @@ const navbarLinks = computed(() => {
         <h3 class="text-lg font-bold mb-4 text-gray-900 dark:text-gray-100">{{ t('navbar.menuNavigation') }}</h3>
         <div class="space-y-3">
           <!-- Left positioned links - typically navigation -->
-          <template v-for="(link, index) in navbarLinks.filter(l => l.position === 'left')" :key="`left-${index}`">
+          <template v-for="(link, index) in leftNavItems" :key="`left-${index}`">
             <!-- Regular links -->
             <NuxtLink
               v-if="link.to && !link.children"
@@ -512,7 +437,7 @@ const navbarLinks = computed(() => {
         <h3 class="text-lg font-bold mb-4 text-gray-900 dark:text-gray-100">{{ t('navbar.menuTools') }}</h3>
         <div class="space-y-3">
           <!-- Information dropdown items in mobile view -->
-          <template v-for="(link, index) in navbarLinks.filter(l => l.position === 'right' && l.children)" :key="`info-${index}`">
+          <template v-for="(link, index) in rightNavItems.filter(l => l.children)" :key="`info-${index}`">
             <!-- Non-collapsible links with children -->
             <div v-if="link.collapse === false" class="mb-4 space-y-2">
               <!-- Static header -->
@@ -590,7 +515,7 @@ const navbarLinks = computed(() => {
         </div>
       </div>
     </div>
-  </MobileFullscreenModal>
+  </MobileFullscreen>
 </template>
 
 <style scoped>

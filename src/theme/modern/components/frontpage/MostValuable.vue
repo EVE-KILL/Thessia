@@ -182,7 +182,7 @@ const isPriorityImage = (index: number): boolean => {
           class="flex flex-col items-center p-2 rounded transition-colors duration-300 cursor-pointer hover:bg-gray-200 dark:hover:bg-gray-900"
           @click="handleItemClick(item.killmail_id)"
         >
-          <EveImage
+          <Image
             type="type-render"
             :id="item.victim.ship_id"
             :alt="`Ship: ${getShipName(item)}`"
@@ -209,7 +209,7 @@ const isPriorityImage = (index: number): boolean => {
           class="flex items-center p-3 cursor-pointer hover:bg-gray-100 dark:hover:bg-background-800 transition-colors duration-300"
           @click="handleItemClick(item.killmail_id)"
         >
-          <EveImage
+          <Image
             type="type-render"
             :id="item.victim.ship_id"
             :alt="`Ship: ${getShipName(item)}`"
