@@ -10,17 +10,45 @@ import { defineEventHandler } from 'h3';
 export default defineEventHandler(async () => {
     const theme = process.env.THEME || 'modern';
     // Path to the public backgrounds directory
-    const publicDir = path.resolve(process.cwd() + '/src/theme/' + theme + '/public/backgrounds');
+    const dirs = [
+        path.join(process.cwd(), 'src', 'theme', theme, 'public', 'backgrounds'),
+        path.join(process.cwd(), 'public', 'backgrounds'),
+    ];
 
-    // Read the directory
-    const files = await fs.promises.readdir(publicDir);
+    // Find the first directory that exists
+    let existingDir = null;
+    for (const dir of dirs) {
+        try {
+            const stats = await fs.promises.stat(dir);
+            if (stats.isDirectory()) {
+                existingDir = dir;
+                break;
+            }
+        } catch (error) {
+            // Directory doesn't exist, try next one
+            continue;
+        }
+    }
 
-    // Filter for image files and format the response
-    const backgrounds = files
-      .filter(file => /\.(jpg|jpeg|png|webp)$/i.test(file))
-      .map(file => ({
-        path: `/backgrounds/${file}`
-      }));
+    // If no directory exists, return empty array
+    if (!existingDir) {
+        return [];
+    }
 
-    return backgrounds;
+    try {
+        // Read the directory
+        const files = await fs.promises.readdir(existingDir);
+
+        // Filter for image files and format the response
+        const backgrounds = files
+            .filter(file => /\.(jpg|jpeg|png|webp)$/i.test(file))
+            .map(file => ({
+                path: `/backgrounds/${file}`
+            }));
+
+        return backgrounds;
+    } catch (error) {
+        console.error('Error reading backgrounds directory:', error);
+        return [];
+    }
 });
