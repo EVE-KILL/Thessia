@@ -57,6 +57,15 @@ const props = defineProps({
   itemsPerColumn: {
     type: Number,
     default: 10
+  },
+  // New props for hover functionality
+  openOnHover: {
+    type: Boolean,
+    default: false
+  },
+  hoverDelay: {
+    type: Number,
+    default: 250 // ms
   }
 });
 
@@ -70,6 +79,36 @@ const isOpen = computed({
 const dropdownRef = ref<HTMLElement | null>(null);
 const triggerRef = ref<HTMLElement | null>(null);
 const dropdownStyles = ref({});
+
+// Timer for hover delay
+const hoverTimer = ref<ReturnType<typeof setTimeout> | null>(null);
+
+// Handle hover events for opening/closing
+const handleMouseEnter = () => {
+  if (!props.openOnHover) return;
+
+  if (hoverTimer.value) {
+    clearTimeout(hoverTimer.value);
+    hoverTimer.value = null;
+  }
+
+  hoverTimer.value = setTimeout(() => {
+    isOpen.value = true;
+  }, props.hoverDelay);
+};
+
+const handleMouseLeave = () => {
+  if (!props.openOnHover) return;
+
+  if (hoverTimer.value) {
+    clearTimeout(hoverTimer.value);
+    hoverTimer.value = null;
+  }
+
+  hoverTimer.value = setTimeout(() => {
+    isOpen.value = false;
+  }, props.hoverDelay);
+};
 
 // Handle click outside - MODIFY THIS FUNCTION
 onClickOutside(dropdownRef, (event) => {
@@ -322,6 +361,12 @@ onUnmounted(() => {
   window.removeEventListener('keydown', handleKeydown);
   window.removeEventListener('resize', updatePosition);
   window.removeEventListener('scroll', updatePosition);
+
+  // Clear any remaining hover timers
+  if (hoverTimer.value) {
+    clearTimeout(hoverTimer.value);
+    hoverTimer.value = null;
+  }
 });
 
 // Column style based on props
@@ -336,7 +381,11 @@ const contentStyle = computed(() => {
 </script>
 
 <template>
-  <div class="custom-dropdown-container">
+  <div
+    class="custom-dropdown-container"
+    @mouseenter="handleMouseEnter"
+    @mouseleave="handleMouseLeave"
+  >
     <!-- Use stopPropagation to prevent click events from bubbling -->
     <div ref="triggerRef" @click.stop="toggleDropdown" class="cursor-pointer">
       <slot name="trigger"></slot>
@@ -351,6 +400,8 @@ const contentStyle = computed(() => {
           class="custom-dropdown"
           :style="dropdownStyles"
           @click="handleContentClick"
+          @mouseenter="handleMouseEnter"
+          @mouseleave="handleMouseLeave"
         >
           <div
             class="dropdown-content"
