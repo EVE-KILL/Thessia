@@ -100,7 +100,7 @@ const pendingMessages = ref<IKillmail[]>([]);
 const manuallyPaused = ref(false);
 const mouseMoveTimer = ref<NodeJS.Timeout | null>(null);
 
-// Initialize WebSocket using the composable
+// Initialize WebSocket using the composable - with debug disabled
 const {
   isConnected: wsConnected,
   connectionAttempts: wsReconnectAttempts,
@@ -115,6 +115,7 @@ const {
   handleBfCache: true,
   useGlobalInstance: true,
   globalRefKey: "killList",
+  debug: false, // Disable debug logging
   onMessage: handleWebSocketMessage
 });
 

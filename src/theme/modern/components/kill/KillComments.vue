@@ -352,6 +352,7 @@ const {
   handleBfCache: true,
   useGlobalInstance: true,
   globalRefKey: "comments",
+  debug: false, // Disable debug logging
   onMessage: handleWebSocketMessage
 });
 
@@ -1184,8 +1185,6 @@ const handleKeyDown = (event: KeyboardEvent) => {
 
 // Fetch comments and set up event listeners on mount
 onMounted(() => {
-  console.log('🏗️ Comments: Component mounted');
-
   // Fetch initial comments
   fetchComments();
 

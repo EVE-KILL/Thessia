@@ -16,6 +16,7 @@ export function useWebSocket(options: {
   autoReconnect?: boolean;
   useGlobalInstance?: boolean;
   globalRefKey?: string;
+  debug?: boolean;
   onMessage?: (data: any) => void;
   onConnected?: () => void;
   onDisconnected?: (event: { code: number, reason: string }) => void;
@@ -32,6 +33,7 @@ export function useWebSocket(options: {
     autoReconnect = true,
     useGlobalInstance = false,
     globalRefKey = 'default',
+    debug = false,
     onMessage = () => {},
     onConnected = () => {},
     onDisconnected = () => {},
@@ -50,6 +52,11 @@ export function useWebSocket(options: {
   // Store pending cleanup functions for reliable execution
   const pendingCleanupFunctions: (() => void)[] = [];
   let reconnectTimer: NodeJS.Timeout | null = null;
+
+  // Helper for conditional debug logging
+  const log = (msg: string, ...args: any[]) => {
+    if (debug) console.log(msg, ...args);
+  };
 
   /**
    * Connect to WebSocket with proper error handling
@@ -70,7 +77,6 @@ export function useWebSocket(options: {
       }
 
       errorMessage.value = null;
-      console.log(`🔌 WebSocket(${globalRefKey}): Opening connection to ${url}...`);
 
       // Check if we should use a global shared instance
       if (useGlobalInstance) {
@@ -84,7 +90,7 @@ export function useWebSocket(options: {
           socket.value = existingInstance.socket;
           existingInstance.count++;
 
-          console.log(`🔄 WebSocket(${globalRefKey}): Using existing global connection, count:`, existingInstance.count);
+          log(`WebSocket(${globalRefKey}): Using existing global connection, count:`, existingInstance.count);
 
           // If already open, emit connected event
           if (existingInstance.socket.readyState === WebSocket.OPEN) {
@@ -110,10 +116,8 @@ export function useWebSocket(options: {
         if (useGlobalInstance) {
           setGlobalInstance(globalRefKey, newSocket);
         }
-
-        console.log(`🔗 WebSocket(${globalRefKey}): Object created`);
       } catch (wsErr) {
-        console.error(`❌ WebSocket(${globalRefKey}): Failed to create connection:`, wsErr);
+        console.error(`WebSocket(${globalRefKey}): Failed to create connection:`, wsErr);
         errorMessage.value = 'Failed to create WebSocket connection';
         isConnected.value = false;
         onError({ message: 'Failed to create WebSocket connection', error: wsErr });
@@ -122,12 +126,12 @@ export function useWebSocket(options: {
 
       socket.value.onopen = () => {
         if (!componentActive.value) {
-          console.log(`🛑 WebSocket(${globalRefKey}): Component inactive, closing new connection`);
+          log(`WebSocket(${globalRefKey}): Component inactive, closing new connection`);
           close();
           return;
         }
 
-        console.log(`✅ WebSocket(${globalRefKey}): Connection established`);
+        log(`WebSocket(${globalRefKey}): Connection established`);
         isConnected.value = true;
         connectionAttempts.value = 0;
         errorMessage.value = null;
@@ -153,14 +157,14 @@ export function useWebSocket(options: {
       };
 
       socket.value.onerror = (error) => {
-        console.error(`❌ WebSocket(${globalRefKey}): Error:`, error);
+        console.error(`WebSocket(${globalRefKey}): Error:`, error);
         errorMessage.value = 'Connection error';
         onError({ error });
       };
 
       socket.value.onclose = (event) => {
         isConnected.value = false;
-        console.log(`🔒 WebSocket(${globalRefKey}): Closed with code: ${event.code}`);
+        log(`WebSocket(${globalRefKey}): Closed with code: ${event.code}`);
         onDisconnected({ code: event.code, reason: event.reason });
 
         // Only attempt reconnect if:
@@ -178,7 +182,7 @@ export function useWebSocket(options: {
         }
       };
     } catch (err) {
-      console.error(`❌ WebSocket(${globalRefKey}): Error establishing connection:`, err);
+      console.error(`WebSocket(${globalRefKey}): Error establishing connection:`, err);
       isConnected.value = false;
       errorMessage.value = 'Failed to establish connection';
       onError({ message: 'Failed to establish connection', error: err });
@@ -195,7 +199,6 @@ export function useWebSocket(options: {
     }
 
     if (!componentActive.value || isPaused.value) {
-      console.log(`🛑 WebSocket(${globalRefKey}): Component inactive or paused, not scheduling reconnection`);
       return;
     }
 
@@ -203,16 +206,15 @@ export function useWebSocket(options: {
     // Exponential backoff: 1s, 2s, 4s, 8s, 16s (capped at 30s)
     const backoffTime = Math.min(1000 * Math.pow(2, connectionAttempts.value - 1), 30000);
 
-    console.log(`🔄 WebSocket(${globalRefKey}): Scheduling reconnection attempt ${connectionAttempts.value} in ${backoffTime/1000}s`);
+    log(`WebSocket(${globalRefKey}): Scheduling reconnection attempt ${connectionAttempts.value} in ${backoffTime/1000}s`);
     onReconnecting({ attempt: connectionAttempts.value, maxAttempts: maxReconnectAttempts, delay: backoffTime });
 
     reconnectTimer = setTimeout(() => {
       if (!componentActive.value || isPaused.value) {
-        console.log(`🛑 WebSocket(${globalRefKey}): Component inactive or paused, canceling scheduled reconnection`);
         return;
       }
 
-      console.log(`🔄 WebSocket(${globalRefKey}): Attempting reconnection (${connectionAttempts.value}/${maxReconnectAttempts})`);
+      log(`WebSocket(${globalRefKey}): Attempting reconnection (${connectionAttempts.value}/${maxReconnectAttempts})`);
       connect();
     }, backoffTime);
 
@@ -221,7 +223,6 @@ export function useWebSocket(options: {
       if (reconnectTimer) {
         clearTimeout(reconnectTimer);
         reconnectTimer = null;
-        console.log(`🧹 WebSocket(${globalRefKey}): Cleared reconnect timer during cleanup`);
       }
     });
   };
@@ -234,7 +235,6 @@ export function useWebSocket(options: {
     if (reconnectTimer) {
       clearTimeout(reconnectTimer);
       reconnectTimer = null;
-      console.log(`🧹 WebSocket(${globalRefKey}): Cleared reconnect timer`);
     }
 
     // Handle global instance reference counting
@@ -247,13 +247,12 @@ export function useWebSocket(options: {
           instance.count--;
         }
 
-        console.log(`📊 WebSocket(${globalRefKey}): Reference count after decrement: ${instance.count}`);
+        log(`WebSocket(${globalRefKey}): Reference count after decrement: ${instance.count}`);
 
         // Only close if no more references
         if (instance.count > 0) {
           socket.value = null;
           isConnected.value = false;
-          console.log(`📴 WebSocket(${globalRefKey}): Released reference but connection still active with ${instance.count} users`);
           return;
         }
       }
@@ -261,8 +260,6 @@ export function useWebSocket(options: {
 
     // Close socket if it exists
     if (socket.value) {
-      console.log(`📴 WebSocket(${globalRefKey}): Closing connection`);
-
       try {
         // Remove event handlers before closing to prevent unwanted callbacks
         socket.value.onopen = null;
@@ -273,10 +270,9 @@ export function useWebSocket(options: {
         // Only attempt to close if the socket is open or connecting
         if (socket.value.readyState === WebSocket.OPEN || socket.value.readyState === WebSocket.CONNECTING) {
           socket.value.close();
-          console.log(`✅ WebSocket(${globalRefKey}): Closed successfully`);
         }
       } catch (err) {
-        console.error(`❌ WebSocket(${globalRefKey}): Error closing:`, err);
+        console.error(`WebSocket(${globalRefKey}): Error closing:`, err);
       }
 
       // If using global instance, clear it
@@ -294,13 +290,11 @@ export function useWebSocket(options: {
    */
   const pause = () => {
     isPaused.value = true;
-    console.log(`⏸️ WebSocket(${globalRefKey}): Paused`);
 
     // Don't close the connection if it's a global instance being used by others
     if (useGlobalInstance) {
       const instance = getGlobalInstance(globalRefKey);
       if (instance && instance.count > 1) {
-        console.log(`📊 WebSocket(${globalRefKey}): Keeping global connection alive for ${instance.count} users`);
         socket.value = null;
         isConnected.value = false;
         return;
@@ -316,7 +310,6 @@ export function useWebSocket(options: {
    */
   const resume = () => {
     isPaused.value = false;
-    console.log(`▶️ WebSocket(${globalRefKey}): Resumed`);
 
     // Reconnect if not connected
     if (!isConnected.value && autoConnect && componentActive.value) {
@@ -329,7 +322,7 @@ export function useWebSocket(options: {
    */
   const sendMessage = (message: string | object) => {
     if (!socket.value || socket.value.readyState !== WebSocket.OPEN) {
-      console.warn(`⚠️ WebSocket(${globalRefKey}): Cannot send message, connection not open`);
+      console.warn(`WebSocket(${globalRefKey}): Cannot send message, connection not open`);
       return false;
     }
 
@@ -338,7 +331,7 @@ export function useWebSocket(options: {
       socket.value.send(messageToSend);
       return true;
     } catch (err) {
-      console.error(`❌ WebSocket(${globalRefKey}): Error sending message:`, err);
+      console.error(`WebSocket(${globalRefKey}): Error sending message:`, err);
       onError({ message: 'Failed to send message', error: err });
       return false;
     }
@@ -348,10 +341,7 @@ export function useWebSocket(options: {
    * Properly close WebSocket for bfcache - called on page hide
    */
   const handlePageHide = (event: PageTransitionEvent) => {
-    console.log(`🔌 WebSocket(${globalRefKey}): Page hide event (persisted: ${event.persisted})`);
-
-    // This is critical - close WebSocket connections when page hides
-    // so the page can be stored in bfcache
+    log(`WebSocket(${globalRefKey}): Page hide event (persisted: ${event.persisted})`);
     pause();
   };
 
@@ -359,11 +349,10 @@ export function useWebSocket(options: {
    * Handle returning from bfcache - called on page show
    */
   const handlePageShow = (event: PageTransitionEvent) => {
-    console.log(`🔙 WebSocket(${globalRefKey}): Page show event (persisted: ${event.persisted})`);
+    log(`WebSocket(${globalRefKey}): Page show event (persisted: ${event.persisted})`);
 
     // Only reconnect if we were previously using WebSocket and not paused
     if (event.persisted && autoConnect && componentActive.value && !isPaused.value) {
-      console.log(`♻️ WebSocket(${globalRefKey}): Restoring from bfcache, reinitializing WebSocket`);
       // Short delay to ensure component is ready
       setTimeout(() => {
         if (componentActive.value && !isPaused.value) {
@@ -378,10 +367,8 @@ export function useWebSocket(options: {
    */
   const handleVisibilityChange = () => {
     if (document.visibilityState === 'hidden') {
-      console.log(`👁️ WebSocket(${globalRefKey}): Page hidden, pausing connection`);
       pause();
     } else if (document.visibilityState === 'visible' && !isPaused.value) {
-      console.log(`👁️ WebSocket(${globalRefKey}): Page visible, resuming connection`);
       resume();
     }
   };
@@ -390,7 +377,6 @@ export function useWebSocket(options: {
    * Handle network status changes
    */
   const handleOnline = () => {
-    console.log(`🌐 WebSocket(${globalRefKey}): Network online, attempting reconnect`);
     if (!isPaused.value && autoConnect && componentActive.value && !isConnected.value) {
       // Reset connection attempts on network recovery to give a fresh start
       connectionAttempts.value = 0;
@@ -399,7 +385,6 @@ export function useWebSocket(options: {
   };
 
   const handleOffline = () => {
-    console.log(`🌐 WebSocket(${globalRefKey}): Network offline, closing connection`);
     close();
   };
 
@@ -407,13 +392,12 @@ export function useWebSocket(options: {
    * Run all pending cleanup functions
    */
   const runCleanupFunctions = () => {
-    console.log(`🧹 WebSocket(${globalRefKey}): Running pending cleanup functions`);
     while (pendingCleanupFunctions.length > 0) {
       const cleanupFn = pendingCleanupFunctions.pop();
       try {
         cleanupFn?.();
       } catch (err) {
-        console.error(`❌ WebSocket(${globalRefKey}): Error in cleanup function:`, err);
+        console.error(`WebSocket(${globalRefKey}): Error in cleanup function:`, err);
       }
     }
   };
@@ -422,8 +406,6 @@ export function useWebSocket(options: {
    * Complete cleanup for component unmount
    */
   const completeCleanup = () => {
-    console.log(`🧹 WebSocket(${globalRefKey}): Running complete cleanup`);
-
     // Set component as inactive
     componentActive.value = false;
 
@@ -461,8 +443,6 @@ export function useWebSocket(options: {
     } else {
       globalInstances.set(key, { socket: wsSocket, count: 1 });
     }
-
-    console.log(`📊 WebSocket(${key}): Global instance set, count: ${globalInstances.get(key)?.count}`);
   }
 
   function clearGlobalInstance(key: string) {
@@ -470,14 +450,11 @@ export function useWebSocket(options: {
 
     if (instance && instance.count <= 0) {
       globalInstances.delete(key);
-      console.log(`🗑️ WebSocket(${key}): Global instance removed`);
     }
   }
 
   // Initialize WebSocket connection and event listeners
   onMounted(() => {
-    console.log(`🏗️ WebSocket(${globalRefKey}): Mounted`);
-
     // Reset component active state
     componentActive.value = true;
 
@@ -507,13 +484,11 @@ export function useWebSocket(options: {
 
   // Handle component deactivation (keep-alive)
   onDeactivated(() => {
-    console.log(`⏸️ WebSocket(${globalRefKey}): Component deactivated`);
     pause();
   });
 
   // Handle component activation (keep-alive)
   onActivated(() => {
-    console.log(`▶️ WebSocket(${globalRefKey}): Component activated`);
     if (!isPaused.value && autoConnect) {
       resume();
     }

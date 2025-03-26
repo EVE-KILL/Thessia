@@ -157,10 +157,9 @@ export default defineNuxtConfig({
         "@nuxt/icon",
         "@nuxt/image",
         "@nuxtjs/i18n",
-        "@vueuse/nuxt",
+        //"@vueuse/nuxt",
         "@nuxtjs/sitemap",
         "@nuxtjs/seo",
-        // Uncomment next line if you need it, but make sure it's installed
         // "nuxt-security",
         "@nuxtjs/color-mode",
         "@nuxtjs/device",
