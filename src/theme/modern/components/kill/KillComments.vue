@@ -512,6 +512,11 @@ async function resolveImgurUrl(url: string): Promise<{url: string, type: string}
 }
 
 renderer.link = (href, title, text) => {
+  // Guard against non-string href values that could occur in Marked v15+
+  if (!href || typeof href !== 'string') {
+    return `<a href="${href || ''}">${text}</a>`;
+  }
+
   // Check if it's a YouTube link (including shorts)
   const youtubeMatch = href.match(/^https?:\/\/(www\.)?youtube\.com\/watch\?v=([a-zA-Z0-9_-]+)/) ||
                         href.match(/^https?:\/\/(www\.)?youtu\.be\/([a-zA-Z0-9_-]+)/) ||
@@ -735,9 +740,11 @@ function renderMarkdown(text: string): string {
   // Convert markdown to HTML and sanitize
   const rawHTML = marked(text);
   return DOMPurify.sanitize(rawHTML, {
-    ADD_TAGS: ['iframe', 'blockquote', 'script', 'video', 'source'],
+    ADD_TAGS: ['iframe', 'blockquote', 'video', 'source'], // Removed 'script' which is a security risk
     ADD_ATTR: ['allow', 'allowfullscreen', 'frameborder', 'scrolling', 'target', 'rel', 'async',
-               'charset', 'data-id', 'lang', 'controls', 'loop', 'muted', 'playsinline', 'type', 'src']
+               'charset', 'data-id', 'lang', 'controls', 'loop', 'muted', 'playsinline', 'type', 'src'],
+    FORBID_TAGS: ['script', 'style', 'form', 'input', 'button', 'textarea', 'select', 'option'],
+    FORBID_ATTR: ['onerror', 'onload', 'onclick', 'onmouseover', 'onmouseout', 'eval']
   });
 }
 
