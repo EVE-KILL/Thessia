@@ -58,6 +58,12 @@ const selectedTimePeriod = ref('24hours');
 // Request type selection (all, web, api)
 const requestType = ref('web');
 
+// Store cached data by request type
+const cachedData = ref({
+  web: null,
+  api: null
+});
+
 // Chart options
 const pageViewsChartOptions = ref({});
 const browserChartOptions = ref({});
@@ -119,7 +125,18 @@ const fetchRequestStats = () => {
 };
 
 // Initialize data fetch
-const { data: statsData, pending: loading, error, refresh: refreshData } = fetchRequestStats();
+const { data: rawStatsData, pending: loading, error, refresh: refreshData } = fetchRequestStats();
+
+// Use computed property to access current stats data, either from cache or from fetched data
+const statsData = computed(() => {
+  // If we have fresh data, update the cache
+  if (rawStatsData.value) {
+    cachedData.value[requestType.value] = rawStatsData.value;
+  }
+  
+  // Return cached data for current request type
+  return cachedData.value[requestType.value];
+});
 
 // Fetch admin data if user is administrator
 const { data: adminData, refresh: refreshAdminData } = useLazyFetch('/api/status/requeststats/admin', {
@@ -157,6 +174,17 @@ const refresh = async () => {
     console.error('Error refreshing data:', err);
   }
 };
+
+// Watch for request type changes to only fetch if data isn't already cached
+watch(requestType, (newType) => {
+  // Only fetch if we don't have data for this type in cache
+  if (!cachedData.value[newType]) {
+    refreshData();
+  } else {
+    // Update charts with cached data
+    updateCharts();
+  }
+});
 
 // Setup auto-refresh
 const { pause, resume } = useIntervalFn(() => {
@@ -496,6 +524,17 @@ const updateTimeSeriesChart = () => {
   };
 };
 
+// Function to update all charts
+const updateCharts = () => {
+  updatePageViewsChart();
+  updateBrowsersChart();
+  updateOsChart();
+  updateDeviceChart();
+  updateStatusCodeChart();
+  updateTimeSeriesChart();
+  updateApiEndpointsChart();
+};
+
 // Tab state
 const activeTab = ref('overview');
 
@@ -507,20 +546,19 @@ const changeRequestType = (type) => {
 };
 
 // Watch for data changes and update charts
-watch([statsData, selectedTimePeriod], () => {
+watch(statsData, () => {
   if (statsData.value) {
-    updatePageViewsChart();
-    updateBrowsersChart();
-    updateOsChart();
-    updateDeviceChart();
-    updateStatusCodeChart();
-    updateTimeSeriesChart();
-    updateApiEndpointsChart();
+    updateCharts();
   }
-}, { immediate: true });
+}, { deep: true });
 
 // Watch for time period changes
 watch(selectedTimePeriod, () => {
+  // Clear the cache when time period changes
+  cachedData.value = {
+    web: null,
+    api: null
+  };
   refresh();
 });
 
@@ -557,6 +595,11 @@ onMounted(() => {
 
 onUnmounted(() => {
   window.removeEventListener('resize', checkIfMobile);
+});
+
+// Use a function to determine the URL header based on the request type
+const urlHeaderKey = computed(() => {
+  return requestType.value === 'api' ? 'requeststats.tableHeaders.apiEndpoint' : 'requeststats.tableHeaders.url';
 });
 </script>
 

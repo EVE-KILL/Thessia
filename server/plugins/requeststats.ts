@@ -84,7 +84,10 @@ export default defineNitroPlugin(() => {
             url.startsWith("/auth") ||
             url.startsWith("/api/auth") ||
             url.startsWith("/map.png") ||
-            url.startsWith("/favicon")
+            url.startsWith("/favicon") ||
+            url.startsWith("/images") ||
+            url.startsWith("/api/status") ||
+            url.startsWith("/api/site/backgrounds")
         ) {
             return;
         }

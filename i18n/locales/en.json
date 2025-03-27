@@ -672,7 +672,8 @@
             "method": "Method",
             "statusCode": "Status",
             "userAgent": "User Agent",
-            "type": "Type"
+            "type": "Type",
+            "apiEndpoint": "API Endpoint"
         },
         "timelineDescription": "This chart shows the number of requests over time. You can zoom in by selecting a region.",
         "adminView": {
