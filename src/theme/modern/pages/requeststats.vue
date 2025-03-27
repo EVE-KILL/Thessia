@@ -41,6 +41,9 @@ use([
 
 // Time period options for chart display
 const timePeriods = [
+  { value: '5min', label: t('requeststats.timePeriods.5min') },
+  { value: '10min', label: t('requeststats.timePeriods.10min') },
+  { value: '30min', label: t('requeststats.timePeriods.30min') },
   { value: '1hour', label: t('requeststats.timePeriods.1hour') },
   { value: '6hours', label: t('requeststats.timePeriods.6hours') },
   { value: '12hours', label: t('requeststats.timePeriods.12hours') },
@@ -109,7 +112,8 @@ const fetchRequestStats = () => {
     server: false, // Only fetch on client-side
     query: {
       period: selectedTimePeriod,
-      type: requestType
+      type: requestType,
+      _t: Date.now() // Add timestamp to prevent caching
     }
   });
 };
@@ -121,7 +125,8 @@ const { data: statsData, pending: loading, error, refresh: refreshData } = fetch
 const { data: adminData, refresh: refreshAdminData } = useLazyFetch('/api/status/requeststats/admin', {
   server: false,
   query: {
-    period: selectedTimePeriod
+    period: selectedTimePeriod,
+    _t: Date.now() // Add timestamp to prevent caching
   },
   immediate: false // Don't fetch immediately
 });

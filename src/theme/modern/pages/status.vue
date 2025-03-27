@@ -43,6 +43,8 @@ const chartOptions = ref({})
 const timePeriods = [
   { value: '1min', label: t('status.timePeriods.1min') },
   { value: '5min', label: t('status.timePeriods.5min') },
+  { value: '10min', label: t('status.timePeriods.10min') },
+  { value: '30min', label: t('status.timePeriods.30min') },
   { value: '15min', label: t('status.timePeriods.15min') },
   { value: '1hour', label: t('status.timePeriods.1hour') },
   { value: '6hours', label: t('status.timePeriods.6hours') },

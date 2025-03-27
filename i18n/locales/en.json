@@ -198,6 +198,8 @@
         "timePeriods": {
             "1min": "1 Minute",
             "5min": "5 Minutes",
+            "10min": "10 Minutes",
+            "30min": "30 Minutes",
             "15min": "15 Minutes",
             "1hour": "1 Hour",
             "6hours": "6 Hours",
@@ -627,7 +629,12 @@
         "topBrowser": "Top Browser",
         "topOS": "Top OS",
         "requests": "requests",
+        "webRequests": "Web Requests",
+        "apiRequests": "API Requests",
         "timePeriods": {
+            "5min": "Last 5 Minutes",
+            "10min": "Last 10 Minutes",
+            "30min": "Last 30 Minutes",
             "1hour": "Last Hour",
             "6hours": "Last 6 Hours",
             "12hours": "Last 12 Hours",
@@ -649,7 +656,9 @@
             "devices": "Devices",
             "statusCodes": "Status Codes",
             "requestsOverTime": "Requests Over Time",
-            "topPages": "Top Pages"
+            "topPages": "Top Pages",
+            "apiEndpoints": "API Endpoints",
+            "topApiEndpoints": "Top API Endpoints"
         },
         "tableHeaders": {
             "url": "URL",
@@ -662,7 +671,8 @@
             "ip": "IP Address",
             "method": "Method",
             "statusCode": "Status",
-            "userAgent": "User Agent"
+            "userAgent": "User Agent",
+            "type": "Type"
         },
         "timelineDescription": "This chart shows the number of requests over time. You can zoom in by selecting a region.",
         "adminView": {

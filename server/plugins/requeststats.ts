@@ -102,7 +102,7 @@ let flushInterval: NodeJS.Timer | null = null;
 export default defineNitroPlugin(() => {
     // Set up the flush interval
     if (!flushInterval) {
-        flushInterval = setInterval(flushRequestStats, 10000);
+        flushInterval = setInterval(flushRequestStats, 1000);
     }
 
     // Add a hook for every incoming request

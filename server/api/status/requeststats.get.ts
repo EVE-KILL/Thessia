@@ -14,6 +14,15 @@ export default defineEventHandler(async (event) => {
     let startDate = new Date();
 
     switch (period) {
+      case '5min':
+        startDate.setMinutes(now.getMinutes() - 5);
+        break;
+      case '10min':
+        startDate.setMinutes(now.getMinutes() - 10);
+        break;
+      case '30min':
+        startDate.setMinutes(now.getMinutes() - 30);
+        break;
       case '1hour':
         startDate.setHours(now.getHours() - 1);
         break;
