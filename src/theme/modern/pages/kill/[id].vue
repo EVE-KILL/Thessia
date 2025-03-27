@@ -470,63 +470,85 @@ const mobileTabs = computed(() => [
   }
 ]);
 
-// Fetch killmail data with useFetch instead of useAsyncData
-const { data: fetchedKillmail, pending } = useFetch<IKillmail>(
-  () => route.params.id ? `/api/killmail/${route.params.id}` : null,
+// Replace the useFetch call with useAsyncData for better SSR support
+const { data: fetchedKillmail, pending } = useAsyncData<IKillmail>(
+  `killmail-${route.params.id || 'none'}`,
+  async () => {
+    if (!route.params.id) return null;
+
+    try {
+      const response = await $fetch<IKillmail>(`/api/killmail/${route.params.id}`);
+      return response;
+    } catch (error) {
+      console.error('Error fetching killmail:', error);
+      return null;
+    }
+  },
   {
-    key: `killmail-${route.params.id?.[0] || 'none'}`, // Fixed: Use function returning string instead of computed
-    watch: [() => route.params.id],
-    immediate: true
+    server: true, // Ensure this runs on the server
+    lazy: false   // Don't delay the initial render
   }
 );
+
+// Set up SEO meta tags using a computed property that handles null/undefined values safely
+const seoData = computed(() => {
+  if (!fetchedKillmail.value) return null;
+
+  const data = fetchedKillmail.value;
+  const finalAttacker = data.attackers.length > 0 ? data.attackers[data.attackers.length - 1] : null;
+
+  return {
+    title: `${data.killmail_id} | ${data.victim.character_name || 'Unknown'} | ${data.victim.ship_name?.en || 'Unknown Ship'} | ${data.system_name}`,
+    ogImage: `https://images.evetech.net/types/${data.victim.ship_id}/render?size=512`,
+    description: finalAttacker ?
+      `${data.victim.character_name || 'Unknown'} lost ${data.victim.ship_name?.en || 'Unknown Ship'} in ${data.system_name} to ${finalAttacker.character_name || 'Unknown'} in ${finalAttacker.ship_name?.en || 'Unknown Ship'} - ${formatIsk(data.total_value)}` :
+      `${data.victim.character_name || 'Unknown'} lost ${data.victim.ship_name?.en || 'Unknown Ship'} in ${data.system_name} - ${formatIsk(data.total_value)}`
+  };
+});
+
+// Apply SEO meta tags when available
+useSeoMeta({
+  title: computed(() => seoData.value?.title || 'Killmail | EVE-KILL'),
+  ogTitle: computed(() => seoData.value?.title || 'Killmail | EVE-KILL'),
+  twitterTitle: computed(() => seoData.value?.title || 'Killmail | EVE-KILL'),
+
+  description: computed(() => seoData.value?.description || 'EVE Online killmail details'),
+  ogDescription: computed(() => seoData.value?.description || 'EVE Online killmail details'),
+  twitterDescription: computed(() => seoData.value?.description || 'EVE Online killmail details'),
+
+  ogImage: computed(() => seoData.value?.ogImage || ''),
+  twitterImage: computed(() => seoData.value?.ogImage || ''),
+
+  // Keep the rest of your meta tags
+  ogType: 'website',
+  ogSiteName: 'EVE-KILL',
+  ogUrl: computed(() => fetchedKillmail.value ? `https://eve-kill.com/kill/${fetchedKillmail.value.killmail_id}` : ''),
+  ogLocale: 'en_US',
+  twitterCard: 'summary_large_image',
+  twitterSite: '@eve_kill',
+  twitterImageAlt: computed(() => fetchedKillmail.value?.victim?.ship_name?.en || 'EVE Ship'),
+  twitterImageWidth: '512',
+  twitterImageHeight: '512',
+  twitterCreator: '@eve_kill',
+});
 
 // Track loading state
 watch(pending, (newPending) => {
   isLoading.value = newPending;
 });
 
-// Watch for changes in the fetched killmail data
+// Watch for changes in the fetched killmail data and update our ref
 watch(fetchedKillmail, async (newData: IKillmail) => {
   if (newData) {
-    // SEO
-    useSeoMeta({
-        title: newData.killmail_id + ' | ' + newData.victim.character_name + ' | ' + newData.victim.ship_name.en + ' | ' + newData.system_name,
-        ogImage: 'https://images.evetech.net/types/' + newData.victim.ship_id + '/render?size=512',
-        ogTitle: newData.killmail_id + ' | ' + newData.victim.character_name + ' | ' + newData.victim.ship_name.en + ' | ' + newData.system_name,
-        ogDescription: `${newData.victim.character_name} lost ${newData.victim.ship_name.en} in ${newData.system_name} to ${newData.attackers[newData.attackers.length - 1].character_name} in ${newData.attackers[newData.attackers.length - 1].ship_name.en} - ${formatIsk(newData.total_value)}`,
-        ogType: 'website',
-        ogSiteName: 'EVE-KILL',
-        ogUrl: 'https://eve-kill.com/kill/' + newData.killmail_id,
-        ogLocale: 'en_US',
-        twitterCard: 'summary_large_image',
-        twitterSite: '@eve_kill',
-        twitterTitle: newData.killmail_id + ' | ' + newData.victim.character_name + ' | ' + newData.victim.ship_name.en + ' | ' + newData.system_name,
-        twitterDescription: `${newData.victim.character_name} lost ${newData.victim.ship_name.en} in ${newData.system_name} to ${newData.attackers[newData.attackers.length - 1].character_name} in ${newData.attackers[newData.attackers.length - 1].ship_name.en} - ${formatIsk(newData.total_value)}`,
-        twitterImage: 'https://images.evetech.net/types/' + newData.victim.ship_id + '/render?size=512',
-        twitterImageAlt: newData.victim.ship_name.en,
-        twitterImageWidth: '512',
-        twitterImageHeight: '512',
-        twitterCreator: '@eve_kill',
-    })
     killmail.value = newData;
 
     try {
-      // Fetch sibling killmail if it exists using useFetch
-      const { data: siblingResponse } = await useFetch<string[]>(
-        `/api/killmail/${route.params.id[0]}/sibling`,
-        {
-          key: `killmail-sibling-${route.params.id[0]}` // Added explicit key
-        }
-      );
+      // Fetch sibling killmail if it exists
+      const siblingResponse = await $fetch<string[]>(`/api/killmail/${route.params.id}/sibling`);
 
-      if (siblingResponse.value && Array.isArray(siblingResponse.value) && siblingResponse.value.length > 0) {
-        const { data: siblingData } = await useFetch<IKillmail>(
-          `/api/killmail/${siblingResponse.value[0]}`,
-          {
-            key: `killmail-sibling-data-${siblingResponse.value[0]}` // Added explicit key
-          }
-        );
-        sibling.value = siblingData.value || null;
+      if (siblingResponse && Array.isArray(siblingResponse) && siblingResponse.length > 0) {
+        const siblingData = await $fetch<IKillmail>(`/api/killmail/${siblingResponse[0]}`);
+        sibling.value = siblingData || null;
       } else {
         sibling.value = null;
       }
