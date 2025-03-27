@@ -11,23 +11,59 @@
           <div class="w-full flex justify-center items-center">
             <template v-if="!killmail || isLoading">
               <div class="fitting-wheel-skeleton max-w-[650px]">
-                <!-- Outer ring skeleton -->
-                <div class="skeleton-ring outer-skeleton-ring"></div>
-                <!-- Inner ring skeleton -->
-                <div class="skeleton-ring inner-skeleton-ring"></div>
+                <!-- Outer SVG ring -->
+                <div class="skeleton-outer-ring">
+                  <svg viewBox="24 24 464 464" xmlns="http://www.w3.org/2000/svg">
+                    <g>
+                      <circle cx="256" cy="256" r="224" style="fill: none; stroke: rgba(40, 40, 40, 0.5); stroke-width: 16;"></circle>
+                      <rect width="17" height="17" x="98" y="89" style="fill: rgba(40, 40, 40, 0.3);"></rect>
+                      <rect width="17" height="17" x="401" y="93" style="fill: rgba(40, 40, 40, 0.3);"></rect>
+                      <rect width="17" height="17" x="402" y="401" style="fill: rgba(40, 40, 40, 0.3);"></rect>
+                      <rect width="17" height="17" x="94" y="402" style="fill: rgba(40, 40, 40, 0.3);"></rect>
+                      <rect width="12" height="12" x="196" y="82" transform="rotate(56)" style="fill: rgba(40, 40, 40, 0.3);"></rect>
+                    </g>
+                  </svg>
+                </div>
+
+                <!-- Inner SVG ring -->
+                <div class="skeleton-inner-ring">
+                  <svg viewBox="24 24 464 464" xmlns="http://www.w3.org/2000/svg">
+                    <defs>
+                      <mask id="skeleton-slot-corners">
+                        <rect width="512" height="512" x="0" y="0" style="fill: rgba(255, 255, 255, 0.2);"></rect>
+                        <rect width="17" height="17" x="133" y="126" style="fill: rgb(0, 0, 0);"></rect>
+                        <rect width="17" height="17" x="366" y="129" style="fill: rgb(0, 0, 0);"></rect>
+                        <rect width="17" height="17" x="366" y="366" style="fill: rgb(0, 0, 0);"></rect>
+                        <rect width="17" height="17" x="132" y="369" style="fill: rgb(0, 0, 0);"></rect>
+                        <rect width="12" height="12" x="230" y="44" transform="rotate(56)" style="fill: rgb(0, 0, 0);"></rect>
+                      </mask>
+                    </defs>
+                    <g>
+                      <circle cx="256" cy="256" r="195" mask="url(#skeleton-slot-corners)" style="fill: none; stroke: rgba(40, 40, 40, 0.3); stroke-width: 46; stroke-opacity: 0.6;"></circle>
+                    </g>
+                  </svg>
+                </div>
+
                 <!-- Ship skeleton -->
                 <div class="skeleton-ship">
                   <USkeleton class="h-full w-full rounded-full" />
                 </div>
+
                 <!-- Slot indicators -->
                 <div class="skeleton-indicator high-indicator" :style="getSkeletonSlotPosition('indicator', 'top')">
-                  <USkeleton class="h-4 w-4" />
+                  <div class="indicator-svg">
+                    <USkeleton class="h-full w-full rounded-sm" />
+                  </div>
                 </div>
                 <div class="skeleton-indicator mid-indicator" :style="getSkeletonSlotPosition('indicator', 'right')">
-                  <USkeleton class="h-4 w-4" />
+                  <div class="indicator-svg">
+                    <USkeleton class="h-full w-full rounded-sm" />
+                  </div>
                 </div>
                 <div class="skeleton-indicator low-indicator" :style="getSkeletonSlotPosition('indicator', 'bottom')">
-                  <USkeleton class="h-4 w-4" />
+                  <div class="indicator-svg">
+                    <USkeleton class="h-full w-full rounded-sm" />
+                  </div>
                 </div>
 
                 <!-- Slot skeletons for modules -->
@@ -302,25 +338,61 @@
         </div>
         <!-- Skeleton content -->
         <div class="p-4">
-          <!-- Use enhanced fitting wheel skeleton -->
+          <!-- Enhanced fitting wheel skeleton -->
           <div class="fitting-wheel-skeleton mx-auto mb-4">
-            <!-- Outer ring skeleton -->
-            <div class="skeleton-ring outer-skeleton-ring"></div>
-            <!-- Inner ring skeleton -->
-            <div class="skeleton-ring inner-skeleton-ring"></div>
+            <!-- Outer SVG ring -->
+            <div class="skeleton-outer-ring">
+              <svg viewBox="24 24 464 464" xmlns="http://www.w3.org/2000/svg">
+                <g>
+                  <circle cx="256" cy="256" r="224" style="fill: none; stroke: rgba(40, 40, 40, 0.5); stroke-width: 16;"></circle>
+                  <rect width="17" height="17" x="98" y="89" style="fill: rgba(40, 40, 40, 0.3);"></rect>
+                  <rect width="17" height="17" x="401" y="93" style="fill: rgba(40, 40, 40, 0.3);"></rect>
+                  <rect width="17" height="17" x="402" y="401" style="fill: rgba(40, 40, 40, 0.3);"></rect>
+                  <rect width="17" height="17" x="94" y="402" style="fill: rgba(40, 40, 40, 0.3);"></rect>
+                  <rect width="12" height="12" x="196" y="82" transform="rotate(56)" style="fill: rgba(40, 40, 40, 0.3);"></rect>
+                </g>
+              </svg>
+            </div>
+
+            <!-- Inner SVG ring -->
+            <div class="skeleton-inner-ring">
+              <svg viewBox="24 24 464 464" xmlns="http://www.w3.org/2000/svg">
+                <defs>
+                  <mask id="skeleton-slot-corners-mobile">
+                    <rect width="512" height="512" x="0" y="0" style="fill: rgba(255, 255, 255, 0.2);"></rect>
+                    <rect width="17" height="17" x="133" y="126" style="fill: rgb(0, 0, 0);"></rect>
+                    <rect width="17" height="17" x="366" y="129" style="fill: rgb(0, 0, 0);"></rect>
+                    <rect width="17" height="17" x="366" y="366" style="fill: rgb(0, 0, 0);"></rect>
+                    <rect width="17" height="17" x="132" y="369" style="fill: rgb(0, 0, 0);"></rect>
+                    <rect width="12" height="12" x="230" y="44" transform="rotate(56)" style="fill: rgb(0, 0, 0);"></rect>
+                  </mask>
+                </defs>
+                <g>
+                  <circle cx="256" cy="256" r="195" mask="url(#skeleton-slot-corners-mobile)" style="fill: none; stroke: rgba(40, 40, 40, 0.3); stroke-width: 46; stroke-opacity: 0.6;"></circle>
+                </g>
+              </svg>
+            </div>
+
             <!-- Ship skeleton -->
             <div class="skeleton-ship">
               <USkeleton class="h-full w-full rounded-full" />
             </div>
+
             <!-- Slot indicators -->
             <div class="skeleton-indicator high-indicator" :style="getSkeletonSlotPosition('indicator', 'top')">
-              <USkeleton class="h-4 w-4" />
+              <div class="indicator-svg">
+                <USkeleton class="h-full w-full rounded-sm" />
+              </div>
             </div>
             <div class="skeleton-indicator mid-indicator" :style="getSkeletonSlotPosition('indicator', 'right')">
-              <USkeleton class="h-4 w-4" />
+              <div class="indicator-svg">
+                <USkeleton class="h-full w-full rounded-sm" />
+              </div>
             </div>
             <div class="skeleton-indicator low-indicator" :style="getSkeletonSlotPosition('indicator', 'bottom')">
-              <USkeleton class="h-4 w-4" />
+              <div class="indicator-svg">
+                <USkeleton class="h-full w-full rounded-sm" />
+              </div>
             </div>
 
             <!-- Slot skeletons for modules -->
@@ -569,13 +641,15 @@ function updateCommentCount(count: number) {
 /**
  * Calculates the position for skeleton slots
  */
-function getSkeletonSlotPosition(index: number, position: string): Record<string, string> {
+function getSkeletonSlotPosition(index: number | string, total?: number | string, position?: string): Record<string, string> {
   // Use the same radius as the actual component for consistency
   const radius = 42;
   let angle = 0;
 
-  if (position === 'indicator') {
-    switch (index) {
+  // Handle the case where index is 'indicator'
+  if (index === 'indicator' && typeof total === 'string') {
+    // In this case, total is actually the position ('top', 'right', 'bottom')
+    switch (total) {
       case 'top':
         angle = -125 - 9;
         break;
@@ -588,7 +662,9 @@ function getSkeletonSlotPosition(index: number, position: string): Record<string
       default:
         angle = 0;
     }
-  } else {
+  }
+  // Handle normal slot positioning - exactly matching the KillFittingWheel component logic
+  else if (typeof index === 'number' && typeof total === 'number' && position) {
     switch (position) {
       case 'top':
         angle = -125 + (index * 10.5);
@@ -838,6 +914,125 @@ onBeforeUnmount(() => {
 @media (max-width: 768px) {
   .fitting-wheel-skeleton {
     max-width: 400px; /* Increased from 300px */
+  }
+}
+
+/* Enhanced fitting wheel skeleton styles */
+.fitting-wheel-skeleton {
+  position: relative;
+  width: 100%;
+  max-width: 600px;
+  height: 0;
+  padding-bottom: 100%; /* Maintain 1:1 aspect ratio */
+  margin: 0 auto;
+  border-radius: 50%;
+  overflow: hidden;
+  background-color: rgba(30, 30, 30, 0.05);
+}
+
+.skeleton-outer-ring,
+.skeleton-inner-ring {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+
+.skeleton-outer-ring {
+  z-index: 4;
+}
+
+.skeleton-inner-ring {
+  z-index: 3;
+}
+
+.skeleton-ship {
+  position: absolute;
+  top: 20%;
+  left: 20%;
+  width: 60%;
+  height: 60%;
+  border-radius: 50%;
+  overflow: hidden;
+  background-color: rgba(40, 40, 40, 0.1);
+  z-index: 1;
+}
+
+.skeleton-slot {
+  position: absolute;
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  overflow: hidden;
+  background-color: rgba(30, 30, 30, 0.1);
+  z-index: 5;
+}
+
+.skeleton-slot.high-slot {
+  border: 1px solid rgba(180, 60, 60, 0.2);
+}
+
+.skeleton-slot.mid-slot {
+  border: 1px solid rgba(60, 120, 180, 0.2);
+}
+
+.skeleton-slot.low-slot {
+  border: 1px solid rgba(180, 140, 60, 0.2);
+}
+
+.skeleton-slot.rig-slot {
+  border: 1px solid rgba(150, 150, 150, 0.2);
+}
+
+.skeleton-indicator {
+  position: absolute;
+  width: 18px;
+  height: 18px;
+  z-index: 6;
+  transform-origin: center;
+}
+
+.skeleton-indicator.high-indicator .indicator-svg {
+  background-color: rgba(180, 60, 60, 0.2);
+  height: 100%;
+  width: 100%;
+  transform: rotate(-125deg);
+}
+
+.skeleton-indicator.mid-indicator .indicator-svg {
+  background-color: rgba(60, 120, 180, 0.2);
+  height: 100%;
+  width: 100%;
+  transform: rotate(-35deg);
+}
+
+.skeleton-indicator.low-indicator .indicator-svg {
+  background-color: rgba(180, 140, 60, 0.2);
+  height: 100%;
+  width: 100%;
+  transform: rotate(55deg);
+}
+
+/* Remove duplicate style blocks */
+.outer-skeleton-ring,
+.inner-skeleton-ring,
+.skeleton-ring {
+  display: none;
+}
+
+/* Responsive adjustments */
+@media (max-width: 500px) {
+  .skeleton-slot {
+    width: 36px;
+    height: 36px;
+  }
+}
+
+@media (max-width: 768px) {
+  .fitting-wheel-skeleton {
+    max-width: 400px;
   }
 }
 </style>
