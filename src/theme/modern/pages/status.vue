@@ -141,12 +141,12 @@ const formattedUptime = computed(() => {
 
 // Format date to locale string
 const formatDate = (dateString) => {
-  return new Date(dateString).toLocaleString()
+  return new Date(dateString);
 }
 
 // Format numbers using locale
 const formatNumber = (value: number): string => {
-  return value.toLocaleString("da-DK");
+  return value;
 };
 
 // Function to update chart options
@@ -187,7 +187,7 @@ const updateChartOptions = () => {
       axisPointer: { type: 'shadow' },
       formatter: function(params) {
         const data = params[0]
-        return `${data.name}: ${data.value.toLocaleString()}`
+        return `${data.name}: ${data.value}`
       }
     },
     grid: {
@@ -198,7 +198,7 @@ const updateChartOptions = () => {
     },
     xAxis: {
       type: 'value',
-      axisLabel: { formatter: (value) => value.toLocaleString() }
+      axisLabel: { formatter: (value) => value }
     },
     yAxis: {
       type: 'category',
