@@ -96,7 +96,8 @@ export default defineNitroPlugin(() => {
             url.startsWith("/favicon.ico") ||
             url.startsWith("/__vite") ||
             url.startsWith("/__nuxt") ||
-            url.startsWith("/_ipx")
+            url.startsWith("/_ipx") ||
+            url.startsWith("/_healthcheck")
         ) {
             return;
         }
