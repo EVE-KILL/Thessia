@@ -245,17 +245,19 @@ const handleRowClick = (item: any, event: MouseEvent) => {
   }
 
   // For Ctrl/Cmd + click, we'll handle this manually since our anchor is at row level
-  // This prevents the need for event.stopPropagation() in nested clickable elements
   const url = props.linkFn(item);
   if (!url) return;
 
+  // Prevent default behavior
+  event.preventDefault();
+
+  // Use Nuxt's navigateTo for SPA navigation to trigger page hooks
   if (event.ctrlKey || event.metaKey || props.openInNewTab) {
-    event.preventDefault();
-    // Just open a new tab and let the browser handle focusing
+    // For ctrl/cmd clicks or when openInNewTab is true, open in new tab
     window.open(url, '_blank');
   } else {
-    // For normal clicks, we'll use standard navigation
-    window.location.href = url;
+    // For normal clicks, use navigateTo to trigger Nuxt page hooks
+    navigateTo(url);
   }
 };
 
