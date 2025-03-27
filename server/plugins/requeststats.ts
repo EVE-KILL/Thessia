@@ -117,6 +117,7 @@ export default defineNitroPlugin(() => {
             url.startsWith("/_ipx") ||
             url.startsWith("/_healthcheck") ||
             url.startsWith("/auth") ||
+            url.startsWith("/api/auth") ||
             url.startsWith("/map.png") ||
             url.startsWith("/favicon")
         ) {
