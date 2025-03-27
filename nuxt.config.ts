@@ -164,7 +164,12 @@ export default defineNuxtConfig({
         // "nuxt-security",
         "@nuxtjs/color-mode",
         "@nuxtjs/device",
+        "nuxt-cloudflare-analytics"
     ],
+
+    cloudflareAnalytics: {
+        token: process.env.CLOUDFLARE_ANALYTICS_TOKEN
+    },
 
     colorMode: {
         preference: "system",

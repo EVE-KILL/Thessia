@@ -103,7 +103,8 @@ jobs:
                       --set global.env.sensitive.discordNewComment=${{ secrets.DISCORD_NEW_COMMENT }} \
                       --set global.env.sensitive.discordReportComment=${{ secrets.DISCORD_REPORT_COMMENT }} \
                       --set global.env.sensitive.openAIAPIKey=${{ secrets.OPENAI_API_KEY }} \
-                      --set global.env.sensitive.tenorAPIKey=${{ secrets.TENOR_API_KEY }}
+                      --set global.env.sensitive.tenorAPIKey=${{ secrets.TENOR_API_KEY }} \
+                      --set global.env.sensitive.cloudflareAnalyticsToken=${{ secrets.CLOUDFLARE_ANALYTICS_TOKEN }}
 
     purge-cloudflare-cache:
         runs-on: ubuntu-latest

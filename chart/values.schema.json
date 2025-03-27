@@ -99,6 +99,9 @@
                 },
                 "tenorAPIKey": {
                   "type": "string"
+                },
+                "cloudflareAnalyticsToken": {
+                  "type": "string"
                 }
               }
             }

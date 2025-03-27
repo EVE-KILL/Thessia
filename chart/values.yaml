@@ -56,6 +56,9 @@ global:
             sentryProject: "thessia"
             sentryAuthToken: ""
 
+            # Cloudflare Analytics
+            cloudflareAnalyticsToken: ""
+
 # Namespace configuration
 namespace:
     create: true
