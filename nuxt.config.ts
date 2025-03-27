@@ -89,11 +89,7 @@ export default defineNuxtConfig({
                       },
                       "/api/status": {
                           cors: true,
-                          cache: false,
-                      },
-                      "/api/status/requeststats": {
-                          cors: true,
-                          cache: false
+                          cache: { maxAge: 5, staleMaxAge: 0, swr: false },
                       },
                   },
 
