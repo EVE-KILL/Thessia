@@ -2,10 +2,10 @@
 export default {
   darkMode: 'class',
   content: [
-    "./components/**/*.{js,vue,ts}",
-    "./layouts/**/*.vue",
-    "./pages/**/*.vue",
-    "./plugins/**/*.{js,ts}",
+    "./src/theme/modern/components/**/*.{js,vue,ts}",
+    "./src/theme/modern/layouts/**/*.vue",
+    "./src/theme/modern/pages/**/*.vue",
+    "./src/theme/core/plugins/**/*.{js,ts}",
     "./app.vue",
     "./error.vue",
     "./node_modules/@nuxt/ui/dist/**/*.{js,vue,mjs,ts}"
@@ -37,7 +37,7 @@ export default {
   safelist: [
     // Background opacity classes
     {
-      pattern: /bg-(white|black|gray)-(10|20|30|40|50|60|70|80|85|90)/,
+      pattern: /bg-(white|black|gray)-(10|20|30|40|50|60|70|80|90)/,
       variants: ['hover'],
     },
     // Custom opacity utility classes
