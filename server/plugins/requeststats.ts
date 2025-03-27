@@ -115,7 +115,10 @@ export default defineNitroPlugin(() => {
             url.startsWith("/__vite") ||
             url.startsWith("/__nuxt") ||
             url.startsWith("/_ipx") ||
-            url.startsWith("/_healthcheck")
+            url.startsWith("/_healthcheck") ||
+            url.startsWith("/auth") ||
+            url.startsWith("/map.png") ||
+            url.startsWith("/favicon")
         ) {
             return;
         }
