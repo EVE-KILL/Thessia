@@ -165,43 +165,45 @@
       <!-- Body -->
       <div class="mt-4">
         <template v-if="!killmail || isLoading">
-          <div class="custom-table-skeleton">
+          <div class="kill-items-skeleton">
             <!-- Table header skeleton -->
-            <div class="table-header-skeleton">
-              <div class="cell image-cell"></div>
-              <div class="cell name-cell">
+            <div class="skeleton-header">
+              <div class="skeleton-cell image-cell"></div>
+              <div class="skeleton-cell name-cell">
                 <USkeleton class="h-5 w-16" />
               </div>
-              <div class="cell quantity-cell">
+              <div class="skeleton-cell quantity-cell">
                 <USkeleton class="h-5 w-24" />
               </div>
-              <div class="cell value-cell">
+              <div class="skeleton-cell value-cell">
                 <USkeleton class="h-5 w-16" />
               </div>
             </div>
 
-            <!-- Header row -->
-            <div class="table-row-skeleton header-row">
-              <div class="cell image-cell"></div>
-              <div class="cell name-cell">
+            <!-- Hull section -->
+            <div class="skeleton-row section-header">
+              <div class="skeleton-cell image-cell"></div>
+              <div class="skeleton-cell name-cell">
                 <USkeleton class="h-5 w-32" />
               </div>
-              <div class="cell quantity-cell"></div>
-              <div class="cell value-cell"></div>
+              <div class="skeleton-cell quantity-cell"></div>
+              <div class="skeleton-cell value-cell"></div>
             </div>
 
             <!-- Ship row -->
-            <div class="table-row-skeleton">
-              <div class="cell image-cell">
+            <div class="skeleton-row item-row">
+              <div class="skeleton-cell image-cell">
                 <USkeleton class="h-8 w-8 rounded-md" />
               </div>
-              <div class="cell name-cell">
+              <div class="skeleton-cell name-cell">
                 <USkeleton class="h-5 w-40" />
               </div>
-              <div class="cell quantity-cell">
-                <USkeleton class="h-5 w-10 rounded-full" />
+              <div class="skeleton-cell quantity-cell">
+                <div class="badge-container">
+                  <USkeleton class="h-5 w-10 rounded-full" />
+                </div>
               </div>
-              <div class="cell value-cell">
+              <div class="skeleton-cell value-cell">
                 <USkeleton class="h-5 w-24" />
               </div>
             </div>
@@ -209,61 +211,82 @@
             <!-- Repeat for other sections -->
             <div v-for="section in 3" :key="`section-${section}`">
               <!-- Section header -->
-              <div class="table-row-skeleton header-row mt-2">
-                <div class="cell image-cell"></div>
-                <div class="cell name-cell">
+              <div class="skeleton-row section-header">
+                <div class="skeleton-cell image-cell"></div>
+                <div class="skeleton-cell name-cell">
                   <USkeleton class="h-5 w-36" />
                 </div>
-                <div class="cell quantity-cell"></div>
-                <div class="cell value-cell"></div>
+                <div class="skeleton-cell quantity-cell"></div>
+                <div class="skeleton-cell value-cell"></div>
               </div>
 
-              <!-- Item rows -->
-              <div v-for="i in 3" :key="`item-${section}-${i}`" class="table-row-skeleton">
-                <div class="cell image-cell">
+              <!-- Regular items -->
+              <div v-for="i in 3" :key="`item-${section}-${i}`" class="skeleton-row item-row">
+                <div class="skeleton-cell image-cell">
                   <USkeleton class="h-6 w-6 rounded-md" />
                 </div>
-                <div class="cell name-cell">
+                <div class="skeleton-cell name-cell">
                   <USkeleton class="h-5 w-48" />
                 </div>
-                <div class="cell quantity-cell">
-                  <div class="flex gap-2">
+                <div class="skeleton-cell quantity-cell">
+                  <div class="badge-container">
                     <USkeleton class="h-5 w-8 rounded-full" />
                     <USkeleton class="h-5 w-8 rounded-full" />
                   </div>
                 </div>
-                <div class="cell value-cell">
+                <div class="skeleton-cell value-cell">
+                  <USkeleton class="h-5 w-20" />
+                </div>
+              </div>
+
+              <!-- Add one nested item for the second section -->
+              <div v-if="section === 2" class="skeleton-row item-row nested-item">
+                <div class="skeleton-cell image-cell">
+                  <div class="connector">
+                    <USkeleton class="h-4 w-4" />
+                  </div>
+                  <USkeleton class="h-6 w-6 rounded-md ml-5" />
+                </div>
+                <div class="skeleton-cell name-cell">
+                  <USkeleton class="h-5 w-36" />
+                </div>
+                <div class="skeleton-cell quantity-cell">
+                  <div class="badge-container">
+                    <USkeleton class="h-5 w-8 rounded-full" />
+                  </div>
+                </div>
+                <div class="skeleton-cell value-cell">
                   <USkeleton class="h-5 w-20" />
                 </div>
               </div>
 
               <!-- Subtotal row -->
-              <div class="table-row-skeleton value-row">
-                <div class="cell image-cell"></div>
-                <div class="cell name-cell">
+              <div class="skeleton-row subtotal-row">
+                <div class="skeleton-cell image-cell"></div>
+                <div class="skeleton-cell name-cell">
                   <USkeleton class="h-5 w-20" />
                 </div>
-                <div class="cell quantity-cell">
-                  <div class="flex gap-2">
+                <div class="skeleton-cell quantity-cell">
+                  <div class="badge-container">
                     <USkeleton class="h-5 w-8 rounded-full" />
                     <USkeleton class="h-5 w-8 rounded-full" />
                   </div>
                 </div>
-                <div class="cell value-cell">
+                <div class="skeleton-cell value-cell">
                   <USkeleton class="h-5 w-24" />
                 </div>
               </div>
             </div>
 
             <!-- Total row -->
-            <div class="table-row-skeleton value-row mt-2">
-              <div class="cell image-cell"></div>
-              <div class="cell name-cell">
-                <USkeleton class="h-5 w-16" />
+            <div class="skeleton-row total-row">
+              <div class="skeleton-cell image-cell"></div>
+              <div class="skeleton-cell name-cell">
+                <USkeleton class="h-5 w-16 font-bold" />
               </div>
-              <div class="cell quantity-cell"></div>
-              <div class="cell value-cell">
-                <USkeleton class="h-5 w-28" />
+              <div class="skeleton-cell quantity-cell"></div>
+              <div class="skeleton-cell value-cell">
+                <USkeleton class="h-6 w-28" />
               </div>
             </div>
           </div>
@@ -1033,6 +1056,93 @@ onBeforeUnmount(() => {
 @media (max-width: 768px) {
   .fitting-wheel-skeleton {
     max-width: 400px;
+  }
+}
+
+/* Enhanced KillItems skeleton styles */
+.kill-items-skeleton {
+  width: 100%;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.skeleton-header,
+.skeleton-row {
+  display: grid;
+  grid-template-columns: 80px 1fr 120px 120px;
+  padding: 0.5rem 1rem;
+  align-items: center;
+  border-bottom: 1px solid rgba(40, 40, 40, 0.5);
+}
+
+.skeleton-header {
+  background-color: rgba(26, 26, 26, 0.5);
+}
+
+.section-header {
+  background-color: rgba(26, 26, 26, 0.7);
+  padding: 0.3rem 1rem;
+  margin-top: 0.5rem;
+  height: 2.2rem;
+}
+
+.item-row {
+  background-color: transparent;
+}
+
+.nested-item {
+  background-color: rgba(40, 40, 40, 0.15);
+  position: relative;
+}
+
+.nested-item .image-cell {
+  position: relative;
+}
+
+.connector {
+  position: absolute;
+  left: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  height: 16px;
+  width: 16px;
+  opacity: 0.7;
+}
+
+.subtotal-row {
+  background-color: rgba(40, 40, 40, 0.2);
+  font-weight: 500;
+}
+
+.total-row {
+  background-color: rgba(40, 40, 40, 0.3);
+  font-weight: 600;
+  margin-top: 0.5rem;
+}
+
+.skeleton-cell.value-cell {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.badge-container {
+  display: flex;
+  gap: 0.35rem;
+  justify-content: flex-start;
+}
+
+/* Responsive adjustments for mobile */
+@media (max-width: 640px) {
+  .skeleton-header,
+  .skeleton-row {
+    grid-template-columns: 50px 1fr 80px 80px;
+    padding: 0.5rem;
+  }
+
+  .badge-container {
+    flex-direction: column;
+    gap: 0.25rem;
+    align-items: flex-start;
   }
 }
 </style>
