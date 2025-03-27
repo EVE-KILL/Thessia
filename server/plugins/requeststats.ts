@@ -2,17 +2,15 @@ import { nitroApp } from "nitropack/runtime/internal/app";
 import { cliLogger } from "~/server/helpers/Logger";
 import { RequestStats } from "~/server/models/RequestStats";
 import type { IRequestStats } from "~/server/interfaces/IRequestStats";
+import { UAParser } from "ua-parser-js";
 
 // In-memory storage for request data
 const inMemoryStorage: IRequestStats[] = [];
 
 /**
- * Parse user agent to extract browser, OS and device information
- * Simple implementation - in a production app, you might want to use a library like ua-parser-js
+ * Parse user agent using ua-parser-js library
  */
-const parseUserAgent = (
-    userAgent: string
-): { browser: string; os: string; device: string } => {
+const parseUserAgent = (userAgent: string): { browser: string; os: string; device: string } => {
     // Default values
     const result = {
         browser: "Unknown",
@@ -22,46 +20,25 @@ const parseUserAgent = (
 
     if (!userAgent) return result;
 
-    // Browser detection
-    if (userAgent.includes("Firefox/")) {
-        result.browser = "Firefox";
-    } else if (userAgent.includes("Edg/")) {
-        result.browser = "Edge";
-    } else if (userAgent.includes("Chrome/")) {
-        result.browser = "Chrome";
-    } else if (
-        userAgent.includes("Safari/") &&
-        !userAgent.includes("Chrome/")
-    ) {
-        result.browser = "Safari";
-    } else if (userAgent.includes("MSIE ") || userAgent.includes("Trident/")) {
-        result.browser = "Internet Explorer";
-    }
+    try {
+        const parser = new UAParser(userAgent);
+        const parsed = parser.getResult();
 
-    // OS detection
-    if (userAgent.includes("Windows")) {
-        result.os = "Windows";
-    } else if (userAgent.includes("Mac OS X")) {
-        result.os = "macOS";
-    } else if (userAgent.includes("Linux")) {
-        result.os = "Linux";
-    } else if (userAgent.includes("Android")) {
-        result.os = "Android";
-    } else if (
-        userAgent.includes("iOS") ||
-        userAgent.includes("iPhone") ||
-        userAgent.includes("iPad")
-    ) {
-        result.os = "iOS";
-    }
+        // Extract browser info
+        result.browser = parsed.browser.name || "Unknown";
 
-    // Device detection
-    if (userAgent.includes("Mobile")) {
-        result.device = "Mobile";
-    } else if (userAgent.includes("Tablet")) {
-        result.device = "Tablet";
-    } else {
-        result.device = "Desktop";
+        // Extract OS info
+        result.os = parsed.os.name || "Unknown";
+
+        // Extract device info
+        if (parsed.device.type) {
+            // ua-parser-js returns device types like 'mobile', 'tablet', etc.
+            result.device = parsed.device.type.charAt(0).toUpperCase() + parsed.device.type.slice(1);
+        } else {
+            result.device = "Desktop"; // Default to Desktop if no device type is detected
+        }
+    } catch (error) {
+        cliLogger.error(`[RequestStats] Error parsing user agent: ${error}`);
     }
 
     return result;
@@ -70,24 +47,12 @@ const parseUserAgent = (
 // Function to flush data to the database
 async function flushRequestStats() {
     if (inMemoryStorage.length > 0) {
-        try {
-            // Clone the current storage and clear it
-            const batchToFlush = [...inMemoryStorage];
-            inMemoryStorage.length = 0;
+        // Clone the current storage and clear it
+        const batchToFlush = [...inMemoryStorage];
+        inMemoryStorage.length = 0;
 
-            // Insert the batch into MongoDB
-            await RequestStats.insertMany(batchToFlush);
-            cliLogger.info(`[RequestStats] Flushed ${batchToFlush.length} request entries to the database`);
-        } catch (err) {
-            cliLogger.error(`[RequestStats] Failed to flush request stats: ${err}`);
-            // If we failed to save, put the items back in memory
-            // But to avoid memory leaks, we'll limit the buffer size
-            if (inMemoryStorage.length < 10000) {
-                inMemoryStorage.push(...batchToFlush);
-            } else {
-                cliLogger.warn(`[RequestStats] In-memory storage limit reached, some requests will not be logged`);
-            }
-        }
+        // Insert the batch into MongoDB
+        await RequestStats.insertMany(batchToFlush);
     }
 }
 

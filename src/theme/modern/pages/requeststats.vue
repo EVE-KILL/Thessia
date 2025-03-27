@@ -188,14 +188,16 @@ const formatNumber = (value: number): string => {
 // Calculate percentage of API vs Web requests
 const apiRequestPercentage = computed(() => {
   if (!statsData.value) return 0;
-  const total = statsData.value.totalRequests;
+  const total = statsData.value.totalWebRequests + statsData.value.totalApiRequests;
   if (total === 0) return 0;
   return Math.round((statsData.value.totalApiRequests / total) * 100);
 });
 
 const webRequestPercentage = computed(() => {
   if (!statsData.value) return 0;
-  return 100 - apiRequestPercentage.value;
+  const total = statsData.value.totalWebRequests + statsData.value.totalApiRequests;
+  if (total === 0) return 0;
+  return Math.round((statsData.value.totalWebRequests / total) * 100);
 });
 
 // Function to update chart options - Page Views
@@ -698,12 +700,7 @@ onUnmounted(() => {
             <template #overview>
               <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
                 <!-- Main content charts -->
-                <UCard v-if="requestType === 'web'">
-                  <div class="h-64">
-                    <v-chart :option="timeSeriesChartOptions" autoresize />
-                  </div>
-                </UCard>
-                <UCard v-else>
+                <UCard>
                   <div class="h-64">
                     <v-chart :option="timeSeriesChartOptions" autoresize />
                   </div>
@@ -716,52 +713,8 @@ onUnmounted(() => {
                 </UCard>
               </div>
 
-              <!-- If web request type, show both web and API stats on overview -->
-              <div v-if="requestType === 'web'" class="mb-6">
-                <UCard>
-                  <template #header>
-                    <div class="flex items-center">
-                      <UIcon name="lucide:code" class="mr-2" />
-                      <h3 class="font-bold">{{ $t('requeststats.charts.topApiEndpoints') }}</h3>
-                    </div>
-                  </template>
-
-                  <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
-                    <div class="h-64">
-                      <v-chart :option="apiEndpointsChartOptions" autoresize />
-                    </div>
-                    <div class="overflow-x-auto">
-                      <table class="min-w-full">
-                        <thead>
-                          <tr class="bg-gray-50 dark:bg-gray-800">
-                            <th class="py-3 px-4 text-left">{{ $t('requeststats.tableHeaders.apiEndpoint') }}</th>
-                            <th class="py-3 px-4 text-right">{{ $t('requeststats.tableHeaders.count') }}</th>
-                            <th class="py-3 px-4 text-right">{{ $t('requeststats.tableHeaders.percentage') }}</th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          <tr v-for="(endpoint, index) in statsData.topApiEndpoints?.slice(0, 10)" :key="index"
-                              class="border-t border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors">
-                            <td class="py-3 px-4 max-w-xs truncate"
-                                @mouseenter="showTooltip($event, endpoint.url)"
-                                @mouseleave="hideTooltip">
-                              <div class="cursor-help relative">
-                                <span>{{ endpoint.url }}</span>
-                              </div>
-                            </td>
-                            <td class="py-3 px-4 text-right font-mono">{{ formatNumber(endpoint.count) }}</td>
-                            <td class="py-3 px-4 text-right font-mono">
-                              {{ ((endpoint.count / statsData.totalApiRequests) * 100).toFixed(2) }}%
-                            </td>
-                          </tr>
-                        </tbody>
-                      </table>
-                    </div>
-                  </div>
-                </UCard>
-              </div>
-
-              <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <!-- Browser/OS/Device charts only shown if in Web view -->
+              <div v-if="requestType === 'web'" class="grid grid-cols-1 md:grid-cols-3 gap-6">
                 <!-- Bottom row charts -->
                 <UCard>
                   <div class="h-64">
@@ -778,6 +731,22 @@ onUnmounted(() => {
                 <UCard>
                   <div class="h-64">
                     <v-chart :option="deviceChartOptions" autoresize />
+                  </div>
+                </UCard>
+              </div>
+
+              <!-- API-specific status codes when in API view -->
+              <div v-if="requestType === 'api'" class="grid grid-cols-1 md:grid-cols-1 gap-6">
+                <UCard>
+                  <template #header>
+                    <div class="flex items-center">
+                      <UIcon name="lucide:check-circle" class="mr-2" />
+                      <h3 class="font-bold">{{ $t('requeststats.charts.statusCodes') }}</h3>
+                    </div>
+                  </template>
+
+                  <div class="h-64">
+                    <v-chart :option="statusCodeChartOptions" autoresize />
                   </div>
                 </UCard>
               </div>
