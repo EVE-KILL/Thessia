@@ -223,39 +223,39 @@
           />
 
           <div class="editor-toolbar flex flex-wrap gap-2 mb-2">
-            <UButton size="xs" @click="insertMarkdown('**', '**')" color="gray">
+            <UButton size="xs" @click="insertMarkdown('**', '**')" color="neutral">
               <Icon name="lucide:bold" class="w-4 h-4 mr-1" />
               {{ $t('markdown_editor.bold') }}
             </UButton>
-            <UButton size="xs" @click="insertMarkdown('*', '*')" color="gray">
+            <UButton size="xs" @click="insertMarkdown('*', '*')" color="neutral">
               <Icon name="lucide:italic" class="w-4 h-4 mr-1" />
               {{ $t('markdown_editor.italic') }}
             </UButton>
-            <UButton size="xs" @click="insertMarkdown('[', '](url)')" color="gray">
+            <UButton size="xs" @click="insertMarkdown('[', '](url)')" color="neutral">
               <Icon name="lucide:link" class="w-4 h-4 mr-1" />
               {{ $t('markdown_editor.link') }}
             </UButton>
-            <UButton size="xs" @click="insertMarkdown('\n```\n', '\n```')" color="gray">
+            <UButton size="xs" @click="insertMarkdown('\n```\n', '\n```')" color="neutral">
               <Icon name="lucide:code" class="w-4 h-4 mr-1" />
               {{ $t('markdown_editor.code') }}
             </UButton>
-            <UButton size="xs" @click="insertImage" color="gray">
+            <UButton size="xs" @click="insertImage" color="neutral">
               <Icon name="lucide:image" class="w-4 h-4 mr-1" />
               {{ $t('markdown_editor.image') }}
             </UButton>
-            <UButton size="xs" @click="insertYoutube" color="gray">
+            <UButton size="xs" @click="insertYoutube" color="neutral">
               <Icon name="lucide:video" class="w-4 h-4 mr-1" />
               {{ $t('markdown_editor.youtube') }}
             </UButton>
-            <UButton size="xs" @click="insertImgur" color="gray">
+            <UButton size="xs" @click="insertImgur" color="neutral">
               <Icon name="simple-icons:imgur" class="w-4 h-4 mr-1" />
               {{ $t('markdown_editor.imgur') }}
             </UButton>
-            <UButton size="xs" @click="insertGiphy" color="gray">
+            <UButton size="xs" @click="insertGiphy" color="neutral">
               <Icon name="simple-icons:giphy" class="w-4 h-4 mr-1" />
               {{ $t('markdown_editor.giphy') }}
             </UButton>
-            <UButton size="xs" @click="insertTenor" color="gray">
+            <UButton size="xs" @click="insertTenor" color="neutral">
               <Icon name="simple-icons:tenor" class="w-4 h-4 mr-1" />
               {{ $t('markdown_editor.tenor') }}
             </UButton>
@@ -296,17 +296,6 @@
       <p class="mb-2">{{ $t('login_to_comment') }}</p>
       <UButton color="primary" @click="loginToComment">{{ $t('login') }}</UButton>
     </div>
-
-    <!-- WebSocket connection management -->
-    <Websocket
-      ref="wsRef"
-      url="/comments"
-      :auto-connect="true"
-      :handle-bfCache="true"
-      :use-global-instance="true"
-      global-ref-key="comments"
-      @message="handleWebSocketMessage"
-    />
   </div>
 </template>
 

@@ -656,6 +656,7 @@ onBeforeUnmount(() => {
   pointer-events: none;
 }
 
+/* Fix z-index values to be lower and ensure proper layering */
 .outer-ring {
   position: absolute;
   top: 0;
@@ -888,7 +889,7 @@ onBeforeUnmount(() => {
 
 /* Make sure tooltips appear above everything */
 :deep(.u-tooltip) {
-  z-index: 100;
+  z-index: 20; /* Lower z-index for tooltips to stay below dropdowns */
 }
 
 /* Override button styles to preserve icon appearance */
@@ -914,7 +915,7 @@ onBeforeUnmount(() => {
   display: flex;
   justify-content: center;
   align-items: center;
-  z-index: 100;
+  z-index: 10; /* Lower z-index to not interfere with dropdowns */
   background-color: rgba(0, 0, 0, 0.15);
   border-radius: 50%;
   backdrop-filter: blur(3px);

@@ -405,6 +405,7 @@ const hasKeyspaceInfo = computed(() => {
               { label: isMobile ? '' : $t('status.tabs.redis'), icon: 'lucide:database', slot: 'redis' },
             ]"
             class="mb-6"
+            color="neutral"
           >
             <template #overview>
               <!-- Overview with refined 3-column layout -->

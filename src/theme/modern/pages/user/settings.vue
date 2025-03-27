@@ -284,7 +284,7 @@ const hasScope = (scope: string) => {
         <!-- Settings Tabs - Combined into single ESI tab -->
         <UTabs v-else-if="profileData && profileData.authenticated" :items="[
             { label: isMobile ? '' : $t('settings.esi', 'EVE SSO Authentication'), icon: 'lucide:shield', slot: 'esi', defaultSelected: true },
-        ]" class="mb-6">
+        ]" class="mb-6" color="neutral">
             <!-- ESI Tab (Combined Profile and Permissions) -->
             <template #esi>
                 <UCard>
@@ -334,7 +334,7 @@ const hasScope = (scope: string) => {
                                 </UTooltip>
 
                                 <UTooltip text="Choose which permissions to grant">
-                                    <UButton color="gray" size="sm" icon="lucide:settings" @click="handleCustomizeScopes">
+                                    <UButton color="neutral" size="sm" icon="lucide:settings" @click="handleCustomizeScopes">
                                         {{ $t('settings.customizeScopes', 'Customize Scopes') }}
                                     </UButton>
                                 </UTooltip>

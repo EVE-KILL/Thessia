@@ -124,6 +124,7 @@ const isPriorityImage = (index: number): boolean => {
       :ui="tabsUi"
       class="w-full"
       default-selected="1"
+      color="neutral"
     />
 
     <!-- Use our custom Table component with horizontal layout -->

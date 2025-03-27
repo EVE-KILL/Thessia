@@ -106,7 +106,7 @@ const handleClose = () => {
             <!-- Close button - always present -->
             <UButton
               icon="lucide:x"
-              color="gray"
+              color="neutral"
               variant="ghost"
               @click="handleClose"
             />

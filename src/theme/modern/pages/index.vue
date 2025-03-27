@@ -61,7 +61,7 @@
 
         <!-- Mobile View with Tabs - Only shown on mobile -->
         <div v-else class="mobile-layout">
-            <UTabs :items="tabItems" class="w-full" default-selected="kills" default-value="1">
+            <UTabs :items="tabItems" class="w-full" default-selected="kills" default-value="1" color="neutral">
                 <template #content="{ item }">
                     <div class="tab-content">
                         <!-- Top Lists tab content -->

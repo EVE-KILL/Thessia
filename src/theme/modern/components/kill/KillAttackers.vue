@@ -6,6 +6,7 @@
       :items="keyAttackerTabs"
       class="key-attackers-tabs"
       :ui="tabsUi"
+      color="neutral"
     >
       <!-- Final Blow Tab -->
       <template #final-blow="{ item }">

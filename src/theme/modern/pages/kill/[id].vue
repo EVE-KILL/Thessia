@@ -277,6 +277,7 @@
         :items="rightSideTabs"
         :ui="tabsUi"
         v-model="defaultDesktopTabIndex"
+        color="neutral"
       >
         <template #comments="{ item }">
           <KillComments :killId="killmail.killmail_id" />
@@ -343,6 +344,7 @@
         :items="mobileTabs"
         :ui="tabsUi"
         :default-index="defaultMobileTabIndex"
+        color="neutral"
       >
         <!-- Fitting Wheel Tab -->
         <template #fitting="{ item }">

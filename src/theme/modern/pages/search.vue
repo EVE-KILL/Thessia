@@ -55,10 +55,10 @@
                   />
                   <h3 class="text-xl font-bold">{{ capitalizeFirstLetter(type) }}</h3>
                   <UBadge
-                    :color="getBadgeColorForEntityType(type)"
                     variant="subtle"
                     size="sm"
                     class="ml-2"
+                    :class="getBadgeColorForEntityType(type)"
                   >
                     {{ group.length }}
                   </UBadge>
@@ -74,7 +74,6 @@
                 >
                   <UButton
                     :to="`/${hit.type}/${hit.id}`"
-                    color="gray"
                     variant="ghost"
                     block
                     class="justify-between h-auto py-2"
@@ -290,25 +289,25 @@ const getColorForEntityType = (type: string) => {
   }
 };
 
-// Get the appropriate badge color for each entity type
+// Get the appropriate badge color class for each entity type
 const getBadgeColorForEntityType = (type: string) => {
   switch (type.toLowerCase()) {
     case 'character':
-      return 'blue';
+      return 'badge-blue';
     case 'corporation':
-      return 'green';
+      return 'badge-green';
     case 'alliance':
-      return 'purple';
+      return 'badge-purple';
     case 'ship':
-      return 'red';
+      return 'badge-red';
     case 'item':
-      return 'orange';
+      return 'badge-orange';
     case 'system':
-      return 'teal';
+      return 'badge-teal';
     case 'region':
-      return 'indigo';
+      return 'badge-indigo';
     default:
-      return 'gray';
+      return 'badge-gray';
   }
 };
 
@@ -379,3 +378,46 @@ useSeoMeta({
   )
 });
 </script>
+
+<style scoped>
+/* Custom badge color classes */
+.badge-blue {
+  background-color: rgba(59, 130, 246, 0.1);
+  color: rgb(59, 130, 246);
+}
+
+.badge-green {
+  background-color: rgba(16, 185, 129, 0.1);
+  color: rgb(16, 185, 129);
+}
+
+.badge-purple {
+  background-color: rgba(139, 92, 246, 0.1);
+  color: rgb(139, 92, 246);
+}
+
+.badge-red {
+  background-color: rgba(239, 68, 68, 0.1);
+  color: rgb(239, 68, 68);
+}
+
+.badge-orange {
+  background-color: rgba(249, 115, 22, 0.1);
+  color: rgb(249, 115, 22);
+}
+
+.badge-teal {
+  background-color: rgba(20, 184, 166, 0.1);
+  color: rgb(20, 184, 166);
+}
+
+.badge-indigo {
+  background-color: rgba(99, 102, 241, 0.1);
+  color: rgb(99, 102, 241);
+}
+
+.badge-gray {
+  background-color: rgba(107, 114, 128, 0.1);
+  color: rgb(107, 114, 128);
+}
+</style>

@@ -83,6 +83,9 @@ const dropdownStyles = ref({});
 // Timer for hover delay
 const hoverTimer = ref<ReturnType<typeof setTimeout> | null>(null);
 
+// Add a ref to track positioning status
+const isPositioned = ref(false);
+
 // Handle hover events for opening/closing
 const handleMouseEnter = () => {
   if (!props.openOnHover) return;
@@ -180,9 +183,12 @@ const distributedColumns = computed(() => {
   return distributeItemsInColumns(props.items, calculateColumns.value);
 });
 
-// Position the dropdown - completely revised for viewport-based positioning
+// Position the dropdown - improved positioning flow
 const updatePosition = () => {
   if (!triggerRef.value || !dropdownRef.value) return;
+
+  // Start with dropdown invisible while calculating position
+  isPositioned.value = false;
 
   // Get trigger position relative to viewport
   const triggerRect = triggerRef.value.getBoundingClientRect();
@@ -206,12 +212,19 @@ const updatePosition = () => {
   let top = 0;
   let left = 0;
   let right = 'auto';
+  let transform = 'none';
 
   // Add 5px offset for better visual spacing
   const offsetY = 5;
 
-  // Smart positioning logic - using viewport coordinates
-  if (props.smartPosition) {
+  // SPECIAL CASE: Center alignment - handle differently
+  if (align === 'center') {
+    top = triggerRect.bottom + offsetY;
+    left = triggerRect.left + (triggerRect.width / 2);
+    transform = 'translateX(-50%)';
+  }
+  // Standard smart positioning logic
+  else if (props.smartPosition) {
     // Position relative to the trigger in the viewport with offset
     top = triggerRect.bottom + offsetY; // Bottom edge of trigger in viewport + offset
 
@@ -231,10 +244,10 @@ const updatePosition = () => {
         top = triggerRect.bottom + offsetY; // Add offset
         break;
       case 'top':
-        top = triggerRect.top - (dropdownRef.value?.offsetHeight || 0) - offsetY; // Subtract offset for top positioning
+        top = triggerRect.top - (dropdownRef.value?.offsetHeight || 0) - offsetY;
         break;
       case 'left':
-        left = triggerRect.left - (dropdownRef.value?.offsetWidth || 0) - offsetY; // Subtract offset for left positioning
+        left = triggerRect.left - (dropdownRef.value?.offsetWidth || 0) - offsetY;
         top = triggerRect.top;
         break;
       case 'right':
@@ -248,6 +261,7 @@ const updatePosition = () => {
         left = position === 'top' || position === 'bottom' ? triggerRect.left : left;
         break;
       case 'center':
+        // Standard center alignment (not using transform)
         left = position === 'top' || position === 'bottom'
           ? triggerRect.left + (triggerRect.width / 2) - ((dropdownRef.value?.offsetWidth || 0) / 2)
           : left;
@@ -263,64 +277,83 @@ const updatePosition = () => {
     }
   }
 
-  // Get dropdown dimensions
+  // Get dropdown dimensions - first pass
   const dropdownWidth = dropdownRef.value?.offsetWidth || 0;
   const dropdownHeight = dropdownRef.value?.offsetHeight || 0;
 
-  // Horizontal constraint within viewport
-  if (left !== 'auto' && left + dropdownWidth > screenWidth) {
-    left = screenWidth - dropdownWidth - 8;
-  }
-  if (left !== 'auto' && left < 8) {
-    left = 8;
-  }
-
-  // Vertical constraint within viewport
-  if (top + dropdownHeight > screenHeight) {
-    // Flip to above if below would go off screen
-    if (position === 'bottom' || props.smartPosition) {
-      top = triggerRect.top - dropdownHeight;
-    } else {
-      top = screenHeight - dropdownHeight - 8;
-    }
-  }
-  if (top < 8) {
-    top = 8;
-  }
-
-  // Apply final styles - using fixed position to stay relative to viewport
+  // Apply initial styles with opacity 0 to measure properly without showing it
   dropdownStyles.value = {
-    position: 'fixed', // Key change: use fixed positioning to stay in viewport
+    position: 'fixed',
     top: `${top}px`,
     left: left !== 'auto' ? `${left}px` : left,
     right: right !== 'auto' ? `${right}px` : 'auto',
     width: widthValue,
     maxHeight: `${props.maxHeight}vh`,
-    zIndex: 50
+    zIndex: 50,
+    transform,
+    opacity: 0
   };
 
-  // Apply second-level adjustments after rendering
-  setTimeout(() => {
-    if (dropdownRef.value) {
-      const actualDropdownWidth = dropdownRef.value.offsetWidth;
+  // Ensure we have proper dimensions before continuing
+  nextTick(() => {
+    // Get updated dropdown dimensions now that we've applied initial styles
+    const updatedWidth = dropdownRef.value?.offsetWidth || dropdownWidth;
+    const updatedHeight = dropdownRef.value?.offsetHeight || dropdownHeight;
 
-      // Adjust horizontal position if needed
-      if (props.smartPosition) {
-        if (isOnRightSide) {
-          dropdownStyles.value.right = `${screenWidth - triggerRect.right}px`;
-          dropdownStyles.value.left = 'auto';
-        } else {
-          dropdownStyles.value.left = `${triggerRect.left}px`;
-          dropdownStyles.value.right = 'auto';
-        }
+    // For centered dropdowns
+    if (align === 'center') {
+      // Reapply the position with proper measurements
+      const leftEdge = left - (updatedWidth / 2);
+      const rightEdge = left + (updatedWidth / 2);
 
-        // Final edge detection
-        if (left !== 'auto' && left + actualDropdownWidth > screenWidth) {
-          dropdownStyles.value.left = `${screenWidth - actualDropdownWidth - 8}px`;
+      if (leftEdge < 8) {
+        // Too close to left edge, adjust position
+        const adjustment = 8 - leftEdge;
+        dropdownStyles.value.transform = `translateX(calc(-50% + ${adjustment}px))`;
+      } else if (rightEdge > screenWidth - 8) {
+        // Too close to right edge, adjust position
+        const adjustment = rightEdge - (screenWidth - 8);
+        dropdownStyles.value.transform = `translateX(calc(-50% - ${adjustment}px))`;
+      }
+    }
+    // Special handling for left side of screen
+    else if (!isOnRightSide) {
+      // Revalidate left position now that we have proper measurements
+      if (left !== 'auto' && left + updatedWidth > screenWidth - 8) {
+        dropdownStyles.value.left = `${screenWidth - updatedWidth - 8}px`;
+      }
+
+      // Ensure we're not too far left
+      if (left < 8 && left !== 'auto') {
+        dropdownStyles.value.left = '8px';
+      }
+    }
+    // Special handling for right side of screen
+    else {
+      // Confirm the right-side positioning is correct
+      if (right !== 'auto') {
+        // Make sure dropdown doesn't go off left edge of screen
+        const calculatedLeft = screenWidth - right - updatedWidth;
+        if (calculatedLeft < 8) {
+          dropdownStyles.value.right = `${screenWidth - updatedWidth - 16}px`;
         }
       }
     }
-  }, 10);
+
+    // Vertical constraint within viewport
+    if (top + updatedHeight > screenHeight - 8) {
+      // Flip to above if below would go off screen
+      if (position === 'bottom' || props.smartPosition) {
+        dropdownStyles.value.top = `${triggerRect.top - updatedHeight - offsetY}px`;
+      } else {
+        dropdownStyles.value.top = `${screenHeight - updatedHeight - 8}px`;
+      }
+    }
+
+    // Finally make it visible after all positioning is correct
+    dropdownStyles.value.opacity = 1;
+    isPositioned.value = true;
+  });
 };
 
 // Handle inner clicks
@@ -340,6 +373,9 @@ const handleScroll = () => {
 // Update position when dropdown state changes
 watch(() => isOpen.value, (value) => {
   if (value) {
+    // Reset positioning status when opening
+    isPositioned.value = false;
+
     // Use nextTick to ensure the dropdown is rendered before measuring
     nextTick(() => {
       updatePosition();
@@ -393,11 +429,13 @@ const contentStyle = computed(() => {
 
     <!-- Dropdown content -->
     <Teleport to="body">
+      <!-- Add a class that depends on positioning status -->
       <Transition name="dropdown">
         <div
           v-if="isOpen"
           ref="dropdownRef"
           class="custom-dropdown"
+          :class="{ 'is-positioned': isPositioned }"
           :style="dropdownStyles"
           @click="handleContentClick"
           @mouseenter="handleMouseEnter"
@@ -448,17 +486,27 @@ const contentStyle = computed(() => {
   padding: 0.5rem;
 }
 
-/* Animation for dropdown */
+/* Animation for dropdown - updated with proper transitions */
 .dropdown-enter-active,
 .dropdown-leave-active {
   transition: opacity 0.2s, transform 0.2s;
-  transform-origin: top;
+  transform-origin: top center;
 }
 
 .dropdown-enter-from,
 .dropdown-leave-to {
   opacity: 0;
-  transform: translateY(-0.25rem);
+  transform: translateY(-0.75rem);
+}
+
+/* Override transitions when positioning isn't complete */
+.custom-dropdown {
+  transition: opacity 0.15s ease-out;
+}
+
+.custom-dropdown:not(.is-positioned) {
+  /* Prevent animation until properly positioned */
+  pointer-events: none;
 }
 
 /* Add cursor-pointer for items in dropdown */

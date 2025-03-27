@@ -69,6 +69,13 @@ const showResults = computed(() => {
          query.value.length >= 3;
 });
 
+// Watch for changes in results to properly show/hide dropdown
+watch(() => results.value?.hits, (newHits) => {
+  if (newHits && newHits.length > 0 && query.value.length >= 3) {
+    shouldShowDropdown.value = true;
+  }
+}, { deep: true });
+
 // Reset active item when results change
 watch(() => results.value?.hits, () => {
   activeItemIndex.value = -1;
@@ -200,30 +207,22 @@ const capitalizeFirstLetter = (string: string) => {
   return string.charAt(0).toUpperCase() + string.slice(1);
 };
 
-// Show dropdown when input is focused
+// Show dropdown when input is focused - UPDATED
 const handleFocus = () => {
-  shouldShowDropdown.value = true;
+  // Only show dropdown if we already have results
+  if (results.value?.hits && results.value.hits.length > 0) {
+    shouldShowDropdown.value = true;
+  }
 
+  // For mobile, show fullscreen search
   if (isMobile.value && query.value.length > 0) {
     isFullscreenMobile.value = true;
-  } else {
-    // Fix animation issues by forcing a proper initial position
-    nextTick(() => {
-      dropdownTransition.value.entering = true;
-      setTimeout(() => {
-        dropdownTransition.value.entering = false;
-      }, 50);
-    });
   }
 };
 
-// Hide dropdown when clicking outside
-const handleClickOutside = (event: MouseEvent) => {
-  const searchContainer = document.querySelector('.search-container');
-  if (searchContainer && !searchContainer.contains(event.target as Node)) {
-    shouldShowDropdown.value = false;
-  }
-};
+// Replace previous click outside handler with simpler logic
+// since Dropdown component handles this for us
+const handleClickOutside = () => {};
 
 // Click on search result
 const handleResultClick = (hit: any) => {
@@ -251,14 +250,9 @@ const openMobileSearch = () => {
   });
 };
 
-// Set up and clean up click outside handler
-onMounted(() => {
-  document.addEventListener('click', handleClickOutside);
-});
-
-onUnmounted(() => {
-  document.removeEventListener('click', handleClickOutside);
-});
+// Set up and clean up click outside handler - simplified as Dropdown handles this
+onMounted(() => {});
+onUnmounted(() => {});
 </script>
 
 <template>
@@ -289,13 +283,20 @@ onUnmounted(() => {
       </div>
     </form>
 
-    <!-- Desktop Search Results Dropdown -->
-    <div
-      v-if="showResults && !isMobile"
-      ref="dropdownRef"
-      class="search-dropdown absolute left-1/2 mt-1 border border-gray-200 dark:border-gray-700 rounded-md shadow-lg z-50 max-h-[70vh] overflow-y-auto"
-      :class="{ 'initial-position': dropdownTransition.entering }"
+    <!-- Desktop Search Results using Dropdown component -->
+    <Dropdown
+      v-model="shouldShowDropdown"
+      position="bottom"
+      align="center"
+      :smart-position="true"
+      width="800px"
+      :max-height="70"
     >
+      <template #trigger>
+        <!-- Empty invisible trigger because we control open state separately -->
+        <div class="invisible h-0 w-0"></div>
+      </template>
+
       <div class="dropdown-content p-2 divide-y divide-gray-100 dark:divide-gray-700">
         <!-- Search Header -->
         <div class="flex items-center justify-between mb-2">
@@ -354,17 +355,17 @@ onUnmounted(() => {
           </template>
         </div>
 
-        <!-- View all results button -->
+        <!-- View all results button - FIX FOR NULL REFERENCE -->
         <div class="pt-2 mt-2">
           <button
             class="w-full text-center py-2 px-3 text-sm text-primary-600 dark:text-primary-400 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-md cursor-pointer"
             @click="navigateToSearch(); shouldShowDropdown = false;"
           >
-            {{ t('search.viewAllResults', { count: results.estimatedTotalHits || results.hits.length }) }}
+            {{ t('search.viewAllResults', { count: results?.estimatedTotalHits || results?.hits?.length || 0 }) }}
           </button>
         </div>
       </div>
-    </div>
+    </Dropdown>
 
     <!-- Mobile Fullscreen Search using the shared modal component -->
     <MobileFullscreen
@@ -459,14 +460,14 @@ onUnmounted(() => {
         <p>{{ t('search.placeholder') }}</p>
       </div>
 
-      <!-- Footer slot for search all button -->
+      <!-- Footer slot for search all button - FIX FOR NULL REFERENCE -->
       <template #footer>
         <div v-if="results && results.hits && results.hits.length > 0" class="fixed-bottom-button">
           <button
             class="w-full py-2 px-4 bg-primary-500 hover:bg-primary-600 text-white rounded-md font-medium transition-colors"
             @click="navigateToSearch(); isFullscreenMobile = false;"
           >
-            {{ t('search.viewAllResults', { count: results.estimatedTotalHits || results.hits.length }) }}
+            {{ t('search.viewAllResults', { count: results?.estimatedTotalHits || results?.hits?.length || 0 }) }}
           </button>
         </div>
       </template>
@@ -487,40 +488,6 @@ onUnmounted(() => {
   }
 }
 
-/* Renamed from custom-dropdown to search-dropdown */
-.search-dropdown {
-  width: min(90vw, 800px); /* Increased max width to accommodate up to 4 columns */
-  background-color: var(--ui-bg, #ffffff);
-  border-radius: var(--ui-radius, 0.5rem);
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
-  border: 1px solid var(--ui-border, rgba(229, 231, 235));
-  color: var(--ui-text, inherit);
-  transition: opacity 0.2s, transform 0.2s;
-  transform-origin: top;
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
-}
-
-:root.dark .search-dropdown {
-  background-color: var(--ui-bg, rgb(31, 41, 55));
-  border-color: var(--ui-border, rgba(55, 65, 81));
-}
-
-.dropdown-content {
-  padding: 0.75rem;
-}
-
-/* Safari fix for backdrop-filter */
-@supports not ((backdrop-filter: blur(8px)) or (-webkit-backdrop-filter: blur(8px))) {
-  .search-dropdown {
-    background-color: rgba(255, 255, 255, 0.98);
-  }
-
-  :root.dark .search-dropdown {
-    background-color: rgba(31, 41, 55, 0.98);
-  }
-}
-
 /* Category styling */
 .category-heading {
   position: sticky;
@@ -529,52 +496,11 @@ onUnmounted(() => {
   z-index: 1;
 }
 
-/* Animation for dropdown */
-.search-dropdown {
-  animation: dropdownFadeIn 0.2s ease;
-}
-
-@keyframes dropdownFadeIn {
-  from {
-    opacity: 0;
-    transform: translateY(-0.25rem) translateX(-50%);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0) translateX(-50%);
-  }
-}
-
 /* Prevent iOS zoom on input focus */
 @media (max-width: 767px) {
   input[type="search"] {
     font-size: 16px !important; /* Minimum font size to prevent iOS zoom */
   }
-}
-
-/* Fix initial positioning class to prevent jumping */
-.initial-position {
-  transform: translateX(-50%) !important;
-  opacity: 0;
-}
-
-/* Fix animation with proper transform for centering */
-@keyframes dropdownFadeIn {
-  from {
-    opacity: 0;
-    transform: translateY(-0.25rem) translateX(-50%);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0) translateX(-50%);
-  }
-}
-
-/* Fix the search dropdown positioning */
-.search-dropdown {
-  transform: translateX(-50%);
-  animation: dropdownFadeIn 0.2s ease forwards;
-  width: min(90vw, 800px);
 }
 
 /* Fixed bottom button styling (for "View all results" button) */
