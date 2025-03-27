@@ -32,3 +32,6 @@ values.yaml
 
 # Ignore the console/cron/queue loaders
 .loader.ts
+
+# Cloudflare Analytics Beacon
+_ca/

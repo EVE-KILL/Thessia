@@ -34,7 +34,6 @@
     "mongoose": "^8.13.0",
     "node-gyp": "^11.1.0",
     "nuxt": "^3.16.1",
-    "nuxt-cloudflare-analytics": "^1.0.8",
     "nuxt-security": "2.2.0",
     "server-health": "^6.0.2",
     "sharp": "^0.33.5",

@@ -3,6 +3,7 @@ const theme = process.env.THEME || "modern";
 import { generateCliLoader } from './build-cli';
 import { generateCronLoader } from './build-cron';
 import { generateQueueLoader } from './build-queue';
+import { generateCloudflareBeacon } from './build-cloudflare';
 
 // https://nuxt.com/docs/api/configuration/nuxt-config
 export default defineNuxtConfig({
@@ -136,8 +137,14 @@ export default defineNuxtConfig({
     },
 
     runtimeConfig: {
-        public: {},
+        public: {
+            cloudflare: {
+                enabled: process.env.CLOUDFLARE_ANALYTICS_ENABLED === 'true' || false,
+                token: process.env.CLOUDFLARE_ANALYTICS_TOKEN || '',
+            },
+        },
     },
+
     // Ensure modern compatibility mode
     compatibilityDate: "2024-11-01",
 
@@ -163,14 +170,8 @@ export default defineNuxtConfig({
         "@nuxtjs/seo",
         // "nuxt-security",
         "@nuxtjs/color-mode",
-        "@nuxtjs/device",
-        "nuxt-cloudflare-analytics"
+        "@nuxtjs/device"
     ],
-
-    cloudflareAnalytics: {
-        token: process.env.CLOUDFLARE_ANALYTICS_TOKEN,
-        scriptPath: "~/src/theme/" + theme + "/public/_ca/b.js",
-    },
 
     colorMode: {
         preference: "system",
@@ -299,22 +300,27 @@ export default defineNuxtConfig({
                     title: "EVE-KILL",
                     href: "/search.xml",
                 },
-            ],
+            ]
         },
     },
     hooks: {
         // Generate loaders before build
-        'build:before': () => {
+        'build:before': async () => {
             generateCliLoader();
             generateCronLoader();
             generateQueueLoader();
         },
 
         // Also generate loaders on dev server start
-        'app:resolve': () => {
+        'app:resolve': async () => {
             generateCliLoader();
             generateCronLoader();
             generateQueueLoader();
         },
+
+        // Process Cloudflare beacon during build
+        'nitro:build:public-assets': (nitro) => {
+            generateCloudflareBeacon(nitro);
+        }
     }
 });
