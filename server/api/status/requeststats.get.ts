@@ -7,6 +7,7 @@ export default defineEventHandler(async (event) => {
     const query = getQuery(event);
     const period = query.period?.toString() || '24hours';
     const limit = parseInt(query.limit?.toString() || '1000', 10);
+    const requestType = query.type?.toString() || 'all'; // Can be 'all', 'web', 'api'
 
     // Determine time range based on period
     const now = new Date();
@@ -34,8 +35,22 @@ export default defineEventHandler(async (event) => {
         break;
     }
 
+    // Base query for time range
+    const baseQuery = { timestamp: { $gte: startDate } };
+
+    // Add filter based on request type
+    let typeFilter = {};
+    if (requestType === 'web') {
+      typeFilter = { isApi: false };
+    } else if (requestType === 'api') {
+      typeFilter = { isApi: true };
+    }
+
+    // Combine filters
+    const finalQuery = { ...baseQuery, ...typeFilter };
+
     // Check if we have cached results to avoid excessive database queries
-    const cacheKey = `requeststats:${period}:${limit}`;
+    const cacheKey = `requeststats:${period}:${limit}:${requestType}`;
     const cache = RedisStorage.getInstance().getClient();
     const cachedData = await cache.get(cacheKey);
 
@@ -45,48 +60,50 @@ export default defineEventHandler(async (event) => {
 
     // Fetch raw request data from MongoDB
     const rawStats = await RequestStats.find(
-      { timestamp: { $gte: startDate } },
+      finalQuery,
       null,
       { sort: { timestamp: -1 }, limit }
     ).lean();
 
-    // Total requests
-    const totalRequests = await RequestStats.countDocuments({ timestamp: { $gte: startDate } });
+    // Get total counts
+    const totalRequests = await RequestStats.countDocuments(finalQuery);
+    const totalWebRequests = await RequestStats.countDocuments({ ...baseQuery, isApi: false });
+    const totalApiRequests = await RequestStats.countDocuments({ ...baseQuery, isApi: true });
 
     // Aggregate statistics
     const pageViews = await RequestStats.aggregate([
-      { $match: { timestamp: { $gte: startDate } } },
+      { $match: finalQuery },
       { $group: { _id: '$url', count: { $sum: 1 } } },
       { $sort: { count: -1 } },
       { $limit: 20 }
     ]);
 
     const browserStats = await RequestStats.aggregate([
-      { $match: { timestamp: { $gte: startDate } } },
+      { $match: finalQuery },
       { $group: { _id: '$browser', count: { $sum: 1 } } },
       { $sort: { count: -1 } }
     ]);
 
     const osStats = await RequestStats.aggregate([
-      { $match: { timestamp: { $gte: startDate } } },
+      { $match: finalQuery },
       { $group: { _id: '$os', count: { $sum: 1 } } },
       { $sort: { count: -1 } }
     ]);
 
     const deviceStats = await RequestStats.aggregate([
-      { $match: { timestamp: { $gte: startDate } } },
+      { $match: finalQuery },
       { $group: { _id: '$device', count: { $sum: 1 } } },
       { $sort: { count: -1 } }
     ]);
 
     const statusCodeStats = await RequestStats.aggregate([
-      { $match: { timestamp: { $gte: startDate } } },
+      { $match: finalQuery },
       { $group: { _id: '$statusCode', count: { $sum: 1 } } },
       { $sort: { _id: 1 } } // Sort by status code ascending
     ]);
 
     const hourlyStats = await RequestStats.aggregate([
-      { $match: { timestamp: { $gte: startDate } } },
+      { $match: finalQuery },
       {
         $group: {
           _id: {
@@ -115,7 +132,15 @@ export default defineEventHandler(async (event) => {
       };
     });
 
-    // Get recent requests - for admin view
+    // Get top API endpoints (useful for API tab)
+    const topApiEndpoints = await RequestStats.aggregate([
+      { $match: { ...baseQuery, isApi: true } },
+      { $group: { _id: '$url', count: { $sum: 1 } } },
+      { $sort: { count: -1 } },
+      { $limit: 20 }
+    ]);
+
+    // Get recent requests - for non-admin view (masked IP)
     const recentRequests = rawStats.slice(0, 100).map(req => {
       const { ip, userAgent, ...safeData } = req;
       return {
@@ -127,14 +152,17 @@ export default defineEventHandler(async (event) => {
 
     const result = {
       totalRequests,
+      totalWebRequests,
+      totalApiRequests,
+      requestType,
       pageViews: pageViews.map(item => ({ url: item._id, count: item.count })),
       browserStats: browserStats.map(item => ({ name: item._id, count: item.count })),
       osStats: osStats.map(item => ({ name: item._id, count: item.count })),
       deviceStats: deviceStats.map(item => ({ name: item._id, count: item.count })),
       statusCodeStats: statusCodeStats.map(item => ({ code: item._id, count: item.count })),
+      topApiEndpoints: topApiEndpoints.map(item => ({ url: item._id, count: item.count })),
       timeData,
       recentRequests,
-      // Only provide raw data to admins in a different endpoint
     };
 
     // Cache the results to avoid excessive database queries

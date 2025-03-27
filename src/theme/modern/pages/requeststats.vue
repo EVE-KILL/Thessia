@@ -1,17 +1,17 @@
 <script setup lang="ts">
-import { ref, onMounted, watch, onUnmounted } from 'vue'
-import { useIntervalFn, useDocumentVisibility } from '@vueuse/core'
-import VChart from 'vue-echarts'
-import { use } from 'echarts/core'
-import { CanvasRenderer } from 'echarts/renderers'
-import { BarChart, PieChart, LineChart } from 'echarts/charts'
+import { ref, computed, onMounted, watch, onUnmounted } from 'vue';
+import { useIntervalFn, useDocumentVisibility } from '@vueuse/core';
+import VChart from 'vue-echarts';
+import { use } from 'echarts/core';
+import { CanvasRenderer } from 'echarts/renderers';
+import { BarChart, PieChart, LineChart } from 'echarts/charts';
 import {
     TitleComponent,
     TooltipComponent,
     LegendComponent,
     GridComponent,
     DataZoomComponent
-} from 'echarts/components'
+} from 'echarts/components';
 
 // Get i18n instance
 const { t } = useI18n();
@@ -52,6 +52,9 @@ const timePeriods = [
 // Default time period
 const selectedTimePeriod = ref('24hours');
 
+// Request type selection (all, web, api)
+const requestType = ref('web');
+
 // Chart options
 const pageViewsChartOptions = ref({});
 const browserChartOptions = ref({});
@@ -59,6 +62,7 @@ const osChartOptions = ref({});
 const deviceChartOptions = ref({});
 const timeSeriesChartOptions = ref({});
 const statusCodeChartOptions = ref({});
+const apiEndpointsChartOptions = ref({});
 
 // Auto refresh settings
 const autoRefresh = ref(true);
@@ -73,13 +77,45 @@ const checkIfMobile = () => {
   isMobile.value = window.innerWidth < 768;
 };
 
-// Fetch request statistics data
-const { data: statsData, pending: loading, error, refresh: refreshData } = useLazyFetch('/api/status/requeststats', {
-  server: false, // Only fetch on client-side
-  query: {
-    period: selectedTimePeriod
-  }
+// Create custom tooltip reference
+const tooltip = ref({
+  visible: false,
+  text: '',
+  x: 0,
+  y: 0
 });
+
+// Method to show tooltip on URL hover
+const showTooltip = (event, text) => {
+  if (!text) return;
+
+  tooltip.value.visible = true;
+  tooltip.value.text = text;
+
+  // Position the tooltip near the cursor
+  const rect = event.target.getBoundingClientRect();
+  tooltip.value.x = rect.left;
+  tooltip.value.y = rect.bottom + window.scrollY + 5; // 5px below the element
+};
+
+// Method to hide tooltip
+const hideTooltip = () => {
+  tooltip.value.visible = false;
+};
+
+// Fetch request statistics data for the current request type
+const fetchRequestStats = () => {
+  return useLazyFetch('/api/status/requeststats', {
+    server: false, // Only fetch on client-side
+    query: {
+      period: selectedTimePeriod,
+      type: requestType
+    }
+  });
+};
+
+// Initialize data fetch
+const { data: statsData, pending: loading, error, refresh: refreshData } = fetchRequestStats();
 
 // Fetch admin data if user is administrator
 const { data: adminData, refresh: refreshAdminData } = useLazyFetch('/api/status/requeststats/admin', {
@@ -144,11 +180,24 @@ const formatNumber = (value: number): string => {
   return value?.toLocaleString("en-US") || "0";
 };
 
+// Calculate percentage of API vs Web requests
+const apiRequestPercentage = computed(() => {
+  if (!statsData.value) return 0;
+  const total = statsData.value.totalRequests;
+  if (total === 0) return 0;
+  return Math.round((statsData.value.totalApiRequests / total) * 100);
+});
+
+const webRequestPercentage = computed(() => {
+  if (!statsData.value) return 0;
+  return 100 - apiRequestPercentage.value;
+});
+
 // Function to update chart options - Page Views
 const updatePageViewsChart = () => {
   if (!statsData.value?.pageViews) return;
 
-  // Take top 10 page views
+  // Take top 15 page views
   const data = statsData.value.pageViews.slice(0, 15).map(item => ({
     name: item.url,
     value: item.count
@@ -156,7 +205,7 @@ const updatePageViewsChart = () => {
 
   pageViewsChartOptions.value = {
     title: {
-      text: t('requeststats.charts.pageViews'),
+      text: requestType.value === 'api' ? t('requeststats.charts.apiEndpoints') : t('requeststats.charts.pageViews'),
       left: 'center'
     },
     tooltip: {
@@ -164,7 +213,53 @@ const updatePageViewsChart = () => {
       formatter: '{b}: {c} ({d}%)'
     },
     series: [{
-      name: t('requeststats.charts.pageViews'),
+      name: requestType.value === 'api' ? t('requeststats.charts.apiEndpoints') : t('requeststats.charts.pageViews'),
+      type: 'pie',
+      radius: ['40%', '70%'],
+      itemStyle: {
+        borderRadius: 10,
+        borderColor: '#fff',
+        borderWidth: 2
+      },
+      label: {
+        show: false
+      },
+      emphasis: {
+        label: {
+          show: true,
+          fontSize: '14',
+          fontWeight: 'bold'
+        }
+      },
+      labelLine: {
+        show: false
+      },
+      data: data
+    }]
+  };
+};
+
+// Function to update API endpoints chart (for overview)
+const updateApiEndpointsChart = () => {
+  if (!statsData.value?.topApiEndpoints) return;
+
+  // Take top 10 API endpoints
+  const data = statsData.value.topApiEndpoints.slice(0, 10).map(item => ({
+    name: item.url,
+    value: item.count
+  }));
+
+  apiEndpointsChartOptions.value = {
+    title: {
+      text: t('requeststats.charts.topApiEndpoints'),
+      left: 'center'
+    },
+    tooltip: {
+      trigger: 'item',
+      formatter: '{b}: {c} ({d}%)'
+    },
+    series: [{
+      name: t('requeststats.charts.topApiEndpoints'),
       type: 'pie',
       radius: ['40%', '70%'],
       itemStyle: {
@@ -397,6 +492,13 @@ const updateTimeSeriesChart = () => {
 // Tab state
 const activeTab = ref('overview');
 
+// Handle request type change
+const changeRequestType = (type) => {
+  requestType.value = type;
+  // Reload data with the new request type
+  refreshData();
+};
+
 // Watch for data changes and update charts
 watch([statsData, selectedTimePeriod], () => {
   if (statsData.value) {
@@ -406,6 +508,7 @@ watch([statsData, selectedTimePeriod], () => {
     updateDeviceChart();
     updateStatusCodeChart();
     updateTimeSeriesChart();
+    updateApiEndpointsChart();
   }
 }, { immediate: true });
 
@@ -448,45 +551,19 @@ onMounted(() => {
 onUnmounted(() => {
   window.removeEventListener('resize', checkIfMobile);
 });
-
-// Create custom tooltip reference
-const tooltip = ref({
-  visible: false,
-  text: '',
-  x: 0,
-  y: 0
-});
-
-// Method to show tooltip on URL hover
-const showTooltip = (event, text) => {
-  if (!text) return;
-  
-  tooltip.value.visible = true;
-  tooltip.value.text = text;
-  
-  // Position the tooltip near the cursor
-  const rect = event.target.getBoundingClientRect();
-  tooltip.value.x = rect.left;
-  tooltip.value.y = rect.bottom + window.scrollY + 5; // 5px below the element
-};
-
-// Method to hide tooltip
-const hideTooltip = () => {
-  tooltip.value.visible = false;
-};
 </script>
 
 <template>
   <div class="mx-auto">
     <!-- Tooltip element that follows cursor -->
     <Teleport to="body">
-      <div v-if="tooltip.visible" 
+      <div v-if="tooltip.visible"
            class="fixed z-50 bg-white dark:bg-gray-800 p-2 rounded shadow-lg border border-gray-200 dark:border-gray-700 text-sm max-w-[90vw] backdrop-blur-md"
            :style="{top: `${tooltip.y}px`, left: `${tooltip.x}px`, backgroundColor: 'var(--color-background)', boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)'}">
         {{ tooltip.text }}
       </div>
     </Teleport>
-    
+
     <div class="bg-gray-100 dark:bg-gray-900 rounded-lg shadow-lg p-4">
       <div class="flex justify-between items-center mb-4">
         <h1 class="text-2xl font-bold">{{ $t('requeststats.pageTitle') }}</h1>
@@ -533,16 +610,24 @@ const hideTooltip = () => {
             />
           </div>
 
-          <!-- Summary Cards -->
+          <!-- Summary Cards - Now with Web/API Split -->
           <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 mb-6">
             <div class="bg-indigo-50 dark:bg-indigo-900/30 rounded-lg shadow p-4">
               <div class="text-xs uppercase text-indigo-700 dark:text-indigo-300">{{ $t('requeststats.totalRequests') }}</div>
-              <div class="text-xl font-mono truncate">{{ formatNumber(statsData.totalRequests) }}</div>
+              <div class="text-xl font-mono truncate">
+                {{ formatNumber(statsData.totalWebRequests + statsData.totalApiRequests) }}
+              </div>
+              <div class="text-xs mt-1">
+                <span class="text-blue-600 dark:text-blue-400">{{ $t('requeststats.webRequests') }}: {{ formatNumber(statsData.totalWebRequests) }} ({{ webRequestPercentage }}%)</span><br>
+                <span class="text-green-600 dark:text-green-400">{{ $t('requeststats.apiRequests') }}: {{ formatNumber(statsData.totalApiRequests) }} ({{ apiRequestPercentage }}%)</span>
+              </div>
             </div>
 
             <div class="bg-emerald-50 dark:bg-emerald-900/30 rounded-lg shadow p-4"
                  v-if="statsData.pageViews && statsData.pageViews.length > 0">
-              <div class="text-xs uppercase text-emerald-700 dark:text-emerald-300">{{ $t('requeststats.topPage') }}</div>
+              <div class="text-xs uppercase text-emerald-700 dark:text-emerald-300">
+                {{ requestType === 'api' ? $t('requeststats.topApiEndpoint') : $t('requeststats.topPage') }}
+              </div>
               <div class="text-xl font-mono truncate">
                 {{ statsData.pageViews[0].url }} ({{ formatNumber(statsData.pageViews[0].count) }})
               </div>
@@ -565,6 +650,32 @@ const hideTooltip = () => {
             </div>
           </div>
 
+          <!-- Request Type Selector -->
+          <div class="flex mb-6 border-b border-gray-200 dark:border-gray-700">
+            <div class="mr-4">
+              <UButton
+                :color="requestType === 'web' ? 'primary' : 'gray'"
+                variant="ghost"
+                @click="changeRequestType('web')"
+                class="rounded-b-none border-b-2"
+                :class="requestType === 'web' ? 'border-primary-500' : 'border-transparent'"
+              >
+                {{ $t('requeststats.webRequests') }}
+              </UButton>
+            </div>
+            <div>
+              <UButton
+                :color="requestType === 'api' ? 'primary' : 'gray'"
+                variant="ghost"
+                @click="changeRequestType('api')"
+                class="rounded-b-none border-b-2"
+                :class="requestType === 'api' ? 'border-primary-500' : 'border-transparent'"
+              >
+                {{ $t('requeststats.apiRequests') }}
+              </UButton>
+            </div>
+          </div>
+
           <!-- Main Content Tabs -->
           <UTabs
             :items="[
@@ -581,7 +692,13 @@ const hideTooltip = () => {
             <!-- Overview Tab -->
             <template #overview>
               <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-                <UCard>
+                <!-- Main content charts -->
+                <UCard v-if="requestType === 'web'">
+                  <div class="h-64">
+                    <v-chart :option="timeSeriesChartOptions" autoresize />
+                  </div>
+                </UCard>
+                <UCard v-else>
                   <div class="h-64">
                     <v-chart :option="timeSeriesChartOptions" autoresize />
                   </div>
@@ -594,7 +711,53 @@ const hideTooltip = () => {
                 </UCard>
               </div>
 
+              <!-- If web request type, show both web and API stats on overview -->
+              <div v-if="requestType === 'web'" class="mb-6">
+                <UCard>
+                  <template #header>
+                    <div class="flex items-center">
+                      <UIcon name="lucide:code" class="mr-2" />
+                      <h3 class="font-bold">{{ $t('requeststats.charts.topApiEndpoints') }}</h3>
+                    </div>
+                  </template>
+
+                  <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                    <div class="h-64">
+                      <v-chart :option="apiEndpointsChartOptions" autoresize />
+                    </div>
+                    <div class="overflow-x-auto">
+                      <table class="min-w-full">
+                        <thead>
+                          <tr class="bg-gray-50 dark:bg-gray-800">
+                            <th class="py-3 px-4 text-left">{{ $t('requeststats.tableHeaders.apiEndpoint') }}</th>
+                            <th class="py-3 px-4 text-right">{{ $t('requeststats.tableHeaders.count') }}</th>
+                            <th class="py-3 px-4 text-right">{{ $t('requeststats.tableHeaders.percentage') }}</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          <tr v-for="(endpoint, index) in statsData.topApiEndpoints?.slice(0, 10)" :key="index"
+                              class="border-t border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors">
+                            <td class="py-3 px-4 max-w-xs truncate"
+                                @mouseenter="showTooltip($event, endpoint.url)"
+                                @mouseleave="hideTooltip">
+                              <div class="cursor-help relative">
+                                <span>{{ endpoint.url }}</span>
+                              </div>
+                            </td>
+                            <td class="py-3 px-4 text-right font-mono">{{ formatNumber(endpoint.count) }}</td>
+                            <td class="py-3 px-4 text-right font-mono">
+                              {{ ((endpoint.count / statsData.totalApiRequests) * 100).toFixed(2) }}%
+                            </td>
+                          </tr>
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                </UCard>
+              </div>
+
               <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <!-- Bottom row charts -->
                 <UCard>
                   <div class="h-64">
                     <v-chart :option="browserChartOptions" autoresize />
@@ -621,15 +784,19 @@ const hideTooltip = () => {
                 <template #header>
                   <div class="flex items-center">
                     <UIcon name="lucide:file" class="mr-2" />
-                    <h3 class="font-bold">{{ $t('requeststats.charts.topPages') }}</h3>
+                    <h3 class="font-bold">
+                      {{ requestType === 'api' ? $t('requeststats.charts.topApiEndpoints') : $t('requeststats.charts.topPages') }}
+                    </h3>
                   </div>
                 </template>
-                
+
                 <div class="overflow-x-auto">
                   <table class="min-w-full">
                     <thead>
                       <tr class="bg-gray-50 dark:bg-gray-800">
-                        <th class="py-3 px-4 text-left">{{ $t('requeststats.tableHeaders.url') }}</th>
+                        <th class="py-3 px-4 text-left">
+                          {{ requestType === 'api' ? $t('requeststats.tableHeaders.apiEndpoint') : $t('requeststats.tableHeaders.url') }}
+                        </th>
                         <th class="py-3 px-4 text-right">{{ $t('requeststats.tableHeaders.count') }}</th>
                         <th class="py-3 px-4 text-right">{{ $t('requeststats.tableHeaders.percentage') }}</th>
                       </tr>
@@ -637,8 +804,8 @@ const hideTooltip = () => {
                     <tbody>
                       <tr v-for="(pageView, index) in statsData.pageViews" :key="index"
                           class="border-t border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors">
-                        <td class="py-3 px-4 max-w-xs truncate" 
-                            @mouseenter="showTooltip($event, pageView.url)" 
+                        <td class="py-3 px-4 max-w-xs truncate"
+                            @mouseenter="showTooltip($event, pageView.url)"
                             @mouseleave="hideTooltip">
                           <div class="cursor-help relative">
                             <span>{{ pageView.url }}</span>
@@ -665,7 +832,7 @@ const hideTooltip = () => {
                       <h3 class="font-bold">{{ $t('requeststats.charts.browsers') }}</h3>
                     </div>
                   </template>
-                  
+
                   <div class="overflow-x-auto">
                     <table class="min-w-full">
                       <thead>
@@ -688,7 +855,7 @@ const hideTooltip = () => {
                     </table>
                   </div>
                 </UCard>
-                
+
                 <UCard>
                   <template #header>
                     <div class="flex items-center">
@@ -696,7 +863,7 @@ const hideTooltip = () => {
                       <h3 class="font-bold">{{ $t('requeststats.charts.operatingSystems') }}</h3>
                     </div>
                   </template>
-                  
+
                   <div class="overflow-x-auto">
                     <table class="min-w-full">
                       <thead>
@@ -720,7 +887,7 @@ const hideTooltip = () => {
                   </div>
                 </UCard>
               </div>
-              
+
               <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <UCard>
                   <template #header>
@@ -729,7 +896,7 @@ const hideTooltip = () => {
                       <h3 class="font-bold">{{ $t('requeststats.charts.devices') }}</h3>
                     </div>
                   </template>
-                  
+
                   <div class="overflow-x-auto">
                     <table class="min-w-full">
                       <thead>
@@ -752,7 +919,7 @@ const hideTooltip = () => {
                     </table>
                   </div>
                 </UCard>
-                
+
                 <UCard>
                   <template #header>
                     <div class="flex items-center">
@@ -760,7 +927,7 @@ const hideTooltip = () => {
                       <h3 class="font-bold">{{ $t('requeststats.charts.statusCodes') }}</h3>
                     </div>
                   </template>
-                  
+
                   <div class="h-64">
                     <v-chart :option="statusCodeChartOptions" autoresize />
                   </div>
@@ -777,12 +944,12 @@ const hideTooltip = () => {
                     <h3 class="font-bold">{{ $t('requeststats.charts.requestsOverTime') }}</h3>
                   </div>
                 </template>
-                
+
                 <div class="h-96">
                   <v-chart :option="timeSeriesChartOptions" autoresize />
                 </div>
               </UCard>
-              
+
               <UAlert class="mt-6" color="info">
                 <template #icon>
                   <UIcon name="lucide:info" />
@@ -800,12 +967,12 @@ const hideTooltip = () => {
                     <h3 class="font-bold">{{ $t('requeststats.adminView.title') }}</h3>
                   </div>
                 </template>
-                
+
                 <p class="mb-4 text-amber-600 dark:text-amber-400">
                   <UIcon name="lucide:alert-triangle" class="inline-block mr-1" />
                   {{ $t('requeststats.adminView.warning') }}
                 </p>
-                
+
                 <div class="overflow-x-auto">
                   <table class="min-w-full text-sm">
                     <thead>
@@ -815,6 +982,7 @@ const hideTooltip = () => {
                         <th class="py-3 px-4 text-left">{{ $t('requeststats.tableHeaders.method') }}</th>
                         <th class="py-3 px-4 text-left">{{ $t('requeststats.tableHeaders.url') }}</th>
                         <th class="py-3 px-4 text-left">{{ $t('requeststats.tableHeaders.statusCode') }}</th>
+                        <th class="py-3 px-4 text-left">{{ $t('requeststats.tableHeaders.type') }}</th>
                         <th class="py-3 px-4 text-left">{{ $t('requeststats.tableHeaders.userAgent') }}</th>
                       </tr>
                     </thead>
@@ -824,14 +992,18 @@ const hideTooltip = () => {
                         <td class="py-2 px-4">{{ formatDate(request.timestamp) }}</td>
                         <td class="py-2 px-4">{{ request.ip }}</td>
                         <td class="py-2 px-4">{{ request.method }}</td>
-                        <td class="py-2 px-4 max-w-[200px] truncate cursor-help" 
-                            @mouseenter="showTooltip($event, request.url)" 
+                        <td class="py-2 px-4 max-w-[200px] truncate cursor-help"
+                            @mouseenter="showTooltip($event, request.url)"
                             @mouseleave="hideTooltip">
                           {{ request.url }}
                         </td>
                         <td class="py-2 px-4 font-mono">{{ request.statusCode }}</td>
-                        <td class="py-2 px-4 max-w-[200px] truncate cursor-help" 
-                            @mouseenter="showTooltip($event, request.userAgent)" 
+                        <td class="py-2 px-4">
+                          <span v-if="request.isApi" class="font-semibold text-green-600 dark:text-green-400">API</span>
+                          <span v-else class="font-semibold text-blue-600 dark:text-blue-400">Web</span>
+                        </td>
+                        <td class="py-2 px-4 max-w-[200px] truncate cursor-help"
+                            @mouseenter="showTooltip($event, request.userAgent)"
                             @mouseleave="hideTooltip">
                           {{ request.userAgent }}
                         </td>
@@ -849,7 +1021,7 @@ const hideTooltip = () => {
               </UCard>
             </template>
           </UTabs>
-          
+
           <!-- Recent requests (non-sensitive data for all users) -->
           <div class="mt-6">
             <UCard>
@@ -859,7 +1031,7 @@ const hideTooltip = () => {
                   <h3 class="font-bold">{{ $t('requeststats.recentRequests') }}</h3>
                 </div>
               </template>
-              
+
               <div class="overflow-x-auto">
                 <table class="min-w-full text-sm">
                   <thead>
@@ -871,6 +1043,7 @@ const hideTooltip = () => {
                       <th class="py-3 px-4 text-left">{{ $t('requeststats.tableHeaders.os') }}</th>
                       <th class="py-3 px-4 text-left">{{ $t('requeststats.tableHeaders.device') }}</th>
                       <th class="py-3 px-4 text-left">{{ $t('requeststats.tableHeaders.statusCode') }}</th>
+                      <th class="py-3 px-4 text-left">{{ $t('requeststats.tableHeaders.type') }}</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -878,8 +1051,8 @@ const hideTooltip = () => {
                         class="border-t border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors">
                       <td class="py-2 px-4">{{ formatDate(request.timestamp) }}</td>
                       <td class="py-2 px-4">{{ request.method }}</td>
-                      <td class="py-2 px-4 max-w-[200px] truncate cursor-help" 
-                          @mouseenter="showTooltip($event, request.url)" 
+                      <td class="py-2 px-4 max-w-[200px] truncate cursor-help"
+                          @mouseenter="showTooltip($event, request.url)"
                           @mouseleave="hideTooltip">
                         {{ request.url }}
                       </td>
@@ -887,6 +1060,10 @@ const hideTooltip = () => {
                       <td class="py-2 px-4">{{ request.os }}</td>
                       <td class="py-2 px-4">{{ request.device }}</td>
                       <td class="py-2 px-4 font-mono">{{ request.statusCode }}</td>
+                      <td class="py-2 px-4">
+                        <span v-if="request.isApi" class="font-semibold text-green-600 dark:text-green-400">API</span>
+                        <span v-else class="font-semibold text-blue-600 dark:text-blue-400">Web</span>
+                      </td>
                     </tr>
                   </tbody>
                 </table>

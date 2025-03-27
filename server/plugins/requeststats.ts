@@ -1,4 +1,5 @@
 import { nitroApp } from "nitropack/runtime/internal/app";
+import { cliLogger } from "~/server/helpers/Logger";
 import { RequestStats } from "~/server/models/RequestStats";
 import type { IRequestStats } from "~/server/interfaces/IRequestStats";
 
@@ -69,13 +70,30 @@ const parseUserAgent = (
 // Function to flush data to the database
 async function flushRequestStats() {
     if (inMemoryStorage.length > 0) {
-        // Clone the current storage and clear it
-        const batchToFlush = [...inMemoryStorage];
-        inMemoryStorage.length = 0;
+        try {
+            // Clone the current storage and clear it
+            const batchToFlush = [...inMemoryStorage];
+            inMemoryStorage.length = 0;
 
-        // Insert the batch into MongoDB
-        await RequestStats.insertMany(batchToFlush);
+            // Insert the batch into MongoDB
+            await RequestStats.insertMany(batchToFlush);
+            cliLogger.info(`[RequestStats] Flushed ${batchToFlush.length} request entries to the database`);
+        } catch (err) {
+            cliLogger.error(`[RequestStats] Failed to flush request stats: ${err}`);
+            // If we failed to save, put the items back in memory
+            // But to avoid memory leaks, we'll limit the buffer size
+            if (inMemoryStorage.length < 10000) {
+                inMemoryStorage.push(...batchToFlush);
+            } else {
+                cliLogger.warn(`[RequestStats] In-memory storage limit reached, some requests will not be logged`);
+            }
+        }
     }
+}
+
+// Helper function to determine if a request is an API request
+function isApiRequest(url: string): boolean {
+    return url.startsWith('/api/');
 }
 
 // Set up the timer to flush the data every 10 seconds
@@ -84,7 +102,7 @@ let flushInterval: NodeJS.Timer | null = null;
 export default defineNitroPlugin(() => {
     // Set up the flush interval
     if (!flushInterval) {
-        flushInterval = setInterval(flushRequestStats, 1000);
+        flushInterval = setInterval(flushRequestStats, 10000);
     }
 
     // Add a hook for every incoming request
@@ -115,6 +133,9 @@ export default defineNitroPlugin(() => {
         // Parse user agent for additional information
         const { browser, os, device } = parseUserAgent(userAgent);
 
+        // Check if this is an API request
+        const isApi = isApiRequest(url);
+
         // Create a new request stats entry
         const requestEntry: IRequestStats = {
             ip: requestIp,
@@ -127,6 +148,7 @@ export default defineNitroPlugin(() => {
             statusCode: 200, // Will be updated later if possible
             referer,
             timestamp: new Date(),
+            isApi, // Add flag to distinguish API requests
         };
 
         // Store in memory buffer
@@ -138,8 +160,7 @@ export default defineNitroPlugin(() => {
         // Find the last entry for this request and update its status code
         // This is a simplistic approach - in a real app you might want to use request ID
         const lastIndex = inMemoryStorage.findIndex(
-            (entry) =>
-                entry.ip === getRequestIP(event, { xForwardedFor: true }) &&
+            entry => entry.ip === getRequestIP(event, { xForwardedFor: true }) &&
                 entry.url === event.node.req.url
         );
 

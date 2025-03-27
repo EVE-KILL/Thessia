@@ -35,11 +35,11 @@ export default defineEventHandler(async (event) => {
     const query = getQuery(event);
     const period = query.period?.toString() || '24hours';
     const limit = parseInt(query.limit?.toString() || '1000', 10);
-    
+
     // Determine time range based on period
     const now = new Date();
     let startDate = new Date();
-    
+
     switch (period) {
       case '1hour':
         startDate.setHours(now.getHours() - 1);
@@ -68,7 +68,7 @@ export default defineEventHandler(async (event) => {
       null,
       { sort: { timestamp: -1 }, limit }
     ).lean();
-    
+
     // Return full details for admin view
     return {
       detailedRequests: rawStats.map(req => ({
@@ -76,7 +76,7 @@ export default defineEventHandler(async (event) => {
         timestamp: new Date(req.timestamp).toISOString()
       }))
     };
-    
+
   } catch (error) {
     console.error('Error fetching admin request statistics:', error);
     throw createError({

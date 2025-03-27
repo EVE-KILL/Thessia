@@ -9,6 +9,7 @@ export interface IRequestStats {
   statusCode: number;
   referer: string;
   timestamp: Date;
+  isApi: boolean;  // Flag to distinguish API requests from regular web requests
   updatedAt?: Date;
   createdAt?: Date;
 }

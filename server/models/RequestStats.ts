@@ -17,6 +17,7 @@ const requestStatsSchema = new Schema<IRequestStatsDocument>(
     statusCode: { type: Number, required: false },
     referer: { type: String, required: false },
     timestamp: { type: Date, required: true },
+    isApi: { type: Boolean, required: true, default: false },
     updatedAt: { type: Date },
     createdAt: { type: Date },
   },
@@ -37,5 +38,6 @@ requestStatsSchema.index({ timestamp: -1 });
 requestStatsSchema.index({ url: 1 });
 requestStatsSchema.index({ browser: 1 });
 requestStatsSchema.index({ os: 1 });
+requestStatsSchema.index({ isApi: 1 }); // Add index for faster API vs non-API filtering
 
 export const RequestStats: Model<IRequestStatsDocument> = model<IRequestStatsDocument>("RequestStats", requestStatsSchema, "requeststats");
