@@ -128,10 +128,6 @@ const pauseWebSocket = (reason = 'hover') => {
   if (reason === 'manual') {
     manuallyPaused.value = true;
   }
-
-  if (reason !== 'hover') {
-    console.log(`⏸️ KillList: WebSocket paused (${reason})`);
-  }
 };
 
 // Resume WebSocket processing
@@ -147,8 +143,6 @@ const resumeWebSocket = () => {
 
   // Process any pending messages
   if (pendingMessages.value.length > 0 && !useExternalData.value) {
-    console.log(`▶️ KillList: Processing ${pendingMessages.value.length} pending messages`);
-
     // Sort by kill time to maintain chronological order
     pendingMessages.value.sort((a, b) =>
       new Date(b.kill_time).getTime() - new Date(a.kill_time).getTime()

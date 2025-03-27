@@ -168,7 +168,8 @@ export default defineNuxtConfig({
     ],
 
     cloudflareAnalytics: {
-        token: process.env.CLOUDFLARE_ANALYTICS_TOKEN
+        token: process.env.CLOUDFLARE_ANALYTICS_TOKEN,
+        scriptPath: "~/src/theme/" + theme + "/public/_ca/b.js",
     },
 
     colorMode: {
