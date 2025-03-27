@@ -1,2 +1,8 @@
 User-agent: *
 Disallow:
+
+User-agent: *
+Disallow: /api/*
+
+User-agent: *
+Disallow: /_healthcheck

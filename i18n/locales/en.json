@@ -611,5 +611,68 @@
         "delete_success_title": "Comment Deleted",
         "hard_delete_success": "Comment has been permanently deleted.",
         "deleted": "This comment has been deleted"
+    },
+    "requeststats": {
+        "pageTitle": "Request Statistics",
+        "pageDescription": "Analytics for website traffic and visitor information",
+        "loading": "Loading request statistics...",
+        "retry": "Retry",
+        "refreshNow": "Refresh now",
+        "autoRefresh": "Auto refresh every {seconds}s",
+        "autoRefreshing": "Auto-refreshing every {seconds} seconds",
+        "selectTimePeriod": "Select time period",
+        "lastUpdated": "Last updated: {time}",
+        "totalRequests": "Total Requests",
+        "topPage": "Top Page",
+        "topBrowser": "Top Browser",
+        "topOS": "Top OS",
+        "requests": "requests",
+        "timePeriods": {
+            "1hour": "Last Hour",
+            "6hours": "Last 6 Hours",
+            "12hours": "Last 12 Hours",
+            "24hours": "Last 24 Hours",
+            "7days": "Last 7 Days",
+            "30days": "Last 30 Days"
+        },
+        "tabs": {
+            "overview": "Overview",
+            "pages": "Pages",
+            "browsers": "Browsers",
+            "timeline": "Timeline",
+            "raw": "Raw Data"
+        },
+        "charts": {
+            "pageViews": "Page Views",
+            "browsers": "Browsers",
+            "operatingSystems": "Operating Systems",
+            "devices": "Devices",
+            "statusCodes": "Status Codes",
+            "requestsOverTime": "Requests Over Time",
+            "topPages": "Top Pages"
+        },
+        "tableHeaders": {
+            "url": "URL",
+            "count": "Count",
+            "percentage": "Percentage",
+            "browser": "Browser",
+            "os": "OS",
+            "device": "Device",
+            "timestamp": "Timestamp",
+            "ip": "IP Address",
+            "method": "Method",
+            "statusCode": "Status",
+            "userAgent": "User Agent"
+        },
+        "timelineDescription": "This chart shows the number of requests over time. You can zoom in by selecting a region.",
+        "adminView": {
+            "title": "Detailed Request Data",
+            "warning": "This section contains sensitive information including IP addresses and user-agent strings."
+        },
+        "adminRequired": {
+            "title": "Administrator Access Required",
+            "message": "You need administrator privileges to view detailed request data."
+        },
+        "recentRequests": "Recent Requests"
     }
 }
