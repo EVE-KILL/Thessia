@@ -389,6 +389,8 @@
         "pageTitle": "Frequently Asked Questions"
     },
     "killList": {
+        "disconnected": "Disconnected",
+        "connected": "Connected",
         "ship": "Ship",
         "victim": "Victim",
         "finalBlow": "Final Blow",
