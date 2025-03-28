@@ -19,13 +19,17 @@ export default defineEventHandler(async (event) => {
 
     // Define the query condition based on whether the item is a ship or not
     let queryCondition = {};
+    let indexHint = {};
 
     if (typeGroupId && shipGroupIds.includes(typeGroupId)) {
         // If it's a ship, search for victim.ship_id
         queryCondition = { "victim.ship_id": typeId };
+        indexHint = "victim.ship_id_-1_kill_time_-1";
+
     } else {
         // For non-ship items, search for items.type_id
         queryCondition = { "items.type_id": typeId };
+        indexHint = "items.type_id_-1_kill_time_-1";
     }
 
     const killmails = await Killmails.find(
@@ -37,7 +41,7 @@ export default defineEventHandler(async (event) => {
             limit: limit,
             sort: { killmail_id: -1 },
         }
-    );
+    ).hint(indexHint);
 
     return killmails.map((killmail) => {
         return {
