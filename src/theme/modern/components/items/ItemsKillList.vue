@@ -145,15 +145,17 @@ const error = ref(null);
 // Fetch key based on item id to ensure proper cache invalidation
 const fetchKey = computed(() => `item-killmails-${props.item?.type_id || 'none'}-${Date.now()}`);
 
-// Fetch killmails data when item is available
+// Update the fetch and data handling to work with the API response structure
+// that now returns a direct array of killmails
 const { data, pending, error: fetchError } = useAsyncData(
   fetchKey.value,
   async () => {
     if (!props.item?.type_id) return [];
 
     try {
-      const result = await $fetch(`/api/items/${props.item.type_id}/killmails?limit=20`);
-      return result;
+      // The API now returns an array directly without wrapping in a results object
+      const response = await $fetch(`/api/items/${props.item.type_id}/killmails?limit=20`);
+      return response;
     } catch (err) {
       console.error('Error fetching killmail data:', err);
       error.value = err;
@@ -179,7 +181,7 @@ watch([() => props.loading, pending], ([propsLoading, asyncPending]) => {
   isLoading.value = propsLoading || asyncPending;
 }, { immediate: true });
 
-// Update kill list when data changes
+// Update kill list when data changes - using direct killmail array
 watch(data, (newData) => {
   if (newData) {
     killmails.value = newData;

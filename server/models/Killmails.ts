@@ -113,6 +113,7 @@ const indexes = [
   { fields: { killmail_id: -1, killmail_hash: -1 }, options: { unique: true } },
   { fields: { kill_time: -1 }, options: { sparse: true } },
   { fields: { createdAt: -1 }, options: { sparse: true } },
+  { fields: { updatedAt: -1 }, options: { sparse: true } },
 
   // Victim entity indexes - highly used in queries
   { fields: { "victim.character_id": -1, kill_time: -1 }, options: { sparse: true } },
@@ -133,6 +134,7 @@ const indexes = [
   // Location indexes
   { fields: { system_id: -1, kill_time: -1 }, options: { sparse: true } },
   { fields: { region_id: -1, kill_time: -1 }, options: { sparse: true } },
+  { fields: { constellation_id: -1, kill_time: -1 }, options: { sparse: true } },
   { fields: { system_security: -1, kill_time: -1 }, options: { sparse: true } },
 
   // Feature-based filters
@@ -142,15 +144,6 @@ const indexes = [
 
   // Spatial queries
   { fields: { system_id: -1, x: -1, y: -1, z: -1 }, options: { sparse: true } },
-
-  // Compound indexes for common combined queries
-  { fields: { "victim.ship_group_id": -1, total_value: -1, kill_time: -1 }, options: { sparse: true } },
-  { fields: { region_id: -1, system_security: -1, kill_time: -1 }, options: { sparse: true } },
-
-  // Combined entity queries (for endpoints like combined/[type]/[id])
-  { fields: { "attackers.character_id": -1, "victim.character_id": -1, kill_time: -1 }, options: { sparse: true } },
-  { fields: { "attackers.corporation_id": -1, "victim.corporation_id": -1, kill_time: -1 }, options: { sparse: true } },
-  { fields: { "attackers.alliance_id": -1, "victim.alliance_id": -1, kill_time: -1 }, options: { sparse: true } },
 ];
 
 for (const { fields, options } of indexes) {
