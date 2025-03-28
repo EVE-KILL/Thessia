@@ -1,8 +1,8 @@
 <template>
     <Table :columns="columns" :items="data" :loading="!killmail" :row-class="getRowClasses" :bordered="true"
-        :striped="false" :hover="false" :density="'compact'" :show-header="true" :special-header="true"
+        :striped="false" :hover="true" :density="'compact'" :show-header="true" :special-header="true"
         :empty-icon="'lucide:package'" :empty-text="t('killItems.noItems')" background="transparent"
-        class="kill-items-table" @row-click="onRowClick">
+        :link-fn="generateItemLink" class="kill-items-table">
         <!-- Image cell with connector lines for container items -->
         <template #cell-image="{ item }">
             <div class="image-cell" :class="{ 'indented-image': item.isNested }">
@@ -15,7 +15,8 @@
                 <!-- Show collapse icon for headers if collapsible -->
                 <Icon v-if="item.type === 'header' && isCollapsible(item.itemName)"
                     :name="isSectionCollapsed(item.itemName) ? 'lucide:chevron-right' : 'lucide:chevron-down'"
-                    class="collapse-icon" :class="{ 'rotate-icon': !isSectionCollapsed(item.itemName) }" />
+                    class="collapse-icon" :class="{ 'rotate-icon': !isSectionCollapsed(item.itemName) }"
+                    @click.stop="toggleSectionCollapse(item.itemName)" />
 
                 <Image v-if="(item.type === 'item' || item.type === 'container-item') && item.image" type="item"
                     :id="item.itemId" size="24" class="w-6 h-6 rounded-md" :alt="item.itemName || ''" />
@@ -25,7 +26,7 @@
 
         <!-- Name cell -->
         <template #cell-name="{ item }">
-            <div v-if="item.type === 'header'" class="font-bold text-sm uppercase">
+            <div v-if="item.type === 'header'" class="font-bold text-sm uppercase" @click.stop="isCollapsible(item.itemName) && toggleSectionCollapse(item.itemName)">
                 {{ item.itemName }}
                 <span v-if="isCollapsible(item.itemName)" class="section-count">
                     ({{ getSectionItemCount(item.itemName) }})
@@ -76,7 +77,8 @@
 
                     <Icon v-if="item.type === 'header' && isCollapsible(item.itemName)"
                         :name="isSectionCollapsed(item.itemName) ? 'lucide:chevron-right' : 'lucide:chevron-down'"
-                        class="collapse-icon-mobile" />
+                        class="collapse-icon-mobile"
+                        @click.stop="toggleSectionCollapse(item.itemName)" />
 
                     <Image v-if="(item.type === 'item' || item.type === 'container-item') && item.image" type="item"
                         :id="item.itemId" size="24" class="w-6 h-6 rounded-md" :alt="item.itemName || ''" />
@@ -86,7 +88,7 @@
                 <div class="mobile-content">
                     <!-- Name -->
                     <div class="mobile-header">
-                        <div v-if="item.type === 'header'" class="font-bold text-sm uppercase mobile-title">
+                        <div v-if="item.type === 'header'" class="font-bold text-sm uppercase mobile-title" @click.stop="isCollapsible(item.itemName) && toggleSectionCollapse(item.itemName)">
                             {{ item.itemName }}
                             <span v-if="isCollapsible(item.itemName)" class="section-count">
                                 ({{ getSectionItemCount(item.itemName) }})
@@ -415,8 +417,13 @@ function getRowClasses(item: Item) {
         classes.push(item.type);
     }
 
-    // Add clickable class
+    // Add clickable class for items or container-items with itemId
     if ((item.type === 'item' || item.type === 'container-item') && item.itemId) {
+        classes.push('cursor-pointer');
+    }
+
+    // Add header click indicator for collapsible headers
+    if (item.type === 'header' && isCollapsible(item.itemName)) {
         classes.push('cursor-pointer');
     }
 
@@ -436,27 +443,6 @@ function getRowClasses(item: Item) {
     }
 
     return classes.join(' ');
-}
-
-// Handle row click - for collapsible headers and item links
-function handleRowClick(row: Item, event: MouseEvent) {
-    // Handle collapsible section headers
-    if (row.type === 'header' && isCollapsible(row.itemName)) {
-        toggleSectionCollapse(row.itemName);
-        return;
-    }
-
-    // Generate link URL if applicable
-    const url = generateItemLink(row);
-    if (!url) return;
-
-    // Handle link navigation with middle-click support
-    if (event.ctrlKey || event.metaKey || event.button === 1) {
-        event.preventDefault();
-        window.open(url, '_blank');
-    } else {
-        navigateTo(url);
-    }
 }
 
 // Get the count of items in a section for display
@@ -740,18 +726,18 @@ function groupByQty(items: any[]) {
 /**
  * Generates a link URL for an item if it should be clickable
  */
-function generateItemLink(row: Item): string | null {
+function generateItemLink(item: Item): string | null {
     // Only certain row types with itemId are clickable
-    if ((row.type === 'item' || row.type === 'container-item') && row.itemId) {
-        return `/item/${row.itemId}`;
+    if ((item.type === 'item' || item.type === 'container-item') && item.itemId) {
+        return `/item/${item.itemId}`;
     }
-    return null;
-}
 
-// Add item click handling for the Table component
-// We need to intercept row-click events from the Table
-function onRowClick({ item, event }) {
-    handleRowClick(item, event);
+    // For headers that are collapsible, return null but let the click handler handle them
+    if (item.type === 'header' && isCollapsible(item.itemName)) {
+        return null;
+    }
+
+    return null;
 }
 </script>
 
