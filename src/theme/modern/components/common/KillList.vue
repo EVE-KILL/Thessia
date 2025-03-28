@@ -634,7 +634,7 @@ onBeforeUnmount(() => {
             format="webp"
             :alt="`Character: ${item.victim.character_name}`"
             class="rounded w-10 mx-2"
-            size="64"
+            size="44"
           />
           <div class="flex flex-col items-start">
             <span class="text-sm text-black dark:text-white">{{ item.victim.character_name }}</span>
@@ -653,7 +653,7 @@ onBeforeUnmount(() => {
             <Image
                 type="character"
                 id="0"
-                size="64"
+                size="44"
                 alt="NPC"
                 class="rounded w-10 mx-2"
             />
@@ -671,7 +671,7 @@ onBeforeUnmount(() => {
               format="webp"
               :alt="`Character: ${item.finalblow.character_name}`"
               class="rounded w-10 mx-2"
-              size="64"
+              size="44"
             />
             <div class="flex flex-col items-start">
               <span class="text-sm text-black dark:text-white">{{ item.finalblow.character_name }}</span>
