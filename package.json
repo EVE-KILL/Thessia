@@ -23,6 +23,7 @@
     "commander": "^13.1.0",
     "cron-parser": "^5.0.6",
     "csv-parser": "^3.2.0",
+    "date-fns": "^4.1.0",
     "dompurify": "^3.2.4",
     "echarts": "^5.6.0",
     "ioredis": "^5.6.0",

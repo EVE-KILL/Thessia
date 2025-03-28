@@ -35,3 +35,6 @@ values.yaml
 
 # Cloudflare Analytics Beacon
 _ca/
+
+# old frontend
+oldfrontend/
