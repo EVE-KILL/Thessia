@@ -41,7 +41,7 @@ export default defineEventHandler(async (event) => {
             limit: limit,
             sort: { killmail_id: -1 },
         }
-    ).hint(indexHint);
+    ); //.hint(indexHint);
 
     return killmails.map((killmail) => {
         return {
