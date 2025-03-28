@@ -83,7 +83,7 @@ const leftNavItems = computed<NavLink[]>(() => [
 /**
  * Center navigation items
  */
-const centerNavItems = computed<NavLink[]>(() => [
+const centerNavItems = computed(() => [
   {
     component: Search,
     inline: true,
@@ -94,7 +94,7 @@ const centerNavItems = computed<NavLink[]>(() => [
 /**
  * Right navigation items
  */
-const rightNavItems = computed<NavLink[]>(() => [
+const rightNavItems = computed(() => [
   {
     position: 'right',
     component: LanguageSelector,
@@ -135,7 +135,7 @@ const rightNavItems = computed<NavLink[]>(() => [
 /**
  * All navigation items combined
  */
-const allNavItems = computed<NavLink[]>(() => [
+const allNavItems = computed(() => [
   ...leftNavItems.value,
   ...centerNavItems.value,
   ...rightNavItems.value

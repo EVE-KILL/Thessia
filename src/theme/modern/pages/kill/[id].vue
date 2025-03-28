@@ -483,6 +483,7 @@
 <script setup lang="ts">
 import type { IKillmail } from '~/server/interfaces/IKillmail';
 
+const { t } = useI18n();
 const route = useRoute();
 const killmail = ref<IKillmail | null>(null);
 const sibling = ref<IKillmail | null>(null);
