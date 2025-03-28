@@ -50,55 +50,55 @@ export default defineNuxtConfig({
                       "/api/**": { cors: true },
                       "/api/alliances/**": {
                           cors: true,
-                          cache: { maxAge: 3600, staleMaxAge: -1, swr: true },
+                          cache: { maxAge: 3600, staleMaxAge: -1, swr: true, base: "redis" },
                       },
                       "/api/characters/**": {
                           cors: true,
-                          cache: { maxAge: 3600, staleMaxAge: -1, swr: true },
+                          cache: { maxAge: 3600, staleMaxAge: -1, swr: true, base: "redis" },
                       },
                       "/api/corporations/**": {
                           cors: true,
-                          cache: { maxAge: 3600, staleMaxAge: -1, swr: true },
+                          cache: { maxAge: 3600, staleMaxAge: -1, swr: true, base: "redis" },
                       },
                       "/api/factions/**": {
                           cors: true,
-                          cache: { maxAge: 3600, staleMaxAge: -1, swr: true },
+                          cache: { maxAge: 3600, staleMaxAge: -1, swr: true, base: "redis" },
                       },
                       "/api/fitting/**": {
                           cors: true,
-                          cache: { maxAge: 3600, staleMaxAge: -1, swr: true },
+                          cache: { maxAge: 3600, staleMaxAge: -1, swr: true, base: "redis" },
                       },
                       "/api/items/**": {
                           cors: true,
-                          cache: { maxAge: 3600, staleMaxAge: -1, swr: true },
+                          cache: { maxAge: 3600, staleMaxAge: -1, swr: true, base: "redis" },
                       },
                       "/api/killlist/**": {
                           cors: true,
-                          cache: { maxAge: 30, staleMaxAge: 0, swr: false },
+                          cache: { maxAge: 30, staleMaxAge: 0, swr: false, base: "redis" },
                       },
                       "/api/killmail/**": {
                           cors: true,
-                          cache: { maxAge: 300, staleMaxAge: -1, swr: true },
+                          cache: { maxAge: 300, staleMaxAge: -1, swr: true, base: "redis" },
                       },
                       "/api/prices/**": {
                           cors: true,
-                          cache: { maxAge: 300, staleMaxAge: -1, swr: true },
+                          cache: { maxAge: 300, staleMaxAge: -1, swr: true, base: "redis" },
                       },
                       "/api/search/**": {
                           cors: true,
-                          cache: { maxAge: 30, staleMaxAge: -1, swr: true },
+                          cache: { maxAge: 30, staleMaxAge: -1, swr: true, base: "redis" },
                       },
                       "/api/stats": {
                           cors: true,
-                          cache: { maxAge: 300, staleMaxAge: -1, swr: true },
+                          cache: { maxAge: 300, staleMaxAge: -1, swr: true, base: "redis" },
                       },
                       "/api/wars/**": {
                           cors: true,
-                          cache: { maxAge: 3600, staleMaxAge: -1, swr: true },
+                          cache: { maxAge: 3600, staleMaxAge: -1, swr: true, base: "redis" },
                       },
                       "/api/status": {
                           cors: true,
-                          cache: { maxAge: 5, staleMaxAge: 0, swr: false },
+                          cache: { maxAge: 5, staleMaxAge: 0, swr: false, base: "redis" },
                       },
                   },
 
