@@ -34,6 +34,8 @@
         <NuxtImg v-if="(item.type === 'item' || item.type === 'container-item') && item.image"
                  :src="item.image"
                  :alt="item.itemName || ''"
+                 width="24"
+                 height="24"
                  class="w-6 h-6 rounded-md" />
       </div>
     </template>
@@ -96,6 +98,8 @@
           <NuxtImg v-if="(item.type === 'item' || item.type === 'container-item') && item.image"
                    :src="item.image"
                    :alt="item.itemName || ''"
+                   width="24"
+                   height="24"
                    class="w-6 h-6 rounded-md" />
         </div>
 

@@ -174,6 +174,7 @@ onUnmounted(() => {
                 <NuxtImg
                   :src="bg.path"
                   width="180"
+                  height="101"
                   loading="lazy"
                   format="webp"
                   fit="cover"
@@ -236,6 +237,8 @@ onUnmounted(() => {
           <div class="aspect-video bg-(--ui-bg-muted) overflow-hidden">
             <NuxtImg
               :src="bg.path"
+              width="180"
+              height="101"
               loading="lazy"
               format="webp"
               fit="cover"

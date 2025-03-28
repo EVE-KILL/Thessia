@@ -293,6 +293,8 @@ const imageTypeMap = {
               :src="getImageUrl(item)"
               format="webp"
               quality="80"
+              width="28"
+              height="28"
               :alt="`${props.type}: ${getEntityDisplayName(item)}`"
               class="w-7 flex-shrink-0 mr-2"
             />

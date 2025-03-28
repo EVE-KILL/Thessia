@@ -654,6 +654,8 @@ onBeforeUnmount(() => {
               src="https://images.evetech.net/characters/0/portrait?size=128"
               format="webp"
               quality="80"
+              width="128"
+              height="128"
               alt="NPC"
               class="rounded w-10 mx-2"
             />
@@ -713,6 +715,8 @@ onBeforeUnmount(() => {
               src="/images/involved.png"
               format="webp"
               quality="80"
+              width="16"
+              height="16"
               :alt="`${item.attackerCount} Involved`"
               class="h-4"
             />
@@ -721,6 +725,8 @@ onBeforeUnmount(() => {
               src="/images/comment.gif"
               format="webp"
               quality="80"
+              width="16"
+              height="16"
               alt="Comments"
               class="h-4"
             />
@@ -783,6 +789,8 @@ onBeforeUnmount(() => {
                   src="/images/involved.png"
                   format="webp"
                   quality="80"
+                  width="16"
+                  height="16"
                   :alt="`${item.attackerCount} Involved`"
                   class="h-3"
                 />
