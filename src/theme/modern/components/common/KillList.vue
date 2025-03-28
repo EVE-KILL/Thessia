@@ -650,14 +650,12 @@ onBeforeUnmount(() => {
         <div class="flex items-center py-1 whitespace-nowrap">
           <!-- NPC Fallback Image or Character Image -->
           <template v-if="item.is_npc">
-            <NuxtImg
-              src="https://images.evetech.net/characters/0/portrait?size=128"
-              format="webp"
-              quality="80"
-              width="128"
-              height="128"
-              alt="NPC"
-              class="rounded w-10 mx-2"
+            <Image
+                type="character"
+                id="0"
+                size="64"
+                alt="NPC"
+                class="rounded w-10 mx-2"
             />
             <div class="flex flex-col items-start">
               <span class="text-sm text-black dark:text-white">{{ item.finalblow.faction_name }}</span>
@@ -744,7 +742,7 @@ onBeforeUnmount(() => {
             format="webp"
             :alt="`Ship: ${getLocalizedString(item.victim.ship_name, currentLocale)}`"
             class="rounded w-16 h-16"
-            size="128"
+            size="64"
           />
 
           <!-- Victim Info -->

@@ -25,7 +25,6 @@ const props = defineProps({
   },
   // The ID for the image (character ID, corporation ID, etc.)
   id: {
-    type: Number,
     required: true
   },
   // Item name - used for detecting blueprint status for 'item' type
