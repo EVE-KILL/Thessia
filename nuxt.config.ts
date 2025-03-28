@@ -28,6 +28,14 @@ export default defineNuxtConfig({
         preset: "bun",
         srcDir: "server",
         minify: true,
+        compressPublicAssets: true,
+        publicAssets: [
+            {
+                dir: "src/core/public",
+                baseURL: "/",
+                maxAge: 31536000,
+            },
+        ],
 
         esbuild: {
             options: {
@@ -66,7 +74,7 @@ export default defineNuxtConfig({
                       },
                       "/api/killlist/**": {
                           cors: true,
-                          cache: { maxAge: 30, staleMaxAge: 0, swr: true },
+                          cache: { maxAge: 30, staleMaxAge: 0, swr: false },
                       },
                       "/api/killmail/**": {
                           cors: true,
