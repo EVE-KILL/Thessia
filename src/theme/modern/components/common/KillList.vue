@@ -650,8 +650,10 @@ onBeforeUnmount(() => {
         <div class="flex items-center py-1 whitespace-nowrap">
           <!-- NPC Fallback Image or Character Image -->
           <template v-if="item.is_npc">
-            <img
+            <NuxtImg
               src="https://images.evetech.net/characters/0/portrait?size=128"
+              format="webp"
+              quality="80"
               alt="NPC"
               class="rounded w-10 mx-2"
             />
@@ -707,13 +709,21 @@ onBeforeUnmount(() => {
           </ClientOnly>
           <div class="flex gap-1 items-center">
             <span class="text-xs text-gray-600 dark:text-gray-400">{{ item.attackerCount }}</span>
-            <img
+            <NuxtImg
               src="/images/involved.png"
+              format="webp"
+              quality="80"
               :alt="`${item.attackerCount} Involved`"
               class="h-4"
             />
             <span class="text-xs text-gray-600 dark:text-gray-400">{{ item.commentCount || 0 }}</span>
-            <img src="/images/comment.gif" alt="Comments" class="h-4" />
+            <NuxtImg
+              src="/images/comment.gif"
+              format="webp"
+              quality="80"
+              alt="Comments"
+              class="h-4"
+            />
           </div>
         </div>
       </template>
@@ -769,7 +779,13 @@ onBeforeUnmount(() => {
               </ClientOnly>
               <div class="attacker-count flex items-center gap-1">
                 <span class="text-xs text-gray-600 dark:text-gray-400">{{ item.attackerCount }}</span>
-                <img src="/images/involved.png" :alt="`${item.attackerCount} Involved`" class="h-3" />
+                <NuxtImg
+                  src="/images/involved.png"
+                  format="webp"
+                  quality="80"
+                  :alt="`${item.attackerCount} Involved`"
+                  class="h-3"
+                />
               </div>
             </div>
           </div>

@@ -289,8 +289,10 @@ const imageTypeMap = {
             />
           </template>
           <template v-else>
-            <img
+            <NuxtImg
               :src="getImageUrl(item)"
+              format="webp"
+              quality="80"
               :alt="`${props.type}: ${getEntityDisplayName(item)}`"
               class="w-7 flex-shrink-0 mr-2"
             />

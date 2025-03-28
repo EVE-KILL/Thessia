@@ -31,10 +31,10 @@
               class="collapse-icon"
               :class="{ 'rotate-icon': !isSectionCollapsed(item.itemName) }" />
 
-        <img v-if="(item.type === 'item' || item.type === 'container-item') && item.image"
-             :src="item.image"
-             :alt="item.itemName || ''"
-             class="w-6 h-6 rounded-md" />
+        <NuxtImg v-if="(item.type === 'item' || item.type === 'container-item') && item.image"
+                 :src="item.image"
+                 :alt="item.itemName || ''"
+                 class="w-6 h-6 rounded-md" />
       </div>
     </template>
 
@@ -93,10 +93,10 @@
                 :name="isSectionCollapsed(item.itemName) ? 'lucide:chevron-right' : 'lucide:chevron-down'"
                 class="collapse-icon-mobile" />
 
-          <img v-if="(item.type === 'item' || item.type === 'container-item') && item.image"
-               :src="item.image"
-               :alt="item.itemName || ''"
-               class="w-6 h-6 rounded-md" />
+          <NuxtImg v-if="(item.type === 'item' || item.type === 'container-item') && item.image"
+                   :src="item.image"
+                   :alt="item.itemName || ''"
+                   class="w-6 h-6 rounded-md" />
         </div>
 
         <!-- Mobile content -->
