@@ -28,18 +28,16 @@ export default defineNuxtConfig({
         preset: "bun",
         srcDir: "server",
         minify: true,
-        compressPublicAssets: true,
-        publicAssets: [
-            {
-                dir: "src/core/public",
-                baseURL: "/",
-                maxAge: 31536000,
-            },
-        ],
 
         esbuild: {
             options: {
                 target: "esnext",
+                minify: true,
+                minifySyntax: true,
+                minifyWhitespace: true,
+                minifyIdentifiers: true,
+                treeShaking: true,
+                charset: "utf8",
             },
         },
 
@@ -134,11 +132,7 @@ export default defineNuxtConfig({
         storage: {
             redis: {
                 driver: "redis",
-                url: `redis://${process.env.REDIS_URI || "192.168.10.10"}:${
-                    process.env.REDIS_PORT
-                        ? Number.parseInt(process.env.REDIS_PORT)
-                        : 6379
-                }`,
+                url: `redis://${process.env.REDIS_URI}:${process.env.REDIS_PORT}`,
                 database: process.env.REDIS_DB || 0,
             },
         },
