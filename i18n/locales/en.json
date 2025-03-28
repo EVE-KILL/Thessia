@@ -282,7 +282,8 @@
         "previous": "Previous",
         "next": "Next",
         "backToHome": "Back to Home",
-        "isk": "ISK"
+        "isk": "ISK",
+        "errorLoading": "Error loading data. Please try again."
     },
     "settings": {
         "description": "Manage your account settings and permissions",
@@ -687,5 +688,18 @@
             "message": "You need administrator privileges to view detailed request data."
         },
         "recentRequests": "Recent Requests"
+    },
+    "items": {
+        "description": "Description",
+        "latestKills": "Latest Kills",
+        "topFittings": "Top Fittings",
+        "marketPrices": "Market Prices - {region}",
+        "priceSource": "Price data sourced from",
+        "noPrices": "No price data available",
+        "noKills": "No kills found for this item",
+        "date": "Date",
+        "minPrice": "Min Price",
+        "avgPrice": "Avg Price",
+        "maxPrice": "Max Price"
     }
 }
