@@ -74,7 +74,7 @@ export default defineNuxtConfig({
                       },
                       "/api/killlist/**": {
                           cors: true,
-                          cache: { maxAge: 30, staleMaxAge: 0, swr: false, base: "redis" },
+                          cache: { maxAge: 30, staleMaxAge: 0, swr: true, base: "redis" },
                       },
                       "/api/killmail/**": {
                           cors: true,
