@@ -109,6 +109,36 @@ export function useEveImages() {
   };
 
   /**
+   * Get system image URL
+   * @param systemId - EVE solar system ID
+   * @param size - Image size (default: 64, will be normalized to nearest valid size)
+   * @returns System image URL
+   */
+  const getSystemImage = (systemId: number | null, size = 64): string | null => {
+    return `/map.png`;
+  };
+
+  /**
+   * Get constellation image URL
+   * @param constellationId - EVE constellation ID
+   * @param size - Image size (default: 64, will be normalized to nearest valid size)
+   * @returns Constellation image URL
+   */
+  const getConstellationImage = (constellationId: number | null, size = 64): string | null => {
+    return `/map.png`;
+  };
+
+  /**
+   * Get region image URL
+   * @param regionId - EVE region ID
+   * @param size - Image size (default: 64, will be normalized to nearest valid size)
+   * @returns Region image URL
+   */
+  const getRegionImage = (regionId: number | null, size = 64): string | null => {
+    return `/map.png`;
+  };
+
+  /**
    * Check if an item name represents a blueprint
    * @param name - Item name to check
    * @returns True if the name indicates a blueprint
@@ -161,6 +191,9 @@ export function useEveImages() {
     getTypeRender,
     getBlueprintIcon,
     getBlueprintCopyIcon,
+    getSystemImage,
+    getConstellationImage,
+    getRegionImage,
     isBlueprint,
     isBlueprintCopy,
     getItemImageUrl

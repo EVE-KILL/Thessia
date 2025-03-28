@@ -50,44 +50,15 @@ const getLocalizedString = (obj: any, locale: string): string => {
     return obj[locale] || obj['en'] || '';
 };
 
-const getImageUrl = (entity: ITopEntity): string => {
-    if (!entity) return '/images/unknown.png';
-
-    const idFieldMap = {
-        character: 'character_id',
-        corporation: 'corporation_id',
-        alliance: 'alliance_id',
-        ship: 'type_id',
-        solarsystem: 'system_id',
-        constellation: 'constellation_id',
-        region: 'region_id'
-    };
-
-    const idField = idFieldMap[props.type];
-    const entityId = idField && entity[idField];
-
-    if (!entityId) {
-        if (entity.id) {
-            return getImageUrlForType(props.type, entity.id);
-        }
-        return '/images/unknown.png';
-    }
-
-    return getImageUrlForType(props.type, entityId);
-};
-
-const getImageUrlForType = (type: string, id: number): string => {
-    const imageMap = {
-        character: `https://images.evetech.net/characters/${id}/portrait?size=64`,
-        corporation: `https://images.evetech.net/corporations/${id}/logo?size=64`,
-        alliance: `https://images.evetech.net/alliances/${id}/logo?size=64`,
-        ship: `https://images.evetech.net/types/${id}/render?size=64`,
-        solarsystem: '/map.png',
-        constellation: '/map.png',
-        region: '/map.png'
-    };
-
-    return imageMap[type] || '/images/unknown.png';
+// Mapping of entity types to image types for the Image component
+const imageTypeMap = {
+    'character': 'character',
+    'corporation': 'corporation',
+    'alliance': 'alliance',
+    'ship': 'type-render',
+    'solarsystem': 'system',
+    'constellation': 'constellation',
+    'region': 'region'
 };
 
 const getEntityDisplayName = (entity: ITopEntity): string => {
@@ -157,37 +128,12 @@ const columns: TableColumn<ITopEntity>[] = [
         ]);
       }
 
-      // Determine the image type based on entity type
-      const imageTypeMap = {
-        'character': 'character',
-        'corporation': 'corporation',
-        'alliance': 'alliance',
-        'ship': 'type-render',
-        'solarsystem': null, // Use direct URL for these
-        'constellation': null,
-        'region': null
-      };
-
-      const imageType = imageTypeMap[props.type];
       const entityId = Number(getEntityId(row.original));
       const entityName = getEntityDisplayName(row.original);
+      const imageType = imageTypeMap[props.type];
 
-      // For entity types not directly supported by the Image component
-      if (!imageType) {
-        return h('div', { class: 'flex items-center py-1' }, [
-          h('img', {
-            src: getImageUrl(row.original),
-            alt: `${props.type}: ${entityName}`,
-            class: 'w-7 flex-shrink-0 mr-2'
-          }),
-          h('div', { class: 'text-sm text-left text-black dark:text-white truncate min-w-0 overflow-hidden' },
-            entityName)
-        ]);
-      }
-
-      // Use the EVE Image component for supported types
       return h('div', { class: 'flex items-center py-1' }, [
-        h(resolveComponent('EveImage'), {
+        h(resolveComponent('Image'), {
           type: imageType,
           id: entityId,
           alt: `${props.type}: ${entityName}`,
@@ -240,15 +186,6 @@ const tableColumns = [
     cellClass: 'text-right'
   }
 ];
-
-// Mapping of entity types to image types
-const imageTypeMap = {
-  'character': 'character',
-  'corporation': 'corporation',
-  'alliance': 'alliance',
-  'ship': 'type-render'
-  // Other types will use custom image URLs
-};
 </script>
 
 <template>
@@ -277,28 +214,16 @@ const imageTypeMap = {
       <!-- Keep existing entity and count cell templates -->
       <template #cell-entity="{ item }">
         <div class="flex items-center py-1">
-          <!-- Render different images based on entity type -->
-          <template v-if="imageTypeMap[props.type]">
-            <Image
-              :type="imageTypeMap[props.type]"
-              :id="getEntityId(item)"
-              :alt="`${props.type}: ${getEntityDisplayName(item)}`"
-              class="w-7 flex-shrink-0 mr-2"
-              size="32"
-              format="webp"
-            />
-          </template>
-          <template v-else>
-            <NuxtImg
-              :src="getImageUrl(item)"
-              format="webp"
-              quality="80"
-              width="28"
-              height="28"
-              :alt="`${props.type}: ${getEntityDisplayName(item)}`"
-              class="w-7 flex-shrink-0 mr-2"
-            />
-          </template>
+          <Image
+            v-if="!item.isLoading"
+            :type="imageTypeMap[props.type]"
+            :id="getEntityId(item)"
+            :alt="`${props.type}: ${getEntityDisplayName(item)}`"
+            class="w-7 flex-shrink-0 mr-2"
+            size="32"
+            format="webp"
+          />
+          <div v-else class="w-7 h-7 flex-shrink-0 mr-2 rounded bg-gray-200 dark:bg-gray-700 animate-pulse"></div>
 
           <!-- Entity name -->
           <div class="text-sm text-left text-black dark:text-white truncate min-w-0 overflow-hidden">

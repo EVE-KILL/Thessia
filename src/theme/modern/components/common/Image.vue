@@ -20,7 +20,10 @@ const props = defineProps({
       'type-render',
       'blueprint',
       'blueprint-copy',
-      'item' // For automatic detection based on name
+      'item',
+      'system',
+      'constellation',
+      'region'
     ].includes(value)
   },
   // The ID for the image (character ID, corporation ID, etc.)
@@ -134,7 +137,10 @@ const eveSize = computed(() => {
     'type-render': 512,
     'blueprint': 64,
     'blueprint-copy': 64,
-    'item': 64
+    'item': 64,
+    'system': 64,
+    'constellation': 64,
+    'region': 64
   };
 
   // Convert size to number if it's a string
@@ -166,6 +172,12 @@ const src = computed(() => {
       return eveImages.getBlueprintIcon(props.id, eveSize.value);
     case 'blueprint-copy':
       return eveImages.getBlueprintCopyIcon(props.id, eveSize.value);
+    case 'system':
+      return eveImages.getSystemImage(props.id, eveSize.value);
+    case 'constellation':
+      return eveImages.getConstellationImage(props.id, eveSize.value);
+    case 'region':
+      return eveImages.getRegionImage(props.id, eveSize.value);
     case 'item':
       // Auto-detect image type based on name
       return eveImages.getItemImageUrl(props.id, props.name, 'icon', eveSize.value);
