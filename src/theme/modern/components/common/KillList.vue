@@ -427,27 +427,27 @@ const resetWebSocketState = () => {
 const tableColumns = [
   {
     id: 'ship',
-    header: computed(() => t('killList.ship')),
+    header: computed(() => t('ship')),
     width: '20%'
   },
   {
     id: 'victim',
-    header: computed(() => t('killList.victim')),
+    header: computed(() => t('victim')),
     width: '25%'
   },
   {
     id: 'finalBlow',
-    header: computed(() => t('killList.finalBlow')),
+    header: computed(() => t('finalBlow')),
     width: '25%'
   },
   {
     id: 'location',
-    header: computed(() => t('killList.location')),
+    header: computed(() => t('location')),
     width: '15%'
   },
   {
     id: 'details',
-    header: computed(() => t('killList.details')),
+    header: computed(() => t('details')),
     headerClass: 'text-right',
     width: '15%'
   },
@@ -462,12 +462,12 @@ const getRowClass = (item) => {
 const wsStatusMessage = computed(() => {
   if (!wsConnected.value) {
     return wsReconnectAttempts.value > 0
-      ? t('killList.reconnecting')
-      : t('killList.disconnected');
+      ? t('reconnecting')
+      : t('disconnected');
   } else {
     return isWebSocketPaused.value
-      ? t('killList.paused')
-      : t('killList.connected');
+      ? t('paused')
+      : t('connected');
   }
 });
 
@@ -596,7 +596,7 @@ onBeforeUnmount(() => {
       :items="killlistData"
       :loading="pending"
       :skeleton-count="selectedPageSize"
-      :empty-text="t('killList.noKills')"
+      :empty-text="t('noKills')"
       :row-class="getRowClass"
       :special-header="true"
       :bordered="true"

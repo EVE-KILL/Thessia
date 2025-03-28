@@ -5,13 +5,13 @@
       <UCard class="bg-black bg-opacity-30 dark:bg-gray-900 dark:bg-opacity-30">
         <template #header>
           <div class="header-container">
-            <h3 class="header-title">{{ $t('character.bio') }}</h3>
+            <h3 class="header-title">{{ $t('bio') }}</h3>
           </div>
         </template>
 
         <div v-if="characterBio" class="character-bio" v-html="characterBio"></div>
         <div v-else class="empty-bio">
-          {{ $t('character.noBio') }}
+          {{ $t('noBio') }}
         </div>
       </UCard>
 
@@ -20,7 +20,7 @@
         <template #header>
           <div class="header-container">
             <h3 class="header-title">
-              {{ $t('character.stats') }} ({{ activePeriodLabel }})
+              {{ $t('stats') }} ({{ activePeriodLabel }})
             </h3>
             <div class="period-selector">
               <UButton
@@ -66,7 +66,7 @@
 
           <!-- Heat Map Activity -->
           <div class="heat-map-container">
-            <h3 class="section-title">{{ $t('character.heatMap') }}</h3>
+            <h3 class="section-title">{{ $t('heatMap') }}</h3>
             <div class="heat-map-grid">
               <div
                 v-for="(count, hour) in stats.heatMap"
@@ -86,7 +86,7 @@
 
           <!-- Most Used Ships -->
           <div v-if="stats.mostUsedShips && Object.keys(stats.mostUsedShips).length > 0" class="stats-section">
-            <h3 class="section-title">{{ $t('character.mostUsedShips') }}</h3>
+            <h3 class="section-title">{{ $t('mostUsedShips') }}</h3>
             <Table
               :columns="shipColumns"
               :items="sortByCountDesc(stats.mostUsedShips)"
@@ -106,7 +106,7 @@
 
           <!-- Most Lost Ships -->
           <div v-if="stats.mostLostShips && Object.keys(stats.mostLostShips).length > 0" class="stats-section">
-            <h3 class="section-title">{{ $t('character.mostLostShips') }}</h3>
+            <h3 class="section-title">{{ $t('mostLostShips') }}</h3>
             <Table
               :columns="shipColumns"
               :items="sortByCountDesc(stats.mostLostShips)"
@@ -126,7 +126,7 @@
 
           <!-- Dies To Corporations -->
           <div v-if="stats.diesToCorporations && Object.keys(stats.diesToCorporations).length > 0" class="stats-section">
-            <h3 class="section-title">{{ $t('character.diesToCorporations') }}</h3>
+            <h3 class="section-title">{{ $t('diesToCorporations') }}</h3>
             <Table
               :columns="corpColumns"
               :items="sortByCountDesc(stats.diesToCorporations)"
@@ -146,7 +146,7 @@
 
           <!-- Dies To Alliances -->
           <div v-if="stats.diesToAlliances && Object.keys(stats.diesToAlliances).length > 0" class="stats-section">
-            <h3 class="section-title">{{ $t('character.diesToAlliances') }}</h3>
+            <h3 class="section-title">{{ $t('diesToAlliances') }}</h3>
             <Table
               :columns="allianceColumns"
               :items="sortByCountDesc(stats.diesToAlliances)"
@@ -166,7 +166,7 @@
 
           <!-- Flies With Corporations -->
           <div v-if="stats.fliesWithCorporations && Object.keys(stats.fliesWithCorporations).length > 0" class="stats-section">
-            <h3 class="section-title">{{ $t('character.fliesWithCorporations') }}</h3>
+            <h3 class="section-title">{{ $t('fliesWithCorporations') }}</h3>
             <Table
               :columns="corpColumns"
               :items="sortByCountDesc(stats.fliesWithCorporations)"
@@ -186,7 +186,7 @@
 
           <!-- Flies With Alliances -->
           <div v-if="stats.fliesWithAlliances && Object.keys(stats.fliesWithAlliances).length > 0" class="stats-section">
-            <h3 class="section-title">{{ $t('character.fliesWithAlliances') }}</h3>
+            <h3 class="section-title">{{ $t('fliesWithAlliances') }}</h3>
             <Table
               :columns="allianceColumns"
               :items="sortByCountDesc(stats.fliesWithAlliances)"
@@ -242,11 +242,11 @@ const periods = [
   { value: '14', label: '14d' },
   { value: '30', label: '30d' },
   { value: '90', label: '90d' },
-  { value: 'all', label: t('character.allTime') }
+  { value: 'all', label: t('allTime') }
 ];
 
 const activePeriodLabel = computed(() => {
-  if (activePeriod.value === 'all') return t('character.allTime');
+  if (activePeriod.value === 'all') return t('allTime');
   return `${activePeriod.value}d`;
 });
 
@@ -263,23 +263,23 @@ const statsError = ref(false);
 
 // Table columns - adjusted with proper width alignment
 const statColumns = [
-  { id: 'name', header: t('common.name'), width: '50%' },
-  { id: 'value', header: t('common.value'), headerClass: 'text-right', width: '50%' }
+  { id: 'name', header: t('name'), width: '50%' },
+  { id: 'value', header: t('value'), headerClass: 'text-right', width: '50%' }
 ];
 
 const shipColumns = [
-  { id: 'name', header: t('common.ship'), width: '75%' },
-  { id: 'count', header: t('common.count'), headerClass: 'text-right', width: '25%' }
+  { id: 'name', header: t('ship'), width: '75%' },
+  { id: 'count', header: t('count'), headerClass: 'text-right', width: '25%' }
 ];
 
 const corpColumns = [
-  { id: 'name', header: t('common.corporation'), width: '75%' },
-  { id: 'count', header: t('common.count'), headerClass: 'text-right', width: '25%' }
+  { id: 'name', header: t('corporation'), width: '75%' },
+  { id: 'count', header: t('count'), headerClass: 'text-right', width: '25%' }
 ];
 
 const allianceColumns = [
-  { id: 'name', header: t('common.alliance'), width: '75%' },
-  { id: 'count', header: t('common.count'), headerClass: 'text-right', width: '25%' }
+  { id: 'name', header: t('alliance'), width: '75%' },
+  { id: 'count', header: t('count'), headerClass: 'text-right', width: '25%' }
 ];
 
 // Timezone data (evening playtimes)
@@ -423,18 +423,18 @@ const formattedStats = computed(() => {
   const activeTimezone = determineActiveTimezone(stats.value.heatMap);
 
   return [
-    { name: t('character.kills'), value: formatNumber(stats.value.kills) },
-    { name: t('character.losses'), value: formatNumber(stats.value.losses) },
-    { name: t('character.iskKilled'), value: formatIsk(stats.value.iskKilled) },
-    { name: t('character.iskLost'), value: formatIsk(stats.value.iskLost) },
-    { name: t('character.soloKills'), value: formatNumber(stats.value.soloKills) },
-    { name: t('character.soloLosses'), value: formatNumber(stats.value.soloLosses) },
-    { name: t('character.npcLosses'), value: formatNumber(stats.value.npcLosses) },
-    { name: t('character.blobFactor'), value: stats.value.blobFactor?.toFixed(2) || '0.00' },
-    { name: t('character.lastActive'), value: formatDate(stats.value.lastActive) },
-    { name: t('character.activeTimezone'), value: activeTimezone },
-    { name: t('character.knownFC'), value: stats.value.possibleFC ? t('common.yes') : t('common.no') },
-    { name: t('character.knownCynoAlt'), value: stats.value.possibleCynoAlt ? t('common.yes') : t('common.no') },
+    { name: t('kills'), value: formatNumber(stats.value.kills) },
+    { name: t('losses'), value: formatNumber(stats.value.losses) },
+    { name: t('isk') + ' ' + t('killed'), value: formatIsk(stats.value.iskKilled) },
+    { name: t('isk') + ' ' + t('lost'), value: formatIsk(stats.value.iskLost) },
+    { name: t('solo') + ' ' + t('kills'), value: formatNumber(stats.value.soloKills) },
+    { name: t('solo') + ' ' + t('losses'), value: formatNumber(stats.value.soloLosses) },
+    { name: t('npc') + ' ' + t('losses'), value: formatNumber(stats.value.npcLosses) },
+    { name: t('blobFactor'), value: stats.value.blobFactor?.toFixed(2) || '0.00' },
+    { name: t('lastActive'), value: formatDate(stats.value.lastActive) },
+    { name: t('activeTimezone'), value: activeTimezone },
+    { name: t('knownFC'), value: stats.value.possibleFC ? t('yes') : t('no') },
+    { name: t('knownCynoAlt'), value: stats.value.possibleCynoAlt ? t('yes') : t('no') },
   ];
 });
 

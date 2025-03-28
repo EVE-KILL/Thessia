@@ -39,43 +39,43 @@ interface NavLink {
 /**
  * Left navigation items
  */
-const leftNavItems = computed<NavLink[]>(() => [
+const leftNavItems = computed(() => [
   {
-    name: t('navbar.home.text'),
-    label: t('navbar.home.label'),
+    name: t('home'),
+    label: t('home'),
     icon: 'lucide:house',
     to: '/',
     position: 'left'
   },
   {
-    name: t('navbar.kills.text'),
-    label: t('navbar.kills.label'),
+    name: t('kills'),
+    label: t('kills'),
     position: 'left',
     children: [
-      { name: t('navbar.kills.latest'), label: t('navbar.kills.latestLabel'), to: '/kills/latest' },
-      { name: t('navbar.kills.abyssal'), label: t('navbar.kills.abyssalLabel'), to: '/kills/abyssal' },
-      { name: t('navbar.kills.wspace'), label: t('navbar.kills.wspaceLabel'), to: '/kills/wspace' },
-      { name: t('navbar.kills.highsec'), label: t('navbar.kills.highsecLabel'), to: '/kills/highsec' },
-      { name: t('navbar.kills.lowsec'), label: t('navbar.kills.lowsecLabel'), to: '/kills/lowsec' },
-      { name: t('navbar.kills.nullsec'), label: t('navbar.kills.nullsecLabel'), to: '/kills/nullsec' },
-      { name: t('navbar.kills.big'), label: t('navbar.kills.bigLabel'), to: '/kills/big' },
-      { name: t('navbar.kills.solo'), label: t('navbar.kills.soloLabel'), to: '/kills/solo' },
-      { name: t('navbar.kills.npc'), label: t('navbar.kills.npcLabel'), to: '/kills/npc' },
-      { name: t('navbar.kills.5b'), label: t('navbar.kills.5bLabel'), to: '/kills/5b' },
-      { name: t('navbar.kills.10b'), label: t('navbar.kills.10bLabel'), to: '/kills/10b' },
-      { name: t('navbar.kills.citadels'), label: t('navbar.kills.citadelsLabel'), to: '/kills/citadels' },
-      { name: t('navbar.kills.t1'), label: t('navbar.kills.t1Label'), to: '/kills/t1' },
-      { name: t('navbar.kills.t2'), label: t('navbar.kills.t2Label'), to: '/kills/t2' },
-      { name: t('navbar.kills.t3'), label: t('navbar.kills.t3Label'), to: '/kills/t3' },
-      { name: t('navbar.kills.frigates'), label: t('navbar.kills.frigatesLabel'), to: '/kills/frigates' },
-      { name: t('navbar.kills.destroyers'), label: t('navbar.kills.destroyersLabel'), to: '/kills/destroyers' },
-      { name: t('navbar.kills.cruisers'), label: t('navbar.kills.cruisersLabel'), to: '/kills/cruisers' },
-      { name: t('navbar.kills.battlecruisers'), label: t('navbar.kills.battlecruisersLabel'), to: '/kills/battlecruisers' },
-      { name: t('navbar.kills.battleships'), label: t('navbar.kills.battleshipsLabel'), to: '/kills/battleships' },
-      { name: t('navbar.kills.capitals'), label: t('navbar.kills.capitalsLabel'), to: '/kills/capitals' },
-      { name: t('navbar.kills.freighters'), label: t('navbar.kills.freightersLabel'), to: '/kills/freighters' },
-      { name: t('navbar.kills.supercarriers'), label: t('navbar.kills.supercarriersLabel'), to: '/kills/supercarriers' },
-      { name: t('navbar.kills.titans'), label: t('navbar.kills.titansLabel'), to: '/kills/titans' }
+      { name: t('latest'), label: t('latest'), to: '/kills/latest' },
+      { name: t('abyssal'), label: t('abyssal'), to: '/kills/abyssal' },
+      { name: t('wspace'), label: t('wspace'), to: '/kills/wspace' },
+      { name: t('highsec'), label: t('highsec'), to: '/kills/highsec' },
+      { name: t('lowsec'), label: t('lowsec'), to: '/kills/lowsec' },
+      { name: t('nullsec'), label: t('nullsec'), to: '/kills/nullsec' },
+      { name: t('big'), label: t('big'), to: '/kills/big' },
+      { name: t('solo'), label: t('solo'), to: '/kills/solo' },
+      { name: t('npc'), label: t('npc'), to: '/kills/npc' },
+      { name: t('5b'), label: t('5b'), to: '/kills/5b' },
+      { name: t('10b'), label: t('10b'), to: '/kills/10b' },
+      { name: t('citadels'), label: t('citadels'), to: '/kills/citadels' },
+      { name: t('t1'), label: t('t1'), to: '/kills/t1' },
+      { name: t('t2'), label: t('t2'), to: '/kills/t2' },
+      { name: t('t3'), label: t('t3'), to: '/kills/t3' },
+      { name: t('frigates'), label: t('frigates'), to: '/kills/frigates' },
+      { name: t('destroyers'), label: t('destroyers'), to: '/kills/destroyers' },
+      { name: t('cruisers'), label: t('cruisers'), to: '/kills/cruisers' },
+      { name: t('battlecruisers'), label: t('battlecruisers'), to: '/kills/battlecruisers' },
+      { name: t('battleships'), label: t('battleships'), to: '/kills/battleships' },
+      { name: t('capitals'), label: t('capitals'), to: '/kills/capitals' },
+      { name: t('freighters'), label: t('freighters'), to: '/kills/freighters' },
+      { name: t('supercarriers'), label: t('supercarriers'), to: '/kills/supercarriers' },
+      { name: t('titans'), label: t('titans'), to: '/kills/titans' }
     ]
   }
 ]);
@@ -109,21 +109,19 @@ const rightNavItems = computed(() => [
     },
   },
   {
-    label: t('navbar.backgroundSelector.label'),
     icon: 'lucide:book-image',
     component: BackgroundSwitcher,
     position: 'right',
     mobile: true,
   },
   {
-    label: t('navbar.information.label'),
     icon: 'lucide:info',
     position: 'right',
     collapse: false,
     children: [
-      { name: t('navbar.faq.text'), label: t('navbar.faq.label'), to: '/faq' },
-      { name: t('navbar.status.text'), label: t('navbar.status.label'), to: '/status' },
-      { name: t('navbar.about.text'), label: t('navbar.about.label'), to: '/about' }
+      { name: t('faq'), label: t('faq'), to: '/faq' },
+      { name: t('status'), label: t('status'), to: '/status' },
+      { name: t('aboutTitle'), label: t('aboutTitle'), to: '/about' }
     ],
   },
   {
@@ -346,7 +344,7 @@ const closeMobileMenu = () => {
   <!-- Mobile Fullscreen Menu Modal -->
   <MobileFullscreen
     :open="isMobileMenuOpen"
-    :title="t('navbar.menuTitle')"
+    :title="t('menuTitle')"
     @close="closeMobileMenu"
   >
     <!-- Main menu content -->

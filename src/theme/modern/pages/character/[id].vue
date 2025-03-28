@@ -88,13 +88,13 @@
                   {{ character.faction_name }}
                 </NuxtLink>
                 <div class="text-gray-300 mt-1">
-                  {{ $t('character.securityStatus') }}:
+                  {{ $t('securityStatus') }}:
                   <span :style="{ color: getSecurityStatusColor(character.security_status) }">
                     {{ character.security_status.toFixed(3) }}
                   </span>
                 </div>
                 <div v-if="!shortStatsLoading && shortStats?.lastActive" class="text-gray-400 text-sm">
-                  {{ $t('character.lastActive') }}: {{ formatDate(shortStats.lastActive) }}
+                  {{ $t('lastActive') }}: {{ formatDate(shortStats.lastActive) }}
                 </div>
               </div>
 
@@ -103,7 +103,7 @@
                 <!-- Stats loading state -->
                 <UCard v-if="shortStatsLoading" class="col-span-2 h-32 flex items-center justify-center bg-black bg-opacity-20">
                   <UIcon name="i-lucide-loader-2" class="animate-spin text-gray-400" size="lg" />
-                  <span class="ml-2 text-gray-400">{{ $t('common.loading') }}</span>
+                  <span class="ml-2 text-gray-400">{{ $t('loading') }}</span>
                 </UCard>
 
                 <!-- Stats data -->
@@ -111,19 +111,19 @@
                   <!-- Left stats column -->
                   <div class="space-y-1">
                     <div class="flex justify-between">
-                      <span class="text-gray-300">{{ $t('character.kills') }}:</span>
+                      <span class="text-gray-300">{{ $t('kills') }}:</span>
                       <span class="text-white font-medium">{{ formatNumber(shortStats.kills) }}</span>
                     </div>
                     <div class="flex justify-between">
-                      <span class="text-gray-300">{{ $t('character.losses') }}:</span>
+                      <span class="text-gray-300">{{ $t('losses') }}:</span>
                       <span class="text-white font-medium">{{ formatNumber(shortStats.losses) }}</span>
                     </div>
                     <div class="flex justify-between">
-                      <span class="text-gray-300">{{ $t('character.iskKilled') }}:</span>
+                      <span class="text-gray-300">{{ $t('isk') + ' ' + $t('killed') }}:</span>
                       <span class="text-white font-medium">{{ formatIsk(shortStats.iskKilled) }}</span>
                     </div>
                     <div class="flex justify-between">
-                      <span class="text-gray-300">{{ $t('character.iskLost') }}:</span>
+                      <span class="text-gray-300">{{ $t('isk') + ' ' + $t('lost') }}:</span>
                       <span class="text-white font-medium">{{ formatIsk(shortStats.iskLost) }}</span>
                     </div>
                   </div>
@@ -131,19 +131,19 @@
                   <!-- Right stats column -->
                   <div class="space-y-1">
                     <div class="flex justify-between">
-                      <span class="text-gray-300">{{ $t('character.npcLosses') }}:</span>
+                      <span class="text-gray-300">{{ $t('npc') + ' ' + $t('losses') }}:</span>
                       <span class="text-white font-medium">{{ formatNumber(shortStats.npcLosses) }}</span>
                     </div>
                     <div class="flex justify-between">
-                      <span class="text-gray-300">{{ $t('character.soloKills') }}:</span>
+                      <span class="text-gray-300">{{ $t('solo') + ' ' + $t('kills') }}:</span>
                       <span class="text-white font-medium">{{ formatNumber(shortStats.soloKills) }}</span>
                     </div>
                     <div class="flex justify-between">
-                      <span class="text-gray-300">{{ $t('character.soloLosses') }}:</span>
+                      <span class="text-gray-300">{{ $t('solo') + ' ' + $t('losses') }}:</span>
                       <span class="text-white font-medium">{{ formatNumber(shortStats.soloLosses) }}</span>
                     </div>
                     <div class="flex justify-between">
-                      <span class="text-gray-300">{{ $t('character.dangerRatio') }}:</span>
+                      <span class="text-gray-300">{{ $t('dangerRatio') }}:</span>
                       <span class="text-white font-medium">{{ calcDangerRatio(shortStats) }}%</span>
                     </div>
                   </div>
@@ -304,12 +304,12 @@ const { data: shortStats, pending: shortStatsLoading } = useFetch(`/api/characte
 useSeoMeta({
   title: computed(() => character.value ? `${character.value.name} - EVE Kill` : t('character.characterPage')),
   description: computed(() => character.value
-    ? t('character.metaDescription', {
+    ? t('characterMetaDescription', {
         name: character.value.name,
         corporation: character.value.corporation_name,
-        alliance: character.value.alliance_name || t('character.noAlliance')
+        alliance: character.value.alliance_name || t('noAlliance')
       })
-    : t('character.defaultDescription')),
+    : t('characterDefaultDescription', { id: id })),
   ogImage: computed(() => character.value
     ? `https://images.eve-kill.com/characters/${character.value.character_id}/portrait?size=256`
     : '/images/default-og.png')
@@ -319,37 +319,37 @@ useSeoMeta({
 const tabItems = [
   {
     id: 'dashboard',
-    label: computed(() => t('character.dashboard')),
+    label: computed(() => t('dashboard')),
     icon: 'i-lucide-layout-dashboard',
     slot: 'dashboard' as const
   },
   {
     id: 'kills',
-    label: computed(() => t('character.kills')),
+    label: computed(() => t('kills')),
     icon: 'i-lucide-trophy',
     slot: 'kills' as const
   },
   {
     id: 'losses',
-    label: computed(() => t('character.losses')),
+    label: computed(() => t('losses')),
     icon: 'i-lucide-skull',
     slot: 'losses' as const
   },
   {
     id: 'combined',
-    label: computed(() => t('character.combined')),
+    label: computed(() => t('combined')),
     icon: 'i-lucide-layers',
     slot: 'combined' as const
   },
   {
     id: 'corporation-history',
-    label: computed(() => t('character.corporationHistory')),
+    label: computed(() => t('corporationHistory')),
     icon: 'i-lucide-history',
     slot: 'corporation-history' as const
   },
   {
     id: 'stats',
-    label: computed(() => t('character.stats')),
+    label: computed(() => t('stats')),
     icon: 'i-lucide-bar-chart',
     slot: 'stats' as const
   }

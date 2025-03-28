@@ -66,6 +66,6 @@
 const { t } = useI18n();
 
 useSeoMeta({
-  title: t('legal.pageTitle'),
+  title: t('legalPageTitle'),
 });
 </script>

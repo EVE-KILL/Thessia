@@ -6,7 +6,7 @@
       variant="solid"
       size="sm"
       aria-label="View background"
-      :title="$t('background.toggleVisibility')"
+      :title="$t('toggleVisibility')"
       @click="toggleBackgroundView"
     />
   </div>

@@ -7,7 +7,7 @@ definePageMeta({
 // Add SEO meta
 const { t } = useI18n();
 useSeoMeta({
-    title: t('user.settingsPageTitle')
+    title: t('settingsPageTitle')
 });
 
 // Add active tab tracking

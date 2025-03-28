@@ -49,7 +49,7 @@
         <div v-if="activeTooltip.visible" class="center-tooltip-overlay" @mouseenter="keepTooltipVisible" @mouseleave="prepareToHideTooltip">
           <div class="center-tooltip">
             <div class="tooltip-name">{{ activeTooltip.name }}</div>
-            <div class="tooltip-value">{{ activeTooltip.value }} {{ $t('common.isk') }}</div>
+            <div class="tooltip-value">{{ activeTooltip.value }} {{ $t('isk') }}</div>
             <div class="tooltip-status" v-if="activeTooltip.status" v-html="activeTooltip.status"></div>
           </div>
         </div>
@@ -496,8 +496,8 @@ const HIDE_DELAY = 150; // Short delay before hiding tooltip to prevent flickeri
 
 // Create reactive tooltip translations for dropped/destroyed text
 const tooltipText = computed(() => ({
-  dropped: t('killFittingWheel.dropped'),
-  destroyed: t('killFittingWheel.destroyed')
+  dropped: t('dropped'),
+  destroyed: t('destroyed')
 }));
 
 // Update tooltip properties when locale changes

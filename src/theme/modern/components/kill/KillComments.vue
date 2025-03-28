@@ -105,7 +105,7 @@
                 :disabled="!reportMessage.trim() || isReporting"
                 class="px-4 py-2 rounded-md bg-red-600 text-white hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
               >
-                {{ isReporting ? $t('common.loading') : $t('comment.submit_report') }}
+                {{ isReporting ? $t('loading') : $t('comment.submit_report') }}
               </button>
             </div>
           </div>
@@ -140,7 +140,7 @@
                 :disabled="isDeleting"
                 class="px-4 py-2 rounded-md bg-red-600 text-white hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
               >
-                {{ isDeleting ? $t('common.loading') : $t('comment.confirm_delete') }}
+                {{ isDeleting ? $t('loading') : $t('comment.confirm_delete') }}
               </button>
             </div>
           </div>
@@ -149,13 +149,13 @@
     </div>
 
     <div v-if="comments.length === 0" class="section mb-4 text-center py-8">
-      <div class="text-light-dark-secondary">{{ $t('comment.no_comments') }}</div>
+      <div class="text-light-dark-secondary">{{ $t('noComments') }}</div>
     </div>
 
     <!-- WebSocket connection status indicator -->
     <div v-if="!wsConnected" class="text-xs text-amber-500 mb-2 flex items-center justify-end gap-1">
       <div class="w-2 h-2 rounded-full bg-amber-500 animate-pulse"></div>
-      <span>{{ $t('killList.wsReconnecting', { attempt: wsReconnectAttempts, max: 5 }) }}</span>
+      <span>{{ $t('reconnecting', { attempt: wsReconnectAttempts, max: 5 }) }}</span>
     </div>
 
     <!-- Comment Input Box for authenticated users -->
@@ -293,7 +293,7 @@
 
     <!-- Login prompt for unauthenticated users -->
     <div v-else class="section mb-4 text-center py-4">
-      <p class="mb-2">{{ $t('login_to_comment') }}</p>
+      <p class="mb-2">{{ $t('loginToComment') }}</p>
       <UButton color="primary" @click="loginToComment">{{ $t('login') }}</UButton>
     </div>
   </div>

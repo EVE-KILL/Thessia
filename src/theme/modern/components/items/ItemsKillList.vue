@@ -9,7 +9,7 @@
         :items="[]"
         :loading="true"
         :skeleton-count="5"
-        :empty-text="$t('items.noKills')"
+        :empty-text="$t('noKills')"
         background="transparent"
       />
     </div>
@@ -25,7 +25,7 @@
         :columns="tableColumns"
         :items="killmails"
         :loading="false"
-        :empty-text="$t('items.noKills')"
+        :empty-text="$t('noKills')"
         :link-fn="generateKillLink"
         :bordered="true"
         :striped="false"
@@ -112,7 +112,7 @@
 
     <!-- Empty state -->
     <div v-else class="text-center p-4">
-      {{ $t('items.noKills') }}
+      {{ $t('noKills') }}
     </div>
   </div>
 </template>

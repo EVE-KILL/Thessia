@@ -1,7 +1,7 @@
 <template>
     <Table :columns="columns" :items="data" :loading="!killmail" :row-class="getRowClasses" :bordered="true"
         :striped="false" :hover="true" :density="'compact'" :show-header="true" :special-header="true"
-        :empty-icon="'lucide:package'" :empty-text="t('killItems.noItems')" background="transparent"
+        :empty-icon="'lucide:package'" :empty-text="t('noItems')" background="transparent"
         :link-fn="generateItemLink" class="kill-items-table">
         <!-- Image cell with connector lines for container items -->
         <template #cell-image="{ item }">
@@ -150,18 +150,18 @@ const columns = ref<TableColumn[]>([
     },
     {
         id: 'name',
-        header: computed(() => t('killItems.item')),
+        header: computed(() => t('item')),
         cellClass: 'name-cell-container' // Add flex-1 to make this column expand
     },
     {
         id: 'quantity',
-        header: computed(() => t('killItems.quantity')),
+        header: computed(() => t('quantity')),
         width: '120px',
         cellClass: 'quantity-cell-container' // Add justify-end for right alignment
     },
     {
         id: 'value',
-        header: computed(() => t('killItems.value')),
+        header: computed(() => t('value')),
         width: '120px',
         cellClass: 'value-cell-container justify-end' // Add justify-end for right alignment
     }
@@ -176,175 +176,175 @@ const slotTypeConfig = {
         flags: [27, 28, 29, 30, 31, 32, 33, 34],
         collapsible: false,
         defaultCollapsed: false,
-        label: () => t('killItems.slots.highSlot')
+        label: () => t('slots.highSlot')
     },
     mediumSlot: {
         flags: [19, 20, 21, 22, 23, 24, 25, 26],
         collapsible: false,
         defaultCollapsed: false,
-        label: () => t('killItems.slots.mediumSlot')
+        label: () => t('slots.mediumSlot')
     },
     lowSlot: {
         flags: [11, 12, 13, 14, 15, 16, 17, 18],
         collapsible: false,
         defaultCollapsed: false,
-        label: () => t('killItems.slots.lowSlot')
+        label: () => t('slots.lowSlot')
     },
     rigSlot: {
         flags: [92, 93, 94, 95, 96, 97, 98, 99],
         collapsible: false,
         defaultCollapsed: false,
-        label: () => t('killItems.slots.rigSlot')
+        label: () => t('slots.rigSlot')
     },
     subsystem: {
         flags: [125, 126, 127, 128, 129, 130, 131, 132],
         collapsible: false,
         defaultCollapsed: false,
-        label: () => t('killItems.slots.subsystem')
+        label: () => t('slots.subsystem')
     },
     droneBay: {
         flags: [87],
         collapsible: true,
         defaultCollapsed: false,
-        label: () => t('killItems.slots.droneBay')
+        label: () => t('slots.droneBay')
     },
     cargoBay: {
         flags: [5],
         collapsible: true,
         defaultCollapsed: false,
-        label: () => t('killItems.slots.cargoBay')
+        label: () => t('slots.cargoBay')
     },
     fuelBay: {
         flags: [133],
         collapsible: true,
         defaultCollapsed: true,
-        label: () => t('killItems.slots.fuelBay')
+        label: () => t('slots.fuelBay')
     },
     fleetHangar: {
         flags: [155],
         collapsible: true,
         defaultCollapsed: true,
-        label: () => t('killItems.slots.fleetHangar')
+        label: () => t('slots.fleetHangar')
     },
     fighterBay: {
         flags: [158],
         collapsible: true,
         defaultCollapsed: true,
-        label: () => t('killItems.slots.fighterBay')
+        label: () => t('slots.fighterBay')
     },
     fighterLaunchTubes: {
         flags: [159, 160, 161, 162, 163],
         collapsible: true,
         defaultCollapsed: true,
-        label: () => t('killItems.slots.fighterLaunchTubes')
+        label: () => t('slots.fighterLaunchTubes')
     },
     shipHangar: {
         flags: [90],
         collapsible: true,
         defaultCollapsed: true,
-        label: () => t('killItems.slots.shipHangar')
+        label: () => t('slots.shipHangar')
     },
     oreHold: {
         flags: [134],
         collapsible: true,
         defaultCollapsed: true,
-        label: () => t('killItems.slots.oreHold')
+        label: () => t('slots.oreHold')
     },
     gasHold: {
         flags: [135],
         collapsible: true,
         defaultCollapsed: true,
-        label: () => t('killItems.slots.gasHold')
+        label: () => t('slots.gasHold')
     },
     mineralHold: {
         flags: [136],
         collapsible: true,
         defaultCollapsed: true,
-        label: () => t('killItems.slots.mineralHold')
+        label: () => t('slots.mineralHold')
     },
     salvageHold: {
         flags: [137],
         collapsible: true,
         defaultCollapsed: true,
-        label: () => t('killItems.slots.salvageHold')
+        label: () => t('slots.salvageHold')
     },
     shipHold: {
         flags: [138],
         collapsible: true,
         defaultCollapsed: true,
-        label: () => t('killItems.slots.shipHold')
+        label: () => t('slots.shipHold')
     },
     smallShipHold: {
         flags: [139],
         collapsible: true,
         defaultCollapsed: true,
-        label: () => t('killItems.slots.smallShipHold')
+        label: () => t('slots.smallShipHold')
     },
     mediumShipHold: {
         flags: [140],
         collapsible: true,
         defaultCollapsed: true,
-        label: () => t('killItems.slots.mediumShipHold')
+        label: () => t('slots.mediumShipHold')
     },
     largeShipHold: {
         flags: [141],
         collapsible: true,
         defaultCollapsed: true,
-        label: () => t('killItems.slots.largeShipHold')
+        label: () => t('slots.largeShipHold')
     },
     industrialShipHold: {
         flags: [142],
         collapsible: true,
         defaultCollapsed: true,
-        label: () => t('killItems.slots.industrialShipHold')
+        label: () => t('slots.industrialShipHold')
     },
     ammoHold: {
         flags: [143],
         collapsible: true,
         defaultCollapsed: true,
-        label: () => t('killItems.slots.ammoHold')
+        label: () => t('slots.ammoHold')
     },
     quafeBay: {
         flags: [154],
         collapsible: true,
         defaultCollapsed: true,
-        label: () => t('killItems.slots.quafeBay')
+        label: () => t('slots.quafeBay')
     },
     structureServices: {
         flags: [164, 165, 166, 167, 168, 169, 170, 171],
         collapsible: true,
         defaultCollapsed: true,
-        label: () => t('killItems.slots.structureServices')
+        label: () => t('slots.structureServices')
     },
     structureFuel: {
         flags: [172],
         collapsible: true,
         defaultCollapsed: true,
-        label: () => t('killItems.slots.structureFuel')
+        label: () => t('slots.structureFuel')
     },
     implants: {
         flags: [89],
         collapsible: true,
         defaultCollapsed: true,
-        label: () => t('killItems.slots.implants')
+        label: () => t('slots.implants')
     },
     infrastructureHangar: {
         flags: [185],
         collapsible: true,
         defaultCollapsed: true,
-        label: () => t('killItems.slots.infrastructureHangar')
+        label: () => t('slots.infrastructureHangar')
     },
     coreRoom: {
         flags: [180],
         collapsible: true,
         defaultCollapsed: true,
-        label: () => t('killItems.slots.coreRoom')
+        label: () => t('slots.coreRoom')
     },
     moonMaterialBay: {
         flags: [186],
         collapsible: true,
         defaultCollapsed: true,
-        label: () => t('killItems.slots.moonMaterialBay')
+        label: () => t('slots.moonMaterialBay')
     }
 };
 
@@ -438,7 +438,7 @@ function getRowClasses(item: Item) {
     }
 
     // Add section total class
-    if (item.type === 'value' && item.itemName !== t('killItems.total')) {
+    if (item.type === 'value' && item.itemName !== t('total')) {
         classes.push('section-total-row');
     }
 
@@ -533,7 +533,7 @@ function processKillmailData(killmail: IKillmail) {
     data.value?.push({
         type: 'header',
         image: null,
-        itemName: t('killItems.hull'),
+        itemName: t('hull'),
         dropped: null,
         destroyed: null,
         value: null
@@ -638,7 +638,7 @@ function processKillmailData(killmail: IKillmail) {
         data.value?.push({
             type: 'value',
             image: null,
-            itemName: t('killItems.subtotal'),
+            itemName: t('subTotal'),
             dropped: items.reduce((sum, item) => sum + (item.qty_dropped || 0), 0),
             destroyed: items.reduce((sum, item) => sum + (item.qty_destroyed || 0), 0),
             value: innerValue,
@@ -652,7 +652,7 @@ function processKillmailData(killmail: IKillmail) {
     data.value?.push({
         type: 'value',
         image: null,
-        itemName: t('killItems.total'),
+        itemName: t('total'),
         dropped: null,
         destroyed: null,
         value: totalValue,

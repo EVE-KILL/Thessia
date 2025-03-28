@@ -47,6 +47,6 @@ definePageMeta({
 const { t } = useI18n();
 
 useSeoMeta({
-  title: t('about.pageTitle')
+  title: t('aboutPageTitle')
 });
 </script>

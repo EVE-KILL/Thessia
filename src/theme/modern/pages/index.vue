@@ -13,43 +13,43 @@
                         type="character"
                         :limit="10"
                         :days="7"
-                        :title="t('top.characters')"
+                        :title="t('top') + ' ' + t('characters')"
                     />
                     <TopBox
                         type="corporation"
                         :limit="10"
                         :days="7"
-                        :title="t('top.corporations')"
+                        :title="t('top') + ' ' + t('corporations')"
                     />
                     <TopBox
                         type="alliance"
                         :limit="10"
                         :days="7"
-                        :title="t('top.alliances')"
+                        :title="t('top') + ' ' + t('alliances')"
                     />
                     <TopBox
                         type="ship"
                         :limit="10"
                         :days="7"
-                        :title="t('top.ships')"
+                        :title="t('top') + ' ' + t('ships')"
                     />
                     <TopBox
                         type="solarsystem"
                         :limit="10"
                         :days="7"
-                        :title="t('top.systems')"
+                        :title="t('top') + ' ' + t('systems')"
                     />
                     <TopBox
                         type="constellation"
                         :limit="10"
                         :days="7"
-                        :title="t('top.constellations')"
+                        :title="t('top') + ' ' + t('constellations')"
                     />
                     <TopBox
                         type="region"
                         :limit="10"
                         :days="7"
-                        :title="t('top.regions')"
+                        :title="t('top') + ' ' + t('regions')"
                     />
                 </div>
 
@@ -134,23 +134,23 @@ const { isMobile } = useResponsive();
 const tabItems = ref([
     {
         key: 'topLists',
-        label: t('tabs.topLists'),
+        label: t('topLists'),
         icon: 'i-lucide-list-ordered'
     },
     {
         key: 'kills',
-        label: t('tabs.kills'),
+        label: t('kills'),
         icon: 'i-lucide-swords'
     },
     {
         key: 'most-valuable',
-        label: t('tabs.most-valuable'),
+        label: t('mostValuable'),
         icon: 'i-lucide-layout-dashboard'
     }
 ]);
 
 useSeoMeta({
-    title: t('home.pageTitle')
+    title: t('homePageTitle')
 });
 </script>
 

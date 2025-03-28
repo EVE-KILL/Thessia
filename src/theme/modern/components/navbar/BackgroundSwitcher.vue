@@ -150,7 +150,7 @@ onUnmounted(() => {
         <div class="p-2">
           <div class="flex items-center justify-between mb-4">
             <h3 class="text-base font-medium">
-              {{ $t('background.title', 'Select Background') }}
+              {{ $t('backgroundTitle') }}
             </h3>
           </div>
 
@@ -215,7 +215,7 @@ onUnmounted(() => {
     <!-- Mobile Fullscreen Modal -->
     <MobileFullscreen
       :open="isFullscreen"
-      :title="$t('background.title', 'Select Background')"
+      :title="$t('backgroundTitle')"
       @close="closeFullscreen"
     >
       <!-- Loading state -->

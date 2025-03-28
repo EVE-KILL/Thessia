@@ -24,7 +24,7 @@
           All materials are property of
           <a href="https://www.ccpgames.com/" target="_blank" rel="noopener noreferrer" class="footer-link">CCP</a>
           -
-          <NuxtLink to="/legal" class="footer-link">{{ $t('footer.legal') }}</NuxtLink>
+          <NuxtLink to="/legal" class="footer-link">{{ $t('footerLegal') }}</NuxtLink>
         </div>
       </div>
     </div>

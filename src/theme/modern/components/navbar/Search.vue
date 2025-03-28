@@ -198,7 +198,7 @@ const getColorForEntityType = (type: string) => {
 
 // Helper to get category label
 const getCategoryLabel = (type: string) => {
-  const key = `search.category.${type}`;
+  const key = `${type}`;
   return t(key);
 };
 
@@ -264,7 +264,7 @@ onUnmounted(() => {});
           v-if="!isMobile"
           v-model="query"
           :icon="isLoading ? 'i-lucide-refresh-ccw' : 'i-lucide-search'"
-          :placeholder="t('search.placeholder')"
+          :placeholder="t('searchFor')"
           class="search-input w-full py-1.5 rounded-md bg-gray-100 dark:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-primary-500 text-base"
           type="search"
           @keydown="handleKeydown"
@@ -275,7 +275,7 @@ onUnmounted(() => {});
         <UInput
           v-else
           :icon="isLoading ? 'i-lucide-refresh-ccw' : 'i-lucide-search'"
-          :placeholder="t('search.placeholder')"
+          :placeholder="t('searchFor')"
           class="search-input w-full py-1.5 rounded-md bg-gray-100 dark:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-primary-500 text-base"
           type="search"
           @focus="openMobileSearch"
@@ -283,7 +283,7 @@ onUnmounted(() => {});
       </div>
     </form>
 
-    <!-- Desktop Search Results using Dropdown component -->
+    <!-- Desktop searchResults using Dropdown component -->
     <Dropdown
       v-model="shouldShowDropdown"
       position="bottom"
@@ -301,7 +301,7 @@ onUnmounted(() => {});
         <!-- Search Header -->
         <div class="flex items-center justify-between mb-2">
           <h3 class="text-base font-medium text-gray-800 dark:text-gray-200">
-            {{ t('search.results') }}
+            {{ t('searchResults') }}
           </h3>
         </div>
 
@@ -347,7 +347,7 @@ onUnmounted(() => {});
                     class="text-xs text-primary-600 dark:text-primary-400 hover:underline py-1 cursor-pointer"
                     @click="navigateToSearch(); shouldShowDropdown = false;"
                   >
-                    +{{ hits.length - 5 }} {{ t('search.more') }}
+                    +{{ hits.length - 5 }} {{ t('more') }}
                   </button>
                 </div>
               </div>
@@ -361,7 +361,7 @@ onUnmounted(() => {});
             class="w-full text-center py-2 px-3 text-sm text-primary-600 dark:text-primary-400 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-md cursor-pointer"
             @click="navigateToSearch(); shouldShowDropdown = false;"
           >
-            {{ t('search.viewAllResults', { count: results?.estimatedTotalHits || results?.hits?.length || 0 }) }}
+            {{ t('viewAllResults', { count: results?.estimatedTotalHits || results?.hits?.length || 0 }) }}
           </button>
         </div>
       </div>
@@ -370,7 +370,7 @@ onUnmounted(() => {});
     <!-- Mobile Fullscreen Search using the shared modal component -->
     <MobileFullscreen
       :open="isFullscreenMobile"
-      :title="t('search.title', 'Search')"
+      :title="t('searchTitle')"
       @close="closeMobileSearch"
     >
       <!-- Custom header slot with search input -->
@@ -384,7 +384,7 @@ onUnmounted(() => {});
           <input
             id="mobile-search-input"
             v-model="query"
-            :placeholder="t('search.placeholder')"
+            :placeholder="t('searchFor')"
             class="w-full py-1.5 bg-transparent border-none text-lg focus:outline-none text-gray-900 dark:text-white"
             type="search"
             @keydown="handleKeydown"
@@ -394,7 +394,7 @@ onUnmounted(() => {});
         </div>
       </template>
 
-      <!-- Search results content -->
+      <!-- searchResults content -->
       <div v-if="results && results.hits && results.hits.length > 0">
         <div v-for="(hits, type) in groupedResults" :key="type" class="mb-6">
           <!-- Type Header -->
@@ -435,7 +435,7 @@ onUnmounted(() => {});
               class="w-full text-center py-2 px-3 text-sm text-primary-600 dark:text-primary-400 bg-gray-50 dark:bg-gray-800/30 hover:bg-gray-100 dark:hover:bg-gray-700/50 rounded-md"
               @click="navigateToSearch({ category: type }); isFullscreenMobile = false;"
             >
-              {{ t('search.showMoreCategory', { count: hits.length - 5, category: getCategoryLabel(type).toLowerCase() }) }}
+              {{ t('searchShowMoreCategoryXCountY', { count: hits.length - 5, category: getCategoryLabel(type).toLowerCase() }) }}
             </button>
           </div>
         </div>
@@ -447,8 +447,8 @@ onUnmounted(() => {});
         class="flex flex-col items-center justify-center min-h-[60vh] text-center text-gray-600 dark:text-gray-400"
       >
         <UIcon name="lucide:search" class="text-5xl mb-4" />
-        <p v-if="isLoading">{{ t('search.searching') }}</p>
-        <p v-else>{{ t('search.noResults') }}</p>
+        <p v-if="isLoading">{{ t('searching') }}</p>
+        <p v-else>{{ t('noResults') }}</p>
       </div>
 
       <!-- Type to search -->
@@ -457,7 +457,7 @@ onUnmounted(() => {});
         class="flex flex-col items-center justify-center min-h-[60vh] text-center text-gray-600 dark:text-gray-400"
       >
         <UIcon name="lucide:search" class="text-5xl mb-4" />
-        <p>{{ t('search.placeholder') }}</p>
+        <p>{{ t('searchFor') }}</p>
       </div>
 
       <!-- Footer slot for search all button - FIX FOR NULL REFERENCE -->

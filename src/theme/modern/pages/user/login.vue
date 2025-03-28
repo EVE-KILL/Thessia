@@ -6,7 +6,7 @@ definePageMeta({
 // Add SEO meta
 const { t } = useI18n();
 useSeoMeta({
-  title: t('user.loginPageTitle')
+  title: t('loginPageTitle')
 });
 
 import { reactive, onMounted } from 'vue';

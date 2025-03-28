@@ -196,7 +196,7 @@ const tableColumns = [
       :items="pending ? skeletonRows : (entities || [])"
       :loading="pending"
       :skeleton-count="props.limit"
-      :empty-text="t('topBox.noData')"
+      :empty-text="t('noData')"
       :empty-icon="'i-lucide-file-text'"
       :density="'compact'"
       :striped="false"
@@ -266,7 +266,7 @@ const tableColumns = [
     </div>
 
     <div class="text-sm text-center text-background-300 py-1 rounded-br-lg rounded-bl-lg">
-      ({{ t('topBox.killsOver', { days: props.days }) }})
+      ({{ t('killsOverLastXDays', { days: props.days }) }})
     </div>
   </div>
 </template>

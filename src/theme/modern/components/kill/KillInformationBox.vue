@@ -22,9 +22,9 @@
         <div class="meta-row">
           <div class="kill-value">{{ formatIsk(killmail?.total_value || 0) }}</div>
           <div class="kill-labels">
-            <span v-if="killmail?.is_solo" class="kill-label solo">{{ $t('killInfo.solo') }}</span>
-            <span v-if="killmail?.is_npc" class="kill-label npc">{{ $t('killInfo.npc') }}</span>
-            <span v-if="isHighValue" class="kill-label value">{{ $t('killInfo.highValue') }}</span>
+            <span v-if="killmail?.is_solo" class="kill-label solo">{{ $t('solo') }}</span>
+            <span v-if="killmail?.is_npc" class="kill-label npc">{{ $t('npc') }}</span>
+            <span v-if="isHighValue" class="kill-label value">{{ $t('highValue') }}</span>
           </div>
         </div>
       </div>
@@ -35,7 +35,7 @@
       <div class="section-grid">
         <!-- Victim Column -->
         <div class="entity-column">
-          <h4 class="column-title">{{ $t('killInfo.victim') }}</h4>
+          <h4 class="column-title">{{ $t('victim') }}</h4>
 
           <div class="entity-info">
             <!-- Character with Corp -->
@@ -78,7 +78,7 @@
               <div class="stat-item">
                 <div class="detail-icon"><Icon name="lucide:zap" /></div>
                 <div class="stat-info">
-                  <span class="stat-label">{{ $t('killInfo.damageTaken') }}:&nbsp;</span>
+                  <span class="stat-label">{{ $t('damageTaken') }}:&nbsp;</span>
                   <span class="damage-value">{{ formatNumber(totalDamageTaken) }}</span>
                 </div>
               </div>
@@ -87,7 +87,7 @@
               <div class="stat-item">
                 <div class="detail-icon"><Icon name="lucide:users" /></div>
                 <div class="stat-info">
-                  <span class="stat-label">{{ $t('killInfo.attackers') }}:&nbsp;</span>
+                  <span class="stat-label">{{ $t('attackers') }}:&nbsp;</span>
                   <span class="attackers-value">{{ killmail?.attackers?.length || 0 }}</span>
                 </div>
               </div>

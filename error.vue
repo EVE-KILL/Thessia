@@ -18,13 +18,13 @@ const errorMessage = computed(() => {
 
   switch (statusCode) {
     case 404:
-      return t('error.notFound');
+      return t('errorNotFound');
     case 403:
-      return t('error.forbidden');
+      return t('errorForbidden');
     case 500:
-      return t('error.serverError');
+      return t('errorServerError');
     default:
-      return props.error?.message || t('error.generic');
+      return props.error?.message || t('errorGeneric');
   }
 })
 
@@ -88,7 +88,7 @@ onMounted(() => {
 
         <!-- Return to home button -->
         <UButton color="primary" @click="handleError">
-          {{ t('common.backToHome') }}
+          {{ t('backToHome') }}
         </UButton>
       </div>
     </NuxtLayout>

@@ -1,7 +1,7 @@
 <template>
   <div class="container mx-auto">
     <div class="mb-8">
-      <h1 class="text-3xl font-bold mb-2">{{ $t('search.results', { query: capitalizeWords(searchQuery) }) }}</h1>
+      <h1 class="text-3xl font-bold mb-2">{{ $t('searchResults', { query: capitalizeWords(searchQuery) }) }}</h1>
     </div>
 
     <!-- Search form -->
@@ -9,7 +9,7 @@
       <div class="flex items-center relative">
         <UInput
           v-model="searchQuery"
-          :placeholder="$t('search.placeholder')"
+          :placeholder="$t('searchFor')"
           :icon="isLoading ? 'lucide:loader' : 'lucide:search'"
           :icon-class="isLoading ? 'animate-spin' : ''"
           size="lg"
@@ -94,7 +94,7 @@
                   :loading="loadingMoreTypes[type]"
                   color="secondary"
                 >
-                  {{ $t('search.moreType', { type: capitalizeFirstLetter(type) + 's', count: getHitCountByType(type) }) }}
+                  {{ $t('more', { type: capitalizeFirstLetter(type) + 's', count: getHitCountByType(type) }) }}
                 </UButton>
               </template>
             </UCard>
@@ -373,7 +373,7 @@ onMounted(async () => {
 useSeoMeta({
   title: computed(() =>
     searchQuery.value
-      ? `${searchQuery.value} - Search Results`
+      ? `${searchQuery.value} - searchResults`
       : 'Search'
   )
 });

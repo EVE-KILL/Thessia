@@ -22,9 +22,9 @@ const currentLocale = computed(() => locale.value);
 
 // Define categories with distinct keys - reordered as requested
 const categories = [
-  { key: 'most_valuable_structures', label: t('mostValuable.structures'), icon: 'i-lucide-building' },
-  { key: 'most_valuable_kills', label: t('mostValuable.kills'), icon: 'i-lucide-target' },
-  { key: 'most_valuable_ships', label: t('mostValuable.ships'), icon: 'i-lucide-ship' }
+  { key: 'most_valuable_structures', label: t('structures'), icon: 'i-lucide-building' },
+  { key: 'most_valuable_kills', label: t('kills'), icon: 'i-lucide-target' },
+  { key: 'most_valuable_ships', label: t('ships'), icon: 'i-lucide-ship' }
 ];
 
 // Use numeric index for the active tab - set "1" as default (2nd tab - Kills)
@@ -133,7 +133,7 @@ const isPriorityImage = (index: number): boolean => {
       :items="items || []"
       :loading="pending"
       :skeleton-count="props.limit"
-      :empty-text="t('mostValuable.noData')"
+      :empty-text="t('noData')"
       :empty-icon="'i-lucide-file-text'"
       horizontal
       :horizontal-items-per-row="7"
@@ -182,7 +182,7 @@ const isPriorityImage = (index: number): boolean => {
     </Table>
 
     <div class="text-sm text-center mt-2 text-gray-500 dark:text-background-400 pb-4">
-      ({{ t('topBox.killsOver', { days: props.days }) }})
+      ({{ t('killsOverLastXDays', { days: props.days }) }})
     </div>
   </div>
 </template>

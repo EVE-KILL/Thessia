@@ -18,7 +18,7 @@ const isMobile = ref(false);
 
 // Add SEO meta
 useSeoMeta({
-  title: t('status.pageTitle')
+  title: t('statusPageTitle')
 });
 
 // Check if we're on mobile
@@ -41,17 +41,17 @@ const chartOptions = ref({})
 
 // Time period options for chart display
 const timePeriods = [
-  { value: '1min', label: t('status.timePeriods.1min') },
-  { value: '5min', label: t('status.timePeriods.5min') },
-  { value: '10min', label: t('status.timePeriods.10min') },
-  { value: '30min', label: t('status.timePeriods.30min') },
-  { value: '15min', label: t('status.timePeriods.15min') },
-  { value: '1hour', label: t('status.timePeriods.1hour') },
-  { value: '6hours', label: t('status.timePeriods.6hours') },
-  { value: '12hours', label: t('status.timePeriods.12hours') },
-  { value: '24hours', label: t('status.timePeriods.24hours') },
-  { value: '1week', label: t('status.timePeriods.1week') },
-  { value: '1month', label: t('status.timePeriods.1month') }
+  { value: '1min', label: t('1min') },
+  { value: '5min', label: t('5min') },
+  { value: '10min', label: t('10min') },
+  { value: '15min', label: t('15min') },
+  { value: '30min', label: t('30min') },
+  { value: '1hour', label: t('1hour') },
+  { value: '6hours', label: t('6hours') },
+  { value: '12hours', label: t('12hours') },
+  { value: '24hours', label: t('24hours') },
+  { value: '1week', label: t('1week') },
+  { value: '1month', label: t('1month') }
 ]
 // Default time period
 const selectedTimePeriod = ref('5min')
@@ -136,7 +136,7 @@ const formattedUptime = computed(() => {
   const minutes = Math.floor((uptime % (60 * 60)) / 60)
   const seconds = Math.floor(uptime % 60)
 
-  return t('status.uptime.format', { days, hours, minutes, seconds })
+  return t('uptimeFormat', { days, hours, minutes, seconds })
 })
 
 // Format date to locale string
@@ -179,7 +179,7 @@ const updateChartOptions = () => {
   // Create chart options
   chartOptions.value = {
     title: {
-      text: t('status.processedItems', { period: period }),
+      text: t('processedItems', { period: period }),
       left: 'center'
     },
     tooltip: {
@@ -289,7 +289,7 @@ const formatRedisUptime = (seconds?: number): string => {
   const minutes = Math.floor((seconds % (60 * 60)) / 60);
   const remainingSeconds = Math.floor(seconds % 60);
 
-  return t('status.redis.uptimeFormat', { days, hours, minutes, seconds: remainingSeconds });
+  return t('uptimeFormat', { days, hours, minutes, seconds: remainingSeconds });
 };
 
 // Format time in milliseconds to human readable format
@@ -341,7 +341,7 @@ const hasKeyspaceInfo = computed(() => {
         <div class="flex items-center gap-2">
           <div class="flex items-center">
             <USwitch v-model="autoRefresh" @change="toggleAutoRefresh" />
-            <span class="ml-2 text-xs sm:text-sm">{{ $t('status.autoRefresh', { seconds: autoRefreshInterval }) }}</span>
+            <span class="ml-2 text-xs sm:text-sm">{{ $t('autoRefresh', { seconds: autoRefreshInterval }) }}</span>
           </div>
           <UButton
             color="primary"
@@ -351,7 +351,7 @@ const hasKeyspaceInfo = computed(() => {
             @click="refresh"
             :loading="loading"
             :disabled="loading"
-            :title="$t('status.refreshNow')"
+            :title="$t('refreshNow')"
           />
         </div>
       </div>
@@ -362,19 +362,19 @@ const hasKeyspaceInfo = computed(() => {
 
       <div v-else-if="error" class="bg-red-100 dark:bg-red-900 border border-red-400 text-red-700 dark:text-red-300 px-4 py-3 rounded">
         <p>{{ error }}</p>
-        <UButton class="mt-4" @click="refresh">{{ $t('status.retry') }}</UButton>
+        <UButton class="mt-4" @click="refresh">{{ $t('retry') }}</UButton>
       </div>
 
-      <ClientOnly fallback-tag="div" :fallback="$t('status.loading')">
+      <ClientOnly fallback-tag="div" :fallback="$t('loading')">
         <div v-if="statusData">
           <!-- Summary Cards -->
           <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-6">
             <div class="bg-indigo-50 dark:bg-indigo-900/30 rounded-lg shadow p-3">
-              <div class="text-xs uppercase text-indigo-700 dark:text-indigo-300">{{ $t('status.summary.uptime') }}</div>
+              <div class="text-xs uppercase text-indigo-700 dark:text-indigo-300">{{ $t('uptime') }}</div>
               <div class="text-xl font-mono truncate">{{ formattedUptime }}</div>
             </div>
             <div class="bg-emerald-50 dark:bg-emerald-900/30 rounded-lg shadow p-3">
-              <div class="text-xs uppercase text-emerald-700 dark:text-emerald-300">{{ $t('status.summary.processedLast5m') }}</div>
+              <div class="text-xs uppercase text-emerald-700 dark:text-emerald-300">{{ $t('processedLast5m') }}</div>
               <div class="text-xl font-mono">
                 {{ formatNumber(summaryStats?.totalProcessed) }}
                 <span v-if="processedDiff !== 0"
@@ -385,7 +385,7 @@ const hasKeyspaceInfo = computed(() => {
               </div>
             </div>
             <div class="bg-amber-50 dark:bg-amber-900/30 rounded-lg shadow p-3">
-              <div class="text-xs uppercase text-amber-700 dark:text-amber-300">{{ $t('status.summary.queuedItems') }}</div>
+              <div class="text-xs uppercase text-amber-700 dark:text-amber-300">{{ $t('queuedItems') }}</div>
               <div class="text-xl font-mono">
                 {{ formatNumber(summaryStats?.totalQueued) }}
                 <span v-if="queuedDiff !== 0"
@@ -400,11 +400,11 @@ const hasKeyspaceInfo = computed(() => {
           <!-- Main Content Tabs - Using the correct default-selected prop -->
           <UTabs
             :items="[
-              { label: isMobile ? '' : $t('status.tabs.overview'), icon: 'lucide:layout-dashboard', slot: 'overview', defaultSelected: true },
-              { label: isMobile ? '' : $t('status.tabs.processing'), icon: 'lucide:bar-chart-2', slot: 'processing' },
-              { label: isMobile ? '' : $t('status.tabs.database'), icon: 'lucide:database', slot: 'database' },
-              { label: isMobile ? '' : $t('status.tabs.cache'), icon: 'lucide:hard-drive', slot: 'cache' },
-              { label: isMobile ? '' : $t('status.tabs.redis'), icon: 'lucide:database', slot: 'redis' },
+              { label: isMobile ? '' : $t('overview'), icon: 'lucide:layout-dashboard', slot: 'overview', defaultSelected: true },
+              { label: isMobile ? '' : $t('processing'), icon: 'lucide:bar-chart-2', slot: 'processing' },
+              { label: isMobile ? '' : $t('database'), icon: 'lucide:database', slot: 'database' },
+              { label: isMobile ? '' : $t('cache'), icon: 'lucide:hard-drive', slot: 'cache' },
+              { label: isMobile ? '' : $t('redis'), icon: 'lucide:database', slot: 'redis' },
             ]"
             class="mb-6"
             color="neutral"
@@ -419,36 +419,36 @@ const hasKeyspaceInfo = computed(() => {
                     <template #header>
                       <div class="flex items-center">
                         <UIcon name="lucide:cpu" class="mr-2" />
-                        <h3 class="font-bold">{{ $t('status.overview.systemInfo') }}</h3>
+                        <h3 class="font-bold">{{ $t('systemInfo') }}</h3>
                       </div>
                     </template>
                     <div class="space-y-2 text-sm">
                       <div class="flex justify-between">
-                        <span>{{ $t('status.overview.loadAverage') }}:</span>
+                        <span>{{ $t('loadAverage') }}:</span>
                         <span class="font-mono">{{ statusData.operatingSystem.loadAvg.join(' | ') }}</span>
                       </div>
                       <div class="flex justify-between">
-                        <span>{{ $t('status.overview.nodeVersion') }}:</span>
+                        <span>{{ $t('nodeVersion') }}:</span>
                         <span class="font-mono">{{ statusData.env.nodeVersion }}</span>
                       </div>
                       <div class="flex justify-between">
-                        <span>{{ $t('status.overview.redisVersion') }}:</span>
+                        <span>{{ $t('redisVersion') }}:</span>
                         <span class="font-mono">{{ statusData.redis?.server?.redis_version || 'N/A' }}</span>
                       </div>
                       <div class="flex justify-between">
-                        <span>{{ $t('status.overview.redisMemory') }}:</span>
+                        <span>{{ $t('redisMemory') }}:</span>
                         <span class="font-mono">{{ formatBytes(statusData.redis?.memory?.used_memory) }}</span>
                       </div>
                       <div class="flex justify-between">
-                        <span>{{ $t('status.overview.redisClients') }}:</span>
+                        <span>{{ $t('redisClients') }}:</span>
                         <span class="font-mono">{{ formatNumber(statusData.redis?.clients?.connected_clients) }}</span>
                       </div>
                         <div class="flex justify-between">
-                          <span>{{ $t('status.overview.hitRatio') }}:</span>
+                          <span>{{ $t('hitRatio') }}:</span>
                           <span class="font-mono">{{ calculateHitRatio(statusData.redis?.stats?.keyspace_hits, statusData.redis?.stats?.keyspace_misses) }}%</span>
                         </div>
                         <div class="flex justify-between">
-                          <span>{{ $t('status.overview.totalKeys') }}:</span>
+                          <span>{{ $t('totalKeys') }}:</span>
                           <span class="font-mono">{{
                             statusData.redis?.keyspace ? formatNumber(Object.values(statusData.redis.keyspace).reduce((total, info) => total + parseKeyspaceInfo(info as string).keys, 0)) : 'N/A'
                           }}</span>
@@ -461,7 +461,7 @@ const hasKeyspaceInfo = computed(() => {
                     <template #header>
                       <div class="flex items-center">
                         <UIcon name="lucide:bar-chart-2" class="mr-2" />
-                        <h3 class="font-bold">{{ $t('status.overview.processing') }}</h3>
+                        <h3 class="font-bold">{{ $t('processing') }}</h3>
                       </div>
                     </template>
                     <div class="space-y-2 text-sm">
@@ -478,7 +478,7 @@ const hasKeyspaceInfo = computed(() => {
                     <template #header>
                       <div class="flex items-center">
                         <UIcon name="lucide:list" class="mr-2" />
-                        <h3 class="font-bold">{{ $t('status.overview.queueCounts') }}</h3>
+                        <h3 class="font-bold">{{ $t('queueCounts') }}</h3>
                       </div>
                     </template>
 
@@ -499,7 +499,7 @@ const hasKeyspaceInfo = computed(() => {
                     <template #header>
                       <div class="flex items-center">
                         <UIcon name="lucide:zap" class="mr-2" />
-                        <h3 class="font-bold">{{ $t('status.overview.cache') }}</h3>
+                        <h3 class="font-bold">{{ $t('cache') }}</h3>
                       </div>
                     </template>
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -542,17 +542,17 @@ const hasKeyspaceInfo = computed(() => {
                   <div class="flex justify-between items-center">
                     <div class="flex items-center">
                       <UIcon name="lucide:bar-chart-2" class="mr-2" />
-                      <h3 class="font-bold">{{ $t('status.processingStatistics.title') }}</h3>
+                      <h3 class="font-bold">{{ $t('processingStatisticsTitle') }}</h3>
                     </div>
                     <div class="flex items-center gap-2">
                       <USwitch v-model="detailed" size="sm" />
-                      <span class="text-xs">{{ detailed ? $t('status.detailed') : $t('status.simplified') }}</span>
+                      <span class="text-xs">{{ detailed ? $t('detailed') : $t('simplified') }}</span>
                     </div>
                   </div>
                 </template>
 
                 <div class="mb-4">
-                  <label for="timePeriod" class="block text-xs font-medium mb-1">{{ $t('status.selectTimePeriod') }}:</label>
+                  <label for="timePeriod" class="block text-xs font-medium mb-1">{{ $t('selectTimePeriod') }}:</label>
                   <USelect
                     id="timePeriod"
                     v-model="selectedTimePeriod"
@@ -572,13 +572,13 @@ const hasKeyspaceInfo = computed(() => {
 
                 <!-- Show detailed stats directly when detailed is true -->
                 <div v-if="detailed" class="mt-4">
-                  <h4 class="font-medium text-sm mb-2">{{ $t('status.detailedStats') }}</h4>
+                  <h4 class="font-medium text-sm mb-2">{{ $t('detailedStats') }}</h4>
                   <div class="overflow-x-auto">
                     <!-- This table should automatically update when statusData changes -->
                     <table class="min-w-full text-xs">
                       <thead>
                         <tr>
-                          <th class="py-1 text-left">{{ $t('status.queueCounts.queue') }}</th>
+                          <th class="py-1 text-left">{{ $t('queue') }}</th>
                           <th v-for="period in timePeriods" :key="period.value" class="py-1 px-1 text-right">
                             {{ period.label }}
                           </th>
@@ -604,7 +604,7 @@ const hasKeyspaceInfo = computed(() => {
                 <template #header>
                   <div class="flex items-center">
                     <UIcon name="lucide:database" class="mr-2" />
-                    <h3 class="font-bold">{{ $t('status.databaseCounts.title') }}</h3>
+                    <h3 class="font-bold">{{ $t('databaseCountsTitle') }}</h3>
                   </div>
                 </template>
 
@@ -612,8 +612,8 @@ const hasKeyspaceInfo = computed(() => {
                   <table class="min-w-full">
                     <thead>
                       <tr>
-                        <th class="text-left text-xs">{{ $t('status.databaseCounts.collection') }}</th>
-                        <th class="text-right text-xs">{{ $t('status.databaseCounts.count') }}</th>
+                        <th class="text-left text-xs">{{ $t('collection') }}</th>
+                        <th class="text-right text-xs">{{ $t('count') }}</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -636,7 +636,7 @@ const hasKeyspaceInfo = computed(() => {
                   <template #header>
                     <div class="flex items-center">
                       <UIcon name="lucide:table" class="mr-2" />
-                      <h3 class="font-bold">{{ $t('status.cacheSizes.title') }}</h3>
+                      <h3 class="font-bold">{{ $t('cacheSizesTitle') }}</h3>
                     </div>
                   </template>
 
@@ -644,8 +644,8 @@ const hasKeyspaceInfo = computed(() => {
                     <table class="min-w-full">
                       <thead>
                         <tr>
-                          <th class="text-left text-xs">{{ $t('status.cacheSizes.cache') }}</th>
-                          <th class="text-right text-xs">{{ $t('status.cacheSizes.size') }}</th>
+                          <th class="text-left text-xs">{{ $t('cache') }}</th>
+                          <th class="text-right text-xs">{{ $t('size') }}</th>
                         </tr>
                       </thead>
                       <tbody>
@@ -664,7 +664,7 @@ const hasKeyspaceInfo = computed(() => {
                   <template #header>
                     <div class="flex items-center">
                       <UIcon name="lucide:zap" class="mr-2" />
-                      <h3 class="font-bold">{{ $t('status.cacheHits.title') }}</h3>
+                      <h3 class="font-bold">{{ $t('cacheHitsTitle') }}</h3>
                     </div>
                   </template>
 
@@ -672,8 +672,8 @@ const hasKeyspaceInfo = computed(() => {
                     <table class="min-w-full">
                       <thead>
                         <tr>
-                          <th class="text-left text-xs">{{ $t('status.cacheHits.cache') }}</th>
-                          <th class="text-right text-xs">{{ $t('status.cacheHits.hits') }}</th>
+                          <th class="text-left text-xs">{{ $t('cache') }}</th>
+                          <th class="text-right text-xs">{{ $t('hits') }}</th>
                         </tr>
                       </thead>
                       <tbody>
@@ -696,7 +696,7 @@ const hasKeyspaceInfo = computed(() => {
                   <template #header>
                     <div class="flex items-center">
                       <UIcon name="lucide:server" class="mr-2" />
-                      <h3 class="font-bold">{{ $t('status.redis.server') }}</h3>
+                      <h3 class="font-bold">{{ $t('redisServer') }}</h3>
                     </div>
                   </template>
 
@@ -704,19 +704,19 @@ const hasKeyspaceInfo = computed(() => {
                     <table class="min-w-full">
                       <tbody>
                         <tr class="border-t border-gray-200 dark:border-gray-700">
-                          <td class="py-1 text-sm">{{ $t('status.redis.version') }}</td>
+                          <td class="py-1 text-sm">{{ $t('version') }}</td>
                           <td class="py-1 text-right font-mono text-sm">{{ statusData.redis.server.redis_version || 'N/A' }}</td>
                         </tr>
                         <tr class="border-t border-gray-200 dark:border-gray-700">
-                          <td class="py-1 text-sm">{{ $t('status.redis.mode') }}</td>
+                          <td class="py-1 text-sm">{{ $t('mode') }}</td>
                           <td class="py-1 text-right font-mono text-sm">{{ statusData.redis.server.redis_mode || 'N/A' }}</td>
                         </tr>
                         <tr class="border-t border-gray-200 dark:border-gray-700">
-                          <td class="py-1 text-sm">{{ $t('status.redis.os') }}</td>
+                          <td class="py-1 text-sm">{{ $t('os') }}</td>
                           <td class="py-1 text-right font-mono text-sm">{{ statusData.redis.server.os || 'N/A' }}</td>
                         </tr>
                         <tr class="border-t border-gray-200 dark:border-gray-700">
-                          <td class="py-1 text-sm">{{ $t('status.redis.uptime') }}</td>
+                          <td class="py-1 text-sm">{{ $t('uptime') }}</td>
                           <td class="py-1 text-right font-mono text-sm">{{ formatRedisUptime(statusData.redis.server.uptime_in_seconds) }}</td>
                         </tr>
                       </tbody>
@@ -729,7 +729,7 @@ const hasKeyspaceInfo = computed(() => {
                   <template #header>
                     <div class="flex items-center">
                       <UIcon name="lucide:memory-stick" class="mr-2" />
-                      <h3 class="font-bold">{{ $t('status.redis.memory') }}</h3>
+                      <h3 class="font-bold">{{ $t('memory') }}</h3>
                     </div>
                   </template>
 
@@ -737,15 +737,15 @@ const hasKeyspaceInfo = computed(() => {
                     <table class="min-w-full">
                       <tbody>
                         <tr class="border-t border-gray-200 dark:border-gray-700">
-                          <td class="py-1 text-sm">{{ $t('status.redis.usedMemory') }}</td>
+                          <td class="py-1 text-sm">{{ $t('usedMemory') }}</td>
                           <td class="py-1 text-right font-mono text-sm">{{ formatBytes(statusData.redis.memory.used_memory) }}</td>
                         </tr>
                         <tr class="border-t border-gray-200 dark:border-gray-700">
-                          <td class="py-1 text-sm">{{ $t('status.redis.usedMemoryPeak') }}</td>
+                          <td class="py-1 text-sm">{{ $t('usedMemoryPeak') }}</td>
                           <td class="py-1 text-right font-mono text-sm">{{ formatBytes(statusData.redis.memory.used_memory_peak) }}</td>
                         </tr>
                         <tr class="border-t border-gray-200 dark:border-gray-700">
-                          <td class="py-1 text-sm">{{ $t('status.redis.memFragmentationRatio') }}</td>
+                          <td class="py-1 text-sm">{{ $t('memFragmentationRatio') }}</td>
                           <td class="py-1 text-right font-mono text-sm">{{ formatNumber(statusData.redis.memory.mem_fragmentation_ratio) }}</td>
                         </tr>
                       </tbody>
@@ -758,7 +758,7 @@ const hasKeyspaceInfo = computed(() => {
                   <template #header>
                     <div class="flex items-center">
                       <UIcon name="lucide:bar-chart" class="mr-2" />
-                      <h3 class="font-bold">{{ $t('status.redis.stats') }}</h3>
+                      <h3 class="font-bold">{{ $t('stats') }}</h3>
                     </div>
                   </template>
 
@@ -766,27 +766,27 @@ const hasKeyspaceInfo = computed(() => {
                     <table class="min-w-full">
                       <tbody>
                         <tr class="border-t border-gray-200 dark:border-gray-700">
-                          <td class="py-1 text-sm">{{ $t('status.redis.connectedClients') }}</td>
+                          <td class="py-1 text-sm">{{ $t('connectedClients') }}</td>
                           <td class="py-1 text-right font-mono text-sm">{{ formatNumber(statusData.redis.clients.connected_clients) }}</td>
                         </tr>
                         <tr class="border-t border-gray-200 dark:border-gray-700">
-                          <td class="py-1 text-sm">{{ $t('status.redis.totalConnections') }}</td>
+                          <td class="py-1 text-sm">{{ $t('totalConnections') }}</td>
                           <td class="py-1 text-right font-mono text-sm">{{ formatNumber(statusData.redis.stats.total_connections_received) }}</td>
                         </tr>
                         <tr class="border-t border-gray-200 dark:border-gray-700">
-                          <td class="py-1 text-sm">{{ $t('status.redis.totalCommands') }}</td>
+                          <td class="py-1 text-sm">{{ $t('totalCommands') }}</td>
                           <td class="py-1 text-right font-mono text-sm">{{ formatNumber(statusData.redis.stats.total_commands_processed) }}</td>
                         </tr>
                         <tr class="border-t border-gray-200 dark:border-gray-700">
-                          <td class="py-1 text-sm">{{ $t('status.redis.keyspaceHits') }}</td>
+                          <td class="py-1 text-sm">{{ $t('keyspaceHits') }}</td>
                           <td class="py-1 text-right font-mono text-sm">{{ formatNumber(statusData.redis.stats.keyspace_hits) }}</td>
                         </tr>
                         <tr class="border-t border-gray-200 dark:border-gray-700">
-                          <td class="py-1 text-sm">{{ $t('status.redis.keyspaceMisses') }}</td>
+                          <td class="py-1 text-sm">{{ $t('keyspaceMisses') }}</td>
                           <td class="py-1 text-right font-mono text-sm">{{ formatNumber(statusData.redis.stats.keyspace_misses) }}</td>
                         </tr>
                         <tr class="border-t border-gray-200 dark:border-gray-700">
-                          <td class="py-1 text-sm">{{ $t('status.redis.hitRatio') }}</td>
+                          <td class="py-1 text-sm">{{ $t('hitRatio') }}</td>
                           <td class="py-1 text-right font-mono text-sm">
                             {{ calculateHitRatio(statusData.redis.stats.keyspace_hits, statusData.redis.stats.keyspace_misses) }}%
                           </td>
@@ -801,7 +801,7 @@ const hasKeyspaceInfo = computed(() => {
                   <template #header>
                     <div class="flex items-center">
                       <UIcon name="lucide:key" class="mr-2" />
-                      <h3 class="font-bold">{{ $t('status.redis.keyspace') }}</h3>
+                      <h3 class="font-bold">{{ $t('keyspace') }}</h3>
                     </div>
                   </template>
 
@@ -809,10 +809,10 @@ const hasKeyspaceInfo = computed(() => {
                     <table class="min-w-full">
                       <thead>
                         <tr>
-                          <th class="text-left text-xs">{{ $t('status.redis.database') }}</th>
-                          <th class="text-right text-xs">{{ $t('status.redis.keys') }}</th>
-                          <th class="text-right text-xs">{{ $t('status.redis.expires') }}</th>
-                          <th class="text-right text-xs">{{ $t('status.redis.avgTtl') }}</th>
+                          <th class="text-left text-xs">{{ $t('database') }}</th>
+                          <th class="text-right text-xs">{{ $t('keys') }}</th>
+                          <th class="text-right text-xs">{{ $t('expires') }}</th>
+                          <th class="text-right text-xs">{{ $t('avgTtl') }}</th>
                         </tr>
                       </thead>
                       <tbody>
@@ -833,8 +833,8 @@ const hasKeyspaceInfo = computed(() => {
 
           <!-- Last update indicator -->
           <div class="text-center text-xs text-gray-500 dark:text-gray-400 mt-4">
-            <span>{{ $t('status.lastUpdated', { time: formatDate(new Date()) }) }}</span>
-            <span v-if="autoRefresh"> · {{ $t('status.autoRefreshing', { seconds: autoRefreshInterval }) }}</span>
+            <span>{{ $t('lastUpdated', { time: formatDate(new Date()) }) }}</span>
+            <span v-if="autoRefresh"> · {{ $t('autoRefreshing', { seconds: autoRefreshInterval }) }}</span>
           </div>
         </div>
       </ClientOnly>
