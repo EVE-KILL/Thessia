@@ -28,14 +28,6 @@ export default defineNuxtConfig({
         preset: "bun",
         srcDir: "server",
         minify: true,
-        compressPublicAssets: true,
-        publicAssets: [
-            {
-                dir: "src/core/public",
-                baseURL: "/",
-                maxAge: 31536000,
-            },
-        ],
 
         esbuild: {
             options: {
