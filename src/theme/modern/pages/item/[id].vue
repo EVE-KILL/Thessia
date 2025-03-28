@@ -3,41 +3,42 @@
     <ClientOnly>
       <!-- Item Header -->
       <div v-if="item" class="p-4 mb-4 rounded bg-background-800 bg-opacity-75">
-        <h2 class="text-xl font-bold flex items-center">
-          <NuxtLink :to="`/item/${item.type_id}`" class="mr-2">
-            <Image
-              type="item"
-              :id="item.type_id"
-              format="webp"
-              :alt="getLocalizedString(item.name, currentLocale)"
-              class="rounded w-16 h-16"
-              size="64"
-              :variant="item.name?.en?.includes('Blueprint') ? 'bp' : 'icon'"
-            />
-          </NuxtLink>
+        <h2 class="text-2xl font-bold mb-4">
           {{ getLocalizedString(item.name, currentLocale) }}
         </h2>
-        <div class="border-b border-background-600 mb-4">
-          <ul class="flex space-x-4">
-            <li class="text-primary-300">{{ $t('items.description') }}</li>
-          </ul>
+        <div class="flex">
+          <div class="mr-4 flex-shrink-0">
+            <NuxtLink :to="`/item/${item.type_id}`">
+              <Image
+                type="item"
+                :id="item.type_id"
+                format="webp"
+                :alt="getLocalizedString(item.name, currentLocale)"
+                class="rounded w-16 h-16"
+                size="64"
+                :variant="item.name?.en?.includes('Blueprint') ? 'bp' : 'icon'"
+              />
+            </NuxtLink>
+          </div>
+          <div v-html="convertEveHtml(getLocalizedString(item.description, currentLocale))"></div>
         </div>
-        <div v-html="convertEveHtml(getLocalizedString(item.description, currentLocale))"></div>
       </div>
 
       <!-- Loading State -->
       <div v-else class="p-4 mb-4 rounded bg-background-800 bg-opacity-75">
-        <div class="flex items-center">
-          <USkeleton class="w-16 h-16 rounded mr-2" />
+        <div class="flex items-center mb-4">
           <USkeleton class="h-8 w-64" />
         </div>
         <div class="border-b border-background-600 my-4">
           <USkeleton class="h-6 w-32 mb-4" />
         </div>
-        <div class="space-y-2">
-          <USkeleton class="h-4 w-full" />
-          <USkeleton class="h-4 w-full" />
-          <USkeleton class="h-4 w-3/4" />
+        <div class="flex">
+          <USkeleton class="w-16 h-16 rounded mr-4 flex-shrink-0" />
+          <div class="space-y-2 flex-grow">
+            <USkeleton class="h-4 w-full" />
+            <USkeleton class="h-4 w-full" />
+            <USkeleton class="h-4 w-3/4" />
+          </div>
         </div>
       </div>
 
@@ -58,17 +59,19 @@
       <!-- Fallback for ClientOnly -->
       <template #fallback>
         <div class="p-4 mb-4 rounded bg-background-800 bg-opacity-75">
-          <div class="flex items-center">
-            <USkeleton class="w-16 h-16 rounded mr-2" />
+          <div class="flex items-center mb-4">
             <USkeleton class="h-8 w-64" />
           </div>
           <div class="border-b border-background-600 my-4">
             <USkeleton class="h-6 w-32 mb-4" />
           </div>
-          <div class="space-y-2">
-            <USkeleton class="h-4 w-full" />
-            <USkeleton class="h-4 w-full" />
-            <USkeleton class="h-4 w-3/4" />
+          <div class="flex">
+            <USkeleton class="w-16 h-16 rounded mr-4 flex-shrink-0" />
+            <div class="space-y-2 flex-grow">
+              <USkeleton class="h-4 w-full" />
+              <USkeleton class="h-4 w-full" />
+              <USkeleton class="h-4 w-3/4" />
+            </div>
           </div>
         </div>
 
