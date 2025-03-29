@@ -98,6 +98,10 @@ export default defineNuxtConfig({
               cors: true,
               cache: { maxAge: 5, staleMaxAge: 0, swr: false, base: "redis" },
             },
+            "/api/query": {
+              cors: true,
+              cache: { maxAge: 300, staleMaxAge: 0, swr: false, base: "redis" },
+            },
           },
 
     imports: {
