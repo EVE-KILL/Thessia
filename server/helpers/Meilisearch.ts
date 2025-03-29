@@ -1,5 +1,15 @@
 import MeiliSearch from "meilisearch";
 
+/**
+ * Search options for Meilisearch index
+ */
+export interface MeilisearchSearchOptions {
+  limit?: number;
+  offset?: number;
+  lang?: string;
+  filter?: string | string[];
+}
+
 export class Meilisearch {
   private static instance: Meilisearch;
   public client: typeof MeiliSearch.prototype;
@@ -26,7 +36,6 @@ export class Meilisearch {
       await this.client.index(indexName).getStats();
       return true;
     } catch (error) {
-      console.error(`Index ${indexName} does not exist: ${error}`);
       return false;
     }
   }
@@ -43,10 +52,49 @@ export class Meilisearch {
     await this.client.swapIndexes([{ indexes: [indexName, indexNameNew] }]);
   }
 
-  async search(indexName: string, query: string): Promise<any> {
-    return await this.client.index(indexName).search(query, {
-      limit: 1000,
-    });
+  /**
+   * Search Meilisearch index with optional language filtering
+   *
+   * @param indexName - The name of the index to search
+   * @param query - The search query string
+   * @param options - Search options including language preference
+   * @returns Search results from Meilisearch
+   */
+  async search(
+    indexName: string,
+    query: string,
+    options: MeilisearchSearchOptions = {},
+  ): Promise<any> {
+    const searchOptions: Record<string, any> = {
+      limit: options.limit || 1000,
+    };
+
+    // Add offset if provided
+    if (options.offset !== undefined) {
+      searchOptions.offset = options.offset;
+    }
+
+    // Apply language filter if provided
+    if (options.lang) {
+      // Filter for either entities with the specified language OR entities with lang="all"
+      searchOptions.filter = [`lang = ${options.lang} OR lang = all`];
+    }
+
+    // Apply additional filters if provided
+    if (options.filter) {
+      if (searchOptions.filter) {
+        // Combine with existing language filter
+        if (Array.isArray(options.filter)) {
+          searchOptions.filter.push(...options.filter);
+        } else {
+          searchOptions.filter.push(options.filter);
+        }
+      } else {
+        searchOptions.filter = Array.isArray(options.filter) ? options.filter : [options.filter];
+      }
+    }
+
+    return await this.client.index(indexName).search(query, searchOptions);
   }
 
   async addDocuments(indexName: string, documents: any[]): Promise<void> {
@@ -67,5 +115,15 @@ export class Meilisearch {
 
   async updateRankingRules(indexName: string, rankingRules: string[]): Promise<void> {
     await this.client.index(indexName).updateRankingRules(rankingRules);
+  }
+
+  /**
+   * Configure filterable attributes for the index
+   *
+   * @param indexName - The name of the index to configure
+   * @param attributes - Array of attribute names that should be filterable
+   */
+  async updateFilterableAttributes(indexName: string, attributes: string[]): Promise<void> {
+    await this.client.index(indexName).updateFilterableAttributes(attributes);
   }
 }

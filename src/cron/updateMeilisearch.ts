@@ -4,8 +4,6 @@ import type { IAlliance } from "~/server/interfaces/IAlliance";
 import type { ICharacter } from "~/server/interfaces/ICharacter";
 import type { ICorporation } from "~/server/interfaces/ICorporation";
 import type { IFaction } from "~/server/interfaces/IFaction";
-import type { IInvType } from "~/server/interfaces/IInvType";
-import type { IRegion } from "~/server/interfaces/IRegion";
 import type { ISolarSystem } from "~/server/interfaces/ISolarSystem";
 import { Alliances } from "~/server/models/Alliances";
 import { Characters } from "~/server/models/Characters";
@@ -17,19 +15,53 @@ import { SolarSystems } from "~/server/models/SolarSystems";
 
 const BATCH_SIZE = 100000;
 
+type EntityTypes =
+  | "characters"
+  | "corporations"
+  | "alliances"
+  | "factions"
+  | "systems"
+  | "regions"
+  | "items";
+
 export default {
   name: "updateMeilisearch",
   description: "Update entities in Meilisearch",
   schedule: "0 0 * * *",
   run: async () => {
     const meilisearch = new Meilisearch();
+    // Drop the placeholder index if it exists
+    const indexExists = await meilisearch.existsIndex("nitro-update");
+    if (indexExists) {
+      await meilisearch.deleteIndex("nitro-update");
+    }
+
     // Create a placeholder index
     await meilisearch.createIndex("nitro-update");
 
     // Ensure the nitro index exists
     await meilisearch.createIndex("nitro");
 
-    const entityTypes = [
+    // Set ranking rules to prioritize based on rank field, then word position etc.
+    await meilisearch.updateRankingRules("nitro-update", [
+      "rank:asc", // Lower rank values appear first (items=1, characters=7)
+      "words",
+      "typo",
+      "proximity",
+      "attribute",
+      "sort",
+      "exactness",
+    ]);
+
+    // Configure filterable attributes to enable language filtering
+    await meilisearch.updateFilterableAttributes("nitro-update", [
+      "type",
+      "rank",
+      "lang",
+      "originalId",
+    ]);
+
+    const entityTypes: EntityTypes[] = [
       "characters",
       "corporations",
       "alliances",
@@ -39,7 +71,7 @@ export default {
       "items",
     ];
 
-    const resultCount = {
+    const resultCount: Record<EntityTypes, number> = {
       characters: 0,
       corporations: 0,
       alliances: 0,
@@ -61,7 +93,7 @@ export default {
   },
 };
 
-async function processEntities(entityType: string, meilisearch: Meilisearch): Promise<number> {
+async function processEntities(entityType: EntityTypes, meilisearch: Meilisearch): Promise<number> {
   let count = 0;
   let skip = 0;
   let hasMore = true;
@@ -79,7 +111,7 @@ async function processEntities(entityType: string, meilisearch: Meilisearch): Pr
   return count;
 }
 
-async function getEntities(entityType: string, skip: number, limit: number) {
+async function getEntities(entityType: EntityTypes, skip: number, limit: number) {
   switch (entityType) {
     case "characters": {
       const characters = await Characters.find(
@@ -96,6 +128,7 @@ async function getEntities(entityType: string, skip: number, limit: number) {
         name: character.name,
         type: "character",
         rank: 7,
+        lang: "all", // Add this field for searchability
       }));
     }
 
@@ -116,6 +149,7 @@ async function getEntities(entityType: string, skip: number, limit: number) {
         ticker: corporation.ticker,
         type: "corporation",
         rank: 6,
+        lang: "all", // Add this field for searchability
       }));
     }
 
@@ -136,6 +170,7 @@ async function getEntities(entityType: string, skip: number, limit: number) {
         ticker: alliance.ticker,
         type: "alliance",
         rank: 5,
+        lang: "all", // Add this field for searchability
       }));
     }
 
@@ -154,6 +189,7 @@ async function getEntities(entityType: string, skip: number, limit: number) {
         name: faction.name,
         type: "faction",
         rank: 4,
+        lang: "all", // Add this field for searchability
       }));
     }
 
@@ -172,6 +208,7 @@ async function getEntities(entityType: string, skip: number, limit: number) {
         name: system.system_name,
         type: "system",
         rank: 3,
+        lang: "all", // Add this field for searchability
       }));
     }
 
@@ -180,17 +217,42 @@ async function getEntities(entityType: string, skip: number, limit: number) {
         {},
         {
           region_id: 1,
-          region_name: 1,
+          name: 1,
         },
       )
         .skip(skip)
         .limit(limit);
-      return regions.map((region: IRegion) => ({
-        id: region.region_id,
-        name: region.region_name,
-        type: "region",
-        rank: 2,
-      }));
+
+      // Create separate searchable documents for each available language
+      const translatedRegions = [];
+      for (const region of regions) {
+        // Always include English version
+        translatedRegions.push({
+          id: `${region.region_id}_en`,
+          originalId: region.region_id,
+          name: region.name.en,
+          type: "region",
+          rank: 2,
+          lang: "en",
+        });
+
+        // Add other available languages
+        const supportedLangs = ["de", "es", "fr", "ja", "ko", "ru", "zh"];
+        for (const lang of supportedLangs) {
+          if (region.name[lang]) {
+            translatedRegions.push({
+              id: `${region.region_id}_${lang}`,
+              originalId: region.region_id,
+              name: region.name[lang],
+              type: "region",
+              rank: 2,
+              lang,
+            });
+          }
+        }
+      }
+
+      return translatedRegions;
     }
 
     case "items": {
@@ -203,12 +265,37 @@ async function getEntities(entityType: string, skip: number, limit: number) {
       )
         .skip(skip)
         .limit(limit);
-      return items.map((item: IInvType) => ({
-        id: item.type_id,
-        name: item.name,
-        type: "item",
-        rank: 1,
-      }));
+
+      // Create separate searchable documents for each available language
+      const translatedItems = [];
+      for (const item of items) {
+        // Always include English version
+        translatedItems.push({
+          id: `${item.type_id}_en`,
+          originalId: item.type_id,
+          name: item.name.en,
+          type: "item",
+          rank: 1,
+          lang: "en",
+        });
+
+        // Add other available languages
+        const supportedLangs = ["de", "es", "fr", "ja", "ko", "ru", "zh"];
+        for (const lang of supportedLangs) {
+          if (item.name[lang]) {
+            translatedItems.push({
+              id: `${item.type_id}_${lang}`,
+              originalId: item.type_id,
+              name: item.name[lang],
+              type: "item",
+              rank: 1,
+              lang,
+            });
+          }
+        }
+      }
+
+      return translatedItems;
     }
 
     default:

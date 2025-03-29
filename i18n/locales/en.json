@@ -61,6 +61,8 @@
     "constellation": "Constellation",
     "regions": "Regions",
     "region": "Region",
+    "faction": "Faction",
+    "factions": "Factions",
     "kill": "Kill",
     "killed": "Killed",
     "losses": "Losses",
