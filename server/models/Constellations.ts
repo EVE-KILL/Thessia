@@ -1,6 +1,6 @@
 // models/Constellations.ts
 
-import { Schema, model, type Document, type Model } from "mongoose";
+import { type Document, type Model, Schema, model } from "mongoose";
 import type { IConstellation } from "~/server/interfaces/IConstellation"; // Adjust the path as necessary
 
 // Extend the IConstellation interface with Mongoose's Document interface

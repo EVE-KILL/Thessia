@@ -149,9 +149,9 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue';
-import type { IKillmail, IAttacker } from '~/server/interfaces/IKillmail';
-import moment from 'moment';
+import moment from "moment";
+import { computed } from "vue";
+import type { IAttacker, IKillmail } from "~/server/interfaces/IKillmail";
 
 // i18n setup
 const { t, locale } = useI18n();
@@ -159,109 +159,113 @@ const currentLocale = computed(() => locale.value);
 
 // Props definition
 const props = defineProps<{
-    killmail: IKillmail | null;
+  killmail: IKillmail | null;
 }>();
 
 // Define formatted headers
 const headers = computed(() => ({
-    details: t('killInfo.details'),
-    victim: t('killInfo.victim'),
-    finalBlow: t('killInfo.finalBlow'),
-    character: t('killInfo.character'),
-    corporation: t('killInfo.corporation'),
-    alliance: t('killInfo.alliance'),
-    faction: t('killInfo.faction'),
-    ship: t('killInfo.ship'),
-    time: t('killInfo.time'),
-    system: t('killInfo.system'),
-    region: t('killInfo.region'),
-    attackers: t('killInfo.attackers'),
-    solo: t('killInfo.solo'),
-    npc: t('killInfo.npc'),
-    highValue: t('killInfo.highValue')
+  details: t("killInfo.details"),
+  victim: t("killInfo.victim"),
+  finalBlow: t("killInfo.finalBlow"),
+  character: t("killInfo.character"),
+  corporation: t("killInfo.corporation"),
+  alliance: t("killInfo.alliance"),
+  faction: t("killInfo.faction"),
+  ship: t("killInfo.ship"),
+  time: t("killInfo.time"),
+  system: t("killInfo.system"),
+  region: t("killInfo.region"),
+  attackers: t("killInfo.attackers"),
+  solo: t("killInfo.solo"),
+  npc: t("killInfo.npc"),
+  highValue: t("killInfo.highValue"),
 }));
 
 // Find the final blow attacker
 const finalBlowAttacker = computed<IAttacker | null>(() => {
-    if (!props.killmail || !props.killmail.attackers) return null;
-    return props.killmail.attackers.find(attacker => attacker.final_blow) || null;
+  if (!props.killmail || !props.killmail.attackers) return null;
+  return props.killmail.attackers.find((attacker) => attacker.final_blow) || null;
 });
 
 // Calculate total damage taken
 const totalDamageTaken = computed<number>(() => {
-    if (!props.killmail || !props.killmail.attackers) return 0;
+  if (!props.killmail || !props.killmail.attackers) return 0;
 
-    return props.killmail.attackers.reduce((sum, attacker) => {
-        return sum + (attacker.damage_done || 0);
-    }, 0);
+  return props.killmail.attackers.reduce((sum, attacker) => {
+    return sum + (attacker.damage_done || 0);
+  }, 0);
 });
 
 // Check if this is a high value kill (over 1 billion ISK)
 const isHighValue = computed(() => {
-    return (props.killmail?.total_value || 0) >= 1000000000;
+  return (props.killmail?.total_value || 0) >= 1000000000;
 });
 
 /**
  * Gets the localized string from a translation object using the current locale
  */
 const getLocalizedString = (obj: any, locale: string): string => {
-    if (!obj) return '';
-    return obj[locale] || obj['en'] || '';
+  if (!obj) return "";
+  return obj[locale] || obj.en || "";
 };
 
 /**
  * Format a number with commas as thousands separators
  */
 function formatNumber(num: number): string {
-    return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+  return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
 }
 
 /**
  * Format security status with proper coloring
  */
 function formatSecurity(security: number | undefined): string {
-    if (security === undefined) return '?';
-    return security.toFixed(1);
+  if (security === undefined) return "?";
+  return security.toFixed(1);
 }
 
 /**
  * Get CSS class for security status coloring
  */
 function getSecurityClass(security: number | undefined): string {
-    if (security === undefined) return 'unknown';
-    if (security >= 0.9) return 'highsec-highest';
-    if (security >= 0.8) return 'highsec-high';
-    if (security >= 0.7) return 'highsec-medium';
-    if (security >= 0.6) return 'highsec-low';
-    if (security >= 0.5) return 'lowsec-high';
-    if (security >= 0.4) return 'lowsec-medium';
-    if (security >= 0.3) return 'lowsec-low';
-    if (security >= 0.1) return 'nullsec-high';
-    return 'nullsec-low';
+  if (security === undefined) return "unknown";
+  if (security >= 0.9) return "highsec-highest";
+  if (security >= 0.8) return "highsec-high";
+  if (security >= 0.7) return "highsec-medium";
+  if (security >= 0.6) return "highsec-low";
+  if (security >= 0.5) return "lowsec-high";
+  if (security >= 0.4) return "lowsec-medium";
+  if (security >= 0.3) return "lowsec-low";
+  if (security >= 0.1) return "nullsec-high";
+  return "nullsec-low";
 }
 
 /**
  * Format date and time in local format
  */
 function formatDateTime(dateTime: string | undefined): string {
-    if (!dateTime) return '';
-    moment.locale(currentLocale.value);
-    return moment.utc(dateTime).local().format('YYYY-MM-DD HH:mm:ss');
+  if (!dateTime) return "";
+  moment.locale(currentLocale.value);
+  return moment.utc(dateTime).local().format("YYYY-MM-DD HH:mm:ss");
 }
 
 /**
  * Format time ago (e.g. "2 hours ago")
  */
 function formatTimeAgo(dateTime: string | undefined): string {
-    if (!dateTime) return '';
-    moment.locale(currentLocale.value);
-    return moment.utc(dateTime).fromNow();
+  if (!dateTime) return "";
+  moment.locale(currentLocale.value);
+  return moment.utc(dateTime).fromNow();
 }
 
 // Watch for locale changes to update moment locale
-watch(locale, (newLocale) => {
+watch(
+  locale,
+  (newLocale) => {
     moment.locale(newLocale);
-}, { immediate: true });
+  },
+  { immediate: true },
+);
 </script>
 
 <style scoped>

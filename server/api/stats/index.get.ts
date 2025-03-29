@@ -1,17 +1,17 @@
 import {
-  topCharacters,
-  topCorporations,
+  killCount,
+  mostValuableKills,
+  mostValuableShips,
+  mostValuableStructures,
+  newCharacters,
   topAlliances,
-  topSystems,
+  topCharacters,
   topConstellations,
+  topCorporations,
   topRegions,
   topShips,
   topSolo,
-  mostValuableKills,
-  mostValuableStructures,
-  mostValuableShips,
-  killCount,
-  newCharacters,
+  topSystems,
 } from "~/server/helpers/TopLists"; // Adjust path as needed
 
 export default defineEventHandler(async (event) => {
@@ -60,6 +60,6 @@ export default defineEventHandler(async (event) => {
     return result;
   } catch (error) {
     console.error(`Error fetching stats for type ${type}:`, error);
-    return { error: 'Failed to fetch data', message: error.message };
+    return { error: "Failed to fetch data", message: error.message };
   }
 });

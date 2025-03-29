@@ -1,4 +1,4 @@
-import { ref, onMounted, onUnmounted, computed } from 'vue';
+import { computed, onMounted, onUnmounted, ref } from "vue";
 
 /**
  * Composable for responsive design detection
@@ -18,7 +18,7 @@ export const useResponsive = () => {
     md: 768,
     lg: 1024,
     xl: 1280,
-    '2xl': 1536
+    "2xl": 1536,
   };
 
   // Create reactive refs for various device types
@@ -41,7 +41,8 @@ export const useResponsive = () => {
 
       // Update device type based on viewport width
       isMobileViewport.value = viewportWidth.value < breakpoints.md;
-      isTabletViewport.value = viewportWidth.value >= breakpoints.md && viewportWidth.value < breakpoints.lg;
+      isTabletViewport.value =
+        viewportWidth.value >= breakpoints.md && viewportWidth.value < breakpoints.lg;
       isDesktopViewport.value = viewportWidth.value >= breakpoints.lg;
     }
   };
@@ -49,26 +50,26 @@ export const useResponsive = () => {
   // Get current breakpoint name
   const currentBreakpoint = computed(() => {
     if (viewportWidth.value === 0) return null;
-    if (viewportWidth.value < breakpoints.sm) return 'xs';
-    if (viewportWidth.value < breakpoints.md) return 'sm';
-    if (viewportWidth.value < breakpoints.lg) return 'md';
-    if (viewportWidth.value < breakpoints.xl) return 'lg';
-    if (viewportWidth.value < breakpoints['2xl']) return 'xl';
-    return '2xl';
+    if (viewportWidth.value < breakpoints.sm) return "xs";
+    if (viewportWidth.value < breakpoints.md) return "sm";
+    if (viewportWidth.value < breakpoints.lg) return "md";
+    if (viewportWidth.value < breakpoints.xl) return "lg";
+    if (viewportWidth.value < breakpoints["2xl"]) return "xl";
+    return "2xl";
   });
 
   // Set up event listeners for client-side only
   onMounted(() => {
     if (import.meta.client) {
       updateViewport();
-      window.addEventListener('resize', updateViewport);
+      window.addEventListener("resize", updateViewport);
     }
   });
 
   // Clean up event listeners
   onUnmounted(() => {
     if (import.meta.client) {
-      window.removeEventListener('resize', updateViewport);
+      window.removeEventListener("resize", updateViewport);
     }
   });
 

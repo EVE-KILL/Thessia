@@ -1,7 +1,7 @@
-import { ref, onMounted, onBeforeUnmount, onActivated, onDeactivated } from 'vue';
+import { onActivated, onBeforeUnmount, onDeactivated, onMounted, ref } from "vue";
 
 // Global map to store shared WebSocket instances
-const globalInstances = new Map<string, { socket: WebSocket | null, count: number }>();
+const globalInstances = new Map<string, { socket: WebSocket | null; count: number }>();
 
 /**
  * WebSocket composable for reactive WebSocket connections with
@@ -19,26 +19,26 @@ export function useWebSocket(options: {
   debug?: boolean;
   onMessage?: (data: any) => void;
   onConnected?: () => void;
-  onDisconnected?: (event: { code: number, reason: string }) => void;
+  onDisconnected?: (event: { code: number; reason: string }) => void;
   onError?: (error: any) => void;
-  onReconnecting?: (info: { attempt: number, maxAttempts: number, delay: number }) => void;
+  onReconnecting?: (info: { attempt: number; maxAttempts: number; delay: number }) => void;
 }) {
   // Apply default options
   const {
     url,
-    initialMessage = '',
+    initialMessage = "",
     autoConnect = true,
     maxReconnectAttempts = 5,
     handleBfCache = true,
     autoReconnect = true,
     useGlobalInstance = false,
-    globalRefKey = 'default',
+    globalRefKey = "default",
     debug = false,
     onMessage = () => {},
     onConnected = () => {},
     onDisconnected = () => {},
     onError = () => {},
-    onReconnecting = () => {}
+    onReconnecting = () => {},
   } = options;
 
   // State variables
@@ -82,15 +82,19 @@ export function useWebSocket(options: {
       if (useGlobalInstance) {
         const existingInstance = getGlobalInstance(globalRefKey);
 
-        if (existingInstance?.socket &&
-            (existingInstance.socket.readyState === WebSocket.OPEN ||
-             existingInstance.socket.readyState === WebSocket.CONNECTING)) {
-
+        if (
+          existingInstance?.socket &&
+          (existingInstance.socket.readyState === WebSocket.OPEN ||
+            existingInstance.socket.readyState === WebSocket.CONNECTING)
+        ) {
           // Use existing global connection
           socket.value = existingInstance.socket;
           existingInstance.count++;
 
-          log(`WebSocket(${globalRefKey}): Using existing global connection, count:`, existingInstance.count);
+          log(
+            `WebSocket(${globalRefKey}): Using existing global connection, count:`,
+            existingInstance.count,
+          );
 
           // If already open, emit connected event
           if (existingInstance.socket.readyState === WebSocket.OPEN) {
@@ -98,7 +102,7 @@ export function useWebSocket(options: {
             onConnected();
 
             // Send initial message if specified
-            if (initialMessage && initialMessage.trim() !== '') {
+            if (initialMessage && initialMessage.trim() !== "") {
               sendMessage(initialMessage);
             }
           }
@@ -118,9 +122,9 @@ export function useWebSocket(options: {
         }
       } catch (wsErr) {
         console.error(`WebSocket(${globalRefKey}): Failed to create connection:`, wsErr);
-        errorMessage.value = 'Failed to create WebSocket connection';
+        errorMessage.value = "Failed to create WebSocket connection";
         isConnected.value = false;
-        onError({ message: 'Failed to create WebSocket connection', error: wsErr });
+        onError({ message: "Failed to create WebSocket connection", error: wsErr });
         return;
       }
 
@@ -138,7 +142,7 @@ export function useWebSocket(options: {
         onConnected();
 
         // Send initial message if specified
-        if (initialMessage && initialMessage.trim() !== '') {
+        if (initialMessage && initialMessage.trim() !== "") {
           sendMessage(initialMessage);
         }
       };
@@ -158,7 +162,7 @@ export function useWebSocket(options: {
 
       socket.value.onerror = (error) => {
         console.error(`WebSocket(${globalRefKey}): Error:`, error);
-        errorMessage.value = 'Connection error';
+        errorMessage.value = "Connection error";
         onError({ error });
       };
 
@@ -173,19 +177,21 @@ export function useWebSocket(options: {
         // 3. Haven't reached max attempts
         // 4. Component is still active
         // 5. Not in paused state
-        if (!event.wasClean &&
-            autoReconnect &&
-            connectionAttempts.value < maxReconnectAttempts &&
-            componentActive.value &&
-            !isPaused.value) {
+        if (
+          !event.wasClean &&
+          autoReconnect &&
+          connectionAttempts.value < maxReconnectAttempts &&
+          componentActive.value &&
+          !isPaused.value
+        ) {
           scheduleReconnect();
         }
       };
     } catch (err) {
       console.error(`WebSocket(${globalRefKey}): Error establishing connection:`, err);
       isConnected.value = false;
-      errorMessage.value = 'Failed to establish connection';
-      onError({ message: 'Failed to establish connection', error: err });
+      errorMessage.value = "Failed to establish connection";
+      onError({ message: "Failed to establish connection", error: err });
     }
   };
 
@@ -204,17 +210,25 @@ export function useWebSocket(options: {
 
     connectionAttempts.value++;
     // Exponential backoff: 1s, 2s, 4s, 8s, 16s (capped at 30s)
-    const backoffTime = Math.min(1000 * Math.pow(2, connectionAttempts.value - 1), 30000);
+    const backoffTime = Math.min(1000 * 2 ** (connectionAttempts.value - 1), 30000);
 
-    log(`WebSocket(${globalRefKey}): Scheduling reconnection attempt ${connectionAttempts.value} in ${backoffTime/1000}s`);
-    onReconnecting({ attempt: connectionAttempts.value, maxAttempts: maxReconnectAttempts, delay: backoffTime });
+    log(
+      `WebSocket(${globalRefKey}): Scheduling reconnection attempt ${connectionAttempts.value} in ${backoffTime / 1000}s`,
+    );
+    onReconnecting({
+      attempt: connectionAttempts.value,
+      maxAttempts: maxReconnectAttempts,
+      delay: backoffTime,
+    });
 
     reconnectTimer = setTimeout(() => {
       if (!componentActive.value || isPaused.value) {
         return;
       }
 
-      log(`WebSocket(${globalRefKey}): Attempting reconnection (${connectionAttempts.value}/${maxReconnectAttempts})`);
+      log(
+        `WebSocket(${globalRefKey}): Attempting reconnection (${connectionAttempts.value}/${maxReconnectAttempts})`,
+      );
       connect();
     }, backoffTime);
 
@@ -268,7 +282,10 @@ export function useWebSocket(options: {
         socket.value.onmessage = null;
 
         // Only attempt to close if the socket is open or connecting
-        if (socket.value.readyState === WebSocket.OPEN || socket.value.readyState === WebSocket.CONNECTING) {
+        if (
+          socket.value.readyState === WebSocket.OPEN ||
+          socket.value.readyState === WebSocket.CONNECTING
+        ) {
           socket.value.close();
         }
       } catch (err) {
@@ -327,12 +344,12 @@ export function useWebSocket(options: {
     }
 
     try {
-      const messageToSend = typeof message === 'object' ? JSON.stringify(message) : message;
+      const messageToSend = typeof message === "object" ? JSON.stringify(message) : message;
       socket.value.send(messageToSend);
       return true;
     } catch (err) {
       console.error(`WebSocket(${globalRefKey}): Error sending message:`, err);
-      onError({ message: 'Failed to send message', error: err });
+      onError({ message: "Failed to send message", error: err });
       return false;
     }
   };
@@ -366,9 +383,9 @@ export function useWebSocket(options: {
    * Handle visibility change - pause when hidden, resume when visible
    */
   const handleVisibilityChange = () => {
-    if (document.visibilityState === 'hidden') {
+    if (document.visibilityState === "hidden") {
       pause();
-    } else if (document.visibilityState === 'visible' && !isPaused.value) {
+    } else if (document.visibilityState === "visible" && !isPaused.value) {
       resume();
     }
   };
@@ -418,12 +435,12 @@ export function useWebSocket(options: {
     // Remove event listeners
     if (import.meta.client) {
       if (handleBfCache) {
-        window.removeEventListener('pagehide', handlePageHide);
-        window.removeEventListener('pageshow', handlePageShow);
+        window.removeEventListener("pagehide", handlePageHide);
+        window.removeEventListener("pageshow", handlePageShow);
       }
-      document.removeEventListener('visibilitychange', handleVisibilityChange);
-      window.removeEventListener('online', handleOnline);
-      window.removeEventListener('offline', handleOffline);
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+      window.removeEventListener("online", handleOnline);
+      window.removeEventListener("offline", handleOffline);
     }
   };
 
@@ -462,16 +479,16 @@ export function useWebSocket(options: {
     if (import.meta.client && autoConnect && !isPaused.value) {
       if (handleBfCache) {
         // Add bfcache event handlers
-        window.addEventListener('pagehide', handlePageHide);
-        window.addEventListener('pageshow', handlePageShow);
+        window.addEventListener("pagehide", handlePageHide);
+        window.addEventListener("pageshow", handlePageShow);
       }
 
       // Add visibility change handler
-      document.addEventListener('visibilitychange', handleVisibilityChange);
+      document.addEventListener("visibilitychange", handleVisibilityChange);
 
       // Add network status handlers
-      window.addEventListener('online', handleOnline);
-      window.addEventListener('offline', handleOffline);
+      window.addEventListener("online", handleOnline);
+      window.addEventListener("offline", handleOffline);
 
       // Connect with a slight delay to ensure component is fully mounted
       setTimeout(() => {
@@ -511,6 +528,6 @@ export function useWebSocket(options: {
     close,
     pause,
     resume,
-    sendMessage
+    sendMessage,
   };
 }

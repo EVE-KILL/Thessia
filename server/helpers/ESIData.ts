@@ -1,10 +1,10 @@
-import type { IWar } from "~/server/interfaces/IWar";
 import type { IAlliance } from "~/server/interfaces/IAlliance";
 import type { ICharacter } from "~/server/interfaces/ICharacter";
 import type { ICorporation } from "~/server/interfaces/ICorporation";
 import type { IESIKillmail } from "~/server/interfaces/IESIKillmail";
 import type { IFaction } from "~/server/interfaces/IFaction";
 import type { IItem } from "~/server/interfaces/IKillmail";
+import type { IWar } from "~/server/interfaces/IWar";
 import { Alliances } from "~/server/models/Alliances";
 import { Characters } from "~/server/models/Characters";
 import { Corporations } from "~/server/models/Corporations";

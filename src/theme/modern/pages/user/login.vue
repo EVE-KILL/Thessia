@@ -1,15 +1,15 @@
 <script setup lang="ts">
 definePageMeta({
-  layout: 'default'
+  layout: "default",
 });
 
 // Add SEO meta
 const { t } = useI18n();
 useSeoMeta({
-  title: t('loginPageTitle')
+  title: t("loginPageTitle"),
 });
 
-import { reactive, onMounted } from 'vue';
+import { onMounted, reactive } from "vue";
 
 // Composables
 const auth = useAuth();
@@ -18,42 +18,58 @@ const colorMode = useColorMode();
 
 // Get redirect path from query parameter or default to home
 const redirectPath = computed(() => {
-  return route.query.redirect?.toString() || '/';
+  return route.query.redirect?.toString() || "/";
 });
 
 // Available scopes with descriptions
 const availableScopes = reactive([
-  { id: 'publicData', name: t('scopes.publicData', 'Public Data'), description: t('scopes.publicDataDesc', 'Basic character information'), required: true, selected: true },
-  { id: 'esi-killmails.read_killmails.v1', name: t('scopes.readKillmails', 'Read Killmails'), description: t('scopes.readKillmailsDesc', 'Access to your character\'s killmails'), required: false, selected: true },
-  { id: 'esi-killmails.read_corporation_killmails.v1', name: t('scopes.readCorpKillmails', 'Read Corporation Killmails'), description: t('scopes.readCorpKillmailsDesc', 'Access to your corporation\'s killmails'), required: false, selected: true },
+  {
+    id: "publicData",
+    name: t("scopes.publicData", "Public Data"),
+    description: t("scopes.publicDataDesc", "Basic character information"),
+    required: true,
+    selected: true,
+  },
+  {
+    id: "esi-killmails.read_killmails.v1",
+    name: t("scopes.readKillmails", "Read Killmails"),
+    description: t("scopes.readKillmailsDesc", "Access to your character's killmails"),
+    required: false,
+    selected: true,
+  },
+  {
+    id: "esi-killmails.read_corporation_killmails.v1",
+    name: t("scopes.readCorpKillmails", "Read Corporation Killmails"),
+    description: t("scopes.readCorpKillmailsDesc", "Access to your corporation's killmails"),
+    required: false,
+    selected: true,
+  },
 ]);
 
 // Check if customize mode is active
-const isCustomizeMode = computed(() => route.query.customize === 'true');
+const isCustomizeMode = computed(() => route.query.customize === "true");
 
 // SSO image configuration
 const ssoImages = {
   light: {
-    large: '/images/sso-light-large.png',
-    small: '/images/sso-light-small.png'
+    large: "/images/sso-light-large.png",
+    small: "/images/sso-light-small.png",
   },
   dark: {
-    large: '/images/sso-dark-large.png',
-    small: '/images/sso-dark-small.png'
-  }
+    large: "/images/sso-dark-large.png",
+    small: "/images/sso-dark-small.png",
+  },
 };
 
 // Image source based on theme
 const ssoImageSrc = computed(() => {
-  const theme = colorMode.value === 'dark' ? 'light' : 'dark';
+  const theme = colorMode.value === "dark" ? "light" : "dark";
   return ssoImages[theme].large;
 });
 
 // Login with selected scopes
 const handleCustomLogin = () => {
-  const selectedScopes = availableScopes
-    .filter(scope => scope.selected)
-    .map(scope => scope.id);
+  const selectedScopes = availableScopes.filter((scope) => scope.selected).map((scope) => scope.id);
 
   auth.login(redirectPath.value, selectedScopes);
 };
@@ -71,7 +87,7 @@ onMounted(async () => {
   // Check for auth error from redirect
   const authError = route.query.auth_error;
   if (authError) {
-    auth.authError.value = t('auth.error.general', 'Authentication failed. Please try again.');
+    auth.authError.value = t("auth.error.general", "Authentication failed. Please try again.");
   }
 
   // Only redirect if authenticated AND not in customize scopes mode

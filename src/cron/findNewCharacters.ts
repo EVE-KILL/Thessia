@@ -1,6 +1,6 @@
 import { getCharacter } from "~/server/helpers/ESIData";
-import { Characters } from "~/server/models/Characters";
 import { cliLogger } from "~/server/helpers/Logger";
+import { Characters } from "~/server/models/Characters";
 
 export default {
   name: "findNewCharacters",

@@ -1,5 +1,5 @@
-import fetch from 'node-fetch';
-import { cliLogger } from './Logger';
+import fetch from "node-fetch";
+import { cliLogger } from "./Logger";
 
 /**
  * Helper class for sending notifications to Discord webhooks
@@ -12,15 +12,15 @@ export class DiscordWebhooks {
    */
   public static async send(webhookUrl: string, content: string): Promise<void> {
     if (!webhookUrl) {
-      cliLogger.warn('Discord webhook URL not configured');
+      cliLogger.warn("Discord webhook URL not configured");
       return;
     }
 
     try {
       const response = await fetch(webhookUrl, {
-        method: 'POST',
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
         body: JSON.stringify({ content }),
       });
@@ -44,12 +44,12 @@ export class DiscordWebhooks {
 
     // Generate a link to the comment
     // Format: kill:123 -> /kill/123
-    const commentPath = comment.killIdentifier.replace(':', '/');
+    const commentPath = comment.killIdentifier.replace(":", "/");
     const commentLink = `https://eve-kill.com/${commentPath}#comment-${comment.identifier}`;
 
     const content = `New comment by ${comment.characterName} on ${commentLink} \`\`\`${comment.comment}\`\`\``;
 
-    await this.send(webhookUrl, content);
+    await DiscordWebhooks.send(webhookUrl, content);
   }
 
   /**
@@ -58,21 +58,20 @@ export class DiscordWebhooks {
    * @param reportMessage The report message
    * @param reporter The user who reported the comment
    */
-  public static async sendReportedComment(comment: any, reportMessage: string, reporter: any): Promise<void> {
+  public static async sendReportedComment(
+    comment: any,
+    reportMessage: string,
+    reporter: any,
+  ): Promise<void> {
     const webhookUrl = process.env.DISCORD_REPORT_COMMENT;
     if (!webhookUrl) return;
 
     // Generate a link to the comment
-    const commentPath = comment.killIdentifier.replace(':', '/');
+    const commentPath = comment.killIdentifier.replace(":", "/");
     const commentLink = `https://eve-kill.com/${commentPath}#comment-${comment.identifier}`;
 
-    const content = `🚨 COMMENT REPORTED 🚨\n` +
-                   `Reported by: ${reporter.characterName}\n` +
-                   `Comment by: ${comment.characterName}\n` +
-                   `Comment link: ${commentLink}\n` +
-                   `Report reason: \`\`\`${reportMessage}\`\`\`\n` +
-                   `Original comment: \`\`\`${comment.comment}\`\`\``;
+    const content = `🚨 COMMENT REPORTED 🚨\nReported by: ${reporter.characterName}\nComment by: ${comment.characterName}\nComment link: ${commentLink}\nReport reason: \`\`\`${reportMessage}\`\`\`\nOriginal comment: \`\`\`${comment.comment}\`\`\``;
 
-    await this.send(webhookUrl, content);
+    await DiscordWebhooks.send(webhookUrl, content);
   }
 }

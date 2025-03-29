@@ -1,12 +1,12 @@
 <script setup lang="ts">
-import { computed, onMounted, nextTick } from 'vue';
+import { computed, nextTick, onMounted } from "vue";
 
 // Component props
 const props = defineProps({
-    isMobileView: {
-        type: Boolean,
-        default: false
-    }
+  isMobileView: {
+    type: Boolean,
+    default: false,
+  },
 });
 
 // Composables
@@ -26,46 +26,44 @@ onMounted(() => {
 
 // Auth handlers
 const handleEveLogin = () => {
-    const currentPath = window.location.pathname;
-    auth.login(currentPath);
-    isDropdownOpen.value = false;
+  const currentPath = window.location.pathname;
+  auth.login(currentPath);
+  isDropdownOpen.value = false;
 };
 
 const handleLogout = () => {
-    auth.logout();
-    isDropdownOpen.value = false;
+  auth.logout();
+  isDropdownOpen.value = false;
 };
 
 const handleCustomizeLogin = () => {
-    const currentPath = window.location.pathname;
-    navigateTo(`/user/login?customize=true&redirect=${encodeURIComponent(currentPath)}`);
-    isDropdownOpen.value = false;
+  const currentPath = window.location.pathname;
+  navigateTo(`/user/login?customize=true&redirect=${encodeURIComponent(currentPath)}`);
+  isDropdownOpen.value = false;
 };
 
 // SSO image configuration
 const SSO_IMAGES = {
   light: {
-    large: '/images/sso-light-large.png',
-    small: '/images/sso-light-small.png'
+    large: "/images/sso-light-large.png",
+    small: "/images/sso-light-small.png",
   },
   dark: {
-    large: '/images/sso-dark-large.png',
-    small: '/images/sso-dark-small.png'
-  }
+    large: "/images/sso-dark-large.png",
+    small: "/images/sso-dark-small.png",
+  },
 };
 
 // Image source based on theme and viewport size
 const ssoImageSrc = computed(() => {
-  const theme = colorMode.value === 'dark' ? 'light' : 'dark';
-  const size = props.isMobileView ? 'small' : 'large';
+  const theme = colorMode.value === "dark" ? "light" : "dark";
+  const size = props.isMobileView ? "small" : "large";
   return SSO_IMAGES[theme][size];
 });
 
 // Image dimensions for consistent sizing
 const ssoImageDimensions = computed(() => {
-  return props.isMobileView
-    ? { width: 195, height: 30 }
-    : { width: 270, height: 45 };
+  return props.isMobileView ? { width: 195, height: 30 } : { width: 270, height: 45 };
 });
 </script>
 

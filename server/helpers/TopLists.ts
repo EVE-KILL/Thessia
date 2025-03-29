@@ -1,11 +1,11 @@
-import { Characters } from "~/server/models/Characters";
-import { Corporations } from "~/server/models/Corporations";
 import { Alliances } from "~/server/models/Alliances";
-import { SolarSystems } from "~/server/models/SolarSystems";
+import { Characters } from "~/server/models/Characters";
 import { Constellations } from "~/server/models/Constellations";
-import { Regions } from "~/server/models/Regions";
+import { Corporations } from "~/server/models/Corporations";
 import { InvTypes } from "~/server/models/InvTypes";
 import { Killmails } from "~/server/models/Killmails";
+import { Regions } from "~/server/models/Regions";
+import { SolarSystems } from "~/server/models/SolarSystems";
 
 // Earliest known killmail is from 2007-12-05
 const timeSinceEarlyDays: Date = new Date("2007-12-05T00:00:00Z");
@@ -65,20 +65,20 @@ async function topCharacters(
   });
 
   // Batch load character data instead of individual queries
-  const characterIds = results.map(result => result.id);
+  const characterIds = results.map((result) => result.id);
   const characters = await Characters.find(
     { character_id: { $in: characterIds } },
-    { character_id: 1, name: 1, _id: 0 }
+    { character_id: 1, name: 1, _id: 0 },
   ).lean();
 
   // Create a map for faster lookups
   const characterMap = new Map();
-  characters.forEach(char => {
+  characters.forEach((char) => {
     characterMap.set(char.character_id, char.name);
   });
 
   // Map results with character names
-  return results.map(character => ({
+  return results.map((character) => ({
     character_id: character.id,
     name: characterMap.get(character.id) || "Unknown",
     count: character.count,
@@ -121,7 +121,7 @@ async function topCorporations(
     {
       $group: {
         _id: "$attackers.corporation_id",
-        count: { $sum: 1 }
+        count: { $sum: 1 },
       },
     },
     { $sort: { count: -1, _id: 1 } },
@@ -140,20 +140,20 @@ async function topCorporations(
   });
 
   // Batch load corporation data instead of individual queries
-  const corporationIds = results.map(result => result.id);
+  const corporationIds = results.map((result) => result.id);
   const corporations = await Corporations.find(
     { corporation_id: { $in: corporationIds } },
-    { corporation_id: 1, name: 1, _id: 0 }
+    { corporation_id: 1, name: 1, _id: 0 },
   ).lean();
 
   // Create a map for faster lookups
   const corporationMap = new Map();
-  corporations.forEach(corp => {
+  corporations.forEach((corp) => {
     corporationMap.set(corp.corporation_id, corp.name);
   });
 
   // Map results with corporation names
-  return results.map(corporation => ({
+  return results.map((corporation) => ({
     corporation_id: corporation.id,
     name: corporationMap.get(corporation.id) || "Unknown",
     count: corporation.count,
@@ -196,7 +196,7 @@ async function topAlliances(
     {
       $group: {
         _id: "$attackers.alliance_id",
-        count: { $sum: 1 }
+        count: { $sum: 1 },
       },
     },
     { $sort: { count: -1, _id: 1 } },
@@ -215,20 +215,20 @@ async function topAlliances(
   });
 
   // Batch load alliance data
-  const allianceIds = results.map(result => result.id);
+  const allianceIds = results.map((result) => result.id);
   const alliances = await Alliances.find(
     { alliance_id: { $in: allianceIds } },
-    { alliance_id: 1, name: 1, _id: 0 }
+    { alliance_id: 1, name: 1, _id: 0 },
   ).lean();
 
   // Create a map for faster lookups
   const allianceMap = new Map();
-  alliances.forEach(alliance => {
+  alliances.forEach((alliance) => {
     allianceMap.set(alliance.alliance_id, alliance.name);
   });
 
   // Map results with alliance names
-  return results.map(alliance => ({
+  return results.map((alliance) => ({
     alliance_id: alliance.id,
     name: allianceMap.get(alliance.id) || "Unknown",
     count: alliance.count,
@@ -266,7 +266,7 @@ async function topSystems(
     {
       $group: {
         _id: "$system_id",
-        count: { $sum: 1 }
+        count: { $sum: 1 },
       },
     },
     { $sort: { count: -1, _id: 1 } },
@@ -285,20 +285,20 @@ async function topSystems(
   });
 
   // Batch load system data
-  const systemIds = results.map(result => result.id);
+  const systemIds = results.map((result) => result.id);
   const systems = await SolarSystems.find(
     { system_id: { $in: systemIds } },
-    { system_id: 1, system_name: 1, _id: 0 }
+    { system_id: 1, system_name: 1, _id: 0 },
   ).lean();
 
   // Create a map for faster lookups
   const systemMap = new Map();
-  systems.forEach(system => {
+  systems.forEach((system) => {
     systemMap.set(system.system_id, system.system_name);
   });
 
   // Map results with system names
-  return results.map(system => ({
+  return results.map((system) => ({
     system_id: system.id,
     name: systemMap.get(system.id) || "Unknown",
     count: system.count,
@@ -339,7 +339,7 @@ async function topConstellations(
     {
       $group: {
         _id: "$constellation_id",
-        count: { $sum: 1 }
+        count: { $sum: 1 },
       },
     },
     { $sort: { count: -1, _id: 1 } },
@@ -358,20 +358,20 @@ async function topConstellations(
   });
 
   // Batch load constellation data
-  const constellationIds = results.map(result => result.id);
+  const constellationIds = results.map((result) => result.id);
   const constellations = await Constellations.find(
     { constellation_id: { $in: constellationIds } },
-    { constellation_id: 1, constellation_name: 1, _id: 0 }
+    { constellation_id: 1, constellation_name: 1, _id: 0 },
   ).lean();
 
   // Create a map for faster lookups
   const constellationMap = new Map();
-  constellations.forEach(constellation => {
+  constellations.forEach((constellation) => {
     constellationMap.set(constellation.constellation_id, constellation.constellation_name);
   });
 
   // Map results with constellation names
-  return results.map(constellation => ({
+  return results.map((constellation) => ({
     constellation_id: constellation.id,
     name: constellationMap.get(constellation.id) || "Unknown",
     count: constellation.count,
@@ -409,7 +409,7 @@ async function topRegions(
     {
       $group: {
         _id: "$region_id",
-        count: { $sum: 1 }
+        count: { $sum: 1 },
       },
     },
     { $sort: { count: -1, _id: 1 } },
@@ -428,20 +428,20 @@ async function topRegions(
   });
 
   // Batch load region data
-  const regionIds = results.map(result => result.id);
+  const regionIds = results.map((result) => result.id);
   const regions = await Regions.find(
     { region_id: { $in: regionIds } },
-    { region_id: 1, name: 1, _id: 0 }
+    { region_id: 1, name: 1, _id: 0 },
   ).lean();
 
   // Create a map for faster lookups
   const regionMap = new Map();
-  regions.forEach(region => {
+  regions.forEach((region) => {
     regionMap.set(region.region_id, region.name);
   });
 
   // Map results with region names
-  return results.map(region => ({
+  return results.map((region) => ({
     region_id: region.id,
     name: regionMap.get(region.id) || "Unknown",
     count: region.count,
@@ -484,7 +484,7 @@ async function topShips(
     {
       $group: {
         _id: "$attackers.ship_id",
-        count: { $sum: 1 }
+        count: { $sum: 1 },
       },
     },
     { $sort: { count: -1, _id: 1 } },
@@ -503,20 +503,20 @@ async function topShips(
   });
 
   // Batch load ship data
-  const shipIds = results.map(result => result.id);
+  const shipIds = results.map((result) => result.id);
   const ships = await InvTypes.find(
     { type_id: { $in: shipIds } },
-    { type_id: 1, name: 1, _id: 0 }
+    { type_id: 1, name: 1, _id: 0 },
   ).lean();
 
   // Create a map for faster lookups
   const shipMap = new Map();
-  ships.forEach(ship => {
+  ships.forEach((ship) => {
     shipMap.set(ship.type_id, ship.name);
   });
 
   // Map results with ship names
-  return results.map(ship => ({
+  return results.map((ship) => ({
     type_id: ship.id,
     name: shipMap.get(ship.id) || "Unknown",
     count: ship.count,
@@ -559,7 +559,7 @@ async function topSolo(
     {
       $group: {
         _id: "$attackers.character_id",
-        count: { $sum: 1 }
+        count: { $sum: 1 },
       },
     },
     { $sort: { count: -1, _id: 1 } },
@@ -578,20 +578,20 @@ async function topSolo(
   });
 
   // Batch load character data
-  const characterIds = results.map(result => result.id);
+  const characterIds = results.map((result) => result.id);
   const characters = await Characters.find(
     { character_id: { $in: characterIds } },
-    { character_id: 1, name: 1, _id: 0 }
+    { character_id: 1, name: 1, _id: 0 },
   ).lean();
 
   // Create a map for faster lookups
   const characterMap = new Map();
-  characters.forEach(char => {
+  characters.forEach((char) => {
     characterMap.set(char.character_id, char.name);
   });
 
   // Map results with character names
-  return results.map(character => ({
+  return results.map((character) => ({
     character_id: character.id,
     name: characterMap.get(character.id) || "Unknown",
     count: character.count,
@@ -618,8 +618,8 @@ async function mostValuableKills(days: number | null = 7, limit = 10) {
       killmail_id: 1,
       total_value: 1,
       "victim.ship_id": 1,
-      "victim.ship_name": 1
-    }
+      "victim.ship_name": 1,
+    },
   )
     .sort({ total_value: -1 })
     .limit(limit)
@@ -642,15 +642,15 @@ async function mostValuableStructures(days: number | null = 7, limit = 10) {
   return await Killmails.find(
     {
       kill_time: { $gte: calculatedTime },
-      "victim.ship_group_id": { $in: structureGroupIDs }
+      "victim.ship_group_id": { $in: structureGroupIDs },
     },
     {
       _id: 0,
       killmail_id: 1,
       total_value: 1,
       "victim.ship_id": 1,
-      "victim.ship_name": 1
-    }
+      "victim.ship_name": 1,
+    },
   )
     .sort({ total_value: -1 })
     .limit(limit)
@@ -678,15 +678,15 @@ async function mostValuableShips(days: number | null = 7, limit = 10) {
   return await Killmails.find(
     {
       kill_time: { $gte: calculatedTime },
-      "victim.ship_group_id": { $in: shipGroupIDs }
+      "victim.ship_group_id": { $in: shipGroupIDs },
     },
     {
       _id: 0,
       killmail_id: 1,
       total_value: 1,
       "victim.ship_id": 1,
-      "victim.ship_name": 1
-    }
+      "victim.ship_name": 1,
+    },
   )
     .sort({ total_value: -1 })
     .limit(limit)
@@ -703,15 +703,12 @@ async function killCount(days: number | null = 7) {
     calculatedTime = new Date(Date.now() - days * 86400 * 1000);
   }
 
-  const query: any[] = [
-    { $match: { kill_time: { $gte: calculatedTime } } },
-    { $count: "count" }
-  ];
+  const query: any[] = [{ $match: { kill_time: { $gte: calculatedTime } } }, { $count: "count" }];
 
   // Use the optimized kill_time index
   return await Killmails.aggregate(query, {
     allowDiskUse: true,
-    hint: { kill_time: -1 }
+    hint: { kill_time: -1 },
   });
 }
 

@@ -1,6 +1,6 @@
 // models/Characters.ts
 
-import { Schema, model, type Document, type Model } from "mongoose";
+import { type Document, type Model, Schema, model } from "mongoose";
 import type { ICharacter, ICharacterHistory } from "~/server/interfaces/ICharacter"; // Adjust the path as necessary
 
 // Extend the ICharacter interface with Mongoose's Document interface

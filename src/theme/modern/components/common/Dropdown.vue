@@ -1,79 +1,79 @@
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted, computed, watch, nextTick } from 'vue';
-import { onClickOutside } from '@vueuse/core';
+import { onClickOutside } from "@vueuse/core";
+import { computed, nextTick, onMounted, onUnmounted, ref, watch } from "vue";
 
 const props = defineProps({
   // Support for multi-column layout
   columns: {
     type: Number,
-    default: 1
+    default: 1,
   },
   // Control max height for scroll (vh units)
   maxHeight: {
     type: Number,
-    default: 50 // 50vh by default
+    default: 50, // 50vh by default
   },
   // Position relative to trigger (top, bottom, left, right)
   position: {
     type: String,
-    default: 'bottom'
+    default: "bottom",
   },
   // Alignment (start, center, end)
   align: {
     type: String,
-    default: 'start'
+    default: "start",
   },
   // Whether the dropdown should close when clicking inside
   closeOnInnerClick: {
     type: Boolean,
-    default: false
+    default: false,
   },
   // Width of dropdown (auto, full, or pixel value)
   width: {
     type: String,
-    default: 'auto'
+    default: "auto",
   },
   // Whether to show the dropdown
   modelValue: {
     type: Boolean,
-    default: false
+    default: false,
   },
   // Whether to use smart positioning based on screen edge
   smartPosition: {
     type: Boolean,
-    default: true
+    default: true,
   },
   // Whether to use built-in column distribution
   useColumnDistribution: {
     type: Boolean,
-    default: false
+    default: false,
   },
   // Item data for column distribution (when useColumnDistribution is true)
   items: {
     type: Array,
-    default: () => []
+    default: () => [],
   },
   // Items per column threshold
   itemsPerColumn: {
     type: Number,
-    default: 10
+    default: 10,
   },
   // New props for hover functionality
   openOnHover: {
     type: Boolean,
-    default: false
+    default: false,
   },
   hoverDelay: {
     type: Number,
-    default: 250 // ms
-  }
+    default: 250, // ms
+  },
 });
 
-const emit = defineEmits(['update:modelValue']);
+const emit = defineEmits(["update:modelValue"]);
 
 const isOpen = computed({
   get: () => props.modelValue,
-  set: (value) => emit('update:modelValue', value)
+  set: (value) => emit("update:modelValue", value),
 });
 
 const dropdownRef = ref<HTMLElement | null>(null);
@@ -124,7 +124,7 @@ onClickOutside(dropdownRef, (event) => {
 
 // Close dropdown when Escape key is pressed
 const handleKeydown = (e: KeyboardEvent) => {
-  if (e.key === 'Escape' && isOpen.value) {
+  if (e.key === "Escape" && isOpen.value) {
     isOpen.value = false;
   }
 };
@@ -150,9 +150,7 @@ const distributeItemsInColumns = (items, columnCount) => {
   // Distribute items evenly with extra items in earlier columns
   for (let col = 0; col < columnCount; col++) {
     // Add one extra item to earlier columns if we have remainder
-    const itemsInThisColumn = col < extraItems
-      ? baseItemsPerColumn + 1
-      : baseItemsPerColumn;
+    const itemsInThisColumn = col < extraItems ? baseItemsPerColumn + 1 : baseItemsPerColumn;
 
     for (let i = 0; i < itemsInThisColumn; i++) {
       if (currentIndex < totalItems) {
@@ -201,27 +199,27 @@ const updatePosition = () => {
   const isOnRightSide = triggerRect.left > screenCenter;
 
   // Width calculation
-  let widthValue = 'auto';
-  if (props.width === 'full') {
+  let widthValue = "auto";
+  if (props.width === "full") {
     widthValue = `${triggerRect.width}px`;
-  } else if (props.width !== 'auto') {
+  } else if (props.width !== "auto") {
     widthValue = props.width;
   }
 
   // Default positioning variables - using viewport coordinates
   let top = 0;
   let left = 0;
-  let right = 'auto';
-  let transform = 'none';
+  let right = "auto";
+  let transform = "none";
 
   // Add 5px offset for better visual spacing
   const offsetY = 5;
 
   // SPECIAL CASE: Center alignment - handle differently
-  if (align === 'center') {
+  if (align === "center") {
     top = triggerRect.bottom + offsetY;
-    left = triggerRect.left + (triggerRect.width / 2);
-    transform = 'translateX(-50%)';
+    left = triggerRect.left + triggerRect.width / 2;
+    transform = "translateX(-50%)";
   }
   // Standard smart positioning logic
   else if (props.smartPosition) {
@@ -231,48 +229,51 @@ const updatePosition = () => {
     if (isOnRightSide) {
       // If on right half of screen, align right edges
       right = screenWidth - triggerRect.right;
-      left = 'auto';
+      left = "auto";
     } else {
       // If on left half of screen, align left edges
       left = triggerRect.left;
-      right = 'auto';
+      right = "auto";
     }
   } else {
     // Original positioning logic with viewport coordinates
     switch (position) {
-      case 'bottom':
+      case "bottom":
         top = triggerRect.bottom + offsetY; // Add offset
         break;
-      case 'top':
+      case "top":
         top = triggerRect.top - (dropdownRef.value?.offsetHeight || 0) - offsetY;
         break;
-      case 'left':
+      case "left":
         left = triggerRect.left - (dropdownRef.value?.offsetWidth || 0) - offsetY;
         top = triggerRect.top;
         break;
-      case 'right':
+      case "right":
         left = triggerRect.right + offsetY; // Add offset
         top = triggerRect.top;
         break;
     }
 
     switch (align) {
-      case 'start':
-        left = position === 'top' || position === 'bottom' ? triggerRect.left : left;
+      case "start":
+        left = position === "top" || position === "bottom" ? triggerRect.left : left;
         break;
-      case 'center':
+      case "center":
         // Standard center alignment (not using transform)
-        left = position === 'top' || position === 'bottom'
-          ? triggerRect.left + (triggerRect.width / 2) - ((dropdownRef.value?.offsetWidth || 0) / 2)
-          : left;
-        top = position === 'left' || position === 'right'
-          ? triggerRect.top + (triggerRect.height / 2) - ((dropdownRef.value?.offsetHeight || 0) / 2)
-          : top;
+        left =
+          position === "top" || position === "bottom"
+            ? triggerRect.left + triggerRect.width / 2 - (dropdownRef.value?.offsetWidth || 0) / 2
+            : left;
+        top =
+          position === "left" || position === "right"
+            ? triggerRect.top + triggerRect.height / 2 - (dropdownRef.value?.offsetHeight || 0) / 2
+            : top;
         break;
-      case 'end':
-        left = position === 'top' || position === 'bottom'
-          ? triggerRect.right - (dropdownRef.value?.offsetWidth || 0)
-          : left;
+      case "end":
+        left =
+          position === "top" || position === "bottom"
+            ? triggerRect.right - (dropdownRef.value?.offsetWidth || 0)
+            : left;
         break;
     }
   }
@@ -283,15 +284,15 @@ const updatePosition = () => {
 
   // Apply initial styles with opacity 0 to measure properly without showing it
   dropdownStyles.value = {
-    position: 'fixed',
+    position: "fixed",
     top: `${top}px`,
-    left: left !== 'auto' ? `${left}px` : left,
-    right: right !== 'auto' ? `${right}px` : 'auto',
+    left: left !== "auto" ? `${left}px` : left,
+    right: right !== "auto" ? `${right}px` : "auto",
     width: widthValue,
     maxHeight: `${props.maxHeight}vh`,
     zIndex: 50,
     transform,
-    opacity: 0
+    opacity: 0,
   };
 
   // Ensure we have proper dimensions before continuing
@@ -301,10 +302,10 @@ const updatePosition = () => {
     const updatedHeight = dropdownRef.value?.offsetHeight || dropdownHeight;
 
     // For centered dropdowns
-    if (align === 'center') {
+    if (align === "center") {
       // Reapply the position with proper measurements
-      const leftEdge = left - (updatedWidth / 2);
-      const rightEdge = left + (updatedWidth / 2);
+      const leftEdge = left - updatedWidth / 2;
+      const rightEdge = left + updatedWidth / 2;
 
       if (leftEdge < 8) {
         // Too close to left edge, adjust position
@@ -319,19 +320,19 @@ const updatePosition = () => {
     // Special handling for left side of screen
     else if (!isOnRightSide) {
       // Revalidate left position now that we have proper measurements
-      if (left !== 'auto' && left + updatedWidth > screenWidth - 8) {
+      if (left !== "auto" && left + updatedWidth > screenWidth - 8) {
         dropdownStyles.value.left = `${screenWidth - updatedWidth - 8}px`;
       }
 
       // Ensure we're not too far left
-      if (left < 8 && left !== 'auto') {
-        dropdownStyles.value.left = '8px';
+      if (left < 8 && left !== "auto") {
+        dropdownStyles.value.left = "8px";
       }
     }
     // Special handling for right side of screen
     else {
       // Confirm the right-side positioning is correct
-      if (right !== 'auto') {
+      if (right !== "auto") {
         // Make sure dropdown doesn't go off left edge of screen
         const calculatedLeft = screenWidth - right - updatedWidth;
         if (calculatedLeft < 8) {
@@ -343,7 +344,7 @@ const updatePosition = () => {
     // Vertical constraint within viewport
     if (top + updatedHeight > screenHeight - 8) {
       // Flip to above if below would go off screen
-      if (position === 'bottom' || props.smartPosition) {
+      if (position === "bottom" || props.smartPosition) {
         dropdownStyles.value.top = `${triggerRect.top - updatedHeight - offsetY}px`;
       } else {
         dropdownStyles.value.top = `${screenHeight - updatedHeight - 8}px`;
@@ -371,32 +372,35 @@ const handleScroll = () => {
 };
 
 // Update position when dropdown state changes
-watch(() => isOpen.value, (value) => {
-  if (value) {
-    // Reset positioning status when opening
-    isPositioned.value = false;
+watch(
+  () => isOpen.value,
+  (value) => {
+    if (value) {
+      // Reset positioning status when opening
+      isPositioned.value = false;
 
-    // Use nextTick to ensure the dropdown is rendered before measuring
-    nextTick(() => {
-      updatePosition();
-      window.addEventListener('resize', updatePosition);
-      window.addEventListener('scroll', handleScroll);
-    });
-  } else {
-    window.removeEventListener('resize', updatePosition);
-    window.removeEventListener('scroll', handleScroll);
-  }
-});
+      // Use nextTick to ensure the dropdown is rendered before measuring
+      nextTick(() => {
+        updatePosition();
+        window.addEventListener("resize", updatePosition);
+        window.addEventListener("scroll", handleScroll);
+      });
+    } else {
+      window.removeEventListener("resize", updatePosition);
+      window.removeEventListener("scroll", handleScroll);
+    }
+  },
+);
 
 // Event handlers for keyboard navigation
 onMounted(() => {
-  window.addEventListener('keydown', handleKeydown);
+  window.addEventListener("keydown", handleKeydown);
 });
 
 onUnmounted(() => {
-  window.removeEventListener('keydown', handleKeydown);
-  window.removeEventListener('resize', updatePosition);
-  window.removeEventListener('scroll', updatePosition);
+  window.removeEventListener("keydown", handleKeydown);
+  window.removeEventListener("resize", updatePosition);
+  window.removeEventListener("scroll", updatePosition);
 
   // Clear any remaining hover timers
   if (hoverTimer.value) {
@@ -411,7 +415,7 @@ const contentStyle = computed(() => {
 
   return {
     columnCount: props.columns,
-    columnGap: '1rem'
+    columnGap: "1rem",
   };
 });
 </script>

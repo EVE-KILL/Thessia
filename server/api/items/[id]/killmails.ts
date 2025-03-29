@@ -1,5 +1,5 @@
-import { Killmails } from "~/server/models/Killmails";
 import { InvTypes } from "~/server/models/InvTypes";
+import { Killmails } from "~/server/models/Killmails";
 
 /**
  * List of ship group IDs to identify ships vs. modules/items
@@ -22,25 +22,22 @@ export default defineCachedEventHandler(
         ? Number.parseInt(event.context.params.id)
         : null;
 
-      if (!typeId || isNaN(typeId)) {
+      if (!typeId || Number.isNaN(typeId)) {
         throw createError({
           statusCode: 400,
-          statusMessage: "Valid Type ID is required"
+          statusMessage: "Valid Type ID is required",
         });
       }
 
       // Parse limit parameter with default of 10 and max of 100
-      const limit = Math.min(
-        Math.max(Number.parseInt(query.limit as string || '10'), 1),
-        100
-      );
+      const limit = Math.min(Math.max(Number.parseInt((query.limit as string) || "10"), 1), 100);
 
       // Get item type information to determine if it's a ship
       const type = await InvTypes.findOne({ type_id: typeId }, { group_id: 1 }).lean();
       if (!type) {
         throw createError({
           statusCode: 404,
-          statusMessage: "Item type not found"
+          statusMessage: "Item type not found",
         });
       }
 
@@ -75,13 +72,15 @@ export default defineCachedEventHandler(
           "victim.corporation_id": 1,
           "victim.corporation_name": 1,
           "victim.alliance_id": 1,
-          "victim.alliance_name": 1
+          "victim.alliance_name": 1,
         },
         {
           limit: limit,
           sort: { kill_time: -1 }, // Sort by kill time descending for most recent first
-        }
-      ).hint(indexHint).lean();
+        },
+      )
+        .hint(indexHint)
+        .lean();
 
       // Return directly mapped results without pagination wrapping
       return killmails.map((killmail) => ({
@@ -107,14 +106,15 @@ export default defineCachedEventHandler(
       console.error(`Error fetching item killmails: ${error.message}`);
       throw createError({
         statusCode: 500,
-        statusMessage: "Error retrieving killmails for this item"
+        statusMessage: "Error retrieving killmails for this item",
       });
     }
   },
   {
     // Cache for 15 minutes
     maxAge: 15 * 60,
-    getKey: (event) => `${event.path}?${new URLSearchParams(getQuery(event) as Record<string, string>).toString()}`,
-    tags: ["item", "killmail"]
-  }
+    getKey: (event) =>
+      `${event.path}?${new URLSearchParams(getQuery(event) as Record<string, string>).toString()}`,
+    tags: ["item", "killmail"],
+  },
 );

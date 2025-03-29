@@ -41,12 +41,12 @@
 
 <script setup lang="ts">
 definePageMeta({
-  layout: 'default',
+  layout: "default",
 });
 
 const { t } = useI18n();
 
 useSeoMeta({
-  title: t('aboutPageTitle')
+  title: t("aboutPageTitle"),
 });
 </script>

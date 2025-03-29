@@ -1,5 +1,5 @@
-import { getFaction } from "~/server/helpers/ESIData";
 import { defineEventHandler } from "h3";
+import { getFaction } from "~/server/helpers/ESIData";
 
 export default defineEventHandler(async (event) => {
   const factionId: number | null = event.context.params?.id

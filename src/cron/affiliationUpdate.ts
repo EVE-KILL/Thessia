@@ -1,6 +1,6 @@
 import _ from "lodash";
-import { cliLogger } from "~/server/helpers/Logger";
 import { processChunk } from "~/server/helpers/Affiliation";
+import { cliLogger } from "~/server/helpers/Logger";
 import { createQueue } from "~/server/helpers/Queue";
 import { Characters } from "~/server/models/Characters";
 

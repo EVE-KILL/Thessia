@@ -300,11 +300,11 @@
 </template>
 
 <script setup lang="ts">
-import { useAuth } from '~/src/theme/modern/composables/useAuth';
-import { useI18n } from 'vue-i18n';
-import { marked } from 'marked';
-import DOMPurify from 'dompurify';
-import { useWebSocket } from '~/src/theme/modern/composables/useWebsocket';
+import DOMPurify from "dompurify";
+import { marked } from "marked";
+import { useI18n } from "vue-i18n";
+import { useAuth } from "~/src/theme/modern/composables/useAuth";
+import { useWebSocket } from "~/src/theme/modern/composables/useWebsocket";
 
 const { t } = useI18n();
 const route = useRoute();
@@ -314,18 +314,18 @@ const { isAuthenticated, currentUser, login, isAdministrator } = useAuth();
 const props = defineProps({
   killId: {
     type: Number,
-    required: true
-  }
+    required: true,
+  },
 });
 
 // State
 const comments = ref([]);
-const newComment = ref('');
+const newComment = ref("");
 const isSubmitting = ref(false);
-const errorMessage = ref('');
-const lastPostedComment = ref('');
+const errorMessage = ref("");
+const lastPostedComment = ref("");
 const commentLimit = 1000;
-const activeTab = ref('write'); // 'write' or 'preview'
+const activeTab = ref("write"); // 'write' or 'preview'
 const charactersRemaining = computed(() => commentLimit - newComment.value.length);
 const killIdentifier = computed(() => `kill:${props.killId}`);
 
@@ -334,7 +334,7 @@ const {
   isConnected: wsConnected,
   connectionAttempts: wsReconnectAttempts,
   isPaused: wsIsPaused,
-  sendMessage: wsSendMessage
+  sendMessage: wsSendMessage,
 } = useWebSocket({
   url: "/comments",
   autoConnect: true,
@@ -342,7 +342,7 @@ const {
   useGlobalInstance: true,
   globalRefKey: "comments",
   debug: false, // Disable debug logging
-  onMessage: handleWebSocketMessage
+  onMessage: handleWebSocketMessage,
 });
 
 // Fix layout juddering
@@ -351,9 +351,9 @@ const textareaHeight = ref<number | null>(null);
 const previewContainerRef = ref<HTMLElement | null>(null);
 
 // Modal state
-const activeModal = ref<'report' | 'delete' | null>(null);
+const activeModal = ref<"report" | "delete" | null>(null);
 const activeComment = ref<string | null>(null);
-const reportMessage = ref('');
+const reportMessage = ref("");
 const isDeleting = ref(false);
 const isReporting = ref(false);
 const reportTextarea = ref<HTMLTextAreaElement | null>(null);
@@ -372,39 +372,41 @@ interface MarkedToken {
 }
 
 // Define media types for better type safety
-type MediaType = 'image' | 'video' | 'gif' | 'iframe' | 'unknown';
+type MediaType = "image" | "video" | "gif" | "iframe" | "unknown";
 
 /**
  * Add autolink extension to handle raw URLs in text
  */
 marked.use({
-  extensions: [{
-    name: 'autolink',
-    level: 'inline',
-    start(src) {
-      return src.indexOf('http');
+  extensions: [
+    {
+      name: "autolink",
+      level: "inline",
+      start(src) {
+        return src.indexOf("http");
+      },
+      tokenizer(src) {
+        const urlRegex = /^(https?:\/\/[^\s<]+[^<.,:;"')\]\s])/;
+        const match = src.match(urlRegex);
+        if (match) {
+          return {
+            type: "link",
+            raw: match[0],
+            text: match[0],
+            href: match[0],
+            tokens: [
+              {
+                type: "text",
+                raw: match[0],
+                text: match[0],
+              },
+            ],
+          };
+        }
+        return false;
+      },
     },
-    tokenizer(src) {
-      const urlRegex = /^(https?:\/\/[^\s<]+[^<.,:;"')\]\s])/;
-      const match = src.match(urlRegex);
-      if (match) {
-        return {
-          type: 'link',
-          raw: match[0],
-          text: match[0],
-          href: match[0],
-          tokens: [
-            {
-              type: 'text',
-              raw: match[0],
-              text: match[0]
-            }
-          ]
-        };
-      }
-      return false;
-    }
-  }]
+  ],
 });
 
 /**
@@ -413,13 +415,13 @@ marked.use({
  * @returns Safe URL string
  */
 function extractUrl(token: any): string {
-  if (!token) return '';
+  if (!token) return "";
 
   // Handle different marked versions and token structures
-  if (typeof token === 'string') return token;
+  if (typeof token === "string") return token;
   if (token.raw) return token.raw;
   if (token.href) return token.href;
-  return '';
+  return "";
 }
 
 /**
@@ -428,12 +430,12 @@ function extractUrl(token: any): string {
  * @returns Safe text string
  */
 function extractText(token: any): string {
-  if (!token) return '';
+  if (!token) return "";
 
-  if (typeof token === 'string') return token;
+  if (typeof token === "string") return token;
   if (token.text) return token.text;
   if (token.raw) return token.raw;
-  return '';
+  return "";
 }
 
 /**
@@ -441,65 +443,74 @@ function extractText(token: any): string {
  * @param url - URL to analyze
  * @returns Media type and additional metadata
  */
-function detectMediaType(url: string): { type: MediaType, id?: string, matches?: RegExpMatchArray | null } {
+function detectMediaType(url: string): {
+  type: MediaType;
+  id?: string;
+  matches?: RegExpMatchArray | null;
+} {
   // YouTube (including shorts)
-  const youtubeMatch = url.match(/^https?:\/\/(www\.)?youtube\.com\/watch\?v=([a-zA-Z0-9_-]+)/) ||
-                       url.match(/^https?:\/\/(www\.)?youtu\.be\/([a-zA-Z0-9_-]+)/) ||
-                       url.match(/^https?:\/\/(www\.)?youtube\.com\/shorts\/([a-zA-Z0-9_-]+)/);
+  const youtubeMatch =
+    url.match(/^https?:\/\/(www\.)?youtube\.com\/watch\?v=([a-zA-Z0-9_-]+)/) ||
+    url.match(/^https?:\/\/(www\.)?youtu\.be\/([a-zA-Z0-9_-]+)/) ||
+    url.match(/^https?:\/\/(www\.)?youtube\.com\/shorts\/([a-zA-Z0-9_-]+)/);
   if (youtubeMatch) {
-    return { type: 'iframe', id: youtubeMatch[2], matches: youtubeMatch };
+    return { type: "iframe", id: youtubeMatch[2], matches: youtubeMatch };
   }
 
   // Imgur direct
-  const imgurDirectMatch = url.match(/^https?:\/\/(i\.)?imgur\.com\/([a-zA-Z0-9]+)(\.(jpeg|jpg|png|gif|mp4|webm))?$/i);
+  const imgurDirectMatch = url.match(
+    /^https?:\/\/(i\.)?imgur\.com\/([a-zA-Z0-9]+)(\.(jpeg|jpg|png|gif|mp4|webm))?$/i,
+  );
   if (imgurDirectMatch) {
-    const extension = imgurDirectMatch[3] || '.jpg';
-    const mediaType = extension.match(/\.(mp4|webm)$/i) ? 'video' : 'image';
+    const extension = imgurDirectMatch[3] || ".jpg";
+    const mediaType = extension.match(/\.(mp4|webm)$/i) ? "video" : "image";
     return { type: mediaType as MediaType, id: imgurDirectMatch[2], matches: imgurDirectMatch };
   }
 
   // Imgur gallery
   const imgurGalleryMatch = url.match(/^https?:\/\/(www\.)?imgur\.com\/(gallery|a)\/([^\/\s]+)/i);
   if (imgurGalleryMatch) {
-    return { type: 'iframe', id: imgurGalleryMatch[3], matches: imgurGalleryMatch };
+    return { type: "iframe", id: imgurGalleryMatch[3], matches: imgurGalleryMatch };
   }
 
   // Giphy complex URL
-  const complexGiphyMatch = url.match(/^https?:\/\/media[0-9]?\.giphy\.com\/media\/v[0-9]\..*?\/.*?\/giphy\.gif/);
+  const complexGiphyMatch = url.match(
+    /^https?:\/\/media[0-9]?\.giphy\.com\/media\/v[0-9]\..*?\/.*?\/giphy\.gif/,
+  );
   if (complexGiphyMatch) {
-    return { type: 'image', matches: complexGiphyMatch };
+    return { type: "image", matches: complexGiphyMatch };
   }
 
   // Giphy simple URL
-  const simpleGiphyMatch = !complexGiphyMatch && (
-    url.match(/^https?:\/\/(www\.)?giphy\.com\/gifs\/([a-zA-Z0-9]+-)*([a-zA-Z0-9]+)/) ||
-    url.match(/^https?:\/\/media[0-9]?\.giphy\.com\/media\/([a-zA-Z0-9]+)/)
-  );
+  const simpleGiphyMatch =
+    !complexGiphyMatch &&
+    (url.match(/^https?:\/\/(www\.)?giphy\.com\/gifs\/([a-zA-Z0-9]+-)*([a-zA-Z0-9]+)/) ||
+      url.match(/^https?:\/\/media[0-9]?\.giphy\.com\/media\/([a-zA-Z0-9]+)/));
   if (simpleGiphyMatch) {
     const giphyId = simpleGiphyMatch[simpleGiphyMatch.length - 1];
-    return { type: 'image', id: giphyId, matches: simpleGiphyMatch };
+    return { type: "image", id: giphyId, matches: simpleGiphyMatch };
   }
 
   // Tenor
   const tenorMatch = url.match(/^https?:\/\/(www\.)?tenor\.com\/view\/[a-zA-Z0-9-]+-([0-9]+)/);
   if (tenorMatch) {
-    return { type: 'iframe', id: tenorMatch[2], matches: tenorMatch };
+    return { type: "iframe", id: tenorMatch[2], matches: tenorMatch };
   }
 
   // Standard image
   const imageMatch = url.match(/\.(jpeg|jpg|gif|png)$/i);
   if (imageMatch) {
-    return { type: 'image', matches: imageMatch };
+    return { type: "image", matches: imageMatch };
   }
 
   // Standard video
   const videoMatch = url.match(/\.(mp4|webm)$/i);
   if (videoMatch) {
-    return { type: 'video', matches: videoMatch };
+    return { type: "video", matches: videoMatch };
   }
 
   // Default - regular link
-  return { type: 'unknown' };
+  return { type: "unknown" };
 }
 
 /**
@@ -533,8 +544,8 @@ function renderImgurDirect(imgurId: string, extension: string, originalUrl: stri
                 </a>
               </div>
             </div>`;
-  } else {
-    return `<div class="image-container">
+  }
+  return `<div class="image-container">
               <img src="https://i.imgur.com/${imgurId}${extension}" alt="Imgur Image" class="max-w-full h-auto" />
               <div class="media-source">
                 <a href="${originalUrl}" target="_blank" rel="noopener noreferrer" class="source-link">
@@ -542,7 +553,6 @@ function renderImgurDirect(imgurId: string, extension: string, originalUrl: stri
                 </a>
               </div>
             </div>`;
-  }
 }
 
 /**
@@ -569,12 +579,12 @@ function renderImgurGallery(originalUrl: string): string {
       // Update the placeholder with the resolved media
       if (placeholder) {
         if (media) {
-          if (media.type === 'video') {
+          if (media.type === "video") {
             placeholder.innerHTML = `<video autoplay loop muted playsinline controls class="max-w-full">
                                     <source src="${media.url}" type="video/mp4">
                                     Your browser doesn't support HTML5 video.
                                    </video>`;
-          } else if (media.type === 'gif') {
+          } else if (media.type === "gif") {
             placeholder.innerHTML = `<img src="${media.url}" alt="Imgur GIF" class="max-w-full h-auto" />`;
           } else {
             placeholder.innerHTML = `<img src="${media.url}" alt="Imgur Image" class="max-w-full h-auto" />`;
@@ -612,9 +622,7 @@ function renderImgurGallery(originalUrl: string): string {
  * Generate HTML for Giphy media
  */
 function renderGiphy(url: string, giphyId?: string): string {
-  const imgSrc = giphyId
-    ? `https://media.giphy.com/media/${giphyId}/giphy.gif`
-    : url;
+  const imgSrc = giphyId ? `https://media.giphy.com/media/${giphyId}/giphy.gif` : url;
 
   return `<div class="gif-container">
             <img src="${imgSrc}" alt="GIPHY" class="max-w-full h-auto" />
@@ -661,43 +669,43 @@ function renderVideo(url: string): string {
 }
 
 // Custom link renderer to handle both older and newer marked versions
-renderer.link = function(href: any, title: any, text: any): string {
+renderer.link = (href: any, title: any, text: any): string => {
   // Extract URL and text safely from potentially complex tokens
   const url = extractUrl(href);
   const linkText = extractText(text);
-  const linkTitle = title || '';
+  const linkTitle = title || "";
 
   // If URL is not valid, return a basic link or text
   if (!url) {
-    return `<span>${linkText || 'link'}</span>`;
+    return `<span>${linkText || "link"}</span>`;
   }
 
   // Detect media type and get appropriate renderer
   const { type, id, matches } = detectMediaType(url);
 
   switch (type) {
-    case 'iframe':
-      if (url.includes('youtube.com') || url.includes('youtu.be')) {
+    case "iframe":
+      if (url.includes("youtube.com") || url.includes("youtu.be")) {
         return id ? renderYouTube(id) : renderImage(url, linkText);
       }
-      if (url.includes('tenor.com') && id) {
+      if (url.includes("tenor.com") && id) {
         return renderTenor(id, url);
       }
-      if (url.includes('imgur.com') && !url.includes('i.imgur.com')) {
+      if (url.includes("imgur.com") && !url.includes("i.imgur.com")) {
         return renderImgurGallery(url);
       }
       break;
 
-    case 'video':
+    case "video":
       return renderVideo(url);
 
-    case 'image':
-      if (url.includes('imgur.com') && matches) {
+    case "image":
+      if (url.includes("imgur.com") && matches) {
         const imgurId = matches[2];
-        const extension = matches[3] || '.jpg';
+        const extension = matches[3] || ".jpg";
         return renderImgurDirect(imgurId, extension, url);
       }
-      if (url.includes('giphy.com') || url.includes('media.giphy.com')) {
+      if (url.includes("giphy.com") || url.includes("media.giphy.com")) {
         return renderGiphy(url, id);
       }
       return renderImage(url, linkText);
@@ -715,18 +723,18 @@ marked.use({ renderer });
  */
 function convertImgurToJsonUrl(url: string): string {
   // Remove query parameters and hash fragments
-  const cleanUrl = url.split(/[?#]/)[0].replace(/\/+$/, '');
+  const cleanUrl = url.split(/[?#]/)[0].replace(/\/+$/, "");
 
   // Handle direct i.imgur.com links
-  if (cleanUrl.includes('i.imgur.com/')) {
-    const hash = cleanUrl.split('/').pop()?.split('.')[0];
+  if (cleanUrl.includes("i.imgur.com/")) {
+    const hash = cleanUrl.split("/").pop()?.split(".")[0];
     if (hash) {
       return `https://imgur.com/gallery/${hash}.json`;
     }
   }
 
   // Add .json if needed
-  if (!cleanUrl.endsWith('.json')) {
+  if (!cleanUrl.endsWith(".json")) {
     return `${cleanUrl}.json`;
   }
 
@@ -736,55 +744,54 @@ function convertImgurToJsonUrl(url: string): string {
 /**
  * Extract media information from Imgur JSON data
  */
-function extractImgurMedia(imageData: any): {url: string, type: string} | null {
+function extractImgurMedia(imageData: any): { url: string; type: string } | null {
   try {
     // For albums, get the first image
     if (imageData.is_album && imageData.album_images?.images?.length > 0) {
       const firstImage = imageData.album_images.images[0];
       const hash = firstImage.hash;
-      const ext = firstImage.ext || '.jpg';
+      const ext = firstImage.ext || ".jpg";
 
       // Determine media type
-      let type = 'image';
-      if (ext === '.mp4' || ext === '.webm' || firstImage.has_sound) {
-        type = 'video';
+      let type = "image";
+      if (ext === ".mp4" || ext === ".webm" || firstImage.has_sound) {
+        type = "video";
       } else if (firstImage.animated) {
-        type = firstImage.prefer_video ? 'video' : 'gif';
+        type = firstImage.prefer_video ? "video" : "gif";
       }
 
       return {
         url: `https://i.imgur.com/${hash}${ext}`,
-        type
+        type,
       };
     }
     // For single images
-    else {
-      const hash = imageData.album_cover || imageData.hash;
-      const ext = imageData.ext || '.jpg';
 
-      // Determine media type
-      let type = 'image';
-      if (ext === '.mp4' || ext === '.webm' || imageData.has_sound) {
-        type = 'video';
-      } else if (imageData.animated) {
-        type = imageData.prefer_video ? 'video' : 'gif';
-      }
+    const hash = imageData.album_cover || imageData.hash;
+    const ext = imageData.ext || ".jpg";
 
-      return {
-        url: `https://i.imgur.com/${hash}${ext}`,
-        type
-      };
+    // Determine media type
+    let type = "image";
+    if (ext === ".mp4" || ext === ".webm" || imageData.has_sound) {
+      type = "video";
+    } else if (imageData.animated) {
+      type = imageData.prefer_video ? "video" : "gif";
     }
+
+    return {
+      url: `https://i.imgur.com/${hash}${ext}`,
+      type,
+    };
   } catch (error) {
     return null;
   }
 }
 
 // Create a reactive map to store resolved Imgur URLs with media type information
-const resolvedImgurMedia = ref(new Map<string, {url: string, type: string}>());
+const resolvedImgurMedia = ref(new Map<string, { url: string; type: string }>());
 
 // Function to resolve an Imgur gallery/album URL to its media
-async function resolveImgurUrl(url: string): Promise<{url: string, type: string} | null> {
+async function resolveImgurUrl(url: string): Promise<{ url: string; type: string } | null> {
   try {
     // Generate a unique cache key for this specific URL
     const cacheKey = url.trim();
@@ -795,25 +802,25 @@ async function resolveImgurUrl(url: string): Promise<{url: string, type: string}
     }
 
     // Use server proxy to fetch Imgur data (avoids CORS issues)
-    const { data, error } = await useFetch('/api/proxy/imgur', {
-      method: 'POST',
+    const { data, error } = await useFetch("/api/proxy/imgur", {
+      method: "POST",
       body: { url: cacheKey },
       headers: {
-        'Content-Type': 'application/json'
+        "Content-Type": "application/json",
       },
       // Critical: Tell useFetch not to deduplicate or cache the request
       key: `imgur-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`,
-      cache: 'no-store'
+      cache: "no-store",
     });
 
     if (error.value) {
       return null;
     }
 
-    if (data.value && data.value.mediaUrl) {
+    if (data.value?.mediaUrl) {
       const result = {
         url: data.value.mediaUrl,
-        type: data.value.mediaType || 'image'
+        type: data.value.mediaType || "image",
       };
 
       // Cache the resolved media info in the component
@@ -830,42 +837,60 @@ async function resolveImgurUrl(url: string): Promise<{url: string, type: string}
 
 // Computed
 const isSubmittingDisabled = computed(() => {
-  return isSubmitting.value ||
-    newComment.value.trim() === '' ||
+  return (
+    isSubmitting.value ||
+    newComment.value.trim() === "" ||
     charactersRemaining.value < 0 ||
-    newComment.value.trim() === lastPostedComment.value;
+    newComment.value.trim() === lastPostedComment.value
+  );
 });
 
 // Methods
 function formatDate(dateString: string) {
-  if (!dateString) return '';
+  if (!dateString) return "";
 
   const date = new Date(dateString);
   return new Intl.DateTimeFormat(undefined, {
-    year: 'numeric',
-    month: 'short',
-    day: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit'
+    year: "numeric",
+    month: "short",
+    day: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
   }).format(date);
 }
 
 function renderMarkdown(text: string): string {
-  if (!text) return '';
+  if (!text) return "";
 
   // Convert markdown to HTML and sanitize
   const rawHTML = marked(text);
   return DOMPurify.sanitize(rawHTML, {
-    ADD_TAGS: ['iframe', 'blockquote', 'video', 'source'],
-    ADD_ATTR: ['allow', 'allowfullscreen', 'frameborder', 'scrolling', 'target', 'rel', 'async',
-               'charset', 'data-id', 'lang', 'controls', 'loop', 'muted', 'playsinline', 'type', 'src'],
-    FORBID_TAGS: ['script', 'style', 'form', 'input', 'button', 'textarea', 'select', 'option'],
-    FORBID_ATTR: ['onerror', 'onload', 'onclick', 'onmouseover', 'onmouseout', 'eval']
+    ADD_TAGS: ["iframe", "blockquote", "video", "source"],
+    ADD_ATTR: [
+      "allow",
+      "allowfullscreen",
+      "frameborder",
+      "scrolling",
+      "target",
+      "rel",
+      "async",
+      "charset",
+      "data-id",
+      "lang",
+      "controls",
+      "loop",
+      "muted",
+      "playsinline",
+      "type",
+      "src",
+    ],
+    FORBID_TAGS: ["script", "style", "form", "input", "button", "textarea", "select", "option"],
+    FORBID_ATTR: ["onerror", "onload", "onclick", "onmouseover", "onmouseout", "eval"],
   });
 }
 
 function insertMarkdown(prefix: string, suffix: string) {
-  const textarea = document.querySelector('textarea');
+  const textarea = document.querySelector("textarea");
   if (!textarea) return;
 
   const start = textarea.selectionStart;
@@ -874,7 +899,9 @@ function insertMarkdown(prefix: string, suffix: string) {
 
   newComment.value =
     newComment.value.substring(0, start) +
-    prefix + selection + suffix +
+    prefix +
+    selection +
+    suffix +
     newComment.value.substring(end);
 
   // Set cursor position to right after the inserted text
@@ -885,7 +912,7 @@ function insertMarkdown(prefix: string, suffix: string) {
 }
 
 function insertImage() {
-  const url = prompt(t('markdown_editor.image_url_prompt'), 'https://');
+  const url = prompt(t("markdown_editor.image_url_prompt"), "https://");
   if (url) {
     const markdown = `![Image](${url})`;
     insertTextAtCursor(markdown);
@@ -893,42 +920,40 @@ function insertImage() {
 }
 
 function insertYoutube() {
-  const url = prompt(t('markdown_editor.youtube_url_prompt'), 'https://www.youtube.com/watch?v=');
+  const url = prompt(t("markdown_editor.youtube_url_prompt"), "https://www.youtube.com/watch?v=");
   if (url) {
     insertTextAtCursor(url);
   }
 }
 
 function insertImgur() {
-  const url = prompt(t('markdown_editor.imgur_url_prompt'), 'https://imgur.com/');
+  const url = prompt(t("markdown_editor.imgur_url_prompt"), "https://imgur.com/");
   if (url) {
     insertTextAtCursor(url);
   }
 }
 
 function insertGiphy() {
-  const url = prompt(t('markdown_editor.giphy_url_prompt'), 'https://giphy.com/gifs/');
+  const url = prompt(t("markdown_editor.giphy_url_prompt"), "https://giphy.com/gifs/");
   if (url) {
     insertTextAtCursor(url);
   }
 }
 
 function insertTenor() {
-  const url = prompt(t('markdown_editor.tenor_url_prompt'), 'https://tenor.com/view/');
+  const url = prompt(t("markdown_editor.tenor_url_prompt"), "https://tenor.com/view/");
   if (url) {
     insertTextAtCursor(url);
   }
 }
 
 function insertTextAtCursor(text: string) {
-  const textarea = document.querySelector('textarea');
+  const textarea = document.querySelector("textarea");
   if (!textarea) return;
 
   const start = textarea.selectionStart;
   newComment.value =
-    newComment.value.substring(0, start) +
-    text +
-    newComment.value.substring(start);
+    newComment.value.substring(0, start) + text + newComment.value.substring(start);
 }
 
 async function fetchComments() {
@@ -941,7 +966,7 @@ async function fetchComments() {
 
     comments.value = data.value || [];
   } catch (err) {
-    console.error('Error fetching comments:', err);
+    console.error("Error fetching comments:", err);
   }
 }
 
@@ -950,23 +975,23 @@ async function postComment() {
 
   // Check for duplicate comment
   if (newComment.value.trim() === lastPostedComment.value) {
-    errorMessage.value = t('duplicate_comment_error');
+    errorMessage.value = t("duplicate_comment_error");
     return;
   }
 
   isSubmitting.value = true;
-  errorMessage.value = '';
+  errorMessage.value = "";
 
   try {
     // Post JSON data to the API
     const { data, error } = await useFetch(`/api/comments/${killIdentifier.value}`, {
-      method: 'POST',
+      method: "POST",
       body: {
-        comment: newComment.value.trim()
+        comment: newComment.value.trim(),
       },
       headers: {
-        'Content-Type': 'application/json'
-      }
+        "Content-Type": "application/json",
+      },
     });
 
     if (error.value) {
@@ -977,14 +1002,16 @@ async function postComment() {
         errorMessage.value = match ? match[1] : error.value.message;
 
         // If the error is about moderation, format it nicely
-        if (errorMessage.value.includes('potentially harmful content')) {
-          const moderationMatch = errorMessage.value.match(/Comment contains potentially harmful content.*?$/);
+        if (errorMessage.value.includes("potentially harmful content")) {
+          const moderationMatch = errorMessage.value.match(
+            /Comment contains potentially harmful content.*?$/,
+          );
           if (moderationMatch) {
             errorMessage.value = moderationMatch[0];
           }
         }
       } else {
-        errorMessage.value = t('comment_post_error');
+        errorMessage.value = t("comment_post_error");
       }
       return;
     }
@@ -992,10 +1019,10 @@ async function postComment() {
     // Don't need to manually add the comment here anymore
     // as the WebSocket will send us the update
     lastPostedComment.value = newComment.value.trim();
-    newComment.value = '';
-    activeTab.value = 'write';  // Reset to write tab after posting
+    newComment.value = "";
+    activeTab.value = "write"; // Reset to write tab after posting
   } catch (err) {
-    errorMessage.value = t('comment_post_error');
+    errorMessage.value = t("comment_post_error");
   } finally {
     isSubmitting.value = false;
   }
@@ -1004,14 +1031,14 @@ async function postComment() {
 // Fix layout juddering when typing
 function updateEditorHeight() {
   nextTick(() => {
-    const textarea = document.querySelector('.editor-container textarea');
+    const textarea = document.querySelector(".editor-container textarea");
 
     if (textarea && !textareaHeight.value) {
       // Save initial height when first loaded
       textareaHeight.value = textarea.clientHeight;
 
       // Also save the container height
-      const container = document.querySelector('.editor-container');
+      const container = document.querySelector(".editor-container");
       if (container) {
         editorContainerHeight.value = container.clientHeight;
       }
@@ -1028,13 +1055,13 @@ function updateEditorHeight() {
 function handleWebSocketMessage(data) {
   try {
     // Process event based on type
-    if (data.eventType === 'new') {
+    if (data.eventType === "new") {
       handleNewComment(data.comment);
-    } else if (data.eventType === 'deleted') {
+    } else if (data.eventType === "deleted") {
       handleDeletedComment(data.comment);
     }
   } catch (err) {
-    console.error('❌ Comments: Error processing WebSocket message:', err);
+    console.error("❌ Comments: Error processing WebSocket message:", err);
   }
 }
 
@@ -1043,7 +1070,7 @@ function handleNewComment(comment: any) {
   // Only process if this comment is for the current kill
   if (comment.killIdentifier === killIdentifier.value) {
     // Check if we don't already have this comment (prevent duplicates)
-    if (!comments.value.some(c => c.identifier === comment.identifier)) {
+    if (!comments.value.some((c) => c.identifier === comment.identifier)) {
       // Add to beginning of array (newest first)
       comments.value = [comment, ...comments.value];
     }
@@ -1055,7 +1082,7 @@ function handleDeletedComment(comment: any) {
   // Only process if this comment is for the current kill
   if (comment.killIdentifier === killIdentifier.value) {
     // Remove the deleted comment from the list
-    comments.value = comments.value.filter(c => c.identifier !== comment.identifier);
+    comments.value = comments.value.filter((c) => c.identifier !== comment.identifier);
   }
 }
 
@@ -1063,16 +1090,16 @@ function handleDeletedComment(comment: any) {
 function scrollToCommentFragment() {
   if (import.meta.client) {
     const fragment = window.location.hash;
-    if (fragment && fragment.startsWith('#comment-')) {
+    if (fragment?.startsWith("#comment-")) {
       nextTick(() => {
         const commentId = fragment.slice(1); // Remove the # symbol
         const commentElement = document.getElementById(commentId);
         if (commentElement) {
-          commentElement.scrollIntoView({ behavior: 'smooth' });
+          commentElement.scrollIntoView({ behavior: "smooth" });
           // Add a highlight effect
-          commentElement.classList.add('highlighted-comment');
+          commentElement.classList.add("highlighted-comment");
           setTimeout(() => {
-            commentElement.classList.remove('highlighted-comment');
+            commentElement.classList.remove("highlighted-comment");
           }, 2000);
         }
       });
@@ -1083,8 +1110,8 @@ function scrollToCommentFragment() {
 // Modal control functions
 function openReportModal(identifier: string) {
   activeComment.value = identifier;
-  activeModal.value = 'report';
-  reportMessage.value = '';
+  activeModal.value = "report";
+  reportMessage.value = "";
 
   nextTick(() => {
     if (reportTextarea.value) {
@@ -1095,13 +1122,13 @@ function openReportModal(identifier: string) {
 
 function openDeleteModal(identifier: string) {
   activeComment.value = identifier;
-  activeModal.value = 'delete';
+  activeModal.value = "delete";
 }
 
 function closeModal() {
   activeModal.value = null;
   activeComment.value = null;
-  reportMessage.value = '';
+  reportMessage.value = "";
 }
 
 // Submit comment report to the API
@@ -1111,23 +1138,23 @@ async function submitReport() {
   isReporting.value = true;
 
   try {
-    const { data, error } = await useFetch('/api/comments/report', {
-      method: 'POST',
+    const { data, error } = await useFetch("/api/comments/report", {
+      method: "POST",
       body: {
         identifier: activeComment.value,
-        reportMessage: reportMessage.value.trim()
-      }
+        reportMessage: reportMessage.value.trim(),
+      },
     });
 
     if (error.value) {
-      alert(t('comment.report_error'));
+      alert(t("comment.report_error"));
       return;
     }
 
     closeModal();
-    alert(t('comment.report_success'));
+    alert(t("comment.report_success"));
   } catch (err) {
-    alert(t('comment.report_error'));
+    alert(t("comment.report_error"));
   } finally {
     isReporting.value = false;
   }
@@ -1140,21 +1167,21 @@ async function confirmDelete() {
   isDeleting.value = true;
 
   try {
-    const { data, error } = await useFetch('/api/comments/delete', {
-      method: 'POST',
+    const { data, error } = await useFetch("/api/comments/delete", {
+      method: "POST",
       body: {
-        identifier: activeComment.value
-      }
+        identifier: activeComment.value,
+      },
     });
 
     if (error.value) {
-      alert(t('comment.delete_error'));
+      alert(t("comment.delete_error"));
       return;
     }
 
     closeModal();
   } catch (err) {
-    alert(t('comment.delete_error'));
+    alert(t("comment.delete_error"));
   } finally {
     isDeleting.value = false;
   }
@@ -1167,7 +1194,7 @@ function loginToComment() {
 
 // Event handlers for keyboard events
 const handleKeyDown = (event: KeyboardEvent) => {
-  if (event.key === 'Escape' && activeModal.value) {
+  if (event.key === "Escape" && activeModal.value) {
     closeModal();
   }
 };
@@ -1185,15 +1212,19 @@ onMounted(() => {
     }, 500);
 
     // Also watch for comments loading and try again
-    watch(() => comments.value.length, () => {
-      scrollToCommentFragment();
-    }, { immediate: true });
+    watch(
+      () => comments.value.length,
+      () => {
+        scrollToCommentFragment();
+      },
+      { immediate: true },
+    );
 
     // Listen for hash changes
-    window.addEventListener('hashchange', scrollToCommentFragment);
+    window.addEventListener("hashchange", scrollToCommentFragment);
 
     // Add keyboard event listeners
-    window.addEventListener('keydown', handleKeyDown);
+    window.addEventListener("keydown", handleKeyDown);
   }
 
   // Fix for layout juddering
@@ -1202,19 +1233,19 @@ onMounted(() => {
 
 // Complete cleanup on unmount
 onBeforeUnmount(() => {
-  console.log('🗑️ Comments: Component unmounting');
+  console.log("🗑️ Comments: Component unmounting");
 
   // Remove all event listeners
-  window.removeEventListener('hashchange', scrollToCommentFragment);
-  window.removeEventListener('keydown', handleKeyDown);
+  window.removeEventListener("hashchange", scrollToCommentFragment);
+  window.removeEventListener("keydown", handleKeyDown);
 });
 
 // Add Imgur embed script to handle album embeds
-if (import.meta.client && !document.getElementById('imgur-embed-script')) {
-  const imgurScript = document.createElement('script');
-  imgurScript.id = 'imgur-embed-script';
+if (import.meta.client && !document.getElementById("imgur-embed-script")) {
+  const imgurScript = document.createElement("script");
+  imgurScript.id = "imgur-embed-script";
   imgurScript.async = true;
-  imgurScript.src = '//s.imgur.com/min/embed.js';
+  imgurScript.src = "//s.imgur.com/min/embed.js";
   document.head.appendChild(imgurScript);
 }
 </script>

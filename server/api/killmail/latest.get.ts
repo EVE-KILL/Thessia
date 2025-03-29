@@ -1,5 +1,5 @@
-import { Killmails } from "~/server/models/Killmails";
 import type { IKillmail } from "~/server/interfaces/IKillmail";
+import { Killmails } from "~/server/models/Killmails";
 
 export default defineEventHandler(async () => {
   const latestKillmails: IKillmail[] = await Killmails.find(

@@ -1,5 +1,5 @@
-import { Prices } from "~/server/models/Prices";
 import { defineEventHandler } from "h3";
+import { Prices } from "~/server/models/Prices";
 
 export default defineEventHandler(async () => {
   const pipeline = [

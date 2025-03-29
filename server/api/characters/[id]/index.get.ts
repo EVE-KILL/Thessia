@@ -1,5 +1,5 @@
-import { getCharacter } from "~/server/helpers/ESIData";
 import { defineEventHandler } from "h3";
+import { getCharacter } from "~/server/helpers/ESIData";
 
 export default defineEventHandler(async (event) => {
   const characterId: number | null = event.context.params?.id

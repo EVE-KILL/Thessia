@@ -1,9 +1,9 @@
 import type { Job } from "bullmq";
+import { cliLogger } from "~/server/helpers/Logger";
 import { createWorker } from "~/server/helpers/Queue";
+import { updateAlliance } from "~/server/queue/Alliance";
 import { updateCharacter, updateCharacterHistory } from "~/server/queue/Character";
 import { updateCorporation, updateCorporationHistory } from "~/server/queue/Corporation";
-import { updateAlliance } from "~/server/queue/Alliance";
-import { cliLogger } from "~/server/helpers/Logger";
 
 export default {
   name: "process:entities",

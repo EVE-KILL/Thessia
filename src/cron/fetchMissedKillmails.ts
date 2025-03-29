@@ -1,6 +1,6 @@
 import { cliLogger } from "~/server/helpers/Logger";
-import { addKillmail } from "~/server/queue/Killmail";
 import { KillmailsESI } from "~/server/models/KillmailsESI";
+import { addKillmail } from "~/server/queue/Killmail";
 
 export default {
   name: "fetchMissedKillmails",

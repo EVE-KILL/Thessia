@@ -1,9 +1,9 @@
 <script setup lang="ts">
-import type { IKillList } from '~/interfaces/IKillList';
-import type { IKillmail } from '~/interfaces/IKillmail';
-import type { IAttacker } from '~/interfaces/IAttacker';
-import moment from 'moment';
-import { useWebSocket } from '~/src/theme/modern/composables/useWebsocket';
+import moment from "moment";
+import type { IAttacker } from "~/interfaces/IAttacker";
+import type { IKillList } from "~/interfaces/IKillList";
+import type { IKillmail } from "~/interfaces/IKillmail";
+import { useWebSocket } from "~/src/theme/modern/composables/useWebsocket";
 
 const { t, locale } = useI18n();
 const currentLocale = computed(() => locale.value);
@@ -11,28 +11,28 @@ const currentLocale = computed(() => locale.value);
 // Define props with defaults
 const props = defineProps({
   combinedKillsAndLosses: { type: Boolean, default: false },
-  combinedVictimType: { type: String, default: 'character' },
+  combinedVictimType: { type: String, default: "character" },
   combinedVictimId: { type: Number, default: null },
-  killlistType: { type: String, default: 'latest' },
-  wsFilter: { type: String, default: 'all' },
+  killlistType: { type: String, default: "latest" },
+  wsFilter: { type: String, default: "all" },
   wsDisabled: { type: Boolean, default: false },
   externalKilllistData: { type: Array as PropType<IKillList[]>, default: null },
-  limit: { type: Number, default: 100 }
+  limit: { type: Number, default: 100 },
 });
 
 // Pagination and display settings
 const pagination = ref({
   pageIndex: 0,
-  pageSize: 10
+  pageSize: 10,
 });
 
 const pageSizeItems = [
-  { label: '10', id: 10 },
-  { label: '50', id: 50 },
-  { label: '100', id: 100 },
-  { label: '250', id: 250 },
-  { label: '500', id: 500 },
-  { label: '1000', id: 1000 }
+  { label: "10", id: 10 },
+  { label: "50", id: 50 },
+  { label: "100", id: 100 },
+  { label: "250", id: 250 },
+  { label: "500", id: 500 },
+  { label: "1000", id: 1000 },
 ];
 // Use the limit prop as the default page size
 const selectedPageSize = ref(props.limit);
@@ -42,7 +42,7 @@ const currentPage = computed(() => pagination.value.pageIndex + 1);
 const queryParams = computed(() => ({
   type: props.killlistType,
   page: currentPage.value,
-  limit: selectedPageSize.value
+  limit: selectedPageSize.value,
 }));
 
 // Determine if we should use external data
@@ -52,11 +52,16 @@ const useExternalData = computed(() => props.externalKilllistData !== null);
 const localKilllistData = ref<IKillList[]>([]);
 
 // Fetch kill list data only if not using external data
-const { data: fetchedData, pending, error, refresh } = !useExternalData.value
-  ? useFetch<IKillList[]>('/api/killlist', {
-      key: 'killlist',
+const {
+  data: fetchedData,
+  pending,
+  error,
+  refresh,
+} = !useExternalData.value
+  ? useFetch<IKillList[]>("/api/killlist", {
+      key: "killlist",
       query: queryParams,
-      watch: [queryParams]
+      watch: [queryParams],
     })
   : { data: ref(null), pending: ref(false), error: ref(null), refresh: () => Promise.resolve() };
 
@@ -66,18 +71,26 @@ const killlistData = computed(() => {
 });
 
 // Update local data when external data changes
-watch(() => props.externalKilllistData, (newData) => {
-  if (newData && useExternalData.value) {
-    localKilllistData.value = [...newData];
-  }
-}, { immediate: true });
+watch(
+  () => props.externalKilllistData,
+  (newData) => {
+    if (newData && useExternalData.value) {
+      localKilllistData.value = [...newData];
+    }
+  },
+  { immediate: true },
+);
 
 // Update local data when fetched data changes
-watch(fetchedData, (newData) => {
-  if (newData && !useExternalData.value) {
-    localKilllistData.value = [...newData];
-  }
-}, { immediate: true });
+watch(
+  fetchedData,
+  (newData) => {
+    if (newData && !useExternalData.value) {
+      localKilllistData.value = [...newData];
+    }
+  },
+  { immediate: true },
+);
 
 // Update pagination when page size changes
 watch(selectedPageSize, async (newSize) => {
@@ -89,7 +102,7 @@ watch(selectedPageSize, async (newSize) => {
     try {
       await refresh();
     } catch (err) {
-      console.error('Error refreshing data after page size change:', err);
+      console.error("Error refreshing data after page size change:", err);
     }
   }
 });
@@ -107,25 +120,25 @@ const {
   isPaused: isWebSocketPaused,
   pause: pauseWs,
   resume: resumeWs,
-  sendMessage: wsSendMessage
+  sendMessage: wsSendMessage,
 } = useWebSocket({
   url: "wss://eve-kill.com/killmails",
-  initialMessage: props.wsFilter === 'latest' ? 'all' : props.wsFilter,
+  initialMessage: props.wsFilter === "latest" ? "all" : props.wsFilter,
   autoConnect: !props.wsDisabled && !useExternalData.value,
   handleBfCache: true,
   useGlobalInstance: true,
   globalRefKey: "killList",
   debug: false, // Disable debug logging
-  onMessage: handleWebSocketMessage
+  onMessage: handleWebSocketMessage,
 });
 
 // Pause WebSocket processing with reason
-const pauseWebSocket = (reason = 'hover') => {
+const pauseWebSocket = (reason = "hover") => {
   if (props.wsDisabled || useExternalData.value) return;
 
   pauseWs();
 
-  if (reason === 'manual') {
+  if (reason === "manual") {
     manuallyPaused.value = true;
   }
 };
@@ -144,11 +157,11 @@ const resumeWebSocket = () => {
   // Process any pending messages
   if (pendingMessages.value.length > 0 && !useExternalData.value) {
     // Sort by kill time to maintain chronological order
-    pendingMessages.value.sort((a, b) =>
-      new Date(b.kill_time).getTime() - new Date(a.kill_time).getTime()
+    pendingMessages.value.sort(
+      (a, b) => new Date(b.kill_time).getTime() - new Date(a.kill_time).getTime(),
     );
 
-    pendingMessages.value.forEach(killmail => {
+    pendingMessages.value.forEach((killmail) => {
       processKillmail(killmail);
     });
 
@@ -157,15 +170,18 @@ const resumeWebSocket = () => {
 };
 
 // Watch page changes to control WebSocket pausing
-watch(() => pagination.value.pageIndex, (newPageIndex) => {
-  if (newPageIndex > 0) {
-    // Automatically pause on pages > 1
-    pauseWebSocket('pagination');
-  } else if (!manuallyPaused.value) {
-    // Resume on page 1 (unless manually paused)
-    resumeWebSocket();
-  }
-});
+watch(
+  () => pagination.value.pageIndex,
+  (newPageIndex) => {
+    if (newPageIndex > 0) {
+      // Automatically pause on pages > 1
+      pauseWebSocket("pagination");
+    } else if (!manuallyPaused.value) {
+      // Resume on page 1 (unless manually paused)
+      resumeWebSocket();
+    }
+  },
+);
 
 // Toggle WebSocket mode (manually pause/resume)
 const toggleWebSocketMode = () => {
@@ -178,28 +194,43 @@ const toggleWebSocketMode = () => {
       resumeWebSocket();
     }
   } else {
-    pauseWebSocket('manual');
+    pauseWebSocket("manual");
   }
 };
 
 // Mouse event handlers
 const handleMouseEnter = () => {
-  if (pagination.value.pageIndex === 0 && !manuallyPaused.value && !props.wsDisabled && !useExternalData.value) {
-    pauseWebSocket('hover');
+  if (
+    pagination.value.pageIndex === 0 &&
+    !manuallyPaused.value &&
+    !props.wsDisabled &&
+    !useExternalData.value
+  ) {
+    pauseWebSocket("hover");
     clearMouseMoveTimer();
   }
 };
 
 const handleMouseLeave = () => {
-  if (pagination.value.pageIndex === 0 && !manuallyPaused.value && !props.wsDisabled && !useExternalData.value) {
+  if (
+    pagination.value.pageIndex === 0 &&
+    !manuallyPaused.value &&
+    !props.wsDisabled &&
+    !useExternalData.value
+  ) {
     resumeWebSocket();
     clearMouseMoveTimer();
   }
 };
 
 const handleMouseMove = () => {
-  if (isWebSocketPaused.value && pagination.value.pageIndex === 0 &&
-      !manuallyPaused.value && !props.wsDisabled && !useExternalData.value) {
+  if (
+    isWebSocketPaused.value &&
+    pagination.value.pageIndex === 0 &&
+    !manuallyPaused.value &&
+    !props.wsDisabled &&
+    !useExternalData.value
+  ) {
     clearMouseMoveTimer();
     mouseMoveTimer.value = setTimeout(() => {
       resumeWebSocket();
@@ -217,7 +248,7 @@ const clearMouseMoveTimer = () => {
 // Handle WebSocket messages
 function handleWebSocketMessage(data) {
   try {
-    if (data.type !== 'killmail') return;
+    if (data.type !== "killmail") return;
 
     const killmail: IKillmail = data.data;
 
@@ -233,7 +264,7 @@ function handleWebSocketMessage(data) {
       processKillmail(killmail);
     }
   } catch (err) {
-    console.error('❌ KillList: Error processing WebSocket message:', err);
+    console.error("❌ KillList: Error processing WebSocket message:", err);
   }
 }
 
@@ -245,7 +276,8 @@ const processKillmail = (killmail: IKillmail) => {
   if (!killlistData.value || killlistData.value.length === 0) {
     if (useExternalData.value) {
       return;
-    } else if (fetchedData.value) {
+    }
+    if (fetchedData.value) {
       fetchedData.value = [formattedKill, ...(fetchedData.value || [])];
       wsNewKillCount.value++;
       ensureKillListLimit();
@@ -260,7 +292,8 @@ const processKillmail = (killmail: IKillmail) => {
   if (newKillTime > latestKillTime) {
     if (useExternalData.value) {
       return;
-    } else if (fetchedData.value) {
+    }
+    if (fetchedData.value) {
       fetchedData.value = [formattedKill, ...(fetchedData.value || [])];
       wsNewKillCount.value++;
       ensureKillListLimit();
@@ -270,7 +303,9 @@ const processKillmail = (killmail: IKillmail) => {
 
 // Format killmail object to KillList format
 const formatKillmail = (killmail: IKillmail): IKillList => {
-  const finalBlowAttacker: IAttacker | undefined = killmail.attackers.find(attacker => attacker.final_blow);
+  const finalBlowAttacker: IAttacker | undefined = killmail.attackers.find(
+    (attacker) => attacker.final_blow,
+  );
 
   return {
     killmail_id: killmail.killmail_id,
@@ -293,21 +328,21 @@ const formatKillmail = (killmail: IKillmail): IKillList => {
       corporation_id: killmail.victim.corporation_id,
       corporation_name: killmail.victim.corporation_name,
       alliance_id: killmail.victim.alliance_id || 0,
-      alliance_name: killmail.victim.alliance_name || '',
+      alliance_name: killmail.victim.alliance_name || "",
       faction_id: killmail.victim.faction_id || 0,
-      faction_name: killmail.victim.faction_name || '',
+      faction_name: killmail.victim.faction_name || "",
     },
     finalblow: {
       character_id: finalBlowAttacker?.character_id || 0,
-      character_name: finalBlowAttacker?.character_name || '',
+      character_name: finalBlowAttacker?.character_name || "",
       corporation_id: finalBlowAttacker?.corporation_id || 0,
-      corporation_name: finalBlowAttacker?.corporation_name || '',
+      corporation_name: finalBlowAttacker?.corporation_name || "",
       alliance_id: finalBlowAttacker?.alliance_id || 0,
-      alliance_name: finalBlowAttacker?.alliance_name || '',
+      alliance_name: finalBlowAttacker?.alliance_name || "",
       faction_id: finalBlowAttacker?.faction_id || 0,
-      faction_name: finalBlowAttacker?.faction_name || '',
+      faction_name: finalBlowAttacker?.faction_name || "",
       ship_group_name: finalBlowAttacker?.ship_group_name || {},
-    }
+    },
   };
 };
 
@@ -335,8 +370,8 @@ const resetNewKillCount = () => {
 
 // Helper functions for data formatting
 const getLocalizedString = (obj: any, locale: string): string => {
-  if (!obj) return '';
-  return obj[locale] || obj['en'] || '';
+  if (!obj) return "";
+  return obj[locale] || obj.en || "";
 };
 
 const formatIsk = (value: number): string => {
@@ -352,31 +387,33 @@ const formatDate = (date: string): string => {
 };
 
 const truncateString = (str: any, num: number): string => {
-  const stringifiedStr = String(str || '');
+  const stringifiedStr = String(str || "");
   return stringifiedStr.length <= num ? stringifiedStr : `${stringifiedStr.slice(0, num)}...`;
 };
 
 const isCombinedLoss = (kill: any): boolean => {
-  return props.combinedKillsAndLosses &&
-    kill.victim[`${props.combinedVictimType}_id`] === props.combinedVictimId;
+  return (
+    props.combinedKillsAndLosses &&
+    kill.victim[`${props.combinedVictimType}_id`] === props.combinedVictimId
+  );
 };
 
 const getSecurityColor = (security: number): string => {
-  if (security >= 0.9) return 'dark:text-yellow-400 text-yellow-600';
-  if (security >= 0.8) return 'dark:text-green-400 text-green-600';
-  if (security >= 0.7) return 'dark:text-green-500 text-green-700';
-  if (security >= 0.6) return 'dark:text-lime-400 text-lime-600';
-  if (security >= 0.5) return 'dark:text-yellow-300 text-yellow-500';
-  if (security >= 0.4) return 'dark:text-amber-400 text-amber-600';
-  if (security >= 0.3) return 'dark:text-orange-400 text-orange-600';
-  if (security >= 0.2) return 'dark:text-orange-500 text-orange-700';
-  if (security >= 0.1) return 'dark:text-red-400 text-red-600';
-  return 'dark:text-red-500 text-red-700';
+  if (security >= 0.9) return "dark:text-yellow-400 text-yellow-600";
+  if (security >= 0.8) return "dark:text-green-400 text-green-600";
+  if (security >= 0.7) return "dark:text-green-500 text-green-700";
+  if (security >= 0.6) return "dark:text-lime-400 text-lime-600";
+  if (security >= 0.5) return "dark:text-yellow-300 text-yellow-500";
+  if (security >= 0.4) return "dark:text-amber-400 text-amber-600";
+  if (security >= 0.3) return "dark:text-orange-400 text-orange-600";
+  if (security >= 0.2) return "dark:text-orange-500 text-orange-700";
+  if (security >= 0.1) return "dark:text-red-400 text-red-600";
+  return "dark:text-red-500 text-red-700";
 };
 
 // Navigation handler
 const openInNewTab = (url: string) => {
-  window.open(url, '_blank', 'noopener');
+  window.open(url, "_blank", "noopener");
 };
 
 // Update pagination structure to work with UPagination
@@ -399,20 +436,23 @@ watch(currentPageIndex, (newPage) => {
 
   // Handle WebSocket state based on page
   if (newPageIndex > 0) {
-    pauseWebSocket('pagination');
+    pauseWebSocket("pagination");
   } else if (!manuallyPaused.value) {
     resumeWebSocket();
   }
 });
 
 // Watch pagination.pageIndex changes to keep currentPageIndex in sync
-watch(() => pagination.value.pageIndex, (newPageIndex) => {
-  // Convert 0-based pageIndex to 1-based page
-  const newPage = pageIndexToPage(newPageIndex);
-  if (currentPageIndex.value !== newPage) {
-    currentPageIndex.value = newPage;
-  }
-});
+watch(
+  () => pagination.value.pageIndex,
+  (newPageIndex) => {
+    // Convert 0-based pageIndex to 1-based page
+    const newPage = pageIndexToPage(newPageIndex);
+    if (currentPageIndex.value !== newPage) {
+      currentPageIndex.value = newPage;
+    }
+  },
+);
 
 // Reset WebSocket state when returning to page 1
 const resetWebSocketState = () => {
@@ -426,49 +466,44 @@ const resetWebSocketState = () => {
 // Define table columns for the EkTable component
 const tableColumns = [
   {
-    id: 'ship',
-    header: computed(() => t('ship')),
-    width: '20%'
+    id: "ship",
+    header: computed(() => t("ship")),
+    width: "20%",
   },
   {
-    id: 'victim',
-    header: computed(() => t('victim')),
-    width: '25%'
+    id: "victim",
+    header: computed(() => t("victim")),
+    width: "25%",
   },
   {
-    id: 'finalBlow',
-    header: computed(() => t('finalBlow')),
-    width: '25%'
+    id: "finalBlow",
+    header: computed(() => t("finalBlow")),
+    width: "25%",
   },
   {
-    id: 'location',
-    header: computed(() => t('location')),
-    width: '15%'
+    id: "location",
+    header: computed(() => t("location")),
+    width: "15%",
   },
   {
-    id: 'details',
-    header: computed(() => t('details')),
-    headerClass: 'text-right',
-    width: '15%'
+    id: "details",
+    header: computed(() => t("details")),
+    headerClass: "text-right",
+    width: "15%",
   },
 ];
 
 // Get row class based on whether it's a combined loss
 const getRowClass = (item) => {
-  return isCombinedLoss(item) ? 'bg-darkred' : '';
+  return isCombinedLoss(item) ? "bg-darkred" : "";
 };
 
 // WebSocket status message
 const wsStatusMessage = computed(() => {
   if (!wsConnected.value) {
-    return wsReconnectAttempts.value > 0
-      ? t('reconnecting')
-      : t('disconnected');
-  } else {
-    return isWebSocketPaused.value
-      ? t('paused')
-      : t('connected');
+    return wsReconnectAttempts.value > 0 ? t("reconnecting") : t("disconnected");
   }
+  return isWebSocketPaused.value ? t("paused") : t("connected");
 });
 
 // Generate kill link
@@ -481,11 +516,11 @@ const generateKillLink = (item: any): string | null => {
 onMounted(() => {
   // Only set up mouse handlers if WebSocket is enabled and we're not using external data
   if (!props.wsDisabled && !useExternalData.value) {
-    const tableContainer = document.querySelector('.kill-list-container');
+    const tableContainer = document.querySelector(".kill-list-container");
     if (tableContainer) {
-      tableContainer.addEventListener('mouseenter', handleMouseEnter);
-      tableContainer.addEventListener('mouseleave', handleMouseLeave);
-      tableContainer.addEventListener('mousemove', handleMouseMove);
+      tableContainer.addEventListener("mouseenter", handleMouseEnter);
+      tableContainer.addEventListener("mouseleave", handleMouseLeave);
+      tableContainer.addEventListener("mousemove", handleMouseMove);
     }
   }
 });
@@ -496,11 +531,11 @@ onBeforeUnmount(() => {
 
   // Remove mouse event listeners
   if (!props.wsDisabled && !useExternalData.value) {
-    const tableContainer = document.querySelector('.kill-list-container');
+    const tableContainer = document.querySelector(".kill-list-container");
     if (tableContainer) {
-      tableContainer.removeEventListener('mouseenter', handleMouseEnter);
-      tableContainer.removeEventListener('mouseleave', handleMouseLeave);
-      tableContainer.removeEventListener('mousemove', handleMouseMove);
+      tableContainer.removeEventListener("mouseenter", handleMouseEnter);
+      tableContainer.removeEventListener("mouseleave", handleMouseLeave);
+      tableContainer.removeEventListener("mousemove", handleMouseMove);
     }
   }
 });

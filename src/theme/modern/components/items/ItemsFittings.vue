@@ -35,17 +35,17 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue';
+import { ref } from "vue";
 
 const props = defineProps({
   item: {
     type: Object,
-    default: null
+    default: null,
   },
   loading: {
     type: Boolean,
-    default: false
-  }
+    default: false,
+  },
 });
 
 // Interface for fitting data
@@ -61,7 +61,11 @@ const isLoading = ref(true);
 const error = ref(null);
 
 // Fetch fittings data when item is available
-const { data, pending, error: fetchError } = await useAsyncData(
+const {
+  data,
+  pending,
+  error: fetchError,
+} = await useAsyncData(
   `item-fittings-${props.item?.type_id}`,
   async () => {
     if (!props.item?.type_id) return [];
@@ -76,7 +80,7 @@ const { data, pending, error: fetchError } = await useAsyncData(
   {
     watch: [() => props.item?.type_id],
     server: false,
-  }
+  },
 );
 
 // Set error from fetch error
@@ -92,12 +96,16 @@ watch([() => props.loading, pending], ([propsLoading, asyncPending]) => {
 });
 
 // Update fittings when data changes
-watch(data, (newData) => {
-  if (newData) {
-    fittings.value = newData;
-    isLoading.value = false;
-  }
-}, { immediate: true });
+watch(
+  data,
+  (newData) => {
+    if (newData) {
+      fittings.value = newData;
+      isLoading.value = false;
+    }
+  },
+  { immediate: true },
+);
 
 // Generate eveship.fit URL
 function generateEveShipFitUrl(killmailId: number, killmailHash: string): string {

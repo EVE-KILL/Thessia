@@ -1,8 +1,8 @@
-import { cliLogger } from "~/server/helpers/Logger";
 import { esiFetcher } from "~/server/helpers/ESIFetcher";
+import { cliLogger } from "~/server/helpers/Logger";
 import type { IWar } from "~/server/interfaces/IWar";
-import { queueUpdateWar } from "~/server/queue/War";
 import { Wars } from "~/server/models/Wars";
+import { queueUpdateWar } from "~/server/queue/War";
 
 export default {
   name: "fetchWars",

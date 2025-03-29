@@ -21,12 +21,12 @@ export default defineCachedEventHandler(
       const query = getQuery(event);
 
       // Validate required parameters
-      const requiredParams = ['system_id', 'x', 'y', 'z', 'distanceInMeters'];
-      const missingParams = requiredParams.filter(param => !query[param]);
+      const requiredParams = ["system_id", "x", "y", "z", "distanceInMeters"];
+      const missingParams = requiredParams.filter((param) => !query[param]);
       if (missingParams.length > 0) {
         throw createError({
           statusCode: 400,
-          statusMessage: `Missing required parameters: ${missingParams.join(', ')}`
+          statusMessage: `Missing required parameters: ${missingParams.join(", ")}`,
         });
       }
 
@@ -39,10 +39,16 @@ export default defineCachedEventHandler(
       const days = Number.parseInt(query.days as string) || 1;
       const limit = Number.parseInt(query.limit as string) || 10;
 
-      if (isNaN(systemId) || isNaN(distanceInMeters) || isNaN(x) || isNaN(y) || isNaN(z)) {
+      if (
+        Number.isNaN(systemId) ||
+        Number.isNaN(distanceInMeters) ||
+        Number.isNaN(x) ||
+        Number.isNaN(y) ||
+        Number.isNaN(z)
+      ) {
         throw createError({
           statusCode: 400,
-          statusMessage: 'Invalid parameter format. Numeric values expected.'
+          statusMessage: "Invalid parameter format. Numeric values expected.",
         });
       }
 
@@ -69,7 +75,7 @@ export default defineCachedEventHandler(
             total_value: 1,
             victim: {
               ship_id: 1,
-              ship_name: 1
+              ship_name: 1,
             },
             distance: {
               $sqrt: {
@@ -87,20 +93,20 @@ export default defineCachedEventHandler(
         { $sort: { distance: 1 } }, // Sort by closest first
         { $limit: Math.min(limit, 50) }, // Cap at 50 to prevent excessive results
       ]).option({
-        hint: { system_id: -1, x: -1, y: -1, z: -1 } // Use our spatial index
+        hint: { system_id: -1, x: -1, y: -1, z: -1 }, // Use our spatial index
       });
 
       if (results.length === 0) {
         return {
           results: [],
           count: 0,
-          message: 'No killmails found near these coordinates within the specified distance.'
+          message: "No killmails found near these coordinates within the specified distance.",
         };
       }
 
       return {
         results,
-        count: results.length
+        count: results.length,
       };
     } catch (error) {
       if (error.statusCode) {
@@ -110,14 +116,15 @@ export default defineCachedEventHandler(
       console.error(`Error in nearCoordinates: ${error.message}`);
       throw createError({
         statusCode: 500,
-        statusMessage: 'Error while searching for nearby killmails'
+        statusMessage: "Error while searching for nearby killmails",
       });
     }
   },
   {
     maxAge: 5 * 60, // Cache for 5 minutes
     // Include all query parameters in the cache key
-    getKey: (event) => `${event.path}?${new URLSearchParams(getQuery(event) as Record<string, string>).toString()}`,
-    tags: ['spatial', 'killmail']
-  }
+    getKey: (event) =>
+      `${event.path}?${new URLSearchParams(getQuery(event) as Record<string, string>).toString()}`,
+    tags: ["spatial", "killmail"],
+  },
 );

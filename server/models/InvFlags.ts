@@ -1,6 +1,6 @@
 // models/InvFlags.ts
 
-import { Schema, model, type Document, type Model } from "mongoose";
+import { type Document, type Model, Schema, model } from "mongoose";
 import type { IInvFlag } from "~/server/interfaces/IInvFlag"; // Adjust the path as necessary
 
 // Extend the IInvFlag interface with Mongoose's Document interface

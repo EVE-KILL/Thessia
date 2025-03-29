@@ -1,5 +1,5 @@
-import fs from 'node:fs';
-import path from 'node:path';
+import fs from "node:fs";
+import path from "node:path";
 
 /**
  * Downloads the Cloudflare beacon script, modifies it to use our proxy,
@@ -10,8 +10,8 @@ import path from 'node:path';
  */
 export async function downloadAndModifyCloudflareBeacon(publicDir: string): Promise<void> {
   try {
-    console.log('Downloading and processing Cloudflare beacon script...');
-    const beaconUrl = 'https://static.cloudflareinsights.com/beacon.min.js';
+    console.log("Downloading and processing Cloudflare beacon script...");
+    const beaconUrl = "https://static.cloudflareinsights.com/beacon.min.js";
 
     // Fetch the original beacon script
     const response = await fetch(beaconUrl);
@@ -25,21 +25,21 @@ export async function downloadAndModifyCloudflareBeacon(publicDir: string): Prom
     // Replace the Cloudflare insights URL with our proxy endpoint
     beaconScript = beaconScript.replace(
       /https:\/\/cloudflareinsights\.com\/cdn-cgi\/rum/g,
-      '/api/site/cloudflare/rumproxy'
+      "/api/site/cloudflare/rumproxy",
     );
 
     // Ensure the _ca directory exists inside the publicDir
-    const outputDir = path.join(publicDir, '_ca');
+    const outputDir = path.join(publicDir, "_ca");
     if (!fs.existsSync(outputDir)) {
       fs.mkdirSync(outputDir, { recursive: true });
     }
 
     // Save the modified script
-    const outputPath = path.join(outputDir, 'cloudflare-beacon.js');
+    const outputPath = path.join(outputDir, "cloudflare-beacon.js");
     fs.writeFileSync(outputPath, beaconScript);
     console.log(`Cloudflare beacon script saved to ${outputPath}`);
   } catch (error) {
-    console.error('Failed to process Cloudflare beacon script:', error);
+    console.error("Failed to process Cloudflare beacon script:", error);
   }
 }
 
@@ -50,8 +50,7 @@ export async function downloadAndModifyCloudflareBeacon(publicDir: string): Prom
  */
 export function generateCloudflareBeacon(nitro: any): void {
   // Execute the download and modification only during build time
-  downloadAndModifyCloudflareBeacon(nitro.options.output.publicDir)
-    .catch(error => {
-      console.error('Error in generateCloudflareBeacon:', error);
-    });
+  downloadAndModifyCloudflareBeacon(nitro.options.output.publicDir).catch((error) => {
+    console.error("Error in generateCloudflareBeacon:", error);
+  });
 }

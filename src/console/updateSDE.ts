@@ -1,8 +1,8 @@
+import { Database } from "bun:sqlite";
 import { exec } from "node:child_process";
 import fs from "node:fs";
 import { Readable, pipeline } from "node:stream";
 import { promisify } from "node:util";
-import { Database } from "bun:sqlite";
 import bz2 from "unbzip2-stream";
 // Import Models
 import { Celestials } from "~/server/models/Celestials";
@@ -132,7 +132,8 @@ async function invTypes() {
 
 async function factions() {
   const db = await connectToDatabase();
-  const results = db.query(`
+  const results = db
+    .query(`
         SELECT
         chrFactions.factionID AS faction_id,
         chrFactions.factionName AS name,
@@ -146,7 +147,8 @@ async function factions() {
         chrFactions.militiaCorporationID AS militia_corporation_id,
         chrFactions.iconID AS icon_id
         FROM chrFactions
-    `).all();
+    `)
+    .all();
 
   console.log(`Found ${results.length} factions`);
 
@@ -168,14 +170,16 @@ async function factions() {
 
 async function invFlags() {
   const db = await connectToDatabase();
-  const results = db.query(`
+  const results = db
+    .query(`
         SELECT
         invFlags.flagID AS flag_id,
         invFlags.flagName AS flag_name,
         invFlags.flagText AS flag_text,
         invFlags.orderID AS order_id
         FROM invFlags
-    `).all();
+    `)
+    .all();
 
   console.log(`Found ${results.length} invFlags`);
 
@@ -226,7 +230,8 @@ async function invGroups() {
 async function updateCelestials() {
   const db = await connectToDatabase();
 
-  const results = db.query(`
+  const results = db
+    .query(`
         SELECT
             mapDenormalize.itemID AS item_id,
             invNames.itemName AS item_name,
@@ -248,7 +253,8 @@ async function updateCelestials() {
             JOIN mapSolarSystems ON mapSolarSystems.solarSystemID = mapDenormalize.solarSystemID
             JOIN mapRegions ON mapDenormalize.regionID = mapRegions.regionID
             JOIN mapConstellations ON mapDenormalize.constellationID = mapConstellations.constellationID
-    `).all();
+    `)
+    .all();
 
   // Emit the count of found results
   console.log(`Found ${results.length} Celestials`);
@@ -273,7 +279,8 @@ async function updateCelestials() {
 
 async function updateSolarSystems() {
   const db = await connectToDatabase();
-  const results = db.query(`
+  const results = db
+    .query(`
         SELECT
         mapSolarSystems.regionID AS region_id,
         mapSolarSystems.constellationID AS constellation_id,
@@ -302,7 +309,8 @@ async function updateSolarSystems() {
         mapSolarSystems.sunTypeID AS sun_type_id,
         mapSolarSystems.securityClass AS security_class
         FROM mapSolarSystems
-    `).all();
+    `)
+    .all();
 
   console.log(`Found ${results.length} SolarSystems`);
 
@@ -352,7 +360,8 @@ async function updateRegions() {
 
 async function updateConstellations() {
   const db = await connectToDatabase();
-  const results = db.query(`
+  const results = db
+    .query(`
         SELECT
         mapConstellations.regionID AS region_id,
         mapConstellations.constellationID AS constellation_id,
@@ -369,7 +378,8 @@ async function updateConstellations() {
         mapConstellations.factionID AS faction_id,
         mapConstellations.radius AS radius
         FROM mapConstellations
-    `).all();
+    `)
+    .all();
 
   console.log(`Found ${results.length} Constellations`);
 

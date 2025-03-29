@@ -1,25 +1,25 @@
 export default defineEventHandler(async (event) => {
   try {
-    const cookieName = 'evelogin';
+    const cookieName = "evelogin";
 
     // Delete the cookie by setting it with a past expiration
-    setCookie(event, cookieName, '', {
+    setCookie(event, cookieName, "", {
       httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'lax',
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "lax",
       maxAge: -1, // Expired
-      path: '/'
+      path: "/",
     });
 
     return {
       success: true,
-      message: 'Logged out successfully'
+      message: "Logged out successfully",
     };
   } catch (error) {
-    console.debug('[Auth] Logout error:', error);
+    console.debug("[Auth] Logout error:", error);
     return {
       success: false,
-      message: 'An error occurred during logout'
+      message: "An error occurred during logout",
     };
   }
 });

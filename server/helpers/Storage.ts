@@ -10,7 +10,8 @@ export class RedisStorage {
 
   // Private properties for pub/sub functionality
   private subscribeClient: Redis | null = null;
-  private channelCallbacks: Map<string, Array<(message: string, channel: string) => void>> = new Map();
+  private channelCallbacks: Map<string, Array<(message: string, channel: string) => void>> =
+    new Map();
 
   // Private constructor to prevent direct instantiation
   public constructor() {
@@ -35,7 +36,7 @@ export class RedisStorage {
   }
 
   // Redis operations
-  async set(key: string, value: any, ttl: number = 0): Promise<void> {
+  async set(key: string, value: any, ttl = 0): Promise<void> {
     if (ttl === 0) {
       // Set the value without expiration
       await this.client.set(key, value);
@@ -61,21 +62,21 @@ export class RedisStorage {
       const parsedInfo: Record<string, any> = {};
 
       // Parse the INFO command output which is formatted as string with sections
-      const sections = info.split('#');
+      const sections = info.split("#");
 
-      sections.forEach(section => {
-        const lines = section.split('\r\n').filter(Boolean);
+      sections.forEach((section) => {
+        const lines = section.split("\r\n").filter(Boolean);
         if (lines.length > 0) {
           const sectionName = lines[0].toLowerCase().trim();
           parsedInfo[sectionName] = {};
 
           for (let i = 1; i < lines.length; i++) {
             const line = lines[i];
-            if (line && line.includes(':')) {
-              const [key, value] = line.split(':');
+            if (line?.includes(":")) {
+              const [key, value] = line.split(":");
               // Convert numeric values to numbers
               const numValue = Number(value);
-              parsedInfo[sectionName][key] = isNaN(numValue) ? value : numValue;
+              parsedInfo[sectionName][key] = Number.isNaN(numValue) ? value : numValue;
             }
           }
         }
@@ -83,7 +84,7 @@ export class RedisStorage {
 
       return parsedInfo;
     } catch (err) {
-      cliLogger.error('Failed to get Redis stats:', err);
+      cliLogger.error("Failed to get Redis stats:", err);
       return {};
     }
   }
@@ -95,7 +96,7 @@ export class RedisStorage {
    * @param message The message to publish (will be stringified)
    */
   async publish(channel: string, message: any): Promise<number> {
-    const messageString = typeof message === 'string' ? message : JSON.stringify(message);
+    const messageString = typeof message === "string" ? message : JSON.stringify(message);
     return await this.client.publish(channel, messageString);
   }
 
@@ -104,7 +105,10 @@ export class RedisStorage {
    * @param channel The channel to subscribe to
    * @param callback The callback to execute when a message is received
    */
-  async subscribe(channel: string, callback: (message: string, channel: string) => void): Promise<void> {
+  async subscribe(
+    channel: string,
+    callback: (message: string, channel: string) => void,
+  ): Promise<void> {
     // Create a duplicate client for subscriptions if one doesn't exist yet
     if (!this.subscribeClient) {
       this.subscribeClient = new Redis({
@@ -114,7 +118,7 @@ export class RedisStorage {
       });
 
       // Set up the message handler
-      this.subscribeClient.on('message', (channel, message) => {
+      this.subscribeClient.on("message", (channel, message) => {
         // Find and execute the callback for this channel
         const channelCallbacks = this.channelCallbacks.get(channel) || [];
         for (const callback of channelCallbacks) {
@@ -137,13 +141,16 @@ export class RedisStorage {
    * @param channel The channel to unsubscribe from
    * @param callback Optional specific callback to remove
    */
-  async unsubscribe(channel: string, callback?: (message: string, channel: string) => void): Promise<void> {
+  async unsubscribe(
+    channel: string,
+    callback?: (message: string, channel: string) => void,
+  ): Promise<void> {
     if (!this.subscribeClient) return;
 
     if (callback) {
       // Remove specific callback
       const callbacks = this.channelCallbacks.get(channel) || [];
-      const updatedCallbacks = callbacks.filter(cb => cb !== callback);
+      const updatedCallbacks = callbacks.filter((cb) => cb !== callback);
 
       if (updatedCallbacks.length === 0) {
         // No more callbacks, unsubscribe from channel
@@ -170,7 +177,7 @@ export class RedisStorage {
 }
 
 // Define a constant for the killmail channel
-export const KILLMAIL_PUBSUB_CHANNEL = 'killmail-broadcasts';
+export const KILLMAIL_PUBSUB_CHANNEL = "killmail-broadcasts";
 
 // Add this constant to the file's exports:
-export const COMMENT_PUBSUB_CHANNEL = 'comments:events';
+export const COMMENT_PUBSUB_CHANNEL = "comments:events";

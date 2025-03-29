@@ -1,4 +1,4 @@
-import { useState } from '#app';
+import { useState } from "#app";
 
 export interface UserData {
   characterId: number | null;
@@ -18,10 +18,10 @@ export interface UserData {
  */
 export function useAuth() {
   // Access global auth state
-  const authenticated = useState<boolean>('auth.authenticated');
-  const loading = useState<boolean>('auth.loading');
-  const user = useState<UserData>('auth.user');
-  const authError = useState<string | null>('auth.error');
+  const authenticated = useState<boolean>("auth.authenticated");
+  const loading = useState<boolean>("auth.loading");
+  const user = useState<UserData>("auth.user");
+  const authError = useState<string | null>("auth.error");
 
   /**
    * Check/refresh the user's authentication status
@@ -32,24 +32,24 @@ export function useAuth() {
     loading.value = true;
 
     try {
-      const { data, error } = await useFetch('/api/auth/me', {
-        credentials: 'include'
+      const { data, error } = await useFetch("/api/auth/me", {
+        credentials: "include",
       });
 
       if (error.value) {
-        authError.value = error.value.message || 'Authentication error';
+        authError.value = error.value.message || "Authentication error";
         authenticated.value = false;
         return;
       }
 
-      if (data.value && data.value.authenticated && data.value.user) {
+      if (data.value?.authenticated && data.value.user) {
         authenticated.value = true;
         user.value = {
           characterId: data.value.user.characterId,
           characterName: data.value.user.characterName,
           corporationName: data.value.user.corporationName,
           corporationId: data.value.user.corporationId,
-          allianceName: data.value.user.allianceName || '',
+          allianceName: data.value.user.allianceName || "",
           allianceId: data.value.user.allianceId || 0,
           scopes: data.value.user.scopes || [],
           canFetchCorporationKillmails: data.value.user.canFetchCorporationKillmails,
@@ -61,7 +61,7 @@ export function useAuth() {
       }
     } catch (err) {
       authenticated.value = false;
-      authError.value = 'Failed to validate authentication';
+      authError.value = "Failed to validate authentication";
     } finally {
       loading.value = false;
     }
@@ -74,16 +74,16 @@ export function useAuth() {
    */
   const login = async (redirectUrl: string | null = null, customScopes?: string[]) => {
     try {
-      const { data, error } = await useFetch('/api/auth/loginurl', {
-        method: 'GET',
+      const { data, error } = await useFetch("/api/auth/loginurl", {
+        method: "GET",
         params: {
-          redirect: redirectUrl || (import.meta.client ? window.location.pathname : '/'),
-          scopes: customScopes ? customScopes.join(',') : undefined,
+          redirect: redirectUrl || (import.meta.client ? window.location.pathname : "/"),
+          scopes: customScopes ? customScopes.join(",") : undefined,
         },
       });
 
       if (error.value) {
-        authError.value = error.value.message || 'Login error';
+        authError.value = error.value.message || "Login error";
         return;
       }
 
@@ -91,7 +91,7 @@ export function useAuth() {
         window.location.href = data.value.url;
       }
     } catch (err) {
-      authError.value = 'Failed to initiate login';
+      authError.value = "Failed to initiate login";
     }
   };
 
@@ -102,10 +102,10 @@ export function useAuth() {
     loading.value = true;
 
     try {
-      const { data, error } = await useFetch('/api/auth/logout');
+      const { data, error } = await useFetch("/api/auth/logout");
 
       if (error.value) {
-        authError.value = error.value.message || 'Logout error';
+        authError.value = error.value.message || "Logout error";
         return;
       }
 
@@ -126,10 +126,9 @@ export function useAuth() {
       authError.value = null;
 
       // Return the user to the frontpage
-      window.location.href = '/';
-
+      window.location.href = "/";
     } catch (err) {
-      authError.value = 'Failed to logout';
+      authError.value = "Failed to logout";
     } finally {
       loading.value = false;
     }

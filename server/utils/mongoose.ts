@@ -1,4 +1,4 @@
-import { Schema, type SchemaDefinition, type SchemaOptions, model, type Model } from "mongoose";
+import { type Model, Schema, type SchemaDefinition, type SchemaOptions, model } from "mongoose";
 
 interface DefineModel<T> {
   name: string;

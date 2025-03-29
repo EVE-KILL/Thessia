@@ -1,4 +1,4 @@
-import { Schema, model, type Document, type Model } from "mongoose";
+import { type Document, type Model, Schema, model } from "mongoose";
 import type { ISolarSystem } from "~/server/interfaces/ISolarSystem"; // Adjust the path as necessary
 
 export interface ISolarSystemDocument extends ISolarSystem, Document {}

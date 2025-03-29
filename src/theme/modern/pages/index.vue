@@ -132,25 +132,25 @@ const { isMobile } = useResponsive();
 
 // Create the tabs configuration for mobile view
 const tabItems = ref([
-    {
-        key: 'topLists',
-        label: t('topLists'),
-        icon: 'i-lucide-list-ordered'
-    },
-    {
-        key: 'kills',
-        label: t('kills'),
-        icon: 'i-lucide-swords'
-    },
-    {
-        key: 'most-valuable',
-        label: t('mostValuable'),
-        icon: 'i-lucide-layout-dashboard'
-    }
+  {
+    key: "topLists",
+    label: t("topLists"),
+    icon: "i-lucide-list-ordered",
+  },
+  {
+    key: "kills",
+    label: t("kills"),
+    icon: "i-lucide-swords",
+  },
+  {
+    key: "most-valuable",
+    label: t("mostValuable"),
+    icon: "i-lucide-layout-dashboard",
+  },
 ]);
 
 useSeoMeta({
-    title: t('homePageTitle')
+  title: t("homePageTitle"),
 });
 </script>
 

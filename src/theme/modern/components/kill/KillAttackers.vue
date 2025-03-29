@@ -304,7 +304,7 @@
 </template>
 
 <script setup lang="ts">
-import type { IKillmail, IAttacker } from '~/server/interfaces/IKillmail';
+import type { IAttacker, IKillmail } from "~/server/interfaces/IKillmail";
 
 // i18n setup
 const { t, locale } = useI18n();
@@ -312,8 +312,8 @@ const currentLocale = computed(() => locale.value);
 
 // Props definition - accept either full killmail or just attackers array
 const props = defineProps<{
-    killmail?: IKillmail | null;
-    attackers?: IAttacker[];
+  killmail?: IKillmail | null;
+  attackers?: IAttacker[];
 }>();
 
 // State for collapsible sections - changed to false (collapsed by default)
@@ -321,200 +321,205 @@ const isOrganizationsOpen = ref(false);
 
 // Function to toggle organizations visibility
 function toggleOrganizations() {
-    isOrganizationsOpen.value = !isOrganizationsOpen.value;
+  isOrganizationsOpen.value = !isOrganizationsOpen.value;
 }
 
 // Derive attackers from either props source
 const attackers = computed<IAttacker[]>(() => {
-    if (props.attackers && props.attackers.length > 0) {
-        return props.attackers;
-    }
-    return props.killmail?.attackers || [];
+  if (props.attackers && props.attackers.length > 0) {
+    return props.attackers;
+  }
+  return props.killmail?.attackers || [];
 });
 
 // Sort attackers by damage only (don't prioritize final blow)
 const sortedAttackers = computed(() => {
-    return [...attackers.value].sort((a, b) => {
-        // Sort only by damage done (highest first)
-        return (b.damage_done || 0) - (a.damage_done || 0);
-    });
+  return [...attackers.value].sort((a, b) => {
+    // Sort only by damage done (highest first)
+    return (b.damage_done || 0) - (a.damage_done || 0);
+  });
 });
 
 // Calculate total damage for percentages
 const totalDamage = computed(() => {
-    return attackers.value.reduce((sum, attacker) => sum + (attacker.damage_done || 0), 0);
+  return attackers.value.reduce((sum, attacker) => sum + (attacker.damage_done || 0), 0);
 });
 
 // Find final blow attacker
 const finalBlowAttacker = computed<IAttacker | null>(() => {
-    return attackers.value.find(attacker => attacker.final_blow) || null;
+  return attackers.value.find((attacker) => attacker.final_blow) || null;
 });
 
 // Find top damage attacker
 const topDamageAttacker = computed<IAttacker | null>(() => {
-    if (attackers.value.length === 0) return null;
+  if (attackers.value.length === 0) return null;
 
-    return attackers.value.reduce((highest, current) => {
-        return (current.damage_done || 0) > (highest.damage_done || 0) ? current : highest;
-    }, attackers.value[0]);
+  return attackers.value.reduce((highest, current) => {
+    return (current.damage_done || 0) > (highest.damage_done || 0) ? current : highest;
+  }, attackers.value[0]);
 });
 
 // Tab state for key attackers
-const activeKeyAttacker = ref('final-blow');
+const activeKeyAttacker = ref("final-blow");
 const keyAttackerTabs = computed(() => [
-    {
-        label: t('finalBlow'),
-        value: 'final-blow',
-        slot: 'final-blow'
-    },
-    {
-        label: t('topDamage'),
-        value: 'top-damage',
-        slot: 'top-damage'
-    }
+  {
+    label: t("finalBlow"),
+    value: "final-blow",
+    slot: "final-blow",
+  },
+  {
+    label: t("topDamage"),
+    value: "top-damage",
+    slot: "top-damage",
+  },
 ]);
 
 // Tabs UI configuration similar to parent
 const tabsUi = {
-    list: {
-        base: 'mb-1 border-b border-background-700',
-        background: '',
-        rounded: '',
-        shadow: '',
-        padding: 'p-0',
-        height: 'h-auto',
-        width: 'w-full',
-        marker: {
-            background: 'dark:bg-primary-500 bg-primary-500',
-            rounded: 'rounded-none',
-            shadow: ''
-        }
+  list: {
+    base: "mb-1 border-b border-background-700",
+    background: "",
+    rounded: "",
+    shadow: "",
+    padding: "p-0",
+    height: "h-auto",
+    width: "w-full",
+    marker: {
+      background: "dark:bg-primary-500 bg-primary-500",
+      rounded: "rounded-none",
+      shadow: "",
     },
-    tab: {
-        base: 'text-sm inline-flex items-center h-9 px-3 cursor-pointer',
-        active: 'text-black dark:text-white font-medium',
-        inactive: 'text-gray-500 dark:text-gray-400 hover:text-black dark:hover:text-white'
-    },
-    panel: {
-        base: 'p-3 sm:p-3'
-    }
+  },
+  tab: {
+    base: "text-sm inline-flex items-center h-9 px-3 cursor-pointer",
+    active: "text-black dark:text-white font-medium",
+    inactive: "text-gray-500 dark:text-gray-400 hover:text-black dark:hover:text-white",
+  },
+  panel: {
+    base: "p-3 sm:p-3",
+  },
 };
 
 // Organization tree for the structured organization display
 interface Organization {
-    id: number;
-    name: string;
-    count: number;
+  id: number;
+  name: string;
+  count: number;
 }
 
 interface Alliance extends Organization {
-    corporations: Organization[];
+  corporations: Organization[];
 }
 
 interface OrganizationTree {
-    alliances: Alliance[];
-    noAllianceCorporations: Organization[];
+  alliances: Alliance[];
+  noAllianceCorporations: Organization[];
 }
 
 // Build organization tree from attackers
 const organizationsTree = computed<OrganizationTree>(() => {
-    const alliances: Record<string, Alliance> = {};
-    const noAllianceCorporations: Record<string, Organization> = {};
+  const alliances: Record<string, Alliance> = {};
+  const noAllianceCorporations: Record<string, Organization> = {};
 
-    // Process each attacker
-    attackers.value.forEach(attacker => {
-        // Process alliance
-        if (attacker.alliance_id && attacker.alliance_name) {
-            const allianceKey = `alliance_${attacker.alliance_id}`;
-            if (!alliances[allianceKey]) {
-                alliances[allianceKey] = {
-                    id: attacker.alliance_id,
-                    name: attacker.alliance_name,
-                    count: 0,
-                    corporations: []
-                };
-            }
-            alliances[allianceKey].count++;
+  // Process each attacker
+  attackers.value.forEach((attacker) => {
+    // Process alliance
+    if (attacker.alliance_id && attacker.alliance_name) {
+      const allianceKey = `alliance_${attacker.alliance_id}`;
+      if (!alliances[allianceKey]) {
+        alliances[allianceKey] = {
+          id: attacker.alliance_id,
+          name: attacker.alliance_name,
+          count: 0,
+          corporations: [],
+        };
+      }
+      alliances[allianceKey].count++;
 
-            // Process corporation within alliance
-            if (attacker.corporation_id && attacker.corporation_name) {
-                const corpKey = `corp_${attacker.corporation_id}`;
-                const allianceCorporations = alliances[allianceKey].corporations;
+      // Process corporation within alliance
+      if (attacker.corporation_id && attacker.corporation_name) {
+        const corpKey = `corp_${attacker.corporation_id}`;
+        const allianceCorporations = alliances[allianceKey].corporations;
 
-                // Check if corp already exists in alliance
-                const existingCorp = allianceCorporations.find(corp => corp.id === attacker.corporation_id);
+        // Check if corp already exists in alliance
+        const existingCorp = allianceCorporations.find(
+          (corp) => corp.id === attacker.corporation_id,
+        );
 
-                if (existingCorp) {
-                    existingCorp.count++;
-                } else {
-                    allianceCorporations.push({
-                        id: attacker.corporation_id,
-                        name: attacker.corporation_name,
-                        count: 1
-                    });
-                }
-            }
+        if (existingCorp) {
+          existingCorp.count++;
+        } else {
+          allianceCorporations.push({
+            id: attacker.corporation_id,
+            name: attacker.corporation_name,
+            count: 1,
+          });
         }
-        // Process corporations without alliance
-        else if (attacker.corporation_id && attacker.corporation_name) {
-            const corpKey = `corp_${attacker.corporation_id}`;
-            if (!noAllianceCorporations[corpKey]) {
-                noAllianceCorporations[corpKey] = {
-                    id: attacker.corporation_id,
-                    name: attacker.corporation_name,
-                    count: 0
-                };
-            }
-            noAllianceCorporations[corpKey].count++;
-        }
-    });
+      }
+    }
+    // Process corporations without alliance
+    else if (attacker.corporation_id && attacker.corporation_name) {
+      const corpKey = `corp_${attacker.corporation_id}`;
+      if (!noAllianceCorporations[corpKey]) {
+        noAllianceCorporations[corpKey] = {
+          id: attacker.corporation_id,
+          name: attacker.corporation_name,
+          count: 0,
+        };
+      }
+      noAllianceCorporations[corpKey].count++;
+    }
+  });
 
-    // Sort corporations within alliances by count
-    Object.values(alliances).forEach(alliance => {
-        alliance.corporations.sort((a, b) => b.count - a.count);
-    });
+  // Sort corporations within alliances by count
+  Object.values(alliances).forEach((alliance) => {
+    alliance.corporations.sort((a, b) => b.count - a.count);
+  });
 
-    // Convert to arrays and sort
-    const alliancesArray = Object.values(alliances).sort((a, b) => b.count - a.count);
-    const noAllianceCorporationsArray = Object.values(noAllianceCorporations).sort((a, b) => b.count - a.count);
+  // Convert to arrays and sort
+  const alliancesArray = Object.values(alliances).sort((a, b) => b.count - a.count);
+  const noAllianceCorporationsArray = Object.values(noAllianceCorporations).sort(
+    (a, b) => b.count - a.count,
+  );
 
-    return {
-        alliances: alliancesArray,
-        noAllianceCorporations: noAllianceCorporationsArray
-    };
+  return {
+    alliances: alliancesArray,
+    noAllianceCorporations: noAllianceCorporationsArray,
+  };
 });
 
 /**
  * Gets the localized string from a translation object using the current locale
  */
 function getLocalizedString(obj: any, locale: string): string {
-    if (!obj) return '';
-    return obj[locale] || obj['en'] || '';
+  if (!obj) return "";
+  return obj[locale] || obj.en || "";
 }
 
 /**
  * Format a number with commas as thousands separators
  */
 function formatNumber(num: number): string {
-    return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+  return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
 }
 
 /**
  * Get damage percentage for an attacker
  */
 function getDamagePercentage(attacker: IAttacker): string {
-    if (!attacker || !attacker.damage_done || totalDamage.value === 0) return '0';
-    return ((attacker.damage_done / totalDamage.value) * 100).toFixed(1);
+  if (!attacker || !attacker.damage_done || totalDamage.value === 0) return "0";
+  return ((attacker.damage_done / totalDamage.value) * 100).toFixed(1);
 }
 
 /**
  * Gets the total count of corporations across alliances and standalone corps
  */
 function getTotalCorporationsCount(): number {
-    const allianceCorpsCount = organizationsTree.value.alliances.reduce(
-        (sum, alliance) => sum + alliance.corporations.length, 0
-    );
-    return allianceCorpsCount + organizationsTree.value.noAllianceCorporations.length;
+  const allianceCorpsCount = organizationsTree.value.alliances.reduce(
+    (sum, alliance) => sum + alliance.corporations.length,
+    0,
+  );
+  return allianceCorpsCount + organizationsTree.value.noAllianceCorporations.length;
 }
 </script>
 

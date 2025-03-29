@@ -45,7 +45,7 @@ export class Meilisearch {
 
   async search(indexName: string, query: string): Promise<any> {
     return await this.client.index(indexName).search(query, {
-      limit: 1000
+      limit: 1000,
     });
   }
 

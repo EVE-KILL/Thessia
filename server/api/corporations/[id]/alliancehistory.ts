@@ -1,6 +1,6 @@
-import { queueUpdateCorporationHistory } from "~/server/queue/Corporation";
-import { getAlliance, getCorporation } from "~/server/helpers/ESIData";
 import { defineEventHandler } from "h3";
+import { getAlliance, getCorporation } from "~/server/helpers/ESIData";
+import { queueUpdateCorporationHistory } from "~/server/queue/Corporation";
 
 export default defineEventHandler(async (event) => {
   const corporationId: number | null = event.context.params?.id

@@ -11,7 +11,9 @@
     "debug": "nuxt dev --inspect --host 0.0.0.0",
     "build-cli": "bun run build-cli.ts",
     "build-cron": "bun run build-cron.ts",
-    "build-queue": "bun run build-queue.ts"
+    "build-queue": "bun run build-queue.ts",
+    "lint": "biome check .",
+    "lint:fix": "biome check --write ."
   },
   "dependencies": {
     "@nuxtjs/color-mode": "3.5.2",

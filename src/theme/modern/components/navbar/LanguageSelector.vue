@@ -71,15 +71,15 @@
 </template>
 
 <script setup lang="ts">
-import type { LocaleObject } from '@nuxtjs/i18n';
-import type { Locale } from 'vue-i18n';
+import type { LocaleObject } from "@nuxtjs/i18n";
+import type { Locale } from "vue-i18n";
 
 // Props
 const props = defineProps({
   isMobileView: {
     type: Boolean,
-    default: false
-  }
+    default: false,
+  },
 });
 
 // Use the i18n composable
@@ -91,7 +91,7 @@ const isDropdownOpen = ref(false);
 // Type-safe available locales
 const availableLocales = computed(() => {
   return (locales.value as LocaleObject[]).filter(
-    (locale): locale is LocaleObject => typeof locale !== 'string'
+    (locale): locale is LocaleObject => typeof locale !== "string",
   );
 });
 
@@ -102,7 +102,7 @@ async function switchLocale(newLocale: Locale) {
     // Close dropdown after selection
     isDropdownOpen.value = false;
   } catch (error) {
-    console.debug('Failed to switch locale:', error);
+    console.debug("Failed to switch locale:", error);
   }
 }
 </script>

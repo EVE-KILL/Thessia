@@ -1,130 +1,136 @@
 <script setup lang="ts">
-import type { TableColumn } from '@nuxt/ui';
+import type { TableColumn } from "@nuxt/ui";
 
 interface ITopEntity {
-    id: number;
-    name: string;
-    count: number;
-    [key: string]: any;
+  id: number;
+  name: string;
+  count: number;
+  [key: string]: any;
 }
 
 const props = defineProps({
-    type: { type: String, default: 'character' },
-    limit: { type: Number, default: 10 },
-    days: { type: Number, default: 7 },
-    title: { type: String, default: '' }
+  type: { type: String, default: "character" },
+  limit: { type: Number, default: 10 },
+  days: { type: Number, default: 7 },
+  title: { type: String, default: "" },
 });
 
 const { t, locale } = useI18n();
 const currentLocale = computed(() => locale.value);
 
 const displayTitle = computed(() => {
-    if (props.title) return props.title;
+  if (props.title) return props.title;
 
-    const typeMap = {
-        character: t('topBox.characters'),
-        corporation: t('topBox.corporations'),
-        alliance: t('topBox.alliances'),
-        ship: t('topBox.ships'),
-        solarsystem: t('topBox.systems'),
-        constellation: t('topBox.constellations'),
-        region: t('topBox.regions')
-    };
+  const typeMap = {
+    character: t("topBox.characters"),
+    corporation: t("topBox.corporations"),
+    alliance: t("topBox.alliances"),
+    ship: t("topBox.ships"),
+    solarsystem: t("topBox.systems"),
+    constellation: t("topBox.constellations"),
+    region: t("topBox.regions"),
+  };
 
-    return `${t('topBox.top')} ${props.limit} ${typeMap[props.type] || props.type}`;
+  return `${t("topBox.top")} ${props.limit} ${typeMap[props.type] || props.type}`;
 });
 
 const queryParams = computed(() => ({
-    type: props.type + 's',
-    limit: props.limit,
-    days: props.days
+  type: `${props.type}s`,
+  limit: props.limit,
+  days: props.days,
 }));
 
-const { data: entities, pending, error } = useFetch<ITopEntity[]>('/api/stats', {
-    query: queryParams,
-    key: `top-${props.type}-${props.limit}-${props.days}`
+const {
+  data: entities,
+  pending,
+  error,
+} = useFetch<ITopEntity[]>("/api/stats", {
+  query: queryParams,
+  key: `top-${props.type}-${props.limit}-${props.days}`,
 });
 
 const getLocalizedString = (obj: any, locale: string): string => {
-    if (!obj) return '';
-    return obj[locale] || obj['en'] || '';
+  if (!obj) return "";
+  return obj[locale] || obj.en || "";
 };
 
 // Mapping of entity types to image types for the Image component
 const imageTypeMap = {
-    'character': 'character',
-    'corporation': 'corporation',
-    'alliance': 'alliance',
-    'ship': 'type-render',
-    'solarsystem': 'system',
-    'constellation': 'constellation',
-    'region': 'region'
+  character: "character",
+  corporation: "corporation",
+  alliance: "alliance",
+  ship: "type-render",
+  solarsystem: "system",
+  constellation: "constellation",
+  region: "region",
 };
 
 const getEntityDisplayName = (entity: ITopEntity): string => {
-    if ((props.type === 'ship' || props.type === 'region') && typeof entity.name === 'object') {
-        return getLocalizedString(entity.name, currentLocale.value);
-    }
-    return entity.name;
+  if ((props.type === "ship" || props.type === "region") && typeof entity.name === "object") {
+    return getLocalizedString(entity.name, currentLocale.value);
+  }
+  return entity.name;
 };
 
 const getEntityId = (entity: ITopEntity): number => {
-    if (!entity) return 0;
+  if (!entity) return 0;
 
-    const idFieldMap = {
-        character: 'character_id',
-        corporation: 'corporation_id',
-        alliance: 'alliance_id',
-        ship: 'type_id',
-        solarsystem: 'system_id',
-        constellation: 'constellation_id',
-        region: 'region_id'
-    };
+  const idFieldMap = {
+    character: "character_id",
+    corporation: "corporation_id",
+    alliance: "alliance_id",
+    ship: "type_id",
+    solarsystem: "system_id",
+    constellation: "constellation_id",
+    region: "region_id",
+  };
 
-    const idField = idFieldMap[props.type];
-    const entityId = idField && entity[idField];
+  const idField = idFieldMap[props.type];
+  const entityId = idField && entity[idField];
 
-    if (!entityId && entity.id) {
-        return entity.id;
-    }
+  if (!entityId && entity.id) {
+    return entity.id;
+  }
 
-    return entityId || 0;
+  return entityId || 0;
 };
 
 const getUrlPath = (type: string): string => {
-    const urlPathMap = {
-        'solarsystem': 'system',
-        'ship': 'item'
-    };
+  const urlPathMap = {
+    solarsystem: "system",
+    ship: "item",
+  };
 
-    return urlPathMap[type] || type;
+  return urlPathMap[type] || type;
 };
 
 const generateSkeletonRows = (count: number) => {
-  return Array(count).fill(0).map((_, index) => ({
-    id: `skeleton-${index}`,
-    isLoading: true
-  }));
+  return Array(count)
+    .fill(0)
+    .map((_, index) => ({
+      id: `skeleton-${index}`,
+      isLoading: true,
+    }));
 };
 
 const skeletonRows = computed(() => generateSkeletonRows(props.limit));
 
 const columns: TableColumn<ITopEntity>[] = [
   {
-    key: 'entity',
-    id: 'entity',
-    label: '',
+    key: "entity",
+    id: "entity",
+    label: "",
     sortable: false,
-    class: 'w-full',
+    class: "w-full",
     cell: ({ row }) => {
       if (row.original.isLoading) {
-        return h('div', { class: 'flex items-center py-1' }, [
-          h(resolveComponent('USkeleton'), {
-            class: 'w-7 h-7 flex-shrink-0 mr-2 rounded'
+        return h("div", { class: "flex items-center py-1" }, [
+          h(resolveComponent("USkeleton"), {
+            class: "w-7 h-7 flex-shrink-0 mr-2 rounded",
           }),
-          h(resolveComponent('USkeleton'), {
-            class: 'h-4 w-[150px]'
-          })
+          h(resolveComponent("USkeleton"), {
+            class: "h-4 w-[150px]",
+          }),
         ]);
       }
 
@@ -132,36 +138,45 @@ const columns: TableColumn<ITopEntity>[] = [
       const entityName = getEntityDisplayName(row.original);
       const imageType = imageTypeMap[props.type];
 
-      return h('div', { class: 'flex items-center py-1' }, [
-        h(resolveComponent('Image'), {
+      return h("div", { class: "flex items-center py-1" }, [
+        h(resolveComponent("Image"), {
           type: imageType,
           id: entityId,
           alt: `${props.type}: ${entityName}`,
-          class: 'w-7 flex-shrink-0 mr-2',
+          class: "w-7 flex-shrink-0 mr-2",
           size: 32,
-          format: 'webp'
+          format: "webp",
         }),
-        h('div', { class: 'text-sm text-left text-black dark:text-white truncate min-w-0 overflow-hidden' },
-          entityName)
+        h(
+          "div",
+          {
+            class: "text-sm text-left text-black dark:text-white truncate min-w-0 overflow-hidden",
+          },
+          entityName,
+        ),
       ]);
-    }
+    },
   },
   {
-    key: 'count',
-    id: 'count',
-    label: '',
+    key: "count",
+    id: "count",
+    label: "",
     sortable: false,
-    class: 'w-16 text-right',
+    class: "w-16 text-right",
     cell: ({ row }) => {
       if (row.original.isLoading) {
-        return h(resolveComponent('USkeleton'), {
-          class: 'h-4 w-10 ml-auto mr-2'
+        return h(resolveComponent("USkeleton"), {
+          class: "h-4 w-10 ml-auto mr-2",
         });
       }
 
-      return h('div', { class: 'text-sm text-right text-background-200 pr-2 whitespace-nowrap' }, row.original.count);
-    }
-  }
+      return h(
+        "div",
+        { class: "text-sm text-right text-background-200 pr-2 whitespace-nowrap" },
+        row.original.count,
+      );
+    },
+  },
 ];
 
 // Properly handle row click with middle-click support
@@ -173,18 +188,18 @@ const generateEntityLink = (item: any): string | null => {
 // Simplify column definitions - use only entity and count without the title column
 const tableColumns = [
   {
-    id: 'entity',
+    id: "entity",
     header: displayTitle, // Put the title in the first column header
-    headerClass: 'title-header', // Apply title styling to first column
-    width: '80%'
+    headerClass: "title-header", // Apply title styling to first column
+    width: "80%",
   },
   {
-    id: 'count',
-    header: '',
-    headerClass: 'count-header',
-    width: '20%',
-    cellClass: 'text-right'
-  }
+    id: "count",
+    header: "",
+    headerClass: "count-header",
+    width: "20%",
+    cellClass: "text-right",
+  },
 ];
 </script>
 

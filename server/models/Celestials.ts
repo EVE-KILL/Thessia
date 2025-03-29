@@ -1,6 +1,6 @@
 // models/Celestials.ts
 
-import { Schema, model, type Document, type Model } from "mongoose";
+import { type Document, type Model, Schema, model } from "mongoose";
 import type { ICelestial } from "~/server/interfaces/ICelestial"; // Adjust the path as necessary
 
 // Extend the ICelestial interface with Mongoose's Document interface

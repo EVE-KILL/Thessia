@@ -1,5 +1,5 @@
-import { Killmails } from "~/server/models/Killmails";
 import type { IKillmail } from "~/server/interfaces/IKillmail";
+import { Killmails } from "~/server/models/Killmails";
 
 /**
  * Get a single killmail by ID
@@ -10,10 +10,10 @@ export default defineCachedEventHandler(
     try {
       const killmail_id = event.context.params?.id;
 
-      if (!killmail_id || isNaN(Number(killmail_id))) {
+      if (!killmail_id || Number.isNaN(Number(killmail_id))) {
         throw createError({
           statusCode: 400,
-          statusMessage: "Invalid killmail ID format"
+          statusMessage: "Invalid killmail ID format",
         });
       }
 
@@ -25,7 +25,7 @@ export default defineCachedEventHandler(
       const projection: Record<string, number> = { _id: 0 };
       if (fields) {
         // If fields parameter exists, add requested fields to projection
-        fields.split(',').forEach(field => {
+        fields.split(",").forEach((field) => {
           projection[field.trim()] = 1;
         });
       }
@@ -39,7 +39,7 @@ export default defineCachedEventHandler(
       if (!killmail) {
         throw createError({
           statusCode: 404,
-          statusMessage: "Killmail not found"
+          statusMessage: "Killmail not found",
         });
       }
 
@@ -52,7 +52,7 @@ export default defineCachedEventHandler(
       console.error(`Error fetching killmail: ${error.message}`);
       throw createError({
         statusCode: 500,
-        statusMessage: "Error retrieving killmail"
+        statusMessage: "Error retrieving killmail",
       });
     }
   },
@@ -62,6 +62,6 @@ export default defineCachedEventHandler(
     // Use query params and route params as cache key parts
     getKey: (event) => `${event.path}${event.context.params?.id}${JSON.stringify(getQuery(event))}`,
     // Add cache tags for invalidation if needed
-    tags: ["killmail"]
-  }
+    tags: ["killmail"],
+  },
 );

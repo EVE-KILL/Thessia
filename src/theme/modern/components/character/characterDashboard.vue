@@ -219,17 +219,17 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, computed } from 'vue';
-import { useEveHtmlParser } from '~/src/theme/modern/composables/useEveHtmlParser';
-import { useI18n } from 'vue-i18n';
-import { formatDistanceToNow } from 'date-fns';
-import { enUS, de, es, fr, ja, ko, ru, zhCN } from 'date-fns/locale';
+import { formatDistanceToNow } from "date-fns";
+import { de, enUS, es, fr, ja, ko, ru, zhCN } from "date-fns/locale";
+import { computed, onMounted, ref } from "vue";
+import { useI18n } from "vue-i18n";
+import { useEveHtmlParser } from "~/src/theme/modern/composables/useEveHtmlParser";
 
 const props = defineProps({
   character: {
     type: Object,
-    required: true
-  }
+    required: true,
+  },
 });
 
 const { t, locale } = useI18n();
@@ -237,22 +237,22 @@ const { convertEveHtml } = useEveHtmlParser();
 const currentLocale = computed(() => locale.value);
 
 // Period handling
-const activePeriod = ref('90');
+const activePeriod = ref("90");
 const periods = [
-  { value: '14', label: '14d' },
-  { value: '30', label: '30d' },
-  { value: '90', label: '90d' },
-  { value: 'all', label: t('allTime') }
+  { value: "14", label: "14d" },
+  { value: "30", label: "30d" },
+  { value: "90", label: "90d" },
+  { value: "all", label: t("allTime") },
 ];
 
 const activePeriodLabel = computed(() => {
-  if (activePeriod.value === 'all') return t('allTime');
+  if (activePeriod.value === "all") return t("allTime");
   return `${activePeriod.value}d`;
 });
 
 // Character bio
 const characterBio = computed(() => {
-  if (!props.character?.description) return '';
+  if (!props.character?.description) return "";
   return convertEveHtml(props.character.description);
 });
 
@@ -263,45 +263,45 @@ const statsError = ref(false);
 
 // Table columns - adjusted with proper width alignment
 const statColumns = [
-  { id: 'name', header: t('name'), width: '50%' },
-  { id: 'value', header: t('value'), headerClass: 'text-right', width: '50%' }
+  { id: "name", header: t("name"), width: "50%" },
+  { id: "value", header: t("value"), headerClass: "text-right", width: "50%" },
 ];
 
 const shipColumns = [
-  { id: 'name', header: t('ship'), width: '75%' },
-  { id: 'count', header: t('count'), headerClass: 'text-right', width: '25%' }
+  { id: "name", header: t("ship"), width: "75%" },
+  { id: "count", header: t("count"), headerClass: "text-right", width: "25%" },
 ];
 
 const corpColumns = [
-  { id: 'name', header: t('corporation'), width: '75%' },
-  { id: 'count', header: t('count'), headerClass: 'text-right', width: '25%' }
+  { id: "name", header: t("corporation"), width: "75%" },
+  { id: "count", header: t("count"), headerClass: "text-right", width: "25%" },
 ];
 
 const allianceColumns = [
-  { id: 'name', header: t('alliance'), width: '75%' },
-  { id: 'count', header: t('count'), headerClass: 'text-right', width: '25%' }
+  { id: "name", header: t("alliance"), width: "75%" },
+  { id: "count", header: t("count"), headerClass: "text-right", width: "25%" },
 ];
 
 // Timezone data (evening playtimes)
 const timezones = {
-  'EUTZ Morning': [7, 12],
-  'EUTZ Afternoon': [12, 17],
-  'EUTZ Evening': [17, 22],
-  'USWTZ Morning': [14, 19],
-  'USWTZ Afternoon': [19, 0],
-  'USWTZ Evening': [0, 5],
-  'USETZ Morning': [11, 16],
-  'USETZ Afternoon': [16, 21],
-  'USETZ Evening': [21, 2],
-  'AUTZ Morning': [21, 2],
-  'AUTZ Afternoon': [2, 7],
-  'AUTZ Evening': [7, 12],
-  'CHTZ Morning': [23, 4],
-  'CHTZ Afternoon': [4, 9],
-  'CHTZ Evening': [9, 14],
-  'RUTZ Morning': [4, 9],
-  'RUTZ Afternoon': [9, 14],
-  'RUTZ Evening': [14, 19]
+  "EUTZ Morning": [7, 12],
+  "EUTZ Afternoon": [12, 17],
+  "EUTZ Evening": [17, 22],
+  "USWTZ Morning": [14, 19],
+  "USWTZ Afternoon": [19, 0],
+  "USWTZ Evening": [0, 5],
+  "USETZ Morning": [11, 16],
+  "USETZ Afternoon": [16, 21],
+  "USETZ Evening": [21, 2],
+  "AUTZ Morning": [21, 2],
+  "AUTZ Afternoon": [2, 7],
+  "AUTZ Evening": [7, 12],
+  "CHTZ Morning": [23, 4],
+  "CHTZ Afternoon": [4, 9],
+  "CHTZ Evening": [9, 14],
+  "RUTZ Morning": [4, 9],
+  "RUTZ Afternoon": [9, 14],
+  "RUTZ Evening": [14, 19],
 };
 
 // Date locale mapping
@@ -313,24 +313,24 @@ const dateLocales = {
   ja: ja,
   ko: ko,
   ru: ru,
-  zh: zhCN
+  zh: zhCN,
 };
 
 /**
  * Gets localized string from an object containing translations
  */
 function getLocalizedString(obj: any, locale: string): string {
-  if (!obj) return '';
-  return obj[locale] || obj['en'] || '';
+  if (!obj) return "";
+  return obj[locale] || obj.en || "";
 }
 
 // Format date with date-fns using current locale
 const formatDate = (dateString: string) => {
-  if (!dateString) return '';
+  if (!dateString) return "";
   const date = new Date(dateString);
   return formatDistanceToNow(date, {
     addSuffix: true,
-    locale: dateLocales[currentLocale.value] || enUS
+    locale: dateLocales[currentLocale.value] || enUS,
   });
 };
 
@@ -341,14 +341,16 @@ const formatNumber = (value: number): string => {
 
 // Format ISK values
 const formatIsk = (value: number): string => {
-  if (!value) return '0 ISK';
+  if (!value) return "0 ISK";
   return `${new Intl.NumberFormat().format(value)} ISK`;
 };
 
 // Helper function to sort by count in descending order
 const sortByCountDesc = (items: Record<string, any>) => {
   if (!items) return [];
-  return Object.values(items).sort((a, b) => b.count - a.count).slice(0, 10); // Top 10 only
+  return Object.values(items)
+    .sort((a, b) => b.count - a.count)
+    .slice(0, 10); // Top 10 only
 };
 
 // Function to handle period change
@@ -359,16 +361,16 @@ const changePeriod = (period: string) => {
 
 // Function to determine the most active timezone based on the heatmap
 const determineActiveTimezone = (heatMap: Record<string, number>): string => {
-  if (!heatMap) return 'Unknown';
+  if (!heatMap) return "Unknown";
 
   const hours = Object.entries(heatMap).map(([hour, count]) => ({
-    hour: parseInt(hour.replace('h', '')),
-    count
+    hour: Number.parseInt(hour.replace("h", "")),
+    count,
   }));
 
   const sortedHours = hours.sort((a, b) => b.count - a.count);
 
-  if (sortedHours.length === 0) return 'Unknown';
+  if (sortedHours.length === 0) return "Unknown";
 
   const activeHour = sortedHours[0].hour;
 
@@ -385,28 +387,40 @@ const determineActiveTimezone = (heatMap: Record<string, number>): string => {
     }
   }
 
-  return 'Unknown';
+  return "Unknown";
 };
 
 // Get color for heatmap based on activity level
 const getHeatMapColor = (count: number, maxValue: number): string => {
-  if (!count || !maxValue) return 'bg-gray-800';
+  if (!count || !maxValue) return "bg-gray-800";
 
   const intensity = Math.min(Math.floor((count / maxValue) * 10), 10);
 
   switch (intensity) {
-    case 0: return 'bg-gray-800';
-    case 1: return 'bg-blue-900 dark:bg-blue-950';
-    case 2: return 'bg-blue-800 dark:bg-blue-900';
-    case 3: return 'bg-blue-700 dark:bg-blue-800';
-    case 4: return 'bg-blue-600 dark:bg-blue-700';
-    case 5: return 'bg-blue-500 dark:bg-blue-600';
-    case 6: return 'bg-indigo-500 dark:bg-indigo-600';
-    case 7: return 'bg-indigo-400 dark:bg-indigo-500';
-    case 8: return 'bg-violet-400 dark:bg-violet-500';
-    case 9: return 'bg-violet-300 dark:bg-violet-400';
-    case 10: return 'bg-purple-300 dark:bg-purple-400';
-    default: return 'bg-gray-800';
+    case 0:
+      return "bg-gray-800";
+    case 1:
+      return "bg-blue-900 dark:bg-blue-950";
+    case 2:
+      return "bg-blue-800 dark:bg-blue-900";
+    case 3:
+      return "bg-blue-700 dark:bg-blue-800";
+    case 4:
+      return "bg-blue-600 dark:bg-blue-700";
+    case 5:
+      return "bg-blue-500 dark:bg-blue-600";
+    case 6:
+      return "bg-indigo-500 dark:bg-indigo-600";
+    case 7:
+      return "bg-indigo-400 dark:bg-indigo-500";
+    case 8:
+      return "bg-violet-400 dark:bg-violet-500";
+    case 9:
+      return "bg-violet-300 dark:bg-violet-400";
+    case 10:
+      return "bg-purple-300 dark:bg-purple-400";
+    default:
+      return "bg-gray-800";
   }
 };
 
@@ -423,39 +437,39 @@ const formattedStats = computed(() => {
   const activeTimezone = determineActiveTimezone(stats.value.heatMap);
 
   return [
-    { name: t('kills'), value: formatNumber(stats.value.kills) },
-    { name: t('losses'), value: formatNumber(stats.value.losses) },
-    { name: t('isk') + ' ' + t('killed'), value: formatIsk(stats.value.iskKilled) },
-    { name: t('isk') + ' ' + t('lost'), value: formatIsk(stats.value.iskLost) },
-    { name: t('solo') + ' ' + t('kills'), value: formatNumber(stats.value.soloKills) },
-    { name: t('solo') + ' ' + t('losses'), value: formatNumber(stats.value.soloLosses) },
-    { name: t('npc') + ' ' + t('losses'), value: formatNumber(stats.value.npcLosses) },
-    { name: t('blobFactor'), value: stats.value.blobFactor?.toFixed(2) || '0.00' },
-    { name: t('lastActive'), value: formatDate(stats.value.lastActive) },
-    { name: t('activeTimezone'), value: activeTimezone },
-    { name: t('knownFC'), value: stats.value.possibleFC ? t('yes') : t('no') },
-    { name: t('knownCynoAlt'), value: stats.value.possibleCynoAlt ? t('yes') : t('no') },
+    { name: t("kills"), value: formatNumber(stats.value.kills) },
+    { name: t("losses"), value: formatNumber(stats.value.losses) },
+    { name: `${t("isk")} ${t("killed")}`, value: formatIsk(stats.value.iskKilled) },
+    { name: `${t("isk")} ${t("lost")}`, value: formatIsk(stats.value.iskLost) },
+    { name: `${t("solo")} ${t("kills")}`, value: formatNumber(stats.value.soloKills) },
+    { name: `${t("solo")} ${t("losses")}`, value: formatNumber(stats.value.soloLosses) },
+    { name: `${t("npc")} ${t("losses")}`, value: formatNumber(stats.value.npcLosses) },
+    { name: t("blobFactor"), value: stats.value.blobFactor?.toFixed(2) || "0.00" },
+    { name: t("lastActive"), value: formatDate(stats.value.lastActive) },
+    { name: t("activeTimezone"), value: activeTimezone },
+    { name: t("knownFC"), value: stats.value.possibleFC ? t("yes") : t("no") },
+    { name: t("knownCynoAlt"), value: stats.value.possibleCynoAlt ? t("yes") : t("no") },
   ];
 });
 
 // Fetch stats data
-const fetchStats = async (period = '90') => {
+const fetchStats = async (period = "90") => {
   if (!props.character?.character_id) return;
 
   statsLoading.value = true;
   statsError.value = false;
 
   try {
-    const url = `/api/characters/${props.character.character_id}/stats${period === 'all' ? '' : `?days=${period}`}`;
+    const url = `/api/characters/${props.character.character_id}/stats${period === "all" ? "" : `?days=${period}`}`;
     const { data, error } = await useFetch(url);
 
     if (error.value) {
-      throw new Error('Failed to fetch stats');
+      throw new Error("Failed to fetch stats");
     }
 
     stats.value = data.value;
   } catch (err) {
-    console.error('Failed to fetch character stats:', err);
+    console.error("Failed to fetch character stats:", err);
     statsError.value = true;
   } finally {
     statsLoading.value = false;

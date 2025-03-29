@@ -1,9 +1,9 @@
 import type { Job } from "bullmq";
+import { determineRoutingKeys } from "~/server/helpers/DetermineRoutingKeys";
 import { cliLogger } from "~/server/helpers/Logger";
 import { createWorker } from "~/server/helpers/Queue";
-import { processKillmail } from "~/server/queue/Killmail";
-import { determineRoutingKeys } from "~/server/helpers/DetermineRoutingKeys";
 import { broadcastKillmail } from "~/server/helpers/WSClientManager";
+import { processKillmail } from "~/server/queue/Killmail";
 
 export default {
   name: "process:killmails",
@@ -18,7 +18,7 @@ export default {
           const killmail = await processKillmail(
             job.data.killmailId,
             job.data.killmailHash,
-            job.data.warId || 0
+            job.data.warId || 0,
           );
 
           // Generate routing keys for the killmail
@@ -26,7 +26,6 @@ export default {
 
           // Publish to Redis for WebSocket broadcasting
           await broadcastKillmail(killmail, routingKeys);
-
         } catch (error) {
           cliLogger.error(`ERROR: ${error.message}`);
           cliLogger.error(`Job ID: ${job.id} | Killmail ID: ${job.data.killmailId}`);

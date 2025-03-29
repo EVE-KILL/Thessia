@@ -1,11 +1,11 @@
 <script setup lang="ts">
-import { ref, computed, onUnmounted } from 'vue';
+import { computed, onUnmounted, ref } from "vue";
 
 // Import the composable properly
 const { currentBackground, setSiteBackground } = siteBackground();
 
 // Get the backgrounds that are available from the API
-const { data: backgrounds, pending: loading } = await useFetch('/api/site/backgrounds');
+const { data: backgrounds, pending: loading } = await useFetch("/api/site/backgrounds");
 
 // Track dropdown state
 const isDropdownOpen = ref(false);
@@ -17,20 +17,20 @@ const isFullscreen = ref(false);
 const { isMobile: internalIsMobile } = useResponsive();
 
 // Emit events for parent components
-const emit = defineEmits(['fullscreen-opened', 'fullscreen-closed', 'background-selected']);
+const emit = defineEmits(["fullscreen-opened", "fullscreen-closed", "background-selected"]);
 
 // Props for component
 const props = defineProps({
   // Whether the component is being used on mobile
   isMobile: {
     type: Boolean,
-    default: false
+    default: false,
   },
   // Whether to open in fullscreen mode (controlled by parent)
   fullscreenOpen: {
     type: Boolean,
-    default: false
-  }
+    default: false,
+  },
 });
 
 // Compute effective mobile state (use responsive composable OR prop)
@@ -39,9 +39,12 @@ const isMobileView = computed(() => {
 });
 
 // Watch for changes in fullscreen prop from parent
-watch(() => props.fullscreenOpen, (value) => {
-  isFullscreen.value = value;
-});
+watch(
+  () => props.fullscreenOpen,
+  (value) => {
+    isFullscreen.value = value;
+  },
+);
 
 // Check if a background is the current one - compare directly to the ref value
 const isCurrentBackground = (path: string): boolean => {
@@ -56,8 +59,8 @@ const selectBackground = (path: string) => {
   isDropdownOpen.value = false;
 
   if (isFullscreen.value) {
-    emit('background-selected', path);
-    emit('fullscreen-closed');
+    emit("background-selected", path);
+    emit("fullscreen-closed");
     isFullscreen.value = false;
   }
 };
@@ -65,13 +68,13 @@ const selectBackground = (path: string) => {
 // Open fullscreen mode
 const openFullscreen = () => {
   isFullscreen.value = true;
-  emit('fullscreen-opened');
+  emit("fullscreen-opened");
 };
 
 // Close fullscreen mode
 const closeFullscreen = () => {
   isFullscreen.value = false;
-  emit('fullscreen-closed');
+  emit("fullscreen-closed");
 };
 
 // Improved body scroll locking for mobile fullscreen view
@@ -82,44 +85,44 @@ watch(isFullscreen, (isOpen) => {
     if (isOpen) {
       // Store current scroll position
       const scrollY = window.scrollY;
-      body.style.position = 'fixed';
-      body.style.width = '100%';
+      body.style.position = "fixed";
+      body.style.width = "100%";
       body.style.top = `-${scrollY}px`;
-      body.style.overflow = 'hidden';
-      body.classList.add('modal-open');
+      body.style.overflow = "hidden";
+      body.classList.add("modal-open");
       body.dataset.scrollPosition = String(scrollY);
 
       // Calculate scrollbar width and set custom property
       const scrollbarWidth = window.innerWidth - body.clientWidth;
-      document.documentElement.style.setProperty('--scrollbar-width', `${scrollbarWidth}px`);
+      document.documentElement.style.setProperty("--scrollbar-width", `${scrollbarWidth}px`);
     } else {
       // Restore scroll position
-      const scrollY = body.dataset.scrollPosition || '0';
-      body.style.position = '';
-      body.style.width = '';
-      body.style.top = '';
-      body.style.overflow = '';
-      body.classList.remove('modal-open');
+      const scrollY = body.dataset.scrollPosition || "0";
+      body.style.position = "";
+      body.style.width = "";
+      body.style.top = "";
+      body.style.overflow = "";
+      body.classList.remove("modal-open");
       delete body.dataset.scrollPosition;
-      document.documentElement.style.setProperty('--scrollbar-width', '0px');
-      window.scrollTo(0, parseInt(scrollY, 10));
+      document.documentElement.style.setProperty("--scrollbar-width", "0px");
+      window.scrollTo(0, Number.parseInt(scrollY, 10));
     }
   }
 });
 
 // Clean up on unmount
 onUnmounted(() => {
-  if (import.meta.client && document.body.classList.contains('modal-open')) {
+  if (import.meta.client && document.body.classList.contains("modal-open")) {
     // Restore scroll if component unmounts while modal is open
-    const scrollY = document.body.dataset.scrollPosition || '0';
-    document.body.style.position = '';
-    document.body.style.width = '';
-    document.body.style.top = '';
-    document.body.style.overflow = '';
-    document.body.classList.remove('modal-open');
-    document.documentElement.style.setProperty('--scrollbar-width', '0px');
+    const scrollY = document.body.dataset.scrollPosition || "0";
+    document.body.style.position = "";
+    document.body.style.width = "";
+    document.body.style.top = "";
+    document.body.style.overflow = "";
+    document.body.classList.remove("modal-open");
+    document.documentElement.style.setProperty("--scrollbar-width", "0px");
     delete document.body.dataset.scrollPosition;
-    window.scrollTo(0, parseInt(scrollY, 10));
+    window.scrollTo(0, Number.parseInt(scrollY, 10));
   }
 });
 </script>

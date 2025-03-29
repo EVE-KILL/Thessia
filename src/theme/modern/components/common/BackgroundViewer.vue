@@ -13,18 +13,18 @@
 </template>
 
 <script setup lang="ts">
-const isViewingBackground = ref(false)
+const isViewingBackground = ref(false);
 
 // Toggle background view function
 const toggleBackgroundView = () => {
-  if (!import.meta.client) return
+  if (!import.meta.client) return;
 
-  isViewingBackground.value = !isViewingBackground.value
+  isViewingBackground.value = !isViewingBackground.value;
 
   if (isViewingBackground.value) {
     // Create and inject style for background viewing mode
-    const styleElement = document.createElement('style')
-    styleElement.id = 'background-view-styles'
+    const styleElement = document.createElement("style");
+    styleElement.id = "background-view-styles";
     styleElement.innerHTML = `
       /* Set up transition properties for all elements */
       #content,
@@ -65,29 +65,29 @@ const toggleBackgroundView = () => {
       .background-view-button {
         pointer-events: auto !important;
       }
-    `
-    document.head.appendChild(styleElement)
+    `;
+    document.head.appendChild(styleElement);
   } else {
     // Add a short delay before removing styles for a smooth transition back
     setTimeout(() => {
-      const styleElement = document.getElementById('background-view-styles')
+      const styleElement = document.getElementById("background-view-styles");
       if (styleElement) {
-        document.head.removeChild(styleElement)
+        document.head.removeChild(styleElement);
       }
-    }, 100) // Short delay to allow transitions to complete more naturally
+    }, 100); // Short delay to allow transitions to complete more naturally
   }
-}
+};
 
 // Clean up event listeners
 onUnmounted(() => {
   if (import.meta.client) {
     // Remove any styles we added
-    const styleElement = document.getElementById('background-view-styles')
+    const styleElement = document.getElementById("background-view-styles");
     if (styleElement) {
-      document.head.removeChild(styleElement)
+      document.head.removeChild(styleElement);
     }
   }
-})
+});
 </script>
 
 <style scoped>

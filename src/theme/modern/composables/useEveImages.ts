@@ -20,7 +20,7 @@ export function useEveImages() {
 
     // Otherwise find the nearest valid size
     return VALID_SIZES.reduce((prev, curr) => {
-      return (Math.abs(curr - size) < Math.abs(prev - size)) ? curr : prev;
+      return Math.abs(curr - size) < Math.abs(prev - size) ? curr : prev;
     });
   };
 
@@ -115,7 +115,7 @@ export function useEveImages() {
    * @returns System image URL
    */
   const getSystemImage = (systemId: number | null, size = 64): string | null => {
-    return `/map.png`;
+    return "/map.png";
   };
 
   /**
@@ -125,7 +125,7 @@ export function useEveImages() {
    * @returns Constellation image URL
    */
   const getConstellationImage = (constellationId: number | null, size = 64): string | null => {
-    return `/map.png`;
+    return "/map.png";
   };
 
   /**
@@ -135,7 +135,7 @@ export function useEveImages() {
    * @returns Region image URL
    */
   const getRegionImage = (regionId: number | null, size = 64): string | null => {
-    return `/map.png`;
+    return "/map.png";
   };
 
   /**
@@ -145,7 +145,7 @@ export function useEveImages() {
    */
   const isBlueprint = (name: string | null | undefined): boolean => {
     if (!name) return false;
-    return name.includes('Blueprint');
+    return name.includes("Blueprint");
   };
 
   /**
@@ -155,7 +155,7 @@ export function useEveImages() {
    */
   const isBlueprintCopy = (name: string | null | undefined): boolean => {
     if (!name) return false;
-    return name.includes('Blueprint Copy');
+    return name.includes("Blueprint Copy");
   };
 
   /**
@@ -166,19 +166,25 @@ export function useEveImages() {
    * @param size - Image size
    * @returns URL for the appropriate image type
    */
-  const getItemImageUrl = (typeId: number | null, name: string | null | undefined, imageType = 'icon', size = 64): string | null => {
+  const getItemImageUrl = (
+    typeId: number | null,
+    name: string | null | undefined,
+    imageType = "icon",
+    size = 64,
+  ): string | null => {
     if (!typeId) return null;
 
     // Determine the correct image type based on the name
     if (isBlueprintCopy(name)) {
       return getBlueprintCopyIcon(typeId, size);
-    } else if (isBlueprint(name)) {
-      return getBlueprintIcon(typeId, size);
-    } else if (imageType === 'render') {
-      return getTypeRender(typeId, size);
-    } else {
-      return getTypeIcon(typeId, size);
     }
+    if (isBlueprint(name)) {
+      return getBlueprintIcon(typeId, size);
+    }
+    if (imageType === "render") {
+      return getTypeRender(typeId, size);
+    }
+    return getTypeIcon(typeId, size);
   };
 
   return {
@@ -196,6 +202,6 @@ export function useEveImages() {
     getRegionImage,
     isBlueprint,
     isBlueprintCopy,
-    getItemImageUrl
+    getItemImageUrl,
   };
 }

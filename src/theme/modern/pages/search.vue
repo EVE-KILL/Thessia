@@ -127,38 +127,45 @@
 </template>
 
 <script setup lang="ts">
-import { useRoute, navigateTo } from '#app';
-import { useSearch, type SearchResponse, type SearchHit } from '~/composables/useSearch';
+import { type SearchHit, type SearchResponse, useSearch } from "~/composables/useSearch";
+import { navigateTo, useRoute } from "#app";
 
 const route = useRoute();
 const { search, isLoading, error, setupAutoSearch } = useSearch();
 const results = ref<SearchResponse | null>(null);
-const searchQuery = ref(route.query.q as string || '');
+const searchQuery = ref((route.query.q as string) || "");
 const searchInputRef = ref<HTMLInputElement | null>(null);
 
 // Initialize auto search functionality
-let autoSearchEnabled = ref(false);
+const autoSearchEnabled = ref(false);
 const initAutoSearch = () => {
   // Create a watcher that will perform search when searchQuery changes
-  watch(searchQuery, (newQuery) => {
-    // Update URL to reflect current search query
-    if (newQuery && newQuery.trim().length >= 3) {
-      updateSearchUrl(newQuery);
+  watch(
+    searchQuery,
+    (newQuery) => {
+      // Update URL to reflect current search query
+      if (newQuery && newQuery.trim().length >= 3) {
+        updateSearchUrl(newQuery);
 
-      // Only perform auto-search after initial setup
-      if (autoSearchEnabled.value) {
-        performSearch();
+        // Only perform auto-search after initial setup
+        if (autoSearchEnabled.value) {
+          performSearch();
+        }
+      } else if (!newQuery || newQuery.trim().length === 0) {
+        // Clear results if search query is empty
+        results.value = null;
+        // Reset URL if search bar is cleared
+        navigateTo(
+          {
+            path: "/search",
+            query: {},
+          },
+          { replace: true },
+        );
       }
-    } else if (!newQuery || newQuery.trim().length === 0) {
-      // Clear results if search query is empty
-      results.value = null;
-      // Reset URL if search bar is cleared
-      navigateTo({
-        path: '/search',
-        query: {}
-      }, { replace: true });
-    }
-  }, { immediate: false });
+    },
+    { immediate: false },
+  );
 
   // Mark auto-search as ready after initial setup
   autoSearchEnabled.value = true;
@@ -168,8 +175,8 @@ const initAutoSearch = () => {
 const updateSearchUrl = (query: string) => {
   if (import.meta.client) {
     const url = new URL(window.location.href);
-    url.searchParams.set('q', query);
-    window.history.replaceState({}, '', url.toString());
+    url.searchParams.set("q", query);
+    window.history.replaceState({}, "", url.toString());
   }
 };
 
@@ -186,8 +193,8 @@ const groupedResults = computed(() => {
   const grouped: Record<string, SearchHit[]> = {};
 
   // Initialize with empty arrays for known types, even if no results
-  const knownTypes = ['character', 'corporation', 'alliance', 'ship', 'item', 'system', 'region'];
-  knownTypes.forEach(type => {
+  const knownTypes = ["character", "corporation", "alliance", "ship", "item", "system", "region"];
+  knownTypes.forEach((type) => {
     grouped[type] = [];
 
     // Initialize results per type count if not set
@@ -197,7 +204,7 @@ const groupedResults = computed(() => {
   });
 
   // Group hits by type
-  results.value.hits.forEach(hit => {
+  results.value.hits.forEach((hit) => {
     const type = hit.type.toLowerCase();
     if (!grouped[type]) grouped[type] = [];
 
@@ -214,7 +221,7 @@ const groupedResults = computed(() => {
 // Helper to get total count of hits by type
 const getHitCountByType = (type: string) => {
   if (!results.value || !results.value.hits) return 0;
-  return results.value.hits.filter(hit => hit.type.toLowerCase() === type.toLowerCase()).length;
+  return results.value.hits.filter((hit) => hit.type.toLowerCase() === type.toLowerCase()).length;
 };
 
 // Load more results for a specific type
@@ -234,80 +241,88 @@ const loadMoreForType = (type: string) => {
 // Define column classes for different entity types for better visual organization
 const getColumnClass = (type: string) => {
   switch (type.toLowerCase()) {
-    case 'character': return 'order-1';
-    case 'corporation': return 'order-2';
-    case 'alliance': return 'order-3';
-    case 'ship': return 'order-4';
-    case 'item': return 'order-5';
-    case 'system': return 'order-6';
-    case 'region': return 'order-7';
-    default: return 'order-8';
+    case "character":
+      return "order-1";
+    case "corporation":
+      return "order-2";
+    case "alliance":
+      return "order-3";
+    case "ship":
+      return "order-4";
+    case "item":
+      return "order-5";
+    case "system":
+      return "order-6";
+    case "region":
+      return "order-7";
+    default:
+      return "order-8";
   }
 };
 
 // Get the appropriate icon for each entity type
 const getIconForEntityType = (type: string) => {
   switch (type.toLowerCase()) {
-    case 'character':
-      return 'lucide:user';
-    case 'corporation':
-      return 'lucide:building';
-    case 'alliance':
-      return 'lucide:users';
-    case 'ship':
-      return 'lucide:rocket';
-    case 'item':
-      return 'lucide:box';
-    case 'system':
-      return 'lucide:globe';
-    case 'region':
-      return 'lucide:map';
+    case "character":
+      return "lucide:user";
+    case "corporation":
+      return "lucide:building";
+    case "alliance":
+      return "lucide:users";
+    case "ship":
+      return "lucide:rocket";
+    case "item":
+      return "lucide:box";
+    case "system":
+      return "lucide:globe";
+    case "region":
+      return "lucide:map";
     default:
-      return 'lucide:help-circle';
+      return "lucide:help-circle";
   }
 };
 
 // Get the appropriate color for each entity type
 const getColorForEntityType = (type: string) => {
   switch (type.toLowerCase()) {
-    case 'character':
-      return 'text-blue-600 dark:text-blue-400';
-    case 'corporation':
-      return 'text-green-600 dark:text-green-400';
-    case 'alliance':
-      return 'text-purple-600 dark:text-purple-400';
-    case 'ship':
-      return 'text-red-600 dark:text-red-400';
-    case 'item':
-      return 'text-orange-600 dark:text-orange-400';
-    case 'system':
-      return 'text-teal-600 dark:text-teal-400';
-    case 'region':
-      return 'text-indigo-600 dark:text-indigo-400';
+    case "character":
+      return "text-blue-600 dark:text-blue-400";
+    case "corporation":
+      return "text-green-600 dark:text-green-400";
+    case "alliance":
+      return "text-purple-600 dark:text-purple-400";
+    case "ship":
+      return "text-red-600 dark:text-red-400";
+    case "item":
+      return "text-orange-600 dark:text-orange-400";
+    case "system":
+      return "text-teal-600 dark:text-teal-400";
+    case "region":
+      return "text-indigo-600 dark:text-indigo-400";
     default:
-      return 'text-gray-600 dark:text-gray-400';
+      return "text-gray-600 dark:text-gray-400";
   }
 };
 
 // Get the appropriate badge color class for each entity type
 const getBadgeColorForEntityType = (type: string) => {
   switch (type.toLowerCase()) {
-    case 'character':
-      return 'badge-blue';
-    case 'corporation':
-      return 'badge-green';
-    case 'alliance':
-      return 'badge-purple';
-    case 'ship':
-      return 'badge-red';
-    case 'item':
-      return 'badge-orange';
-    case 'system':
-      return 'badge-teal';
-    case 'region':
-      return 'badge-indigo';
+    case "character":
+      return "badge-blue";
+    case "corporation":
+      return "badge-green";
+    case "alliance":
+      return "badge-purple";
+    case "ship":
+      return "badge-red";
+    case "item":
+      return "badge-orange";
+    case "system":
+      return "badge-teal";
+    case "region":
+      return "badge-indigo";
     default:
-      return 'badge-gray';
+      return "badge-gray";
   }
 };
 
@@ -318,11 +333,11 @@ const capitalizeFirstLetter = (string: string) => {
 
 // Helper to capitalize the first letter of each word in a string
 const capitalizeWords = (string: string) => {
-  if (!string) return '';
+  if (!string) return "";
   return string
-    .split(' ')
-    .map(word => capitalizeFirstLetter(word))
-    .join(' ');
+    .split(" ")
+    .map((word) => capitalizeFirstLetter(word))
+    .join(" ");
 };
 
 // Search function - updated to use debounce
@@ -360,7 +375,7 @@ onMounted(async () => {
   nextTick(() => {
     if (searchInputRef.value) {
       // Access the native input element within the UInput component and focus it
-      const nativeInput = searchInputRef.value.$el.querySelector('input');
+      const nativeInput = searchInputRef.value.$el.querySelector("input");
       if (nativeInput) {
         nativeInput.focus();
         nativeInput.select(); // Select all text in the input
@@ -371,11 +386,7 @@ onMounted(async () => {
 
 // Define page metadata using useSeoMeta instead of useHead
 useSeoMeta({
-  title: computed(() =>
-    searchQuery.value
-      ? `${searchQuery.value} - searchResults`
-      : 'Search'
-  )
+  title: computed(() => (searchQuery.value ? `${searchQuery.value} - searchResults` : "Search")),
 });
 </script>
 

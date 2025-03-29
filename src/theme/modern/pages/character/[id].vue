@@ -249,10 +249,10 @@
 </template>
 
 <script setup lang="ts">
-import { useI18n } from 'vue-i18n';
-import { formatDistanceToNow } from 'date-fns';
-import { enUS, de, es, fr, ja, ko, ru, zhCN } from 'date-fns/locale';
-import type { TabsItem } from '@nuxt/ui';
+import type { TabsItem } from "@nuxt/ui";
+import { formatDistanceToNow } from "date-fns";
+import { de, enUS, es, fr, ja, ko, ru, zhCN } from "date-fns/locale";
+import { useI18n } from "vue-i18n";
 
 const { t, locale } = useI18n();
 const currentLocale = computed(() => locale.value);
@@ -270,7 +270,7 @@ const dateLocales = {
   ja: ja,
   ko: ko,
   ru: ru,
-  zh: zhCN
+  zh: zhCN,
 };
 
 // Format date with date-fns using current locale
@@ -278,7 +278,7 @@ const formatDate = (dateString: string) => {
   const date = new Date(dateString);
   return formatDistanceToNow(date, {
     addSuffix: true,
-    locale: dateLocales[currentLocale.value] || enUS
+    locale: dateLocales[currentLocale.value] || enUS,
   });
 };
 
@@ -286,7 +286,12 @@ const formatDate = (dateString: string) => {
 const fetchKey = computed(() => `character-${id}-${Date.now()}`);
 
 // Fetch character data with improved caching strategy
-const { data: character, pending, error, refresh } = useFetch(`/api/characters/${id}`, {
+const {
+  data: character,
+  pending,
+  error,
+  refresh,
+} = useFetch(`/api/characters/${id}`, {
   initialCache: false, // Don't use initial cache
   key: fetchKey.value, // Use dynamic key to ensure proper cache invalidation
   watch: [() => route.params.id], // Watch for route parameter changes
@@ -294,74 +299,83 @@ const { data: character, pending, error, refresh } = useFetch(`/api/characters/$
 
 // Fetch character short stats
 const shortStatsKey = computed(() => `character-${id}-shortstats-${Date.now()}`);
-const { data: shortStats, pending: shortStatsLoading } = useFetch(`/api/characters/${id}/shortstats`, {
-  initialCache: false,
-  key: shortStatsKey.value,
-  watch: [() => route.params.id],
-});
+const { data: shortStats, pending: shortStatsLoading } = useFetch(
+  `/api/characters/${id}/shortstats`,
+  {
+    initialCache: false,
+    key: shortStatsKey.value,
+    watch: [() => route.params.id],
+  },
+);
 
 // Set up SEO metadata
 useSeoMeta({
-  title: computed(() => character.value ? `${character.value.name} - EVE Kill` : t('character.characterPage')),
-  description: computed(() => character.value
-    ? t('characterMetaDescription', {
-        name: character.value.name,
-        corporation: character.value.corporation_name,
-        alliance: character.value.alliance_name || t('noAlliance')
-      })
-    : t('characterDefaultDescription', { id: id })),
-  ogImage: computed(() => character.value
-    ? `https://images.eve-kill.com/characters/${character.value.character_id}/portrait?size=256`
-    : '/images/default-og.png')
+  title: computed(() =>
+    character.value ? `${character.value.name} - EVE Kill` : t("character.characterPage"),
+  ),
+  description: computed(() =>
+    character.value
+      ? t("characterMetaDescription", {
+          name: character.value.name,
+          corporation: character.value.corporation_name,
+          alliance: character.value.alliance_name || t("noAlliance"),
+        })
+      : t("characterDefaultDescription", { id: id }),
+  ),
+  ogImage: computed(() =>
+    character.value
+      ? `https://images.eve-kill.com/characters/${character.value.character_id}/portrait?size=256`
+      : "/images/default-og.png",
+  ),
 });
 
 // Tab navigation configuration with slot property properly defined
 const tabItems = [
   {
-    id: 'dashboard',
-    label: computed(() => t('dashboard')),
-    icon: 'i-lucide-layout-dashboard',
-    slot: 'dashboard' as const
+    id: "dashboard",
+    label: computed(() => t("dashboard")),
+    icon: "i-lucide-layout-dashboard",
+    slot: "dashboard" as const,
   },
   {
-    id: 'kills',
-    label: computed(() => t('kills')),
-    icon: 'i-lucide-trophy',
-    slot: 'kills' as const
+    id: "kills",
+    label: computed(() => t("kills")),
+    icon: "i-lucide-trophy",
+    slot: "kills" as const,
   },
   {
-    id: 'losses',
-    label: computed(() => t('losses')),
-    icon: 'i-lucide-skull',
-    slot: 'losses' as const
+    id: "losses",
+    label: computed(() => t("losses")),
+    icon: "i-lucide-skull",
+    slot: "losses" as const,
   },
   {
-    id: 'combined',
-    label: computed(() => t('combined')),
-    icon: 'i-lucide-layers',
-    slot: 'combined' as const
+    id: "combined",
+    label: computed(() => t("combined")),
+    icon: "i-lucide-layers",
+    slot: "combined" as const,
   },
   {
-    id: 'corporation-history',
-    label: computed(() => t('corporationHistory')),
-    icon: 'i-lucide-history',
-    slot: 'corporation-history' as const
+    id: "corporation-history",
+    label: computed(() => t("corporationHistory")),
+    icon: "i-lucide-history",
+    slot: "corporation-history" as const,
   },
   {
-    id: 'stats',
-    label: computed(() => t('stats')),
-    icon: 'i-lucide-bar-chart',
-    slot: 'stats' as const
-  }
+    id: "stats",
+    label: computed(() => t("stats")),
+    icon: "i-lucide-bar-chart",
+    slot: "stats" as const,
+  },
 ] satisfies TabsItem[];
 
 // Active tab from query param or default to dashboard
-const activeTab = ref(route.query.tab?.toString() || 'dashboard');
+const activeTab = ref(route.query.tab?.toString() || "dashboard");
 
 // Get initial tab index from query parameter or default to dashboard
 const getInitialTabIndex = () => {
   const tab = route.query.tab as string;
-  const index = tabItems.findIndex(item => item.id === tab);
+  const index = tabItems.findIndex((item) => item.id === tab);
   return index >= 0 ? index : 0;
 };
 
@@ -371,35 +385,35 @@ const handleTabChange = (tabId: string) => {
   router.replace({
     query: {
       ...route.query,
-      tab: tabId
-    }
+      tab: tabId,
+    },
   });
 };
 
 // Format numbers with commas
 const formatNumber = (value: number): string => {
-  return value?.toLocaleString() || '0';
+  return value?.toLocaleString() || "0";
 };
 
 // Format ISK value with B/M suffix
 const formatIsk = (value: number): string => {
-  if (!value) return '0 ISK';
+  if (!value) return "0 ISK";
 
   if (value >= 1000000000) {
     return `${(value / 1000000000).toFixed(2)}B ISK`;
-  } else if (value >= 1000000) {
-    return `${(value / 1000000).toFixed(2)}M ISK`;
-  } else {
-    return `${Math.round(value).toLocaleString()} ISK`;
   }
+  if (value >= 1000000) {
+    return `${(value / 1000000).toFixed(2)}M ISK`;
+  }
+  return `${Math.round(value).toLocaleString()} ISK`;
 };
 
 // Calculate danger ratio (kills / (kills + losses) * 100)
 const calcDangerRatio = (stats: any): string => {
-  if (!stats) return '0';
+  if (!stats) return "0";
 
   const { kills = 0, losses = 0 } = stats;
-  if (kills === 0 && losses === 0) return '0';
+  if (kills === 0 && losses === 0) return "0";
 
   const ratio = (kills / (kills + losses)) * 100;
   return ratio.toFixed(1);
@@ -407,10 +421,10 @@ const calcDangerRatio = (stats: any): string => {
 
 // Get color for security status
 const getSecurityStatusColor = (securityStatus: number): string => {
-  if (securityStatus >= 0.5) return '#00FF00'; // High sec - green
-  if (securityStatus >= 0.0) return '#FFFF00'; // Low sec - yellow
-  if (securityStatus >= -5.0) return '#FF8C00'; // Negative but not too bad - orange
-  return '#FF0000'; // Very negative - red
+  if (securityStatus >= 0.5) return "#00FF00"; // High sec - green
+  if (securityStatus >= 0.0) return "#FFFF00"; // Low sec - yellow
+  if (securityStatus >= -5.0) return "#FF8C00"; // Negative but not too bad - orange
+  return "#FF0000"; // Very negative - red
 };
 </script>
 

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, ref, watch } from 'vue';
+import { computed, ref, watch } from "vue";
 
 interface IMostValuableItem {
   killmail_id: number;
@@ -14,7 +14,7 @@ interface IMostValuableItem {
 
 const props = defineProps({
   days: { type: Number, default: 7 },
-  limit: { type: Number, default: 7 }
+  limit: { type: Number, default: 7 },
 });
 
 const { t, locale } = useI18n();
@@ -22,9 +22,9 @@ const currentLocale = computed(() => locale.value);
 
 // Define categories with distinct keys - reordered as requested
 const categories = [
-  { key: 'most_valuable_structures', label: t('structures'), icon: 'i-lucide-building' },
-  { key: 'most_valuable_kills', label: t('kills'), icon: 'i-lucide-target' },
-  { key: 'most_valuable_ships', label: t('ships'), icon: 'i-lucide-ship' }
+  { key: "most_valuable_structures", label: t("structures"), icon: "i-lucide-building" },
+  { key: "most_valuable_kills", label: t("kills"), icon: "i-lucide-target" },
+  { key: "most_valuable_ships", label: t("ships"), icon: "i-lucide-ship" },
 ];
 
 // Use numeric index for the active tab - set "1" as default (2nd tab - Kills)
@@ -32,7 +32,7 @@ const activeTabIndex = ref("1");
 
 // Get the type for API based on the active tab index
 const getTabType = computed(() => {
-  const index = parseInt(activeTabIndex.value, 10);
+  const index = Number.parseInt(activeTabIndex.value, 10);
   return categories[index]?.key || categories[1].key;
 });
 
@@ -40,25 +40,34 @@ const getTabType = computed(() => {
 const queryParams = computed(() => ({
   type: getTabType.value,
   days: props.days,
-  limit: props.limit
+  limit: props.limit,
 }));
 
 // Fetch data for the active tab only
-const { data: items, pending, error, refresh } = useFetch<IMostValuableItem[]>('/api/stats', {
+const {
+  data: items,
+  pending,
+  error,
+  refresh,
+} = useFetch<IMostValuableItem[]>("/api/stats", {
   query: queryParams,
-  key: `most-valuable-${getTabType.value}-${props.days}-${props.limit}`
+  key: `most-valuable-${getTabType.value}-${props.days}-${props.limit}`,
 });
 
 // Watch for active tab changes and refresh data
-watch(activeTabIndex, () => {
-  refresh();
-}, { immediate: true });
+watch(
+  activeTabIndex,
+  () => {
+    refresh();
+  },
+  { immediate: true },
+);
 
 // Helper functions for data formatting and display
 const getLocalizedString = (obj: any, locale: string): string => {
-  if (!obj) return '';
-  if (typeof obj === 'string') return obj;
-  return obj[locale] || obj['en'] || '';
+  if (!obj) return "";
+  if (typeof obj === "string") return obj;
+  return obj[locale] || obj.en || "";
 };
 
 // Format ISK similar to KillList
@@ -84,23 +93,23 @@ const { isMobile } = useResponsive();
 // Customized UTab UI configuration
 const tabsUi = computed(() => {
   return {
-    wrapper: 'w-full',
+    wrapper: "w-full",
     list: {
-      base: 'flex items-center justify-between',
-      background: 'bg-black',
-      width: 'w-full',
-      height: 'h-auto',
+      base: "flex items-center justify-between",
+      background: "bg-black",
+      width: "w-full",
+      height: "h-auto",
       divider: {
-        base: 'hidden'
+        base: "hidden",
       },
     },
     item: {
-      size: 'text-xs',
-      font: 'font-medium',
-      base: 'flex items-center justify-center py-2 px-4 text-center',
-      active: 'text-white font-bold',
-      inactive: 'text-gray-400 hover:text-gray-300'
-    }
+      size: "text-xs",
+      font: "font-medium",
+      base: "flex items-center justify-center py-2 px-4 text-center",
+      active: "text-white font-bold",
+      inactive: "text-gray-400 hover:text-gray-300",
+    },
   };
 });
 

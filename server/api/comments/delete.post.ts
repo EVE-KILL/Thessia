@@ -1,6 +1,6 @@
 import { cliLogger } from "~/server/helpers/Logger";
-import { Comments } from "~/server/models/Comments";
 import { broadcastCommentEvent } from "~/server/helpers/WSClientManager";
+import { Comments } from "~/server/models/Comments";
 
 export default defineEventHandler(async (event) => {
   // Get the authentication cookie
@@ -10,22 +10,22 @@ export default defineEventHandler(async (event) => {
   if (!token) {
     return createError({
       statusCode: 401,
-      statusMessage: 'Authentication required'
+      statusMessage: "Authentication required",
     });
   }
 
   try {
     // Get user data from the session
-    const session = await $fetch('/api/auth/me', {
+    const session = await $fetch("/api/auth/me", {
       headers: {
-        cookie: `evelogin=${token}`
-      }
+        cookie: `evelogin=${token}`,
+      },
     }).catch(() => null);
 
     if (!session || !session.authenticated) {
       return createError({
         statusCode: 401,
-        statusMessage: 'Authentication failed'
+        statusMessage: "Authentication failed",
       });
     }
 
@@ -35,7 +35,7 @@ export default defineEventHandler(async (event) => {
     if (!user.administrator && !user.characterId) {
       return createError({
         statusCode: 403,
-        statusMessage: 'Unauthorized: Only administrators or comment authors can delete comments'
+        statusMessage: "Unauthorized: Only administrators or comment authors can delete comments",
       });
     }
 
@@ -46,7 +46,7 @@ export default defineEventHandler(async (event) => {
     if (!identifier) {
       return createError({
         statusCode: 400,
-        statusMessage: 'Comment identifier is required'
+        statusMessage: "Comment identifier is required",
       });
     }
 
@@ -56,7 +56,7 @@ export default defineEventHandler(async (event) => {
     if (!comment) {
       return createError({
         statusCode: 404,
-        statusMessage: 'Comment not found'
+        statusMessage: "Comment not found",
       });
     }
 
@@ -65,7 +65,7 @@ export default defineEventHandler(async (event) => {
     if (!user.administrator && !isCommentAuthor) {
       return createError({
         statusCode: 403,
-        statusMessage: 'You can only delete your own comments'
+        statusMessage: "You can only delete your own comments",
       });
     }
 
@@ -77,20 +77,20 @@ export default defineEventHandler(async (event) => {
     // Broadcast the deleted comment event so it can be removed from clients
     try {
       const commentData = comment.toJSON();
-      await broadcastCommentEvent('deleted', commentData);
+      await broadcastCommentEvent("deleted", commentData);
     } catch (broadcastError) {
       cliLogger.error(`Error broadcasting delete event: ${broadcastError}`);
     }
 
     return {
       success: true,
-      message: 'Comment removed'
+      message: "Comment removed",
     };
   } catch (error) {
     cliLogger.error(`Error deleting comment: ${error}`);
     return createError({
       statusCode: 500,
-      statusMessage: 'Failed to delete comment'
+      statusMessage: "Failed to delete comment",
     });
   }
 });

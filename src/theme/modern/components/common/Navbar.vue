@@ -1,12 +1,12 @@
 <script lang="ts" setup>
-import { markRaw } from 'vue';
+import { markRaw } from "vue";
 const { t } = useI18n();
 const colorMode = useColorMode();
 
-import SearchComponent from '../navbar/Search.vue';
-import NavbarUser from '../navbar/User.vue';
-import LanguageSelector from '../navbar/LanguageSelector.vue';
-import BackgroundSwitcher from '../navbar/BackgroundSwitcher.vue';
+import BackgroundSwitcher from "../navbar/BackgroundSwitcher.vue";
+import LanguageSelector from "../navbar/LanguageSelector.vue";
+import SearchComponent from "../navbar/Search.vue";
+import NavbarUser from "../navbar/User.vue";
 
 const Search = markRaw(SearchComponent);
 
@@ -30,7 +30,7 @@ interface NavLink {
   component?: any;
   inline?: boolean;
   mobile?: boolean;
-  position: 'left' | 'center' | 'right';
+  position: "left" | "center" | "right";
   collapse?: boolean;
   onClick?: () => void;
   children?: NavLink[];
@@ -41,43 +41,43 @@ interface NavLink {
  */
 const leftNavItems = computed(() => [
   {
-    name: t('home'),
-    label: t('home'),
-    icon: 'lucide:house',
-    to: '/',
-    position: 'left'
+    name: t("home"),
+    label: t("home"),
+    icon: "lucide:house",
+    to: "/",
+    position: "left",
   },
   {
-    name: t('kills'),
-    label: t('kills'),
-    position: 'left',
+    name: t("kills"),
+    label: t("kills"),
+    position: "left",
     children: [
-      { name: t('latest'), label: t('latest'), to: '/kills/latest' },
-      { name: t('abyssal'), label: t('abyssal'), to: '/kills/abyssal' },
-      { name: t('wspace'), label: t('wspace'), to: '/kills/wspace' },
-      { name: t('highsec'), label: t('highsec'), to: '/kills/highsec' },
-      { name: t('lowsec'), label: t('lowsec'), to: '/kills/lowsec' },
-      { name: t('nullsec'), label: t('nullsec'), to: '/kills/nullsec' },
-      { name: t('big'), label: t('big'), to: '/kills/big' },
-      { name: t('solo'), label: t('solo'), to: '/kills/solo' },
-      { name: t('npc'), label: t('npc'), to: '/kills/npc' },
-      { name: t('5b'), label: t('5b'), to: '/kills/5b' },
-      { name: t('10b'), label: t('10b'), to: '/kills/10b' },
-      { name: t('citadels'), label: t('citadels'), to: '/kills/citadels' },
-      { name: t('t1'), label: t('t1'), to: '/kills/t1' },
-      { name: t('t2'), label: t('t2'), to: '/kills/t2' },
-      { name: t('t3'), label: t('t3'), to: '/kills/t3' },
-      { name: t('frigates'), label: t('frigates'), to: '/kills/frigates' },
-      { name: t('destroyers'), label: t('destroyers'), to: '/kills/destroyers' },
-      { name: t('cruisers'), label: t('cruisers'), to: '/kills/cruisers' },
-      { name: t('battlecruisers'), label: t('battlecruisers'), to: '/kills/battlecruisers' },
-      { name: t('battleships'), label: t('battleships'), to: '/kills/battleships' },
-      { name: t('capitals'), label: t('capitals'), to: '/kills/capitals' },
-      { name: t('freighters'), label: t('freighters'), to: '/kills/freighters' },
-      { name: t('supercarriers'), label: t('supercarriers'), to: '/kills/supercarriers' },
-      { name: t('titans'), label: t('titans'), to: '/kills/titans' }
-    ]
-  }
+      { name: t("latest"), label: t("latest"), to: "/kills/latest" },
+      { name: t("abyssal"), label: t("abyssal"), to: "/kills/abyssal" },
+      { name: t("wspace"), label: t("wspace"), to: "/kills/wspace" },
+      { name: t("highsec"), label: t("highsec"), to: "/kills/highsec" },
+      { name: t("lowsec"), label: t("lowsec"), to: "/kills/lowsec" },
+      { name: t("nullsec"), label: t("nullsec"), to: "/kills/nullsec" },
+      { name: t("big"), label: t("big"), to: "/kills/big" },
+      { name: t("solo"), label: t("solo"), to: "/kills/solo" },
+      { name: t("npc"), label: t("npc"), to: "/kills/npc" },
+      { name: t("5b"), label: t("5b"), to: "/kills/5b" },
+      { name: t("10b"), label: t("10b"), to: "/kills/10b" },
+      { name: t("citadels"), label: t("citadels"), to: "/kills/citadels" },
+      { name: t("t1"), label: t("t1"), to: "/kills/t1" },
+      { name: t("t2"), label: t("t2"), to: "/kills/t2" },
+      { name: t("t3"), label: t("t3"), to: "/kills/t3" },
+      { name: t("frigates"), label: t("frigates"), to: "/kills/frigates" },
+      { name: t("destroyers"), label: t("destroyers"), to: "/kills/destroyers" },
+      { name: t("cruisers"), label: t("cruisers"), to: "/kills/cruisers" },
+      { name: t("battlecruisers"), label: t("battlecruisers"), to: "/kills/battlecruisers" },
+      { name: t("battleships"), label: t("battleships"), to: "/kills/battleships" },
+      { name: t("capitals"), label: t("capitals"), to: "/kills/capitals" },
+      { name: t("freighters"), label: t("freighters"), to: "/kills/freighters" },
+      { name: t("supercarriers"), label: t("supercarriers"), to: "/kills/supercarriers" },
+      { name: t("titans"), label: t("titans"), to: "/kills/titans" },
+    ],
+  },
 ]);
 
 /**
@@ -87,8 +87,8 @@ const centerNavItems = computed(() => [
   {
     component: Search,
     inline: true,
-    position: 'center',
-  }
+    position: "center",
+  },
 ]);
 
 /**
@@ -96,38 +96,38 @@ const centerNavItems = computed(() => [
  */
 const rightNavItems = computed(() => [
   {
-    position: 'right',
+    position: "right",
     component: LanguageSelector,
     mobile: true,
   },
   {
-    icon: 'lucide:sun-moon',
-    position: 'right',
+    icon: "lucide:sun-moon",
+    position: "right",
     mobile: true,
     onClick: () => {
-      colorMode.preference = colorMode.preference === 'dark' ? 'light' : 'dark';
+      colorMode.preference = colorMode.preference === "dark" ? "light" : "dark";
     },
   },
   {
-    icon: 'lucide:book-image',
+    icon: "lucide:book-image",
     component: BackgroundSwitcher,
-    position: 'right',
+    position: "right",
     mobile: true,
   },
   {
-    icon: 'lucide:info',
-    position: 'right',
+    icon: "lucide:info",
+    position: "right",
     collapse: false,
     children: [
-      { name: t('faq'), label: t('faq'), to: '/faq' },
-      { name: t('status'), label: t('status'), to: '/status' },
-      { name: t('aboutTitle'), label: t('aboutTitle'), to: '/about' }
+      { name: t("faq"), label: t("faq"), to: "/faq" },
+      { name: t("status"), label: t("status"), to: "/status" },
+      { name: t("aboutTitle"), label: t("aboutTitle"), to: "/about" },
     ],
   },
   {
     component: NavbarUser,
-    position: 'right',
-  }
+    position: "right",
+  },
 ]);
 
 /**
@@ -136,14 +136,14 @@ const rightNavItems = computed(() => [
 const allNavItems = computed(() => [
   ...leftNavItems.value,
   ...centerNavItems.value,
-  ...rightNavItems.value
+  ...rightNavItems.value,
 ]);
 
 // Initialize expanded menus based on collapse property
 onMounted(() => {
-  allNavItems.value.forEach(link => {
+  allNavItems.value.forEach((link) => {
     if (link.children && link.collapse !== false) {
-      expandedMobileMenus.value[link.name || link.label || ''] = false; // Start collapsed by default
+      expandedMobileMenus.value[link.name || link.label || ""] = false; // Start collapsed by default
     }
   });
 });

@@ -8,7 +8,7 @@ export default defineEventHandler(async (event) => {
     cliLogger.error("Comment API called without identifier");
     return createError({
       statusCode: 400,
-      statusMessage: 'Identifier is required'
+      statusMessage: "Identifier is required",
     });
   }
 
@@ -18,23 +18,20 @@ export default defineEventHandler(async (event) => {
     // Always hide deleted comments from everyone
     const query = {
       killIdentifier: identifier,
-      deleted: false
+      deleted: false,
     };
 
     cliLogger.debug(`Comment query: ${JSON.stringify(query)}`);
 
     // Fetch comments for the given kill identifier, sorted by createdAt in descending order
-    const comments = await Comments.find(query)
-      .sort({ createdAt: -1 })
-      .lean()
-      .exec();
+    const comments = await Comments.find(query).sort({ createdAt: -1 }).lean().exec();
 
     return comments;
   } catch (error) {
     cliLogger.error(`Error fetching comments: ${error}`);
     return createError({
       statusCode: 500,
-      statusMessage: 'Failed to fetch comments'
+      statusMessage: "Failed to fetch comments",
     });
   }
 });

@@ -1,5 +1,5 @@
-import type { IAttacker } from './IAttacker';
-import type { IVictim } from './IVictim';
+import type { IAttacker } from "./IAttacker";
+import type { IVictim } from "./IVictim";
 
 export interface IKillmail {
   killmail_id: number;

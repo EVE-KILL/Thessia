@@ -1,7 +1,7 @@
-import { Prices } from "~/server/models/Prices";
-import bz2 from "unbzip2-stream";
 import { Readable } from "node:stream";
 import csvParser from "csv-parser";
+import bz2 from "unbzip2-stream";
+import { Prices } from "~/server/models/Prices";
 
 export default {
   name: "backfill:prices",

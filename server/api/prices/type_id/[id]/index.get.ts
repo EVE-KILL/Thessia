@@ -1,5 +1,5 @@
-import { Prices } from "~/server/models/Prices";
 import type { IPrice } from "~/server/interfaces/IPrice";
+import { Prices } from "~/server/models/Prices";
 
 export default defineEventHandler(async (event) => {
   const query = getQuery(event);

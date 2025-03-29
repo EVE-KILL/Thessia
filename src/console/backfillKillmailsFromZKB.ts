@@ -1,5 +1,5 @@
-import { KillmailsESI } from "~/server/models/KillmailsESI";
 import { createQueue } from "~/server/helpers/Queue";
+import { KillmailsESI } from "~/server/models/KillmailsESI";
 
 export default {
   name: "backfill:killmailsfromzkb",

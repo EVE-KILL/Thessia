@@ -1,8 +1,8 @@
-import { cliLogger } from "~/server/helpers/Logger";
-import { Prices } from "~/server/models/Prices";
-import bz2 from "unbzip2-stream";
 import { Readable } from "node:stream";
 import csvParser from "csv-parser";
+import bz2 from "unbzip2-stream";
+import { cliLogger } from "~/server/helpers/Logger";
+import { Prices } from "~/server/models/Prices";
 
 export default {
   name: "updatePrices",

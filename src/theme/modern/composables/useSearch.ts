@@ -1,4 +1,4 @@
-import { ref, watch } from 'vue';
+import { ref, watch } from "vue";
 
 export interface SearchHit {
   id: number;
@@ -16,7 +16,7 @@ export interface SearchResponse {
 }
 
 export function useSearch() {
-  const query = ref('');
+  const query = ref("");
   const isLoading = ref(false);
   const results = ref<SearchResponse | null>(null);
   const error = ref<Error | null>(null);
@@ -33,7 +33,9 @@ export function useSearch() {
 
     try {
       const encodedSearchTerm = encodeURIComponent(searchTerm);
-      const { data: responseData, error: fetchError } = await useFetch<SearchResponse>(`/api/search/${encodedSearchTerm}`);
+      const { data: responseData, error: fetchError } = await useFetch<SearchResponse>(
+        `/api/search/${encodedSearchTerm}`,
+      );
 
       if (fetchError.value) {
         throw new Error(fetchError.value.message);
@@ -42,7 +44,7 @@ export function useSearch() {
       results.value = responseData.value as SearchResponse;
       return results.value;
     } catch (err) {
-      console.debug('Error performing search:', err);
+      console.debug("Error performing search:", err);
       error.value = err as Error;
       return null;
     } finally {
@@ -75,16 +77,16 @@ export function useSearch() {
     if (!query.value || query.value.trim().length === 0) return;
 
     navigateTo({
-      path: '/search',
-      query: { q: query.value }
+      path: "/search",
+      query: { q: query.value },
     });
 
     // Clear the query after navigation
-    query.value = '';
+    query.value = "";
   };
 
   const clearSearch = () => {
-    query.value = '';
+    query.value = "";
     results.value = null;
     error.value = null;
   };
@@ -97,6 +99,6 @@ export function useSearch() {
     search,
     navigateToSearch,
     clearSearch,
-    setupAutoSearch
+    setupAutoSearch,
   };
 }

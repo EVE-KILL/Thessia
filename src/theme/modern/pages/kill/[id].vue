@@ -481,7 +481,7 @@
 </template>
 
 <script setup lang="ts">
-import type { IKillmail } from '~/server/interfaces/IKillmail';
+import type { IKillmail } from "~/server/interfaces/IKillmail";
 
 const { t } = useI18n();
 const route = useRoute();
@@ -496,79 +496,83 @@ const { isMobile } = useResponsive();
 // Common UI configuration for tabs
 const tabsUi = {
   list: {
-    base: 'mb-0 border-b border-background-700',
-    background: 'bg-gray-200 dark:bg-gray-900',
-    rounded: '',
-    shadow: '',
-    padding: 'p-0',
-    height: 'h-auto',
-    width: 'w-full',
+    base: "mb-0 border-b border-background-700",
+    background: "bg-gray-200 dark:bg-gray-900",
+    rounded: "",
+    shadow: "",
+    padding: "p-0",
+    height: "h-auto",
+    width: "w-full",
     marker: {
-      background: 'dark:bg-primary-500 bg-primary-500',
-      rounded: 'rounded-none',
-      shadow: ''
-    }
+      background: "dark:bg-primary-500 bg-primary-500",
+      rounded: "rounded-none",
+      shadow: "",
+    },
   },
   tab: {
-    base: 'text-sm inline-flex items-center h-10 px-4 cursor-pointer',
-    active: 'text-black dark:text-white font-medium',
-    inactive: 'text-gray-500 dark:text-gray-400 hover:text-black dark:hover:text-white'
+    base: "text-sm inline-flex items-center h-10 px-4 cursor-pointer",
+    active: "text-black dark:text-white font-medium",
+    inactive: "text-gray-500 dark:text-gray-400 hover:text-black dark:hover:text-white",
   },
   panel: {
-    base: 'p-0 sm:p-0'
-  }
+    base: "p-0 sm:p-0",
+  },
 };
 
 // Desktop tabs
 const rightSideTabs = computed(() => [
   {
-    label: 'Attackers',
-    slot: 'attackers',
-    icon: 'i-lucide-users',
-    trailing: killmail.value?.attackers?.length ? `(${killmail.value.attackers.length})` : undefined
+    label: "Attackers",
+    slot: "attackers",
+    icon: "i-lucide-users",
+    trailing: killmail.value?.attackers?.length
+      ? `(${killmail.value.attackers.length})`
+      : undefined,
   },
   {
-    label: 'Comments',
-    slot: 'comments',
-    icon: 'i-lucide-message-square',
-    trailing: commentCount.value ? `(${commentCount.value})` : undefined
-  }
+    label: "Comments",
+    slot: "comments",
+    icon: "i-lucide-message-square",
+    trailing: commentCount.value ? `(${commentCount.value})` : undefined,
+  },
 ]);
 
 // Mobile tabs
 const mobileTabs = computed(() => [
   {
-    label: 'Fitting',
-    slot: 'fitting',
-    icon: 'i-lucide-circle'
+    label: "Fitting",
+    slot: "fitting",
+    icon: "i-lucide-circle",
   },
   {
-    label: 'Items',
-    slot: 'items',
-    icon: 'i-lucide-package'
+    label: "Items",
+    slot: "items",
+    icon: "i-lucide-package",
   },
   {
-    label: 'Info',
-    slot: 'info',
-    icon: 'i-lucide-info'
+    label: "Info",
+    slot: "info",
+    icon: "i-lucide-info",
   },
   {
-    label: 'Attackers',
-    slot: 'attackers',
-    icon: 'i-lucide-users',
-    trailing: killmail.value?.attackers?.length ? `(${killmail.value.attackers.length})` : undefined
+    label: "Attackers",
+    slot: "attackers",
+    icon: "i-lucide-users",
+    trailing: killmail.value?.attackers?.length
+      ? `(${killmail.value.attackers.length})`
+      : undefined,
   },
   {
-    label: 'Comments',
-    slot: 'comments',
-    icon: 'i-lucide-message-square',
-    trailing: commentCount.value ? `(${commentCount.value})` : undefined
-  }
+    label: "Comments",
+    slot: "comments",
+    icon: "i-lucide-message-square",
+    trailing: commentCount.value ? `(${commentCount.value})` : undefined,
+  },
 ]);
 
 // Replace the useFetch call with useAsyncData for better SSR support
 const { data: fetchedKillmail, pending } = useAsyncData<IKillmail>(
-  `killmail-${route.params.id || 'none'}`,
+  `killmail-${route.params.id || "none"}`,
   async () => {
     if (!route.params.id) return null;
 
@@ -576,14 +580,14 @@ const { data: fetchedKillmail, pending } = useAsyncData<IKillmail>(
       const response = await $fetch<IKillmail>(`/api/killmail/${route.params.id}`);
       return response;
     } catch (error) {
-      console.error('Error fetching killmail:', error);
+      console.error("Error fetching killmail:", error);
       return null;
     }
   },
   {
     server: true, // Ensure this runs on the server
-    lazy: false   // Don't delay the initial render
-  }
+    lazy: false, // Don't delay the initial render
+  },
 );
 
 // Set up SEO meta tags using a computed property that handles null/undefined values safely
@@ -591,41 +595,44 @@ const seoData = computed(() => {
   if (!fetchedKillmail.value) return null;
 
   const data = fetchedKillmail.value;
-  const finalAttacker = data.attackers.length > 0 ? data.attackers[data.attackers.length - 1] : null;
+  const finalAttacker =
+    data.attackers.length > 0 ? data.attackers[data.attackers.length - 1] : null;
 
   return {
-    title: `${data.killmail_id} | ${data.victim.character_name || 'Unknown'} | ${data.victim.ship_name?.en || 'Unknown Ship'} | ${data.system_name}`,
+    title: `${data.killmail_id} | ${data.victim.character_name || "Unknown"} | ${data.victim.ship_name?.en || "Unknown Ship"} | ${data.system_name}`,
     ogImage: `https://images.evetech.net/types/${data.victim.ship_id}/render?size=512`,
-    description: finalAttacker ?
-      `${data.victim.character_name || 'Unknown'} lost ${data.victim.ship_name?.en || 'Unknown Ship'} in ${data.system_name} to ${finalAttacker.character_name || 'Unknown'} in ${finalAttacker.ship_name?.en || 'Unknown Ship'} - ${formatIsk(data.total_value)}` :
-      `${data.victim.character_name || 'Unknown'} lost ${data.victim.ship_name?.en || 'Unknown Ship'} in ${data.system_name} - ${formatIsk(data.total_value)}`
+    description: finalAttacker
+      ? `${data.victim.character_name || "Unknown"} lost ${data.victim.ship_name?.en || "Unknown Ship"} in ${data.system_name} to ${finalAttacker.character_name || "Unknown"} in ${finalAttacker.ship_name?.en || "Unknown Ship"} - ${formatIsk(data.total_value)}`
+      : `${data.victim.character_name || "Unknown"} lost ${data.victim.ship_name?.en || "Unknown Ship"} in ${data.system_name} - ${formatIsk(data.total_value)}`,
   };
 });
 
 // Apply SEO meta tags when available
 useSeoMeta({
-  title: computed(() => seoData.value?.title || 'Killmail | EVE-KILL'),
-  ogTitle: computed(() => seoData.value?.title || 'Killmail | EVE-KILL'),
-  twitterTitle: computed(() => seoData.value?.title || 'Killmail | EVE-KILL'),
+  title: computed(() => seoData.value?.title || "Killmail | EVE-KILL"),
+  ogTitle: computed(() => seoData.value?.title || "Killmail | EVE-KILL"),
+  twitterTitle: computed(() => seoData.value?.title || "Killmail | EVE-KILL"),
 
-  description: computed(() => seoData.value?.description || 'EVE Online killmail details'),
-  ogDescription: computed(() => seoData.value?.description || 'EVE Online killmail details'),
-  twitterDescription: computed(() => seoData.value?.description || 'EVE Online killmail details'),
+  description: computed(() => seoData.value?.description || "EVE Online killmail details"),
+  ogDescription: computed(() => seoData.value?.description || "EVE Online killmail details"),
+  twitterDescription: computed(() => seoData.value?.description || "EVE Online killmail details"),
 
-  ogImage: computed(() => seoData.value?.ogImage || ''),
-  twitterImage: computed(() => seoData.value?.ogImage || ''),
+  ogImage: computed(() => seoData.value?.ogImage || ""),
+  twitterImage: computed(() => seoData.value?.ogImage || ""),
 
   // Keep the rest of your meta tags
-  ogType: 'website',
-  ogSiteName: 'EVE-KILL',
-  ogUrl: computed(() => fetchedKillmail.value ? `https://eve-kill.com/kill/${fetchedKillmail.value.killmail_id}` : ''),
-  ogLocale: 'en_US',
-  twitterCard: 'summary_large_image',
-  twitterSite: '@eve_kill',
-  twitterImageAlt: computed(() => fetchedKillmail.value?.victim?.ship_name?.en || 'EVE Ship'),
-  twitterImageWidth: '512',
-  twitterImageHeight: '512',
-  twitterCreator: '@eve_kill',
+  ogType: "website",
+  ogSiteName: "EVE-KILL",
+  ogUrl: computed(() =>
+    fetchedKillmail.value ? `https://eve-kill.com/kill/${fetchedKillmail.value.killmail_id}` : "",
+  ),
+  ogLocale: "en_US",
+  twitterCard: "summary_large_image",
+  twitterSite: "@eve_kill",
+  twitterImageAlt: computed(() => fetchedKillmail.value?.victim?.ship_name?.en || "EVE Ship"),
+  twitterImageWidth: "512",
+  twitterImageHeight: "512",
+  twitterCreator: "@eve_kill",
 });
 
 // Track loading state
@@ -634,28 +641,32 @@ watch(pending, (newPending) => {
 });
 
 // Watch for changes in the fetched killmail data and update our ref
-watch(fetchedKillmail, async (newData: IKillmail) => {
-  if (newData) {
-    killmail.value = newData;
+watch(
+  fetchedKillmail,
+  async (newData: IKillmail) => {
+    if (newData) {
+      killmail.value = newData;
 
-    try {
-      // Fetch sibling killmail if it exists
-      const siblingResponse = await $fetch<string[]>(`/api/killmail/${route.params.id}/sibling`);
+      try {
+        // Fetch sibling killmail if it exists
+        const siblingResponse = await $fetch<string[]>(`/api/killmail/${route.params.id}/sibling`);
 
-      if (siblingResponse && Array.isArray(siblingResponse) && siblingResponse.length > 0) {
-        const siblingData = await $fetch<IKillmail>(`/api/killmail/${siblingResponse[0]}`);
-        sibling.value = siblingData || null;
-      } else {
+        if (siblingResponse && Array.isArray(siblingResponse) && siblingResponse.length > 0) {
+          const siblingData = await $fetch<IKillmail>(`/api/killmail/${siblingResponse[0]}`);
+          sibling.value = siblingData || null;
+        } else {
+          sibling.value = null;
+        }
+      } catch (error) {
+        console.error("Error fetching sibling killmail:", error);
         sibling.value = null;
+      } finally {
+        isLoading.value = false;
       }
-    } catch (error) {
-      console.error('Error fetching sibling killmail:', error);
-      sibling.value = null;
-    } finally {
-      isLoading.value = false;
     }
-  }
-}, { immediate: true });
+  },
+  { immediate: true },
+);
 
 // Update comment count from child component
 function updateCommentCount(count: number) {
@@ -665,22 +676,26 @@ function updateCommentCount(count: number) {
 /**
  * Calculates the position for skeleton slots
  */
-function getSkeletonSlotPosition(index: number | string, total?: number | string, position?: string): Record<string, string> {
+function getSkeletonSlotPosition(
+  index: number | string,
+  total?: number | string,
+  position?: string,
+): Record<string, string> {
   // Use the same radius as the actual component for consistency
   const radius = 42;
   let angle = 0;
 
   // Handle the case where index is 'indicator'
-  if (index === 'indicator' && typeof total === 'string') {
+  if (index === "indicator" && typeof total === "string") {
     // In this case, total is actually the position ('top', 'right', 'bottom')
     switch (total) {
-      case 'top':
+      case "top":
         angle = -125 - 9;
         break;
-      case 'right':
+      case "right":
         angle = -35 - 10;
         break;
-      case 'bottom':
+      case "bottom":
         angle = 90 - 35 - 10;
         break;
       default:
@@ -688,19 +703,19 @@ function getSkeletonSlotPosition(index: number | string, total?: number | string
     }
   }
   // Handle normal slot positioning - exactly matching the KillFittingWheel component logic
-  else if (typeof index === 'number' && typeof total === 'number' && position) {
+  else if (typeof index === "number" && typeof total === "number" && position) {
     switch (position) {
-      case 'top':
-        angle = -125 + (index * 10.5);
+      case "top":
+        angle = -125 + index * 10.5;
         break;
-      case 'right':
-        angle = 0 - 37 + (index * 10.5);
+      case "right":
+        angle = 0 - 37 + index * 10.5;
         break;
-      case 'bottom':
-        angle = 90 - 36 + (index * 10.5);
+      case "bottom":
+        angle = 90 - 36 + index * 10.5;
         break;
-      case 'left':
-        angle = 218 - 22 + (index * 10.5);
+      case "left":
+        angle = 218 - 22 + index * 10.5;
         break;
       default:
         angle = 0;
@@ -714,50 +729,54 @@ function getSkeletonSlotPosition(index: number | string, total?: number | string
   return {
     left: `${x}%`,
     top: `${y}%`,
-    transform: 'translate(-50%, -50%)'
+    transform: "translate(-50%, -50%)",
   };
 }
 
 // Default tab selections
-const defaultDesktopTabIndex = ref('0'); // First tab (Attackers)
-const defaultMobileTabIndex = ref('0');  // First tab (Fitting)
+const defaultDesktopTabIndex = ref("0"); // First tab (Attackers)
+const defaultMobileTabIndex = ref("0"); // First tab (Fitting)
 
 // Handle comment fragment navigation
 function handleCommentFragment() {
   if (import.meta.client) {
     const fragment = window.location.hash;
-    if (fragment && fragment.startsWith('#comment-')) {
+    if (fragment?.startsWith("#comment-")) {
       // If we have a comment fragment, switch to the comments tab
       if (isMobile.value) {
         // Comments is the 5th tab (index 4) on mobile
-        defaultMobileTabIndex.value = '4';
+        defaultMobileTabIndex.value = "4";
       } else {
         // Comments is the 2nd tab (index 1) on desktop
-        defaultDesktopTabIndex.value = '1';
+        defaultDesktopTabIndex.value = "1";
       }
     }
   }
 }
 
 // Update UTabs to use the defaultIndex
-watch(() => killmail.value, () => {
-  if (killmail.value && import.meta.client) {
-    nextTick(() => {
-      handleCommentFragment();
-    });
-  }
-}, { immediate: true });
+watch(
+  () => killmail.value,
+  () => {
+    if (killmail.value && import.meta.client) {
+      nextTick(() => {
+        handleCommentFragment();
+      });
+    }
+  },
+  { immediate: true },
+);
 
 // Listen for hash changes to update tab selection when fragments change
 onMounted(() => {
   if (import.meta.client) {
-    window.addEventListener('hashchange', handleCommentFragment);
+    window.addEventListener("hashchange", handleCommentFragment);
   }
 });
 
 onBeforeUnmount(() => {
   if (import.meta.client) {
-    window.removeEventListener('hashchange', handleCommentFragment);
+    window.removeEventListener("hashchange", handleCommentFragment);
   }
 });
 </script>

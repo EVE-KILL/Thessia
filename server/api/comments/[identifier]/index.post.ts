@@ -1,8 +1,8 @@
-import { cliLogger } from "~/server/helpers/Logger";
-import { Comments } from "~/server/models/Comments";
 import { v4 as uuidv4 } from "uuid";
-import { broadcastCommentEvent } from "~/server/helpers/WSClientManager";
 import { DiscordWebhooks } from "~/server/helpers/DiscordWebhooks";
+import { cliLogger } from "~/server/helpers/Logger";
+import { broadcastCommentEvent } from "~/server/helpers/WSClientManager";
+import { Comments } from "~/server/models/Comments";
 
 /**
  * Interface for OpenAI moderation API response
@@ -13,17 +13,17 @@ interface ModerationResponse {
   results: Array<{
     flagged: boolean;
     categories: {
-      'sexual': boolean;
-      'hate': boolean;
-      'harassment': boolean;
-      'self-harm': boolean;
-      'sexual/minors': boolean;
-      'hate/threatening': boolean;
-      'violence/graphic': boolean;
-      'self-harm/intent': boolean;
-      'self-harm/instructions': boolean;
-      'harassment/threatening': boolean;
-      'violence': boolean;
+      sexual: boolean;
+      hate: boolean;
+      harassment: boolean;
+      "self-harm": boolean;
+      "sexual/minors": boolean;
+      "hate/threatening": boolean;
+      "violence/graphic": boolean;
+      "self-harm/intent": boolean;
+      "self-harm/instructions": boolean;
+      "harassment/threatening": boolean;
+      violence: boolean;
     };
     category_scores: Record<string, number>;
     flagged_categories: string[];
@@ -35,11 +35,13 @@ interface ModerationResponse {
  * @param result Moderation result from OpenAI
  * @returns Whether the content contains prohibited material
  */
-function isFlagged(result: ModerationResponse['results'][0]): boolean {
-  return result.categories['self-harm'] ||
-    result.categories['sexual/minors'] ||
-    result.categories['self-harm/intent'] ||
-    result.categories['self-harm/instructions'];
+function isFlagged(result: ModerationResponse["results"][0]): boolean {
+  return (
+    result.categories["self-harm"] ||
+    result.categories["sexual/minors"] ||
+    result.categories["self-harm/intent"] ||
+    result.categories["self-harm/instructions"]
+  );
 }
 
 /**
@@ -51,18 +53,18 @@ async function aiModeration(text: string): Promise<{ allowed: boolean; message?:
   const apiKey = process.env.OPENAI_API_KEY;
 
   if (!apiKey) {
-    cliLogger.warn('OpenAI API key not configured, skipping moderation');
+    cliLogger.warn("OpenAI API key not configured, skipping moderation");
     return { allowed: true };
   }
 
   try {
-    const response = await fetch('https://api.openai.com/v1/moderations', {
-      method: 'POST',
+    const response = await fetch("https://api.openai.com/v1/moderations", {
+      method: "POST",
       headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${apiKey}`
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${apiKey}`,
       },
-      body: JSON.stringify({ input: text })
+      body: JSON.stringify({ input: text }),
     });
 
     if (!response.ok) {
@@ -72,7 +74,7 @@ async function aiModeration(text: string): Promise<{ allowed: boolean; message?:
       return { allowed: true };
     }
 
-    const data = await response.json() as ModerationResponse;
+    const data = (await response.json()) as ModerationResponse;
 
     if (data.results.length > 0) {
       const result = data.results[0];
@@ -80,19 +82,19 @@ async function aiModeration(text: string): Promise<{ allowed: boolean; message?:
       if (isFlagged(result)) {
         // Get the names of flagged categories for better error messages
         const flaggedCategories = Object.entries(result.categories)
-          .filter(([category, flagged]) =>
-            flagged && (
-              category === 'self-harm' ||
-              category === 'sexual/minors' ||
-              category === 'self-harm/intent' ||
-              category === 'self-harm/instructions'
-            )
+          .filter(
+            ([category, flagged]) =>
+              flagged &&
+              (category === "self-harm" ||
+                category === "sexual/minors" ||
+                category === "self-harm/intent" ||
+                category === "self-harm/instructions"),
           )
           .map(([category]) => category);
 
         return {
           allowed: false,
-          message: `Comment contains potentially harmful content (${flaggedCategories.join(', ')}) and cannot be posted.`
+          message: `Comment contains potentially harmful content (${flaggedCategories.join(", ")}) and cannot be posted.`,
         };
       }
     }
@@ -113,7 +115,7 @@ export default defineEventHandler(async (event) => {
   if (!token) {
     return createError({
       statusCode: 401,
-      statusMessage: 'Authentication required'
+      statusMessage: "Authentication required",
     });
   }
 
@@ -121,22 +123,22 @@ export default defineEventHandler(async (event) => {
   if (!killIdentifier) {
     return createError({
       statusCode: 400,
-      statusMessage: 'Kill identifier is required'
+      statusMessage: "Kill identifier is required",
     });
   }
 
   try {
     // Get user data from the session
-    const session = await $fetch('/api/auth/me', {
+    const session = await $fetch("/api/auth/me", {
       headers: {
-        cookie: `evelogin=${token}`
-      }
+        cookie: `evelogin=${token}`,
+      },
     }).catch(() => null);
 
     if (!session || !session.authenticated) {
       return createError({
         statusCode: 401,
-        statusMessage: 'Authentication failed'
+        statusMessage: "Authentication failed",
       });
     }
 
@@ -149,10 +151,10 @@ export default defineEventHandler(async (event) => {
     // Extract the comment from the body
     const { comment } = body;
 
-    if (!comment || typeof comment !== 'string' || comment.trim() === '') {
+    if (!comment || typeof comment !== "string" || comment.trim() === "") {
       return createError({
         statusCode: 400,
-        statusMessage: 'Comment text is required'
+        statusMessage: "Comment text is required",
       });
     }
 
@@ -161,7 +163,7 @@ export default defineEventHandler(async (event) => {
     if (!moderationResult.allowed) {
       return createError({
         statusCode: 400,
-        statusMessage: moderationResult.message || 'Comment did not pass content moderation'
+        statusMessage: moderationResult.message || "Comment did not pass content moderation",
       });
     }
 
@@ -186,7 +188,7 @@ export default defineEventHandler(async (event) => {
     cliLogger.debug(`New comment saved for killIdentifier: ${killIdentifier}`);
 
     // Broadcast the new comment via WebSocket
-    await broadcastCommentEvent('new', newComment.toJSON());
+    await broadcastCommentEvent("new", newComment.toJSON());
 
     // Send notification to Discord
     await DiscordWebhooks.sendNewComment(newComment.toJSON());
@@ -196,7 +198,7 @@ export default defineEventHandler(async (event) => {
     cliLogger.error(`Error saving comment: ${error}`);
     return createError({
       statusCode: 500,
-      statusMessage: 'Failed to save comment'
+      statusMessage: "Failed to save comment",
     });
   }
 });

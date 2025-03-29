@@ -1,6 +1,6 @@
 // models/HistoricalStats.ts
 
-import { Schema, model, type Document, type Model } from "mongoose";
+import { type Document, type Model, Schema, model } from "mongoose";
 import type { IHistoricalStats } from "~/server/interfaces/IHistoricalStats"; // Adjust the path as necessary
 
 // Extend the IHistoricalStats interface with Mongoose's Document interface

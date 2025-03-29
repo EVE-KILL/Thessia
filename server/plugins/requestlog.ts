@@ -7,7 +7,7 @@ export default defineNitroPlugin(() => {
 
     // Output request log info similar to nginx
     cliLogger.info(
-      `[${new Date().toISOString()} "${event.node.req.method} ${event.node.req.url} HTTP/${event.node.req.httpVersion}" ${event.node.req.headers["user-agent"]} ${requestIp}]`
+      `[${new Date().toISOString()} "${event.node.req.method} ${event.node.req.url} HTTP/${event.node.req.httpVersion}" ${event.node.req.headers["user-agent"]} ${requestIp}]`,
     );
   });
 });

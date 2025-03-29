@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import { ref, computed, nextTick, watch, onMounted, onUnmounted } from 'vue';
-import { useSearch } from '~/composables/useSearch';
+import { computed, nextTick, onMounted, onUnmounted, ref, watch } from "vue";
+import { useSearch } from "~/composables/useSearch";
 
 const { t } = useI18n();
 
@@ -12,7 +12,7 @@ setupAutoSearch(3, 300);
 
 // Track active item in dropdown
 const activeItemIndex = ref(-1);
-const activeCategory = ref('');
+const activeCategory = ref("");
 const shouldShowDropdown = ref(false);
 const dropdownRef = ref<HTMLElement | null>(null);
 
@@ -20,16 +20,20 @@ const { isMobile } = useResponsive();
 const isFullscreenMobile = ref(false);
 
 // Watch for changes in query and mobile state
-watch([() => query.value, isMobile], ([newQuery, isMobileDevice]) => {
-  // Only auto-close when query is cleared
-  if (newQuery.length === 0) {
-    isFullscreenMobile.value = false;
-  }
-}, { immediate: true });
+watch(
+  [() => query.value, isMobile],
+  ([newQuery, isMobileDevice]) => {
+    // Only auto-close when query is cleared
+    if (newQuery.length === 0) {
+      isFullscreenMobile.value = false;
+    }
+  },
+  { immediate: true },
+);
 
 // Fix animation and positioning issues
 const dropdownTransition = ref({
-  entering: false
+  entering: false,
 });
 
 // Group results by type for fancy category-based display
@@ -38,7 +42,7 @@ const groupedResults = computed(() => {
 
   const grouped: Record<string, any[]> = {};
 
-  results.value.hits.forEach(hit => {
+  results.value.hits.forEach((hit) => {
     if (!grouped[hit.type]) {
       grouped[hit.type] = [];
     }
@@ -63,24 +67,34 @@ const flattenedResults = computed(() => {
 
 // Track if dropdown should be displayed
 const showResults = computed(() => {
-  return shouldShowDropdown.value &&
-         results.value?.hits &&
-         results.value.hits.length > 0 &&
-         query.value.length >= 3;
+  return (
+    shouldShowDropdown.value &&
+    results.value?.hits &&
+    results.value.hits.length > 0 &&
+    query.value.length >= 3
+  );
 });
 
 // Watch for changes in results to properly show/hide dropdown
-watch(() => results.value?.hits, (newHits) => {
-  if (newHits && newHits.length > 0 && query.value.length >= 3) {
-    shouldShowDropdown.value = true;
-  }
-}, { deep: true });
+watch(
+  () => results.value?.hits,
+  (newHits) => {
+    if (newHits && newHits.length > 0 && query.value.length >= 3) {
+      shouldShowDropdown.value = true;
+    }
+  },
+  { deep: true },
+);
 
 // Reset active item when results change
-watch(() => results.value?.hits, () => {
-  activeItemIndex.value = -1;
-  activeCategory.value = '';
-}, { deep: true });
+watch(
+  () => results.value?.hits,
+  () => {
+    activeItemIndex.value = -1;
+    activeCategory.value = "";
+  },
+  { deep: true },
+);
 
 // Handle form submission - navigate to search page
 const handleSearchSubmit = (e: Event) => {
@@ -90,7 +104,7 @@ const handleSearchSubmit = (e: Event) => {
   if (activeItemIndex.value >= 0 && flattenedResults.value[activeItemIndex.value]) {
     const activeHit = flattenedResults.value[activeItemIndex.value];
     navigateTo(`/${activeHit.type}/${activeHit.id}`);
-    query.value = '';
+    query.value = "";
     shouldShowDropdown.value = false;
     isFullscreenMobile.value = false;
   } else {
@@ -106,27 +120,27 @@ const handleKeydown = (e: KeyboardEvent) => {
 
   // Handle arrow keys for dropdown navigation
   switch (e.key) {
-    case 'ArrowDown':
+    case "ArrowDown":
       e.preventDefault();
       activeItemIndex.value = Math.min(
         activeItemIndex.value + 1,
-        flattenedResults.value.length - 1
+        flattenedResults.value.length - 1,
       );
       updateActiveCategoryFromIndex();
       scrollActiveItemIntoView();
       break;
 
-    case 'ArrowUp':
+    case "ArrowUp":
       e.preventDefault();
       activeItemIndex.value = Math.max(activeItemIndex.value - 1, -1);
       updateActiveCategoryFromIndex();
       scrollActiveItemIntoView();
       break;
 
-    case 'Escape':
+    case "Escape":
       if (isFullscreenMobile.value) {
         isFullscreenMobile.value = false;
-        query.value = '';
+        query.value = "";
       } else {
         shouldShowDropdown.value = false;
       }
@@ -139,16 +153,16 @@ const updateActiveCategoryFromIndex = () => {
   if (activeItemIndex.value >= 0 && flattenedResults.value[activeItemIndex.value]) {
     activeCategory.value = flattenedResults.value[activeItemIndex.value].type;
   } else {
-    activeCategory.value = '';
+    activeCategory.value = "";
   }
 };
 
 // Make sure active item is visible in dropdown
 const scrollActiveItemIntoView = () => {
   nextTick(() => {
-    const activeElement = document.querySelector('.search-result-item.active');
+    const activeElement = document.querySelector(".search-result-item.active");
     if (activeElement && dropdownRef.value) {
-      activeElement.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+      activeElement.scrollIntoView({ block: "nearest", behavior: "smooth" });
     }
   });
 };
@@ -156,43 +170,43 @@ const scrollActiveItemIntoView = () => {
 // Helper functions for entity types
 const getIconForEntityType = (type: string) => {
   switch (type.toLowerCase()) {
-    case 'character':
-      return 'lucide:user';
-    case 'corporation':
-      return 'lucide:building';
-    case 'alliance':
-      return 'lucide:users';
-    case 'ship':
-      return 'lucide:ship';
-    case 'item':
-      return 'lucide:box';
-    case 'system':
-      return 'lucide:globe';
-    case 'region':
-      return 'lucide:map';
+    case "character":
+      return "lucide:user";
+    case "corporation":
+      return "lucide:building";
+    case "alliance":
+      return "lucide:users";
+    case "ship":
+      return "lucide:ship";
+    case "item":
+      return "lucide:box";
+    case "system":
+      return "lucide:globe";
+    case "region":
+      return "lucide:map";
     default:
-      return 'lucide:circle';
+      return "lucide:circle";
   }
 };
 
 const getColorForEntityType = (type: string) => {
   switch (type.toLowerCase()) {
-    case 'character':
-      return 'text-blue-600 dark:text-blue-400';
-    case 'corporation':
-      return 'text-green-600 dark:text-green-400';
-    case 'alliance':
-      return 'text-purple-600 dark:text-purple-400';
-    case 'ship':
-      return 'text-red-600 dark:text-red-400';
-    case 'item':
-      return 'text-orange-600 dark:text-orange-400';
-    case 'system':
-      return 'text-teal-600 dark:text-teal-400';
-    case 'region':
-      return 'text-indigo-600 dark:text-indigo-400';
+    case "character":
+      return "text-blue-600 dark:text-blue-400";
+    case "corporation":
+      return "text-green-600 dark:text-green-400";
+    case "alliance":
+      return "text-purple-600 dark:text-purple-400";
+    case "ship":
+      return "text-red-600 dark:text-red-400";
+    case "item":
+      return "text-orange-600 dark:text-orange-400";
+    case "system":
+      return "text-teal-600 dark:text-teal-400";
+    case "region":
+      return "text-indigo-600 dark:text-indigo-400";
     default:
-      return 'text-gray-600 dark:text-gray-400';
+      return "text-gray-600 dark:text-gray-400";
   }
 };
 
@@ -227,7 +241,7 @@ const handleClickOutside = () => {};
 // Click on search result
 const handleResultClick = (hit: any) => {
   navigateTo(`/${hit.type}/${hit.id}`);
-  query.value = '';
+  query.value = "";
   shouldShowDropdown.value = false;
   isFullscreenMobile.value = false;
 };
@@ -235,7 +249,7 @@ const handleResultClick = (hit: any) => {
 // Close mobile fullscreen search
 const closeMobileSearch = () => {
   isFullscreenMobile.value = false;
-  query.value = '';
+  query.value = "";
 };
 
 // Open mobile search
@@ -243,7 +257,7 @@ const openMobileSearch = () => {
   isFullscreenMobile.value = true;
   nextTick(() => {
     // Focus the input in the modal after it opens
-    const searchInput = document.getElementById('mobile-search-input');
+    const searchInput = document.getElementById("mobile-search-input");
     if (searchInput) {
       searchInput.focus();
     }

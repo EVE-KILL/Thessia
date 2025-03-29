@@ -19,7 +19,7 @@ import {
   getCachedItem,
   getCachedPrice,
   getCachedRegion,
-  getCachedSolarSystem
+  getCachedSolarSystem,
 } from "./RuntimeCache";
 
 async function parseKillmail(killmail: IESIKillmail, warId = 0): Promise<Partial<IKillmail>> {

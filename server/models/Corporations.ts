@@ -1,6 +1,6 @@
 // models/Corporations.ts
 
-import { Schema, model, type Document, type Model } from "mongoose";
+import { type Document, type Model, Schema, model } from "mongoose";
 import type { ICorporation, ICorporationHistory } from "~/server/interfaces/ICorporation"; // Adjust the path as necessary
 
 // Extend the ICorporation interface with Mongoose's Document interface

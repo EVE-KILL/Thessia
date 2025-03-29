@@ -2,41 +2,42 @@
 const { getOptimizedImageUrl, getSiteBackground } = siteBackground();
 const backgroundRef = getSiteBackground();
 const backgroundUrl = computed(() => {
-    return getOptimizedImageUrl(backgroundRef.value);
+  return getOptimizedImageUrl(backgroundRef.value);
 });
 
 useHead({
-    link: [
-        { rel: 'preload', as: 'image', href: backgroundUrl.value }
-    ]
+  link: [{ rel: "preload", as: "image", href: backgroundUrl.value }],
 });
 
 useSeoMeta({
-    titleTemplate: 'EVE-KILL | %s',
-    description: 'EVE-KILL is a community-driven killboard for EVE Online, providing detailed statistics and analysis of player kills and losses.',
-    ogDescription: 'EVE-KILL is a community-driven killboard for EVE Online, providing detailed statistics and analysis of player kills and losses.',
-    twitterDescription: 'EVE-KILL is a community-driven killboard for EVE Online, providing detailed statistics and analysis of player kills and losses.',
-    ogImage: '/icon.svg',
-    twitterImage: '/icon.svg',
-    ogType: 'website',
-    twitterCard: 'summary_large_image',
-    twitterTitle: 'EVE-KILL',
-    ogUrl: 'https://eve-kill.com',
-    ogSiteName: 'EVE-KILL',
-    twitterSite: '@eve_kill',
-    twitterCreator: '@eve_kill',
-    ogLocale: 'en_US',
-})
+  titleTemplate: "EVE-KILL | %s",
+  description:
+    "EVE-KILL is a community-driven killboard for EVE Online, providing detailed statistics and analysis of player kills and losses.",
+  ogDescription:
+    "EVE-KILL is a community-driven killboard for EVE Online, providing detailed statistics and analysis of player kills and losses.",
+  twitterDescription:
+    "EVE-KILL is a community-driven killboard for EVE Online, providing detailed statistics and analysis of player kills and losses.",
+  ogImage: "/icon.svg",
+  twitterImage: "/icon.svg",
+  ogType: "website",
+  twitterCard: "summary_large_image",
+  twitterTitle: "EVE-KILL",
+  ogUrl: "https://eve-kill.com",
+  ogSiteName: "EVE-KILL",
+  twitterSite: "@eve_kill",
+  twitterCreator: "@eve_kill",
+  ogLocale: "en_US",
+});
 
 useHead({
-    link: [
-        {
-            rel: 'icon',
-            type: 'image/png',
-            href: '/favicon.png'
-        }
-    ]
-})
+  link: [
+    {
+      rel: "icon",
+      type: "image/png",
+      href: "/favicon.png",
+    },
+  ],
+});
 </script>
 
 <template>

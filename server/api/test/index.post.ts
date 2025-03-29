@@ -1,7 +1,7 @@
 import { fetchESIKillmail } from "~/server/helpers/ESIData";
 import { parseKillmail } from "~/server/helpers/KillmailParser";
-import { processKillmail } from "~/server/queue/Killmail";
 import type { IESIKillmail } from "~/server/interfaces/IESIKillmail";
+import { processKillmail } from "~/server/queue/Killmail";
 
 export default defineEventHandler(async (event) => {
   const query = getQuery(event);

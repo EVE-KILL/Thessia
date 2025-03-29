@@ -1,6 +1,6 @@
+import { DiscordWebhooks } from "~/server/helpers/DiscordWebhooks";
 import { cliLogger } from "~/server/helpers/Logger";
 import { Comments } from "~/server/models/Comments";
-import { DiscordWebhooks } from "~/server/helpers/DiscordWebhooks";
 
 export default defineEventHandler(async (event) => {
   // Get the authentication cookie
@@ -10,22 +10,22 @@ export default defineEventHandler(async (event) => {
   if (!token) {
     return createError({
       statusCode: 401,
-      statusMessage: 'Authentication required'
+      statusMessage: "Authentication required",
     });
   }
 
   try {
     // Get user data from the session
-    const session = await $fetch('/api/auth/me', {
+    const session = await $fetch("/api/auth/me", {
       headers: {
-        cookie: `evelogin=${token}`
-      }
+        cookie: `evelogin=${token}`,
+      },
     }).catch(() => null);
 
     if (!session || !session.authenticated) {
       return createError({
         statusCode: 401,
-        statusMessage: 'Authentication failed'
+        statusMessage: "Authentication failed",
       });
     }
 
@@ -40,14 +40,14 @@ export default defineEventHandler(async (event) => {
     if (!identifier) {
       return createError({
         statusCode: 400,
-        statusMessage: 'Comment identifier is required'
+        statusMessage: "Comment identifier is required",
       });
     }
 
-    if (!reportMessage || reportMessage.trim() === '') {
+    if (!reportMessage || reportMessage.trim() === "") {
       return createError({
         statusCode: 400,
-        statusMessage: 'Report message is required'
+        statusMessage: "Report message is required",
       });
     }
 
@@ -57,7 +57,7 @@ export default defineEventHandler(async (event) => {
     if (!comment) {
       return createError({
         statusCode: 404,
-        statusMessage: 'Comment not found'
+        statusMessage: "Comment not found",
       });
     }
 
@@ -65,7 +65,7 @@ export default defineEventHandler(async (event) => {
     if (user.characterId === comment.characterId) {
       return createError({
         statusCode: 400,
-        statusMessage: 'You cannot report your own comment'
+        statusMessage: "You cannot report your own comment",
       });
     }
 
@@ -73,7 +73,7 @@ export default defineEventHandler(async (event) => {
     const report = {
       reporterId: user.characterId,
       reporterName: user.characterName,
-      message: reportMessage.trim()
+      message: reportMessage.trim(),
     };
 
     comment.reported = true;
@@ -85,26 +85,22 @@ export default defineEventHandler(async (event) => {
     await comment.save();
 
     // Send notification to Discord
-    await DiscordWebhooks.sendReportedComment(
-      comment.toJSON(),
-      reportMessage.trim(),
-      {
-        characterId: user.characterId,
-        characterName: user.characterName
-      }
-    );
+    await DiscordWebhooks.sendReportedComment(comment.toJSON(), reportMessage.trim(), {
+      characterId: user.characterId,
+      characterName: user.characterName,
+    });
 
     cliLogger.debug(`Comment ${identifier} reported by ${user.characterName}: ${reportMessage}`);
 
     return {
       success: true,
-      message: 'Comment reported successfully'
+      message: "Comment reported successfully",
     };
   } catch (error) {
     cliLogger.error(`Error reporting comment: ${error}`);
     return createError({
       statusCode: 500,
-      statusMessage: 'Failed to report comment'
+      statusMessage: "Failed to report comment",
     });
   }
 });

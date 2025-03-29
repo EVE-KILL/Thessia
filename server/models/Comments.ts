@@ -1,6 +1,6 @@
 // models/Comments.ts
 
-import { Schema, model, type Document, type Model } from "mongoose";
+import { type Document, type Model, Schema, model } from "mongoose";
 import type { IComments } from "~/server/interfaces/IComments";
 
 // Extend the IComments interface with Mongoose's Document interface
@@ -17,7 +17,7 @@ const commentsSchema = new Schema<ICommentsDocument>(
     killIdentifier: {
       type: String,
       required: true,
-      index: true // Index for faster queries but not unique
+      index: true, // Index for faster queries but not unique
     },
     comment: { type: String, required: true },
     characterId: { type: Number, required: true },
@@ -30,12 +30,14 @@ const commentsSchema = new Schema<ICommentsDocument>(
     // New fields for deletion and reporting
     deleted: { type: Boolean, default: false },
     reported: { type: Boolean, default: false },
-    reportMessages: [{
-      reporterId: { type: Number, required: true },
-      reporterName: { type: String, required: true },
-      message: { type: String, required: true },
-      timestamp: { type: Date, default: Date.now }
-    }]
+    reportMessages: [
+      {
+        reporterId: { type: Number, required: true },
+        reporterName: { type: String, required: true },
+        message: { type: String, required: true },
+        timestamp: { type: Date, default: Date.now },
+      },
+    ],
   },
   {
     collection: "comments",

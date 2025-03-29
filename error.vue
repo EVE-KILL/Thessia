@@ -1,16 +1,16 @@
 <script setup lang="ts">
-import * as locales from '@nuxt/ui/locale';
+import * as locales from "@nuxt/ui/locale";
 
 // Get the error that was thrown
 const props = defineProps({
-  error: Object
-})
+  error: Object,
+});
 
 // Load i18n
 const { locale, t } = useI18n();
 
 // Clear error state on button click
-const handleError = () => clearError({ redirect: '/' })
+const handleError = () => clearError({ redirect: "/" });
 
 // Get appropriate error message based on status code
 const errorMessage = computed(() => {
@@ -18,15 +18,15 @@ const errorMessage = computed(() => {
 
   switch (statusCode) {
     case 404:
-      return t('errorNotFound');
+      return t("errorNotFound");
     case 403:
-      return t('errorForbidden');
+      return t("errorForbidden");
     case 500:
-      return t('errorServerError');
+      return t("errorServerError");
     default:
-      return props.error?.message || t('errorGeneric');
+      return props.error?.message || t("errorGeneric");
   }
-})
+});
 
 // Get appropriate image based on status code
 const errorImage = computed(() => {
@@ -34,36 +34,36 @@ const errorImage = computed(() => {
   // For now we only have 404 image, but structure allows for additional images
   switch (statusCode) {
     case 404:
-      return '/images/404.png';
+      return "/images/404.png";
     default:
-      return '/images/404.png'; // fallback to 404 image
+      return "/images/404.png"; // fallback to 404 image
   }
-})
+});
 
 // Apply theme class when component mounts
 onMounted(() => {
   if (import.meta.client) {
     const applyThemeClass = () => {
-      const colorMode = useColorMode()
-      const isDarkMode = colorMode.value === 'dark'
+      const colorMode = useColorMode();
+      const isDarkMode = colorMode.value === "dark";
 
       if (isDarkMode) {
-        document.documentElement.classList.add('dark')
+        document.documentElement.classList.add("dark");
       } else {
-        document.documentElement.classList.remove('dark')
+        document.documentElement.classList.remove("dark");
       }
-    }
+    };
 
     // Apply theme class immediately and on DOM content loaded
-    applyThemeClass()
-    document.addEventListener('DOMContentLoaded', applyThemeClass)
+    applyThemeClass();
+    document.addEventListener("DOMContentLoaded", applyThemeClass);
 
     // Clean up event listener on unmount
     onUnmounted(() => {
-      document.removeEventListener('DOMContentLoaded', applyThemeClass)
-    })
+      document.removeEventListener("DOMContentLoaded", applyThemeClass);
+    });
   }
-})
+});
 </script>
 
 <template>

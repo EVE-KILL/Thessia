@@ -1,4 +1,8 @@
-import { addCommentClient, removeCommentClient, initializeCommentSubscription } from "~/server/helpers/WSClientManager";
+import {
+  addCommentClient,
+  initializeCommentSubscription,
+  removeCommentClient,
+} from "~/server/helpers/WSClientManager";
 
 // Initialize the Redis subscription when this module loads
 initializeCommentSubscription();

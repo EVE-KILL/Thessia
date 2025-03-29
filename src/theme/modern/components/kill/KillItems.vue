@@ -128,43 +128,43 @@
 </template>
 
 <script setup lang="ts">
-import { resolveComponent } from 'vue';
+import { resolveComponent } from "vue";
 
-import type { IKillmail } from '~/server/interfaces/IKillmail';
-import type { TableColumn } from '../common/Table.vue';
+import type { IKillmail } from "~/server/interfaces/IKillmail";
+import type { TableColumn } from "../common/Table.vue";
 
 const { t, locale } = useI18n();
 const currentLocale = computed(() => locale.value);
 const { isMobile } = useResponsive();
 
 const props = defineProps<{
-    killmail: IKillmail | null;
+  killmail: IKillmail | null;
 }>();
 
 // Define table columns with proper width and alignment
 const columns = ref<TableColumn[]>([
-    {
-        id: 'image',
-        width: '80px',
-        cellClass: 'image-cell-container'
-    },
-    {
-        id: 'name',
-        header: computed(() => t('item')),
-        cellClass: 'name-cell-container' // Add flex-1 to make this column expand
-    },
-    {
-        id: 'quantity',
-        header: computed(() => t('quantity')),
-        width: '120px',
-        cellClass: 'quantity-cell-container' // Add justify-end for right alignment
-    },
-    {
-        id: 'value',
-        header: computed(() => t('value')),
-        width: '120px',
-        cellClass: 'value-cell-container justify-end' // Add justify-end for right alignment
-    }
+  {
+    id: "image",
+    width: "80px",
+    cellClass: "image-cell-container",
+  },
+  {
+    id: "name",
+    header: computed(() => t("item")),
+    cellClass: "name-cell-container", // Add flex-1 to make this column expand
+  },
+  {
+    id: "quantity",
+    header: computed(() => t("quantity")),
+    width: "120px",
+    cellClass: "quantity-cell-container", // Add justify-end for right alignment
+  },
+  {
+    id: "value",
+    header: computed(() => t("value")),
+    width: "120px",
+    cellClass: "value-cell-container justify-end", // Add justify-end for right alignment
+  },
 ]);
 
 const groupedItems = ref();
@@ -172,180 +172,180 @@ const data = ref<Item[]>();
 
 // Combined slot type configuration with collapsible settings and localized labels
 const slotTypeConfig = {
-    highSlot: {
-        flags: [27, 28, 29, 30, 31, 32, 33, 34],
-        collapsible: false,
-        defaultCollapsed: false,
-        label: () => t('slots.highSlot')
-    },
-    mediumSlot: {
-        flags: [19, 20, 21, 22, 23, 24, 25, 26],
-        collapsible: false,
-        defaultCollapsed: false,
-        label: () => t('slots.mediumSlot')
-    },
-    lowSlot: {
-        flags: [11, 12, 13, 14, 15, 16, 17, 18],
-        collapsible: false,
-        defaultCollapsed: false,
-        label: () => t('slots.lowSlot')
-    },
-    rigSlot: {
-        flags: [92, 93, 94, 95, 96, 97, 98, 99],
-        collapsible: false,
-        defaultCollapsed: false,
-        label: () => t('slots.rigSlot')
-    },
-    subsystem: {
-        flags: [125, 126, 127, 128, 129, 130, 131, 132],
-        collapsible: false,
-        defaultCollapsed: false,
-        label: () => t('slots.subsystem')
-    },
-    droneBay: {
-        flags: [87],
-        collapsible: true,
-        defaultCollapsed: false,
-        label: () => t('slots.droneBay')
-    },
-    cargoBay: {
-        flags: [5],
-        collapsible: true,
-        defaultCollapsed: false,
-        label: () => t('slots.cargoBay')
-    },
-    fuelBay: {
-        flags: [133],
-        collapsible: true,
-        defaultCollapsed: true,
-        label: () => t('slots.fuelBay')
-    },
-    fleetHangar: {
-        flags: [155],
-        collapsible: true,
-        defaultCollapsed: true,
-        label: () => t('slots.fleetHangar')
-    },
-    fighterBay: {
-        flags: [158],
-        collapsible: true,
-        defaultCollapsed: true,
-        label: () => t('slots.fighterBay')
-    },
-    fighterLaunchTubes: {
-        flags: [159, 160, 161, 162, 163],
-        collapsible: true,
-        defaultCollapsed: true,
-        label: () => t('slots.fighterLaunchTubes')
-    },
-    shipHangar: {
-        flags: [90],
-        collapsible: true,
-        defaultCollapsed: true,
-        label: () => t('slots.shipHangar')
-    },
-    oreHold: {
-        flags: [134],
-        collapsible: true,
-        defaultCollapsed: true,
-        label: () => t('slots.oreHold')
-    },
-    gasHold: {
-        flags: [135],
-        collapsible: true,
-        defaultCollapsed: true,
-        label: () => t('slots.gasHold')
-    },
-    mineralHold: {
-        flags: [136],
-        collapsible: true,
-        defaultCollapsed: true,
-        label: () => t('slots.mineralHold')
-    },
-    salvageHold: {
-        flags: [137],
-        collapsible: true,
-        defaultCollapsed: true,
-        label: () => t('slots.salvageHold')
-    },
-    shipHold: {
-        flags: [138],
-        collapsible: true,
-        defaultCollapsed: true,
-        label: () => t('slots.shipHold')
-    },
-    smallShipHold: {
-        flags: [139],
-        collapsible: true,
-        defaultCollapsed: true,
-        label: () => t('slots.smallShipHold')
-    },
-    mediumShipHold: {
-        flags: [140],
-        collapsible: true,
-        defaultCollapsed: true,
-        label: () => t('slots.mediumShipHold')
-    },
-    largeShipHold: {
-        flags: [141],
-        collapsible: true,
-        defaultCollapsed: true,
-        label: () => t('slots.largeShipHold')
-    },
-    industrialShipHold: {
-        flags: [142],
-        collapsible: true,
-        defaultCollapsed: true,
-        label: () => t('slots.industrialShipHold')
-    },
-    ammoHold: {
-        flags: [143],
-        collapsible: true,
-        defaultCollapsed: true,
-        label: () => t('slots.ammoHold')
-    },
-    quafeBay: {
-        flags: [154],
-        collapsible: true,
-        defaultCollapsed: true,
-        label: () => t('slots.quafeBay')
-    },
-    structureServices: {
-        flags: [164, 165, 166, 167, 168, 169, 170, 171],
-        collapsible: true,
-        defaultCollapsed: true,
-        label: () => t('slots.structureServices')
-    },
-    structureFuel: {
-        flags: [172],
-        collapsible: true,
-        defaultCollapsed: true,
-        label: () => t('slots.structureFuel')
-    },
-    implants: {
-        flags: [89],
-        collapsible: true,
-        defaultCollapsed: true,
-        label: () => t('slots.implants')
-    },
-    infrastructureHangar: {
-        flags: [185],
-        collapsible: true,
-        defaultCollapsed: true,
-        label: () => t('slots.infrastructureHangar')
-    },
-    coreRoom: {
-        flags: [180],
-        collapsible: true,
-        defaultCollapsed: true,
-        label: () => t('slots.coreRoom')
-    },
-    moonMaterialBay: {
-        flags: [186],
-        collapsible: true,
-        defaultCollapsed: true,
-        label: () => t('slots.moonMaterialBay')
-    }
+  highSlot: {
+    flags: [27, 28, 29, 30, 31, 32, 33, 34],
+    collapsible: false,
+    defaultCollapsed: false,
+    label: () => t("slots.highSlot"),
+  },
+  mediumSlot: {
+    flags: [19, 20, 21, 22, 23, 24, 25, 26],
+    collapsible: false,
+    defaultCollapsed: false,
+    label: () => t("slots.mediumSlot"),
+  },
+  lowSlot: {
+    flags: [11, 12, 13, 14, 15, 16, 17, 18],
+    collapsible: false,
+    defaultCollapsed: false,
+    label: () => t("slots.lowSlot"),
+  },
+  rigSlot: {
+    flags: [92, 93, 94, 95, 96, 97, 98, 99],
+    collapsible: false,
+    defaultCollapsed: false,
+    label: () => t("slots.rigSlot"),
+  },
+  subsystem: {
+    flags: [125, 126, 127, 128, 129, 130, 131, 132],
+    collapsible: false,
+    defaultCollapsed: false,
+    label: () => t("slots.subsystem"),
+  },
+  droneBay: {
+    flags: [87],
+    collapsible: true,
+    defaultCollapsed: false,
+    label: () => t("slots.droneBay"),
+  },
+  cargoBay: {
+    flags: [5],
+    collapsible: true,
+    defaultCollapsed: false,
+    label: () => t("slots.cargoBay"),
+  },
+  fuelBay: {
+    flags: [133],
+    collapsible: true,
+    defaultCollapsed: true,
+    label: () => t("slots.fuelBay"),
+  },
+  fleetHangar: {
+    flags: [155],
+    collapsible: true,
+    defaultCollapsed: true,
+    label: () => t("slots.fleetHangar"),
+  },
+  fighterBay: {
+    flags: [158],
+    collapsible: true,
+    defaultCollapsed: true,
+    label: () => t("slots.fighterBay"),
+  },
+  fighterLaunchTubes: {
+    flags: [159, 160, 161, 162, 163],
+    collapsible: true,
+    defaultCollapsed: true,
+    label: () => t("slots.fighterLaunchTubes"),
+  },
+  shipHangar: {
+    flags: [90],
+    collapsible: true,
+    defaultCollapsed: true,
+    label: () => t("slots.shipHangar"),
+  },
+  oreHold: {
+    flags: [134],
+    collapsible: true,
+    defaultCollapsed: true,
+    label: () => t("slots.oreHold"),
+  },
+  gasHold: {
+    flags: [135],
+    collapsible: true,
+    defaultCollapsed: true,
+    label: () => t("slots.gasHold"),
+  },
+  mineralHold: {
+    flags: [136],
+    collapsible: true,
+    defaultCollapsed: true,
+    label: () => t("slots.mineralHold"),
+  },
+  salvageHold: {
+    flags: [137],
+    collapsible: true,
+    defaultCollapsed: true,
+    label: () => t("slots.salvageHold"),
+  },
+  shipHold: {
+    flags: [138],
+    collapsible: true,
+    defaultCollapsed: true,
+    label: () => t("slots.shipHold"),
+  },
+  smallShipHold: {
+    flags: [139],
+    collapsible: true,
+    defaultCollapsed: true,
+    label: () => t("slots.smallShipHold"),
+  },
+  mediumShipHold: {
+    flags: [140],
+    collapsible: true,
+    defaultCollapsed: true,
+    label: () => t("slots.mediumShipHold"),
+  },
+  largeShipHold: {
+    flags: [141],
+    collapsible: true,
+    defaultCollapsed: true,
+    label: () => t("slots.largeShipHold"),
+  },
+  industrialShipHold: {
+    flags: [142],
+    collapsible: true,
+    defaultCollapsed: true,
+    label: () => t("slots.industrialShipHold"),
+  },
+  ammoHold: {
+    flags: [143],
+    collapsible: true,
+    defaultCollapsed: true,
+    label: () => t("slots.ammoHold"),
+  },
+  quafeBay: {
+    flags: [154],
+    collapsible: true,
+    defaultCollapsed: true,
+    label: () => t("slots.quafeBay"),
+  },
+  structureServices: {
+    flags: [164, 165, 166, 167, 168, 169, 170, 171],
+    collapsible: true,
+    defaultCollapsed: true,
+    label: () => t("slots.structureServices"),
+  },
+  structureFuel: {
+    flags: [172],
+    collapsible: true,
+    defaultCollapsed: true,
+    label: () => t("slots.structureFuel"),
+  },
+  implants: {
+    flags: [89],
+    collapsible: true,
+    defaultCollapsed: true,
+    label: () => t("slots.implants"),
+  },
+  infrastructureHangar: {
+    flags: [185],
+    collapsible: true,
+    defaultCollapsed: true,
+    label: () => t("slots.infrastructureHangar"),
+  },
+  coreRoom: {
+    flags: [180],
+    collapsible: true,
+    defaultCollapsed: true,
+    label: () => t("slots.coreRoom"),
+  },
+  moonMaterialBay: {
+    flags: [186],
+    collapsible: true,
+    defaultCollapsed: true,
+    label: () => t("slots.moonMaterialBay"),
+  },
 };
 
 // Track which sections are collapsed
@@ -358,386 +358,401 @@ const sectionValues = ref<Record<string, number>>({});
 
 // Initialize collapsed state based on default settings
 function initializeCollapsedState() {
-    // Only initialize if not already initialized
-    if (isInitialized.value) return;
+  // Only initialize if not already initialized
+  if (isInitialized.value) return;
 
-    // Create a fresh object with default states
-    const initialState: Record<string, boolean> = {};
+  // Create a fresh object with default states
+  const initialState: Record<string, boolean> = {};
 
-    Object.entries(slotTypeConfig).forEach(([key, config]) => {
-        // Use the label function to get the translated name
-        const translatedKey = config.label();
-        if (config.collapsible) {
-            initialState[translatedKey] = config.defaultCollapsed;
-        }
-    });
+  Object.entries(slotTypeConfig).forEach(([key, config]) => {
+    // Use the label function to get the translated name
+    const translatedKey = config.label();
+    if (config.collapsible) {
+      initialState[translatedKey] = config.defaultCollapsed;
+    }
+  });
 
-    // Set the initial collapsed state
-    collapsedSections.value = initialState;
-    isInitialized.value = true;
+  // Set the initial collapsed state
+  collapsedSections.value = initialState;
+  isInitialized.value = true;
 }
 
 // Check if a section is collapsible
 function isCollapsible(sectionName: string): boolean {
-    // Try to find the section in our config by translated name
-    for (const [key, config] of Object.entries(slotTypeConfig)) {
-        const translatedKey = config.label();
-        if (translatedKey === sectionName) {
-            return config.collapsible;
-        }
+  // Try to find the section in our config by translated name
+  for (const [key, config] of Object.entries(slotTypeConfig)) {
+    const translatedKey = config.label();
+    if (translatedKey === sectionName) {
+      return config.collapsible;
     }
-    return false;
+  }
+  return false;
 }
 
 // Check if a section is currently collapsed
 function isSectionCollapsed(sectionName: string): boolean {
-    return collapsedSections.value[sectionName] || false;
+  return collapsedSections.value[sectionName] || false;
 }
 
 // Toggle collapsed state for a section with animation support
 function toggleSectionCollapse(sectionName: string) {
-    if (isCollapsible(sectionName)) {
-        // Add a small delay to ensure the icon animation shows properly
-        // Set timeout to make the transition work better
-        collapsedSections.value[sectionName] = !collapsedSections.value[sectionName];
+  if (isCollapsible(sectionName)) {
+    // Add a small delay to ensure the icon animation shows properly
+    // Set timeout to make the transition work better
+    collapsedSections.value[sectionName] = !collapsedSections.value[sectionName];
 
-        // Reprocess the data structure to update what's shown
-        if (props.killmail) {
-            processKillmailData(props.killmail);
-        }
+    // Reprocess the data structure to update what's shown
+    if (props.killmail) {
+      processKillmailData(props.killmail);
     }
+  }
 }
 
 // Get CSS classes for each row
 function getRowClasses(item: Item) {
-    const classes = [];
+  const classes = [];
 
-    // Add class based on row type
-    if (item.type) {
-        classes.push(item.type);
-    }
+  // Add class based on row type
+  if (item.type) {
+    classes.push(item.type);
+  }
 
-    // Add clickable class for items or container-items with itemId
-    if ((item.type === 'item' || item.type === 'container-item') && item.itemId) {
-        classes.push('cursor-pointer');
-    }
+  // Add clickable class for items or container-items with itemId
+  if ((item.type === "item" || item.type === "container-item") && item.itemId) {
+    classes.push("cursor-pointer");
+  }
 
-    // Add header click indicator for collapsible headers
-    if (item.type === 'header' && isCollapsible(item.itemName)) {
-        classes.push('cursor-pointer');
-    }
+  // Add header click indicator for collapsible headers
+  if (item.type === "header" && isCollapsible(item.itemName)) {
+    classes.push("cursor-pointer");
+  }
 
-    // Add nested item class
-    if (item.isNested) {
-        classes.push('container-item-row');
-    }
+  // Add nested item class
+  if (item.isNested) {
+    classes.push("container-item-row");
+  }
 
-    // Add section header class
-    if (item.type === 'header') {
-        classes.push('section-header-row');
-    }
+  // Add section header class
+  if (item.type === "header") {
+    classes.push("section-header-row");
+  }
 
-    // Add section total class
-    if (item.type === 'value' && item.itemName !== t('total')) {
-        classes.push('section-total-row');
-    }
+  // Add section total class
+  if (item.type === "value" && item.itemName !== t("total")) {
+    classes.push("section-total-row");
+  }
 
-    return classes.join(' ');
+  return classes.join(" ");
 }
 
 // Get the count of items in a section for display
 function getSectionItemCount(sectionName: string): number {
-    // Return from our stored counts instead of calculating from the visible items
-    return sectionItemCounts.value[sectionName] || 0;
+  // Return from our stored counts instead of calculating from the visible items
+  return sectionItemCounts.value[sectionName] || 0;
 }
 
 /**
  * Gets the localized string from a translation object using the current locale
  */
 const getLocalizedString = (obj: any, locale: string): string => {
-    if (!obj) return '';
-    return obj[locale] || obj['en'] || '';
+  if (!obj) return "";
+  return obj[locale] || obj.en || "";
 };
 
 /**
  * Determines if an item is a blueprint based on its name
  */
 function isBlueprint(itemName: string): boolean {
-    if (!itemName) return false;
-    return itemName.includes('Blueprint');
+  if (!itemName) return false;
+  return itemName.includes("Blueprint");
 }
 
 /**
  * Generates the correct image URL for an item, handling blueprints appropriately
  */
-function getItemImageUrl(typeId: number, itemName: any, size: number = 64): string {
-    const localizedName = getLocalizedString(itemName, currentLocale.value);
-    const imageType = isBlueprint(localizedName) ? 'bp' : 'icon';
-    return `https://images.evetech.net/types/${typeId}/${imageType}?size=${size}`;
+function getItemImageUrl(typeId: number, itemName: any, size = 64): string {
+  const localizedName = getLocalizedString(itemName, currentLocale.value);
+  const imageType = isBlueprint(localizedName) ? "bp" : "icon";
+  return `https://images.evetech.net/types/${typeId}/${imageType}?size=${size}`;
 }
 
 // Watch for locale changes and reprocess data when language changes
-watch(currentLocale, () => {
+watch(
+  currentLocale,
+  () => {
     if (props.killmail) {
-        // Re-process data with new locale
-        processKillmailData(props.killmail);
+      // Re-process data with new locale
+      processKillmailData(props.killmail);
     }
-}, { immediate: false });
+  },
+  { immediate: false },
+);
 
 // Watch for changes to the killmail and process data
-watch(() => props.killmail, (killmail: IKillmail | null) => {
+watch(
+  () => props.killmail,
+  (killmail: IKillmail | null) => {
     // Initialize collapsed state before first data processing
     if (!isInitialized.value) {
-        initializeCollapsedState();
+      initializeCollapsedState();
     }
 
     if (killmail) {
-        processKillmailData(killmail);
+      processKillmailData(killmail);
     }
-}, { immediate: true });
+  },
+  { immediate: true },
+);
 
 // Extract killmail data processing into a separate function for reusability
 function processKillmailData(killmail: IKillmail) {
-    if (!killmail) return;
+  if (!killmail) return;
 
-    // Clear section data
-    sectionItemCounts.value = {};
-    sectionValues.value = {};
+  // Clear section data
+  sectionItemCounts.value = {};
+  sectionValues.value = {};
 
-    let allItems = [];
+  const allItems = [];
 
-    // Process each item to identify containers and their contents
-    killmail.items?.forEach((item) => {
-        const containerItemsValue = item.items ?
-            item.items.reduce((sum, containerItem) => sum + containerItem.value * (containerItem.qty_dropped + containerItem.qty_destroyed), 0)
-            : 0;
-        allItems.push({
-            ...item,
-            isContainer: !!item.items,
-            items: item.items || [],
-            containerItemsValue
-        })
+  // Process each item to identify containers and their contents
+  killmail.items?.forEach((item) => {
+    const containerItemsValue = item.items
+      ? item.items.reduce(
+          (sum, containerItem) =>
+            sum + containerItem.value * (containerItem.qty_dropped + containerItem.qty_destroyed),
+          0,
+        )
+      : 0;
+    allItems.push({
+      ...item,
+      isContainer: !!item.items,
+      items: item.items || [],
+      containerItemsValue,
     });
+  });
 
-    // Group items by slot type using the combined config
-    groupedItems.value = Object.entries(slotTypeConfig).map(([slotType, config]) => ({
-        slotType,
-        items: groupByQty(allItems.filter((item) => config.flags.includes(item.flag))),
-    })).filter((group) => group.items.length > 0);
+  // Group items by slot type using the combined config
+  groupedItems.value = Object.entries(slotTypeConfig)
+    .map(([slotType, config]) => ({
+      slotType,
+      items: groupByQty(allItems.filter((item) => config.flags.includes(item.flag))),
+    }))
+    .filter((group) => group.items.length > 0);
 
-    // Start building the display data
-    data.value = [];
-    let totalValue = killmail.ship_value || 0;
+  // Start building the display data
+  data.value = [];
+  let totalValue = killmail.ship_value || 0;
 
-    // Add hull section
+  // Add hull section
+  data.value?.push({
+    type: "header",
+    image: null,
+    itemName: t("hull"),
+    dropped: null,
+    destroyed: null,
+    value: null,
+  });
+
+  // Add ship item (always visible)
+  data.value?.push({
+    type: "item",
+    image: getItemImageUrl(killmail.victim.ship_id, killmail.victim.ship_name),
+    itemName: getLocalizedString(killmail.victim.ship_name, currentLocale.value),
+    dropped: 0,
+    destroyed: 1,
+    value: killmail.ship_value,
+    itemId: killmail.victim.ship_id,
+  });
+
+  // Process each slot group
+  groupedItems.value.forEach((group) => {
+    const items = group.items;
+    // Use the label function directly from config to get the translated name
+    const sectionName = slotTypeConfig[group.slotType].label();
+
+    // Skip empty sections
+    if (items.length === 0) return;
+
+    // Calculate and store the count for this section (regardless of collapsed state)
+    let itemCount = 0;
+    // Count both regular items and their container contents
+    items.forEach((item) => {
+      itemCount++; // Count the item itself
+      if (item.isContainer && item.items && item.items.length > 0) {
+        itemCount += item.items.length; // Count container items
+      }
+    });
+    sectionItemCounts.value[sectionName] = itemCount;
+
+    // Add group header with localized slot type name
     data.value?.push({
-        type: 'header',
-        image: null,
-        itemName: t('hull'),
-        dropped: null,
-        destroyed: null,
-        value: null
+      type: "header",
+      image: null,
+      itemName: sectionName,
+      dropped: null,
+      destroyed: null,
+      value: null,
+      sectionName: sectionName,
     });
 
-    // Add ship item (always visible)
-    data.value?.push({
-        type: 'item',
-        image: getItemImageUrl(killmail.victim.ship_id, killmail.victim.ship_name),
-        itemName: getLocalizedString(killmail.victim.ship_name, currentLocale.value),
-        dropped: 0,
-        destroyed: 1,
-        value: killmail.ship_value,
-        itemId: killmail.victim.ship_id
-    });
+    let innerValue = 0;
+    const sectionCollapsed = isSectionCollapsed(sectionName);
 
-    // Process each slot group
-    groupedItems.value.forEach((group) => {
-        const items = group.items;
-        // Use the label function directly from config to get the translated name
-        const sectionName = slotTypeConfig[group.slotType].label();
-
-        // Skip empty sections
-        if (items.length === 0) return;
-
-        // Calculate and store the count for this section (regardless of collapsed state)
-        let itemCount = 0;
-        // Count both regular items and their container contents
-        items.forEach(item => {
-            itemCount++; // Count the item itself
-            if (item.isContainer && item.items && item.items.length > 0) {
-                itemCount += item.items.length; // Count container items
-            }
-        });
-        sectionItemCounts.value[sectionName] = itemCount;
-
-        // Add group header with localized slot type name
+    // Process each item in the group - hide if section is collapsed
+    if (!sectionCollapsed) {
+      items.forEach((item) => {
+        // Add the main item
         data.value?.push({
-            type: 'header',
-            image: null,
-            itemName: sectionName,
-            dropped: null,
-            destroyed: null,
-            value: null,
-            sectionName: sectionName
+          type: "item",
+          image: getItemImageUrl(item.type_id, item.name),
+          itemName: getLocalizedString(item.name, currentLocale.value),
+          dropped: item.qty_dropped,
+          destroyed: item.qty_destroyed,
+          value: item.value * (item.qty_dropped + item.qty_destroyed),
+          itemId: item.type_id,
+          sectionName: sectionName,
         });
 
-        let innerValue = 0;
-        const sectionCollapsed = isSectionCollapsed(sectionName);
-
-        // Process each item in the group - hide if section is collapsed
-        if (!sectionCollapsed) {
-            items.forEach((item) => {
-                // Add the main item
-                data.value?.push({
-                    type: 'item',
-                    image: getItemImageUrl(item.type_id, item.name),
-                    itemName: getLocalizedString(item.name, currentLocale.value),
-                    dropped: item.qty_dropped,
-                    destroyed: item.qty_destroyed,
-                    value: item.value * (item.qty_dropped + item.qty_destroyed),
-                    itemId: item.type_id,
-                    sectionName: sectionName
-                });
-
-                // If this is a container with items, add all contained items with indentation
-                if (item.isContainer && item.items && item.items.length > 0) {
-                    item.items.forEach(containerItem => {
-                        const itemName = containerItem.type_name || containerItem.name || '';
-                        data.value?.push({
-                            type: 'container-item',
-                            image: getItemImageUrl(containerItem.type_id, itemName),
-                            itemName: getLocalizedString(itemName, currentLocale.value),
-                            dropped: containerItem.qty_dropped,
-                            destroyed: containerItem.qty_destroyed,
-                            value: containerItem.value * (containerItem.qty_dropped + containerItem.qty_destroyed),
-                            itemId: containerItem.type_id,
-                            isNested: true,
-                            sectionName: sectionName
-                        });
-                    });
-                }
-
-                // Calculate value including container items
-                const itemValue = (item.value || 0) * ((item.qty_destroyed || 0) + (item.qty_dropped || 0));
-                const containerValue = item.containerItemsValue || 0;
-                innerValue += itemValue + containerValue;
+        // If this is a container with items, add all contained items with indentation
+        if (item.isContainer && item.items && item.items.length > 0) {
+          item.items.forEach((containerItem) => {
+            const itemName = containerItem.type_name || containerItem.name || "";
+            data.value?.push({
+              type: "container-item",
+              image: getItemImageUrl(containerItem.type_id, itemName),
+              itemName: getLocalizedString(itemName, currentLocale.value),
+              dropped: containerItem.qty_dropped,
+              destroyed: containerItem.qty_destroyed,
+              value:
+                containerItem.value * (containerItem.qty_dropped + containerItem.qty_destroyed),
+              itemId: containerItem.type_id,
+              isNested: true,
+              sectionName: sectionName,
             });
-        } else {
-            // Even if collapsed, calculate the section value
-            items.forEach((item) => {
-                const itemValue = (item.value || 0) * ((item.qty_destroyed || 0) + (item.qty_dropped || 0));
-                const containerValue = item.containerItemsValue || 0;
-                innerValue += itemValue + containerValue;
-            });
+          });
         }
 
-        // Store the section value for reference
-        sectionValues.value[sectionName] = innerValue;
+        // Calculate value including container items
+        const itemValue = (item.value || 0) * ((item.qty_destroyed || 0) + (item.qty_dropped || 0));
+        const containerValue = item.containerItemsValue || 0;
+        innerValue += itemValue + containerValue;
+      });
+    } else {
+      // Even if collapsed, calculate the section value
+      items.forEach((item) => {
+        const itemValue = (item.value || 0) * ((item.qty_destroyed || 0) + (item.qty_dropped || 0));
+        const containerValue = item.containerItemsValue || 0;
+        innerValue += itemValue + containerValue;
+      });
+    }
 
-        // Add group total (always visible)
-        data.value?.push({
-            type: 'value',
-            image: null,
-            itemName: t('subTotal'),
-            dropped: items.reduce((sum, item) => sum + (item.qty_dropped || 0), 0),
-            destroyed: items.reduce((sum, item) => sum + (item.qty_destroyed || 0), 0),
-            value: innerValue,
-            sectionName: sectionName
-        });
+    // Store the section value for reference
+    sectionValues.value[sectionName] = innerValue;
 
-        totalValue += innerValue;
-    });
-
-    // Add grand total
+    // Add group total (always visible)
     data.value?.push({
-        type: 'value',
-        image: null,
-        itemName: t('total'),
-        dropped: null,
-        destroyed: null,
-        value: totalValue,
+      type: "value",
+      image: null,
+      itemName: t("subTotal"),
+      dropped: items.reduce((sum, item) => sum + (item.qty_dropped || 0), 0),
+      destroyed: items.reduce((sum, item) => sum + (item.qty_destroyed || 0), 0),
+      value: innerValue,
+      sectionName: sectionName,
     });
+
+    totalValue += innerValue;
+  });
+
+  // Add grand total
+  data.value?.push({
+    type: "value",
+    image: null,
+    itemName: t("total"),
+    dropped: null,
+    destroyed: null,
+    value: totalValue,
+  });
 }
 
 // Initialize collapsed state BEFORE processing killmail data
 onMounted(() => {
-    initializeCollapsedState();
+  initializeCollapsedState();
 });
 
 // Also initialize when locale changes
 watch(locale, () => {
-    // Do NOT reset collapsedSections here
-    // Only reprocess data with new translations
-    if (props.killmail) {
-        processKillmailData(props.killmail);
-    }
+  // Do NOT reset collapsedSections here
+  // Only reprocess data with new translations
+  if (props.killmail) {
+    processKillmailData(props.killmail);
+  }
 });
 
-const UBadge = resolveComponent('UBadge')
+const UBadge = resolveComponent("UBadge");
 
 type Item = {
-    type: 'header' | 'value' | 'item' | 'container-item'
-    image: string | null
-    itemName: string | null
-    dropped: number | null
-    destroyed: number | null
-    value: number | null
-    itemId?: number | null
-    isNested?: boolean
-    sectionName?: string
-}
+  type: "header" | "value" | "item" | "container-item";
+  image: string | null;
+  itemName: string | null;
+  dropped: number | null;
+  destroyed: number | null;
+  value: number | null;
+  itemId?: number | null;
+  isNested?: boolean;
+  sectionName?: string;
+};
 
 /**
  * Groups similar items together
  */
 function groupByQty(items: any[]) {
-    const grouped = items.reduce((acc, item) => {
-        let key;
-        if (item.type_id === 3468) {
-            key = `${item.Itemid}_${item.type_id}_${Math.random()}`;
-        } else {
-            key = `${item.type_id}_${item.qty_dropped || 0}_${item.qty_destroyed || 0}`;
-        }
+  const grouped = items.reduce((acc, item) => {
+    let key;
+    if (item.type_id === 3468) {
+      key = `${item.Itemid}_${item.type_id}_${Math.random()}`;
+    } else {
+      key = `${item.type_id}_${item.qty_dropped || 0}_${item.qty_destroyed || 0}`;
+    }
 
-        if (!acc[key]) {
-            acc[key] = {
-                ...item,
-                qty_dropped: 0,
-                qty_destroyed: 0,
-                items: [],
-                containerItemsValue: 0,
-            };
-        }
+    if (!acc[key]) {
+      acc[key] = {
+        ...item,
+        qty_dropped: 0,
+        qty_destroyed: 0,
+        items: [],
+        containerItemsValue: 0,
+      };
+    }
 
-        acc[key].qty_dropped += item.qty_dropped || 0;
-        acc[key].qty_destroyed += item.qty_destroyed || 0;
+    acc[key].qty_dropped += item.qty_dropped || 0;
+    acc[key].qty_destroyed += item.qty_destroyed || 0;
 
-        if (item.isContainer) {
-            acc[key].items = item.items;
-            acc[key].containerItemsValue = item.containerItemsValue;
-        }
+    if (item.isContainer) {
+      acc[key].items = item.items;
+      acc[key].containerItemsValue = item.containerItemsValue;
+    }
 
-        return acc;
-    }, {});
+    return acc;
+  }, {});
 
-    return Object.values(grouped);
+  return Object.values(grouped);
 }
 
 /**
  * Generates a link URL for an item if it should be clickable
  */
 function generateItemLink(item: Item): string | null {
-    // Only certain row types with itemId are clickable
-    if ((item.type === 'item' || item.type === 'container-item') && item.itemId) {
-        return `/item/${item.itemId}`;
-    }
+  // Only certain row types with itemId are clickable
+  if ((item.type === "item" || item.type === "container-item") && item.itemId) {
+    return `/item/${item.itemId}`;
+  }
 
-    // For headers that are collapsible, return null but let the click handler handle them
-    if (item.type === 'header' && isCollapsible(item.itemName)) {
-        return null;
-    }
-
+  // For headers that are collapsible, return null but let the click handler handle them
+  if (item.type === "header" && isCollapsible(item.itemName)) {
     return null;
+  }
+
+  return null;
 }
 </script>
 

@@ -118,9 +118,9 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch } from 'vue';
-import { useI18n } from 'vue-i18n';
-import { useRoute } from 'vue-router';
+import { computed, ref, watch } from "vue";
+import { useI18n } from "vue-i18n";
+import { useRoute } from "vue-router";
 
 const { t, locale } = useI18n();
 const currentLocale = computed(() => locale.value);
@@ -129,12 +129,12 @@ const route = useRoute();
 const props = defineProps({
   item: {
     type: Object,
-    default: null
+    default: null,
   },
   loading: {
     type: Boolean,
-    default: false
-  }
+    default: false,
+  },
 });
 
 // State
@@ -143,11 +143,15 @@ const isLoading = ref(true);
 const error = ref(null);
 
 // Fetch key based on item id to ensure proper cache invalidation
-const fetchKey = computed(() => `item-killmails-${props.item?.type_id || 'none'}-${Date.now()}`);
+const fetchKey = computed(() => `item-killmails-${props.item?.type_id || "none"}-${Date.now()}`);
 
 // Update the fetch and data handling to work with the API response structure
 // that now returns a direct array of killmails
-const { data, pending, error: fetchError } = useAsyncData(
+const {
+  data,
+  pending,
+  error: fetchError,
+} = useAsyncData(
   fetchKey.value,
   async () => {
     if (!props.item?.type_id) return [];
@@ -157,7 +161,7 @@ const { data, pending, error: fetchError } = useAsyncData(
       const response = await $fetch(`/api/items/${props.item.type_id}/killmails?limit=20`);
       return response;
     } catch (err) {
-      console.error('Error fetching killmail data:', err);
+      console.error("Error fetching killmail data:", err);
       error.value = err;
       return [];
     }
@@ -166,7 +170,7 @@ const { data, pending, error: fetchError } = useAsyncData(
     watch: [() => props.item?.type_id],
     server: false,
     immediate: !!props.item?.type_id,
-  }
+  },
 );
 
 // Set error from fetch error
@@ -177,43 +181,55 @@ watch(fetchError, (newError) => {
 });
 
 // Update loading state whenever props.loading or pending changes
-watch([() => props.loading, pending], ([propsLoading, asyncPending]) => {
-  isLoading.value = propsLoading || asyncPending;
-}, { immediate: true });
+watch(
+  [() => props.loading, pending],
+  ([propsLoading, asyncPending]) => {
+    isLoading.value = propsLoading || asyncPending;
+  },
+  { immediate: true },
+);
 
 // Update kill list when data changes - using direct killmail array
-watch(data, (newData) => {
-  if (newData) {
-    killmails.value = newData;
-    isLoading.value = false;
-  }
-}, { immediate: true });
+watch(
+  data,
+  (newData) => {
+    if (newData) {
+      killmails.value = newData;
+      isLoading.value = false;
+    }
+  },
+  { immediate: true },
+);
 
 // Handle route changes and ensure data refreshes
-watch(() => route.params.id, () => {
-  isLoading.value = true;
-}, { immediate: true });
+watch(
+  () => route.params.id,
+  () => {
+    isLoading.value = true;
+  },
+  { immediate: true },
+);
 
 // Table configuration
 const tableColumns = [
   {
-    id: 'ship',
-    header: computed(() => t('ship')),
-    width: '20%'
+    id: "ship",
+    header: computed(() => t("ship")),
+    width: "20%",
   },
   {
-    id: 'victim',
-    header: computed(() => t('victim')),
-    width: '80%'
-  }
+    id: "victim",
+    header: computed(() => t("victim")),
+    width: "80%",
+  },
 ];
 
 /**
  * Gets localized string from an object containing translations
  */
 function getLocalizedString(obj: any, locale: string): string {
-  if (!obj) return '';
-  return obj[locale] || obj['en'] || '';
+  if (!obj) return "";
+  return obj[locale] || obj.en || "";
 }
 
 /**

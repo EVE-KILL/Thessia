@@ -52,12 +52,10 @@ async function main() {
         if (Math.abs(now - prev.getTime()) <= tolerance) {
           cliLogger.info(`Running job "${job.name}" on schedule: ${job.schedule}`);
           runningJobs.push(
-            job
-              .run({ args: [] })
-              .catch((err: any) => {
-                  cliLogger.error(`Error in job "${job.name}": ${err}`);
-                  process.exit(1);
-                })
+            job.run({ args: [] }).catch((err: any) => {
+              cliLogger.error(`Error in job "${job.name}": ${err}`);
+              process.exit(1);
+            }),
           );
         }
       } catch (e) {

@@ -1,5 +1,5 @@
-import { KillmailsESI } from "~/server/models/KillmailsESI";
 import type { IESIKillmail } from "~/server/interfaces/IESIKillmail";
+import { KillmailsESI } from "~/server/models/KillmailsESI";
 
 export default defineEventHandler(async (event) => {
   const killmail_id = event.context.params?.id;

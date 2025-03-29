@@ -1,7 +1,7 @@
-import type { ICorporation } from "~/server/interfaces/ICorporation";
-import { getAlliance, getCharacter, getCorporation } from "~/server/helpers/ESIData";
 import { defineEventHandler } from "h3";
+import { getAlliance, getCharacter, getCorporation } from "~/server/helpers/ESIData";
 import type { IAlliance } from "~/server/interfaces/IAlliance";
+import type { ICorporation } from "~/server/interfaces/ICorporation";
 import { queueUpdateCharacterHistory } from "~/server/queue/Character";
 
 export default defineEventHandler(async (event) => {

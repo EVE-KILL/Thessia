@@ -68,18 +68,18 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watch, computed } from 'vue';
-import moment from 'moment';
+import moment from "moment";
+import { computed, ref, watch } from "vue";
 
 const props = defineProps({
   item: {
     type: Object,
-    default: null
+    default: null,
   },
   loading: {
     type: Boolean,
-    default: false
-  }
+    default: false,
+  },
 });
 
 // Interface for price data
@@ -99,10 +99,14 @@ const error = ref(null);
 const REGION_ID = 10000002;
 
 // Fetch key based on item id to ensure proper cache invalidation
-const fetchKey = computed(() => `item-prices-${props.item?.type_id || 'none'}-${Date.now()}`);
+const fetchKey = computed(() => `item-prices-${props.item?.type_id || "none"}-${Date.now()}`);
 
 // Fetch pricing data when item is available
-const { data, pending, error: fetchError } = useAsyncData<PriceData[]>(
+const {
+  data,
+  pending,
+  error: fetchError,
+} = useAsyncData<PriceData[]>(
   fetchKey.value,
   async () => {
     // Only fetch if we have an item with type_id
@@ -112,11 +116,11 @@ const { data, pending, error: fetchError } = useAsyncData<PriceData[]>(
 
     try {
       const result = await $fetch<PriceData[]>(
-        `/api/items/${props.item.type_id}/pricing?regionId=${REGION_ID}&days=30`
+        `/api/items/${props.item.type_id}/pricing?regionId=${REGION_ID}&days=30`,
       );
       return result;
     } catch (err) {
-      console.error('Error fetching price data:', err);
+      console.error("Error fetching price data:", err);
       error.value = err;
       return [];
     }
@@ -124,8 +128,8 @@ const { data, pending, error: fetchError } = useAsyncData<PriceData[]>(
   {
     watch: [() => props.item?.type_id],
     server: false,
-    immediate: !!props.item?.type_id
-  }
+    immediate: !!props.item?.type_id,
+  },
 );
 
 // Watch for fetch errors
@@ -136,44 +140,57 @@ watch(fetchError, (newError) => {
 });
 
 // Update loading state whenever props.loading or pending changes
-watch([() => props.loading, pending], ([propsLoading, asyncPending]) => {
-  isLoading.value = propsLoading || asyncPending;
-}, { immediate: true });
+watch(
+  [() => props.loading, pending],
+  ([propsLoading, asyncPending]) => {
+    isLoading.value = propsLoading || asyncPending;
+  },
+  { immediate: true },
+);
 
 // Update prices when data changes
-watch(data, (newData) => {
-  if (newData) {
-    prices.value = newData;
-    isLoading.value = false;
-  }
-}, { immediate: true });
+watch(
+  data,
+  (newData) => {
+    if (newData) {
+      prices.value = newData;
+      isLoading.value = false;
+    }
+  },
+  { immediate: true },
+);
 
 // Handle route changes and ensure data refreshes
 const route = useRoute();
-watch(() => route.params.id, () => {
-  isLoading.value = true;
-}, { immediate: true });
+watch(
+  () => route.params.id,
+  () => {
+    isLoading.value = true;
+  },
+  { immediate: true },
+);
 
 /**
  * Format number with appropriate commas and decimals
  */
 function formatNumber(value: number): string {
   if (value >= 1000000000) {
-    return (value / 1000000000).toFixed(2) + 'B';
-  } else if (value >= 1000000) {
-    return (value / 1000000).toFixed(2) + 'M';
-  } else if (value >= 1000) {
-    return (value / 1000).toFixed(2) + 'K';
-  } else {
-    return value.toFixed(2);
+    return `${(value / 1000000000).toFixed(2)}B`;
   }
+  if (value >= 1000000) {
+    return `${(value / 1000000).toFixed(2)}M`;
+  }
+  if (value >= 1000) {
+    return `${(value / 1000).toFixed(2)}K`;
+  }
+  return value.toFixed(2);
 }
 
 /**
  * Format date to YYYY-MM-DD
  */
 function formatDate(dateString: string): string {
-  return moment(dateString).format('YYYY-MM-DD');
+  return moment(dateString).format("YYYY-MM-DD");
 }
 </script>
 

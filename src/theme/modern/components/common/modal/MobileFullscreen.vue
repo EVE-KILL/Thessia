@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { watch, onUnmounted } from 'vue';
+import { onUnmounted, watch } from "vue";
 
 const props = defineProps({
   /**
@@ -7,77 +7,80 @@ const props = defineProps({
    */
   open: {
     type: Boolean,
-    default: false
+    default: false,
   },
   /**
    * Modal title
    */
   title: {
     type: String,
-    required: true
+    required: true,
   },
   /**
    * Z-index for the modal
    */
   zIndex: {
     type: Number,
-    default: 9999
-  }
+    default: 9999,
+  },
 });
 
-const emit = defineEmits(['close']);
+const emit = defineEmits(["close"]);
 
 // Improved body scroll locking when modal is open
-watch(() => props.open, (isOpen) => {
-  if (import.meta.client) {
-    const body = document.body;
+watch(
+  () => props.open,
+  (isOpen) => {
+    if (import.meta.client) {
+      const body = document.body;
 
-    if (isOpen) {
-      // Store current scroll position
-      const scrollY = window.scrollY;
-      body.style.position = 'fixed';
-      body.style.width = '100%';
-      body.style.top = `-${scrollY}px`;
-      body.style.overflow = 'hidden';
-      body.classList.add('modal-open');
-      body.dataset.scrollPosition = String(scrollY);
+      if (isOpen) {
+        // Store current scroll position
+        const scrollY = window.scrollY;
+        body.style.position = "fixed";
+        body.style.width = "100%";
+        body.style.top = `-${scrollY}px`;
+        body.style.overflow = "hidden";
+        body.classList.add("modal-open");
+        body.dataset.scrollPosition = String(scrollY);
 
-      // Calculate scrollbar width and set custom property
-      const scrollbarWidth = window.innerWidth - body.clientWidth;
-      document.documentElement.style.setProperty('--scrollbar-width', `${scrollbarWidth}px`);
-    } else {
-      // Restore scroll position
-      const scrollY = body.dataset.scrollPosition || '0';
-      body.style.position = '';
-      body.style.width = '';
-      body.style.top = '';
-      body.style.overflow = '';
-      body.classList.remove('modal-open');
-      delete body.dataset.scrollPosition;
-      document.documentElement.style.setProperty('--scrollbar-width', '0px');
-      window.scrollTo(0, parseInt(scrollY, 10));
+        // Calculate scrollbar width and set custom property
+        const scrollbarWidth = window.innerWidth - body.clientWidth;
+        document.documentElement.style.setProperty("--scrollbar-width", `${scrollbarWidth}px`);
+      } else {
+        // Restore scroll position
+        const scrollY = body.dataset.scrollPosition || "0";
+        body.style.position = "";
+        body.style.width = "";
+        body.style.top = "";
+        body.style.overflow = "";
+        body.classList.remove("modal-open");
+        delete body.dataset.scrollPosition;
+        document.documentElement.style.setProperty("--scrollbar-width", "0px");
+        window.scrollTo(0, Number.parseInt(scrollY, 10));
+      }
     }
-  }
-});
+  },
+);
 
 // Clean up on unmount
 onUnmounted(() => {
-  if (import.meta.client && document.body.classList.contains('modal-open')) {
+  if (import.meta.client && document.body.classList.contains("modal-open")) {
     // Restore scroll if component unmounts while modal is open
-    const scrollY = document.body.dataset.scrollPosition || '0';
-    document.body.style.position = '';
-    document.body.style.width = '';
-    document.body.style.top = '';
-    document.body.style.overflow = '';
-    document.body.classList.remove('modal-open');
-    document.documentElement.style.setProperty('--scrollbar-width', '0px');
+    const scrollY = document.body.dataset.scrollPosition || "0";
+    document.body.style.position = "";
+    document.body.style.width = "";
+    document.body.style.top = "";
+    document.body.style.overflow = "";
+    document.body.classList.remove("modal-open");
+    document.documentElement.style.setProperty("--scrollbar-width", "0px");
     delete document.body.dataset.scrollPosition;
-    window.scrollTo(0, parseInt(scrollY, 10));
+    window.scrollTo(0, Number.parseInt(scrollY, 10));
   }
 });
 
 const handleClose = () => {
-  emit('close');
+  emit("close");
 };
 </script>
 

@@ -1,16 +1,16 @@
 <script setup lang="ts">
-import { ref, computed, onMounted, onUnmounted, watch, nextTick } from 'vue'
-import { useIntervalFn, useDocumentVisibility } from '@vueuse/core'
-import VChart from 'vue-echarts'
-import { use } from 'echarts/core'
-import { CanvasRenderer } from 'echarts/renderers'
-import { BarChart } from 'echarts/charts'
+import { useDocumentVisibility, useIntervalFn } from "@vueuse/core";
+import { BarChart } from "echarts/charts";
 import {
-    TitleComponent,
-    TooltipComponent,
-    LegendComponent,
-    GridComponent
-} from 'echarts/components'
+  GridComponent,
+  LegendComponent,
+  TitleComponent,
+  TooltipComponent,
+} from "echarts/components";
+import { use } from "echarts/core";
+import { CanvasRenderer } from "echarts/renderers";
+import { computed, nextTick, onMounted, onUnmounted, ref, watch } from "vue";
+import VChart from "vue-echarts";
 
 // Get i18n instance
 const { t } = useI18n();
@@ -18,7 +18,7 @@ const isMobile = ref(false);
 
 // Add SEO meta
 useSeoMeta({
-  title: t('statusPageTitle')
+  title: t("statusPageTitle"),
 });
 
 // Check if we're on mobile
@@ -27,42 +27,35 @@ const checkIfMobile = () => {
 };
 
 // Register ECharts components
-use([
-  CanvasRenderer,
-  BarChart,
-  TitleComponent,
-  TooltipComponent,
-  LegendComponent,
-  GridComponent
-])
+use([CanvasRenderer, BarChart, TitleComponent, TooltipComponent, LegendComponent, GridComponent]);
 
 // Chart options
-const chartOptions = ref({})
+const chartOptions = ref({});
 
 // Time period options for chart display
 const timePeriods = [
-  { value: '1min', label: t('1min') },
-  { value: '5min', label: t('5min') },
-  { value: '10min', label: t('10min') },
-  { value: '15min', label: t('15min') },
-  { value: '30min', label: t('30min') },
-  { value: '1hour', label: t('1hour') },
-  { value: '6hours', label: t('6hours') },
-  { value: '12hours', label: t('12hours') },
-  { value: '24hours', label: t('24hours') },
-  { value: '1week', label: t('1week') },
-  { value: '1month', label: t('1month') }
-]
+  { value: "1min", label: t("1min") },
+  { value: "5min", label: t("5min") },
+  { value: "10min", label: t("10min") },
+  { value: "15min", label: t("15min") },
+  { value: "30min", label: t("30min") },
+  { value: "1hour", label: t("1hour") },
+  { value: "6hours", label: t("6hours") },
+  { value: "12hours", label: t("12hours") },
+  { value: "24hours", label: t("24hours") },
+  { value: "1week", label: t("1week") },
+  { value: "1month", label: t("1month") },
+];
 // Default time period
-const selectedTimePeriod = ref('5min')
+const selectedTimePeriod = ref("5min");
 
 // Auto refresh settings
-const autoRefresh = ref(true)
-const autoRefreshInterval = ref(10) // seconds
-const scrollPosition = ref(0)
+const autoRefresh = ref(true);
+const autoRefreshInterval = ref(10); // seconds
+const scrollPosition = ref(0);
 
 // Use VueUse to track document visibility
-const isVisible = useDocumentVisibility()
+const isVisible = useDocumentVisibility();
 
 // Track change stats for UI display
 const prevProcessedCount = ref(0);
@@ -71,15 +64,20 @@ const processedDiff = ref(0);
 const queuedDiff = ref(0);
 
 // Fetch status data
-const { data: statusData, pending: loading, error, refresh: refreshData } = useLazyFetch('/api/status', {
-  server: false // Only fetch on client-side
-})
+const {
+  data: statusData,
+  pending: loading,
+  error,
+  refresh: refreshData,
+} = useLazyFetch("/api/status", {
+  server: false, // Only fetch on client-side
+});
 
 // Custom refresh function with change tracking
 const refresh = async () => {
   try {
     if (import.meta.client) {
-      scrollPosition.value = window.scrollY
+      scrollPosition.value = window.scrollY;
     }
 
     // Store current values to calculate difference
@@ -88,7 +86,7 @@ const refresh = async () => {
       prevQueuedCount.value = summaryStats.value?.totalQueued || 0;
     }
 
-    await refreshData()
+    await refreshData();
 
     // Calculate differences
     if (statusData.value) {
@@ -100,49 +98,49 @@ const refresh = async () => {
       nextTick(() => {
         window.scrollTo({
           top: scrollPosition.value,
-          behavior: 'instant'
-        })
-      })
+          behavior: "instant",
+        });
+      });
     }
   } catch (err) {
-    console.error('Error refreshing data:', err)
+    console.error("Error refreshing data:", err);
   }
-}
+};
 
 // Setup auto-refresh
 const { pause, resume } = useIntervalFn(() => {
-  if (import.meta.client && isVisible.value === 'visible' && autoRefresh.value) {
-    refresh()
+  if (import.meta.client && isVisible.value === "visible" && autoRefresh.value) {
+    refresh();
   }
-}, autoRefreshInterval.value * 1000)
+}, autoRefreshInterval.value * 1000);
 
 // Toggle auto-refresh
 const toggleAutoRefresh = () => {
-  autoRefresh.value = !autoRefresh.value
+  autoRefresh.value = !autoRefresh.value;
   if (autoRefresh.value) {
-    resume()
+    resume();
   } else {
-    pause()
+    pause();
   }
-}
+};
 
 // Format uptime to days, hours, minutes, seconds
 const formattedUptime = computed(() => {
-  if (!statusData.value) return ''
+  if (!statusData.value) return "";
 
-  const uptime = statusData.value.uptime
-  const days = Math.floor(uptime / (24 * 60 * 60))
-  const hours = Math.floor((uptime % (24 * 60 * 60)) / (60 * 60))
-  const minutes = Math.floor((uptime % (60 * 60)) / 60)
-  const seconds = Math.floor(uptime % 60)
+  const uptime = statusData.value.uptime;
+  const days = Math.floor(uptime / (24 * 60 * 60));
+  const hours = Math.floor((uptime % (24 * 60 * 60)) / (60 * 60));
+  const minutes = Math.floor((uptime % (60 * 60)) / 60);
+  const seconds = Math.floor(uptime % 60);
 
-  return t('uptimeFormat', { days, hours, minutes, seconds })
-})
+  return t("uptimeFormat", { days, hours, minutes, seconds });
+});
 
 // Format date to locale string
 const formatDate = (dateString) => {
   return new Date(dateString);
-}
+};
 
 // Format numbers using locale
 const formatNumber = (value: number): string => {
@@ -151,124 +149,141 @@ const formatNumber = (value: number): string => {
 
 // Function to update chart options
 const updateChartOptions = () => {
-  if (!statusData.value) return
+  if (!statusData.value) return;
 
-  const period = selectedTimePeriod.value
-  const processedCounts = statusData.value.processedCounts
-  const categories = Object.keys(processedCounts)
+  const period = selectedTimePeriod.value;
+  const processedCounts = statusData.value.processedCounts;
+  const categories = Object.keys(processedCounts);
 
   // Extract data for the selected time period
-  const dataPoints = categories.map(category => {
-    const value = processedCounts[category][period]
+  const dataPoints = categories.map((category) => {
+    const value = processedCounts[category][period];
     return {
       name: category,
-      value: typeof value === 'number' ? value : 0
-    }
-  })
+      value: typeof value === "number" ? value : 0,
+    };
+  });
 
   // Sort by value (descending order)
-  dataPoints.sort((a, b) => b.value - a.value)
+  dataPoints.sort((a, b) => b.value - a.value);
 
   // Colors for the bars
   const colors = [
-    '#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0',
-    '#9966FF', '#FF9F40', '#C7C7C7', '#8AC926',
-    '#1982C4', '#6A4C93', '#FFCA3A', '#FF595E'
-  ]
+    "#FF6384",
+    "#36A2EB",
+    "#FFCE56",
+    "#4BC0C0",
+    "#9966FF",
+    "#FF9F40",
+    "#C7C7C7",
+    "#8AC926",
+    "#1982C4",
+    "#6A4C93",
+    "#FFCA3A",
+    "#FF595E",
+  ];
 
   // Create chart options
   chartOptions.value = {
     title: {
-      text: t('processedItems', { period: period }),
-      left: 'center'
+      text: t("processedItems", { period: period }),
+      left: "center",
     },
     tooltip: {
-      trigger: 'axis',
-      axisPointer: { type: 'shadow' },
-      formatter: function(params) {
-        const data = params[0]
-        return `${data.name}: ${data.value}`
-      }
+      trigger: "axis",
+      axisPointer: { type: "shadow" },
+      formatter: (params) => {
+        const data = params[0];
+        return `${data.name}: ${data.value}`;
+      },
     },
     grid: {
-      left: '5%',
-      right: '20%',
-      bottom: '5%',
-      containLabel: true
+      left: "5%",
+      right: "20%",
+      bottom: "5%",
+      containLabel: true,
     },
     xAxis: {
-      type: 'value',
-      axisLabel: { formatter: (value) => value }
+      type: "value",
+      axisLabel: { formatter: (value) => value },
     },
     yAxis: {
-      type: 'category',
-      data: dataPoints.map(item => item.name),
-      axisLabel: { formatter: (value) => value.charAt(0).toUpperCase() + value.slice(1) }
+      type: "category",
+      data: dataPoints.map((item) => item.name),
+      axisLabel: { formatter: (value) => value.charAt(0).toUpperCase() + value.slice(1) },
     },
-    series: [{
-      type: 'bar',
-      data: dataPoints.map((item, index) => ({
-        value: item.value,
-        itemStyle: { color: colors[index % colors.length] }
-      }))
-    }]
-  }
-}
+    series: [
+      {
+        type: "bar",
+        data: dataPoints.map((item, index) => ({
+          value: item.value,
+          itemStyle: { color: colors[index % colors.length] },
+        })),
+      },
+    ],
+  };
+};
 
 // Watch for changes in data and time period
-watch([statusData, selectedTimePeriod], () => {
-  if (statusData.value) {
-    updateChartOptions()
-  }
-}, { immediate: true })
+watch(
+  [statusData, selectedTimePeriod],
+  () => {
+    if (statusData.value) {
+      updateChartOptions();
+    }
+  },
+  { immediate: true },
+);
 
 // Watch visibility changes
 watch(isVisible, (newValue) => {
-  if (newValue === 'visible' && autoRefresh.value) {
-    resume()
+  if (newValue === "visible" && autoRefresh.value) {
+    resume();
   } else {
-    pause()
+    pause();
   }
-})
+});
 
 // Setup when mounted
 onMounted(() => {
   if (autoRefresh.value) {
-    resume()
+    resume();
   }
 
   checkIfMobile();
-  window.addEventListener('resize', checkIfMobile);
-})
+  window.addEventListener("resize", checkIfMobile);
+});
 
 onUnmounted(() => {
-  window.removeEventListener('resize', checkIfMobile);
+  window.removeEventListener("resize", checkIfMobile);
 });
 
 // Tab state
-const activeTab = ref('overview')
-const detailed = ref(false)
+const activeTab = ref("overview");
+const detailed = ref(false);
 
 // Summary stats computed property
 const summaryStats = computed(() => {
-  if (!statusData.value) return null
+  if (!statusData.value) return null;
 
   return {
     totalQueued: Object.values(statusData.value.queueCounts).reduce(
-      (sum, val) => sum + (typeof val === 'number' ? val : 0), 0
+      (sum, val) => sum + (typeof val === "number" ? val : 0),
+      0,
     ),
     totalProcessed: Object.values(statusData.value.processedCounts).reduce(
-      (sum, val) => sum + (val['5min'] || 0), 0
+      (sum, val) => sum + (val["5min"] || 0),
+      0,
     ),
-    unprocessedItems: statusData.value.databaseCounts.unprocessedCount || 0
-  }
-})
+    unprocessedItems: statusData.value.databaseCounts.unprocessedCount || 0,
+  };
+});
 
 // Format bytes to human readable format
 const formatBytes = (bytes?: number): string => {
-  if (bytes === undefined) return 'N/A';
+  if (bytes === undefined) return "N/A";
 
-  const units = ['B', 'KB', 'MB', 'GB', 'TB'];
+  const units = ["B", "KB", "MB", "GB", "TB"];
   let value = bytes;
   let unitIndex = 0;
 
@@ -282,19 +297,19 @@ const formatBytes = (bytes?: number): string => {
 
 // Format Redis uptime
 const formatRedisUptime = (seconds?: number): string => {
-  if (!seconds) return 'N/A';
+  if (!seconds) return "N/A";
 
   const days = Math.floor(seconds / (24 * 60 * 60));
   const hours = Math.floor((seconds % (24 * 60 * 60)) / (60 * 60));
   const minutes = Math.floor((seconds % (60 * 60)) / 60);
   const remainingSeconds = Math.floor(seconds % 60);
 
-  return t('uptimeFormat', { days, hours, minutes, seconds: remainingSeconds });
+  return t("uptimeFormat", { days, hours, minutes, seconds: remainingSeconds });
 };
 
 // Format time in milliseconds to human readable format
 const formatTime = (ms?: number): string => {
-  if (!ms) return 'N/A';
+  if (!ms) return "N/A";
 
   if (ms < 1000) return `${ms} ms`;
   if (ms < 60000) return `${(ms / 1000).toFixed(2)} s`;
@@ -305,9 +320,9 @@ const formatTime = (ms?: number): string => {
 
 // Calculate hit ratio
 const calculateHitRatio = (hits?: number, misses?: number): string => {
-  if (!hits || !misses) return 'N/A';
+  if (!hits || !misses) return "N/A";
   const total = hits + misses;
-  if (total === 0) return '0.00';
+  if (total === 0) return "0.00";
 
   return ((hits / total) * 100).toFixed(2);
 };
@@ -316,12 +331,12 @@ const calculateHitRatio = (hits?: number, misses?: number): string => {
 const parseKeyspaceInfo = (info: string) => {
   const result = { keys: 0, expires: 0, avg_ttl: 0 };
 
-  if (typeof info === 'string') {
-    const parts = info.split(',');
-    parts.forEach(part => {
-      if (part.includes('keys=')) result.keys = parseInt(part.split('=')[1], 10);
-      if (part.includes('expires=')) result.expires = parseInt(part.split('=')[1], 10);
-      if (part.includes('avg_ttl=')) result.avg_ttl = parseInt(part.split('=')[1], 10);
+  if (typeof info === "string") {
+    const parts = info.split(",");
+    parts.forEach((part) => {
+      if (part.includes("keys=")) result.keys = Number.parseInt(part.split("=")[1], 10);
+      if (part.includes("expires=")) result.expires = Number.parseInt(part.split("=")[1], 10);
+      if (part.includes("avg_ttl=")) result.avg_ttl = Number.parseInt(part.split("=")[1], 10);
     });
   }
 
@@ -330,7 +345,9 @@ const parseKeyspaceInfo = (info: string) => {
 
 // Check if keyspace info exists
 const hasKeyspaceInfo = computed(() => {
-  return statusData.value?.redis?.keyspace && Object.keys(statusData.value.redis.keyspace).length > 0;
+  return (
+    statusData.value?.redis?.keyspace && Object.keys(statusData.value.redis.keyspace).length > 0
+  );
 });
 </script>
 

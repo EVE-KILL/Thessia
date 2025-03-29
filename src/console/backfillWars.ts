@@ -1,7 +1,7 @@
 import { esiFetcher } from "~/server/helpers/ESIFetcher";
-import { queueUpdateWar } from "~/server/queue/War";
-import { Wars } from "~/server/models/Wars";
 import type { IWar } from "~/server/interfaces/IWar";
+import { Wars } from "~/server/models/Wars";
+import { queueUpdateWar } from "~/server/queue/War";
 
 export default {
   name: "backfill:wars",

@@ -117,7 +117,7 @@
 </template>
 
 <script setup lang="ts">
-import { useI18n } from 'vue-i18n';
+import { useI18n } from "vue-i18n";
 
 const { t, locale } = useI18n();
 const currentLocale = computed(() => locale.value);
@@ -141,67 +141,80 @@ watch(pending, (newPending) => {
 });
 
 // Watch for route changes to reset state
-watch(() => route.params.id, (newId) => {
-  loading.value = true;
-});
+watch(
+  () => route.params.id,
+  (newId) => {
+    loading.value = true;
+  },
+);
 
 // Update SEO metadata
 useSeoMeta({
-  title: computed(() => item.value ?
-    `${getLocalizedString(item.value.name, currentLocale)} | EVE-KILL` :
-    'Item Details | EVE-KILL'),
-  ogTitle: computed(() => item.value ?
-    `${getLocalizedString(item.value.name, currentLocale)} | EVE-KILL` :
-    'Item Details | EVE-KILL'),
-  description: computed(() => item.value ?
-    truncateText(stripHtml(getLocalizedString(item.value.description, currentLocale)), 160) :
-    'EVE Online item details'),
-  ogDescription: computed(() => item.value ?
-    truncateText(stripHtml(getLocalizedString(item.value.description, currentLocale)), 160) :
-    'EVE Online item details'),
-  ogImage: computed(() => item.value ?
-    `https://images.evetech.net/types/${item.value.type_id}/render?size=512` :
-    ''),
-  twitterCard: 'summary_large_image',
+  title: computed(() =>
+    item.value
+      ? `${getLocalizedString(item.value.name, currentLocale)} | EVE-KILL`
+      : "Item Details | EVE-KILL",
+  ),
+  ogTitle: computed(() =>
+    item.value
+      ? `${getLocalizedString(item.value.name, currentLocale)} | EVE-KILL`
+      : "Item Details | EVE-KILL",
+  ),
+  description: computed(() =>
+    item.value
+      ? truncateText(stripHtml(getLocalizedString(item.value.description, currentLocale)), 160)
+      : "EVE Online item details",
+  ),
+  ogDescription: computed(() =>
+    item.value
+      ? truncateText(stripHtml(getLocalizedString(item.value.description, currentLocale)), 160)
+      : "EVE Online item details",
+  ),
+  ogImage: computed(() =>
+    item.value ? `https://images.evetech.net/types/${item.value.type_id}/render?size=512` : "",
+  ),
+  twitterCard: "summary_large_image",
 });
 
 /**
  * Gets localized string from an object containing translations
  */
 function getLocalizedString(obj: any, locale: string): string {
-  if (!obj) return '';
-  return obj[locale] || obj['en'] || '';
+  if (!obj) return "";
+  return obj[locale] || obj.en || "";
 }
 
 /**
  * Converts EVE HTML to properly rendered HTML
  */
 function convertEveHtml(text: string): string {
-  if (!text) return '';
+  if (!text) return "";
 
   // Replace showinfo links with appropriate NuxtLinks
-  return text.replace(/<a href=showinfo:(\d+)(?:\/\/(\d+))?>(.*?)<\/a>/g, (match, typeId, itemId, text) => {
-    if (itemId) {
-      return `<a href="/item/${itemId}" class="text-primary-400 hover:text-primary-300">${text}</a>`;
-    } else {
+  return text.replace(
+    /<a href=showinfo:(\d+)(?:\/\/(\d+))?>(.*?)<\/a>/g,
+    (match, typeId, itemId, text) => {
+      if (itemId) {
+        return `<a href="/item/${itemId}" class="text-primary-400 hover:text-primary-300">${text}</a>`;
+      }
       return `<a href="/item/${typeId}" class="text-primary-400 hover:text-primary-300">${text}</a>`;
-    }
-  });
+    },
+  );
 }
 
 /**
  * Strips HTML tags from text
  */
 function stripHtml(html: string): string {
-  if (!html) return '';
-  return html.replace(/<\/?[^>]+(>|$)/g, '');
+  if (!html) return "";
+  return html.replace(/<\/?[^>]+(>|$)/g, "");
 }
 
 /**
  * Truncates text to specified length
  */
 function truncateText(text: string, length: number): string {
-  if (!text) return '';
+  if (!text) return "";
   return text.length > length ? `${text.slice(0, length)}...` : text;
 }
 </script>

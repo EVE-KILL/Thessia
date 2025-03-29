@@ -1,22 +1,22 @@
-import { build } from 'esbuild';
-import { resolve } from 'path';
-import fs from 'fs';
-import { glob } from 'glob';
+import fs from "node:fs";
+import { resolve } from "node:path";
+import { build } from "esbuild";
+import { glob } from "glob";
 
 // Utility function to generate the CLI loader file
-export function generateCliLoader(targetFile = 'src/console/.loader.ts') {
+export function generateCliLoader(targetFile = "src/console/.loader.ts") {
   // Find all command files
-  const commandFiles = glob.sync('src/console/**/*.{ts,js}', {
-    ignore: ['**/.*', '**/.*.*', '**/.loader.ts', '**/.loader.js', '**/_*.ts', '**/_*.js']
+  const commandFiles = glob.sync("src/console/**/*.{ts,js}", {
+    ignore: ["**/.*", "**/.*.*", "**/.loader.ts", "**/.loader.js", "**/_*.ts", "**/_*.js"],
   });
 
   // Generate import statements and commands object
-  let importStatements: string[] = [];
-  let commandEntries: string[] = [];
+  const importStatements: string[] = [];
+  const commandEntries: string[] = [];
 
   for (const file of commandFiles) {
     // Extract the base filename without extension
-    const baseName = file.replace(/^src\/console\//, '').replace(/\.(ts|js)$/, '');
+    const baseName = file.replace(/^src\/console\//, "").replace(/\.(ts|js)$/, "");
 
     // Generate a valid variable name from the file name (handle paths with slashes)
     const varName = baseName.replace(/[-\/\\](.)/g, (_, c) => c.toUpperCase());
@@ -33,11 +33,11 @@ export function generateCliLoader(targetFile = 'src/console/.loader.ts') {
 
   // Create the loader file content
   const loaderContent = `// Auto-generated CLI commands loader
-${importStatements.join('\n')}
+${importStatements.join("\n")}
 
 // Export all command modules
 export const commands = {
-${commandEntries.join('\n')}
+${commandEntries.join("\n")}
 };
 `;
 
@@ -48,10 +48,10 @@ ${commandEntries.join('\n')}
 }
 
 async function buildCLI() {
-  console.log('Building CLI...');
+  console.log("Building CLI...");
 
-  const outdir = resolve('.output/cli');
-  const projectRoot = resolve('.');
+  const outdir = resolve(".output/cli");
+  const projectRoot = resolve(".");
 
   // Ensure output directory exists
   if (!fs.existsSync(outdir)) {
@@ -62,57 +62,63 @@ async function buildCLI() {
   generateCliLoader();
 
   // List of modules that should remain external (only Node.js built-ins)
-  const externalModules = ['fs', 'path', 'os', 'child_process', 'crypto', 'events', 'stream', 'bun:sqlite'];
+  const externalModules = [
+    "fs",
+    "path",
+    "os",
+    "child_process",
+    "crypto",
+    "events",
+    "stream",
+    "bun:sqlite",
+  ];
 
   try {
     // Build the single console binary
-    console.log('Building single CLI binary...');
+    console.log("Building single CLI binary...");
     await build({
-      entryPoints: ['console.ts'],
+      entryPoints: ["console.ts"],
       bundle: true,
-      platform: 'node',
-      target: 'esnext',
-      outfile: resolve(outdir, 'console.js'),
-      format: 'esm',
+      platform: "node",
+      target: "esnext",
+      outfile: resolve(outdir, "console.js"),
+      format: "esm",
       sourcemap: true,
       external: externalModules,
       alias: {
-        '~': projectRoot,
+        "~": projectRoot,
       },
       minify: true,
       define: {
-        'process.env.NODE_ENV': '"production"'
+        "process.env.NODE_ENV": '"production"',
       },
     });
 
     // Make CLI executable
-    fs.chmodSync(resolve(outdir, 'console.js'), '755');
+    fs.chmodSync(resolve(outdir, "console.js"), "755");
 
     // Create package.json in the output directory with required dependencies
     const packageJson = {
-      "name": "thessia-cli",
-      "private": true,
-      "type": "module",
-      "dependencies": {
-        "mongoose": "*",
-        "commander": "*",
-        "ioredis": "*",
-        "bullmq": "*",
-        "glob": "*",
+      name: "thessia-cli",
+      private: true,
+      type: "module",
+      dependencies: {
+        mongoose: "*",
+        commander: "*",
+        ioredis: "*",
+        bullmq: "*",
+        glob: "*",
         "stream-json": "*",
-        "lru-cache": "*"
-      }
+        "lru-cache": "*",
+      },
     };
 
-    fs.writeFileSync(
-      resolve(outdir, 'package.json'),
-      JSON.stringify(packageJson, null, 2)
-    );
+    fs.writeFileSync(resolve(outdir, "package.json"), JSON.stringify(packageJson, null, 2));
 
-    console.log('CLI build completed successfully');
-    console.log('Run with: bun --bun run .output/cli/console.js <command>');
+    console.log("CLI build completed successfully");
+    console.log("Run with: bun --bun run .output/cli/console.js <command>");
   } catch (error) {
-    console.error('CLI build failed:', error);
+    console.error("CLI build failed:", error);
     process.exit(1);
   }
 }

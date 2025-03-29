@@ -21,8 +21,12 @@ export default {
       .eachAsync((doc) => {
         processedChars++;
         if (processedChars % 100 === 0) console.log(`Characters: ${processedChars}/${charCount}`);
-        if (!firstChar) fs.appendFileSync(path.join(__dirname, "~/server/data/characters.json"), ",\n");
-        fs.appendFileSync(path.join(__dirname, "~/server/data/characters.json"), JSON.stringify(doc));
+        if (!firstChar)
+          fs.appendFileSync(path.join(__dirname, "~/server/data/characters.json"), ",\n");
+        fs.appendFileSync(
+          path.join(__dirname, "~/server/data/characters.json"),
+          JSON.stringify(doc),
+        );
         firstChar = false;
       });
     fs.appendFileSync(path.join(__dirname, "~/server/data/characters.json"), "]");
@@ -37,8 +41,12 @@ export default {
       .eachAsync((doc) => {
         processedCorps++;
         if (processedCorps % 100 === 0) console.log(`Corporations: ${processedCorps}/${corpCount}`);
-        if (!firstCorp) fs.appendFileSync(path.join(__dirname, "~/server/data/corporations.json"), ",\n");
-        fs.appendFileSync(path.join(__dirname, "~/server/data/corporations.json"), JSON.stringify(doc));
+        if (!firstCorp)
+          fs.appendFileSync(path.join(__dirname, "~/server/data/corporations.json"), ",\n");
+        fs.appendFileSync(
+          path.join(__dirname, "~/server/data/corporations.json"),
+          JSON.stringify(doc),
+        );
         firstCorp = false;
       });
     fs.appendFileSync(path.join(__dirname, "~/server/data/corporations.json"), "]");
@@ -53,8 +61,12 @@ export default {
       .eachAsync((doc) => {
         processedAlli++;
         if (processedAlli % 100 === 0) console.log(`Alliances: ${processedAlli}/${alliCount}`);
-        if (!firstAlli) fs.appendFileSync(path.join(__dirname, "~/server/data/alliances.json"), ",\n");
-        fs.appendFileSync(path.join(__dirname, "~/server/data/alliances.json"), JSON.stringify(doc));
+        if (!firstAlli)
+          fs.appendFileSync(path.join(__dirname, "~/server/data/alliances.json"), ",\n");
+        fs.appendFileSync(
+          path.join(__dirname, "~/server/data/alliances.json"),
+          JSON.stringify(doc),
+        );
         firstAlli = false;
       });
     fs.appendFileSync(path.join(__dirname, "~/server/data/alliances.json"), "]");
