@@ -10,7 +10,9 @@
     "ignore": [
       "node_modules",
       ".nitro",
+      ".nuxt",
       ".output",
+      ".data",
       "dist",
       "build",
       "*.log",

@@ -12,8 +12,10 @@
     "build-cli": "bun run build-cli.ts",
     "build-cron": "bun run build-cron.ts",
     "build-queue": "bun run build-queue.ts",
+    "husky": "husky",
     "lint": "biome check .",
-    "lint:fix": "biome check --write ."
+    "lint:fix": "biome check --write .",
+    "prepare": "husky"
   },
   "dependencies": {
     "@nuxtjs/color-mode": "3.5.2",
