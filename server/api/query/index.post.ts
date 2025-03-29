@@ -1,5 +1,13 @@
 import type { H3Event } from "h3";
 import { Killmails } from "~/server/models/Killmails";
+import {
+  DEFAULT_EXCLUSIONS,
+  DEFAULT_LIMIT,
+  MAX_LIMIT,
+  type QueryAPIRequest,
+  VALID_FIELDS,
+  VALID_OPERATORS,
+} from "~/shared/helpers/queryAPIHelper";
 
 /**
  * Query API - MongoDB-like query interface for killmail data
@@ -16,75 +24,6 @@ import { Killmails } from "~/server/models/Killmails";
  *   }
  * }
  */
-
-// Define valid filters, fields, and options
-const VALID_FILTERS = [
-  "$gt",
-  "$gte",
-  "$lt",
-  "$lte",
-  "$eq",
-  "$ne",
-  "$in",
-  "$nin",
-  "$exists",
-  "$or",
-  "$and",
-];
-const VALID_FIELDS = [
-  "killmail_id",
-  "killmail_hash",
-  "dna",
-  "is_npc",
-  "is_solo",
-  "region_id",
-  "system_id",
-  "system_security",
-  "constellation_id",
-  "total_value",
-  "war_id",
-  "kill_time",
-  "victim.ship_id",
-  "victim.ship_group_id",
-  "victim.character_id",
-  "victim.corporation_id",
-  "victim.alliance_id",
-  "victim.faction_id",
-  "attackers.ship_id",
-  "attackers.ship_group_id",
-  "attackers.character_id",
-  "attackers.corporation_id",
-  "attackers.alliance_id",
-  "attackers.faction_id",
-  "attackers.weapon_type_id",
-  "items.type_id",
-  "items.group_id",
-];
-const VALID_OPTIONS = ["sort", "limit", "skip", "projection"];
-const MAX_LIMIT = 10000;
-const DEFAULT_LIMIT = 100;
-
-// Fields to exclude by default from query results
-const DEFAULT_EXCLUSIONS = {
-  _id: 0,
-  __v: 0,
-  createdAt: 0,
-  updatedAt: 0,
-  kill_time_str: 0,
-};
-
-/**
- * Interface for query request body
- */
-interface QueryRequestBody {
-  filter?: Record<string, any>;
-  options?: {
-    sort?: Record<string, any>;
-    limit?: number;
-    skip?: number;
-    projection?: Record<string, 0 | 1>;
-  };
-}
 
 /**
  * Interface for the processed query
@@ -128,7 +67,7 @@ function validateSort(sort: any): Record<string, 1 | -1> {
 
   const validatedSort: Record<string, 1 | -1> = {};
   for (const [field, direction] of Object.entries(sort)) {
-    if (!VALID_FIELDS.includes(field)) {
+    if (!VALID_FIELDS.includes(field as any)) {
       throw new Error(`Invalid sort field: ${field}`);
     }
 
@@ -161,7 +100,7 @@ function validateSkip(skip: any): number {
 function validateLimit(limit: any): number {
   const intValue = Number.parseInt(limit, 10);
   if (Number.isNaN(intValue) || intValue < 1) {
-    return DEFAULT_LIMIT; // Default to 100 if invalid
+    return DEFAULT_LIMIT; // Default to default limit if invalid
   }
   return Math.min(intValue, MAX_LIMIT);
 }
@@ -198,7 +137,7 @@ function validateFilterValue(key: string, value: any): any {
   if (key === "kill_time") {
     const validatedValue: any = {};
     for (const [operator, operand] of Object.entries(value)) {
-      if (VALID_FILTERS.includes(operator)) {
+      if (VALID_OPERATORS.includes(operator as any)) {
         if (["$gt", "$gte", "$lt", "$lte"].includes(operator)) {
           // Convert timestamp to Date for these operators
           validatedValue[operator] = new Date(validatePositiveInteger(operand, "kill_time") * 1000);
@@ -226,7 +165,7 @@ function validateFilterValue(key: string, value: any): any {
   if (typeof value === "object" && value !== null) {
     const validatedValue: any = {};
     for (const [operator, operand] of Object.entries(value)) {
-      if (VALID_FILTERS.includes(operator)) {
+      if (VALID_OPERATORS.includes(operator as any)) {
         validatedValue[operator] = operand;
       } else {
         throw new Error(`Invalid filter operator: ${operator}`);
@@ -257,7 +196,7 @@ function validateFilter(filter: any): Record<string, any> {
           throw new Error(`Invalid ${key} operator: value must be an array`);
         }
         validatedFilter[key] = value.map((condition) => validateFilter(condition));
-      } else if (VALID_FIELDS.includes(key)) {
+      } else if (VALID_FIELDS.includes(key as any)) {
         validatedFilter[key] = validateFilterValue(key, value);
       } else {
         throw new Error(`Invalid filter field: ${key}`);
@@ -283,7 +222,7 @@ function validateOptions(options: any): Record<string, any> {
   const validatedOptions: Record<string, any> = {};
 
   for (const [key, value] of Object.entries(options)) {
-    if (!VALID_OPTIONS.includes(key)) {
+    if (!["sort", "limit", "skip", "projection"].includes(key)) {
       throw new Error(`Invalid option: ${key}`);
     }
 
@@ -309,11 +248,24 @@ function validateOptions(options: any): Record<string, any> {
 }
 
 /**
+ * Validates a query request object
+ * @param query - Query request to validate
+ * @returns The validated query or throws an error
+ */
+function validateQuery(query: QueryAPIRequest): QueryAPIRequest {
+  if (!query || typeof query !== "object") {
+    throw new Error("Query must be an object");
+  }
+
+  return query;
+}
+
+/**
  * Generates an aggregation pipeline for a complex query
  * @param input - Query input from request body
  * @returns Processed query with filter and pipeline
  */
-function generateComplexQuery(input: QueryRequestBody): ProcessedQuery {
+function generateComplexQuery(input: QueryAPIRequest): ProcessedQuery {
   const query = {
     filter: {},
     options: {
@@ -396,7 +348,7 @@ function generateComplexQuery(input: QueryRequestBody): ProcessedQuery {
 export default defineEventHandler(async (event: H3Event) => {
   try {
     // Parse the request body
-    const body = (await readBody(event)) as QueryRequestBody;
+    const body = (await readBody(event)) as QueryAPIRequest;
 
     if (!body || typeof body !== "object") {
       return createError({
@@ -404,6 +356,9 @@ export default defineEventHandler(async (event: H3Event) => {
         statusMessage: "Invalid request body: expected JSON object",
       });
     }
+
+    // Validate the query structure
+    validateQuery(body);
 
     // Generate the query
     const queryData = generateComplexQuery(body);
