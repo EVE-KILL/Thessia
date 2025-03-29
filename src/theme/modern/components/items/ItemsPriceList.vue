@@ -1,6 +1,6 @@
 <template>
   <div class="w-full p-4 rounded bg-background-800 bg-opacity-75">
-    <h2 class="text-xl font-bold mb-4">{{ $t('marketPrices', { region: 'The Forge' }) }}</h2>
+    <h2 class="text-xl font-bold mb-4">{{ $t('marketPricesX', { region: 'The Forge' }) }}</h2>
 
     <!-- Loading state -->
     <div v-if="isLoading" class="overflow-x-auto">

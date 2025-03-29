@@ -250,6 +250,7 @@
     "maxPrice": "Max Price",
     "avgPrice": "Avg Price",
     "marketPrices": "Market Prices",
+    "marketPricesX": "Market Prices ({region})",
     "priceSource": "Price Source",
 
     "about": {
