@@ -196,14 +196,14 @@
               class="px-3 py-1 text-xs"
               :class="activeTab === 'write' ? 'bg-primary-500 text-white' : 'bg-light-dark-tab text-light-dark-secondary'"
             >
-              {{ $t('markdown_editor.write') }}
+              {{ $t('write') }}
             </button>
             <button
               @click="activeTab = 'preview'"
               class="px-3 py-1 text-xs"
               :class="activeTab === 'preview' ? 'bg-primary-500 text-white' : 'bg-light-dark-tab text-light-dark-secondary'"
             >
-              {{ $t('markdown_editor.preview') }}
+              {{ $t('preview') }}
             </button>
           </div>
         </div>
@@ -218,46 +218,46 @@
             :rows="6"
             class="w-full mb-2 font-mono bg-light-dark-input border-light-dark-border"
             :disabled="isSubmitting"
-            :placeholder="$t('markdown_editor.placeholder')"
+            :placeholder="$t('placeholder')"
             @input="updateEditorHeight"
           />
 
           <div class="editor-toolbar flex flex-wrap gap-2 mb-2">
             <UButton size="xs" @click="insertMarkdown('**', '**')" color="neutral">
               <Icon name="lucide:bold" class="w-4 h-4 mr-1" />
-              {{ $t('markdown_editor.bold') }}
+              {{ $t('bold') }}
             </UButton>
             <UButton size="xs" @click="insertMarkdown('*', '*')" color="neutral">
               <Icon name="lucide:italic" class="w-4 h-4 mr-1" />
-              {{ $t('markdown_editor.italic') }}
+              {{ $t('italic') }}
             </UButton>
             <UButton size="xs" @click="insertMarkdown('[', '](url)')" color="neutral">
               <Icon name="lucide:link" class="w-4 h-4 mr-1" />
-              {{ $t('markdown_editor.link') }}
+              {{ $t('link') }}
             </UButton>
             <UButton size="xs" @click="insertMarkdown('\n```\n', '\n```')" color="neutral">
               <Icon name="lucide:code" class="w-4 h-4 mr-1" />
-              {{ $t('markdown_editor.code') }}
+              {{ $t('code') }}
             </UButton>
             <UButton size="xs" @click="insertImage" color="neutral">
               <Icon name="lucide:image" class="w-4 h-4 mr-1" />
-              {{ $t('markdown_editor.image') }}
+              {{ $t('image') }}
             </UButton>
             <UButton size="xs" @click="insertYoutube" color="neutral">
               <Icon name="lucide:video" class="w-4 h-4 mr-1" />
-              {{ $t('markdown_editor.youtube') }}
+              {{ $t('youtube') }}
             </UButton>
             <UButton size="xs" @click="insertImgur" color="neutral">
               <Icon name="simple-icons:imgur" class="w-4 h-4 mr-1" />
-              {{ $t('markdown_editor.imgur') }}
+              {{ $t('imgur') }}
             </UButton>
             <UButton size="xs" @click="insertGiphy" color="neutral">
               <Icon name="simple-icons:giphy" class="w-4 h-4 mr-1" />
-              {{ $t('markdown_editor.giphy') }}
+              {{ $t('giphy') }}
             </UButton>
             <UButton size="xs" @click="insertTenor" color="neutral">
               <Icon name="simple-icons:tenor" class="w-4 h-4 mr-1" />
-              {{ $t('markdown_editor.tenor') }}
+              {{ $t('tenor') }}
             </UButton>
           </div>
         </div>
@@ -269,13 +269,13 @@
           ref="previewContainerRef"
         >
           <div v-html="renderMarkdown(newComment)" v-if="newComment.trim()"></div>
-          <div v-else class="text-light-dark-secondary text-sm italic">{{ $t('markdown_editor.preview_empty') }}</div>
+          <div v-else class="text-light-dark-secondary text-sm italic">{{ $t('preview_empty') }}</div>
         </div>
       </div>
 
       <div class="flex justify-between mt-3">
         <p class="text-xs text-light-dark-secondary" :class="{ 'text-red-500': charactersRemaining < 0 }">
-          {{ charactersRemaining }} {{ $t('characters_remaining') }}
+          {{ charactersRemaining }} {{ $t('charactersRemaining') }}
         </p>
         <UButton
           :loading="isSubmitting"
@@ -284,7 +284,7 @@
           color="primary"
           size="sm"
         >
-          {{ $t('post_comment') }}
+          {{ $t('postComment') }}
         </UButton>
       </div>
 
