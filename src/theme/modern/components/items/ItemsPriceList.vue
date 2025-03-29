@@ -1,6 +1,6 @@
 <template>
   <div class="w-full p-4 rounded bg-background-800 bg-opacity-75">
-    <h2 class="text-xl font-bold mb-4">{{ $t('items.marketPrices', { region: 'The Forge' }) }}</h2>
+    <h2 class="text-xl font-bold mb-4">{{ $t('marketPrices', { region: 'The Forge' }) }}</h2>
 
     <!-- Loading state -->
     <div v-if="isLoading" class="overflow-x-auto">
@@ -30,10 +30,10 @@
       <table class="table-auto w-full text-left text-sm bg-background-900 rounded-lg shadow-lg">
         <thead>
           <tr class="bg-background-700 text-black dark:text-white uppercase text-xs leading-normal">
-            <th class="px-2 py-1">{{ $t('items.date') }}</th>
-            <th class="px-2 py-1 text-right">{{ $t('items.minPrice') }}</th>
-            <th class="px-2 py-1 text-right">{{ $t('items.avgPrice') }}</th>
-            <th class="px-2 py-1 text-right">{{ $t('items.maxPrice') }}</th>
+            <th class="px-2 py-1">{{ $t('date') }}</th>
+            <th class="px-2 py-1 text-right">{{ $t('minPrice') }}</th>
+            <th class="px-2 py-1 text-right">{{ $t('avgPrice') }}</th>
+            <th class="px-2 py-1 text-right">{{ $t('maxPrice') }}</th>
           </tr>
         </thead>
         <tbody class="text-black dark:text-white text-sm">
@@ -50,7 +50,7 @@
         </tbody>
       </table>
       <p class="text-gray-500 dark:text-gray-400 text-xs mt-2 text-left">
-        {{ $t('items.priceSource') }}
+        {{ $t('priceSource') }}
         <a
           href="https://data.everef.net/market-history/"
           target="_blank"
@@ -62,7 +62,7 @@
 
     <!-- Empty state -->
     <div v-else class="text-center p-4">
-      {{ $t('items.noPrices') }}
+      {{ $t('noPrices') }}
     </div>
   </div>
 </template>

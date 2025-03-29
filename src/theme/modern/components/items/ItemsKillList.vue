@@ -1,6 +1,6 @@
 <template>
   <div class="w-full p-4 rounded bg-background-800 bg-opacity-75">
-    <h2 class="text-xl font-bold mb-4">{{ $t('items.latestKills') }}</h2>
+    <h2 class="text-xl font-bold mb-4">{{ $t('latestKills') }}</h2>
 
     <!-- Loading state -->
     <div v-if="isLoading" class="overflow-x-auto">
@@ -198,12 +198,12 @@ watch(() => route.params.id, () => {
 const tableColumns = [
   {
     id: 'ship',
-    header: computed(() => t('killList.ship')),
+    header: computed(() => t('ship')),
     width: '20%'
   },
   {
     id: 'victim',
-    header: computed(() => t('killList.victim')),
+    header: computed(() => t('victim')),
     width: '80%'
   }
 ];

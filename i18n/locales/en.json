@@ -83,6 +83,7 @@
     "noKills": "No kills",
     "noData": "No data",
     "noItems": "No items",
+    "noPrices": "No prices",
     "toggleVisibility": "Toggle visibility",
     "connected": "Connected",
     "disconnected": "Disconnected",
@@ -241,7 +242,15 @@
     "autoRefreshing": "Auto Refreshing",
     "lastUpdated": "Last updated: {time}",
     "processingStatisticsTitle": "Processing Statistics",
-
+    "marketPricesTitle": "Market Prices",
+    "latestKills": "Latest Kills",
+    "topFittings": "Top Fittings",
+    "date": "Date",
+    "minPrice": "Min Price",
+    "maxPrice": "Max Price",
+    "avgPrice": "Avg Price",
+    "marketPrices": "Market Prices",
+    "priceSource": "Price Source",
 
     "about": {
         "pageTitle": "About EVE-KILL",

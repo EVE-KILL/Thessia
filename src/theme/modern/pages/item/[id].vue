@@ -78,7 +78,7 @@
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
           <div class="flex flex-col space-y-4">
             <div class="w-full p-4 rounded bg-background-800 bg-opacity-75">
-              <h2 class="text-xl font-bold mb-4">{{ $t('items.latestKills') }}</h2>
+              <h2 class="text-xl font-bold mb-4">{{ $t('latestKills') }}</h2>
               <div class="overflow-x-auto">
                 <div class="w-full">
                   <div v-for="i in 5" :key="i" class="flex w-full p-2 mb-1">
@@ -90,7 +90,7 @@
           </div>
           <div class="flex flex-col space-y-4">
             <div class="w-full p-4 rounded bg-background-800 bg-opacity-75">
-              <h2 class="text-xl font-bold mb-4">{{ $t('items.topFittings') }}</h2>
+              <h2 class="text-xl font-bold mb-4">{{ $t('topFittings') }}</h2>
               <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div v-for="i in 4" :key="i" class="border border-background-700 p-4 rounded-md">
                   <USkeleton class="w-full h-60" />
@@ -99,7 +99,7 @@
             </div>
 
             <div class="w-full p-4 rounded bg-background-800 bg-opacity-75">
-              <h2 class="text-xl font-bold mb-4">{{ $t('items.marketPrices', { region: 'The Forge' }) }}</h2>
+              <h2 class="text-xl font-bold mb-4">{{ $t('marketPrices', { region: 'The Forge' }) }}</h2>
               <div class="overflow-x-auto">
                 <div class="w-full">
                   <USkeleton class="h-8 w-full mb-2" />

@@ -1,6 +1,6 @@
 <template>
   <div v-if="fittings && fittings.length > 0" class="w-full p-4 rounded bg-background-800 bg-opacity-75">
-    <h2 class="text-xl font-bold mb-4">{{ $t('items.topFittings') }}</h2>
+    <h2 class="text-xl font-bold mb-4">{{ $t('topFittings') }}</h2>
 
     <!-- Loading state -->
     <div v-if="isLoading" class="grid grid-cols-1 md:grid-cols-2 gap-4">
