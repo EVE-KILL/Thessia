@@ -24,12 +24,18 @@ type EntityTypes =
   | "regions"
   | "items";
 
+/**
+ * Cron job that updates all entities in Meilisearch for search functionality
+ * Runs daily to ensure search data is current
+ */
 export default {
   name: "updateMeilisearch",
   description: "Update entities in Meilisearch",
   schedule: "0 0 * * *",
   run: async () => {
     const meilisearch = new Meilisearch();
+    const startTime = Date.now();
+
     // Drop the placeholder index if it exists
     const indexExists = await meilisearch.existsIndex("nitro-update");
     if (indexExists) {
@@ -81,6 +87,7 @@ export default {
       items: 0,
     };
 
+    // Process each entity type and update their records in Meilisearch
     for (const entityType of entityTypes) {
       resultCount[entityType] = await processEntities(entityType, meilisearch);
     }
@@ -89,10 +96,22 @@ export default {
     await meilisearch.replaceIndex("nitro", "nitro-update");
     await meilisearch.deleteIndex("nitro-update");
 
-    return cliLogger.info(`Updated Meilisearch with ${resultCount} entities`);
+    const duration = (Date.now() - startTime) / 1000;
+    const totalCount = Object.values(resultCount).reduce((sum, count) => sum + count, 0);
+
+    return cliLogger.info(
+      `Updated Meilisearch with ${totalCount.toLocaleString()} entities in ${duration.toFixed(2)} seconds`,
+    );
   },
 };
 
+/**
+ * Process entities of a specific type and add them to Meilisearch
+ *
+ * @param entityType - Type of entity to process
+ * @param meilisearch - Meilisearch instance
+ * @returns Number of processed entities
+ */
 async function processEntities(entityType: EntityTypes, meilisearch: Meilisearch): Promise<number> {
   let count = 0;
   let skip = 0;
@@ -111,6 +130,14 @@ async function processEntities(entityType: EntityTypes, meilisearch: Meilisearch
   return count;
 }
 
+/**
+ * Get entities of a specific type for indexing in Meilisearch
+ *
+ * @param entityType - Type of entity to retrieve
+ * @param skip - Number of documents to skip for pagination
+ * @param limit - Maximum number of documents to return
+ * @returns Array of entities formatted for Meilisearch indexing
+ */
 async function getEntities(entityType: EntityTypes, skip: number, limit: number) {
   switch (entityType) {
     case "characters": {
@@ -226,29 +253,18 @@ async function getEntities(entityType: EntityTypes, skip: number, limit: number)
       // Create separate searchable documents for each available language
       const translatedRegions = [];
       for (const region of regions) {
-        // Always include English version
-        translatedRegions.push({
-          id: `${region.region_id}_en`,
-          originalId: region.region_id,
-          name: region.name.en,
-          type: "region",
-          rank: 2,
-          lang: "en",
-        });
+        // Get the keys inside of region.name directly instead of hardcoding languages
+        const languages = Object.keys(region.name);
 
-        // Add other available languages
-        const supportedLangs = ["de", "es", "fr", "ja", "ko", "ru", "zh"];
-        for (const lang of supportedLangs) {
-          if (region.name[lang]) {
-            translatedRegions.push({
-              id: `${region.region_id}_${lang}`,
-              originalId: region.region_id,
-              name: region.name[lang],
-              type: "region",
-              rank: 2,
-              lang,
-            });
-          }
+        for (const lang of languages) {
+          translatedRegions.push({
+            id: `${region.region_id}_${lang}`,
+            originalId: region.region_id,
+            name: region.name[lang] || region.name.en, // Fallback to English if translation is missing
+            type: "region",
+            rank: 2,
+            lang,
+          });
         }
       }
 
@@ -269,29 +285,18 @@ async function getEntities(entityType: EntityTypes, skip: number, limit: number)
       // Create separate searchable documents for each available language
       const translatedItems = [];
       for (const item of items) {
-        // Always include English version
-        translatedItems.push({
-          id: `${item.type_id}_en`,
-          originalId: item.type_id,
-          name: item.name.en,
-          type: "item",
-          rank: 1,
-          lang: "en",
-        });
+        // Get the keys inside of item.name directly instead of hardcoding languages
+        const languages = Object.keys(item.name);
 
-        // Add other available languages
-        const supportedLangs = ["de", "es", "fr", "ja", "ko", "ru", "zh"];
-        for (const lang of supportedLangs) {
-          if (item.name[lang]) {
-            translatedItems.push({
-              id: `${item.type_id}_${lang}`,
-              originalId: item.type_id,
-              name: item.name[lang],
-              type: "item",
-              rank: 1,
-              lang,
-            });
-          }
+        for (const lang of languages) {
+          translatedItems.push({
+            id: `${item.type_id}_${lang}`,
+            originalId: item.type_id,
+            name: item.name[lang] || item.name.en, // Fallback to English if translation is missing
+            type: "item",
+            rank: 1,
+            lang,
+          });
         }
       }
 

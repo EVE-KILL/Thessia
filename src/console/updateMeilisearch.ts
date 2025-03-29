@@ -335,29 +335,18 @@ async function getEntities(entityType: EntityTypes, skip: number, limit: number)
       // Create separate searchable documents for each available language
       const translatedRegions = [];
       for (const region of regions) {
-        // Always include English version
-        translatedRegions.push({
-          id: `${region.region_id}_en`,
-          originalId: region.region_id,
-          name: region.name.en,
-          type: "region",
-          rank: 2,
-          lang: "en",
-        });
+        // Get the keys inside of region.name
+        const languages = Object.keys(region.name);
 
-        // Add other available languages
-        const supportedLangs = ["de", "es", "fr", "ja", "ko", "ru", "zh"];
-        for (const lang of supportedLangs) {
-          if (region.name[lang]) {
-            translatedRegions.push({
-              id: `${region.region_id}_${lang}`,
-              originalId: region.region_id,
-              name: region.name[lang],
-              type: "region",
-              rank: 2,
-              lang,
-            });
-          }
+        for (const lang of languages) {
+          translatedRegions.push({
+            id: `${region.region_id}_${lang}`,
+            originalId: region.region_id,
+            name: region.name[lang] || region.name.en,
+            type: "region",
+            rank: 2,
+            lang: lang,
+          });
         }
       }
 
@@ -378,29 +367,17 @@ async function getEntities(entityType: EntityTypes, skip: number, limit: number)
       // Create separate searchable documents for each available language
       const translatedItems = [];
       for (const item of items) {
-        // Always include English version
-        translatedItems.push({
-          id: `${item.type_id}_en`,
-          originalId: item.type_id,
-          name: item.name.en,
-          type: "item",
-          rank: 1,
-          lang: "en",
-        });
+        const languages = Object.keys(item.name);
 
-        // Add other available languages
-        const supportedLangs = ["de", "es", "fr", "ja", "ko", "ru", "zh"];
-        for (const lang of supportedLangs) {
-          if (item.name[lang]) {
-            translatedItems.push({
-              id: `${item.type_id}_${lang}`,
-              originalId: item.type_id,
-              name: item.name[lang],
-              type: "item",
-              rank: 1,
-              lang,
-            });
-          }
+        for (const lang of languages) {
+          translatedItems.push({
+            id: `${item.type_id}_${lang}`,
+            originalId: item.type_id,
+            name: item.name[lang] || item.name.en,
+            type: "item",
+            rank: 1,
+            lang,
+          });
         }
       }
 

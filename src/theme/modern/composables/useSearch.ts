@@ -13,6 +13,8 @@ export interface SearchResponse {
   limit: number;
   offset: number;
   estimatedTotalHits: number;
+  entityCounts?: Record<string, number>;
+  entityOrder?: string[];
 }
 
 export function useSearch() {
@@ -21,6 +23,9 @@ export function useSearch() {
   const results = ref<SearchResponse | null>(null);
   const error = ref<Error | null>(null);
   let debounceTimer: NodeJS.Timeout | null = null;
+
+  // Get the i18n instance to access current locale
+  const { locale } = useI18n();
 
   const search = async (searchTerm: string) => {
     if (!searchTerm || searchTerm.trim().length === 0) {
@@ -33,8 +38,15 @@ export function useSearch() {
 
     try {
       const encodedSearchTerm = encodeURIComponent(searchTerm);
+
+      // Include the current locale as a query parameter
       const { data: responseData, error: fetchError } = await useFetch<SearchResponse>(
         `/api/search/${encodedSearchTerm}`,
+        {
+          query: {
+            lang: locale.value,
+          },
+        },
       );
 
       if (fetchError.value) {
@@ -71,14 +83,34 @@ export function useSearch() {
         search(newQuery);
       }, debounceMs);
     });
+
+    // Also watch for locale changes and re-search if we have an active query
+    watch(locale, () => {
+      if (query.value && query.value.length >= minLength) {
+        if (debounceTimer) {
+          clearTimeout(debounceTimer);
+        }
+
+        // Short delay before re-searching with new locale
+        debounceTimer = setTimeout(() => {
+          search(query.value);
+        }, 100);
+      }
+    });
   };
 
-  const navigateToSearch = () => {
+  const navigateToSearch = (options?: { category?: string }) => {
     if (!query.value || query.value.trim().length === 0) return;
+
+    // Include the category if provided
+    const queryParams: Record<string, string> = { q: query.value };
+    if (options?.category) {
+      queryParams.category = options.category;
+    }
 
     navigateTo({
       path: "/search",
-      query: { q: query.value },
+      query: queryParams,
     });
 
     // Clear the query after navigation
@@ -100,5 +132,6 @@ export function useSearch() {
     navigateToSearch,
     clearSearch,
     setupAutoSearch,
+    currentLocale: locale,
   };
 }

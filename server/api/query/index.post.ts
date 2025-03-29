@@ -25,6 +25,31 @@ import {
  * }
  */
 
+// List of fields that have optimized indexes in the database
+// This ensures our query only uses valid indexes
+const INDEXED_FIELDS = [
+  "killmail_id",
+  "killmail_hash",
+  "kill_time",
+  "is_npc",
+  "is_solo",
+  "region_id",
+  "system_id",
+  "system_security",
+  "constellation_id",
+  "total_value",
+  "victim.character_id",
+  "victim.corporation_id",
+  "victim.alliance_id",
+  "victim.ship_id",
+  "victim.ship_group_id",
+  "attackers.character_id",
+  "attackers.corporation_id",
+  "attackers.alliance_id",
+  "attackers.ship_id",
+  "items.type_id",
+];
+
 /**
  * Interface for the processed query
  */
@@ -261,6 +286,94 @@ function validateQuery(query: QueryAPIRequest): QueryAPIRequest {
 }
 
 /**
+ * Extract potential index fields from a filter expression
+ */
+function extractFilterFields(filter: any): string[] {
+  const fields: string[] = [];
+
+  // Handle $and and $or operators
+  if (filter.$and && Array.isArray(filter.$and)) {
+    // For AND, any field could be a good candidate for an index
+    filter.$and.forEach((condition: any) => {
+      fields.push(...extractFilterFields(condition));
+    });
+  } else if (filter.$or && Array.isArray(filter.$or)) {
+    // For OR, we ideally need indexes on all branches, but take the first one for now
+    if (filter.$or.length > 0) {
+      fields.push(...extractFilterFields(filter.$or[0]));
+    }
+  } else {
+    // For regular filters, add any non-operator keys
+    Object.keys(filter).forEach((key) => {
+      if (!key.startsWith("$")) {
+        fields.push(key);
+      }
+    });
+  }
+
+  return fields;
+}
+
+/**
+ * Determines the best index to use for a query based on filter and sort
+ * This replaces the frontend hint logic with backend intelligence
+ */
+function determineOptimalIndexHint(
+  filter: any,
+  sortOptions?: Record<string, any>,
+): Record<string, number> | undefined {
+  // Default to no hint if we don't have a filter
+  if (!filter || typeof filter !== "object" || Object.keys(filter).length === 0) {
+    // Default sort on kill_time if available
+    return { kill_time: -1 };
+  }
+
+  // Extract the primary sort field if provided
+  let primarySortField: string | undefined;
+  if (sortOptions && Object.keys(sortOptions).length > 0) {
+    primarySortField = Object.keys(sortOptions)[0];
+  }
+
+  // First, try to find an index that covers both filter and sort
+  if (primarySortField) {
+    // Look for an indexed filter field
+    const filterFields = extractFilterFields(filter);
+    for (const field of filterFields) {
+      if (INDEXED_FIELDS.includes(field)) {
+        // If primary filter field and sort field are the same, that's ideal
+        if (field === primarySortField) {
+          return { [field]: -1 };
+        }
+
+        // If primary filter has an index and sort field has an index, consider a compound
+        if (INDEXED_FIELDS.includes(primarySortField)) {
+          // Check if we have a compound index on this combination
+          // For now, just return the primary filter field + kill_time which is our standard pattern
+          return { [field]: -1, kill_time: -1 };
+        }
+      }
+    }
+  }
+
+  // If no suitable index covering both filter+sort, prioritize filter fields
+  const filterFields = extractFilterFields(filter);
+  for (const field of filterFields) {
+    if (INDEXED_FIELDS.includes(field)) {
+      // Most of our indexes include kill_time as secondary field
+      return { [field]: -1, kill_time: -1 };
+    }
+  }
+
+  // If we have a sort field with an index, use that
+  if (primarySortField && INDEXED_FIELDS.includes(primarySortField)) {
+    return { [primarySortField]: sortOptions![primarySortField] };
+  }
+
+  // Default to kill_time which should be a safe indexed field
+  return { kill_time: -1 };
+}
+
+/**
  * Generates an aggregation pipeline for a complex query
  * @param input - Query input from request body
  * @returns Processed query with filter and pipeline
@@ -364,17 +477,8 @@ export default defineCachedEventHandler(
       // Generate the query
       const queryData = generateComplexQuery(body);
 
-      // Get a hint based on the first filter field to help the query optimizer
-      let hint: Record<string, number> | undefined = undefined;
-      const filterFields = Object.keys(queryData.query.filter);
-      if (filterFields.length > 0) {
-        const primaryField = filterFields[0];
-        if (primaryField !== "$or" && primaryField !== "$and") {
-          hint = { [primaryField]: -1, kill_time: -1 };
-        }
-      } else {
-        hint = { kill_time: -1 }; // Default index hint for empty filters
-      }
+      // Use our intelligent index selection
+      const hint = determineOptimalIndexHint(queryData.query.filter, queryData.query.options.sort);
 
       // Execute the aggregation pipeline with optimal hint
       const result = hint

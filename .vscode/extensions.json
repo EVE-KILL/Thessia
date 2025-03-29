@@ -1,14 +1,14 @@
 {
-    "recommendations": [
-        "github.copilot",
-        "vue.volar",
-        "bradlc.vscode-tailwindcss",
-        "biomejs.biome",
-        "lokalise.i18n-ally",
-        "dbaeumer.vscode-eslint",
-        "esbenp.prettier-vscode",
-        "christian-kohler.path-intellisense",
-        "antfu.iconify",
-        "redhat.vscode-yaml"
-    ]
+  "recommendations": [
+    "github.copilot",
+    "vue.volar",
+    "bradlc.vscode-tailwindcss",
+    "biomejs.biome",
+    "lokalise.i18n-ally",
+    "dbaeumer.vscode-eslint",
+    "esbenp.prettier-vscode",
+    "christian-kohler.path-intellisense",
+    "antfu.iconify",
+    "redhat.vscode-yaml"
+  ]
 }
