@@ -345,51 +345,63 @@ function generateComplexQuery(input: QueryAPIRequest): ProcessedQuery {
 /**
  * Main handler for query API endpoint
  */
-export default defineEventHandler(async (event: H3Event) => {
-  try {
-    // Parse the request body
-    const body = (await readBody(event)) as QueryAPIRequest;
+export default defineCachedEventHandler(
+  async (event: H3Event) => {
+    try {
+      // Parse the request body
+      const body = (await readBody(event)) as QueryAPIRequest;
 
-    if (!body || typeof body !== "object") {
+      if (!body || typeof body !== "object") {
+        return createError({
+          statusCode: 400,
+          statusMessage: "Invalid request body: expected JSON object",
+        });
+      }
+
+      // Validate the query structure
+      validateQuery(body);
+
+      // Generate the query
+      const queryData = generateComplexQuery(body);
+
+      // Get a hint based on the first filter field to help the query optimizer
+      let hint: Record<string, number> | undefined = undefined;
+      const filterFields = Object.keys(queryData.query.filter);
+      if (filterFields.length > 0) {
+        const primaryField = filterFields[0];
+        if (primaryField !== "$or" && primaryField !== "$and") {
+          hint = { [primaryField]: -1, kill_time: -1 };
+        }
+      } else {
+        hint = { kill_time: -1 }; // Default index hint for empty filters
+      }
+
+      // Execute the aggregation pipeline with optimal hint
+      const result = hint
+        ? await Killmails.aggregate(queryData.pipeline).hint(hint).exec()
+        : await Killmails.aggregate(queryData.pipeline).exec();
+
+      // Return the results
+      return result;
+    } catch (error: any) {
+      console.error("Query API error:", error.message);
+
+      // Provide user-friendly error messages
       return createError({
-        statusCode: 400,
-        statusMessage: "Invalid request body: expected JSON object",
+        statusCode:
+          error.message.includes("Invalid") || error.message.includes("Error in filter")
+            ? 400
+            : 500,
+        statusMessage: error.message,
       });
     }
-
-    // Validate the query structure
-    validateQuery(body);
-
-    // Generate the query
-    const queryData = generateComplexQuery(body);
-
-    // Get a hint based on the first filter field to help the query optimizer
-    let hint: Record<string, number> | undefined = undefined;
-    const filterFields = Object.keys(queryData.query.filter);
-    if (filterFields.length > 0) {
-      const primaryField = filterFields[0];
-      if (primaryField !== "$or" && primaryField !== "$and") {
-        hint = { [primaryField]: -1, kill_time: -1 };
-      }
-    } else {
-      hint = { kill_time: -1 }; // Default index hint for empty filters
-    }
-
-    // Execute the aggregation pipeline with optimal hint
-    const result = hint
-      ? await Killmails.aggregate(queryData.pipeline).hint(hint).exec()
-      : await Killmails.aggregate(queryData.pipeline).exec();
-
-    // Return the results
-    return result;
-  } catch (error: any) {
-    console.error("Query API error:", error.message);
-
-    // Provide user-friendly error messages
-    return createError({
-      statusCode:
-        error.message.includes("Invalid") || error.message.includes("Error in filter") ? 400 : 500,
-      statusMessage: error.message,
-    });
-  }
-});
+  },
+  {
+    maxAge: 300,
+    name: "queryAPI",
+    getKey: async (event) => {
+      const body = (await readBody(event)) as QueryAPIRequest;
+      return JSON.stringify(body);
+    },
+  },
+);
