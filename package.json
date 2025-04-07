@@ -42,7 +42,7 @@
     "nuxt": "^3.16.1",
     "nuxt-security": "2.2.0",
     "server-health": "^6.0.2",
-    "sharp": "^0.33.5",
+    "sharp": "^0.34.0",
     "stream-json": "^1.9.1",
     "tar-stream": "^3.1.7",
     "typescript": "^5.8.2",
