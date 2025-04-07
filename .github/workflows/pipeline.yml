@@ -60,8 +60,8 @@ jobs:
                   #platforms: linux/amd64,linux/arm64
                   platforms: linux/amd64
                   tags: |
-                    ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }}
-                    ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest
+                      ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }}
+                      ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest
 
     deploy:
         name: Deploy application
@@ -118,11 +118,11 @@ jobs:
             id-token: write
 
         steps:
-        - name: Purge Cloudflare Cache
-          uses: jakejarvis/cloudflare-purge-action@v0.3.0
-          env:
-            CLOUDFLARE_ZONE: ${{ secrets.CLOUDFLARE_ZONE_ID }}
-            CLOUDFLARE_TOKEN: ${{ secrets.CLOUDFLARE_CACHE_PURGE_TOKEN }}
+            - name: Purge Cloudflare Cache
+              uses: jakejarvis/cloudflare-purge-action@v0.3.0
+              env:
+                  CLOUDFLARE_ZONE: ${{ secrets.CLOUDFLARE_ZONE_ID }}
+                  CLOUDFLARE_TOKEN: ${{ secrets.CLOUDFLARE_CACHE_PURGE_TOKEN }}
 
     scan:
         name: Vulnerability Scanning
@@ -149,3 +149,15 @@ jobs:
               uses: github/codeql-action/upload-sarif@v3
               with:
                   sarif_file: "trivy-results.sarif"
+
+    sonarqube:
+        name: SonarQube Scan
+        runs-on: ubuntu-latest
+        steps:
+            - name: Checkout repository
+              uses: actions/checkout@v4
+
+            - uses: SonarSource/sonarqube-scan-action@v4
+              env:
+                  SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+                  SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
