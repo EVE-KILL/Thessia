@@ -63,7 +63,7 @@ global:
             botName: "Sara"
             botToken: ""
             botClientId: ""
-            botIgnoredChannelIds: ""
+            botIgnoredChannelIds: "1270093656837324881,831852977664950292,482587113171189765"
             botIgnoredGuildIds: ""
             botAIProvider: "claude"
             botOpenAIAPIKey: ""

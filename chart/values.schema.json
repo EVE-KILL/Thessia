@@ -116,13 +116,10 @@
                                     "type": "string"
                                 },
                                 "botClientId": {
-                                    "type": "string"
+                                    "type": "integer"
                                 },
                                 "botIgnoredChannelIds": {
-                                    "type": "array",
-                                    "items": {
-                                        "type": "string"
-                                    }
+                                    "type": "string"
                                 },
                                 "botIgnoredGuildsIds": {
                                     "type": "array",
