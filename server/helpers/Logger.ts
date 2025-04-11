@@ -1,6 +1,21 @@
+import chalk from 'chalk';
+import moment from 'moment';
+
 export const cliLogger = {
-  info: (msg: string) => console.log(`\x1b[32m[INFO]\x1b[0m ${msg}`),
-  warn: (msg: string) => console.warn(`\x1b[33m[WARN]\x1b[0m ${msg}`),
-  error: (msg: string) => console.error(`\x1b[31m[ERROR]\x1b[0m ${msg}`),
-  debug: (msg: string) => console.debug(`\x1b[34m[DEBUG]\x1b[0m ${msg}`),
+    info: (msg: string) => {
+        const timestamp = chalk.green(moment().format('YYYY-MM-DD HH:mm:ss'));
+        console.log(`${timestamp} ${chalk.green('[INFO]')} ${msg}`);
+    },
+    warn: (msg: string) => {
+        const timestamp = chalk.green(moment().format('YYYY-MM-DD HH:mm:ss'));
+        console.warn(`${timestamp} ${chalk.yellow('[WARN]')} ${msg}`);
+    },
+    error: (msg: string) => {
+        const timestamp = chalk.green(moment().format('YYYY-MM-DD HH:mm:ss'));
+        console.error(`${timestamp} ${chalk.red('[ERROR]')} ${msg}`);
+    },
+    debug: (msg: string) => {
+        const timestamp = chalk.green(moment().format('YYYY-MM-DD HH:mm:ss'));
+        console.debug(`${timestamp} ${chalk.blue('[DEBUG]')} ${msg}`);
+    },
 };

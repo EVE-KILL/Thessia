@@ -1,13 +1,14 @@
+import chalk from "chalk";
 import { nitroApp } from "nitropack/runtime/internal/app";
 import { cliLogger } from "~/server/helpers/Logger";
 
 export default defineNitroPlugin(() => {
-  nitroApp.hooks.hook("request", (event) => {
-    const requestIp = getRequestIP(event, { xForwardedFor: true });
+    nitroApp.hooks.hook("request", (event) => {
+        const requestIp = getRequestIP(event, { xForwardedFor: true });
 
-    // Output request log info similar to nginx
-    cliLogger.info(
-      `[${new Date().toISOString()} "${event.node.req.method} ${event.node.req.url} HTTP/${event.node.req.httpVersion}" ${event.node.req.headers["user-agent"]} ${requestIp}]`,
-    );
-  });
+        // Output request log info similar to nginx but with colors
+        cliLogger.info(
+            `${chalk.cyan(event.node.req.method)} ${chalk.white(event.node.req.url)} ${chalk.gray(`HTTP/${event.node.req.httpVersion}`)} ${chalk.yellow(event.node.req.headers["user-agent"])} ${chalk.magenta(`[${requestIp}]`)}`,
+        );
+    });
 });
