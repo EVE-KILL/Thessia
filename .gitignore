@@ -33,6 +33,10 @@ values.yaml
 # Ignore the console/cron/queue loaders
 .loader.ts
 
+# Ignore the bot loaders
+.interactionLoader.ts
+.messageLoader.ts
+
 # Cloudflare Analytics Beacon
 _ca/
 

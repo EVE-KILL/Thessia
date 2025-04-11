@@ -1,11 +1,12 @@
 import chalk from 'chalk';
 import { Client, GatewayIntentBits, type Interaction, type Message } from 'discord.js';
 import { cliLogger } from './server/helpers/Logger';
-import { loadPlugins, logMessageToTerminal } from './src/bot/helper';
-import type { InteractionHandler } from './src/bot/interfaces/IInteractionHandler';
-import type { MessageHandler } from './src/bot/interfaces/IMessageHandler';
+import { interactionPlugins, slashCommands } from './src/bot/.interactionLoader';
+import { messagePlugins } from './src/bot/.messageLoader';
+import { registerSlashCommands } from './src/bot/helper';
 import { replyCache } from './src/bot/replyCache';
 
+// Create a new Discord client
 const client = new Client({
     intents: [
         GatewayIntentBits.Guilds,
@@ -15,7 +16,7 @@ const client = new Client({
     ]
 });
 
-client.on('ready', () => {
+client.on('ready', async () => {
     if (client.user) {
         cliLogger.info(`Logged in as ${client.user.tag}`);
         const inviteLink = chalk.yellow(`https://discord.com/api/oauth2/authorize?client_id=${client.user.id}&permissions=274881563713&scope=bot`);
@@ -26,16 +27,15 @@ client.on('ready', () => {
         for (const guild of client.guilds.cache.values()) {
             cliLogger.info(`- ${guild.name} (${guild.id})`);
         }
+
+        // Register all slash commands at startup
+        try {
+            await registerSlashCommands(slashCommands);
+        } catch (error) {
+            cliLogger.error('Failed to register slash commands:', error);
+        }
     }
 });
-
-// Type for the plugin arrays
-const interactionPlugins: InteractionHandler[] = [];
-const messagePlugins: MessageHandler[] = [];
-
-// Load plugins with proper typings
-loadPlugins('./src/bot/onInteraction', interactionPlugins, 'interaction');
-loadPlugins('./src/bot/onMessage', messagePlugins, 'message');
 
 client.on('interactionCreate', async (interaction: Interaction) => {
     if (!interaction.isChatInputCommand()) return;
@@ -53,9 +53,6 @@ client.on('interactionCreate', async (interaction: Interaction) => {
 client.on('messageCreate', async (message: Message) => {
     // Ignore messages from bots
     if (message.author.bot) return;
-
-    // Log the message to terminal
-    logMessageToTerminal(message);
 
     // Process the message through all loaded message plugins
     for (const plugin of messagePlugins) {
@@ -76,7 +73,6 @@ client.on('messageUpdate', async (oldMessage, newMessage) => {
 
     // Log the updated message
     cliLogger.info(`Message updated in ${updatedMessage.guild?.name}`);
-    logMessageToTerminal(updatedMessage);
 
     // Check if the bot has already replied to this message
     if (replyCache.has(updatedMessage.id)) {

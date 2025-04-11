@@ -6,7 +6,7 @@
     "license": "MIT",
     "type": "module",
     "scripts": {
-        "build": "nuxt build && bun run build-cli && bun run build-cron && bun run build-queue",
+        "build": "nuxt build && bun run build-cli && bun run build-cron && bun run build-queue && bun run build-bot",
         "dev": "nuxt dev",
         "generate": "nuxt generate",
         "preview": "nuxt preview",
@@ -15,6 +15,7 @@
         "build-cli": "bun run build-cli.ts",
         "build-cron": "bun run build-cron.ts",
         "build-queue": "bun run build-queue.ts",
+        "build-bot": "bun run build-bot.ts",
         "husky": "husky",
         "lint": "biome check .",
         "lint:fix": "biome check --write .",
