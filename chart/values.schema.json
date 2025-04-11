@@ -1,355 +1,403 @@
 {
-  "$schema": "https://json-schema.org/draft-07/schema#",
-  "title": "Values",
-  "type": "object",
-  "properties": {
-    "global": {
-      "type": "object",
-      "properties": {
-        "image": {
-          "type": "object",
-          "properties": {
-            "repository": {
-              "type": "string"
-            },
-            "tag": {
-              "type": "string"
-            },
-            "pullPolicy": {
-              "type": "string",
-              "enum": ["Always", "IfNotPresent", "Never"]
-            }
-          },
-          "required": ["repository"]
-        },
-        "env": {
-          "type": "object",
-          "properties": {
-            "mongoUri": {
-              "type": "string"
-            },
-            "redisUri": {
-              "type": "string"
-            },
-            "redisPort": {
-              "type": "integer"
-            },
-            "redisDb": {
-              "type": "integer"
-            },
-            "meilisearchUri": {
-              "type": "string"
-            },
-            "processKillmails": {
-              "type": "boolean"
-            },
-            "enableTasks": {
-              "type": "boolean"
-            },
-            "host": {
-              "type": "string"
-            },
-            "esiUrl": {
-              "type": "string"
-            },
-            "esiRateLimit": {
-              "type": "integer"
-            },
-            "redisqId": {
-              "type": "string"
-            },
-            "backendDiscordUrl": {
-              "type": "string"
-            },
-            "sensitive": {
-              "type": "object",
-              "properties": {
-                "eveClientId": {
-                  "type": "string"
-                },
-                "eveClientSecret": {
-                  "type": "string"
-                },
-                "eveClientRedirect": {
-                  "type": "string"
-                },
-                "eveClientIdDev": {
-                  "type": "string"
-                },
-                "eveClientSecretDev": {
-                  "type": "string"
-                },
-                "eveClientRedirectDev": {
-                  "type": "string"
-                },
-                "jwtSecret": {
-                  "type": "string"
-                },
-                "backendDiscordUrl": {
-                  "type": "string"
-                },
-                "discordNewComment": {
-                  "type": "string"
-                },
-                "discordReportComment": {
-                  "type": "string"
-                },
-                "openAIAPIKey": {
-                  "type": "string"
-                },
-                "tenorAPIKey": {
-                  "type": "string"
-                },
-                "cloudflareAnalyticsToken": {
-                  "type": "string"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "namespace": {
-      "type": "object",
-      "properties": {
-        "create": {
-          "type": "boolean"
-        },
-        "name": {
-          "type": "string"
-        }
-      }
-    },
-    "serviceAccount": {
-      "type": "object",
-      "properties": {
-        "create": {
-          "type": "boolean"
-        },
-        "name": {
-          "type": "string"
-        },
-        "annotations": {
-          "type": "object"
-        }
-      }
-    },
-    "rbac": {
-      "type": "object",
-      "properties": {
-        "create": {
-          "type": "boolean"
-        }
-      }
-    },
-    "thessia": {
-      "type": "object",
-      "properties": {
-        "enabled": {
-          "type": "boolean"
-        },
-        "replicas": {
-          "type": "integer"
-        },
-        "autoscaling": {
-          "type": "object",
-          "properties": {
-            "enabled": {
-              "type": "boolean"
-            },
-            "minReplicas": {
-              "type": "integer"
-            },
-            "maxReplicas": {
-              "type": "integer"
-            },
-            "targetCPUUtilizationPercentage": {
-              "type": "integer"
-            }
-          }
-        },
-        "resources": {
-          "type": "object"
-        },
-        "service": {
-          "type": "object",
-          "properties": {
-            "port": {
-              "type": "integer"
-            },
-            "targetPort": {
-              "type": "integer"
-            }
-          }
-        },
-        "securityContext": {
-          "type": "object"
-        }
-      }
-    },
-    "processEntities": {
-      "type": "object",
-      "properties": {
-        "enabled": {
-          "type": "boolean"
-        },
-        "replicas": {
-          "type": "integer"
-        },
-        "resources": {
-          "type": "object"
-        },
-        "securityContext": {
-          "type": "object"
-        }
-      }
-    },
-    "processWars": {
-      "type": "object",
-      "properties": {
-        "enabled": {
-          "type": "boolean"
-        },
-        "replicas": {
-          "type": "integer"
-        },
-        "resources": {
-          "type": "object"
-        },
-        "securityContext": {
-          "type": "object"
-        }
-      }
-    },
-    "processKillmails": {
-      "type": "object",
-      "properties": {
-        "enabled": {
-          "type": "boolean"
-        },
-        "replicas": {
-          "type": "integer"
-        },
-        "resources": {
-          "type": "object"
-        },
-        "securityContext": {
-          "type": "object"
-        }
-      }
-    },
-    "redisq": {
-      "type": "object",
-      "properties": {
-        "enabled": {
-          "type": "boolean"
-        },
-        "replicas": {
-          "type": "integer"
-        },
-        "resources": {
-          "type": "object"
-        },
-        "securityContext": {
-          "type": "object"
-        }
-      }
-    },
-    "cron": {
-      "type": "object",
-      "properties": {
-        "enabled": {
-          "type": "boolean"
-        },
-        "schedule": {
-          "type": "string"
-        },
-        "successfulJobsHistoryLimit": {
-          "type": "integer"
-        },
-        "failedJobsHistoryLimit": {
-          "type": "integer"
-        },
-        "startingDeadlineSeconds": {
-          "type": "integer"
-        },
-        "activeDeadlineSeconds": {
-          "type": "integer"
-        },
-        "resources": {
-          "type": "object"
-        },
-        "securityContext": {
-          "type": "object"
-        }
-      }
-    },
-    "ingress": {
-      "type": "object",
-      "properties": {
-        "enabled": {
-          "type": "boolean"
-        },
-        "className": {
-          "type": "string"
-        },
-        "annotations": {
-          "type": "object"
-        },
-        "hosts": {
-          "type": "array",
-          "items": {
+    "$schema": "https://json-schema.org/draft-07/schema#",
+    "title": "Values",
+    "type": "object",
+    "properties": {
+        "global": {
             "type": "object",
             "properties": {
-              "host": {
-                "type": "string"
-              },
-              "paths": {
-                "type": "array",
-                "items": {
-                  "type": "object",
-                  "properties": {
-                    "path": {
-                      "type": "string"
+                "image": {
+                    "type": "object",
+                    "properties": {
+                        "repository": {
+                            "type": "string"
+                        },
+                        "tag": {
+                            "type": "string"
+                        },
+                        "pullPolicy": {
+                            "type": "string",
+                            "enum": [
+                                "Always",
+                                "IfNotPresent",
+                                "Never"
+                            ]
+                        }
                     },
-                    "pathType": {
-                      "type": "string"
+                    "required": [
+                        "repository"
+                    ]
+                },
+                "env": {
+                    "type": "object",
+                    "properties": {
+                        "mongoUri": {
+                            "type": "string"
+                        },
+                        "redisUri": {
+                            "type": "string"
+                        },
+                        "redisPort": {
+                            "type": "integer"
+                        },
+                        "redisDb": {
+                            "type": "integer"
+                        },
+                        "meilisearchUri": {
+                            "type": "string"
+                        },
+                        "processKillmails": {
+                            "type": "boolean"
+                        },
+                        "enableTasks": {
+                            "type": "boolean"
+                        },
+                        "host": {
+                            "type": "string"
+                        },
+                        "esiUrl": {
+                            "type": "string"
+                        },
+                        "esiRateLimit": {
+                            "type": "integer"
+                        },
+                        "redisqId": {
+                            "type": "string"
+                        },
+                        "backendDiscordUrl": {
+                            "type": "string"
+                        },
+                        "sensitive": {
+                            "type": "object",
+                            "properties": {
+                                "eveClientId": {
+                                    "type": "string"
+                                },
+                                "eveClientSecret": {
+                                    "type": "string"
+                                },
+                                "eveClientRedirect": {
+                                    "type": "string"
+                                },
+                                "eveClientIdDev": {
+                                    "type": "string"
+                                },
+                                "eveClientSecretDev": {
+                                    "type": "string"
+                                },
+                                "eveClientRedirectDev": {
+                                    "type": "string"
+                                },
+                                "jwtSecret": {
+                                    "type": "string"
+                                },
+                                "backendDiscordUrl": {
+                                    "type": "string"
+                                },
+                                "discordNewComment": {
+                                    "type": "string"
+                                },
+                                "discordReportComment": {
+                                    "type": "string"
+                                },
+                                "openAIAPIKey": {
+                                    "type": "string"
+                                },
+                                "tenorAPIKey": {
+                                    "type": "string"
+                                },
+                                "cloudflareAnalyticsToken": {
+                                    "type": "string"
+                                },
+                                "botName": {
+                                    "type": "string"
+                                },
+                                "botToken": {
+                                    "type": "string"
+                                },
+                                "botClientId": {
+                                    "type": "string"
+                                },
+                                "botIgnoredChannelIds": {
+                                    "type": "array",
+                                    "items": {
+                                        "type": "string"
+                                    }
+                                },
+                                "botIgnoredGuildsIds": {
+                                    "type": "array",
+                                    "items": {
+                                        "type": "string"
+                                    }
+                                },
+                                "botAIProvider": {
+                                    "type": "string"
+                                },
+                                "botOpenAIAPIKey": {
+                                    "type": "string"
+                                },
+                                "botOpenAIModel": {
+                                    "type": "string"
+                                },
+                                "botOpenAIModerationModel": {
+                                    "type": "string"
+                                },
+                                "botClaudeAPIKey": {
+                                    "type": "string"
+                                },
+                                "botClaudeModel": {
+                                    "type": "string"
+                                }
+                            }
+                        }
                     }
-                  }
                 }
-              }
             }
-          }
         },
-        "tls": {
-          "type": "array",
-          "items": {
+        "namespace": {
             "type": "object",
             "properties": {
-              "secretName": {
-                "type": "string"
-              },
-              "hosts": {
-                "type": "array",
-                "items": {
-                  "type": "string"
+                "create": {
+                    "type": "boolean"
+                },
+                "name": {
+                    "type": "string"
                 }
-              }
             }
-          }
-        }
-      }
-    },
-    "podDisruptionBudget": {
-      "type": "object",
-      "properties": {
-        "enabled": {
-          "type": "boolean"
         },
-        "minAvailable": {
-          "type": ["integer", "string"]
+        "serviceAccount": {
+            "type": "object",
+            "properties": {
+                "create": {
+                    "type": "boolean"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "annotations": {
+                    "type": "object"
+                }
+            }
+        },
+        "rbac": {
+            "type": "object",
+            "properties": {
+                "create": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "thessia": {
+            "type": "object",
+            "properties": {
+                "enabled": {
+                    "type": "boolean"
+                },
+                "replicas": {
+                    "type": "integer"
+                },
+                "autoscaling": {
+                    "type": "object",
+                    "properties": {
+                        "enabled": {
+                            "type": "boolean"
+                        },
+                        "minReplicas": {
+                            "type": "integer"
+                        },
+                        "maxReplicas": {
+                            "type": "integer"
+                        },
+                        "targetCPUUtilizationPercentage": {
+                            "type": "integer"
+                        }
+                    }
+                },
+                "resources": {
+                    "type": "object"
+                },
+                "service": {
+                    "type": "object",
+                    "properties": {
+                        "port": {
+                            "type": "integer"
+                        },
+                        "targetPort": {
+                            "type": "integer"
+                        }
+                    }
+                },
+                "securityContext": {
+                    "type": "object"
+                }
+            }
+        },
+        "processEntities": {
+            "type": "object",
+            "properties": {
+                "enabled": {
+                    "type": "boolean"
+                },
+                "replicas": {
+                    "type": "integer"
+                },
+                "resources": {
+                    "type": "object"
+                },
+                "securityContext": {
+                    "type": "object"
+                }
+            }
+        },
+        "processWars": {
+            "type": "object",
+            "properties": {
+                "enabled": {
+                    "type": "boolean"
+                },
+                "replicas": {
+                    "type": "integer"
+                },
+                "resources": {
+                    "type": "object"
+                },
+                "securityContext": {
+                    "type": "object"
+                }
+            }
+        },
+        "processKillmails": {
+            "type": "object",
+            "properties": {
+                "enabled": {
+                    "type": "boolean"
+                },
+                "replicas": {
+                    "type": "integer"
+                },
+                "resources": {
+                    "type": "object"
+                },
+                "securityContext": {
+                    "type": "object"
+                }
+            }
+        },
+        "redisq": {
+            "type": "object",
+            "properties": {
+                "enabled": {
+                    "type": "boolean"
+                },
+                "replicas": {
+                    "type": "integer"
+                },
+                "resources": {
+                    "type": "object"
+                },
+                "securityContext": {
+                    "type": "object"
+                }
+            }
+        },
+        "cron": {
+            "type": "object",
+            "properties": {
+                "enabled": {
+                    "type": "boolean"
+                },
+                "schedule": {
+                    "type": "string"
+                },
+                "successfulJobsHistoryLimit": {
+                    "type": "integer"
+                },
+                "failedJobsHistoryLimit": {
+                    "type": "integer"
+                },
+                "startingDeadlineSeconds": {
+                    "type": "integer"
+                },
+                "activeDeadlineSeconds": {
+                    "type": "integer"
+                },
+                "resources": {
+                    "type": "object"
+                },
+                "securityContext": {
+                    "type": "object"
+                }
+            }
+        },
+        "ingress": {
+            "type": "object",
+            "properties": {
+                "enabled": {
+                    "type": "boolean"
+                },
+                "className": {
+                    "type": "string"
+                },
+                "annotations": {
+                    "type": "object"
+                },
+                "hosts": {
+                    "type": "array",
+                    "items": {
+                        "type": "object",
+                        "properties": {
+                            "host": {
+                                "type": "string"
+                            },
+                            "paths": {
+                                "type": "array",
+                                "items": {
+                                    "type": "object",
+                                    "properties": {
+                                        "path": {
+                                            "type": "string"
+                                        },
+                                        "pathType": {
+                                            "type": "string"
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                "tls": {
+                    "type": "array",
+                    "items": {
+                        "type": "object",
+                        "properties": {
+                            "secretName": {
+                                "type": "string"
+                            },
+                            "hosts": {
+                                "type": "array",
+                                "items": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "podDisruptionBudget": {
+            "type": "object",
+            "properties": {
+                "enabled": {
+                    "type": "boolean"
+                },
+                "minAvailable": {
+                    "type": [
+                        "integer",
+                        "string"
+                    ]
+                }
+            }
         }
-      }
     }
-  }
 }

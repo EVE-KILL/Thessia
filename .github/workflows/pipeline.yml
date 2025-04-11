@@ -104,7 +104,11 @@ jobs:
                       --set global.env.sensitive.discordReportComment=${{ secrets.DISCORD_REPORT_COMMENT }} \
                       --set global.env.sensitive.openAIAPIKey=${{ secrets.OPENAI_API_KEY }} \
                       --set global.env.sensitive.tenorAPIKey=${{ secrets.TENOR_API_KEY }} \
-                      --set global.env.sensitive.cloudflareAnalyticsToken=${{ secrets.CLOUDFLARE_ANALYTICS_TOKEN }}
+                      --set global.env.sensitive.cloudflareAnalyticsToken=${{ secrets.CLOUDFLARE_ANALYTICS_TOKEN }} \
+                      --set global.env.sensitive.botToken=${{ secrets.DISCORD_TOKEN }} \
+                      --set global.env.sensitive.botClientId=${{ secrets.DISCORD_CLIENT_ID }} \
+                      --set global.env.sensitive.botOpenAIAPIKey=${{ secrets.BOT_OPENAI_API_KEY }} \
+                      --set global.env.sensitive.botClaudeAPIKey=${{ secrets.BOT_CLAUDE_API_KEY }}
 
     purge-cloudflare-cache:
         runs-on: ubuntu-latest

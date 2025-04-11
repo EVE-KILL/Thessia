@@ -59,6 +59,19 @@ global:
             # Cloudflare Analytics
             cloudflareAnalyticsToken: ""
 
+            # Discord bot
+            botName: "Sara"
+            botToken: ""
+            botClientId: ""
+            botIgnoredChannelIds: ""
+            botIgnoredGuildIds: ""
+            botAIProvider: "claude"
+            botOpenAIAPIKey: ""
+            botOpenAIModel: "gpt-4o-mini"
+            botOpenAIModerationModel: "omni-moderation-latest"
+            botClaudeAPIKey: ""
+            botClaudeModel: "claude-3-haiku-20240307"
+
 # Namespace configuration
 namespace:
     create: true
