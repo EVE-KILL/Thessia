@@ -66,3 +66,5 @@ This project uses:
 - Always use `async/await` for asynchronous operations.
 - If the folder exists, you can use it as reference - but DO NOT do so without permission, and ask permission first. The folder in question is called `/oldfrontend`.
 - If you are unsure about a specific implementation, ask for clarification.
+
+use context7
