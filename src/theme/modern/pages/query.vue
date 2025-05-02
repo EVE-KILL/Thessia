@@ -22,6 +22,17 @@ import {
     or,
 } from "~/shared/helpers/queryAPIHelper";
 
+
+// Example static maps for demo (replace with real data lookups in production)
+const SYSTEM_TO_CONSTELLATION: Record<number, number> = {};
+const SYSTEM_TO_REGION: Record<number, number> = {};
+const CONSTELLATION_TO_REGION: Record<number, number> = {};
+const CORP_TO_ALLIANCE: Record<number, number> = {};
+const CHAR_TO_CORP: Record<number, number> = {};
+const CORP_TO_FACTION: Record<number, number> = {};
+const ALLIANCE_TO_FACTION: Record<number, number> = {};
+const CHAR_TO_ALLIANCE: Record<number, number> = {};
+
 // i18n setup
 const { t } = useI18n();
 
@@ -146,6 +157,48 @@ const queryResult = ref<any[] | null>(null);
 const isLoading = ref(false);
 const error = ref<string | null>(null);
 const showRawQuery = ref(false);
+
+// Validation warnings
+const validationWarnings = ref<string[]>([]);
+
+// Validate facets for logical consistency (calls backend validation API)
+async function validateFacets() {
+    const warnings: string[] = [];
+
+    // Operator misuse and conflicting filters (basic demo, keep on frontend)
+    const seenFields = new Set<string>();
+    for (const facet of facets.value) {
+        if (seenFields.has(facet.field)) {
+            warnings.push(`Multiple filters on "${facet.field}" may conflict.`);
+        }
+        seenFields.add(facet.field);
+
+        // Example: $in/$nin with single value
+        if ((facet.operator === "$in" || facet.operator === "$nin") && Array.isArray(facet.value) && facet.value.length === 1) {
+            warnings.push(`Operator "${facet.operator}" on "${facet.field}" has only one value. Consider using "$eq" or "$ne".`);
+        }
+    }
+
+    // Call backend validation API for cross-entity checks
+    try {
+        const { data, error } = await useFetch("/api/query/validate", {
+            method: "POST",
+            body: { facets: facets.value },
+        });
+        if (error.value) {
+            warnings.push("Validation API error: " + (error.value.message || "Unknown error"));
+        } else if (data.value && Array.isArray(data.value.warnings)) {
+            warnings.push(...data.value.warnings);
+        }
+    } catch (err) {
+        warnings.push("Validation API error: " + (err instanceof Error ? err.message : String(err)));
+    }
+
+    validationWarnings.value = warnings;
+}
+
+// Watch facets for validation
+watch(facets, validateFacets, { deep: true });
 
 // Track last search terms to prevent redundant API calls
 const lastSearchTerms = ref<Record<string, string>>({});
@@ -476,6 +529,19 @@ const executeQuery = async () => {
     // Always update query to ensure latest pagination is included
     updateQuery();
 
+    // Block execution if there is a critical validation error
+    const criticalErrors = validationWarnings.value.filter(w =>
+        w.includes("does not belong to the selected region") ||
+        w.includes("does not belong to the selected constellation") ||
+        w.includes("does not belong to the selected alliance") ||
+        w.includes("does not belong to the selected corporation") ||
+        w.includes("does not belong to the selected faction")
+    );
+    if (criticalErrors.length > 0) {
+        error.value = criticalErrors.join(" ");
+        return;
+    }
+
     if (!queryObject.value) return;
 
     try {
@@ -589,6 +655,17 @@ if (facets.value.length === 0) {
 
         <div class="mb-6">
             <UCard>
+                <!-- Validation warnings -->
+                <div v-if="validationWarnings.length" class="mb-4">
+                    <UAlert color="amber" icon="i-lucide-alert-triangle">
+                        <template #title>Potential Query Issues</template>
+                        <template #description>
+                            <ul class="list-disc pl-5">
+                                <li v-for="(warn, i) in validationWarnings" :key="i">{{ warn }}</li>
+                            </ul>
+                        </template>
+                    </UAlert>
+                </div>
                 <template #header>
                     <div class="flex justify-between items-center">
                         <h2 class="text-lg font-medium">{{ $t('filters') }}</h2>
