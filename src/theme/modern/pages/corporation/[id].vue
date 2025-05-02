@@ -169,6 +169,30 @@ const corporationId = route.params.id
 
 const { data: corporation, pending, error } = await useFetch(`/api/corporations/${corporationId}`)
 
+// SEO meta for corporation page
+useSeoMeta({
+  title: computed(() => {
+    const c = corporation.value as any
+    return c?.name ? `${c.name}` : t("corporation.corporationPage")
+  }),
+  description: computed(() => {
+    const c = corporation.value as any
+    return c?.name && c?.ticker
+      ? t("corporationMetaDescription", {
+        name: c.name,
+        ticker: c.ticker,
+        alliance: c.alliance_name || t("noAlliance"),
+      })
+      : t("corporationDefaultDescription", { id: corporationId })
+  }),
+  ogImage: computed(() => {
+    const c = corporation.value as any
+    return c?.corporation_id
+      ? `https://images.eve-kill.com/corporations/${c.corporation_id}/logo?size=256`
+      : "/images/default-og.png"
+  }),
+})
+
 interface IShortStats {
   kills: number;
   losses: number;

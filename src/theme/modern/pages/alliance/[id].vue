@@ -184,6 +184,29 @@ const { data: alliance, pending, error } = await useFetch(`/api/alliances/${alli
     }
 })
 
+// SEO meta for alliance page
+useSeoMeta({
+    title: computed(() => {
+        const a = alliance.value as any
+        return a?.name ? `${a.name}` : t("alliance.alliancePage")
+    }),
+    description: computed(() => {
+        const a = alliance.value as any
+        return a?.name && a?.ticker
+            ? t("allianceMetaDescription", {
+                name: a.name,
+                ticker: a.ticker,
+            })
+            : t("allianceDefaultDescription", { id: allianceId })
+    }),
+    ogImage: computed(() => {
+        const a = alliance.value as any
+        return a?.alliance_id
+            ? `https://images.eve-kill.com/alliances/${a.alliance_id}/logo?size=256`
+            : "/images/default-og.png"
+    }),
+})
+
 interface IShortStats {
     kills: number;
     losses: number;

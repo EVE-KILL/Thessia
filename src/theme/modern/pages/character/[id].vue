@@ -85,22 +85,22 @@
                                         <div class="flex justify-between">
                                             <span class="text-gray-300">{{ $t('kills') }}:</span>
                                             <span class="text-white font-medium">{{ formatNumber(validShortStats.kills)
-                                            }}</span>
+                                                }}</span>
                                         </div>
                                         <div class="flex justify-between">
                                             <span class="text-gray-300">{{ $t('losses') }}:</span>
                                             <span class="text-white font-medium">{{ formatNumber(validShortStats.losses)
-                                            }}</span>
+                                                }}</span>
                                         </div>
                                         <div class="flex justify-between">
                                             <span class="text-gray-300">{{ $t('isk') + ' ' + $t('killed') }}:</span>
                                             <span class="text-white font-medium">{{ formatIsk(validShortStats.iskKilled)
-                                            }}</span>
+                                                }}</span>
                                         </div>
                                         <div class="flex justify-between">
                                             <span class="text-gray-300">{{ $t('isk') + ' ' + $t('lost') }}:</span>
                                             <span class="text-white font-medium">{{ formatIsk(validShortStats.iskLost)
-                                            }}</span>
+                                                }}</span>
                                         </div>
                                     </div>
 
@@ -124,7 +124,7 @@
                                         <div class="flex justify-between">
                                             <span class="text-gray-300">{{ $t('dangerRatio') }}:</span>
                                             <span class="text-white font-medium">{{ calcDangerRatio(validShortStats)
-                                            }}%</span>
+                                                }}%</span>
                                         </div>
                                     </div>
                                 </template>
@@ -315,7 +315,7 @@ useSeoMeta({
     title: computed(() => {
         // Check if character.value exists and has the name property
         const char = character.value as any; // Use 'as any' or a proper type assertion if ICharacter is defined
-        return char?.name ? `${char.name} - EVE Kill` : t("character.characterPage");
+        return char?.name ? `${char.name}` : t("character.characterPage");
     }),
     description: computed(() => {
         const char = character.value as any; // Use 'as any' or a proper type assertion
