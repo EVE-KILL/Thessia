@@ -1,5 +1,5 @@
 import { defineEventHandler } from "h3";
-import { Characters } from "~/server/models/Characters";
+import { Corporations } from "~/server/models/Corporations";
 
 export default defineEventHandler(async (event) => {
     const allianceId: number | null = event.context.params?.id
@@ -9,14 +9,14 @@ export default defineEventHandler(async (event) => {
         return { error: "Alliance ID not provided" };
     }
 
-    // Find all members that are in this alliance
-    const members = await Characters.find(
+    // Find all corporations that are in this alliance
+    const corporations = await Corporations.find(
         { alliance_id: allianceId },
-        { _id: 0, character_id: 1, name: 1 },
+        { _id: 0, corporation_id: 1, name: 1 },
     );
-    if (members.length === 0) {
-        return { error: "No members found" };
+    if (corporations.length === 0) {
+        return { error: "No corporations found" };
     }
 
-    return members;
+    return corporations;
 });

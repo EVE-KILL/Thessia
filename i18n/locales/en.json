@@ -392,6 +392,15 @@
         "notFound": "Corporation Not Found",
         "corporationDoesNotExist": "The corporation you are looking for does not exist or has not been indexed yet."
     },
+    "alliance": {
+        "noCorporations": "No corporations found",
+        "noCharacters": "No characters found",
+        "topShips": "Top Ships",
+        "topSystems": "Top Systems",
+        "topRegions": "Top Regions",
+        "notFound": "Alliance Not Found",
+        "allianceDoesNotExist": "The alliance you are looking for does not exist or has not been indexed yet."
+    },
     "character": {
         "noCorporationHistory": "No corporation history found",
         "topShips": "Top Ships",
