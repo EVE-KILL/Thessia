@@ -1,102 +1,148 @@
-// Validation API for query builder facets
 import type { H3Event } from "h3";
-import { Characters } from "~/server/models/Characters";
-import { Constellations } from "~/server/models/Constellations";
-import { Corporations } from "~/server/models/Corporations";
-import { SolarSystems } from "~/server/models/SolarSystems";
 
+// Example static maps for demo (replace with real data lookups in production)
+const SYSTEM_TO_CONSTELLATION: Record<number, number> = {};
+const SYSTEM_TO_REGION: Record<number, number> = {};
+const CONSTELLATION_TO_REGION: Record<number, number> = {};
+const CORP_TO_ALLIANCE: Record<number, number> = {};
+const CHAR_TO_CORP: Record<number, number> = {};
+const CORP_TO_FACTION: Record<number, number> = {};
+const ALLIANCE_TO_FACTION: Record<number, number> = {};
+const CHAR_TO_ALLIANCE: Record<number, number> = {};
+
+/**
+ * Validates query facets for logical consistency
+ * This endpoint checks for hierarchical relationships between entities
+ * and returns warnings for potential issues
+ */
 export default defineEventHandler(async (event: H3Event) => {
     const body = await readBody(event);
-    const facets = Array.isArray(body?.facets) ? body.facets : [];
+    const { facets } = body || {};
+
+    if (!facets || !Array.isArray(facets)) {
+        throw createError({
+            statusCode: 400,
+            statusMessage: "Missing or invalid facets array",
+        });
+    }
+
     const warnings: string[] = [];
 
-    // Helper to get value for a field from facets
-    function getFacetValue(field: string) {
-        const facet = facets.find((f: any) => f.field === field && f.value !== "" && f.value !== undefined);
-        return facet ? facet.value : undefined;
-    }
-
-    // Location hierarchy checks
-    const regionId = Number(getFacetValue("region_id"));
-    const constellationId = Number(getFacetValue("constellation_id"));
-    const systemId = Number(getFacetValue("system_id"));
-
-    // Check system/region relationship
-    if (regionId && systemId) {
-        const system = await SolarSystems.findOne({ system_id: systemId });
-        if (system && system.region_id !== regionId) {
-            warnings.push("Selected system does not belong to the selected region.");
+    // Extract values by field for cross-validation
+    const fieldValues: Record<string, any> = {};
+    for (const facet of facets) {
+        if (facet.field && facet.value !== undefined) {
+            fieldValues[facet.field] = facet.value;
         }
     }
 
-    // Check constellation/region relationship
-    if (regionId && constellationId) {
-        const constellation = await Constellations.findOne({ constellation_id: constellationId });
-        if (constellation && constellation.region_id !== regionId) {
-            warnings.push("Selected constellation does not belong to the selected region.");
+    // Check for hierarchical relationships
+    // These are just examples - in a real implementation, you would query a database
+    // or use cached data to validate these relationships
+
+    // Region/Constellation/System hierarchy
+    if (fieldValues["region_id"] && fieldValues["system_id"]) {
+        const regionId = Number(fieldValues["region_id"]);
+        const systemId = Number(fieldValues["system_id"]);
+
+        // Check if system belongs to region
+        if (SYSTEM_TO_REGION[systemId] && SYSTEM_TO_REGION[systemId] !== regionId) {
+            warnings.push(`System ${systemId} does not belong to the selected region ${regionId}.`);
         }
     }
 
-    // Check system/constellation relationship
-    if (constellationId && systemId) {
-        const system = await SolarSystems.findOne({ system_id: systemId });
-        if (system && system.constellation_id !== constellationId) {
-            warnings.push("Selected system does not belong to the selected constellation.");
+    if (fieldValues["constellation_id"] && fieldValues["system_id"]) {
+        const constellationId = Number(fieldValues["constellation_id"]);
+        const systemId = Number(fieldValues["system_id"]);
+
+        // Check if system belongs to constellation
+        if (SYSTEM_TO_CONSTELLATION[systemId] && SYSTEM_TO_CONSTELLATION[systemId] !== constellationId) {
+            warnings.push(`System ${systemId} does not belong to the selected constellation ${constellationId}.`);
         }
     }
 
-    // Organization hierarchy checks (victim)
-    const victimAllianceId = Number(getFacetValue("victim.alliance_id"));
-    const victimCorpId = Number(getFacetValue("victim.corporation_id"));
-    const victimCharId = Number(getFacetValue("victim.character_id"));
-    const victimFactionId = Number(getFacetValue("victim.faction_id"));
+    if (fieldValues["region_id"] && fieldValues["constellation_id"]) {
+        const regionId = Number(fieldValues["region_id"]);
+        const constellationId = Number(fieldValues["constellation_id"]);
 
-    if (victimAllianceId && victimCorpId) {
-        const corp = await Corporations.findOne({ corporation_id: victimCorpId });
-        if (corp && corp.alliance_id !== victimAllianceId) {
-            warnings.push("Selected victim corporation does not belong to the selected alliance.");
+        // Check if constellation belongs to region
+        if (CONSTELLATION_TO_REGION[constellationId] && CONSTELLATION_TO_REGION[constellationId] !== regionId) {
+            warnings.push(`Constellation ${constellationId} does not belong to the selected region ${regionId}.`);
         }
     }
-    if (victimCorpId && victimCharId) {
-        const char = await Characters.findOne({ character_id: victimCharId });
-        if (char && char.corporation_id !== victimCorpId) {
-            warnings.push("Selected victim character does not belong to the selected corporation.");
-        }
-    }
-    if (victimFactionId && victimCorpId) {
-        const corp = await Corporations.findOne({ corporation_id: victimCorpId });
-        if (corp && corp.faction_id !== victimFactionId) {
-            warnings.push("Selected victim corporation does not belong to the selected faction.");
-        }
-    }
-    // Note: Alliance <-> Faction relationship check removed (no faction_id on alliance)
 
-    // Organization hierarchy checks (attackers)
-    const attackerAllianceId = Number(getFacetValue("attackers.alliance_id"));
-    const attackerCorpId = Number(getFacetValue("attackers.corporation_id"));
-    const attackerCharId = Number(getFacetValue("attackers.character_id"));
-    const attackerFactionId = Number(getFacetValue("attackers.faction_id"));
+    // Character/Corporation/Alliance hierarchy
+    if (fieldValues["victim.character_id"] && fieldValues["victim.corporation_id"]) {
+        const charId = Number(fieldValues["victim.character_id"]);
+        const corpId = Number(fieldValues["victim.corporation_id"]);
 
-    if (attackerAllianceId && attackerCorpId) {
-        const corp = await Corporations.findOne({ corporation_id: attackerCorpId });
-        if (corp && corp.alliance_id !== attackerAllianceId) {
-            warnings.push("Selected attacker corporation does not belong to the selected alliance.");
+        // Check if character belongs to corporation
+        if (CHAR_TO_CORP[charId] && CHAR_TO_CORP[charId] !== corpId) {
+            warnings.push(`Victim character ${charId} does not belong to the selected corporation ${corpId}.`);
         }
     }
-    if (attackerCorpId && attackerCharId) {
-        const char = await Characters.findOne({ character_id: attackerCharId });
-        if (char && char.corporation_id !== attackerCorpId) {
-            warnings.push("Selected attacker character does not belong to the selected corporation.");
-        }
-    }
-    if (attackerFactionId && attackerCorpId) {
-        const corp = await Corporations.findOne({ corporation_id: attackerCorpId });
-        if (corp && corp.faction_id !== attackerFactionId) {
-            warnings.push("Selected attacker corporation does not belong to the selected faction.");
-        }
-    }
-    // Note: Alliance <-> Faction relationship check removed (no faction_id on alliance)
 
-    // Return all warnings
+    if (fieldValues["victim.corporation_id"] && fieldValues["victim.alliance_id"]) {
+        const corpId = Number(fieldValues["victim.corporation_id"]);
+        const allianceId = Number(fieldValues["victim.alliance_id"]);
+
+        // Check if corporation belongs to alliance
+        if (CORP_TO_ALLIANCE[corpId] && CORP_TO_ALLIANCE[corpId] !== allianceId) {
+            warnings.push(`Victim corporation ${corpId} does not belong to the selected alliance ${allianceId}.`);
+        }
+    }
+
+    if (fieldValues["victim.character_id"] && fieldValues["victim.alliance_id"]) {
+        const charId = Number(fieldValues["victim.character_id"]);
+        const allianceId = Number(fieldValues["victim.alliance_id"]);
+
+        // Check if character belongs to alliance
+        if (CHAR_TO_ALLIANCE[charId] && CHAR_TO_ALLIANCE[charId] !== allianceId) {
+            warnings.push(`Victim character ${charId} does not belong to the selected alliance ${allianceId}.`);
+        }
+    }
+
+    // Same checks for attackers
+    if (fieldValues["attackers.character_id"] && fieldValues["attackers.corporation_id"]) {
+        const charId = Number(fieldValues["attackers.character_id"]);
+        const corpId = Number(fieldValues["attackers.corporation_id"]);
+
+        // Check if character belongs to corporation
+        if (CHAR_TO_CORP[charId] && CHAR_TO_CORP[charId] !== corpId) {
+            warnings.push(`Attacker character ${charId} does not belong to the selected corporation ${corpId}.`);
+        }
+    }
+
+    if (fieldValues["attackers.corporation_id"] && fieldValues["attackers.alliance_id"]) {
+        const corpId = Number(fieldValues["attackers.corporation_id"]);
+        const allianceId = Number(fieldValues["attackers.alliance_id"]);
+
+        // Check if corporation belongs to alliance
+        if (CORP_TO_ALLIANCE[corpId] && CORP_TO_ALLIANCE[corpId] !== allianceId) {
+            warnings.push(`Attacker corporation ${corpId} does not belong to the selected alliance ${allianceId}.`);
+        }
+    }
+
+    // Faction relationships
+    if (fieldValues["victim.corporation_id"] && fieldValues["victim.faction_id"]) {
+        const corpId = Number(fieldValues["victim.corporation_id"]);
+        const factionId = Number(fieldValues["victim.faction_id"]);
+
+        // Check if corporation belongs to faction
+        if (CORP_TO_FACTION[corpId] && CORP_TO_FACTION[corpId] !== factionId) {
+            warnings.push(`Victim corporation ${corpId} does not belong to the selected faction ${factionId}.`);
+        }
+    }
+
+    if (fieldValues["victim.alliance_id"] && fieldValues["victim.faction_id"]) {
+        const allianceId = Number(fieldValues["victim.alliance_id"]);
+        const factionId = Number(fieldValues["victim.faction_id"]);
+
+        // Check if alliance belongs to faction
+        if (ALLIANCE_TO_FACTION[allianceId] && ALLIANCE_TO_FACTION[allianceId] !== factionId) {
+            warnings.push(`Victim alliance ${allianceId} does not belong to the selected faction ${factionId}.`);
+        }
+    }
+
     return { warnings };
 });

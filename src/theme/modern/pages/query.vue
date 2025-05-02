@@ -22,7 +22,6 @@ import {
     or,
 } from "~/shared/helpers/queryAPIHelper";
 
-
 // Example static maps for demo (replace with real data lookups in production)
 const SYSTEM_TO_CONSTELLATION: Record<number, number> = {};
 const SYSTEM_TO_REGION: Record<number, number> = {};
@@ -157,6 +156,186 @@ const queryResult = ref<any[] | null>(null);
 const isLoading = ref(false);
 const error = ref<string | null>(null);
 const showRawQuery = ref(false);
+
+import { useRoute, useRouter } from "vue-router";
+
+// Save Query state
+const showSaveFields = ref(true);
+const showEditButton = ref(false);
+const editing = ref(false);
+const saveTitle = ref("");
+const saveDescription = ref("");
+const saveError = ref("");
+const isSaving = ref(false);
+const savedQueryId = ref<string | null>(null);
+
+const route = useRoute();
+const router = useRouter();
+
+// Parse a saved query into facets, sort, etc.
+function parseQueryToUI(savedQuery: QueryAPIRequest) {
+    try {
+        // Clear existing facets
+        facets.value = [];
+
+        // Parse filter conditions into facets
+        if (savedQuery.filter) {
+            // Handle AND conditions
+            if (savedQuery.filter.$and) {
+                conjunction.value = "and";
+                for (const condition of savedQuery.filter.$and) {
+                    parseSingleCondition(condition);
+                }
+            }
+            // Handle OR conditions
+            else if (savedQuery.filter.$or) {
+                conjunction.value = "or";
+                for (const condition of savedQuery.filter.$or) {
+                    parseSingleCondition(condition);
+                }
+            }
+            // Handle single condition or flat object with multiple fields
+            else {
+                // If it's a flat object with multiple fields, treat as AND
+                const entries = Object.entries(savedQuery.filter);
+                if (entries.length > 1) {
+                    conjunction.value = "and";
+                }
+
+                for (const [field, value] of entries) {
+                    if (!field.startsWith("$")) { // Skip operators like $and, $or
+                        parseSingleCondition({ [field]: value });
+                    }
+                }
+            }
+        }
+
+        // If no facets were created, add a default one
+        if (facets.value.length === 0) {
+            addFacet();
+        }
+
+        // Parse sort options
+        if (savedQuery.options?.sort) {
+            const sortEntry = Object.entries(savedQuery.options.sort)[0];
+            if (sortEntry) {
+                const [field, direction] = sortEntry;
+                sortField.value = field as QueryableField;
+                sortDirection.value = direction === 1 ? "asc" : "desc";
+            }
+        }
+
+        // Parse limit
+        if (savedQuery.options?.limit) {
+            limit.value = Math.min(savedQuery.options.limit, MAX_LIMIT);
+        }
+
+        // Update the generated query
+        updateQuery();
+    } catch (err) {
+        console.error("Error parsing saved query:", err);
+        // Add a default facet if parsing failed
+        if (facets.value.length === 0) {
+            addFacet();
+        }
+    }
+}
+
+// Parse a single filter condition into a facet
+function parseSingleCondition(condition: any) {
+    const entries = Object.entries(condition);
+    if (entries.length === 0) return;
+
+    const [field, value] = entries[0];
+
+    // Skip non-field entries (like operators)
+    if (field.startsWith("$")) return;
+
+    // Create a new facet
+    const id = `facet-${Date.now()}-${Math.random().toString(36).substr(2, 5)}`;
+    const facet: any = {
+        id,
+        field,
+        operator: "$eq", // Default
+        value: null,
+        searchTerm: "",
+        searchResults: [],
+        entityType: getEntityTypeForField(field),
+    };
+
+    // Determine operator and value
+    if (typeof value === "object" && value !== null) {
+        // Handle operator objects like {$gt: 5}
+        const opEntries = Object.entries(value);
+        if (opEntries.length > 0) {
+            const [op, val] = opEntries[0];
+            facet.operator = op;
+            facet.value = val;
+
+            // Special handling for array operators
+            if ((op === "$in" || op === "$nin") && !Array.isArray(val)) {
+                facet.value = [val];
+            }
+        }
+    } else {
+        // Simple equality
+        facet.value = value;
+    }
+
+    facets.value.push(facet);
+}
+
+onMounted(async () => {
+    const id = route.query.id as string | undefined;
+
+    if (id) {
+        savedQueryId.value = id;
+        showSaveFields.value = false;
+        showEditButton.value = true;
+        editing.value = false;
+
+        // Fetch saved query using direct fetch instead of useFetch
+        try {
+            // Use direct fetch API instead of useFetch
+            const response = await fetch(`/api/query/load?id=${id}`);
+
+            if (!response.ok) {
+                throw new Error(`API returned status ${response.status}`);
+            }
+
+            const data = await response.json();
+
+            if (data && data.query) {
+                // Store title/description
+                saveTitle.value = data.title || "";
+                saveDescription.value = data.description || "";
+
+                // Parse the saved query into UI components
+                parseQueryToUI(data.query);
+
+                // Update the query object and generated query
+                updateQuery();
+
+                // Execute the query automatically
+                await executeQuery();
+            } else {
+                console.error("Invalid query data received");
+            }
+        } catch (err) {
+            console.error("Error fetching saved query:", err);
+        }
+    } else {
+        showSaveFields.value = true;
+        showEditButton.value = false;
+        editing.value = true;
+    }
+});
+
+function handleEditQuery() {
+    showSaveFields.value = true;
+    showEditButton.value = false;
+    editing.value = true;
+}
 
 // Validation warnings
 const validationWarnings = ref<string[]>([]);
@@ -524,6 +703,47 @@ const updateQuery = () => {
     }
 };
 
+async function saveQuery() {
+    saveError.value = "";
+    if (!saveTitle.value.trim()) {
+        saveError.value = "Title is required.";
+        return;
+    }
+    isSaving.value = true;
+    try {
+        let url = "/api/query/save";
+        let body: any = {
+            title: saveTitle.value,
+            description: saveDescription.value,
+            query: buildQueryObject(),
+        };
+        if (savedQueryId.value) {
+            url = "/api/query/save";
+            body.id = savedQueryId.value;
+        }
+        const { data, error } = await useFetch(url, {
+            method: "POST",
+            body,
+        });
+        if (error.value || !data.value || !data.value.hash) {
+            saveError.value = error.value?.message || "Failed to save query.";
+            isSaving.value = false;
+            return;
+        }
+        // If new, redirect to /query?id=<hash>
+        if (!savedQueryId.value) {
+            window.location.href = `/query?id=${data.value.hash}`;
+        } else {
+            // If updating, just reload page
+            window.location.reload();
+        }
+    } catch (err: any) {
+        saveError.value = err.message || "Failed to save query.";
+    } finally {
+        isSaving.value = false;
+    }
+}
+
 // Execute the query with pagination
 const executeQuery = async () => {
     // Always update query to ensure latest pagination is included
@@ -651,200 +871,244 @@ if (facets.value.length === 0) {
 
 <template>
     <div class="query-builder container mx-auto py-6 px-4">
-        <h1 class="text-2xl font-bold mb-4">{{ $t('queryBuilder') }}</h1>
+        <!-- Show saved query title and description when viewing a saved query -->
+        <div v-if="!showSaveFields && savedQueryId">
+            <h1 class="text-2xl font-bold mb-2">{{ saveTitle }}</h1>
+            <p v-if="saveDescription" class="text-gray-600 dark:text-gray-400 mb-4">{{ saveDescription }}</p>
+            <div class="mb-6">
+                <UButton color="primary" icon="i-lucide-edit" @click="handleEditQuery">
+                    Edit Query
+                </UButton>
+            </div>
+        </div>
 
-        <div class="mb-6">
-            <UCard>
-                <!-- Validation warnings -->
-                <div v-if="validationWarnings.length" class="mb-4">
-                    <UAlert color="amber" icon="i-lucide-alert-triangle">
-                        <template #title>Potential Query Issues</template>
-                        <template #description>
-                            <ul class="list-disc pl-5">
-                                <li v-for="(warn, i) in validationWarnings" :key="i">{{ warn }}</li>
-                            </ul>
-                        </template>
-                    </UAlert>
-                </div>
-                <template #header>
-                    <div class="flex justify-between items-center">
-                        <h2 class="text-lg font-medium">{{ $t('filters') }}</h2>
-                        <div class="flex gap-4">
-                            <USelect v-model="conjunction" :items="CONJUNCTION_OPTIONS" size="sm" class="w-36" />
+        <!-- Show query builder title when creating a new query or editing -->
+        <h1 v-if="showSaveFields" class="text-2xl font-bold mb-4">{{ $t('queryBuilder') }}</h1>
 
-                            <UButton v-if="facets.length < MAX_FACETS" icon="i-lucide-plus-circle" size="sm"
-                                color="primary" @click="addFacet">
-                                {{ $t('addFacet') }}
-                            </UButton>
-                        </div>
+        <!-- Query builder components - only show when editing -->
+        <template v-if="showSaveFields">
+            <div class="mb-6">
+                <UCard>
+                    <!-- Validation warnings -->
+                    <div v-if="validationWarnings.length" class="mb-4">
+                        <UAlert color="amber" icon="i-lucide-alert-triangle">
+                            <template #title>Potential Query Issues</template>
+                            <template #description>
+                                <ul class="list-disc pl-5">
+                                    <li v-for="(warn, i) in validationWarnings" :key="i">{{ warn }}</li>
+                                </ul>
+                            </template>
+                        </UAlert>
                     </div>
-                </template>
+                    <template #header>
+                        <div class="flex justify-between items-center">
+                            <h2 class="text-lg font-medium">{{ $t('filters') }}</h2>
+                            <div class="flex gap-4">
+                                <USelect v-model="conjunction" :items="CONJUNCTION_OPTIONS" size="sm" class="w-36" />
 
-                <!-- Individual facets -->
-                <div v-if="facets.length > 0" class="space-y-4">
-                    <div v-for="facet in facets" :key="facet.id"
-                        class="facet-row border border-gray-200 dark:border-gray-700 rounded-lg p-4">
-                        <div class="flex flex-wrap md:flex-nowrap gap-3 items-start">
-                            <!-- Field selector -->
-                            <div class="w-full md:w-1/3">
-                                <UFormField :label="$t('field')">
-                                    <USelect v-model="facet.field" :items="FIELD_OPTIONS"
-                                        @update:modelValue="(val) => handleFieldChange(facet.id, val)"
-                                        class="field-selector w-64" />
-                                </UFormField>
+                                <UButton v-if="facets.length < MAX_FACETS" icon="i-lucide-plus-circle" size="sm"
+                                    color="primary" @click="addFacet">
+                                    {{ $t('addFacet') }}
+                                </UButton>
                             </div>
+                        </div>
+                    </template>
 
-                            <!-- Operator selector -->
-                            <div class="w-full md:w-1/4">
-                                <UFormField :label="$t('operator')">
-                                    <USelect v-model="facet.operator" :items="OPERATOR_OPTIONS"
-                                        @update:modelValue="(val) => handleOperatorChange(facet.id, val)"
-                                        class="operator-selector w-64" />
-                                </UFormField>
-                            </div>
+                    <!-- Individual facets -->
+                    <div v-if="facets.length > 0" class="space-y-4">
+                        <div v-for="facet in facets" :key="facet.id"
+                            class="facet-row border border-gray-200 dark:border-gray-700 rounded-lg p-4">
+                            <div class="flex flex-wrap md:flex-nowrap gap-3 items-start">
+                                <!-- Field selector -->
+                                <div class="w-full md:w-1/3">
+                                    <UFormField :label="$t('field')">
+                                        <USelect v-model="facet.field" :items="FIELD_OPTIONS"
+                                            @update:modelValue="(val) => handleFieldChange(facet.id, val)"
+                                            class="field-selector w-64" />
+                                    </UFormField>
+                                </div>
 
-                            <!-- Value input -->
-                            <div class="w-full md:w-1/3">
-                                <UFormField :label="$t('value')">
-                                    <!-- Boolean selectors -->
-                                    <template
-                                        v-if="facet.field === 'is_npc' || facet.field === 'is_solo' || facet.operator === '$exists'">
-                                        <URadioGroup v-model="facet.value" :items="BOOLEAN_OPTIONS"
-                                            class="flex gap-4" />
-                                    </template>
+                                <!-- Operator selector -->
+                                <div class="w-full md:w-1/4">
+                                    <UFormField :label="$t('operator')">
+                                        <USelect v-model="facet.operator" :items="OPERATOR_OPTIONS"
+                                            @update:modelValue="(val) => handleOperatorChange(facet.id, val)"
+                                            class="operator-selector w-64" />
+                                    </UFormField>
+                                </div>
 
-                                    <!-- Multi-value (in/not in array) -->
-                                    <template v-else-if="['$in', '$nin'].includes(facet.operator)">
-                                        <div class="space-y-2">
-                                            <div class="flex gap-2">
-                                                <UInput v-model="facet.searchTerm" :placeholder="$t('typeToSearch')" />
-                                                <UButton icon="i-lucide-plus" @click="addValueToArray(facet.id)" />
-                                            </div>
+                                <!-- Value input -->
+                                <div class="w-full md:w-1/3">
+                                    <UFormField :label="$t('value')">
+                                        <!-- Boolean selectors -->
+                                        <template
+                                            v-if="facet.field === 'is_npc' || facet.field === 'is_solo' || facet.operator === '$exists'">
+                                            <URadioGroup v-model="facet.value" :items="BOOLEAN_OPTIONS"
+                                                class="flex gap-4" />
+                                        </template>
 
-                                            <!-- Selected values -->
-                                            <div v-if="Array.isArray(facet.value) && facet.value.length > 0"
-                                                class="flex flex-wrap gap-2 mt-2">
-                                                <UBadge v-for="(val, i) in facet.value" :key="i" color="primary"
-                                                    class="flex items-center gap-1">
-                                                    {{ val }}
-                                                    <UButton color="white" variant="ghost" icon="i-lucide-x" size="xs"
-                                                        class="p-0" @click="removeValueFromArray(facet.id, val)" />
-                                                </UBadge>
-                                            </div>
-
-                                            <!-- Search results for entity lookups -->
-                                            <div v-if="supportsSearch(facet.field) && facet.searchTerm && facet.searchResults && facet.searchResults.length > 0"
-                                                class="search-results border dark:border-gray-700 rounded-md mt-1 max-h-60 overflow-y-auto">
-                                                <div v-for="result in facet.searchResults" :key="result.id"
-                                                    class="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 cursor-pointer"
-                                                    @click="selectSearchResult(facet.id, result)">
-                                                    {{ result.name }}
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </template>
-
-                                    <!-- Entity search for ID fields -->
-                                    <template v-else-if="supportsSearch(facet.field)">
-                                        <div class="relative">
-                                            <UInput v-model="facet.searchTerm"
-                                                :placeholder="$t('searchFor') + ' ' + facet.entityType" />
-
-                                            <input v-model="facet.value" type="hidden" />
-
-                                            <!-- Search results dropdown -->
-                                            <div v-if="facet.searchResults && facet.searchResults.length > 0"
-                                                class="search-results absolute z-10 w-full border dark:border-gray-700 bg-white dark:bg-gray-900 rounded-md mt-1 max-h-60 overflow-y-auto">
-                                                <div v-for="result in facet.searchResults" :key="result.id"
-                                                    class="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 cursor-pointer"
-                                                    @click="selectSearchResult(facet.id, result)">
-                                                    {{ result.name }}
+                                        <!-- Multi-value (in/not in array) -->
+                                        <template v-else-if="['$in', '$nin'].includes(facet.operator)">
+                                            <div class="space-y-2">
+                                                <div class="flex gap-2">
+                                                    <UInput v-model="facet.searchTerm"
+                                                        :placeholder="$t('typeToSearch')" />
+                                                    <UButton icon="i-lucide-plus" @click="addValueToArray(facet.id)" />
                                                 </div>
 
+                                                <!-- Selected values -->
+                                                <div v-if="Array.isArray(facet.value) && facet.value.length > 0"
+                                                    class="flex flex-wrap gap-2 mt-2">
+                                                    <UBadge v-for="(val, i) in facet.value" :key="i" color="primary"
+                                                        class="flex items-center gap-1">
+                                                        {{ val }}
+                                                        <UButton color="white" variant="ghost" icon="i-lucide-x"
+                                                            size="xs" class="p-0"
+                                                            @click="removeValueFromArray(facet.id, val)" />
+                                                    </UBadge>
+                                                </div>
+
+                                                <!-- Search results for entity lookups -->
+                                                <div v-if="supportsSearch(facet.field) && facet.searchTerm && facet.searchResults && facet.searchResults.length > 0"
+                                                    class="search-results border dark:border-gray-700 rounded-md mt-1 max-h-60 overflow-y-auto">
+                                                    <div v-for="result in facet.searchResults" :key="result.id"
+                                                        class="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 cursor-pointer"
+                                                        @click="selectSearchResult(facet.id, result)">
+                                                        {{ result.name }}
+                                                    </div>
+                                                </div>
                                             </div>
+                                        </template>
 
-                                            <!-- Selected entity display -->
-                                            <div v-if="facet.valueLabel"
-                                                class="mt-2 text-sm text-gray-600 dark:text-gray-400">
-                                                {{ $t('selected') }}: {{ facet.valueLabel }} ({{ facet.value }})
+                                        <!-- Entity search for ID fields -->
+                                        <template v-else-if="supportsSearch(facet.field)">
+                                            <div class="relative">
+                                                <UInput v-model="facet.searchTerm"
+                                                    :placeholder="$t('searchFor') + ' ' + facet.entityType" />
+
+                                                <input v-model="facet.value" type="hidden" />
+
+                                                <!-- Search results dropdown -->
+                                                <div v-if="facet.searchResults && facet.searchResults.length > 0"
+                                                    class="search-results absolute z-10 w-full border dark:border-gray-700 bg-white dark:bg-gray-900 rounded-md mt-1 max-h-60 overflow-y-auto">
+                                                    <div v-for="result in facet.searchResults" :key="result.id"
+                                                        class="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 cursor-pointer"
+                                                        @click="selectSearchResult(facet.id, result)">
+                                                        {{ result.name }}
+                                                    </div>
+
+                                                </div>
+
+                                                <!-- Selected entity display -->
+                                                <div v-if="facet.valueLabel"
+                                                    class="mt-2 text-sm text-gray-600 dark:text-gray-400">
+                                                    {{ $t('selected') }}: {{ facet.valueLabel }} ({{ facet.value }})
+                                                </div>
                                             </div>
-                                        </div>
-                                    </template>
+                                        </template>
 
-                                    <!-- Numeric input for numeric fields -->
-                                    <template
-                                        v-else-if="['killmail_id', 'total_value', 'system_security'].includes(facet.field)">
-                                        <UInput v-model.number="facet.value" type="number"
-                                            :step="facet.field === 'system_security' ? '0.1' : '1'" />
-                                    </template>
+                                        <!-- Numeric input for numeric fields -->
+                                        <template
+                                            v-else-if="['killmail_id', 'total_value', 'system_security'].includes(facet.field)">
+                                            <UInput v-model.number="facet.value" type="number"
+                                                :step="facet.field === 'system_security' ? '0.1' : '1'" />
+                                        </template>
 
-                                    <!-- Date/time input for kill_time -->
-                                    <template v-else-if="facet.field === 'kill_time'">
-                                        <!-- Using timestamp input for now (could enhance with date picker) -->
-                                        <UInput v-model.number="facet.value" type="number"
-                                            :placeholder="$t('unixTimestamp')" />
-                                        <p class="text-xs text-gray-500 mt-1">{{ $t('unixTimestampHelp') }}</p>
-                                    </template>
+                                        <!-- Date/time input for kill_time -->
+                                        <template v-else-if="facet.field === 'kill_time'">
+                                            <!-- Using timestamp input for now (could enhance with date picker) -->
+                                            <UInput v-model.number="facet.value" type="number"
+                                                :placeholder="$t('unixTimestamp')" />
+                                            <p class="text-xs text-gray-500 mt-1">{{ $t('unixTimestampHelp') }}</p>
+                                        </template>
 
-                                    <!-- Default text input for other fields -->
-                                    <template v-else>
-                                        <UInput v-model="facet.value" />
-                                    </template>
-                                </UFormField>
-                            </div>
+                                        <!-- Default text input for other fields -->
+                                        <template v-else>
+                                            <UInput v-model="facet.value" />
+                                        </template>
+                                    </UFormField>
+                                </div>
 
-                            <!-- Remove facet button -->
-                            <div class="flex items-center pt-8 md:w-10">
-                                <UButton color="red" variant="ghost" icon="i-lucide-trash-2"
-                                    @click="removeFacet(facet.id)" />
+                                <!-- Remove facet button -->
+                                <div class="flex items-center pt-8 md:w-10">
+                                    <UButton color="red" variant="ghost" icon="i-lucide-trash-2"
+                                        @click="removeFacet(facet.id)" />
+                                </div>
                             </div>
                         </div>
                     </div>
-                </div>
 
-                <div v-else class="text-center py-4 text-gray-500">
-                    {{ $t('noFilters') }}
-                </div>
-            </UCard>
-        </div>
+                    <div v-else class="text-center py-4 text-gray-500">
+                        {{ $t('noFilters') }}
+                    </div>
+                </UCard>
+            </div>
 
-        <!-- Sort and limit controls -->
-        <div class="mb-6">
-            <UCard>
-                <template #header>
-                    <h2 class="text-lg font-medium">{{ $t('options') }}</h2>
-                </template>
+            <!-- Sort and limit controls -->
+            <div class="mb-6">
+                <UCard>
+                    <template #header>
+                        <h2 class="text-lg font-medium">{{ $t('options') }}</h2>
+                    </template>
 
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div class="sort-controls">
-                        <h3 class="text-md font-medium mb-2">{{ $t('sort') }}</h3>
-                        <div class="flex flex-wrap md:flex-nowrap gap-3">
-                            <USelect v-model="sortField" :items="FIELD_OPTIONS" class="flex-1" />
-                            <USelect v-model="sortDirection" :items="SORT_DIRECTION_OPTIONS" class="w-40" />
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div class="sort-controls">
+                            <h3 class="text-md font-medium mb-2">{{ $t('sort') }}</h3>
+                            <div class="flex flex-wrap md:flex-nowrap gap-3">
+                                <USelect v-model="sortField" :items="FIELD_OPTIONS" class="flex-1" />
+                                <USelect v-model="sortDirection" :items="SORT_DIRECTION_OPTIONS" class="w-40" />
+                            </div>
+                        </div>
+
+                        <div class="limit-controls">
+                            <h3 class="text-md font-medium mb-2">{{ $t('limit') }}</h3>
+                            <UInput v-model.number="limit" type="number" :min="1" :max="MAX_LIMIT" />
+                            <p class="text-xs text-gray-500 mt-1">{{ $t('maxLimit', { max: MAX_LIMIT }) }}</p>
                         </div>
                     </div>
+                </UCard>
+            </div>
+        </template>
 
-                    <div class="limit-controls">
-                        <h3 class="text-md font-medium mb-2">{{ $t('limit') }}</h3>
-                        <UInput v-model.number="limit" type="number" :min="1" :max="MAX_LIMIT" />
-                        <p class="text-xs text-gray-500 mt-1">{{ $t('maxLimit', { max: MAX_LIMIT }) }}</p>
+        <!-- Query execution controls and Save Query fields -->
+        <template v-if="showSaveFields">
+            <div class="mb-6 flex gap-4">
+                <UButton color="primary" icon="i-lucide-search" :loading="isLoading" @click="executeQuery">
+                    {{ $t('executeQuery') }}
+                </UButton>
+                <UButton color="primary" icon="i-lucide-save" @click="saveQuery" :loading="isSaving">
+                    {{ savedQueryId ? 'Update Query' : 'Save Query' }}
+                </UButton>
+                <UCheckbox v-model="generateQuery" name="auto-generate">
+                    {{ $t('autoGenerateQuery') }}
+                </UCheckbox>
+                <UButton v-if="!generateQuery" @click="updateQuery">{{ $t('generateQuery') }}</UButton>
+            </div>
+
+            <!-- Save Query fields -->
+            <div class="mb-6">
+                <UCard>
+                    <template #header>
+                        <h2 class="text-lg font-medium">{{ savedQueryId ? 'Update Query' : 'Save Query' }}</h2>
+                    </template>
+                    <div class="flex flex-col md:flex-row gap-4 items-start">
+                        <div class="flex-1">
+                            <UFormField label="Title">
+                                <UInput id="saveTitle" v-model="saveTitle" placeholder="Enter a title for your query"
+                                    required />
+                            </UFormField>
+                        </div>
+                        <div class="flex-1">
+                            <UFormField label="Description">
+                                <UTextarea id="saveDescription" v-model="saveDescription"
+                                    placeholder="Describe this query (optional)" />
+                            </UFormField>
+                        </div>
                     </div>
-                </div>
-            </UCard>
-        </div>
-
-        <!-- Query execution controls -->
-        <div class="mb-6 flex gap-4">
-            <UButton color="primary" icon="i-lucide-search" :loading="isLoading" @click="executeQuery">
-                {{ $t('executeQuery') }}
-            </UButton>
-
-            <UCheckbox v-model="generateQuery" name="auto-generate">
-                {{ $t('autoGenerateQuery') }}
-            </UCheckbox>
-
-            <UButton v-if="!generateQuery" @click="updateQuery">{{ $t('generateQuery') }}</UButton>
-        </div>
+                    <div v-if="saveError" class="text-red-600 mt-2">{{ saveError }}</div>
+                </UCard>
+            </div>
+        </template>
 
         <!-- Error display -->
         <UAlert v-if="error" color="red" class="mb-6">
@@ -852,8 +1116,8 @@ if (facets.value.length === 0) {
             <template #description>{{ error }}</template>
         </UAlert>
 
-        <!-- Query preview -->
-        <UCard v-if="generatedQuery && !queryResult" class="mb-6">
+        <!-- Query preview - only show when editing -->
+        <UCard v-if="showSaveFields && generatedQuery" class="mb-6">
             <template #header>
                 <h2 class="text-lg font-medium">{{ $t('generatedQuery') }}</h2>
             </template>
@@ -862,7 +1126,7 @@ if (facets.value.length === 0) {
 
         <!-- Query results visualization with transformed data and pagination -->
         <div v-if="queryResult" class="mb-6">
-            <div class="flex justify-between items-center mb-4">
+            <div v-if="showSaveFields" class="flex justify-between items-center mb-4">
                 <h2 class="text-lg font-medium">{{ $t('results') }}</h2>
                 <UBadge color="primary" class="text-sm">
                     {{ $t('resultCount', { count: queryResult.length }) }}
