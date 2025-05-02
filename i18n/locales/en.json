@@ -310,6 +310,7 @@
     "queryBuilderDescription": "Build complex queries to search through EVE Online killmails",
     "paginationLimitWarning": "Maximum of {max} pages available. To see more results, use more specific filters.",
     "page": "Page {page}",
+    "members": "Members",
     "about": {
         "pageTitle": "About EVE-KILL",
         "title": "About EVE-KILL",
@@ -363,5 +364,97 @@
         }
     },
     "ascending": "Ascending",
-    "descending": "Descending"
+    "descending": "Descending",
+    "grid": "Grid",
+    "table": "Table",
+    "joinDate": "Join Date",
+    "leaveDate": "Leave Date",
+    "present": "Present",
+    "retry": "Retry",
+    "common": {
+        "page": "Page {page}",
+        "error": "Error",
+        "errorLoading": "Error loading data",
+        "errorLoadingData": "Error loading data",
+        "retry": "Retry",
+        "tryAgain": "Try Again",
+        "goToHomepage": "Go to Homepage",
+        "goHome": "Go Home",
+        "cancel": "Cancel"
+    },
+    "corporation": {
+        "noMembers": "No members found",
+        "noAllianceHistory": "No alliance history found",
+        "topShips": "Top Ships",
+        "topSystems": "Top Systems",
+        "topRegions": "Top Regions",
+        "noDescription": "No description available",
+        "notFound": "Corporation Not Found",
+        "corporationDoesNotExist": "The corporation you are looking for does not exist or has not been indexed yet."
+    },
+    "character": {
+        "noCorporationHistory": "No corporation history found",
+        "topShips": "Top Ships",
+        "topSystems": "Top Systems",
+        "topRegions": "Top Regions",
+        "notFound": "Character Not Found",
+        "characterDoesNotExist": "The character you are looking for does not exist or has not been indexed yet.",
+        "characterPage": "Character Page"
+    },
+    "topBox": {
+        "top": "Top",
+        "characters": "Characters",
+        "corporations": "Corporations",
+        "alliances": "Alliances",
+        "ships": "Ships",
+        "systems": "Systems",
+        "constellations": "Constellations",
+        "regions": "Regions"
+    },
+    "navbar": {
+        "menuNavigation": "Navigation",
+        "menuTools": "Tools"
+    },
+    "auth": {
+        "loggingOut": "Logging out...",
+        "signIn": "Sign In",
+        "signInWithEve": "Sign in with your EVE Online account",
+        "customizeScopes": "Customize Permissions",
+        "customizeScopesInfo": "Select which permissions you want to grant",
+        "loading": "Loading...",
+        "alreadySignedIn": "You are already signed in",
+        "privacyNote": "We only use your EVE Online data to provide services on this site"
+    },
+    "user": {
+        "settings": "Settings",
+        "logout": "Logout",
+        "tokenExpires": "Token Expires",
+        "permissions": "Permissions"
+    },
+    "settings": {
+        "deleteData": "Delete Data",
+        "deleteAccountConfirmTitle": "Delete Account Data",
+        "deleteAccountConfirmMessage": "Are you sure you want to delete all your account data? This action cannot be undone.",
+        "permanentActionWarning": "This is a permanent action and cannot be undone",
+        "confirmDelete": "Confirm Delete",
+        "authenticationStatus": "Authentication Status",
+        "authenticated": "Authenticated",
+        "reauthenticate": "Reauthenticate",
+        "permissionsDescription": "These are the permissions you have granted to this application",
+        "permissionsNote": "You can customize these permissions by logging out and signing in again"
+    },
+    "search": {
+        "noResultsTitle": "No Results Found",
+        "noResultsDesc": "Try a different search term or check your spelling",
+        "initialMessage": "Search for characters, corporations, alliances, items, and more"
+    },
+    "top": {
+        "characters": "Top Characters",
+        "corporations": "Top Corporations",
+        "alliances": "Top Alliances",
+        "ships": "Top Ships",
+        "systems": "Top Systems",
+        "constellations": "Top Constellations",
+        "regions": "Top Regions"
+    }
 }
