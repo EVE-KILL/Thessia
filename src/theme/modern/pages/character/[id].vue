@@ -43,16 +43,18 @@
                                 <h1 class="text-xl md:text-2xl font-bold">{{ character.name }}</h1>
                                 <NuxtLink :to="`/corporation/${character.corporation_id}`"
                                     class="hover:underline text-gray-300">
-                                    {{ (character as any).corporation_name }}
+                                    {{ (character as any).corporation_name || 'Unknown Corporation' }}
                                 </NuxtLink>
                                 <div v-if="(character as any).title" class="text-gray-400 text-sm">
                                     {{ (character as any).title }}
                                 </div>
-                                <NuxtLink v-if="character.alliance_id" :to="`/alliance/${character.alliance_id}`"
+                                <NuxtLink v-if="character.alliance_id && (character as any).alliance_name"
+                                    :to="`/alliance/${character.alliance_id}`"
                                     class="hover:underline text-gray-300 block">
                                     {{ (character as any).alliance_name }}
                                 </NuxtLink>
-                                <NuxtLink v-if="character.faction_id" :to="`/faction/${character.faction_id}`"
+                                <NuxtLink v-if="character.faction_id && (character as any).faction_name"
+                                    :to="`/faction/${character.faction_id}`"
                                     class="hover:underline text-gray-300 block">
                                     {{ (character as any).faction_name }}
                                 </NuxtLink>
@@ -85,22 +87,22 @@
                                         <div class="flex justify-between">
                                             <span class="text-gray-300">{{ $t('kills') }}:</span>
                                             <span class="text-white font-medium">{{ formatNumber(validShortStats.kills)
-                                                }}</span>
+                                            }}</span>
                                         </div>
                                         <div class="flex justify-between">
                                             <span class="text-gray-300">{{ $t('losses') }}:</span>
                                             <span class="text-white font-medium">{{ formatNumber(validShortStats.losses)
-                                                }}</span>
+                                            }}</span>
                                         </div>
                                         <div class="flex justify-between">
                                             <span class="text-gray-300">{{ $t('isk') + ' ' + $t('killed') }}:</span>
                                             <span class="text-white font-medium">{{ formatIsk(validShortStats.iskKilled)
-                                                }}</span>
+                                            }}</span>
                                         </div>
                                         <div class="flex justify-between">
                                             <span class="text-gray-300">{{ $t('isk') + ' ' + $t('lost') }}:</span>
                                             <span class="text-white font-medium">{{ formatIsk(validShortStats.iskLost)
-                                                }}</span>
+                                            }}</span>
                                         </div>
                                     </div>
 
@@ -124,7 +126,7 @@
                                         <div class="flex justify-between">
                                             <span class="text-gray-300">{{ $t('dangerRatio') }}:</span>
                                             <span class="text-white font-medium">{{ calcDangerRatio(validShortStats)
-                                                }}%</span>
+                                            }}%</span>
                                         </div>
                                     </div>
                                 </template>
@@ -288,9 +290,7 @@ const shortStatsLoading = ref(true);
 const shortStatsData = ref<IShortStats | { error: string } | null>(null);
 
 onMounted(() => {
-    $fetch<IShortStats | { error: string } | null>(`/api/characters/${id}/shortstats`, {
-        timeout: 5000,
-    })
+    $fetch<IShortStats | { error: string } | null>(`/api/characters/${id}/shortstats`)
         .then(data => {
             shortStatsData.value = data;
             shortStatsLoading.value = false;

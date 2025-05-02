@@ -23,6 +23,16 @@
                                     class="text-gray-400 text-sm mt-1">
                                     {{ $t('lastActive') }}: {{ formatDate(validShortStats.lastActive) }}
                                 </div>
+                                <div v-if="alliance.corporation_count !== undefined" class="text-gray-400 text-sm mt-1">
+                                    {{ $t('corporations') }}: {{ formatNumber(alliance.corporation_count) }}
+                                </div>
+                                <div v-if="alliance.member_count !== undefined" class="text-gray-400 text-sm mt-1">
+                                    {{ $t('members') }}: {{ formatNumber(alliance.member_count) }}
+                                </div>
+                                <div v-if="alliance.faction_id && alliance.faction_name"
+                                    class="text-gray-400 text-sm mt-1">
+                                    {{ $t('faction') }}: {{ alliance.faction_name }}
+                                </div>
                             </div>
                             <!-- Alliance stats - Client-only to prevent SSR bottleneck -->
                             <ClientOnly>
@@ -38,25 +48,25 @@
                                                 <span class="text-gray-300">{{ $t('kills') }}:</span>
                                                 <span class="text-white font-medium">{{
                                                     formatNumber(validShortStats.kills)
-                                                }}</span>
+                                                    }}</span>
                                             </div>
                                             <div class="flex justify-between">
                                                 <span class="text-gray-300">{{ $t('losses') }}:</span>
                                                 <span class="text-white font-medium">{{
                                                     formatNumber(validShortStats.losses)
-                                                }}</span>
+                                                    }}</span>
                                             </div>
                                             <div class="flex justify-between">
                                                 <span class="text-gray-300">{{ $t('isk') + ' ' + $t('killed') }}:</span>
                                                 <span class="text-white font-medium">{{
                                                     formatIsk(validShortStats.iskKilled)
-                                                }}</span>
+                                                    }}</span>
                                             </div>
                                             <div class="flex justify-between">
                                                 <span class="text-gray-300">{{ $t('isk') + ' ' + $t('lost') }}:</span>
                                                 <span class="text-white font-medium">{{
                                                     formatIsk(validShortStats.iskLost)
-                                                }}</span>
+                                                    }}</span>
                                             </div>
                                         </div>
                                         <div class="space-y-1">
@@ -72,14 +82,14 @@
                                             </div>
                                             <div class="flex justify-between">
                                                 <span class="text-gray-300">{{ $t('solo') + ' ' + $t('losses')
-                                                }}:</span>
+                                                    }}:</span>
                                                 <span class="text-white font-medium">{{
                                                     formatNumber(validShortStats.soloLosses) }}</span>
                                             </div>
                                             <div class="flex justify-between">
                                                 <span class="text-gray-300">{{ $t('dangerRatio') }}:</span>
                                                 <span class="text-white font-medium">{{ calcDangerRatio(validShortStats)
-                                                }}%</span>
+                                                    }}%</span>
                                             </div>
                                         </div>
                                     </template>
@@ -225,9 +235,7 @@ const shortStatsData = ref<IShortStats | { error: string } | null>(null)
 // Only fetch shortstats on client-side to prevent SSR bottleneck
 onMounted(() => {
     // Use $fetch instead of useFetch to ensure it only runs on client
-    $fetch<IShortStats | { error: string } | null>(`/api/alliances/${allianceId}/shortstats`, {
-        timeout: 5000, // 5 second timeout
-    })
+    $fetch<IShortStats | { error: string } | null>(`/api/alliances/${allianceId}/shortstats`)
         .then(data => {
             shortStatsData.value = data
             shortStatsLoading.value = false

@@ -29,16 +29,19 @@
               <div class="md:w-1/3 mb-4 md:mb-0">
                 <h1 class="text-xl md:text-2xl font-bold">{{ corporation.name }}</h1>
                 <div class="text-gray-300">{{ corporation.ticker }}</div>
-                <NuxtLink v-if="corporation.alliance_id" :to="`/alliance/${corporation.alliance_id}`"
-                  class="hover:underline text-gray-300 block">
+                <NuxtLink v-if="corporation.alliance_id && corporation.alliance_name"
+                  :to="`/alliance/${corporation.alliance_id}`" class="hover:underline text-gray-300 block">
                   {{ corporation.alliance_name }}
                 </NuxtLink>
-                <NuxtLink v-if="corporation.faction_id" :to="`/faction/${corporation.faction_id}`"
-                  class="hover:underline text-gray-300 block">
+                <NuxtLink v-if="corporation.faction_id && corporation.faction_name"
+                  :to="`/faction/${corporation.faction_id}`" class="hover:underline text-gray-300 block">
                   {{ corporation.faction_name }}
                 </NuxtLink>
                 <div v-if="!shortStatsLoading && validShortStats?.lastActive" class="text-gray-400 text-sm mt-1">
                   {{ $t('lastActive') }}: {{ formatDate(validShortStats.lastActive) }}
+                </div>
+                <div v-if="corporation.member_count !== undefined" class="text-gray-400 text-sm mt-1">
+                  {{ $t('members') }}: {{ formatNumber(corporation.member_count) }}
                 </div>
               </div>
               <!-- Corporation stats -->
@@ -208,9 +211,7 @@ const shortStatsLoading = ref(true)
 const shortStatsData = ref<IShortStats | { error: string } | null>(null)
 
 onMounted(() => {
-  $fetch<IShortStats | { error: string } | null>(`/api/corporations/${corporationId}/shortstats`, {
-    timeout: 5000,
-  })
+  $fetch<IShortStats | { error: string } | null>(`/api/corporations/${corporationId}/shortstats`)
     .then(data => {
       shortStatsData.value = data
       shortStatsLoading.value = false
