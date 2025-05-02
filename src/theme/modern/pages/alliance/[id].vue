@@ -24,60 +24,78 @@
                                     {{ $t('lastActive') }}: {{ formatDate(validShortStats.lastActive) }}
                                 </div>
                             </div>
-                            <!-- Alliance stats -->
-                            <div class="md:flex-grow grid grid-cols-1 md:grid-cols-2 gap-4">
-                                <UCard v-if="shortStatsLoading"
-                                    class="col-span-2 h-32 flex items-center justify-center bg-black bg-opacity-20">
-                                    <UIcon name="i-lucide-loader-2" class="animate-spin text-gray-400" size="lg" />
-                                    <span class="ml-2 text-gray-400">{{ $t('loading') }}</span>
-                                </UCard>
-                                <template v-else-if="validShortStats">
-                                    <div class="space-y-1">
-                                        <div class="flex justify-between">
-                                            <span class="text-gray-300">{{ $t('kills') }}:</span>
-                                            <span class="text-white font-medium">{{ formatNumber(validShortStats.kills)
-                                            }}</span>
+                            <!-- Alliance stats - Client-only to prevent SSR bottleneck -->
+                            <ClientOnly>
+                                <div class="md:flex-grow grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <UCard v-if="shortStatsLoading"
+                                        class="col-span-2 h-32 flex items-center justify-center bg-black bg-opacity-20">
+                                        <UIcon name="i-lucide-loader-2" class="animate-spin text-gray-400" size="lg" />
+                                        <span class="ml-2 text-gray-400">{{ $t('loading') }}</span>
+                                    </UCard>
+                                    <template v-else-if="validShortStats">
+                                        <div class="space-y-1">
+                                            <div class="flex justify-between">
+                                                <span class="text-gray-300">{{ $t('kills') }}:</span>
+                                                <span class="text-white font-medium">{{
+                                                    formatNumber(validShortStats.kills)
+                                                }}</span>
+                                            </div>
+                                            <div class="flex justify-between">
+                                                <span class="text-gray-300">{{ $t('losses') }}:</span>
+                                                <span class="text-white font-medium">{{
+                                                    formatNumber(validShortStats.losses)
+                                                }}</span>
+                                            </div>
+                                            <div class="flex justify-between">
+                                                <span class="text-gray-300">{{ $t('isk') + ' ' + $t('killed') }}:</span>
+                                                <span class="text-white font-medium">{{
+                                                    formatIsk(validShortStats.iskKilled)
+                                                }}</span>
+                                            </div>
+                                            <div class="flex justify-between">
+                                                <span class="text-gray-300">{{ $t('isk') + ' ' + $t('lost') }}:</span>
+                                                <span class="text-white font-medium">{{
+                                                    formatIsk(validShortStats.iskLost)
+                                                }}</span>
+                                            </div>
                                         </div>
-                                        <div class="flex justify-between">
-                                            <span class="text-gray-300">{{ $t('losses') }}:</span>
-                                            <span class="text-white font-medium">{{ formatNumber(validShortStats.losses)
-                                            }}</span>
+                                        <div class="space-y-1">
+                                            <div class="flex justify-between">
+                                                <span class="text-gray-300">{{ $t('npc') + ' ' + $t('losses') }}:</span>
+                                                <span class="text-white font-medium">{{
+                                                    formatNumber(validShortStats.npcLosses) }}</span>
+                                            </div>
+                                            <div class="flex justify-between">
+                                                <span class="text-gray-300">{{ $t('solo') + ' ' + $t('kills') }}:</span>
+                                                <span class="text-white font-medium">{{
+                                                    formatNumber(validShortStats.soloKills) }}</span>
+                                            </div>
+                                            <div class="flex justify-between">
+                                                <span class="text-gray-300">{{ $t('solo') + ' ' + $t('losses')
+                                                }}:</span>
+                                                <span class="text-white font-medium">{{
+                                                    formatNumber(validShortStats.soloLosses) }}</span>
+                                            </div>
+                                            <div class="flex justify-between">
+                                                <span class="text-gray-300">{{ $t('dangerRatio') }}:</span>
+                                                <span class="text-white font-medium">{{ calcDangerRatio(validShortStats)
+                                                }}%</span>
+                                            </div>
                                         </div>
-                                        <div class="flex justify-between">
-                                            <span class="text-gray-300">{{ $t('isk') + ' ' + $t('killed') }}:</span>
-                                            <span class="text-white font-medium">{{ formatIsk(validShortStats.iskKilled)
-                                            }}</span>
-                                        </div>
-                                        <div class="flex justify-between">
-                                            <span class="text-gray-300">{{ $t('isk') + ' ' + $t('lost') }}:</span>
-                                            <span class="text-white font-medium">{{ formatIsk(validShortStats.iskLost)
-                                            }}</span>
-                                        </div>
-                                    </div>
-                                    <div class="space-y-1">
-                                        <div class="flex justify-between">
-                                            <span class="text-gray-300">{{ $t('npc') + ' ' + $t('losses') }}:</span>
-                                            <span class="text-white font-medium">{{
-                                                formatNumber(validShortStats.npcLosses) }}</span>
-                                        </div>
-                                        <div class="flex justify-between">
-                                            <span class="text-gray-300">{{ $t('solo') + ' ' + $t('kills') }}:</span>
-                                            <span class="text-white font-medium">{{
-                                                formatNumber(validShortStats.soloKills) }}</span>
-                                        </div>
-                                        <div class="flex justify-between">
-                                            <span class="text-gray-300">{{ $t('solo') + ' ' + $t('losses') }}:</span>
-                                            <span class="text-white font-medium">{{
-                                                formatNumber(validShortStats.soloLosses) }}</span>
-                                        </div>
-                                        <div class="flex justify-between">
-                                            <span class="text-gray-300">{{ $t('dangerRatio') }}:</span>
-                                            <span class="text-white font-medium">{{ calcDangerRatio(validShortStats)
-                                            }}%</span>
-                                        </div>
+                                    </template>
+                                </div>
+                                <!-- Fallback for when ClientOnly is still loading -->
+                                <template #fallback>
+                                    <div class="md:flex-grow grid grid-cols-1 md:grid-cols-2 gap-4">
+                                        <UCard
+                                            class="col-span-2 h-32 flex items-center justify-center bg-black bg-opacity-20">
+                                            <UIcon name="i-lucide-loader-2" class="animate-spin text-gray-400"
+                                                size="lg" />
+                                            <span class="ml-2 text-gray-400">{{ $t('loading') }}</span>
+                                        </UCard>
                                     </div>
                                 </template>
-                            </div>
+                            </ClientOnly>
                         </div>
                     </div>
                 </div>
@@ -143,7 +161,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref } from 'vue'
+import { computed, ref, onMounted } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useRoute, useRouter } from 'vue-router'
 import AllianceCombined from '~/src/theme/modern/components/alliance/AllianceCombined.vue'
@@ -177,16 +195,26 @@ interface IShortStats {
     lastActive: string | null;
 }
 
-const { data: shortStatsData, pending: shortStatsLoading } = await useFetch<IShortStats | { error: string } | null>(
-    `/api/alliances/${allianceId}/shortstats`,
-    {
+// Initialize shortstats data - will be fetched only on client side
+const shortStatsLoading = ref(true)
+const shortStatsData = ref<IShortStats | { error: string } | null>(null)
+
+// Only fetch shortstats on client-side to prevent SSR bottleneck
+onMounted(() => {
+    // Use $fetch instead of useFetch to ensure it only runs on client
+    $fetch<IShortStats | { error: string } | null>(`/api/alliances/${allianceId}/shortstats`, {
         timeout: 5000, // 5 second timeout
-        onResponseError(context) {
-            console.error('Error fetching alliance short stats:', context.error)
-            return { error: 'Failed to fetch alliance stats' }
-        }
-    }
-)
+    })
+        .then(data => {
+            shortStatsData.value = data
+            shortStatsLoading.value = false
+        })
+        .catch(error => {
+            console.error('Error fetching alliance short stats:', error)
+            shortStatsLoading.value = false
+            shortStatsData.value = { error: 'Failed to fetch alliance stats' }
+        })
+})
 
 const validShortStats = computed(() => {
     if (shortStatsData.value && !('error' in shortStatsData.value)) {

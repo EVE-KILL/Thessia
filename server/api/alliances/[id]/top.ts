@@ -4,12 +4,12 @@ import { topRegions, topShips, topSystems } from '~/server/helpers/TopLists';
 
 export default defineEventHandler(async (event: H3Event) => {
     const query = getQuery(event);
-    const corporationId: number | null = event.context.params?.id
+    const allianceId: number | null = event.context.params?.id
         ? Number.parseInt(event.context.params.id)
         : null;
     const topType = (query.type as string) || "";
-    if (!corporationId) {
-        return sendError(event, createError({ statusCode: 400, statusMessage: "Corporation ID not provided" }));
+    if (!allianceId) {
+        return sendError(event, createError({ statusCode: 400, statusMessage: "Alliance ID not provided" }));
     }
 
     if (topType === "") {
@@ -18,12 +18,12 @@ export default defineEventHandler(async (event: H3Event) => {
 
     switch (topType) {
         case "ships":
-            return await topShips("corporation_id", corporationId, 7, 10);
+            return await topShips("alliance_id", allianceId, 7, 10);
 
         case "systems":
-            return await topSystems("corporation_id", corporationId, 7, 10);
+            return await topSystems("alliance_id", allianceId, 7, 10);
 
         case "regions":
-            return await topRegions("corporation_id", corporationId, 7, 10);
+            return await topRegions("alliance_id", allianceId, 7, 10);
     }
 });
