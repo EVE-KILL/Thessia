@@ -13,13 +13,11 @@
             <!-- Alliance, Faction logos -->
             <div class="flex flex-row md:flex-col gap-2 mt-2 md:mt-0">
               <NuxtLink v-if="corporation.alliance_id" :to="`/alliance/${corporation.alliance_id}`" class="block">
-                <Image type="alliance" :id="corporation.alliance_id"
-                  :alt="`Alliance: ${corporation.alliance_name}`"
+                <Image type="alliance" :id="corporation.alliance_id" :alt="`Alliance: ${corporation.alliance_name}`"
                   class="rounded-full w-12 h-12 md:w-16 md:h-16" format="webp" size="64" />
               </NuxtLink>
               <NuxtLink v-if="corporation.faction_id" :to="`/faction/${corporation.faction_id}`" class="block">
-                <Image type="corporation" :id="corporation.faction_id"
-                  :alt="`Faction: ${corporation.faction_name}`"
+                <Image type="corporation" :id="corporation.faction_id" :alt="`Faction: ${corporation.faction_name}`"
                   class="rounded-full w-12 h-12 md:w-16 md:h-16" format="webp" size="64" />
               </NuxtLink>
             </div>
@@ -154,7 +152,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref } from 'vue'
+import { computed, ref, onMounted } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useRoute, useRouter } from 'vue-router'
 import CorporationCombined from '~/src/theme/modern/components/corporation/CorporationCombined.vue'
@@ -182,9 +180,23 @@ interface IShortStats {
   lastActive: string | null;
 }
 
-const { data: shortStatsData, pending: shortStatsLoading } = await useFetch<IShortStats | { error: string } | null>(
-  `/api/corporations/${corporationId}/shortstats`
-)
+const shortStatsLoading = ref(true)
+const shortStatsData = ref<IShortStats | { error: string } | null>(null)
+
+onMounted(() => {
+  $fetch<IShortStats | { error: string } | null>(`/api/corporations/${corporationId}/shortstats`, {
+    timeout: 5000,
+  })
+    .then(data => {
+      shortStatsData.value = data
+      shortStatsLoading.value = false
+    })
+    .catch(error => {
+      console.error('Error fetching corporation short stats:', error)
+      shortStatsLoading.value = false
+      shortStatsData.value = { error: 'Failed to fetch corporation stats' }
+    })
+})
 
 const validShortStats = computed(() => {
   if (shortStatsData.value && !('error' in shortStatsData.value)) {
@@ -290,6 +302,7 @@ const formatDate = (dateString: string) => {
   border-radius: 0.5rem;
   padding: 1rem;
 }
+
 @media (prefers-color-scheme: dark) {
   .tab-content {
     background-color: rgba(17, 24, 39, 0.3);

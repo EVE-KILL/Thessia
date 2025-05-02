@@ -1,4 +1,4 @@
-import { defineEventHandler } from "h3";
+import { defineEventHandler, getQuery } from "h3";
 import { Corporations } from "~/server/models/Corporations";
 
 export default defineEventHandler(async (event) => {
@@ -9,14 +9,26 @@ export default defineEventHandler(async (event) => {
         return { error: "Alliance ID not provided" };
     }
 
-    // Find all corporations that are in this alliance
-    const corporations = await Corporations.find(
-        { alliance_id: allianceId },
-        { _id: 0, corporation_id: 1, name: 1 },
-    );
-    if (corporations.length === 0) {
-        return { error: "No corporations found" };
-    }
+    const query = getQuery(event);
+    const page = query.page ? Math.max(1, Number.parseInt(query.page as string)) : 1;
+    const limit = query.limit ? Math.min(1000, Math.max(1, Number.parseInt(query.limit as string))) : 1000;
+    const skip = (page - 1) * limit;
 
-    return corporations;
+    // Find all corporations that are in this alliance (paginated)
+    const [corporations, total] = await Promise.all([
+        Corporations.find(
+            { alliance_id: allianceId },
+            { _id: 0, corporation_id: 1, name: 1 },
+        ).skip(skip).limit(limit).lean(),
+        Corporations.countDocuments({ alliance_id: allianceId })
+    ]);
+
+    return {
+        corporations,
+        total,
+        page,
+        limit,
+        pageCount: Math.ceil(total / limit),
+        count: corporations.length,
+    };
 });

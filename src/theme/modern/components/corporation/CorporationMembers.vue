@@ -5,6 +5,16 @@
             <span class="ml-2 text-gray-400">{{ $t('loading') }}</span>
         </div>
         <div v-else-if="members.length > 0">
+            <div class="flex justify-between items-center mb-2">
+                <div class="text-xs text-gray-400">
+                    {{ total }} {{ $t('character') }}<span v-if="pageCount > 1"> ({{ $t('common.page') }} {{ page }} /
+                        {{ pageCount }})</span>
+                </div>
+                <div class="flex-1 flex justify-end">
+                    <UPagination v-if="total > limit" v-model:page="page" :total="total" :items-per-page="limit"
+                        :ui="{ wrapper: 'flex items-center' }" />
+                </div>
+            </div>
             <!-- Tabs for Grid/Table views -->
             <UTabs :items="viewTabs" class="mb-4">
                 <!-- Grid View (Default) -->
@@ -44,6 +54,10 @@
                     </div>
                 </template>
             </UTabs>
+            <div class="flex justify-end mt-6">
+                <UPagination v-if="total > limit" v-model:page="page" :total="total" :items-per-page="limit"
+                    :ui="{ wrapper: 'flex justify-center' }" />
+            </div>
         </div>
         <div v-else class="text-center text-gray-400 py-8">
             {{ $t('corporation.noMembers') }}
@@ -52,7 +66,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue';
+import { ref, watch, onMounted } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useRoute, useRouter } from 'vue-router';
 
@@ -70,8 +84,11 @@ const route = useRoute()
 const router = useRouter()
 const members = ref<IMember[]>([])
 const pending = ref(true)
+const page = ref(1)
+const limit = 1000
+const total = ref(0)
+const pageCount = ref(1)
 
-// Define view tabs
 const viewTabs = [
     {
         id: 'grid',
@@ -88,21 +105,33 @@ const viewTabs = [
 ]
 
 async function fetchMembers() {
-    pending.value = true
+    pending.value = true;
     try {
-        const res = await fetch(`/api/corporations/${props.corporation.corporation_id}/members`)
-        members.value = await res.json()
-    } catch {
-        members.value = []
+        const res = await fetch(`/api/corporations/${props.corporation.corporation_id}/members?page=${page.value}&limit=${limit}`);
+        const data = await res.json();
+        members.value = data.members || [];
+        total.value = data.total || 0;
+        pageCount.value = data.pageCount || 1;
+    } catch (err) {
+        console.log('Error fetching members:', err);
+        members.value = [];
+        total.value = 0;
+        pageCount.value = 1;
     }
-    pending.value = false
+    pending.value = false;
 }
+
+onMounted(() => {
+    fetchMembers();
+});
+
+watch(page, async () => {
+    await fetchMembers();
+});
 
 function goToCharacter(characterId: number) {
     router.push(`/character/${characterId}`)
 }
-
-fetchMembers()
 </script>
 
 <style scoped>

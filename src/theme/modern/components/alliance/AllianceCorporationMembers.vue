@@ -5,6 +5,16 @@
             <span class="ml-2 text-gray-400">{{ $t('loading') }}</span>
         </div>
         <div v-else-if="corporations.length > 0">
+            <div class="flex justify-between items-center mb-2">
+                <div class="text-xs text-gray-400">
+                    {{ total }} {{ $t('corporation') }}<span v-if="pageCount > 1"> ({{ $t('common.page') }} {{ page }} /
+                        {{ pageCount }})</span>
+                </div>
+                <div class="flex-1 flex justify-end">
+                    <UPagination v-if="total > limit" v-model:page="page" :total="total" :items-per-page="limit"
+                        :ui="{ wrapper: 'flex items-center' }" />
+                </div>
+            </div>
             <!-- Tabs for Grid/Table views -->
             <UTabs :items="viewTabs" class="mb-4">
                 <!-- Grid View (Default) -->
@@ -45,6 +55,10 @@
                     </div>
                 </template>
             </UTabs>
+            <div class="flex justify-end mt-6">
+                <UPagination v-if="total > limit" v-model:page="page" :total="total" :items-per-page="limit"
+                    :ui="{ wrapper: 'flex justify-center' }" />
+            </div>
         </div>
         <div v-else class="text-center text-gray-400 py-8">
             {{ $t('alliance.noCorporations') }}
@@ -53,7 +67,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue';
+import { ref, watch, onMounted } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useRoute, useRouter } from 'vue-router';
 
@@ -71,6 +85,10 @@ const route = useRoute()
 const router = useRouter()
 const corporations = ref<ICorporation[]>([])
 const pending = ref(true)
+const page = ref(1)
+const limit = 1000
+const total = ref(0)
+const pageCount = ref(1)
 
 // Define view tabs
 const viewTabs = [
@@ -88,22 +106,34 @@ const viewTabs = [
     }
 ]
 
+watch(page, async (newPage) => {
+    await fetchCorporations();
+});
+
 async function fetchCorporations() {
-    pending.value = true
+    pending.value = true;
     try {
-        const res = await fetch(`/api/alliances/${props.alliance.alliance_id}/corporations`)
-        corporations.value = await res.json()
-    } catch {
-        corporations.value = []
+        const res = await fetch(`/api/alliances/${props.alliance.alliance_id}/corporations?page=${page.value}&limit=${limit}`);
+        const data = await res.json();
+        corporations.value = data.corporations || [];
+        total.value = data.total || 0;
+        pageCount.value = data.pageCount || 1;
+    } catch (err) {
+        console.log('Error fetching corporations:', err);
+        corporations.value = [];
+        total.value = 0;
+        pageCount.value = 1;
     }
-    pending.value = false
+    pending.value = false;
 }
 
 function goToCorporation(corporationId: number) {
     router.push(`/corporation/${corporationId}`)
 }
 
-fetchCorporations()
+onMounted(() => {
+    fetchCorporations();
+});
 </script>
 
 <style scoped>

@@ -216,6 +216,7 @@ import type { TabsItem } from "@nuxt/ui";
 import { formatDistanceToNow } from "date-fns";
 import { de, enUS, es, fr, ja, ko, ru, zhCN } from "date-fns/locale";
 import { useI18n } from "vue-i18n";
+import { computed, ref, onMounted } from 'vue';
 import type { ICharacter } from '~/server/interfaces/ICharacter'; // Add ICharacter import
 // Removed explicit import for CharacterKills - relying on Nuxt auto-import
 
@@ -282,15 +283,24 @@ interface IShortStats {
     lastActive: string | null; // Assuming lastActive is a string or null
 }
 
-// Fetch character short stats
-const shortStatsKey = computed(() => `character-${id}-shortstats-${Date.now()}`);
-const { data: shortStatsData, pending: shortStatsLoading } = useFetch<IShortStats | { error: string } | null>(
-    `/api/characters/${id}/shortstats`,
-    {
-        key: shortStatsKey.value,
-        watch: [() => route.params.id],
-    },
-);
+// Fetch character short stats on client-side
+const shortStatsLoading = ref(true);
+const shortStatsData = ref<IShortStats | { error: string } | null>(null);
+
+onMounted(() => {
+    $fetch<IShortStats | { error: string } | null>(`/api/characters/${id}/shortstats`, {
+        timeout: 5000,
+    })
+        .then(data => {
+            shortStatsData.value = data;
+            shortStatsLoading.value = false;
+        })
+        .catch(error => {
+            console.error('Error fetching character short stats:', error);
+            shortStatsLoading.value = false;
+            shortStatsData.value = { error: 'Failed to fetch character stats' };
+        });
+});
 
 // Computed property for valid short stats
 const validShortStats = computed(() => {
