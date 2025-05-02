@@ -13,6 +13,7 @@ const props = defineProps({
   limit: { type: Number, default: 10 },
   days: { type: Number, default: 7 },
   title: { type: String, default: "" },
+  apiUrl: { type: String, default: "/api/stats" },
 });
 
 const { t, locale } = useI18n();
@@ -44,9 +45,9 @@ const {
   data: entities,
   pending,
   error,
-} = useFetch<ITopEntity[]>("/api/stats", {
+} = useFetch<ITopEntity[]>(props.apiUrl, {
   query: queryParams,
-  key: `top-${props.type}-${props.limit}-${props.days}`,
+  key: `top-${props.type}-${props.limit}-${props.days}-${props.apiUrl}`,
 });
 
 const getLocalizedString = (obj: any, locale: string): string => {

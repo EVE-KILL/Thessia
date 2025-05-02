@@ -19,6 +19,7 @@ const props = defineProps({
     externalKilllistData: { type: Array as PropType<IKillList[]>, default: null },
     enablePagination: { type: Boolean, default: true },
     limit: { type: Number, default: 100 },
+    apiEndpoint: { type: String, default: "/api/killlist" },
 });
 
 // Pagination and display settings
@@ -59,7 +60,7 @@ const {
     error,
     refresh,
 } = !useExternalData.value
-        ? useFetch<IKillList[]>("/api/killlist", {
+        ? useFetch<IKillList[]>(props.apiEndpoint, {
             key: "killlist",
             query: queryParams,
             watch: [queryParams],
@@ -393,10 +394,17 @@ const truncateString = (str: any, num: number): string => {
 };
 
 const isCombinedLoss = (kill: any): boolean => {
-    return (
-        props.combinedKillsAndLosses &&
-        kill.victim[`${props.combinedVictimType}_id`] === props.combinedVictimId
-    );
+    if (!kill || !props.combinedKillsAndLosses) return false;
+
+    const victimIdProp = `${props.combinedVictimType}_id`;
+    const victimId = kill.victim[victimIdProp];
+
+    return victimId === props.combinedVictimId;
+};
+
+// Get row class based on whether it's a combined loss
+const getRowClass = (item) => {
+    return isCombinedLoss(item) ? "combined-loss-row bg-darkred" : "";
 };
 
 const getSecurityColor = (security: number): string => {
@@ -494,11 +502,6 @@ const tableColumns = [
     },
 ];
 
-// Get row class based on whether it's a combined loss
-const getRowClass = (item) => {
-    return isCombinedLoss(item) ? "bg-darkred" : "";
-};
-
 // WebSocket status message
 const wsStatusMessage = computed(() => {
     if (!wsConnected.value) {
@@ -588,13 +591,13 @@ onBeforeUnmount(() => {
                         disabled: 'opacity-50 cursor-not-allowed'
                     }
                 }" :prev-button="{
-                icon: 'i-lucide-chevron-left',
-                label: '',
-                disabled: currentPageIndex === 1  // Disable prev when on page 1
-            }" :next-button="{
-                icon: 'i-lucide-chevron-right',
-                label: ''
-            }" @change="resetWebSocketState">
+                    icon: 'i-lucide-chevron-left',
+                    label: '',
+                    disabled: currentPageIndex === 1  // Disable prev when on page 1
+                }" :next-button="{
+                    icon: 'i-lucide-chevron-right',
+                    label: ''
+                }" @change="resetWebSocketState">
                 <template #default>
                     <span class="mx-2">{{ $t('common.page') }} {{ currentPageIndex }}</span>
                 </template>
@@ -857,13 +860,13 @@ onBeforeUnmount(() => {
                         disabled: 'opacity-50 cursor-not-allowed'
                     }
                 }" :prev-button="{
-                icon: 'i-lucide-chevron-left',
-                label: '',
-                disabled: currentPageIndex === 1  // Disable prev when on page 1
-            }" :next-button="{
-                icon: 'i-lucide-chevron-right',
-                label: ''
-            }" @change="resetWebSocketState">
+                    icon: 'i-lucide-chevron-left',
+                    label: '',
+                    disabled: currentPageIndex === 1  // Disable prev when on page 1
+                }" :next-button="{
+                    icon: 'i-lucide-chevron-right',
+                    label: ''
+                }" @change="resetWebSocketState">
                 <template #default>
                     <span class="mx-2">{{ $t('common.page') }} {{ currentPageIndex }}</span>
                 </template>
@@ -906,9 +909,30 @@ onBeforeUnmount(() => {
     /* Ensure XS size */
 }
 
-/* Custom color class */
+/* Enhanced Custom color class for combined losses */
 .bg-darkred {
-    background-color: rgba(100, 0, 0, 0.3);
+    background-color: rgba(139, 0, 0, 0.4) !important;
+    /* Darker red with more opacity */
+}
+
+/* Add an additional class to ensure it gets applied with higher specificity */
+.combined-loss-row {
+    background-color: rgba(139, 0, 0, 0.4) !important;
+    border-left: 3px solid rgb(220, 38, 38) !important;
+    /* Add a left border for extra visibility */
+}
+
+/* Make sure our class overrides table row styles */
+:deep(tr.combined-loss-row),
+:deep(tr.combined-loss-row td),
+:deep(tr.combined-loss-row:hover) {
+    background-color: rgba(139, 0, 0, 0.4) !important;
+}
+
+/* For mobile view */
+:deep(.mobile-container.combined-loss-row) {
+    background-color: rgba(139, 0, 0, 0.4) !important;
+    border-left: 3px solid rgb(220, 38, 38) !important;
 }
 
 /* Override pagination text size */
@@ -1080,5 +1104,54 @@ onBeforeUnmount(() => {
     50% {
         opacity: 0.4;
     }
+}
+
+/* Direct targeting of the table row elements with more muted red */
+.bg-darkred,
+.combined-loss-row,
+:deep(a.table-row.bg-darkred),
+:deep(a.table-row.combined-loss-row) {
+    background-color: rgba(80, 0, 0, 0.6) !important;
+    border-left: 3px solid rgba(139, 46, 46, 0.8) !important;
+}
+
+/* Target hover states with a slightly darker but still muted red */
+:deep(a.table-row.bg-darkred:hover),
+:deep(a.table-row.combined-loss-row:hover) {
+    background-color: rgba(90, 0, 0, 0.65) !important;
+}
+
+/* Target mobile view as well */
+:deep(.mobile-container.bg-darkred),
+:deep(.mobile-container.combined-loss-row) {
+    background-color: rgba(80, 0, 0, 0.6) !important;
+    border-left: 3px solid rgba(139, 46, 46, 0.8) !important;
+}
+
+/* Target any other nested elements to ensure the background is visible */
+:deep(.table-row.bg-darkred *),
+:deep(.table-row.combined-loss-row *) {
+    position: relative;
+    z-index: 1;
+}
+
+/* Target the specific layout of table rows with more muted pseudo-element background */
+:deep(a.table-row.bg-darkred),
+:deep(a.table-row.combined-loss-row) {
+    position: relative;
+}
+
+:deep(a.table-row.bg-darkred)::before,
+:deep(a.table-row.combined-loss-row)::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(80, 0, 0, 0.6);
+    opacity: 0.7;
+    z-index: 0;
+    pointer-events: none;
 }
 </style>
