@@ -37,9 +37,6 @@
     </div>
 </template>
 <script setup lang="ts">
-import Image from '../common/Image.vue'; // Import the Image component
-import Table from '../common/Table.vue'; // Import the Table component
-
 interface BattleCorporation {
     id: number;
     name: string;

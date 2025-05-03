@@ -31,8 +31,6 @@
     </div>
 </template>
 <script setup lang="ts">
-import Table from '../common/Table.vue'; // Import the Table component
-
 interface BattleCharacter {
     id: number;
     name: string;

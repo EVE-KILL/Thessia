@@ -63,12 +63,6 @@
 import { useFetch } from '#app'
 import { computed, ref, watchEffect } from 'vue'
 import { useRoute } from 'vue-router'
-import BattleAlliances from '~/components/battle/BattleAlliances.vue'
-import BattleCharacters from '~/components/battle/BattleCharacters.vue'
-import BattleCorporations from '~/components/battle/BattleCorporations.vue'
-import BattleKills from '~/components/battle/BattleKills.vue'
-import BattleTeams from '~/components/battle/BattleTeams.vue'
-import BattleTimeline from '~/components/battle/BattleTimeline.vue'
 import formatIsk from '~/src/core/utils/formatIsk'
 
 const route = useRoute()

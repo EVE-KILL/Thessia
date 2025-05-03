@@ -81,8 +81,6 @@
 </template>
 <script setup lang="ts">
 import { computed } from 'vue';
-import Table from '../common/Table.vue'; // Import the Table component
-
 const props = defineProps<{
     killmails: any[],
     battle: any
