@@ -33,7 +33,7 @@
         "cron-parser": "^5.1.1",
         "csv-parser": "^3.2.0",
         "date-fns": "^4.1.0",
-        "discord.js": "^14.19.2",
+        "discord.js": "^14.19.3",
         "dompurify": "^3.2.5",
         "echarts": "^5.6.0",
         "ioredis": "^5.6.1",
