@@ -1,9 +1,9 @@
 <template>
-    <div class="p-4 bg-background-900 rounded-lg shadow-lg text-white">
+    <div class="p-4 bg-background-900 rounded-lg shadow-lg text-black dark:text-white">
         <div v-if="battle && battle.blue_team && battle.red_team">
             <!-- Top Info -->
             <div class="mb-4">
-                <div class="text-lg font-bold">
+                <div class="text-lg font-bold text-black dark:text-white">
                     Battle in System: {{ battle.systemInfo?.name }} ({{ battle.systemInfo?.security_status?.toFixed(2)
                     }}) - {{ battle.systemInfo?.region_name }}
                 </div>
@@ -50,26 +50,26 @@
         </div>
         <div v-else>
             <div v-if="battleData && Array.isArray(battleData) && battleData.length === 0">
-                No battle found for this killmail.
+                <span class="text-black dark:text-white">No battle found for this killmail.</span>
             </div>
             <div v-else>
-                Loading...
+                <span class="text-black dark:text-white">Loading...</span>
             </div>
         </div>
     </div>
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watchEffect } from 'vue'
+import { useFetch } from '#app'
+import { computed, ref, watchEffect } from 'vue'
 import { useRoute } from 'vue-router'
-import BattleTeams from '~/components/battle/BattleTeams.vue'
-import BattleKills from '~/components/battle/BattleKills.vue'
 import BattleAlliances from '~/components/battle/BattleAlliances.vue'
-import BattleCorporations from '~/components/battle/BattleCorporations.vue'
 import BattleCharacters from '~/components/battle/BattleCharacters.vue'
+import BattleCorporations from '~/components/battle/BattleCorporations.vue'
+import BattleKills from '~/components/battle/BattleKills.vue'
+import BattleTeams from '~/components/battle/BattleTeams.vue'
 import BattleTimeline from '~/components/battle/BattleTimeline.vue'
 import formatIsk from '~/src/core/utils/formatIsk'
-import { useFetch } from '#app'
 
 const route = useRoute()
 const id = computed(() => route.params.id)

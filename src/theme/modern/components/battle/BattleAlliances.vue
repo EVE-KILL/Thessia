@@ -2,13 +2,13 @@
     <div class="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4">
         <!-- Blue Team Alliances -->
         <div>
-            <div class="mb-2 text-lg font-bold">Blue Team Alliances</div>
+            <div class="mb-2 text-lg font-bold text-black dark:text-white">Blue Team Alliances</div>
             <Table :columns="allianceColumns" :items="blueTeamAlliances" :bordered="true" :striped="false" :hover="true"
                 density="normal" background="transparent" table-class="alliance-table">
                 <template #cell-name="{ item, column, index }: { item: BattleAlliance, column: any, index: number }">
                     <div class="flex items-center">
                         <Image :type="'alliance'" :id="item.id" :size="24" class="mr-2 rounded-full" />
-                        {{ item.name }}
+                        <span class="text-black dark:text-white">{{ item.name }}</span>
                     </div>
                 </template>
                 <template
@@ -19,13 +19,13 @@
         </div>
         <!-- Red Team Alliances -->
         <div>
-            <div class="mb-2 text-lg font-bold">Red Team Alliances</div>
+            <div class="mb-2 text-lg font-bold text-black dark:text-white">Red Team Alliances</div>
             <Table :columns="allianceColumns" :items="redTeamAlliances" :bordered="true" :striped="false" :hover="true"
                 density="normal" background="transparent" table-class="alliance-table">
                 <template #cell-name="{ item, column, index }: { item: BattleAlliance, column: any, index: number }">
                     <div class="flex items-center">
                         <Image :type="'alliance'" :id="item.id" :size="24" class="mr-2 rounded-full" />
-                        {{ item.name }}
+                        <span class="text-black dark:text-white">{{ item.name }}</span>
                     </div>
                 </template>
                 <template
@@ -37,8 +37,8 @@
     </div>
 </template>
 <script setup lang="ts">
-import Table from '../common/Table.vue'; // Import the Table component
 import Image from '../common/Image.vue'; // Import the Image component
+import Table from '../common/Table.vue'; // Import the Table component
 
 interface BattleAlliance {
     id: number;
@@ -90,13 +90,13 @@ const allianceColumns = [
     transition: background-color 0.3s ease;
 }
 
-.alliance-table :deep(.table-row:hover) {
-    background-color: #1a1a1a;
-    /* Example from original table */
-}
 
 .alliance-table :deep(.body-cell) {
     padding: 0.5rem;
     /* Adjust padding */
+}
+
+.alliance-table :deep(tbody tr):hover {
+    background: light-dark(rgba(229, 231, 235, 0.15), rgba(35, 35, 35, 0.5));
 }
 </style>

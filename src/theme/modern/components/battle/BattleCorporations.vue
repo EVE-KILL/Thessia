@@ -2,13 +2,13 @@
     <div class="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4">
         <!-- Blue Team Corporations -->
         <div>
-            <div class="mb-2 text-lg font-bold">Blue Team Corporations</div>
+            <div class="mb-2 text-lg font-bold text-black dark:text-white">Blue Team Corporations</div>
             <Table :columns="corporationColumns" :items="blueTeamCorporations" :bordered="true" :striped="false"
                 :hover="true" density="normal" background="transparent" table-class="corporation-table">
                 <template #cell-name="{ item, column, index }: { item: BattleCorporation, column: any, index: number }">
                     <div class="flex items-center">
                         <Image :type="'corporation'" :id="item.id" :size="24" class="mr-2 rounded-full" />
-                        {{ item.name }}
+                        <span class="text-black dark:text-white">{{ item.name }}</span>
                     </div>
                 </template>
                 <template
@@ -19,13 +19,13 @@
         </div>
         <!-- Red Team Corporations -->
         <div>
-            <div class="mb-2 text-lg font-bold">Red Team Corporations</div>
+            <div class="mb-2 text-lg font-bold text-black dark:text-white">Red Team Corporations</div>
             <Table :columns="corporationColumns" :items="redTeamCorporations" :bordered="true" :striped="false"
                 :hover="true" density="normal" background="transparent" table-class="corporation-table">
                 <template #cell-name="{ item, column, index }: { item: BattleCorporation, column: any, index: number }">
                     <div class="flex items-center">
                         <Image :type="'corporation'" :id="item.id" :size="24" class="mr-2 rounded-full" />
-                        {{ item.name }}
+                        <span class="text-black dark:text-white">{{ item.name }}</span>
                     </div>
                 </template>
                 <template
@@ -37,8 +37,8 @@
     </div>
 </template>
 <script setup lang="ts">
-import Table from '../common/Table.vue'; // Import the Table component
 import Image from '../common/Image.vue'; // Import the Image component
+import Table from '../common/Table.vue'; // Import the Table component
 
 interface BattleCorporation {
     id: number;
@@ -90,13 +90,13 @@ const corporationColumns = [
     transition: background-color 0.3s ease;
 }
 
-.corporation-table :deep(.table-row:hover) {
-    background-color: #1a1a1a;
-    /* Example from original table */
-}
 
 .corporation-table :deep(.body-cell) {
     padding: 0.5rem;
     /* Adjust padding */
+}
+
+.corporation-table :deep(tbody tr):hover {
+    background: light-dark(rgba(229, 231, 235, 0.15), rgba(35, 35, 35, 0.5));
 }
 </style>

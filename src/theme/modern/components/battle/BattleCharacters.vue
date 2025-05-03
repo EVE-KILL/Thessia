@@ -2,7 +2,7 @@
     <div class="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4">
         <!-- Blue Team Characters -->
         <div>
-            <div class="mb-2 text-lg font-bold">Blue Team Characters</div>
+            <div class="mb-2 text-lg font-bold text-black dark:text-white">Blue Team Characters</div>
             <Table :columns="characterColumns" :items="blueTeamCharacters" :bordered="true" :striped="false"
                 :hover="true" density="normal" background="transparent" table-class="character-table">
                 <template #cell-portrait="{ item }">
@@ -16,7 +16,7 @@
         </div>
         <!-- Red Team Characters -->
         <div>
-            <div class="mb-2 text-lg font-bold">Red Team Characters</div>
+            <div class="mb-2 text-lg font-bold text-black dark:text-white">Red Team Characters</div>
             <Table :columns="characterColumns" :items="redTeamCharacters" :bordered="true" :striped="false"
                 :hover="true" density="normal" background="transparent" table-class="character-table">
                 <template #cell-portrait="{ item }">
@@ -85,8 +85,7 @@ const characterColumns = [
 }
 
 .character-table :deep(.table-row:hover) {
-    background-color: #1a1a1a;
-    /* Example from original table */
+    background: light-dark(rgba(229, 231, 235, 0.15), rgba(35, 35, 35, 0.5));
 }
 
 .character-table :deep(.body-cell) {

@@ -4,30 +4,34 @@
             :striped="false" :hover="true" density="normal" background="transparent" table-class="battle-timeline-table"
             header-class="battle-timeline-header">
             <template #header-blue-losses>
-                <div class="text-right">Blue Team Losses</div>
+                <div class="text-right text-black dark:text-white">Blue Team Losses</div>
             </template>
             <template #header-vs>
-                <div class="text-center">VS</div>
+                <div class="text-center text-black dark:text-white">VS</div>
             </template>
             <template #header-red-losses>
-                <div class="text-left">Red Team Losses</div>
+                <div class="text-left text-black dark:text-white">Red Team Losses</div>
             </template>
 
             <template #cell-blue-losses="{ item }">
                 <template v-if="isBlueTeamKill(item)">
                     <div class="flex justify-end items-center w-full">
                         <div>
-                            <div class="font-bold">{{ truncateString(getLocalizedString(item.victim.ship_name, locale),
-                                20) }}</div>
-                            <div class="text-xs">{{ getLocalizedString(item.victim.ship_group_name, locale) }}</div>
+                            <div class="font-bold text-black dark:text-white">{{
+                                truncateString(getLocalizedString(item.victim.ship_name, locale),
+                                    20) }}</div>
+                            <div class="text-xs text-black dark:text-white">{{
+                                getLocalizedString(item.victim.ship_group_name, locale) }}</div>
                         </div>
                         <div class="mx-4">
-                            <div class="font-bold">{{ item.victim.character_name }}</div>
-                            <div class="text-xs">{{ formatNumber(item.victim.damage_taken) }} damage</div>
+                            <div class="font-bold text-black dark:text-white">{{ item.victim.character_name }}</div>
+                            <div class="text-xs text-black dark:text-white">{{ formatNumber(item.victim.damage_taken) }}
+                                damage</div>
                         </div>
                         <div class="flex flex-col items-end">
                             <div class="flex flex-row items-center">
-                                <div class="text-xs mr-4">{{ formatDate(item.kill_time) }}</div>
+                                <div class="text-xs mr-4 text-black dark:text-white">{{ formatDate(item.kill_time) }}
+                                </div>
                                 <img :src="`https://images.eve-kill.com/types/${item.victim.ship_id}/icon`"
                                     :alt="item.victim.ship_type" class="h-12 w-12" />
                             </div>
@@ -50,17 +54,21 @@
                             <div class="flex flex-row items-center">
                                 <img :src="`https://images.eve-kill.com/types/${item.victim.ship_id}/icon`"
                                     :alt="item.victim.ship_type" class="h-12 w-12" />
-                                <div class="text-xs ml-4">{{ formatDate(item.kill_time) }}</div>
+                                <div class="text-xs ml-4 text-black dark:text-white">{{ formatDate(item.kill_time) }}
+                                </div>
                             </div>
                         </div>
                         <div class="text-center mx-4">
-                            <div class="font-bold">{{ item.victim.character_name }}</div>
-                            <div class="text-xs">{{ formatNumber(item.victim.damage_taken) }} damage</div>
+                            <div class="font-bold text-black dark:text-white">{{ item.victim.character_name }}</div>
+                            <div class="text-xs text-black dark:text-white">{{ formatNumber(item.victim.damage_taken) }}
+                                damage</div>
                         </div>
                         <div class="text-center mx-4">
-                            <div class="font-bold">{{ truncateString(getLocalizedString(item.victim.ship_name, locale),
-                                20) }}</div>
-                            <div class="text-xs">{{ getLocalizedString(item.victim.ship_group_name, locale) }}</div>
+                            <div class="font-bold text-black dark:text-white">{{
+                                truncateString(getLocalizedString(item.victim.ship_name, locale),
+                                    20) }}</div>
+                            <div class="text-xs text-black dark:text-white">{{
+                                getLocalizedString(item.victim.ship_group_name, locale) }}</div>
                         </div>
                     </div>
                 </template>
@@ -160,10 +168,6 @@ const generateKillmailLink = (item: any): string => {
     cursor: pointer;
 }
 
-.battle-timeline-table :deep(.table-row:hover) {
-    background-color: #1a1a1a;
-    /* Example from original table */
-}
 
 .battle-timeline-table :deep(.body-cell) {
     padding: 0.5rem;
@@ -183,5 +187,9 @@ const generateKillmailLink = (item: any): string => {
     /* Match border color */
     margin: 0 auto;
     /* Center the line */
+}
+
+.battle-timeline-table :deep(tbody tr):hover {
+    background: light-dark(rgba(229, 231, 235, 0.15), rgba(35, 35, 35, 0.5));
 }
 </style>

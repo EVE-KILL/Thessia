@@ -2,7 +2,7 @@
     <div class="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4">
         <!-- Blue Team Losses -->
         <div>
-            <div class="mb-2 text-lg font-bold">Blue Team Losses</div>
+            <div class="mb-2 text-lg font-bold text-black dark:text-white">Blue Team Losses</div>
             <Table :columns="killColumns" :items="blueTeamKills" :bordered="true" :striped="false" :hover="true"
                 density="normal" background="transparent" table-class="kill-table" :link-fn="generateKillmailLink">
                 <template #cell-ship="{ item, column, index }: { item: BattleKill, column: any, index: number }">
@@ -11,7 +11,8 @@
                             :alt="`Ship: ${getLocalizedString(item.victim.ship_name, locale)}`"
                             class="w-10 rounded mr-2" />
                         <div>
-                            {{ truncateString(getLocalizedString(item.victim.ship_name, locale), 20) }}<br />
+                            <span class="text-black dark:text-white">{{
+                                truncateString(getLocalizedString(item.victim.ship_name, locale), 20) }}</span><br />
                             <span v-if="item.total_value > 50" class="text-background-400">{{
                                 formatNumber(item.total_value) }} ISK</span>
                         </div>
@@ -22,7 +23,7 @@
                         <img :src="`https://images.eve-kill.com/characters/${item.victim.character_id}/portrait?size=64`"
                             :alt="`Character: ${item.victim.character_name}`" class="w-10 rounded mr-2" />
                         <div>
-                            {{ item.victim.character_name }}<br />
+                            <span class="text-black dark:text-white">{{ item.victim.character_name }}</span><br />
                             <span class="text-background-400">{{ truncateString(item.victim.corporation_name, 22)
                             }}</span>
                         </div>
@@ -34,13 +35,13 @@
                             :key="attacker.character_id || attacker.faction_id">
                             <template v-if="attacker.final_blow">
                                 <template v-if="item.is_npc">
-                                    {{ attacker.faction_name }}<br />
+                                    <span class="text-black dark:text-white">{{ attacker.faction_name }}</span><br />
                                     <span class="text-background-400">{{
                                         truncateString(getLocalizedString(attacker.ship_group_name, locale), 22)
                                     }}</span>
                                 </template>
                                 <template v-else>
-                                    {{ attacker.character_name }}<br />
+                                    <span class="text-black dark:text-white">{{ attacker.character_name }}</span><br />
                                     <span class="text-background-400">{{
                                         truncateString(attacker.corporation_name, 22) }}</span>
                                 </template>
@@ -52,7 +53,7 @@
         </div>
         <!-- Red Team Losses -->
         <div>
-            <div class="mb-2 text-lg font-bold">Red Team Losses</div>
+            <div class="mb-2 text-lg font-bold text-black dark:text-white">Red Team Losses</div>
             <Table :columns="killColumns" :items="redTeamKills" :bordered="true" :striped="false" :hover="true"
                 density="normal" background="transparent" table-class="kill-table" :link-fn="generateKillmailLink">
                 <template #cell-ship="{ item, column, index }: { item: BattleKill, column: any, index: number }">
@@ -61,7 +62,8 @@
                             :alt="`Ship: ${getLocalizedString(item.victim.ship_name, locale)}`"
                             class="w-10 rounded mr-2" />
                         <div>
-                            {{ truncateString(getLocalizedString(item.victim.ship_name, locale), 20) }}<br />
+                            <span class="text-black dark:text-white">{{
+                                truncateString(getLocalizedString(item.victim.ship_name, locale), 20) }}</span><br />
                             <span v-if="item.total_value > 50" class="text-background-400">{{
                                 formatNumber(item.total_value) }} ISK</span>
                         </div>
@@ -72,7 +74,7 @@
                         <img :src="`https://images.eve-kill.com/characters/${item.victim.character_id}/portrait?size=64`"
                             :alt="`Character: ${item.victim.character_name}`" class="w-10 rounded mr-2" />
                         <div>
-                            {{ item.victim.character_name }}<br />
+                            <span class="text-black dark:text-white">{{ item.victim.character_name }}</span><br />
                             <span class="text-background-400">{{ truncateString(item.victim.corporation_name, 22)
                             }}</span>
                         </div>
@@ -84,13 +86,13 @@
                             :key="attacker.character_id || attacker.faction_id">
                             <template v-if="attacker.final_blow">
                                 <template v-if="item.is_npc">
-                                    {{ attacker.faction_name }}<br />
+                                    <span class="text-black dark:text-white">{{ attacker.faction_name }}</span><br />
                                     <span class="text-background-400">{{
                                         truncateString(getLocalizedString(attacker.ship_group_name, locale), 22)
                                     }}</span>
                                 </template>
                                 <template v-else>
-                                    {{ attacker.character_name }}<br />
+                                    <span class="text-black dark:text-white">{{ attacker.character_name }}</span><br />
                                     <span class="text-background-400">{{
                                         truncateString(attacker.corporation_name, 22) }}</span>
                                 </template>
@@ -103,8 +105,6 @@
     </div>
 </template>
 <script setup lang="ts">
-import Table from '../common/Table.vue'; // Import the Table component
-import formatIsk from '~/src/core/utils/formatIsk';
 import { useI18n } from 'vue-i18n'; // Import useI18n
 
 interface BattleKill {
@@ -190,9 +190,8 @@ const killColumns = [
     cursor: pointer;
 }
 
-.kill-table :deep(.table-row:hover) {
-    background-color: #1a1a1a;
-    /* Example from original table */
+.kill-table :deep(tbody tr):hover {
+    background: light-dark(rgba(229, 231, 235, 0.15), rgba(35, 35, 35, 0.5));
 }
 
 .kill-table :deep(.body-cell) {

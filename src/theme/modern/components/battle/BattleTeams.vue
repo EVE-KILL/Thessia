@@ -11,34 +11,34 @@
                 <!-- Blue Team Organizations (Collapsible) -->
                 <div class="organizations-section">
                     <div class="section-header" @click="toggleBlueTeam">
-                        <h3 class="section-title">
+                        <h3 class="section-title text-black dark:text-white">
                             Blue Team Organizations
                         </h3>
                         <Icon :name="isBlueTeamCollapsed ? 'lucide:chevron-down' : 'lucide:chevron-up'"
-                            class="toggle-icon" />
+                            class="toggle-icon text-black dark:text-white" />
                     </div>
 
                     <div v-if="!isBlueTeamCollapsed" class="organizations-content">
                         <!-- Alliances with corporations -->
                         <div v-for="alliance in blueTeamAlliances" :key="alliance.id" class="alliance-group">
                             <div class="alliance-header" @click="toggleAlliance(alliance.id)">
-                                <div class="alliance-name">
+                                <div class="alliance-name text-black dark:text-white">
                                     <NuxtLink v-if="alliance.id" :to="`/alliance/${alliance.id}`" class="entity-link">
                                         <Image v-if="alliance.id" :type="'alliance'" :id="alliance.id" :size="24"
                                             class="org-icon" />
-                                        <span>{{ alliance.name }}</span>
+                                        <span class="text-black dark:text-white">{{ alliance.name }}</span>
                                         <span class="count">({{blueTeamCorporations.filter(corp => corp.alliance_id ===
                                             alliance.id).length}})</span>
                                     </NuxtLink>
                                     <span v-else>
-                                        <span>{{ alliance.name }}</span>
+                                        <span class="text-black dark:text-white">{{ alliance.name }}</span>
                                         <span class="count">({{blueTeamCorporations.filter(corp => corp.alliance_id ===
                                             alliance.id).length}})</span>
                                     </span>
                                 </div>
                                 <Icon
                                     :name="isAllianceCollapsed(alliance.id) ? 'lucide:chevron-down' : 'lucide:chevron-up'"
-                                    class="toggle-icon" />
+                                    class="toggle-icon text-black dark:text-white" />
                             </div>
 
                             <!-- Corporations in alliance -->
@@ -46,12 +46,12 @@
                                 <div v-for="corp in blueTeamCorporations.filter(corp => corp.alliance_id === alliance.id)"
                                     :key="corp.id" class="corporation-item">
                                     <NuxtLink v-if="corp.id" :to="`/corporation/${corp.id}`"
-                                        class="entity-link corporation-name">
+                                        class="entity-link corporation-name text-black dark:text-white">
                                         <Image v-if="corp.id" :type="'corporation'" :id="corp.id" :size="24"
                                             class="org-icon" />
-                                        <span>{{ corp.name }}</span>
+                                        <span class="text-black dark:text-white">{{ corp.name }}</span>
                                     </NuxtLink>
-                                    <span v-else>
+                                    <span v-else class="text-black dark:text-white">
                                         <span>{{ corp.name }}</span>
                                     </span>
                                 </div>
@@ -61,23 +61,23 @@
                         <!-- Corporations without alliance -->
                         <div v-if="blueTeamCorporations.filter(corp => !corp.alliance_id).length > 0"
                             class="no-alliance-section">
-                            <div class="no-alliance-header" @click="toggleStandaloneCorps">
+                            <div class="no-alliance-header text-black dark:text-white" @click="toggleStandaloneCorps">
                                 Standalone Corporations ({{blueTeamCorporations.filter(corp =>
                                     !corp.alliance_id).length}})
                                 <Icon :name="isStandaloneCorpsCollapsed ? 'lucide:chevron-down' : 'lucide:chevron-up'"
-                                    class="toggle-icon" />
+                                    class="toggle-icon text-black dark:text-white" />
                             </div>
 
                             <div v-if="!isStandaloneCorpsCollapsed" class="corporation-list">
                                 <div v-for="corp in blueTeamCorporations.filter(corp => !corp.alliance_id)"
                                     :key="corp.id" class="corporation-item standalone">
                                     <NuxtLink v-if="corp.id" :to="`/corporation/${corp.id}`"
-                                        class="entity-link corporation-name">
+                                        class="entity-link corporation-name text-black dark:text-white">
                                         <Image v-if="corp.id" :type="'corporation'" :id="corp.id" :size="24"
                                             class="org-icon" />
-                                        <span>{{ corp.name }}</span>
+                                        <span class="text-black dark:text-white">{{ corp.name }}</span>
                                     </NuxtLink>
-                                    <span v-else>
+                                    <span v-else class="text-black dark:text-white">
                                         <span>{{ corp.name }}</span>
                                     </span>
                                 </div>
@@ -98,34 +98,36 @@
                 <!-- Red Team Organizations (Collapsible) -->
                 <div class="organizations-section">
                     <div class="section-header" @click="toggleRedTeam">
-                        <h3 class="section-title">
+                        <h3 class="section-title text-black dark:text-white">
                             Red Team Organizations
                         </h3>
                         <Icon :name="isRedTeamCollapsed ? 'lucide:chevron-down' : 'lucide:chevron-up'"
-                            class="toggle-icon" />
+                            class="toggle-icon text-black dark:text-white" />
                     </div>
 
                     <div v-if="!isRedTeamCollapsed" class="organizations-content">
                         <!-- Alliances with corporations -->
                         <div v-for="alliance in redTeamAlliances" :key="alliance.id" class="alliance-group">
                             <div class="alliance-header" @click="toggleAlliance(alliance.id)">
-                                <div class="alliance-name">
+                                <div class="alliance-name text-black dark:text-white">
                                     <NuxtLink v-if="alliance.id" :to="`/alliance/${alliance.id}`" class="entity-link">
                                         <Image v-if="alliance.id" :type="'alliance'" :id="alliance.id" :size="24"
                                             class="org-icon" />
-                                        <span>{{ alliance.name }}</span>
-                                        <span class="count">({{redTeamCorporations.filter(corp => corp.alliance_id ===
+                                        <span class="text-black dark:text-white">{{ alliance.name }}</span>
+                                        <span class="count">({{redTeamCorporations.filter(corp => corp.alliance_id
+                                            ===
                                             alliance.id).length}})</span>
                                     </NuxtLink>
                                     <span v-else>
-                                        <span>{{ alliance.name }}</span>
-                                        <span class="count">({{redTeamCorporations.filter(corp => corp.alliance_id ===
+                                        <span class="text-black dark:text-white">{{ alliance.name }}</span>
+                                        <span class="count">({{redTeamCorporations.filter(corp => corp.alliance_id
+                                            ===
                                             alliance.id).length}})</span>
                                     </span>
                                 </div>
                                 <Icon
                                     :name="isAllianceCollapsed(alliance.id) ? 'lucide:chevron-down' : 'lucide:chevron-up'"
-                                    class="toggle-icon" />
+                                    class="toggle-icon text-black dark:text-white" />
                             </div>
 
                             <!-- Corporations in alliance -->
@@ -133,12 +135,12 @@
                                 <div v-for="corp in redTeamCorporations.filter(corp => corp.alliance_id === alliance.id)"
                                     :key="corp.id" class="corporation-item">
                                     <NuxtLink v-if="corp.id" :to="`/corporation/${corp.id}`"
-                                        class="entity-link corporation-name">
+                                        class="entity-link corporation-name text-black dark:text-white">
                                         <Image v-if="corp.id" :type="'corporation'" :id="corp.id" :size="24"
                                             class="org-icon" />
-                                        <span>{{ corp.name }}</span>
+                                        <span class="text-black dark:text-white">{{ corp.name }}</span>
                                     </NuxtLink>
-                                    <span v-else>
+                                    <span v-else class="text-black dark:text-white">
                                         <span>{{ corp.name }}</span>
                                     </span>
                                 </div>
@@ -148,23 +150,24 @@
                         <!-- Corporations without alliance -->
                         <div v-if="redTeamCorporations.filter(corp => !corp.alliance_id).length > 0"
                             class="no-alliance-section">
-                            <div class="no-alliance-header" @click="toggleStandaloneCorps">
-                                Standalone Corporations ({{redTeamCorporations.filter(corp => !corp.alliance_id).length
+                            <div class="no-alliance-header text-black dark:text-white" @click="toggleStandaloneCorps">
+                                Standalone Corporations ({{redTeamCorporations.filter(corp =>
+                                    !corp.alliance_id).length
                                 }})
                                 <Icon :name="isStandaloneCorpsCollapsed ? 'lucide:chevron-down' : 'lucide:chevron-up'"
-                                    class="toggle-icon" />
+                                    class="toggle-icon text-black dark:text-white" />
                             </div>
 
                             <div v-if="!isStandaloneCorpsCollapsed" class="corporation-list">
                                 <div v-for="corp in redTeamCorporations.filter(corp => !corp.alliance_id)"
                                     :key="corp.id" class="corporation-item standalone">
                                     <NuxtLink v-if="corp.id" :to="`/corporation/${corp.id}`"
-                                        class="entity-link corporation-name">
+                                        class="entity-link corporation-name text-black dark:text-white">
                                         <Image v-if="corp.id" :type="'corporation'" :id="corp.id" :size="24"
                                             class="org-icon" />
-                                        <span>{{ corp.name }}</span>
+                                        <span class="text-black dark:text-white">{{ corp.name }}</span>
                                     </NuxtLink>
-                                    <span v-else>
+                                    <span v-else class="text-black dark:text-white">
                                         <span>{{ corp.name }}</span>
                                     </span>
                                 </div>
@@ -373,5 +376,9 @@ function formatNumber(n: number) {
 
 .alliance-header:hover {
     opacity: 0.9;
+}
+
+.grid>div>.bg-background-800 .organizations-section :deep(.table-row:hover) {
+    background: light-dark(rgba(229, 231, 235, 0.15), rgba(35, 35, 35, 0.5));
 }
 </style>
