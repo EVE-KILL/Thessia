@@ -73,11 +73,15 @@ export default {
         }
 
         // Create a placeholder index
-        await meilisearch.createIndex("nitro-update");
+        await meilisearch.createIndex("nitro-update", { 'primaryKey': 'id' });
         console.log(chalk.green("Created nitro-update index"));
 
         // Ensure the nitro index exists
-        await meilisearch.createIndex("nitro");
+        const nitroIndexExists = await meilisearch.existsIndex("nitro");
+        if (!nitroIndexExists) {
+            console.log(chalk.yellow("Creating nitro index..."));
+            await meilisearch.createIndex("nitro", { 'primaryKey': 'id' });
+        }
 
         // Set ranking rules to prioritize based on rank field, then default rules
         await meilisearch.updateRankingRules("nitro-update", [
@@ -101,13 +105,13 @@ export default {
         console.log(chalk.green("Updated filterable attributes"));
 
         const entityTypes: EntityTypes[] = [
-            "characters",
-            "corporations",
-            "alliances",
-            "factions",
-            "systems",
-            "regions",
             "items",
+            "regions",
+            "systems",
+            "factions",
+            "alliances",
+            "corporations",
+            "characters",
         ];
 
         // Get estimated counts for each entity type
@@ -201,7 +205,20 @@ async function processEntities(
     while (hasMore) {
         const entities = await getEntities(entityType, skip, BATCH_SIZE);
         if (entities.length > 0) {
-            await meilisearch.addDocuments("nitro-update", entities);
+            let res = await meilisearch.addDocuments("nitro-update", entities);
+            const taskUid = res.taskUid;
+            // Get the task status
+            let taskStatus = await meilisearch.getTaskStatus(taskUid);
+            // wait until the task is no longer in processing
+            while (taskStatus.status !== "succeeded") {
+                await new Promise((resolve) => setTimeout(resolve, 1000));
+                taskStatus = await meilisearch.getTaskStatus(taskUid);
+                if (taskStatus.status === "failed") {
+                    console.error(`Task failed: ${taskStatus.error.message}`);
+                    break;
+                }
+            }
+
             count += entities.length;
             skip += BATCH_SIZE;
 
@@ -214,6 +231,7 @@ async function processEntities(
                 lastLoggedPercentage = currentPercentage;
             }
         }
+
         hasMore = entities.length === BATCH_SIZE;
     }
 
@@ -226,7 +244,7 @@ async function getEntities(entityType: EntityTypes, skip: number, limit: number)
     switch (entityType) {
         case "characters": {
             const characters = await Characters.find(
-                { deleted: false },
+                { deleted: false, "character_id": { $exists: true } },
                 {
                     character_id: 1,
                     name: 1,
@@ -245,7 +263,7 @@ async function getEntities(entityType: EntityTypes, skip: number, limit: number)
 
         case "corporations": {
             const corporations = await Corporations.find(
-                {},
+                { "corporation_id": { $exists: true } },
                 {
                     corporation_id: 1,
                     name: 1,
@@ -265,7 +283,7 @@ async function getEntities(entityType: EntityTypes, skip: number, limit: number)
         }
         case "alliances": {
             const alliances = await Alliances.find(
-                {},
+                { "alliance_id": { $exists: true } },
                 {
                     alliance_id: 1,
                     name: 1,
@@ -286,7 +304,7 @@ async function getEntities(entityType: EntityTypes, skip: number, limit: number)
 
         case "factions": {
             const factions = await Factions.find(
-                {},
+                { "faction_id": { $exists: true } },
                 {
                     faction_id: 1,
                     name: 1,
@@ -304,7 +322,7 @@ async function getEntities(entityType: EntityTypes, skip: number, limit: number)
         }
         case "systems": {
             const systems = await SolarSystems.find(
-                {},
+                { "system_id": { $exists: true } },
                 {
                     system_id: 1,
                     system_name: 1,
@@ -323,7 +341,7 @@ async function getEntities(entityType: EntityTypes, skip: number, limit: number)
 
         case "regions": {
             const regions = await Regions.find(
-                {},
+                { "region_id": { $exists: true } },
                 {
                     region_id: 1,
                     name: 1,
