@@ -3,60 +3,100 @@
         <!-- Blue Team Corporations -->
         <div>
             <div class="mb-2 text-lg font-bold">Blue Team Corporations</div>
-            <div class="overflow-x-auto" role="table">
-                <table class="table-auto min-w-full bg-background-800 rounded-lg shadow-lg">
-                    <thead>
-                        <tr class="bg-background-900 text-white uppercase text-xs leading-normal">
-                            <th class="px-2 py-1">Corporation</th>
-                            <th class="px-2 py-1">Kills</th>
-                            <th class="px-2 py-1">Total Value</th>
-                        </tr>
-                    </thead>
-                    <tbody class="text-background-300 text-sm">
-                        <tr v-for="corp in blueTeamCorporations" :key="corp.id"
-                            class="border-b border-background-700 hover:bg-background-600 transition-colors duration-300">
-                            <td class="px-2 py-1">{{ corp.name }}</td>
-                            <td class="px-2 py-1">{{ corp.kills }}</td>
-                            <td class="px-2 py-1">{{ formatBillions(corp.totalValue) }} ISK</td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
+            <Table :columns="corporationColumns" :items="blueTeamCorporations" :bordered="true" :striped="false"
+                :hover="true" density="normal" background="transparent" table-class="corporation-table">
+                <template #cell-name="{ item, column, index }: { item: BattleCorporation, column: any, index: number }">
+                    <div class="flex items-center">
+                        <Image :type="'corporation'" :id="item.id" :size="24" class="mr-2 rounded-full" />
+                        {{ item.name }}
+                    </div>
+                </template>
+                <template
+                    #cell-totalValue="{ item, column, index }: { item: BattleCorporation, column: any, index: number }">
+                    {{ formatBillions(item.totalValue) }} ISK
+                </template>
+            </Table>
         </div>
         <!-- Red Team Corporations -->
         <div>
             <div class="mb-2 text-lg font-bold">Red Team Corporations</div>
-            <div class="overflow-x-auto" role="table">
-                <table class="table-auto min-w-full bg-background-800 rounded-lg shadow-lg">
-                    <thead>
-                        <tr class="bg-background-900 text-white uppercase text-xs leading-normal">
-                            <th class="px-2 py-1">Corporation</th>
-                            <th class="px-2 py-1">Kills</th>
-                            <th class="px-2 py-1">Total Value</th>
-                        </tr>
-                    </thead>
-                    <tbody class="text-background-300 text-sm">
-                        <tr v-for="corp in redTeamCorporations" :key="corp.id"
-                            class="border-b border-background-700 hover:bg-background-600 transition-colors duration-300">
-                            <td class="px-2 py-1">{{ corp.name }}</td>
-                            <td class="px-2 py-1">{{ corp.kills }}</td>
-                            <td class="px-2 py-1">{{ formatBillions(corp.totalValue) }} ISK</td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
+            <Table :columns="corporationColumns" :items="redTeamCorporations" :bordered="true" :striped="false"
+                :hover="true" density="normal" background="transparent" table-class="corporation-table">
+                <template #cell-name="{ item, column, index }: { item: BattleCorporation, column: any, index: number }">
+                    <div class="flex items-center">
+                        <Image :type="'corporation'" :id="item.id" :size="24" class="mr-2 rounded-full" />
+                        {{ item.name }}
+                    </div>
+                </template>
+                <template
+                    #cell-totalValue="{ item, column, index }: { item: BattleCorporation, column: any, index: number }">
+                    {{ formatBillions(item.totalValue) }} ISK
+                </template>
+            </Table>
         </div>
     </div>
 </template>
 <script setup lang="ts">
-defineProps<{
-    blueTeamCorporations: any[],
-    redTeamCorporations: any[]
-}>()
-function formatBillions(n: number) {
-    if (typeof n !== 'number') return '0'
-    if (n >= 1e9) return (n / 1e9).toLocaleString(undefined, { maximumFractionDigits: 2 }) + 'B'
-    if (n >= 1e6) return (n / 1e6).toLocaleString(undefined, { maximumFractionDigits: 2 }) + 'M'
-    return n.toLocaleString(undefined, { maximumFractionDigits: 2 })
+import Table from '../common/Table.vue'; // Import the Table component
+import Image from '../common/Image.vue'; // Import the Image component
+
+interface BattleCorporation {
+    id: number;
+    name: string;
+    kills: number;
+    totalValue: number;
 }
+
+defineProps<{
+    blueTeamCorporations: BattleCorporation[],
+    redTeamCorporations: BattleCorporation[]
+}>();
+
+function formatBillions(n: number) {
+    if (typeof n !== 'number') return '0';
+    if (n >= 1e9) return (n / 1e9).toLocaleString(undefined, { maximumFractionDigits: 2 }) + 'B';
+    if (n >= 1e6) return (n / 1e6).toLocaleString(undefined, { maximumFractionDigits: 2 }) + 'M';
+    return n.toLocaleString(undefined, { maximumFractionDigits: 2 });
+}
+
+const corporationColumns = [
+    { id: 'name', header: 'Corporation', width: '50%' },
+    { id: 'kills', header: 'Kills', width: '25%' },
+    { id: 'totalValue', header: 'Total Value', width: '25%' },
+];
 </script>
+
+<style scoped>
+/* Add any necessary scoped styles here to match the original table appearance */
+.corporation-table :deep(.table-header) {
+    background-color: rgba(26, 26, 26, 0.5);
+    /* Example from TopBox */
+    color: #9ca3af;
+    /* Example from TopBox */
+    text-transform: uppercase;
+    font-size: 0.75rem;
+    padding: 0.5rem;
+    /* Adjust padding */
+}
+
+.corporation-table :deep(.header-cell) {
+    padding: 0 0.5rem;
+    /* Adjust padding */
+}
+
+.corporation-table :deep(.table-row) {
+    border-bottom: 1px solid #282828;
+    /* Example from original table */
+    transition: background-color 0.3s ease;
+}
+
+.corporation-table :deep(.table-row:hover) {
+    background-color: #1a1a1a;
+    /* Example from original table */
+}
+
+.corporation-table :deep(.body-cell) {
+    padding: 0.5rem;
+    /* Adjust padding */
+}
+</style>
