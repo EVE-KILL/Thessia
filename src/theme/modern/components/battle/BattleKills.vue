@@ -46,7 +46,8 @@ Pr<template>
                                                 <template v-if="kill.is_npc">
                                                     {{ attacker.faction_name }}<br />
                                                     <span class="text-background-400">{{
-                                                        truncateString(attacker.ship_group_name, 22) }}</span>
+                                                        truncateString(getLocalizedString(attacker.ship_group_name), 22)
+                                                    }}</span>
                                                 </template>
                                                 <template v-else>
                                                     {{ attacker.character_name }}<br />
@@ -89,7 +90,8 @@ Pr<template>
                                 @click="goToKill(kill.killmail_id)">
                                 <td class="px-2 py-1">
                                     <img :src="kill.victim.ship_image_url ? `${kill.victim.ship_image_url}?size=64` : `https://images.eve-kill.com/types/${kill.victim.ship_id}/render?size=64`"
-                                        :alt="`Ship: ${kill.victim.ship_name}`" class="w-10 rounded" />
+                                        :alt="`Ship: ${getLocalizedString(kill.victim.ship_name)}`"
+                                        class="w-10 rounded" />
                                 </td>
                                 <td class="px-2 py-1">
                                     {{ truncateString(kill.victim, 20) }}<br />
@@ -103,7 +105,8 @@ Pr<template>
                                 </td>
                                 <td class="px-2 py-1">
                                     {{ kill.victim.character_name }}<br />
-                                    <span class="text-background-400">{{ truncateString(kill.victim, 22)
+                                    <span class="text-background-400">{{ truncateString(kill.victim.corporation_name,
+                                        22)
                                         }}</span>
                                 </td>
                                 <td class="px-2 py-1">
@@ -114,7 +117,8 @@ Pr<template>
                                                 <template v-if="kill.is_npc">
                                                     {{ attacker.faction_name }}<br />
                                                     <span class="text-background-400">{{
-                                                        truncateString(attacker.ship_group_name, 22) }}</span>
+                                                        truncateString(getLocalizedString(attacker.ship_group_name), 22)
+                                                    }}</span>
                                                 </template>
                                                 <template v-else>
                                                     {{ attacker.character_name }}<br />

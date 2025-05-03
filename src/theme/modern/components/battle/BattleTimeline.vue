@@ -22,7 +22,7 @@
                                     <div class="text-center">
                                         <div class="font-bold">{{
                                             truncateString(getLocalizedString(kill.victim.ship_name), 20) }}</div>
-                                        <div class="text-xs">{{ kill.victim }}</div>
+                                        <div class="text-xs">{{ getLocalizedString(kill.victim.ship_group_name) }}</div>
                                     </div>
                                     <div class="text-center mx-4">
                                         <div class="font-bold">{{ kill.victim.character_name }}</div>
