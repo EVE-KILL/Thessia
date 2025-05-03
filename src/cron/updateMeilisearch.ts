@@ -22,7 +22,7 @@ function formatProgressBar(current: number, total: number, barLength = 20): stri
     return `${bar} ${percentage}% (${current}/${total})`;
 }
 
-const BATCH_SIZE = 100000;
+const BATCH_SIZE = 1000000;
 
 type EntityTypes =
     | "characters"

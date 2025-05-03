@@ -13,7 +13,7 @@ import { InvTypes } from "~/server/models/InvTypes";
 import { Regions } from "~/server/models/Regions";
 import { SolarSystems } from "~/server/models/SolarSystems";
 
-const BATCH_SIZE = 100000;
+const BATCH_SIZE = 1000000;
 
 type EntityTypes =
     | "characters"
