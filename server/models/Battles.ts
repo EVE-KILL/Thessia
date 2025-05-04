@@ -10,6 +10,40 @@ const battlesSchema = new Schema<IBattlesDocument>(
         battle_id: { type: Number, unique: true },
         start_time: { type: Date },
         end_time: { type: Date },
+        system_id: { type: Number },
+        killmailsCount: { type: Number },
+        iskDestroyed: { type: Number },
+        alliancesInvolved: [Number],
+        corporationsInvolved: [Number],
+        charactersInvolved: [Number],
+        blue_team: {
+            alliances: [
+                {
+                    id: Number,
+                    name: String,
+                }
+            ],
+            corporations: [
+                {
+                    id: Number,
+                    name: String,
+                }
+            ]
+        },
+        red_team: {
+            alliances: [
+                {
+                    id: Number,
+                    name: String,
+                }
+            ],
+            corporations: [
+                {
+                    id: Number,
+                    name: String,
+                }
+            ]
+        }
     },
     {
         collection: "battles",
@@ -24,7 +58,7 @@ const battlesSchema = new Schema<IBattlesDocument>(
 );
 
 // Create and export the battles model
-export const battles: Model<IBattlesDocument> = model<IBattlesDocument>(
+export const Battles: Model<IBattlesDocument> = model<IBattlesDocument>(
     "battles",
     battlesSchema,
     "battles",

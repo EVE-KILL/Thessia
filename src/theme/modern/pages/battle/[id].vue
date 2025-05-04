@@ -9,7 +9,7 @@
                         {{ t('battle.in_system') }}:
                         <span class="text-blue-500">{{ battle.system_name || t('battle.unknown_system') }}</span>
                         <span class="ml-2 text-xs px-2 py-1 rounded bg-background-700 text-background-100 align-middle">
-                            {{ battle.system_security.toFixed(2) }}
+                            {{ battle.system_security ? battle.system_security.toFixed(2) : 'N/A' }}
                         </span>
                         <span class="ml-2 text-background-400">
                             ({{ getLocalizedString(battle.region_name) }})
@@ -308,7 +308,7 @@ const { t } = useI18n()
 const route = useRoute()
 const id = computed(() => route.params.id)
 
-const { data: battleData } = useFetch(() => id.value ? `/api/battles/killmail/${id.value}` : null)
+const { data: battleData, error: battleError } = useFetch(() => id.value ? `/api/battles/${id.value}` : null)
 const battle = ref<any>(null)
 const killmails = ref<any[]>([])
 
@@ -769,6 +769,20 @@ watchEffect(async () => {
         if (kills.value) {
             killmails.value = kills.value
             splitKillmailsToSides(killmails.value, battle.value)
+        }
+    }
+})
+
+watchEffect(() => {
+    if (battleError.value) {
+        console.error('Battle API error:', battleError.value)
+    }
+    if (battleData.value) {
+        try {
+            battle.value = battleData.value
+            console.log('Loaded battle:', battle.value)
+        } catch (err) {
+            console.error('Error assigning battleData to battle:', err, battleData.value)
         }
     }
 })

@@ -84,6 +84,13 @@ const leftNavItems = computed(() => [
         position: "left",
         to: "/query",
         icon: "lucide:search",
+    },
+    {
+        name: t("Battles"),
+        label: t("Battles"),
+        position: "left",
+        to: "/battles",
+        icon: "lucide:shield",
     }
 ]);
 

@@ -1,207 +1,207 @@
 <script setup lang="ts">
-import { computed, ref } from "vue";
+import { computed, ref, onMounted } from "vue"; // Add onMounted
 import { useResponsive } from "~/composables/useResponsive";
 
 /**
  * Column definition for the Table component
  */
 export interface TableColumn {
-  id: string; // Unique ID for the column
-  header?: string | (() => any); // Column header text or function returning a VNode
-  headerClass?: string; // Optional CSS class for header cell
-  width?: string; // Optional width (e.g., '20%', '100px')
-  cellClass?: string; // Optional CSS class for cells in this column
-  sortable?: boolean; // Whether the column is sortable
+    id: string; // Unique ID for the column
+    header?: string | (() => any); // Column header text or function returning a VNode
+    headerClass?: string; // Optional CSS class for header cell
+    width?: string; // Optional width (e.g., '20%', '100px')
+    cellClass?: string; // Optional CSS class for cells in this column
+    sortable?: boolean; // Whether the column is sortable
 }
 
 /**
  * Props for the Table component
  */
 const props = defineProps({
-  /**
-   * The columns configuration array
-   */
-  columns: {
-    type: Array as PropType<TableColumn[]>,
-    required: true,
-  },
-  /**
-   * The data items to display
-   */
-  items: {
-    type: Array,
-    default: () => [],
-  },
-  /**
-   * Whether the table is in loading state
-   */
-  loading: {
-    type: Boolean,
-    default: false,
-  },
-  /**
-   * Number of skeleton rows to display when loading
-   */
-  skeletonCount: {
-    type: Number,
-    default: 5,
-  },
-  /**
-   * Text to display when there are no items
-   */
-  emptyText: {
-    type: String,
-    default: "No data available",
-  },
-  /**
-   * Icon to display in empty state
-   */
-  emptyIcon: {
-    type: String,
-    default: "i-lucide-file-text",
-  },
-  /**
-   * CSS class or function returning CSS class for rows
-   */
-  rowClass: {
-    type: [String, Function],
-    default: "",
-  },
-  /**
-   * Force mobile view regardless of screen size
-   */
-  forceMobile: {
-    type: Boolean,
-    default: false,
-  },
-  /**
-   * Force desktop view regardless of screen size
-   */
-  forceDesktop: {
-    type: Boolean,
-    default: false,
-  },
-  /**
-   * Optional additional class for the table container
-   */
-  tableClass: {
-    type: String,
-    default: "",
-  },
-  /**
-   * Optional additional class for the header row
-   */
-  headerClass: {
-    type: String,
-    default: "",
-  },
-  /**
-   * Show table header (true) or hide it (false)
-   */
-  showHeader: {
-    type: Boolean,
-    default: true,
-  },
-  /**
-   * Spacing density: 'compact', 'normal', or 'relaxed'
-   */
-  density: {
-    type: String,
-    default: "normal",
-    validator: (value: string) => ["compact", "normal", "relaxed"].includes(value),
-  },
-  /**
-   * Whether to stripe alternate rows with different background
-   */
-  striped: {
-    type: Boolean,
-    default: false,
-  },
-  /**
-   * Whether to show borders between rows
-   */
-  bordered: {
-    type: Boolean,
-    default: true,
-  },
-  /**
-   * Whether to add hover effect to rows
-   */
-  hover: {
-    type: Boolean,
-    default: true,
-  },
-  /**
-   * Set to true to initialize the table with fit-content width
-   */
-  fitContent: {
-    type: Boolean,
-    default: false,
-  },
-  /**
-   * Background style: 'default', 'transparent', 'subtle'
-   */
-  background: {
-    type: String,
-    default: "default",
-    validator: (value: string) => ["default", "transparent", "subtle"].includes(value),
-  },
-  /**
-   * Custom class for skeleton elements
-   */
-  skeletonClass: {
-    type: String,
-    default: "",
-  },
-  /**
-   * Whether to render the table header with special styling
-   */
-  specialHeader: {
-    type: Boolean,
-    default: false,
-  },
+    /**
+     * The columns configuration array
+     */
+    columns: {
+        type: Array as PropType<TableColumn[]>,
+        required: true,
+    },
+    /**
+     * The data items to display
+     */
+    items: {
+        type: Array,
+        default: () => [],
+    },
+    /**
+     * Whether the table is in loading state
+     */
+    loading: {
+        type: Boolean,
+        default: false,
+    },
+    /**
+     * Number of skeleton rows to display when loading
+     */
+    skeletonCount: {
+        type: Number,
+        default: 5,
+    },
+    /**
+     * Text to display when there are no items
+     */
+    emptyText: {
+        type: String,
+        default: "No data available",
+    },
+    /**
+     * Icon to display in empty state
+     */
+    emptyIcon: {
+        type: String,
+        default: "i-lucide-file-text",
+    },
+    /**
+     * CSS class or function returning CSS class for rows
+     */
+    rowClass: {
+        type: [String, Function],
+        default: "",
+    },
+    /**
+     * Force mobile view regardless of screen size
+     */
+    forceMobile: {
+        type: Boolean,
+        default: false,
+    },
+    /**
+     * Force desktop view regardless of screen size
+     */
+    forceDesktop: {
+        type: Boolean,
+        default: false,
+    },
+    /**
+     * Optional additional class for the table container
+     */
+    tableClass: {
+        type: String,
+        default: "",
+    },
+    /**
+     * Optional additional class for the header row
+     */
+    headerClass: {
+        type: String,
+        default: "",
+    },
+    /**
+     * Show table header (true) or hide it (false)
+     */
+    showHeader: {
+        type: Boolean,
+        default: true,
+    },
+    /**
+     * Spacing density: 'compact', 'normal', or 'relaxed'
+     */
+    density: {
+        type: String,
+        default: "normal",
+        validator: (value: string) => ["compact", "normal", "relaxed"].includes(value),
+    },
+    /**
+     * Whether to stripe alternate rows with different background
+     */
+    striped: {
+        type: Boolean,
+        default: false,
+    },
+    /**
+     * Whether to show borders between rows
+     */
+    bordered: {
+        type: Boolean,
+        default: true,
+    },
+    /**
+     * Whether to add hover effect to rows
+     */
+    hover: {
+        type: Boolean,
+        default: true,
+    },
+    /**
+     * Set to true to initialize the table with fit-content width
+     */
+    fitContent: {
+        type: Boolean,
+        default: false,
+    },
+    /**
+     * Background style: 'default', 'transparent', 'subtle'
+     */
+    background: {
+        type: String,
+        default: "default",
+        validator: (value: string) => ["default", "transparent", "subtle"].includes(value),
+    },
+    /**
+     * Custom class for skeleton elements
+     */
+    skeletonClass: {
+        type: String,
+        default: "",
+    },
+    /**
+     * Whether to render the table header with special styling
+     */
+    specialHeader: {
+        type: Boolean,
+        default: false,
+    },
 
-  /**
-   * Function to generate a link URL for a row, if the row should be clickable
-   * Returns string URL or null/undefined if row shouldn't be a link
-   */
-  linkFn: {
-    type: Function as PropType<(item: any) => string | null | undefined>,
-    default: null,
-  },
+    /**
+     * Function to generate a link URL for a row, if the row should be clickable
+     * Returns string URL or null/undefined if row shouldn't be a link
+     */
+    linkFn: {
+        type: Function as PropType<(item: any) => string | null | undefined>,
+        default: null,
+    },
 
-  /**
-   * Whether to open links in a new tab by default
-   */
-  openInNewTab: {
-    type: Boolean,
-    default: false,
-  },
+    /**
+     * Whether to open links in a new tab by default
+     */
+    openInNewTab: {
+        type: Boolean,
+        default: false,
+    },
 
-  /**
-   * Whether to show both the header title and column headers together
-   * When true, both will be shown; when false, only one will be shown based on presence
-   */
-  showBothHeaders: {
-    type: Boolean,
-    default: false,
-  },
+    /**
+     * Whether to show both the header title and column headers together
+     * When true, both will be shown; when false, only one will be shown based on presence
+     */
+    showBothHeaders: {
+        type: Boolean,
+        default: false,
+    },
 
-  /**
-   * Whether to display table in horizontal layout (items as columns)
-   */
-  horizontal: {
-    type: Boolean,
-    default: false,
-  },
+    /**
+     * Whether to display table in horizontal layout (items as columns)
+     */
+    horizontal: {
+        type: Boolean,
+        default: false,
+    },
 
-  /**
-   * Number of items to display per row in horizontal mode
-   */
-  horizontalItemsPerRow: {
-    type: Number,
-    default: 7,
-  },
+    /**
+     * Number of items to display per row in horizontal mode
+     */
+    horizontalItemsPerRow: {
+        type: Number,
+        default: 7,
+    },
 });
 
 const emit = defineEmits(["row-click"]);
@@ -210,24 +210,30 @@ const emit = defineEmits(["row-click"]);
 const lastMouseEvent = ref<MouseEvent | null>(null);
 const isMouseButtonDown = ref(false);
 
+// Client-side mount flag to prevent hydration mismatch
+const isMounted = ref(false);
+onMounted(() => {
+    isMounted.value = true;
+});
+
 // Responsive detection
 const { isMobile: deviceIsMobile } = useResponsive();
 
 // Determine if we should use mobile view
 const useMobileView = computed(() => {
-  if (props.forceMobile) return true;
-  if (props.forceDesktop) return false;
-  return deviceIsMobile.value;
+    if (props.forceMobile) return true;
+    if (props.forceDesktop) return false;
+    return deviceIsMobile.value;
 });
 
 // Generate skeleton rows for loading state
 const skeletonRows = computed(() =>
-  Array(props.skeletonCount)
-    .fill(0)
-    .map((_, index) => ({
-      id: `skeleton-${index}`,
-      isLoading: true,
-    })),
+    Array(props.skeletonCount)
+        .fill(0)
+        .map((_, index) => ({
+            id: `skeleton-${index}`,
+            isLoading: true,
+        })),
 );
 
 /**
@@ -236,267 +242,272 @@ const skeletonRows = computed(() =>
  * @param event - The mouse event
  */
 const handleRowClick = (item: any, event: MouseEvent) => {
-  // Emit row click event for custom handling if needed
-  emit("row-click", { item, event });
+    // Emit row click event for custom handling if needed
+    emit("row-click", { item, event });
 
-  // Skip handling if:
-  // 1. It's not a primary (left) mouse button click, OR
-  // 2. No link function provided, OR
-  // 3. Event originated from inside an <a> tag (let the browser handle it natively)
-  if (
-    event.button !== 0 ||
-    !props.linkFn ||
-    event.target instanceof HTMLAnchorElement ||
-    (event.target as Element).closest("a")
-  ) {
-    return;
-  }
+    // Skip handling if:
+    // 1. It's not a primary (left) mouse button click, OR
+    // 2. No link function provided, OR
+    // 3. Event originated from inside an <a> tag (let the browser handle it natively)
+    if (
+        event.button !== 0 ||
+        !props.linkFn ||
+        event.target instanceof HTMLAnchorElement ||
+        (event.target as Element).closest("a")
+    ) {
+        return;
+    }
 
-  // For Ctrl/Cmd + click, we'll handle this manually since our anchor is at row level
-  const url = props.linkFn(item);
-  if (!url) return;
+    // For Ctrl/Cmd + click, we'll handle this manually since our anchor is at row level
+    const url = props.linkFn(item);
+    if (!url) return;
 
-  // Prevent default behavior
-  event.preventDefault();
-  // Use Nuxt's navigateTo for SPA navigation to trigger page hooks
-  if (event.ctrlKey || event.metaKey || props.openInNewTab) {
-    // For ctrl/cmd clicks or when openInNewTab is true, open in new tab
-    window.open(url, "_blank");
-  } else {
-    // For normal clicks, use navigateTo to trigger Nuxt page hooks
-    navigateTo(url);
-  }
+    // Prevent default behavior
+    event.preventDefault();
+    // Use Nuxt's navigateTo for SPA navigation to trigger page hooks
+    if (event.ctrlKey || event.metaKey || props.openInNewTab) {
+        // For ctrl/cmd clicks or when openInNewTab is true, open in new tab
+        window.open(url, "_blank");
+    } else {
+        // For normal clicks, use navigateTo to trigger Nuxt page hooks
+        navigateTo(url);
+    }
 };
 
 // Get CSS class for a row
 const getRowClasses = (item: any, index: number) => {
-  const baseClasses = [];
+    const baseClasses = [];
 
-  // Add striped class for alternating rows if enabled
-  if (props.striped && index % 2 === 1) {
-    baseClasses.push("table-row-striped");
-  }
+    // Add striped class for alternating rows if enabled
+    if (props.striped && index % 2 === 1) {
+        baseClasses.push("table-row-striped");
+    }
 
-  // Add hover class if enabled
-  if (props.hover) {
-    baseClasses.push("hover-effect");
-  }
+    // Add hover class if enabled
+    if (props.hover) {
+        baseClasses.push("hover-effect");
+    }
 
-  // Add user-defined classes
-  if (typeof props.rowClass === "function") {
-    baseClasses.push(props.rowClass(item));
-  } else if (props.rowClass) {
-    baseClasses.push(props.rowClass);
-  }
+    // Add user-defined classes
+    if (typeof props.rowClass === "function") {
+        baseClasses.push(props.rowClass(item));
+    } else if (props.rowClass) {
+        baseClasses.push(props.rowClass);
+    }
 
-  return baseClasses.join(" ");
+    return baseClasses.join(" ");
 };
 
 // Computed classes for the table container
 const tableContainerClasses = computed(() => {
-  const classes = ["ek-table-container"];
+    const classes = ["ek-table-container"];
 
-  if (useMobileView.value) {
-    classes.push("mobile-view");
-  }
+    if (useMobileView.value) {
+        classes.push("mobile-view");
+    }
 
-  if (props.horizontal) {
-    classes.push("horizontal-layout");
-  }
+    if (props.horizontal) {
+        classes.push("horizontal-layout");
+    }
 
-  if (props.tableClass) {
-    classes.push(props.tableClass);
-  }
+    if (props.tableClass) {
+        classes.push(props.tableClass);
+    }
 
-  if (props.fitContent) {
-    classes.push("fit-content");
-  }
+    if (props.fitContent) {
+        classes.push("fit-content");
+    }
 
-  // Add background style class
-  classes.push(`bg-${props.background}`);
+    // Add background style class
+    classes.push(`bg-${props.background}`);
 
-  return classes.join(" ");
+    return classes.join(" ");
 });
 
 // Computed classes for the table header
 const tableHeaderClasses = computed(() => {
-  const classes = ["table-header"];
+    const classes = ["table-header"];
 
-  if (props.headerClass) {
-    classes.push(props.headerClass);
-  }
+    if (props.headerClass) {
+        classes.push(props.headerClass);
+    }
 
-  // Add density class to header
-  classes.push(`density-${props.density}`);
+    // Add density class to header
+    classes.push(`density-${props.density}`);
 
-  return classes.join(" ");
+    return classes.join(" ");
 });
 
 // Computed classes for the table rows
 const tableRowClasses = computed(() => {
-  const classes = ["table-row"];
+    const classes = ["table-row"];
 
-  // Add density class to rows
-  classes.push(`density-${props.density}`);
+    // Add density class to rows
+    classes.push(`density-${props.density}`);
 
-  // Add bordered class if enabled
-  if (props.bordered) {
-    classes.push("bordered");
-  }
+    // Add bordered class if enabled
+    if (props.bordered) {
+        classes.push("bordered");
+    }
 
-  return classes.join(" ");
+    return classes.join(" ");
 });
 
 // Generate URL for a row if it's a link
 const getRowUrl = (item: any): string | null => {
-  if (!props.linkFn) return null;
-  return props.linkFn(item);
+    if (!props.linkFn) return null;
+    return props.linkFn(item);
 };
 </script>
 
 <template>
     <div :class="tableContainerClasses">
-        <!-- Only keep the column headers section -->
-        <div v-if="!useMobileView && showHeader && !horizontal"
-            :class="[tableHeaderClasses, { 'special-header': specialHeader }]">
-            <div v-for="column in columns" :key="column.id" class="header-cell" :class="[column.headerClass]"
-                :style="column.width ? { width: column.width } : {}">
-                <slot :name="`header-${column.id}`" :column="column">
-                    {{ typeof column.header === 'function' ? column.header() : column.header }}
-                </slot>
-            </div>
-        </div>
-
-        <!-- Table Body - Vertical Layout (Default) -->
-        <div v-if="!horizontal" class="table-body">
-            <!-- Loading State -->
-            <template v-if="loading">
-                <!-- First check for custom skeleton template -->
-                <slot name="skeleton" :mobile="useMobileView" :columns="columns" :count="skeletonCount">
-                    <!-- Default skeleton fallback -->
-                    <div v-for="(skeleton, index) in skeletonRows" :key="`skeleton-${index}`"
-                        :class="[tableRowClasses, 'skeleton-row']">
-                        <slot name="loading" :mobile="useMobileView" :index="index" :columns="columns">
-                            <template v-if="useMobileView">
-                                <!-- Mobile Loading Skeleton -->
-                                <div class="mobile-skeleton-container">
-                                    <div :class="['skeleton-ship', 'rounded-md', skeletonClass]"></div>
-                                    <div class="skeleton-content">
-                                        <div :class="['skeleton-line-full', skeletonClass]"></div>
-                                        <div :class="['skeleton-line-med', skeletonClass]"></div>
-                                        <div :class="['skeleton-line-wide', skeletonClass]"></div>
-                                        <div :class="['skeleton-line-small', skeletonClass]"></div>
-                                    </div>
-                                </div>
-                            </template>
-                            <template v-else>
-                                <!-- Desktop Loading Skeletons -->
-                                <div v-for="column in columns" :key="column.id" class="body-cell skeleton"
-                                    :class="[column.id, column.cellClass]"
-                                    :style="column.width ? { width: column.width } : {}">
-                                    <slot :name="`loading-${column.id}`" :column="column">
-                                        <div :class="['skeleton-item', skeletonClass]"></div>
-                                    </slot>
-                                </div>
-                            </template>
-                        </slot>
-                    </div>
-                </slot>
-            </template>
-
-            <!-- Empty State -->
-            <div v-else-if="items.length === 0" class="empty-state">
-                <slot name="empty">
-                    <Icon :name="emptyIcon" class="empty-icon" />
-                    <span>{{ emptyText }}</span>
-                </slot>
+        <!-- Wrap main content in v-if="isMounted" to prevent hydration mismatch -->
+        <template v-if="isMounted">
+            <!-- Only keep the column headers section -->
+            <div v-if="!useMobileView && showHeader && !horizontal"
+                :class="[tableHeaderClasses, { 'special-header': specialHeader }]">
+                <div v-for="column in columns" :key="column.id" class="header-cell" :class="[column.headerClass]"
+                    :style="column.width ? { width: column.width } : {}">
+                    <slot :name="`header-${column.id}`" :column="column">
+                        {{ typeof column.header === 'function' ? column.header() : column.header }}
+                    </slot>
+                </div>
             </div>
 
-            <!-- Data Rows - Using native anchor elements for all link handling -->
-            <component v-else v-for="(item, index) in items" :key="item.id || `item-${index}`"
-                :is="props.linkFn && props.linkFn(item) ? 'a' : 'div'"
-                :href="props.linkFn && props.linkFn(item) ? props.linkFn(item) : null"
-                :target="props.openInNewTab ? '_blank' : null" :rel="props.openInNewTab ? 'noopener' : null" :class="[
-                    tableRowClasses,
-                    getRowClasses(item, index),
-                    { 'has-link': props.linkFn && props.linkFn(item) }
-                ]" @click="(e) => handleRowClick(item, e)">
-                <!-- Mobile View -->
-                <template v-if="useMobileView">
-                    <slot name="mobile-row" :item="item" :index="index">
-                        <div class="mobile-container">
-                            <slot name="mobile-content" :item="item" :index="index">
-                                <div class="mobile-content">
-                                    <div class="mobile-header">
-                                        <span class="mobile-title">{{ item.name || 'Item' }}</span>
+            <!-- Table Body - Vertical Layout (Default) -->
+            <div v-if="!horizontal" class="table-body">
+                <!-- Loading State -->
+                <template v-if="loading">
+                    <!-- First check for custom skeleton template -->
+                    <slot name="skeleton" :mobile="useMobileView" :columns="columns" :count="skeletonCount">
+                        <!-- Default skeleton fallback -->
+                        <div v-for="(skeleton, index) in skeletonRows" :key="`skeleton-${index}`"
+                            :class="[tableRowClasses, 'skeleton-row']">
+                            <slot name="loading" :mobile="useMobileView" :index="index" :columns="columns">
+                                <template v-if="useMobileView">
+                                    <!-- Mobile Loading Skeleton -->
+                                    <div class="mobile-skeleton-container">
+                                        <div :class="['skeleton-ship', 'rounded-md', skeletonClass]"></div>
+                                        <div class="skeleton-content">
+                                            <div :class="['skeleton-line-full', skeletonClass]"></div>
+                                            <div :class="['skeleton-line-med', skeletonClass]"></div>
+                                            <div :class="['skeleton-line-wide', skeletonClass]"></div>
+                                            <div :class="['skeleton-line-small', skeletonClass]"></div>
+                                        </div>
                                     </div>
-                                </div>
+                                </template>
+                                <template v-else>
+                                    <!-- Desktop Loading Skeletons -->
+                                    <div v-for="column in columns" :key="column.id" class="body-cell skeleton"
+                                        :class="[column.id, column.cellClass]"
+                                        :style="column.width ? { width: column.width } : {}">
+                                        <slot :name="`loading-${column.id}`" :column="column">
+                                            <div :class="['skeleton-item', skeletonClass]"></div>
+                                        </slot>
+                                    </div>
+                                </template>
                             </slot>
                         </div>
                     </slot>
                 </template>
 
-                <!-- Desktop View -->
-                <template v-else>
-                    <template v-for="column in columns" :key="column.id">
-                        <div class="body-cell" :class="[column.id, column.cellClass]"
-                            :style="column.width ? { width: column.width } : {}">
-                            <slot :name="`cell-${column.id}`" :item="item" :column="column" :index="index">
-                                <!-- Default cell content -->
-                                {{ item[column.id] }}
-                            </slot>
-                        </div>
-                    </template>
-                </template>
-            </component>
-        </div>
+                <!-- Empty State -->
+                <div v-else-if="items.length === 0" class="empty-state">
+                    <slot name="empty">
+                        <Icon :name="emptyIcon" class="empty-icon" />
+                        <span>{{ emptyText }}</span>
+                    </slot>
+                </div>
 
-        <!-- Horizontal Layout -->
-        <div v-else class="horizontal-body">
-            <!-- Horizontal Loading State -->
-            <template v-if="loading">
-                <!-- First check for custom horizontal skeleton template -->
-                <slot name="horizontal-skeleton" :mobile="useMobileView" :count="skeletonCount">
-                    <div class="horizontal-grid">
-                        <slot name="horizontal-loading" :mobile="useMobileView">
-                            <div v-for="(skeleton, index) in skeletonRows" :key="`skeleton-${index}`"
-                                class="horizontal-item skeleton-item-container">
-                                <div class="skeleton-item-box">
-                                    <div :class="['skeleton-image rounded-md', skeletonClass]"></div>
-                                    <div :class="['skeleton-line-full mt-2', skeletonClass]"></div>
-                                    <div :class="['skeleton-line-med mt-1', skeletonClass]"></div>
-                                </div>
-                            </div>
-                        </slot>
-                    </div>
-                </slot>
-            </template>
-
-            <!-- Horizontal Empty State -->
-            <div v-else-if="items.length === 0" class="empty-state">
-                <slot name="empty">
-                    <Icon :name="emptyIcon" class="empty-icon" />
-                    <span>{{ emptyText }}</span>
-                </slot>
-            </div>
-
-            <!-- Horizontal Items Grid -->
-            <div v-else class="horizontal-grid" :class="[`grid-cols-${useMobileView ? 2 : horizontalItemsPerRow}`]">
-                <component v-for="(item, index) in items" :key="item.id || `item-${index}`"
+                <!-- Data Rows - Using native anchor elements for all link handling -->
+                <component v-else v-for="(item, index) in items" :key="item.id || `item-${index}`"
                     :is="props.linkFn && props.linkFn(item) ? 'a' : 'div'"
                     :href="props.linkFn && props.linkFn(item) ? props.linkFn(item) : null"
-                    :target="props.openInNewTab ? '_blank' : null" :rel="props.openInNewTab ? 'noopener' : null"
-                    class="horizontal-item"
-                    :class="[getRowClasses(item, index), { 'has-link': props.linkFn && props.linkFn(item) }]"
-                    @click="(e) => handleRowClick(item, e)">
-                    <slot name="horizontal-item" :item="item" :index="index">
-                        <div class="horizontal-item-content">
-                            {{ item.name || 'Item' }}
-                        </div>
-                    </slot>
+                    :target="props.openInNewTab ? '_blank' : null" :rel="props.openInNewTab ? 'noopener' : null" :class="[
+                        tableRowClasses,
+                        getRowClasses(item, index),
+                        { 'has-link': props.linkFn && props.linkFn(item) }
+                    ]" @click="(e) => handleRowClick(item, e)">
+                    <!-- Mobile View -->
+                    <template v-if="useMobileView">
+                        <slot name="mobile-row" :item="item" :index="index">
+                            <div class="mobile-container">
+                                <slot name="mobile-content" :item="item" :index="index">
+                                    <div class="mobile-content">
+                                        <div class="mobile-header">
+                                            <span class="mobile-title">{{ item.name || 'Item' }}</span>
+                                        </div>
+                                    </div>
+                                </slot>
+                            </div>
+                        </slot>
+                    </template>
+
+                    <!-- Desktop View -->
+                    <template v-else>
+                        <template v-for="column in columns" :key="column.id">
+                            <div class="body-cell" :class="[column.id, column.cellClass]"
+                                :style="column.width ? { width: column.width } : {}">
+                                <slot :name="`cell-${column.id}`" :item="item" :column="column" :index="index">
+                                    <!-- Default cell content -->
+                                    {{ item[column.id] }}
+                                </slot>
+                            </div>
+                        </template>
+                    </template>
                 </component>
             </div>
-        </div>
+
+            <!-- Horizontal Layout -->
+            <div v-else class="horizontal-body">
+                <!-- Horizontal Loading State -->
+                <template v-if="loading">
+                    <!-- First check for custom horizontal skeleton template -->
+                    <slot name="horizontal-skeleton" :mobile="useMobileView" :count="skeletonCount">
+                        <div class="horizontal-grid">
+                            <slot name="horizontal-loading" :mobile="useMobileView">
+                                <div v-for="(skeleton, index) in skeletonRows" :key="`skeleton-${index}`"
+                                    class="horizontal-item skeleton-item-container">
+                                    <div class="skeleton-item-box">
+                                        <div :class="['skeleton-image rounded-md', skeletonClass]"></div>
+                                        <div :class="['skeleton-line-full mt-2', skeletonClass]"></div>
+                                        <div :class="['skeleton-line-med mt-1', skeletonClass]"></div>
+                                    </div>
+                                </div>
+                            </slot>
+                        </div>
+                    </slot>
+                </template>
+
+                <!-- Horizontal Empty State -->
+                <div v-else-if="items.length === 0" class="empty-state">
+                    <slot name="empty">
+                        <Icon :name="emptyIcon" class="empty-icon" />
+                        <span>{{ emptyText }}</span>
+                    </slot>
+                </div>
+
+                <!-- Horizontal Items Grid -->
+                <div v-else class="horizontal-grid" :class="[`grid-cols-${useMobileView ? 2 : horizontalItemsPerRow}`]">
+                    <component v-for="(item, index) in items" :key="item.id || `item-${index}`"
+                        :is="props.linkFn && props.linkFn(item) ? 'a' : 'div'"
+                        :href="props.linkFn && props.linkFn(item) ? props.linkFn(item) : null"
+                        :target="props.openInNewTab ? '_blank' : null" :rel="props.openInNewTab ? 'noopener' : null"
+                        class="horizontal-item"
+                        :class="[getRowClasses(item, index), { 'has-link': props.linkFn && props.linkFn(item) }]"
+                        @click="(e) => handleRowClick(item, e)">
+                        <slot name="horizontal-item" :item="item" :index="index">
+                            <div class="horizontal-item-content">
+                                {{ item.name || 'Item' }}
+                            </div>
+                        </slot>
+                    </component>
+                </div>
+            </div>
+        </template>
+        <!-- Optional: Add a minimal placeholder or loading indicator for the pre-mount state if needed -->
+        <!-- <div v-else class="min-h-[100px]">Loading...</div> -->
     </div>
 </template>
 

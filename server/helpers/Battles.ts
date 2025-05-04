@@ -86,10 +86,6 @@ export async function getBattleData(killmail_id: number) {
     const systemData = await SolarSystems.findOne({ system_id: systemId }, { _id: 0, system_name: 1, region_id: 1, security: 1 });
     const regionData = await Regions.findOne({ region_id: systemData?.region_id }, { _id: 0, name: 1 });
 
-    // Convert to Unix timestamps for consistency with existing code
-    const battleStartTime = Math.floor(battle.startTime.getTime() / 1000);
-    const battleEndTime = Math.floor(battle.endTime.getTime() / 1000);
-
     // Fetch battle killmails using the identified battle_id
     const kills = await Killmails.aggregate([
         {
@@ -109,7 +105,7 @@ export async function getBattleData(killmail_id: number) {
 
     // Process the battle data
     const seedKillmail = kills.find((k: any) => k.killmail_id === killmail_id) || kills[0];
-    const battleData = seedKillmail ? findTeamsEDK(seedKillmail, kills, systemId, battleStartTime, battleEndTime) : [];
+    const battleData = seedKillmail ? processBattle(seedKillmail, kills, systemId, battle.startTime, battle.endTime) : [];
 
     return {
         system_name: systemData?.system_name,
@@ -120,45 +116,18 @@ export async function getBattleData(killmail_id: number) {
     };
 }
 
-async function processBattle(systemId: number, battleStartTime: number, battleEndTime: number, seedKillmailId: number): Promise<any> {
-    // Fetch kills in the battle window
-    const kills = await Killmails.aggregate([
-        {
-            $match: {
-                kill_time: { $gte: new Date(battleStartTime * 1000), $lte: new Date(battleEndTime * 1000) },
-                system_id: systemId
-            }
-        },
-        {
-            $project: {
-                _id: 0,
-                items: 0
-            }
-        }
-    ]);
-
-    // Find the seed killmail
-    const seedKillmail = kills.find((k: any) => k.killmail_id === seedKillmailId);
-    if (!seedKillmail) {
-        // fallback: use first killmail in window
-        if (kills.length === 0) return [];
-        return findTeamsEDK(kills[0], kills, systemId, battleStartTime, battleEndTime);
-    }
-    return findTeamsEDK(seedKillmail, kills, systemId, battleStartTime, battleEndTime);
-}
-
 /**
  * EDK-style team assignment:
  * - Side A: victim's alliance/corp from seed killmail
  * - Side B: all attackers from seed killmail not in victim's alliance/corp
  * - For all killmails, assign sides based on these lists
  */
-function findTeamsEDK(
+export function processBattle(
     seedKillmail: any,
     killmails: any[],
     systemId: number,
-    battleStartTime: number,
-    battleEndTime: number
+    battleStartTime: Date,
+    battleEndTime: Date
 ): any {
     // Build side A (victim's alliance/corp)
     const sideAAlliances = new Set<number>();
