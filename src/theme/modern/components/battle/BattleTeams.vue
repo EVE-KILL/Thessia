@@ -158,7 +158,7 @@
     </div>
 </template>
 <script setup lang="ts">
-import { computed, ref } from 'vue';
+import { computed, ref, watch } from 'vue';
 
 const props = defineProps<{
     blueTeamStats: { iskLost: number, shipsLost: number, damageInflicted: number },
@@ -169,19 +169,27 @@ const props = defineProps<{
     redTeamCorporations: any[]
 }>();
 
-// State for nested collapsible sections (alliances and standalone corps)
 const allianceCollapsedState = ref<Record<number, boolean>>({});
 const isStandaloneCorpsCollapsed = ref(true);
 
-// Initialize alliance collapsed state
-props.blueTeamAlliances.forEach(alliance => {
-    allianceCollapsedState.value[alliance.id] = true;
-});
-props.redTeamAlliances.forEach(alliance => {
-    allianceCollapsedState.value[alliance.id] = true;
-});
+// Ensure allianceCollapsedState is initialized reactively when alliances change
+watch(
+    () => [props.blueTeamAlliances, props.redTeamAlliances],
+    ([blueAlliances, redAlliances]) => {
+        for (const alliance of blueAlliances) {
+            if (!(alliance.id in allianceCollapsedState.value)) {
+                allianceCollapsedState.value[alliance.id] = true;
+            }
+        }
+        for (const alliance of redAlliances) {
+            if (!(alliance.id in allianceCollapsedState.value)) {
+                allianceCollapsedState.value[alliance.id] = true;
+            }
+        }
+    },
+    { immediate: true, deep: true }
+);
 
-// Functions to toggle collapsible sections
 function toggleAlliance(allianceId: number) {
     allianceCollapsedState.value[allianceId] = !allianceCollapsedState.value[allianceId];
 }
@@ -190,7 +198,6 @@ function toggleStandaloneCorps() {
     isStandaloneCorpsCollapsed.value = !isStandaloneCorpsCollapsed.value;
 }
 
-// Computed property to check if an alliance is collapsed
 const isAllianceCollapsed = computed(() => (allianceId: number) => {
     return allianceCollapsedState.value[allianceId] ?? true;
 });
