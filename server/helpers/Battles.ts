@@ -118,12 +118,12 @@ export async function getBattleData(killmail_id: number) {
             return [];
         }
         // Call processBattle to build the battle data
-        return await processBattle(systemId, battleStartTime, battleEndTime);
+        return await processBattle(systemId, battleStartTime, battleEndTime, killmail_id);
     }
     return [];
 }
 
-async function processBattle(systemId: number, battleStartTime: number, battleEndTime: number): Promise<any> {
+async function processBattle(systemId: number, battleStartTime: number, battleEndTime: number, seedKillmailId: number): Promise<any> {
     // Fetch kills in the battle window
     const kills = await Killmails.aggregate([
         {
@@ -140,148 +140,84 @@ async function processBattle(systemId: number, battleStartTime: number, battleEn
         }
     ]);
 
-    // Find the teams
-    const teams = findTeams(kills);
-    const redTeam = teams.a;
-    const blueTeam = teams.b;
+    // Find the seed killmail
+    const seedKillmail = kills.find((k: any) => k.killmail_id === seedKillmailId);
+    if (!seedKillmail) {
+        // fallback: use first killmail in window
+        if (kills.length === 0) return [];
+        return findTeamsEDK(kills[0], kills, systemId, battleStartTime, battleEndTime);
+    }
+    return findTeamsEDK(seedKillmail, kills, systemId, battleStartTime, battleEndTime);
+}
 
-    // Fetch system info
-    const systemInfo = await SolarSystems.findOne(
-        { system_id: systemId },
-        { _id: 0, planets: 0, position: 0, stargates: 0, stations: 0, last_modified: 0 }
-    );
+/**
+ * EDK-style team assignment:
+ * - Side A: victim's alliance/corp from seed killmail
+ * - Side B: all attackers from seed killmail not in victim's alliance/corp
+ * - For all killmails, assign sides based on these lists
+ */
+function findTeamsEDK(
+    seedKillmail: any,
+    killmails: any[],
+    systemId: number,
+    battleStartTime: number,
+    battleEndTime: number
+): any {
+    // Build side A (victim's alliance/corp)
+    const sideAAlliances = new Set<number>();
+    const sideACorps = new Set<number>();
+    if (seedKillmail.victim.alliance_id) sideAAlliances.add(seedKillmail.victim.alliance_id);
+    if (seedKillmail.victim.corporation_id) sideACorps.add(seedKillmail.victim.corporation_id);
 
-    // Build battle object
-    const battle: any = {
+    // Build side B (attackers not in victim's alliance/corp)
+    const sideBAlliances = new Set<number>();
+    const sideBCorps = new Set<number>();
+    for (const attacker of seedKillmail.attackers) {
+        if (
+            (attacker.alliance_id && !sideAAlliances.has(attacker.alliance_id)) ||
+            (attacker.corporation_id && !sideACorps.has(attacker.corporation_id))
+        ) {
+            if (attacker.alliance_id && !sideAAlliances.has(attacker.alliance_id)) {
+                sideBAlliances.add(attacker.alliance_id);
+            }
+            if (attacker.corporation_id && !sideACorps.has(attacker.corporation_id)) {
+                sideBCorps.add(attacker.corporation_id);
+            }
+        }
+    }
+
+    // If board owner logic is needed, swap sides here (not implemented, as not relevant for API consumers)
+
+    // Collect all alliances/corps for each side (no expansion)
+    const blueTeam = {
+        alliances: Array.from(sideAAlliances).map(id => ({ id, name: seedKillmail.victim.alliance_name })),
+        corporations: Array.from(sideACorps).map(id => ({ id, name: seedKillmail.victim.corporation_name }))
+    };
+    const redTeam = {
+        alliances: Array.from(sideBAlliances).map(id => ({ id, name: null })),
+        corporations: Array.from(sideBCorps).map(id => ({ id, name: null }))
+    };
+
+    // Fill in names for red team from killmails
+    for (const killmail of killmails) {
+        for (const attacker of killmail.attackers) {
+            if (attacker.alliance_id && sideBAlliances.has(attacker.alliance_id)) {
+                const exists = redTeam.alliances.find(a => a.id === attacker.alliance_id);
+                if (exists && !exists.name && attacker.alliance_name) exists.name = attacker.alliance_name;
+            }
+            if (attacker.corporation_id && sideBCorps.has(attacker.corporation_id)) {
+                const exists = redTeam.corporations.find(c => c.id === attacker.corporation_id);
+                if (exists && !exists.name && attacker.corporation_name) exists.name = attacker.corporation_name;
+            }
+        }
+    }
+
+    // Fetch system info (should be done outside, but for compatibility, return structure)
+    return {
         start_time: battleStartTime,
         end_time: battleEndTime,
         system_id: systemId,
-        systemInfo,
-        red_team: redTeam,
-        blue_team: blueTeam
+        blue_team: blueTeam,
+        red_team: redTeam
     };
-
-    // Sort keys, keeping red_team and blue_team at the end
-    const ordered: any = {};
-    Object.keys(battle)
-        .filter(k => k !== 'red_team' && k !== 'blue_team')
-        .sort()
-        .forEach(k => { ordered[k] = battle[k]; });
-    ordered.red_team = battle.red_team;
-    ordered.blue_team = battle.blue_team;
-
-    return ordered;
-}
-
-function findTeams(killmails: any[]): any {
-    const attackMatrix: Record<number, Record<number, number>> = {};
-    const corporationNames: Record<number, string> = {};
-    const allianceNames: Record<number, string> = {};
-    const corporationAlliances: Record<number, number> = {};
-
-    for (const killmail of killmails) {
-        const victim = killmail.victim;
-        const attackers = killmail.attackers;
-        const totalDamage = victim.damage_taken;
-
-        for (const attacker of attackers) {
-            // Only consider attackers who did at least 5% of the total damage
-            if (attacker.damage_done < 0.05 * totalDamage) continue;
-
-            // Initialize matrix
-            if (!attackMatrix[victim.corporation_id]) attackMatrix[victim.corporation_id] = {};
-            if (!attackMatrix[victim.corporation_id][attacker.corporation_id]) attackMatrix[victim.corporation_id][attacker.corporation_id] = 0;
-            attackMatrix[victim.corporation_id][attacker.corporation_id]++;
-
-            // Store corporation and alliance names
-            if (!corporationNames[victim.corporation_id]) corporationNames[victim.corporation_id] = victim.corporation_name;
-            if (victim.alliance_id && !allianceNames[victim.alliance_id]) {
-                allianceNames[victim.alliance_id] = victim.alliance_name;
-                corporationAlliances[victim.corporation_id] = victim.alliance_id;
-            }
-            if (!corporationNames[attacker.corporation_id]) corporationNames[attacker.corporation_id] = attacker.corporation_name;
-            if (attacker.alliance_id && !allianceNames[attacker.alliance_id]) {
-                allianceNames[attacker.alliance_id] = attacker.alliance_name;
-                corporationAlliances[attacker.corporation_id] = attacker.alliance_id;
-            }
-        }
-    }
-
-    // Determine the teams
-    const teams = determineTeams(attackMatrix, corporationAlliances, corporationNames, allianceNames);
-
-    // Add names to corporations and alliances
-    for (const key of Object.keys(teams)) {
-        const team = teams[key];
-        team.corporations = team.corporations.map((corpId: number) => ({
-            id: corpId,
-            name: corporationNames[corpId]
-        }));
-        team.alliances = team.alliances.map((allianceId: number) => ({
-            id: allianceId,
-            name: allianceNames[allianceId]
-        }));
-    }
-
-    return teams;
-}
-
-function determineTeams(
-    attackMatrix: Record<number, Record<number, number>>,
-    corporationAlliances: Record<number, number>,
-    corporationNames: Record<number, string>,
-    allianceNames: Record<number, string>
-): any {
-    const teams: any = {
-        a: { corporations: [], alliances: [] },
-        b: { corporations: [], alliances: [] }
-    };
-    const assignedCorporations: Record<number, string> = {};
-    const assignedAlliances: Record<number, string> = {};
-
-    for (const victimCorp in attackMatrix) {
-        for (const attackerCorp in attackMatrix[victimCorp]) {
-            const victimCorpNum = Number(victimCorp);
-            const attackerCorpNum = Number(attackerCorp);
-
-            const victimAlliance = corporationAlliances[victimCorpNum] ?? null;
-            const attackerAlliance = corporationAlliances[attackerCorpNum] ?? null;
-
-            if (!assignedCorporations[victimCorpNum] && !assignedCorporations[attackerCorpNum]) {
-                teams.a.corporations.push(victimCorpNum);
-                teams.b.corporations.push(attackerCorpNum);
-                assignedCorporations[victimCorpNum] = 'a';
-                assignedCorporations[attackerCorpNum] = 'b';
-
-                if (victimAlliance && !teams.a.alliances.includes(victimAlliance)) {
-                    teams.a.alliances.push(victimAlliance);
-                    assignedAlliances[victimAlliance] = 'a';
-                }
-                if (attackerAlliance && !teams.b.alliances.includes(attackerAlliance)) {
-                    teams.b.alliances.push(attackerAlliance);
-                    assignedAlliances[attackerAlliance] = 'b';
-                }
-            } else if (assignedCorporations[victimCorpNum] && !assignedCorporations[attackerCorpNum]) {
-                const oppositeTeam = assignedCorporations[victimCorpNum] === 'a' ? 'b' : 'a';
-                teams[oppositeTeam].corporations.push(attackerCorpNum);
-                assignedCorporations[attackerCorpNum] = oppositeTeam;
-
-                if (attackerAlliance && !assignedAlliances[attackerAlliance]) {
-                    teams[oppositeTeam].alliances.push(attackerAlliance);
-                    assignedAlliances[attackerAlliance] = oppositeTeam;
-                }
-            } else if (!assignedCorporations[victimCorpNum] && assignedCorporations[attackerCorpNum]) {
-                const oppositeTeam = assignedCorporations[attackerCorpNum] === 'a' ? 'b' : 'a';
-                teams[oppositeTeam].corporations.push(victimCorpNum);
-                assignedCorporations[victimCorpNum] = oppositeTeam;
-
-                if (victimAlliance && !assignedAlliances[victimAlliance]) {
-                    teams[oppositeTeam].alliances.push(victimAlliance);
-                    assignedAlliances[victimAlliance] = oppositeTeam;
-                }
-            }
-        }
-    }
-
-    return teams;
 }

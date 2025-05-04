@@ -63,7 +63,6 @@
 import { useFetch } from '#app'
 import { computed, ref, watchEffect } from 'vue'
 import { useRoute } from 'vue-router'
-import formatIsk from '~/src/core/utils/formatIsk'
 
 const route = useRoute()
 const id = computed(() => route.params.id)
@@ -116,8 +115,8 @@ function duration(start: number, end: number) {
     return `${m}m ${s}s`
 }
 
-function trackKillStats(map: Map<any, any>, id: any, name: any, totalValue: number, allianceId?: any, allianceName?: any) {
-    if (!id || !name) return
+// Helper to initialize stats for an entity
+function initializeEntityStats(map: Map<any, any>, id: any, name: any, allianceId?: any, allianceName?: any) {
     if (!map.has(id)) {
         map.set(id, {
             id,
@@ -125,12 +124,28 @@ function trackKillStats(map: Map<any, any>, id: any, name: any, totalValue: numb
             alliance_id: allianceId,
             alliance_name: allianceName,
             kills: 0,
-            totalValue: 0
-        })
+            losses: 0,
+            valueInflicted: 0,
+            valueSuffered: 0,
+        });
     }
-    const stats = map.get(id)
-    stats.kills += 1
-    stats.totalValue += totalValue
+    return map.get(id);
+}
+
+// Track stats when an entity is the victim
+function trackVictimStats(map: Map<any, any>, id: any, name: any, valueSuffered: number, allianceId?: any, allianceName?: any) {
+    if (!id || !name) return;
+    const stats = initializeEntityStats(map, id, name, allianceId, allianceName);
+    stats.losses += 1;
+    stats.valueSuffered += valueSuffered;
+}
+
+// Track stats when an entity gets the final blow
+function trackFinalBlowStats(map: Map<any, any>, id: any, name: any, valueInflicted: number, allianceId?: any, allianceName?: any) {
+    if (!id || !name) return;
+    const stats = initializeEntityStats(map, id, name, allianceId, allianceName);
+    stats.kills += 1;
+    stats.valueInflicted += valueInflicted;
 }
 
 function splitKillmailsToSides(killmails: any[], battle: any) {
@@ -155,6 +170,12 @@ function splitKillmailsToSides(killmails: any[], battle: any) {
         let isBlueVictim = false
         let isRedVictim = false
 
+        // Sets to track entities already processed for this specific killmail's attackers
+        const processedBlueAttackerAlliances = new Set();
+        const processedBlueAttackerCorps = new Set();
+        const processedRedAttackerAlliances = new Set();
+        const processedRedAttackerCorps = new Set();
+
         if (killmail.victim.alliance_id && blueAlliances.has(killmail.victim.alliance_id)) {
             isBlueVictim = true
         } else if (killmail.victim.alliance_id && redAlliances.has(killmail.victim.alliance_id)) {
@@ -166,32 +187,65 @@ function splitKillmailsToSides(killmails: any[], battle: any) {
         }
 
         if (isBlueVictim) {
-            redTeamKills.value.push(killmail)
+            blueTeamKills.value.push(killmail)
             blueTeamStats.value.iskLost += killmail.total_value
             blueTeamStats.value.shipsLost += 1
             blueTeamStats.value.damageInflicted += killmail.victim.damage_taken
-            trackKillStats(blueAlliancesMap, killmail.victim.alliance_id, killmail.victim.alliance_name, killmail.total_value)
-            trackKillStats(blueCorporationsMap, killmail.victim.corporation_id, killmail.victim.corporation_name, killmail.total_value, killmail.victim.alliance_id, killmail.victim.alliance_name)
-            trackKillStats(blueCharactersMap, killmail.victim.character_id, killmail.victim.character_name, killmail.total_value)
+            // Track losses for the blue victim's entities
+            trackVictimStats(blueAlliancesMap, killmail.victim.alliance_id, killmail.victim.alliance_name, killmail.total_value);
+            trackVictimStats(blueCorporationsMap, killmail.victim.corporation_id, killmail.victim.corporation_name, killmail.total_value, killmail.victim.alliance_id, killmail.victim.alliance_name);
+            trackVictimStats(blueCharactersMap, killmail.victim.character_id, killmail.victim.character_name, killmail.total_value);
         } else if (isRedVictim) {
-            blueTeamKills.value.push(killmail)
+            redTeamKills.value.push(killmail)
             redTeamStats.value.iskLost += killmail.total_value
             redTeamStats.value.shipsLost += 1
             redTeamStats.value.damageInflicted += killmail.victim.damage_taken
-            trackKillStats(redAlliancesMap, killmail.victim.alliance_id, killmail.victim.alliance_name, killmail.total_value)
-            trackKillStats(redCorporationsMap, killmail.victim.corporation_id, killmail.victim.corporation_name, killmail.total_value, killmail.victim.alliance_id, killmail.victim.alliance_name)
-            trackKillStats(redCharactersMap, killmail.victim.character_id, killmail.victim.character_name, killmail.total_value)
+            // Track losses for the red victim's entities
+            trackVictimStats(redAlliancesMap, killmail.victim.alliance_id, killmail.victim.alliance_name, killmail.total_value);
+            trackVictimStats(redCorporationsMap, killmail.victim.corporation_id, killmail.victim.corporation_name, killmail.total_value, killmail.victim.alliance_id, killmail.victim.alliance_name);
+            trackVictimStats(redCharactersMap, killmail.victim.character_id, killmail.victim.character_name, killmail.total_value);
         }
 
+        // Process attackers
+        // Process attackers
         killmail.attackers.forEach((attacker: any) => {
-            if (attacker.alliance_id && blueAlliances.has(attacker.alliance_id)) {
-                trackKillStats(blueAlliancesMap, attacker.alliance_id, attacker.alliance_name, killmail.total_value)
-                trackKillStats(blueCorporationsMap, attacker.corporation_id, attacker.corporation_name, killmail.total_value, attacker.alliance_id, attacker.alliance_name)
-                trackKillStats(blueCharactersMap, attacker.character_id, attacker.character_name, killmail.total_value)
-            } else if (attacker.alliance_id && redAlliances.has(attacker.alliance_id)) {
-                trackKillStats(redAlliancesMap, attacker.alliance_id, attacker.alliance_name, killmail.total_value)
-                trackKillStats(redCorporationsMap, attacker.corporation_id, attacker.corporation_name, killmail.total_value, attacker.alliance_id, attacker.alliance_name)
-                trackKillStats(redCharactersMap, attacker.character_id, attacker.character_name, killmail.total_value)
+            const allianceId = attacker.alliance_id;
+            const corpId = attacker.corporation_id;
+            const charId = attacker.character_id;
+
+            // Only credit the final blow attacker if the victim was on the opposing team
+            if (attacker.final_blow === true) {
+                // Blue attacker gets final blow on Red victim
+                if (isRedVictim && allianceId && blueAlliances.has(allianceId)) {
+                    // Track final blow for Blue Alliance (only once per killmail)
+                    if (!processedBlueAttackerAlliances.has(allianceId)) {
+                        trackFinalBlowStats(blueAlliancesMap, allianceId, attacker.alliance_name, killmail.total_value);
+                        processedBlueAttackerAlliances.add(allianceId);
+                    }
+                    // Track final blow for Blue Corporation (only once per killmail)
+                    if (corpId && !processedBlueAttackerCorps.has(corpId)) {
+                        trackFinalBlowStats(blueCorporationsMap, corpId, attacker.corporation_name, killmail.total_value, allianceId, attacker.alliance_name);
+                        processedBlueAttackerCorps.add(corpId);
+                    }
+                    // Track final blow for Blue Character
+                    trackFinalBlowStats(blueCharactersMap, charId, attacker.character_name, killmail.total_value);
+                }
+                // Red attacker gets final blow on Blue victim
+                else if (isBlueVictim && allianceId && redAlliances.has(allianceId)) {
+                    // Track final blow for Red Alliance (only once per killmail)
+                    if (!processedRedAttackerAlliances.has(allianceId)) {
+                        trackFinalBlowStats(redAlliancesMap, allianceId, attacker.alliance_name, killmail.total_value);
+                        processedRedAttackerAlliances.add(allianceId);
+                    }
+                    // Track final blow for Red Corporation (only once per killmail)
+                    if (corpId && !processedRedAttackerCorps.has(corpId)) {
+                        trackFinalBlowStats(redCorporationsMap, corpId, attacker.corporation_name, killmail.total_value, allianceId, attacker.alliance_name);
+                        processedRedAttackerCorps.add(corpId);
+                    }
+                    // Track final blow for Red Character
+                    trackFinalBlowStats(redCharactersMap, charId, attacker.character_name, killmail.total_value);
+                }
+                // Note: Final blows on victims not part of the opposing team are ignored for stat tracking.
             }
         })
     })

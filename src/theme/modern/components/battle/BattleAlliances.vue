@@ -11,9 +11,14 @@
                         <span class="text-black dark:text-white">{{ item.name }}</span>
                     </div>
                 </template>
-                <template
-                    #cell-totalValue="{ item, column, index }: { item: BattleAlliance, column: any, index: number }">
-                    {{ formatBillions(item.totalValue) }} ISK
+                <template #cell-losses="{ item }: { item: BattleAlliance }">
+                    {{ item.losses }}
+                </template>
+                <template #cell-valueInflicted="{ item }: { item: BattleAlliance }">
+                    {{ formatIsk(item.valueInflicted) }} ISK
+                </template>
+                <template #cell-valueSuffered="{ item }: { item: BattleAlliance }">
+                    {{ formatIsk(item.valueSuffered) }} ISK
                 </template>
             </Table>
         </div>
@@ -28,9 +33,14 @@
                         <span class="text-black dark:text-white">{{ item.name }}</span>
                     </div>
                 </template>
-                <template
-                    #cell-totalValue="{ item, column, index }: { item: BattleAlliance, column: any, index: number }">
-                    {{ formatBillions(item.totalValue) }} ISK
+                <template #cell-losses="{ item }: { item: BattleAlliance }">
+                    {{ item.losses }}
+                </template>
+                <template #cell-valueInflicted="{ item }: { item: BattleAlliance }">
+                    {{ formatIsk(item.valueInflicted) }} ISK
+                </template>
+                <template #cell-valueSuffered="{ item }: { item: BattleAlliance }">
+                    {{ formatIsk(item.valueSuffered) }} ISK
                 </template>
             </Table>
         </div>
@@ -41,7 +51,10 @@ interface BattleAlliance {
     id: number;
     name: string;
     kills: number;
-    totalValue: number;
+    losses: number; // Added
+    valueInflicted: number; // Added
+    valueSuffered: number; // Added
+    // totalValue: number; // Removed
 }
 
 defineProps<{
@@ -49,17 +62,13 @@ defineProps<{
     redTeamAlliances: BattleAlliance[]
 }>();
 
-function formatBillions(n: number) {
-    if (typeof n !== 'number') return '0';
-    if (n >= 1e9) return (n / 1e9).toLocaleString(undefined, { maximumFractionDigits: 2 }) + 'B';
-    if (n >= 1e6) return (n / 1e6).toLocaleString(undefined, { maximumFractionDigits: 2 }) + 'M';
-    return n.toLocaleString(undefined, { maximumFractionDigits: 2 });
-}
-
 const allianceColumns = [
-    { id: 'name', header: 'Alliance', width: '50%' },
-    { id: 'kills', header: 'Kills', width: '25%' },
-    { id: 'totalValue', header: 'Total Value', width: '25%' },
+    { id: 'name', header: 'Alliance', width: '40%' }, // Adjusted width
+    { id: 'kills', header: 'Kills', width: '15%' }, // Adjusted width
+    { id: 'losses', header: 'Losses', width: '15%' }, // Added
+    { id: 'valueInflicted', header: 'Value Inflicted', width: '15%' }, // Added
+    { id: 'valueSuffered', header: 'Value Suffered', width: '15%' }, // Added
+    // { id: 'totalValue', header: 'Total Value', width: '25%' }, // Removed
 ];
 </script>
 

@@ -181,7 +181,6 @@
 </template>
 <script setup lang="ts">
 import { computed, ref } from 'vue'; // Import computed
-import formatIsk from '~/src/core/utils/formatIsk';
 
 const props = defineProps<{
     blueTeamStats: { iskLost: number, shipsLost: number, damageInflicted: number },

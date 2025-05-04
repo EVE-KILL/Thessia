@@ -9,8 +9,14 @@
                     <img :src="`https://images.eve-kill.com/characters/${item.id}/portrait?size=64`"
                         :alt="`Character: ${item.name}`" class="w-8 h-8 rounded-full" />
                 </template>
-                <template #cell-totalValue="{ item }">
-                    {{ formatBillions(item.totalValue) }} ISK
+                <template #cell-losses="{ item }: { item: BattleCharacter }">
+                    {{ item.losses }}
+                </template>
+                <template #cell-valueInflicted="{ item }: { item: BattleCharacter }">
+                    {{ formatBillions(item.valueInflicted) }} ISK
+                </template>
+                <template #cell-valueSuffered="{ item }: { item: BattleCharacter }">
+                    {{ formatBillions(item.valueSuffered) }} ISK
                 </template>
             </Table>
         </div>
@@ -23,8 +29,14 @@
                     <img :src="`https://images.eve-kill.com/characters/${item.id}/portrait?size=64`"
                         :alt="`Character: ${item.name}`" class="w-8 h-8 rounded-full" />
                 </template>
-                <template #cell-totalValue="{ item }">
-                    {{ formatBillions(item.totalValue) }} ISK
+                <template #cell-losses="{ item }: { item: BattleCharacter }">
+                    {{ item.losses }}
+                </template>
+                <template #cell-valueInflicted="{ item }: { item: BattleCharacter }">
+                    {{ formatBillions(item.valueInflicted) }} ISK
+                </template>
+                <template #cell-valueSuffered="{ item }: { item: BattleCharacter }">
+                    {{ formatBillions(item.valueSuffered) }} ISK
                 </template>
             </Table>
         </div>
@@ -35,7 +47,10 @@ interface BattleCharacter {
     id: number;
     name: string;
     kills: number;
-    totalValue: number;
+    losses: number; // Added
+    valueInflicted: number; // Added
+    valueSuffered: number; // Added
+    // totalValue: number; // Removed
 }
 
 defineProps<{
@@ -47,14 +62,18 @@ function formatBillions(n: number) {
     if (typeof n !== 'number') return '0';
     if (n >= 1e9) return (n / 1e9).toLocaleString(undefined, { maximumFractionDigits: 2 }) + 'B';
     if (n >= 1e6) return (n / 1e6).toLocaleString(undefined, { maximumFractionDigits: 2 }) + 'M';
-    return n.toLocaleString(undefined, { maximumFractionDigits: 2 });
+    // Keep lower values as full numbers for clarity
+    return n.toLocaleString(undefined, { maximumFractionDigits: 0 });
 }
 
 const characterColumns = [
-    { id: 'portrait', header: 'Portrait', width: '10%' },
-    { id: 'name', header: 'Name', width: '40%' },
-    { id: 'kills', header: 'Kills', width: '25%' },
-    { id: 'totalValue', header: 'Total Value', width: '25%' },
+    { id: 'portrait', header: '', width: '5%' }, // Adjusted width
+    { id: 'name', header: 'Name', width: '35%' }, // Adjusted width
+    { id: 'kills', header: 'Kills', width: '15%' }, // Adjusted width
+    { id: 'losses', header: 'Losses', width: '15%' }, // Added
+    { id: 'valueInflicted', header: 'Value Inflicted', width: '15%' }, // Added
+    { id: 'valueSuffered', header: 'Value Suffered', width: '15%' }, // Added
+    // { id: 'totalValue', header: 'Total Value', width: '25%' }, // Removed
 ];
 </script>
 
