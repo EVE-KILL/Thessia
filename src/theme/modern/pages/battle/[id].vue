@@ -2,24 +2,55 @@
     <div class="p-4 bg-background-900 rounded-lg shadow-lg text-black dark:text-white">
         <div v-if="battle && battle.blue_team && battle.red_team">
             <!-- Top Info -->
-            <div class="mb-4">
-                <div class="text-lg font-bold text-black dark:text-white">
-                    Battle in System: {{ battle.systemInfo?.name }} ({{ battle.systemInfo?.security_status?.toFixed(2)
-                    }}) - {{ battle.systemInfo?.region_name }}
+            <div class="battle-topbox mb-6">
+                <div class="flex items-center gap-2 text-2xl font-extrabold text-black dark:text-white mb-1">
+                    <UIcon name="lucide:map-pin" class="w-7 h-7 text-blue-400" />
+                    <span>
+                        {{ t('battle.in_system') }}:
+                        <span class="text-blue-500">{{ battle.system_name || t('battle.unknown_system') }}</span>
+                        <span class="ml-2 text-xs px-2 py-1 rounded bg-background-700 text-background-100 align-middle">
+                            {{ battle.system_security.toFixed(2) }}
+                        </span>
+                        <span class="ml-2 text-background-400">
+                            ({{ getLocalizedString(battle.region_name) }})
+                        </span>
+                    </span>
                 </div>
-                <div class="text-sm text-background-400">
-                    Start Time: {{ formatDate(battle.start_time) }} | End Time: {{ formatDate(battle.end_time) }}
-                </div>
-                <div class="text-sm text-background-400">
-                    ISK Lost: {{ formatIsk(blueTeamStats.iskLost + redTeamStats.iskLost) }} ISK | Ships Lost: {{
-                        blueTeamStats.shipsLost + redTeamStats.shipsLost }} | Damage Inflicted:
-                    {{ formatNumber(blueTeamStats.damageInflicted + redTeamStats.damageInflicted) }}
-                </div>
-                <div class="text-sm text-background-400">
-                    Duration: {{ duration(battle.start_time, battle.end_time) }}
+                <div class="flex flex-wrap gap-6 mt-2 text-base font-medium">
+                    <div class="flex items-center gap-1">
+                        <UIcon name="lucide:clock" class="w-5 h-5 text-background-400" />
+                        <span>{{ t('battle.start_time') }}:</span>
+                        <span class="font-semibold">{{ formatDate(battle.start_time) }}</span>
+                    </div>
+                    <div class="flex items-center gap-1">
+                        <UIcon name="lucide:clock" class="w-5 h-5 text-background-400" />
+                        <span>{{ t('battle.end_time') }}:</span>
+                        <span class="font-semibold">{{ formatDate(battle.end_time) }}</span>
+                    </div>
+                    <div class="flex items-center gap-1">
+                        <UIcon name="lucide:timer" class="w-5 h-5 text-background-400" />
+                        <span>{{ t('battle.duration') }}:</span>
+                        <span class="font-semibold">{{ duration(battle.start_time, battle.end_time) }}</span>
+                    </div>
+                    <div class="flex items-center gap-1">
+                        <UIcon name="lucide:coins" class="w-5 h-5 text-yellow-500" />
+                        <span>{{ t('battle.isk_lost') }}:</span>
+                        <span class="font-semibold">{{ formatIsk(blueTeamStats.iskLost + redTeamStats.iskLost) }}
+                            ISK</span>
+                    </div>
+                    <div class="flex items-center gap-1">
+                        <UIcon name="lucide:ship" class="w-5 h-5 text-background-400" />
+                        <span>{{ t('battle.ships_lost') }}:</span>
+                        <span class="font-semibold">{{ blueTeamStats.shipsLost + redTeamStats.shipsLost }}</span>
+                    </div>
+                    <div class="flex items-center gap-1">
+                        <UIcon name="lucide:flame" class="w-5 h-5 text-red-500" />
+                        <span>{{ t('battle.damage_inflicted') }}:</span>
+                        <span class="font-semibold">{{ formatNumber(blueTeamStats.damageInflicted +
+                            redTeamStats.damageInflicted) }}</span>
+                    </div>
                 </div>
             </div>
-
             <!-- Teams Table -->
             <BattleTeams :blueTeamStats="blueTeamStats" :redTeamStats="redTeamStats"
                 :blueTeamAlliances="blueTeamAlliances" :redTeamAlliances="redTeamAlliances"
@@ -49,11 +80,11 @@
             </div>
         </div>
         <div v-else>
-            <div v-if="battleData && Array.isArray(battleData) && battleData.length === 0">
-                <span class="text-black dark:text-white">No battle found for this killmail.</span>
+            <div v-if="battleData && Object.keys(battleData).length === 0">
+                <span class="text-black dark:text-white">{{ t('battle.no_battle_found') }}</span>
             </div>
             <div v-else>
-                <span class="text-black dark:text-white">Loading...</span>
+                <span class="text-black dark:text-white">{{ t('battle.loading') }}</span>
             </div>
         </div>
     </div>
@@ -63,6 +94,9 @@
 import { useFetch } from '#app'
 import { computed, ref, watchEffect } from 'vue'
 import { useRoute } from 'vue-router'
+import { useI18n } from 'vue-i18n'
+
+const { t } = useI18n()
 
 const route = useRoute()
 const id = computed(() => route.params.id)
@@ -100,6 +134,11 @@ const tabsUi = {
         active: "bg-background-600"
     }
 }
+
+const getLocalizedString = (obj: any, localeKey: string): string => {
+    if (!obj) return "";
+    return obj[localeKey] || obj.en || "";
+};
 
 function formatNumber(n: number) {
     if (typeof n !== 'number') return '0'
@@ -288,4 +327,39 @@ watchEffect(async () => {
 })
 </script>
 
-<style scoped></style>
+<style scoped>
+/* Top section improvements */
+.bg-background-800 {
+    background-color: var(--color-background-800);
+}
+
+.border-background-700 {
+    border-color: var(--color-background-700);
+}
+
+.text-blue-500 {
+    color: #3b82f6;
+}
+
+.text-yellow-500 {
+    color: #eab308;
+}
+
+.text-red-500 {
+    color: #ef4444;
+}
+
+.rounded-lg {
+    border-radius: 0.5rem;
+}
+
+.battle-topbox {
+    background: light-dark(rgba(245, 245, 245, 0.7), rgba(26, 26, 26, 0.7));
+    border-radius: 0.75rem;
+    border: 1.5px solid var(--color-background-700, #282828);
+    box-shadow: 0 2px 8px 0 rgba(0, 0, 0, 0.07);
+    padding: 1.5rem 2rem 1.25rem 2rem;
+    margin-bottom: 2rem;
+    border-bottom: 3px solid var(--color-background-700, #282828);
+}
+</style>

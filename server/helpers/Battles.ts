@@ -67,6 +67,8 @@ export async function getBattleData(killmail_id: number) {
 
     const killTime = new Date(killmail.kill_time);
     const systemId = killmail.system_id;
+    const systemData = await SolarSystems.findOne({ system_id: systemId }, { _id: 0, system_name: 1, region_id: 1, security: 1 });
+    const regionData = await Regions.findOne({ region_id: systemData?.region_id }, { _id: 0, name: 1 });
     const startTime = Math.floor(killTime.getTime() / 1000) - 3600;
     let endTime = Math.floor(killTime.getTime() / 1000) + 3600;
 
@@ -113,14 +115,21 @@ export async function getBattleData(killmail_id: number) {
         segmentEnd += 300;
     } while (segmentEnd < extensibleToTime);
 
+    let battleData = [];
     if (foundStart && foundEnd) {
-        if (battleEndTime < battleStartTime) {
-            return [];
+        if (battleEndTime > battleStartTime) {
+            // Call processBattle to build the battle data
+            battleData = await processBattle(systemId, battleStartTime, battleEndTime, killmail_id);
         }
-        // Call processBattle to build the battle data
-        return await processBattle(systemId, battleStartTime, battleEndTime, killmail_id);
     }
-    return [];
+
+    return {
+        system_name: systemData?.system_name,
+        system_security: systemData?.security,
+        region_id: systemData?.region_id,
+        region_name: regionData?.name,
+        ...battleData,
+    }
 }
 
 async function processBattle(systemId: number, battleStartTime: number, battleEndTime: number, seedKillmailId: number): Promise<any> {

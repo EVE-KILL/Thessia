@@ -7,7 +7,7 @@
                 :hover="true" density="normal" background="transparent" table-class="corporation-table">
                 <template #cell-name="{ item, column, index }: { item: BattleCorporation, column: any, index: number }">
                     <div class="flex items-center">
-                        <Image :type="'corporation'" :id="item.id" :size="24" class="mr-2 rounded-full" />
+                        <Image :type="'corporation'" :id="item.id" :size="32" class="mr-2 square-img" />
                         <span class="text-black dark:text-white">{{ item.name }}</span>
                     </div>
                 </template>
@@ -29,7 +29,7 @@
                 :hover="true" density="normal" background="transparent" table-class="corporation-table">
                 <template #cell-name="{ item, column, index }: { item: BattleCorporation, column: any, index: number }">
                     <div class="flex items-center">
-                        <Image :type="'corporation'" :id="item.id" :size="24" class="mr-2 rounded-full" />
+                        <Image :type="'corporation'" :id="item.id" :size="32" class="mr-2 square-img" />
                         <span class="text-black dark:text-white">{{ item.name }}</span>
                     </div>
                 </template>
@@ -112,5 +112,14 @@ const corporationColumns = [
 
 .corporation-table :deep(tbody tr):hover {
     background: light-dark(rgba(229, 231, 235, 0.15), rgba(35, 35, 35, 0.5));
+}
+
+.square-img {
+    border-radius: 0.375rem;
+    width: 32px;
+    height: 32px;
+    object-fit: cover;
+    background: #18181b;
+    border: 1px solid #282828;
 }
 </style>

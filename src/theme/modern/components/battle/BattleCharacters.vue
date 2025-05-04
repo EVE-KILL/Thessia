@@ -7,7 +7,7 @@
                 :hover="true" density="normal" background="transparent" table-class="character-table">
                 <template #cell-portrait="{ item }">
                     <img :src="`https://images.eve-kill.com/characters/${item.id}/portrait?size=64`"
-                        :alt="`Character: ${item.name}`" class="w-8 h-8 rounded-full" />
+                        :alt="`Character: ${item.name}`" class="w-8 h-8 square-img" />
                 </template>
                 <template #cell-losses="{ item }: { item: BattleCharacter }">
                     {{ item.losses }}
@@ -27,7 +27,7 @@
                 :hover="true" density="normal" background="transparent" table-class="character-table">
                 <template #cell-portrait="{ item }">
                     <img :src="`https://images.eve-kill.com/characters/${item.id}/portrait?size=64`"
-                        :alt="`Character: ${item.name}`" class="w-8 h-8 rounded-full" />
+                        :alt="`Character: ${item.name}`" class="w-8 h-8 square-img" />
                 </template>
                 <template #cell-losses="{ item }: { item: BattleCharacter }">
                     {{ item.losses }}
@@ -108,5 +108,14 @@ const characterColumns = [
 .character-table :deep(.body-cell) {
     padding: 0.5rem;
     /* Adjust padding */
+}
+
+.square-img {
+    border-radius: 0.375rem;
+    width: 32px;
+    height: 32px;
+    object-fit: cover;
+    background: #18181b;
+    border: 1px solid #282828;
 }
 </style>

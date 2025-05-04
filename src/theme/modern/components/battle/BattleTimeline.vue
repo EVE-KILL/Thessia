@@ -20,12 +20,12 @@
                             <div class="font-bold text-black dark:text-white">{{
                                 truncateString(getLocalizedString(item.victim.ship_name, locale),
                                     20) }}</div>
-                            <div class="text-xs text-black dark:text-white">{{
+                            <div class="text-xs text-background-400">{{
                                 getLocalizedString(item.victim.ship_group_name, locale) }}</div>
                         </div>
                         <div class="mx-4">
                             <div class="font-bold text-black dark:text-white">{{ item.victim.character_name }}</div>
-                            <div class="text-xs text-black dark:text-white">{{ formatNumber(item.victim.damage_taken) }}
+                            <div class="text-xs text-background-400">{{ formatNumber(item.victim.damage_taken) }}
                                 damage</div>
                         </div>
                         <div class="flex flex-col items-end">
@@ -33,7 +33,7 @@
                                 <div class="text-xs mr-4 text-black dark:text-white">{{ formatDate(item.kill_time) }}
                                 </div>
                                 <img :src="`https://images.eve-kill.com/types/${item.victim.ship_id}/icon`"
-                                    :alt="item.victim.ship_type" class="h-12 w-12" />
+                                    :alt="item.victim.ship_type" class="h-12 w-12 square-img" />
                             </div>
                         </div>
                     </div>
@@ -53,21 +53,21 @@
                         <div class="flex flex-col items-start mr-4">
                             <div class="flex flex-row items-center">
                                 <img :src="`https://images.eve-kill.com/types/${item.victim.ship_id}/icon`"
-                                    :alt="item.victim.ship_type" class="h-12 w-12" />
+                                    :alt="item.victim.ship_type" class="h-12 w-12 square-img" />
                                 <div class="text-xs ml-4 text-black dark:text-white">{{ formatDate(item.kill_time) }}
                                 </div>
                             </div>
                         </div>
                         <div class="text-center mx-4">
                             <div class="font-bold text-black dark:text-white">{{ item.victim.character_name }}</div>
-                            <div class="text-xs text-black dark:text-white">{{ formatNumber(item.victim.damage_taken) }}
+                            <div class="text-xs text-background-400">{{ formatNumber(item.victim.damage_taken) }}
                                 damage</div>
                         </div>
                         <div class="text-center mx-4">
                             <div class="font-bold text-black dark:text-white">{{
                                 truncateString(getLocalizedString(item.victim.ship_name, locale),
                                     20) }}</div>
-                            <div class="text-xs text-black dark:text-white">{{
+                            <div class="text-xs text-background-400">{{
                                 getLocalizedString(item.victim.ship_group_name, locale) }}</div>
                         </div>
                     </div>
@@ -189,5 +189,14 @@ const generateKillmailLink = (item: any): string => {
 
 .battle-timeline-table :deep(tbody tr):hover {
     background: light-dark(rgba(229, 231, 235, 0.15), rgba(35, 35, 35, 0.5));
+}
+
+.square-img {
+    border-radius: 0.375rem;
+    width: 48px;
+    height: 48px;
+    object-fit: cover;
+    background: #18181b;
+    border: 1px solid #282828;
 }
 </style>

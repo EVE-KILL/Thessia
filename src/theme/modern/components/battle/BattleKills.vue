@@ -5,46 +5,62 @@
             <div class="mb-2 text-lg font-bold text-black dark:text-white">Blue Team Losses</div>
             <Table :columns="killColumns" :items="blueTeamKills" :bordered="true" :striped="false" :hover="true"
                 density="normal" background="transparent" table-class="kill-table" :link-fn="generateKillmailLink">
-                <template #cell-ship="{ item, column, index }: { item: BattleKill, column: any, index: number }">
-                    <div class="flex items-center">
+                <template #cell-ship="{ item }">
+                    <div class="flex items-center gap-3">
                         <img :src="`https://images.eve-kill.com/types/${item.victim.ship_id}/render?size=64`"
                             :alt="`Ship: ${getLocalizedString(item.victim.ship_name, locale)}`"
-                            class="w-10 rounded mr-2" />
+                            class="w-12 h-12 object-cover rounded-md border border-background-700" />
                         <div>
-                            <span class="text-black dark:text-white">{{
-                                truncateString(getLocalizedString(item.victim.ship_name, locale), 20) }}</span><br />
-                            <span v-if="item.total_value > 50" class="text-background-400">{{
-                                formatNumber(item.total_value) }} ISK</span>
+                            <div class="font-semibold text-black dark:text-white">
+                                {{ truncateString(getLocalizedString(item.victim.ship_name, locale), 20) }}
+                            </div>
+                            <div class="text-xs text-background-400">
+                                {{ formatNumber(item.total_value) }} ISK
+                            </div>
                         </div>
                     </div>
                 </template>
-                <template #cell-victim="{ item, column, index }: { item: BattleKill, column: any, index: number }">
-                    <div class="flex items-center">
+                <template #cell-victim="{ item }">
+                    <div class="flex items-center gap-3">
                         <img :src="`https://images.eve-kill.com/characters/${item.victim.character_id}/portrait?size=64`"
-                            :alt="`Character: ${item.victim.character_name}`" class="w-10 rounded mr-2" />
+                            :alt="`Character: ${item.victim.character_name}`"
+                            class="w-12 h-12 object-cover rounded-md border border-background-700" />
                         <div>
-                            <span class="text-black dark:text-white">{{ item.victim.character_name }}</span><br />
-                            <span class="text-background-400">{{ truncateString(item.victim.corporation_name, 22)
-                            }}</span>
+                            <div class="font-semibold text-black dark:text-white">{{ item.victim.character_name }}</div>
+                            <div class="text-xs text-background-400">{{ item.victim.corporation_name }}</div>
+                            <div v-if="item.victim.alliance_name" class="text-xs text-background-400">{{
+                                item.victim.alliance_name }}</div>
                         </div>
                     </div>
                 </template>
-                <template #cell-finalBlow="{ item, column, index }: { item: BattleKill, column: any, index: number }">
+                <template #cell-finalBlow="{ item }">
                     <template v-if="Array.isArray(item.attackers)">
                         <template v-for="attacker in item.attackers"
                             :key="attacker.character_id || attacker.faction_id">
                             <template v-if="attacker.final_blow">
-                                <template v-if="item.is_npc">
-                                    <span class="text-black dark:text-white">{{ attacker.faction_name }}</span><br />
-                                    <span class="text-background-400">{{
-                                        truncateString(getLocalizedString(attacker.ship_group_name, locale), 22)
-                                    }}</span>
-                                </template>
-                                <template v-else>
-                                    <span class="text-black dark:text-white">{{ attacker.character_name }}</span><br />
-                                    <span class="text-background-400">{{
-                                        truncateString(attacker.corporation_name, 22) }}</span>
-                                </template>
+                                <div class="flex items-center gap-3">
+                                    <img v-if="!item.is_npc"
+                                        :src="`https://images.eve-kill.com/characters/${attacker.character_id}/portrait?size=64`"
+                                        :alt="attacker.character_name"
+                                        class="w-12 h-12 object-cover rounded-md border border-background-700" />
+                                    <img v-else
+                                        :src="`https://images.eve-kill.com/types/${attacker.ship_type_id || 0}/icon`"
+                                        :alt="attacker.faction_name"
+                                        class="w-12 h-12 object-cover rounded-md border border-background-700" />
+                                    <div>
+                                        <div class="font-semibold text-black dark:text-white">
+                                            {{ item.is_npc ? attacker.faction_name : attacker.character_name }}
+                                        </div>
+                                        <div class="text-xs text-background-400">
+                                            {{ item.is_npc ? getLocalizedString(attacker.ship_group_name, locale) :
+                                                attacker.corporation_name }}
+                                        </div>
+                                        <div v-if="!item.is_npc && attacker.alliance_name"
+                                            class="text-xs text-background-400">
+                                            {{ attacker.alliance_name }}
+                                        </div>
+                                    </div>
+                                </div>
                             </template>
                         </template>
                     </template>
@@ -56,46 +72,62 @@
             <div class="mb-2 text-lg font-bold text-black dark:text-white">Red Team Losses</div>
             <Table :columns="killColumns" :items="redTeamKills" :bordered="true" :striped="false" :hover="true"
                 density="normal" background="transparent" table-class="kill-table" :link-fn="generateKillmailLink">
-                <template #cell-ship="{ item, column, index }: { item: BattleKill, column: any, index: number }">
-                    <div class="flex items-center">
+                <template #cell-ship="{ item }">
+                    <div class="flex items-center gap-3">
                         <img :src="`https://images.eve-kill.com/types/${item.victim.ship_id}/render?size=64`"
                             :alt="`Ship: ${getLocalizedString(item.victim.ship_name, locale)}`"
-                            class="w-10 rounded mr-2" />
+                            class="w-12 h-12 object-cover rounded-md border border-background-700" />
                         <div>
-                            <span class="text-black dark:text-white">{{
-                                truncateString(getLocalizedString(item.victim.ship_name, locale), 20) }}</span><br />
-                            <span v-if="item.total_value > 50" class="text-background-400">{{
-                                formatNumber(item.total_value) }} ISK</span>
+                            <div class="font-semibold text-black dark:text-white">
+                                {{ truncateString(getLocalizedString(item.victim.ship_name, locale), 20) }}
+                            </div>
+                            <div class="text-xs text-background-400">
+                                {{ formatNumber(item.total_value) }} ISK
+                            </div>
                         </div>
                     </div>
                 </template>
-                <template #cell-victim="{ item, column, index }: { item: BattleKill, column: any, index: number }">
-                    <div class="flex items-center">
+                <template #cell-victim="{ item }">
+                    <div class="flex items-center gap-3">
                         <img :src="`https://images.eve-kill.com/characters/${item.victim.character_id}/portrait?size=64`"
-                            :alt="`Character: ${item.victim.character_name}`" class="w-10 rounded mr-2" />
+                            :alt="`Character: ${item.victim.character_name}`"
+                            class="w-12 h-12 object-cover rounded-md border border-background-700" />
                         <div>
-                            <span class="text-black dark:text-white">{{ item.victim.character_name }}</span><br />
-                            <span class="text-background-400">{{ truncateString(item.victim.corporation_name, 22)
-                            }}</span>
+                            <div class="font-semibold text-black dark:text-white">{{ item.victim.character_name }}</div>
+                            <div class="text-xs text-background-400">{{ item.victim.corporation_name }}</div>
+                            <div v-if="item.victim.alliance_name" class="text-xs text-background-400">{{
+                                item.victim.alliance_name }}</div>
                         </div>
                     </div>
                 </template>
-                <template #cell-finalBlow="{ item, column, index }: { item: BattleKill, column: any, index: number }">
+                <template #cell-finalBlow="{ item }">
                     <template v-if="Array.isArray(item.attackers)">
                         <template v-for="attacker in item.attackers"
                             :key="attacker.character_id || attacker.faction_id">
                             <template v-if="attacker.final_blow">
-                                <template v-if="item.is_npc">
-                                    <span class="text-black dark:text-white">{{ attacker.faction_name }}</span><br />
-                                    <span class="text-background-400">{{
-                                        truncateString(getLocalizedString(attacker.ship_group_name, locale), 22)
-                                    }}</span>
-                                </template>
-                                <template v-else>
-                                    <span class="text-black dark:text-white">{{ attacker.character_name }}</span><br />
-                                    <span class="text-background-400">{{
-                                        truncateString(attacker.corporation_name, 22) }}</span>
-                                </template>
+                                <div class="flex items-center gap-3">
+                                    <img v-if="!item.is_npc"
+                                        :src="`https://images.eve-kill.com/characters/${attacker.character_id}/portrait?size=64`"
+                                        :alt="attacker.character_name"
+                                        class="w-12 h-12 object-cover rounded-md border border-background-700" />
+                                    <img v-else
+                                        :src="`https://images.eve-kill.com/types/${attacker.ship_type_id || 0}/icon`"
+                                        :alt="attacker.faction_name"
+                                        class="w-12 h-12 object-cover rounded-md border border-background-700" />
+                                    <div>
+                                        <div class="font-semibold text-black dark:text-white">
+                                            {{ item.is_npc ? attacker.faction_name : attacker.character_name }}
+                                        </div>
+                                        <div class="text-xs text-background-400">
+                                            {{ item.is_npc ? getLocalizedString(attacker.ship_group_name, locale) :
+                                                attacker.corporation_name }}
+                                        </div>
+                                        <div v-if="!item.is_npc && attacker.alliance_name"
+                                            class="text-xs text-background-400">
+                                            {{ attacker.alliance_name }}
+                                        </div>
+                                    </div>
+                                </div>
                             </template>
                         </template>
                     </template>
@@ -105,7 +137,7 @@
     </div>
 </template>
 <script setup lang="ts">
-import { useI18n } from 'vue-i18n'; // Import useI18n
+import { useI18n } from 'vue-i18n';
 
 interface BattleKill {
     killmail_id: number;
@@ -113,21 +145,23 @@ interface BattleKill {
     is_npc: boolean;
     victim: {
         ship_id: number;
-        ship_name: any; // Assuming this can be a localized object
+        ship_name: any;
         character_id: number;
         character_name: string;
         corporation_name: string;
-        ship_image_url?: string; // Optional image URL
-        character_image_url?: string; // Optional image URL
+        alliance_name?: string;
+        ship_image_url?: string;
+        character_image_url?: string;
     };
     attackers: Array<{
         character_id?: number;
         faction_id?: number;
         final_blow: boolean;
         faction_name?: string;
-        ship_group_name?: any; // Assuming this can be a localized object
+        ship_group_name?: any;
         character_name?: string;
         corporation_name?: string;
+        alliance_name?: string;
     }>;
 }
 
@@ -166,26 +200,20 @@ const killColumns = [
 </script>
 
 <style scoped>
-/* Add any necessary scoped styles here to match the original table appearance */
 .kill-table :deep(.table-header) {
     background-color: rgba(26, 26, 26, 0.5);
-    /* Example from TopBox */
     color: #9ca3af;
-    /* Example from TopBox */
     text-transform: uppercase;
     font-size: 0.75rem;
     padding: 0.5rem;
-    /* Adjust padding */
 }
 
 .kill-table :deep(.header-cell) {
     padding: 0 0.5rem;
-    /* Adjust padding */
 }
 
 .kill-table :deep(.table-row) {
     border-bottom: 1px solid #282828;
-    /* Example from original table */
     transition: background-color 0.3s ease;
     cursor: pointer;
 }
@@ -196,6 +224,14 @@ const killColumns = [
 
 .kill-table :deep(.body-cell) {
     padding: 0.5rem;
-    /* Adjust padding */
+}
+
+.w-12.h-12 {
+    width: 48px;
+    height: 48px;
+    border-radius: 0.375rem;
+    object-fit: cover;
+    background: #18181b;
+    border: 1px solid #282828;
 }
 </style>
