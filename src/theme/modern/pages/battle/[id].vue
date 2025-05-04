@@ -753,6 +753,46 @@ watchEffect(() => {
     possibleRedCorporations.value = red.corporations;
     possibleRedCharacters.value = red.characters;
 });
+
+const seoData = computed(() => {
+    if (!battle.value) return null;
+    const systemName = battle.value.system_name || t('battle.unknown_system');
+    const regionName = getLocalizedString(battle.value.region_name) || '';
+    const start = battle.value.start_time ? formatDate(battle.value.start_time) : '';
+    const end = battle.value.end_time ? formatDate(battle.value.end_time) : '';
+    const totalIsk = formatIsk(blueTeamStats.value.iskLost + redTeamStats.value.iskLost);
+    const totalShips = blueTeamStats.value.shipsLost + redTeamStats.value.shipsLost;
+    const title = `Battle in ${systemName} (${regionName}) | ${start} - ${end}`;
+    const description = `Battle in ${systemName} (${regionName}) from ${start} to ${end}. ISK Lost: ${totalIsk}, Ships Lost: ${totalShips}.`;
+    return {
+        title,
+        ogImage: '', // Optionally add a system or battle image if available
+        description,
+    };
+});
+
+useSeoMeta({
+    title: computed(() => seoData.value?.title || "Battle | EVE-KILL"),
+    ogTitle: computed(() => seoData.value?.title || "Battle | EVE-KILL"),
+    twitterTitle: computed(() => seoData.value?.title || "Battle | EVE-KILL"),
+    description: computed(() => seoData.value?.description || "EVE Online battle details"),
+    ogDescription: computed(() => seoData.value?.description || "EVE Online battle details"),
+    twitterDescription: computed(() => seoData.value?.description || "EVE Online battle details"),
+    ogImage: computed(() => seoData.value?.ogImage || ""),
+    twitterImage: computed(() => seoData.value?.ogImage || ""),
+    ogType: "website",
+    ogSiteName: "EVE-KILL",
+    ogUrl: computed(() =>
+        battle.value ? `https://eve-kill.com/battle/${route.params.id}` : ""
+    ),
+    ogLocale: "en_US",
+    twitterCard: "summary_large_image",
+    twitterSite: "@eve_kill",
+    twitterImageAlt: computed(() => battle.value?.system_name || "EVE System"),
+    twitterImageWidth: "512",
+    twitterImageHeight: "512",
+    twitterCreator: "@eve_kill",
+});
 </script>
 
 <style scoped>
