@@ -182,46 +182,67 @@ function findTeamsEDK(
     const sideBAlliances = new Set<number>();
     const sideBCorps = new Set<number>();
     for (const attacker of seedKillmail.attackers) {
+        // If attacker is not in victim's alliance/corp, add to side B
+        const notInAAlliance = !attacker.alliance_id || !sideAAlliances.has(attacker.alliance_id);
+        const notInACorp = !attacker.corporation_id || !sideACorps.has(attacker.corporation_id);
         if (
-            (attacker.alliance_id && !sideAAlliances.has(attacker.alliance_id)) ||
-            (attacker.corporation_id && !sideACorps.has(attacker.corporation_id))
+            (attacker.alliance_id && notInAAlliance) ||
+            (attacker.corporation_id && notInACorp)
         ) {
-            if (attacker.alliance_id && !sideAAlliances.has(attacker.alliance_id)) {
+            if (attacker.alliance_id && notInAAlliance) {
                 sideBAlliances.add(attacker.alliance_id);
             }
-            if (attacker.corporation_id && !sideACorps.has(attacker.corporation_id)) {
+            if (attacker.corporation_id && notInACorp) {
                 sideBCorps.add(attacker.corporation_id);
             }
         }
     }
 
-    // If board owner logic is needed, swap sides here (not implemented, as not relevant for API consumers)
+    // Collect all unique corp/alliance IDs from all killmails for name lookup
+    const corpNames: Record<number, string> = {};
+    const allianceNames: Record<number, string> = {};
 
-    // Collect all alliances/corps for each side (no expansion)
-    const blueTeam = {
-        alliances: Array.from(sideAAlliances).map(id => ({ id, name: seedKillmail.victim.alliance_name })),
-        corporations: Array.from(sideACorps).map(id => ({ id, name: seedKillmail.victim.corporation_name }))
-    };
-    const redTeam = {
-        alliances: Array.from(sideBAlliances).map(id => ({ id, name: null })),
-        corporations: Array.from(sideBCorps).map(id => ({ id, name: null }))
-    };
-
-    // Fill in names for red team from killmails
     for (const killmail of killmails) {
+        if (killmail.victim.corporation_id && killmail.victim.corporation_name) {
+            corpNames[killmail.victim.corporation_id] = killmail.victim.corporation_name;
+        }
+        if (killmail.victim.alliance_id && killmail.victim.alliance_name) {
+            allianceNames[killmail.victim.alliance_id] = killmail.victim.alliance_name;
+        }
         for (const attacker of killmail.attackers) {
-            if (attacker.alliance_id && sideBAlliances.has(attacker.alliance_id)) {
-                const exists = redTeam.alliances.find(a => a.id === attacker.alliance_id);
-                if (exists && !exists.name && attacker.alliance_name) exists.name = attacker.alliance_name;
+            if (attacker.corporation_id && attacker.corporation_name) {
+                corpNames[attacker.corporation_id] = attacker.corporation_name;
             }
-            if (attacker.corporation_id && sideBCorps.has(attacker.corporation_id)) {
-                const exists = redTeam.corporations.find(c => c.id === attacker.corporation_id);
-                if (exists && !exists.name && attacker.corporation_name) exists.name = attacker.corporation_name;
+            if (attacker.alliance_id && attacker.alliance_name) {
+                allianceNames[attacker.alliance_id] = attacker.alliance_name;
             }
         }
     }
 
-    // Fetch system info (should be done outside, but for compatibility, return structure)
+    // Build blue team corporations/alliances (including standalone corps)
+    const blueTeam = {
+        alliances: Array.from(sideAAlliances).map(id => ({
+            id,
+            name: allianceNames[id] || seedKillmail.victim.alliance_name || null
+        })),
+        corporations: Array.from(sideACorps).map(id => ({
+            id,
+            name: corpNames[id] || seedKillmail.victim.corporation_name || null
+        }))
+    };
+
+    // Build red team corporations/alliances (including standalone corps)
+    const redTeam = {
+        alliances: Array.from(sideBAlliances).map(id => ({
+            id,
+            name: allianceNames[id] || null
+        })),
+        corporations: Array.from(sideBCorps).map(id => ({
+            id,
+            name: corpNames[id] || null
+        }))
+    };
+
     return {
         start_time: battleStartTime,
         end_time: battleEndTime,
