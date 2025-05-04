@@ -766,31 +766,25 @@ const seoData = computed(() => {
     const description = `Battle in ${systemName} (${regionName}) from ${start} to ${end}. ISK Lost: ${totalIsk}, Ships Lost: ${totalShips}.`;
     return {
         title,
-        ogImage: '', // Optionally add a system or battle image if available
         description,
     };
 });
 
 useSeoMeta({
-    title: computed(() => seoData.value?.title || "Battle | EVE-KILL"),
-    ogTitle: computed(() => seoData.value?.title || "Battle | EVE-KILL"),
-    twitterTitle: computed(() => seoData.value?.title || "Battle | EVE-KILL"),
-    description: computed(() => seoData.value?.description || "EVE Online battle details"),
-    ogDescription: computed(() => seoData.value?.description || "EVE Online battle details"),
-    twitterDescription: computed(() => seoData.value?.description || "EVE Online battle details"),
-    ogImage: computed(() => seoData.value?.ogImage || ""),
-    twitterImage: computed(() => seoData.value?.ogImage || ""),
+    title: () => seoData.value?.title || "Battle | EVE-KILL",
+    ogTitle: () => seoData.value?.title || "Battle | EVE-KILL",
+    twitterTitle: () => seoData.value?.title || "Battle | EVE-KILL",
+    description: () => seoData.value?.description || "EVE Online battle details",
+    ogDescription: () => seoData.value?.description || "EVE Online battle details",
+    twitterDescription: () => seoData.value?.description || "EVE Online battle details",
     ogType: "website",
     ogSiteName: "EVE-KILL",
-    ogUrl: computed(() =>
-        battle.value ? `https://eve-kill.com/battle/${route.params.id}` : ""
-    ),
+    ogUrl: () =>
+        battle.value ? `https://eve-kill.com/battle/${route.params.id}` : "",
     ogLocale: "en_US",
     twitterCard: "summary_large_image",
     twitterSite: "@eve_kill",
-    twitterImageAlt: computed(() => battle.value?.system_name || "EVE System"),
-    twitterImageWidth: "512",
-    twitterImageHeight: "512",
+    twitterImageAlt: () => battle.value?.system_name || "EVE System",
     twitterCreator: "@eve_kill",
 });
 </script>
