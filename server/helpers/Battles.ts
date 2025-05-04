@@ -1,15 +1,22 @@
 import { IKillmail } from "../interfaces/IKillmail";
 
-export async function isKillInBattle(killmail_id: number): Promise<boolean> {
+/**
+ * Finds battle ID and timeframe for a given killmail if it exists
+ * @param killmail_id The killmail ID to check
+ * @returns Battle information or null if no battle exists
+ */
+export async function findBattleForKillmail(killmail_id: number): Promise<{
+    battle_id: any,
+    startTime: Date,
+    endTime: Date,
+    systemId: number
+} | null> {
     const killmail: IKillmail | null = await Killmails.findOne({
         killmail_id: killmail_id,
     }, { _id: 0, system_id: 1, kill_time: 1 });
 
     if (!killmail) {
-        throw createError({
-            statusCode: 400,
-            statusMessage: "Killmail not found",
-        });
+        return null;
     }
 
     const killTime = new Date(killmail.kill_time);
@@ -50,78 +57,59 @@ export async function isKillInBattle(killmail_id: number): Promise<boolean> {
 
     const result = await Killmails.aggregate(pipeline, { allowDiskUse: true });
     if (result.length === 0) {
-        return false;
+        return null;
     }
 
-    return true;
+    return {
+        battle_id: result[0]._id,
+        startTime,
+        endTime,
+        systemId
+    };
+}
+
+export async function isKillInBattle(killmail_id: number): Promise<boolean> {
+    const battle = await findBattleForKillmail(killmail_id);
+    return battle !== null;
 }
 
 export async function getBattleData(killmail_id: number) {
-    const killmail: IKillmail | null = await Killmails.findOne({
-        killmail_id: killmail_id,
-    }, { _id: 0, system_id: 1, kill_time: 1 });
+    // First check if this killmail is actually part of a battle using the same logic as isKillInBattle
+    const battle = await findBattleForKillmail(killmail_id);
 
-    if (!killmail) {
+    // If no battle found with the consistent detection method, return empty result
+    if (!battle) {
         return [];
     }
 
-    const killTime = new Date(killmail.kill_time);
-    const systemId = killmail.system_id;
+    const systemId = battle.systemId;
     const systemData = await SolarSystems.findOne({ system_id: systemId }, { _id: 0, system_name: 1, region_id: 1, security: 1 });
     const regionData = await Regions.findOne({ region_id: systemData?.region_id }, { _id: 0, name: 1 });
-    const startTime = Math.floor(killTime.getTime() / 1000) - 3600;
-    let endTime = Math.floor(killTime.getTime() / 1000) + 3600;
 
-    let extensibleToTime = endTime;
-    let segmentStart = startTime;
-    let segmentEnd = startTime + 300;
-    let foundStart = false;
-    let foundEnd = false;
-    let battleStartTime = 0;
-    let battleEndTime = 0;
-    let failCounter = 0;
-    const killCountToConsiderStart = 5;
-    const killCountToConsiderEnd = 15;
+    // Convert to Unix timestamps for consistency with existing code
+    const battleStartTime = Math.floor(battle.startTime.getTime() / 1000);
+    const battleEndTime = Math.floor(battle.endTime.getTime() / 1000);
 
-    do {
-        const killCount = await Killmails.countDocuments({
-            kill_time: {
-                $gte: new Date(segmentStart * 1000),
-                $lte: new Date(segmentEnd * 1000)
-            },
-            system_id: systemId
-        });
-
-        if (killCount >= killCountToConsiderStart) {
-            if (!foundStart) {
-                foundStart = true;
-                battleStartTime = segmentStart;
+    // Fetch battle killmails using the identified battle_id
+    const kills = await Killmails.aggregate([
+        {
+            $match: {
+                kill_time: { $gte: battle.startTime, $lte: battle.endTime },
+                system_id: battle.systemId,
+                battle_id: battle.battle_id
             }
-            failCounter = 0;
-        } else {
-            if (failCounter >= 3) {
-                foundEnd = true;
-                battleEndTime = segmentStart;
+        },
+        {
+            $project: {
+                _id: 0,
+                items: 0
             }
-            failCounter++;
         }
+    ]);
 
-        // Extend the window if high activity at the end
-        if (segmentEnd >= extensibleToTime && killCount >= killCountToConsiderEnd) {
-            extensibleToTime += 1600;
-        }
-
-        segmentStart += 300;
-        segmentEnd += 300;
-    } while (segmentEnd < extensibleToTime);
-
-    let battleData = [];
-    if (foundStart && foundEnd) {
-        if (battleEndTime > battleStartTime) {
-            // Call processBattle to build the battle data
-            battleData = await processBattle(systemId, battleStartTime, battleEndTime, killmail_id);
-        }
-    }
+    // Process the battle data
+    const seedKillmail = kills.find((k: any) => k.killmail_id === killmail_id) || kills[0];
+    const battleData = seedKillmail ? findTeamsEDK(seedKillmail, kills, systemId, battleStartTime, battleEndTime) : [];
 
     return {
         system_name: systemData?.system_name,
@@ -129,7 +117,7 @@ export async function getBattleData(killmail_id: number) {
         region_id: systemData?.region_id,
         region_name: regionData?.name,
         ...battleData,
-    }
+    };
 }
 
 async function processBattle(systemId: number, battleStartTime: number, battleEndTime: number, seedKillmailId: number): Promise<any> {
