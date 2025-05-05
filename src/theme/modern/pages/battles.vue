@@ -134,9 +134,9 @@ if (!pending.value) {
 
             <Table v-if="!pending && !initialPending" :key="'battles-table-data'" :columns="columns"
                 :items="battlesList" :loading="false" :skeleton-count="selectedPageSize" :link-fn="linkFn"
-                @row-click="goToBattle" :bordered="true" :striped="false" :hover="true" density="normal"
-                background="transparent" table-class="battles-table"
-                :empty-text="t('noBattlesFound', 'No battles found.')" empty-icon="i-heroicons-circle-stack">
+                :bordered="true" :striped="false" :hover="true" density="normal" background="transparent"
+                table-class="battles-table" :empty-text="t('noBattlesFound', 'No battles found.')"
+                empty-icon="i-heroicons-circle-stack">
                 <!-- Custom Cell Rendering -->
                 <template #cell-battle_id="{ item }">
                     <NuxtLink :to="linkFn(item)" class="text-primary-500 hover:underline font-semibold">
