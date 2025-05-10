@@ -825,8 +825,10 @@ function getTotalCorporationsCount(): number {
 
 .separator {
     display: inline-block;
-    margin: 0 4px;
+    margin: 0 2px;
     color: light-dark(#9ca3af, #6b7280);
+    transform: scaleX(0.5);
+    /* shorten dash by half */
 }
 
 .ship-name {
@@ -837,6 +839,8 @@ function getTotalCorporationsCount(): number {
     position: relative;
     transition: all 0.15s ease;
     will-change: overflow;
+    mask-image: linear-gradient(to right, black 75%, transparent);
+    -webkit-mask-image: linear-gradient(to right, black 75%, transparent);
 }
 
 .ship-name:hover {
@@ -866,6 +870,8 @@ function getTotalCorporationsCount(): number {
     position: relative;
     transition: all 0.15s ease;
     will-change: overflow;
+    mask-image: linear-gradient(to right, black 75%, transparent);
+    -webkit-mask-image: linear-gradient(to right, black 75%, transparent);
 }
 
 .weapon-name:hover {
