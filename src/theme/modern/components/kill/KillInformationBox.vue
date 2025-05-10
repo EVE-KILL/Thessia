@@ -85,6 +85,10 @@
                 class="entity-link truncate">
                 {{ getLocalizedString(killmail?.victim?.ship_name) }}
             </NuxtLink>
+            <NuxtLink v-if="killmail?.victim?.ship_group_name" :to="`/group/${killmail.victim.ship_group_id}`"
+                class="entity-link truncate">
+                ({{ getLocalizedString(killmail?.victim?.ship_group_name) }})
+            </NuxtLink>
             <span v-else class="truncate">{{ getLocalizedString(killmail?.victim?.ship_name) }}</span>
         </div>
 
