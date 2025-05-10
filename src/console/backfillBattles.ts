@@ -143,11 +143,6 @@ async function processPotentialBattle(systemId: number, fromTime: Date, toTime: 
             return;
         }
 
-        // Call compileFullBattleData which now handles all calculations:
-        // - battle_id generation
-        // - team siding
-        // - statistics calculations
-        // - top lists generation
         const battleDocument = await compileFullBattleData(battleData, systemId, battleStartTime, battleEndTime);
 
         cliLogger.info(`ℹ️  Battle identified in system ${systemId} (ID: ${battleDocument.battle_id}), ${battleStartTime.toISOString()} to ${battleEndTime.toISOString()}, ${battleData.length} killmails.`);

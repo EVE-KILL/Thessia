@@ -5,7 +5,7 @@ import { Meilisearch } from "~/server/helpers/Meilisearch";
  * Also handles translation IDs properly for multilingual search.
  */
 export default defineEventHandler(async (event) => {
-    const searchTerm = event.context.params?.searchTerm;
+    const searchTerm = decodeURIComponent(event.context.params?.searchTerm);
 
     if (!searchTerm) {
         throw createError({
