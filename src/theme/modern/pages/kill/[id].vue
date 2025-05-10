@@ -103,7 +103,7 @@
                                 </div>
                             </div>
                         </template>
-                        <KillFittingWheel v-else :killmail="killmail" :max-width="1000" style="min-width: 550px" />
+                        <KillFittingWheel v-else :killmail="killmail" :max-width="1000" style="min-width: 350px" />
                     </div>
 
                     <!-- Kill Information - Adjusted width -->
