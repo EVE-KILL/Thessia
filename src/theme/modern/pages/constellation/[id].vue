@@ -12,12 +12,9 @@
                     </div>
                 </div>
             </UCard>
-            <KillList
-                killlistType="latest"
-                :limit="100"
+            <KillList killlistType="latest" :limit="100"
                 :apiEndpoint="`/api/killlist/constellation/${constellation.constellation_id}`"
-                :wsFilter="`constellation.${constellation.constellation_id}`"
-            />
+                :wsFilter="`constellation.${constellation.constellation_id}`" />
         </div>
         <div v-else-if="pending" class="mx-auto p-4">
             <USkeleton class="h-32 rounded-lg mb-4" />
@@ -43,7 +40,6 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue';
 import { useRoute } from 'vue-router';
 import KillList from '../../components/common/KillList.vue';
 

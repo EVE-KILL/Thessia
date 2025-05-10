@@ -60,6 +60,9 @@
             <!-- Tabs -->
             <div class="mb-4">
                 <UTabs :items="tabs" :ui="tabsUi" color="neutral">
+                    <template #overview>
+                        <BattleOverview v-if="battleData" :battle="battleData" />
+                    </template>
                     <template #kills>
                         <BattleKills :blueTeamKills="blueTeamKills" :redTeamKills="redTeamKills" />
                     </template>
@@ -75,7 +78,7 @@
                             :redTeamCharacters="redTeamCharacters" />
                     </template>
                     <template #timeline>
-                        <BattleTimeline :killmails="killmails" :battle="battle" />
+                        <BattleTimeline v-if="battleData" :killmails="killmails" :battle="battleData" />
                     </template>
                 </UTabs>
             </div>
@@ -92,9 +95,9 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref, watchEffect } from 'vue'
-import { useI18n } from 'vue-i18n'
-import { useRoute } from 'vue-router'
+import { computed, ref, watchEffect } from 'vue';
+import { useI18n } from 'vue-i18n';
+import { useRoute } from 'vue-router';
 
 const { locale, t } = useI18n()
 
@@ -117,6 +120,7 @@ const blueTeamCharacters = ref<any[]>([])
 const redTeamCharacters = ref<any[]>([])
 
 const tabs = [
+    { label: 'Overview', slot: 'overview' },
     { label: 'Kills', slot: 'kills' },
     { label: 'Alliances', slot: 'alliances' },
     { label: 'Corporations', slot: 'corporations' },

@@ -1,6 +1,7 @@
 import crypto from "crypto";
 import {
     IBattles as IBattlesDocument,
+    ICharacterShipManifestEntry,
     IEntityStats,
     ITeamSummaryStats
 } from "../interfaces/IBattles";
@@ -212,6 +213,11 @@ export async function compileFullBattleData(
     const blueTeamStats: ITeamSummaryStats = { iskLost: 0, shipsLost: 0, damageInflicted: 0 };
     const redTeamStats: ITeamSummaryStats = { iskLost: 0, shipsLost: 0, damageInflicted: 0 };
 
+    // Initialize ship manifest maps for tracking unique character-ship combinations
+    // Using Maps with keys as `${character_id}-${ship_type_id}` to track unique combinations
+    const blueTeamShipManifestMap = new Map<string, ICharacterShipManifestEntry>();
+    const redTeamShipManifestMap = new Map<string, ICharacterShipManifestEntry>();
+
     const blueTeamAlliancesStatsMap: Map<number, IEntityStats> = new Map();
     const redTeamAlliancesStatsMap: Map<number, IEntityStats> = new Map();
     const blueTeamCorporationsStatsMap: Map<number, IEntityStats> = new Map();
@@ -242,6 +248,77 @@ export async function compileFullBattleData(
         else {
             // Default assignment for neutrals/unassigned entities
             victimIsRed = true;
+        }
+
+        // Process victim ship for manifest
+        if (victim.ship_id && victim.character_id) {
+            const key = `${victim.character_id}-${victim.ship_id}`;
+            const shipEntry: ICharacterShipManifestEntry = {
+                character_id: victim.character_id,
+                character_name: victim.character_name,
+                corporation_id: victim.corporation_id,
+                corporation_name: victim.corporation_name,
+                alliance_id: victim.alliance_id,
+                alliance_name: victim.alliance_name,
+                ship_type_id: victim.ship_id,
+                ship_name: victim.ship_name || { en: `Unknown Ship ${victim.ship_id}` },
+                ship_group_id: victim.ship_group_id,
+                ship_group_name: victim.ship_group_name,
+                was_lost: true,
+                killmail_id_if_lost: killmail.killmail_id
+            };
+
+            // Add to appropriate team's manifest map
+            if (victimIsBlue) {
+                blueTeamShipManifestMap.set(key, shipEntry);
+            } else if (victimIsRed) {
+                redTeamShipManifestMap.set(key, shipEntry);
+            }
+        }
+
+        // Process attackers' ships for manifest
+        for (const attacker of attackers) {
+            if (attacker.ship_id && attacker.character_id) {
+                let attackerTeamIsBlue = false;
+                let attackerTeamIsRed = false;
+
+                // Determine attacker's team
+                if (attacker.alliance_id && blueTeamAllianceIds.has(attacker.alliance_id)) attackerTeamIsBlue = true;
+                else if (attacker.corporation_id && blueTeamCorpIds.has(attacker.corporation_id)) attackerTeamIsBlue = true;
+                else if (attacker.alliance_id && redTeamAllianceIds.has(attacker.alliance_id)) attackerTeamIsRed = true;
+                else if (attacker.corporation_id && redTeamCorpIds.has(attacker.corporation_id)) attackerTeamIsRed = true;
+
+                const key = `${attacker.character_id}-${attacker.ship_id}`;
+
+                // Only add if this character-ship combination doesn't exist yet
+                // or if it exists but was not marked as lost
+                // (we prioritize the "lost" status if the character both used and lost the same ship type)
+                const addOrUpdateShip = (map: Map<string, ICharacterShipManifestEntry>) => {
+                    // Only create a new entry if one doesn't exist yet
+                    if (!map.has(key)) {
+                        map.set(key, {
+                            character_id: attacker.character_id,
+                            character_name: attacker.character_name,
+                            corporation_id: attacker.corporation_id,
+                            corporation_name: attacker.corporation_name,
+                            alliance_id: attacker.alliance_id,
+                            alliance_name: attacker.alliance_name,
+                            ship_type_id: attacker.ship_id,
+                            ship_name: attacker.ship_name || { en: `Unknown Ship ${attacker.ship_id}` },
+                            ship_group_id: attacker.ship_group_id,
+                            ship_group_name: attacker.ship_group_name,
+                            was_lost: false
+                        });
+                    }
+                };
+
+                // Add to appropriate team's manifest map
+                if (attackerTeamIsBlue) {
+                    addOrUpdateShip(blueTeamShipManifestMap);
+                } else if (attackerTeamIsRed) {
+                    addOrUpdateShip(redTeamShipManifestMap);
+                }
+            }
         }
 
         // STEP 2: Identify the killing team by examining primary attacker
@@ -412,6 +489,10 @@ export async function compileFullBattleData(
         red_team_corporations_stats: Array.from(redTeamCorporationsStatsMap.values()).sort((a, b) => b.kills - a.kills || b.valueInflicted - a.valueInflicted || a.losses - b.losses),
         blue_team_characters_stats: Array.from(blueTeamCharactersStatsMap.values()).sort((a, b) => b.kills - a.kills || b.valueInflicted - a.valueInflicted || a.losses - b.losses),
         red_team_characters_stats: Array.from(redTeamCharactersStatsMap.values()).sort((a, b) => b.kills - a.kills || b.valueInflicted - a.valueInflicted || a.losses - b.losses),
+
+        // Add ship manifest data (convert maps to arrays)
+        blue_team_ship_manifest: Array.from(blueTeamShipManifestMap.values()),
+        red_team_ship_manifest: Array.from(redTeamShipManifestMap.values()),
     };
 
     return battleDocument;

@@ -1,7 +1,5 @@
 import { createError, defineEventHandler, getRouterParam } from 'h3';
 import { Battles } from '~/server/models/Battles';
-import { Regions } from '~/server/models/Regions';
-import { SolarSystems } from '~/server/models/SolarSystems';
 
 export default defineEventHandler(async (event) => {
     const idParam = getRouterParam(event, 'id');
@@ -22,14 +20,6 @@ export default defineEventHandler(async (event) => {
         if (!battle) {
             throw createError({ statusCode: 404, statusMessage: 'Battle not found' });
         }
-
-        let systemData = await SolarSystems.findOne({ system_id: battle.system_id }, { _id: 0, system_name: 1, region_id: 1, security: 1 });
-        let regionData = await Regions.findOne({ region_id: systemData?.region_id }, { _id: 0, name: 1 });
-
-        battle.system_name = systemData?.system_name || 'Unknown System';
-        battle.system_security = systemData?.security ?? null;
-        battle.region_id = systemData?.region_id ?? null;
-        battle.region_name = regionData?.name ?? null;
 
         return battle;
     } catch (error: any) {

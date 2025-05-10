@@ -1,5 +1,21 @@
 import type { ITranslation } from "./ITranslation";
 
+// Ship manifest entry for character tracking in battles
+export interface ICharacterShipManifestEntry {
+    character_id?: number;
+    character_name?: string;
+    corporation_id?: number;
+    corporation_name?: string;
+    alliance_id?: number;
+    alliance_name?: string;
+    ship_type_id: number; // Ship type ID
+    ship_name: ITranslation | string;
+    ship_group_id?: number;
+    ship_group_name?: ITranslation | string;
+    was_lost: boolean; // True if this specific ship instance was a victim
+    killmail_id_if_lost?: number; // The killmail_id where this ship was lost
+}
+
 // New helper interfaces
 export interface IEntityStats {
     id: number;
@@ -80,4 +96,8 @@ export interface IBattles {
 
     updatedAt?: Date;
     createdAt?: Date;
+
+    // Ship manifest tracking
+    blue_team_ship_manifest?: ICharacterShipManifestEntry[];
+    red_team_ship_manifest?: ICharacterShipManifestEntry[];
 }

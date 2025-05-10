@@ -4,6 +4,22 @@ import type { IBattles } from "~/server/interfaces/IBattles"; // Adjust the path
 // Extend the IBattles interface with Mongoose's Document interface
 export interface IBattlesDocument extends IBattles, Document { }
 
+// Define a sub-schema for ICharacterShipManifestEntry
+const characterShipManifestEntrySchema = new Schema({
+    character_id: { type: Number, required: false },
+    character_name: { type: String, required: false },
+    corporation_id: { type: Number, required: false },
+    corporation_name: { type: String, required: false },
+    alliance_id: { type: Number, required: false },
+    alliance_name: { type: String, required: false },
+    ship_type_id: { type: Number, required: true },
+    ship_name: { type: Schema.Types.Mixed, required: true }, // Can be ITranslation (Object) or string
+    ship_group_id: { type: Number, required: false },
+    ship_group_name: { type: Schema.Types.Mixed, required: false }, // Can be ITranslation (Object) or string
+    was_lost: { type: Boolean, required: true },
+    killmail_id_if_lost: { type: Number, required: false },
+}, { _id: false }); // _id: false for subdocuments if not needed as separate IDs
+
 // Define the battles schema
 const battlesSchema = new Schema<IBattlesDocument>(
     {
@@ -160,7 +176,9 @@ const battlesSchema = new Schema<IBattlesDocument>(
                 valueInflicted: Number,
                 valueSuffered: Number
             }
-        ]
+        ],
+        blue_team_ship_manifest: [characterShipManifestEntrySchema],
+        red_team_ship_manifest: [characterShipManifestEntrySchema],
     },
     {
         collection: "battles",
