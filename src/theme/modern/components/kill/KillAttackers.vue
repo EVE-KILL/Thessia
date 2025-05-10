@@ -846,6 +846,8 @@ function getTotalCorporationsCount(): number {
 .ship-name:hover {
     overflow: visible;
     z-index: 100;
+    mask-image: none;
+    -webkit-mask-image: none;
 }
 
 .ship-name:hover .entity-link,
@@ -877,6 +879,8 @@ function getTotalCorporationsCount(): number {
 .weapon-name:hover {
     overflow: visible;
     z-index: 100;
+    mask-image: none;
+    -webkit-mask-image: none;
 }
 
 .weapon-name:hover .entity-link,
