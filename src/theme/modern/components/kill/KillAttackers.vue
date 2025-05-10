@@ -32,8 +32,7 @@
 
                     <!-- Ship Image -->
                     <NuxtLink v-if="finalBlowAttacker.ship_id" :to="`/item/${finalBlowAttacker.ship_id}`">
-                        <Image :type="'type-render'" :id="finalBlowAttacker.ship_id" :size="64"
-                            class="ship-image ml-2" />
+                        <Image :type="'item'" :id="finalBlowAttacker.ship_id" :size="64" class="ship-image ml-2" />
                     </NuxtLink>
                     <div v-else class="ship-image placeholder-main ml-2" style="width: 64px; height: 64px;"></div>
                 </div>
@@ -150,8 +149,7 @@
 
                     <!-- Ship Image -->
                     <NuxtLink v-if="topDamageAttacker.ship_id" :to="`/item/${topDamageAttacker.ship_id}`">
-                        <Image :type="'type-render'" :id="topDamageAttacker.ship_id" :size="64"
-                            class="ship-image ml-2" />
+                        <Image :type="'item'" :id="topDamageAttacker.ship_id" :size="64" class="ship-image ml-2" />
                     </NuxtLink>
                     <div v-else class="ship-image placeholder-main ml-2" style="width: 64px; height: 64px;"></div>
                 </div>
@@ -334,7 +332,7 @@
 
                         <!-- Ship Image -->
                         <NuxtLink v-if="attacker.ship_id" :to="`/item/${attacker.ship_id}`">
-                            <Image :type="'type-render'" :id="attacker.ship_id" :size="64" class="ship-image ml-2" />
+                            <Image :type="'item'" :id="attacker.ship_id" :size="64" class="ship-image ml-2" />
                         </NuxtLink>
                         <div v-else class="ship-image placeholder-main ml-2" style="width: 64px; height: 64px;"></div>
                     </div>
