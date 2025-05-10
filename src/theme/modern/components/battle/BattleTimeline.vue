@@ -32,8 +32,9 @@
                             <div class="flex flex-row items-center">
                                 <div class="text-xs mr-4 text-black dark:text-white">{{ formatDate(item.kill_time) }}
                                 </div>
-                                <img :src="`https://images.eve-kill.com/types/${item.victim.ship_id}/icon`"
-                                    :alt="item.victim.ship_type" class="h-12 w-12 square-img" />
+                                <Image :type="'item'" :id="item.victim.ship_id"
+                                    :alt="getLocalizedString(item.victim.ship_name, locale) || item.victim.ship_type"
+                                    :size="48" class="h-12 w-12" />
                             </div>
                         </div>
                     </div>
@@ -52,8 +53,9 @@
                     <div class="flex justify-start items-center">
                         <div class="flex flex-col items-start mr-4">
                             <div class="flex flex-row items-center">
-                                <img :src="`https://images.eve-kill.com/types/${item.victim.ship_id}/icon`"
-                                    :alt="item.victim.ship_type" class="h-12 w-12 square-img" />
+                                <Image :type="'item'" :id="item.victim.ship_id"
+                                    :alt="getLocalizedString(item.victim.ship_name, locale) || item.victim.ship_type"
+                                    :size="48" class="h-12 w-12" />
                                 <div class="text-xs ml-4 text-black dark:text-white">{{ formatDate(item.kill_time) }}
                                 </div>
                             </div>
@@ -81,8 +83,26 @@
 </template>
 <script setup lang="ts">
 import { computed } from 'vue';
+
+interface KillmailVictim {
+    ship_id: number | string;
+    ship_name: any;
+    ship_type: string;
+    ship_group_name: any;
+    character_name: string;
+    damage_taken: number;
+    alliance_id?: number;
+    corporation_id?: number;
+}
+
+interface KillmailItem {
+    victim: KillmailVictim;
+    kill_time: string | number;
+    killmail_id: number | string;
+}
+
 const props = defineProps<{
-    killmails: any[],
+    killmails: KillmailItem[],
     battle: any
 }>();
 
@@ -110,7 +130,7 @@ function truncateString(str: any, num: number) {
     return str.length <= num ? str : str.slice(0, num) + '...';
 }
 
-function isBlueTeamKill(kill: any) {
+function isBlueTeamKill(kill: KillmailItem) {
     if (!props.battle) return false;
     const blueAlliances = (props.battle.blue_team?.alliances || []).map((a: any) => a.id);
     const blueCorporations = (props.battle.blue_team?.corporations || []).map((c: any) => c.id);
@@ -123,7 +143,7 @@ function isBlueTeamKill(kill: any) {
 const sortedKillmails = computed(() => {
     if (!Array.isArray(props.killmails)) return [];
     // Accept both unix timestamp and string
-    return [...props.killmails].sort((a, b) => {
+    return [...props.killmails].sort((a: KillmailItem, b: KillmailItem) => {
         const aTime = typeof a.kill_time === 'number' ? a.kill_time : new Date(a.kill_time).getTime();
         const bTime = typeof b.kill_time === 'number' ? b.kill_time : new Date(b.kill_time).getTime();
         return aTime - bTime;
@@ -136,7 +156,7 @@ const timelineColumns = [
     { id: 'red-losses', header: 'Red Team Losses', width: '45%', headerClass: 'text-left' },
 ];
 
-const generateKillmailLink = (item: any): string => {
+const generateKillmailLink = (item: KillmailItem): string => {
     return `/kill/${item.killmail_id}`;
 };
 </script>
@@ -189,14 +209,5 @@ const generateKillmailLink = (item: any): string => {
 
 .battle-timeline-table :deep(tbody tr):hover {
     background: light-dark(rgba(229, 231, 235, 0.15), rgba(35, 35, 35, 0.5));
-}
-
-.square-img {
-    border-radius: 0.375rem;
-    width: 48px;
-    height: 48px;
-    object-fit: cover;
-    background: #18181b;
-    border: 1px solid #282828;
 }
 </style>

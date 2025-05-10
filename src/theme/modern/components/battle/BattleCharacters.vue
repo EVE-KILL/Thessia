@@ -5,9 +5,9 @@
             <div class="mb-2 text-lg font-bold text-black dark:text-white">Blue Team Characters</div>
             <Table :columns="characterColumns" :items="blueTeamCharacters" :bordered="true" :striped="false"
                 :hover="true" density="normal" background="transparent" table-class="character-table">
-                <template #cell-portrait="{ item }">
-                    <img :src="`https://images.eve-kill.com/characters/${item.id}/portrait?size=64`"
-                        :alt="`Character: ${item.name}`" class="w-8 h-8 square-img" />
+                <template #cell-portrait="{ item }: { item: BattleCharacter }">
+                    <Image :type="'character'" :id="item.id" :alt="`Character: ${item.name}`" :size="64"
+                        class="w-12 h-12" />
                 </template>
                 <template #cell-losses="{ item }: { item: BattleCharacter }">
                     {{ item.losses }}
@@ -25,9 +25,9 @@
             <div class="mb-2 text-lg font-bold text-black dark:text-white">Red Team Characters</div>
             <Table :columns="characterColumns" :items="redTeamCharacters" :bordered="true" :striped="false"
                 :hover="true" density="normal" background="transparent" table-class="character-table">
-                <template #cell-portrait="{ item }">
-                    <img :src="`https://images.eve-kill.com/characters/${item.id}/portrait?size=64`"
-                        :alt="`Character: ${item.name}`" class="w-8 h-8 square-img" />
+                <template #cell-portrait="{ item }: { item: BattleCharacter }">
+                    <Image :type="'character'" :id="item.id" :alt="`Character: ${item.name}`" :size="64"
+                        class="w-12 h-12" />
                 </template>
                 <template #cell-losses="{ item }: { item: BattleCharacter }">
                     {{ item.losses }}
@@ -67,8 +67,8 @@ function formatBillions(n: number) {
 }
 
 const characterColumns = [
-    { id: 'portrait', header: '', width: '5%' }, // Adjusted width
-    { id: 'name', header: 'Name', width: '35%' }, // Adjusted width
+    { id: 'portrait', header: '', width: '15%' }, // Adjusted width
+    { id: 'name', header: 'Name', width: '25%' }, // Adjusted width
     { id: 'kills', header: 'Kills', width: '15%' }, // Adjusted width
     { id: 'losses', header: 'Losses', width: '15%' }, // Added
     { id: 'valueInflicted', header: 'Value Inflicted', width: '15%' }, // Added
@@ -108,14 +108,5 @@ const characterColumns = [
 .character-table :deep(.body-cell) {
     padding: 0.5rem;
     /* Adjust padding */
-}
-
-.square-img {
-    border-radius: 0.375rem;
-    width: 32px;
-    height: 32px;
-    object-fit: cover;
-    background: #18181b;
-    border: 1px solid #282828;
 }
 </style>

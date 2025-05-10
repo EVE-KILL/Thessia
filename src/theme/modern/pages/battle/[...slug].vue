@@ -103,16 +103,11 @@ const { locale, t } = useI18n()
 
 const route = useRoute();
 
-// This component will now be reached via a path like /battle/[...slug].vue
-// slug will be an array of path segments.
-// e.g., /battle/123 -> slug = ['123']
-// e.g., /battle/killmail/456 -> slug = ['killmail', '456']
 const slugParts = computed(() => {
     if (Array.isArray(route.params.slug)) {
         return route.params.slug as string[];
     }
-    // Fallback if slug is somehow a string, though with [...slug].vue it should be an array
-    if (typeof route.params.slug === 'string') {
+    if (typeof route.params.slug === 'string') { // Should be array with [...slug].vue
         return [route.params.slug as string];
     }
     return [];
@@ -124,12 +119,12 @@ const isKillmailRoute = computed(() => {
 
 const entityId = computed(() => {
     if (isKillmailRoute.value) {
-        return slugParts.value[1]; // The ID part after 'killmail'
+        return slugParts.value[1];
     }
     if (slugParts.value.length === 1 && slugParts.value[0]) {
-        return slugParts.value[0]; // The direct battle ID
+        return slugParts.value[0];
     }
-    return null; // Or handle error/redirect if slug is invalid
+    return null;
 });
 
 const apiUrl = computed(() => {
@@ -141,12 +136,12 @@ const apiUrl = computed(() => {
 });
 
 const { data: battleData, pending, error } = useFetch(apiUrl, {
-    key: `battle-${entityId.value}-${isKillmailRoute.value}`, // Unique key for caching
+    key: `battle-${entityId.value}-${isKillmailRoute.value}`,
     lazy: true,
-    watch: [entityId, isKillmailRoute] // Re-fetch if entityId or route type changes
+    watch: [entityId, isKillmailRoute]
 });
 
-const battle = ref<any>(null); // This will be populated by battleData
+const battle = ref<any>(null);
 const killmails = ref<any[]>([])
 
 const blueTeamKills = ref<any[]>([])

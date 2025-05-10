@@ -51,7 +51,7 @@
                     #cell-ship="{ item: rawItem, column: rawColumn, index }: { item: unknown, column: any, index: number }">
                     <div v-if="rawItem" class="flex items-center gap-3"
                         :class="{ 'text-red-500 dark:text-red-400': (rawItem as ICharacterShipManifestEntry).was_lost }">
-                        <Image :type="'type-render'" :id="(rawItem as ICharacterShipManifestEntry).ship_type_id"
+                        <Image :type="'item'" :id="(rawItem as ICharacterShipManifestEntry).ship_type_id"
                             :alt="`Ship: ${getLocalizedString((rawItem as ICharacterShipManifestEntry).ship_name, locale) || 'Unknown'}`"
                             :size="64" class="w-12 h-12" :rounded="true" />
                         <div>
@@ -120,7 +120,7 @@
                     #cell-ship="{ item: rawItem, column: rawColumn, index }: { item: unknown, column: any, index: number }">
                     <div v-if="rawItem" class="flex items-center gap-3"
                         :class="{ 'text-red-500 dark:text-red-400': (rawItem as ICharacterShipManifestEntry).was_lost }">
-                        <Image :type="'type-render'" :id="(rawItem as ICharacterShipManifestEntry).ship_type_id"
+                        <Image :type="'item'" :id="(rawItem as ICharacterShipManifestEntry).ship_type_id"
                             :alt="`Ship: ${getLocalizedString((rawItem as ICharacterShipManifestEntry).ship_name, locale) || 'Unknown'}`"
                             :size="64" class="w-12 h-12" :rounded="true" />
                         <div>

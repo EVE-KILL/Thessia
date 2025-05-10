@@ -5,57 +5,77 @@
             <div class="mb-2 text-lg font-bold text-black dark:text-white">Blue Team Losses</div>
             <Table :columns="killColumns" :items="blueTeamKills" :bordered="true" :striped="false" :hover="true"
                 density="normal" background="transparent" table-class="kill-table" :link-fn="generateKillmailLink">
-                <template #cell-ship="{ item }">
-                    <div class="flex items-center gap-3">
-                        <img :src="`https://images.eve-kill.com/types/${item.victim.ship_id}/render?size=64`"
-                            :alt="`Ship: ${getLocalizedString(item.victim.ship_name, locale)}`"
-                            class="w-12 h-12 object-cover rounded-md border border-background-700" />
+                <template #cell-ship="{ item: rawItem }">
+                    <div v-if="rawItem" class="flex items-center gap-3">
+                        <Image v-if="(rawItem as BattleKill).victim && (rawItem as BattleKill).victim.ship_id"
+                            type="type-render" :id="(rawItem as BattleKill).victim.ship_id!"
+                            :alt="`Ship: ${getLocalizedString((rawItem as BattleKill).victim.ship_name, locale) || 'Unknown Ship'}`"
+                            :size="64" class="w-12 h-12" />
+                        <div v-else
+                            class="w-12 h-12 bg-background-700 rounded-md flex items-center justify-center text-xs text-background-400">
+                            No Ship ID</div>
                         <div>
                             <div class="font-semibold text-black dark:text-white">
-                                {{ truncateString(getLocalizedString(item.victim.ship_name, locale), 20) }}
+                                {{ truncateString(getLocalizedString((rawItem as BattleKill).victim.ship_name, locale)
+                                    || 'Unknown Ship',
+                                    20) }}
                             </div>
                             <div class="text-xs text-background-400">
-                                {{ formatNumber(item.total_value) }} ISK
+                                {{ formatNumber((rawItem as BattleKill).total_value) }} ISK
                             </div>
                         </div>
                     </div>
                 </template>
-                <template #cell-victim="{ item }">
-                    <div class="flex items-center gap-3">
-                        <img :src="`https://images.eve-kill.com/characters/${item.victim.character_id}/portrait?size=64`"
-                            :alt="`Character: ${item.victim.character_name}`"
-                            class="w-12 h-12 object-cover rounded-md border border-background-700" />
+                <template #cell-victim="{ item: rawItem }">
+                    <div v-if="rawItem" class="flex items-center gap-3">
+                        <Image v-if="(rawItem as BattleKill).victim && (rawItem as BattleKill).victim.character_id"
+                            type="character" :id="(rawItem as BattleKill).victim.character_id!"
+                            :alt="`Character: ${(rawItem as BattleKill).victim.character_name || 'Unknown Pilot'}`"
+                            :size="64" class="w-12 h-12" />
+                        <div v-else
+                            class="w-12 h-12 bg-background-700 rounded-md flex items-center justify-center text-xs text-background-400">
+                            No Pilot ID</div>
                         <div>
-                            <div class="font-semibold text-black dark:text-white">{{ item.victim.character_name }}</div>
-                            <div class="text-xs text-background-400">{{ item.victim.corporation_name }}</div>
-                            <div v-if="item.victim.alliance_name" class="text-xs text-background-400">{{
-                                item.victim.alliance_name }}</div>
+                            <div class="font-semibold text-black dark:text-white">
+                                {{ (rawItem as BattleKill).victim.character_name || 'Unknown Pilot' }}
+                            </div>
+                            <div class="text-xs text-background-400">
+                                {{ (rawItem as BattleKill).victim.corporation_name || 'Unknown Corporation' }}
+                            </div>
+                            <div v-if="(rawItem as BattleKill).victim.alliance_name"
+                                class="text-xs text-background-400">{{
+                                    (rawItem as BattleKill).victim.alliance_name }}</div>
                         </div>
                     </div>
                 </template>
-                <template #cell-finalBlow="{ item }">
-                    <template v-if="Array.isArray(item.attackers)">
-                        <template v-for="attacker in item.attackers"
-                            :key="attacker.character_id || attacker.faction_id">
+                <template #cell-finalBlow="{ item: rawItem }">
+                    <template v-if="rawItem && Array.isArray((rawItem as BattleKill).attackers)">
+                        <template v-for="attacker in (rawItem as BattleKill).attackers"
+                            :key="attacker.character_id || attacker.faction_id || attacker.ship_type_id">
                             <template v-if="attacker.final_blow">
                                 <div class="flex items-center gap-3">
-                                    <img v-if="!item.is_npc"
-                                        :src="`https://images.eve-kill.com/characters/${attacker.character_id}/portrait?size=64`"
-                                        :alt="attacker.character_name"
-                                        class="w-12 h-12 object-cover rounded-md border border-background-700" />
-                                    <img v-else
-                                        :src="`https://images.eve-kill.com/types/${attacker.ship_type_id || 0}/icon`"
-                                        :alt="attacker.faction_name"
-                                        class="w-12 h-12 object-cover rounded-md border border-background-700" />
+                                    <Image v-if="!(rawItem as BattleKill).is_npc && attacker.character_id"
+                                        type="character" :id="attacker.character_id"
+                                        :alt="attacker.character_name || 'Unknown Pilot'" :size="64"
+                                        class="w-12 h-12" />
+                                    <Image v-else-if="(rawItem as BattleKill).is_npc && attacker.ship_type_id"
+                                        type="type-icon" :id="attacker.ship_type_id"
+                                        :alt="attacker.faction_name || 'NPC Entity'" :size="64" class="w-12 h-12" />
+                                    <div v-else
+                                        class="w-12 h-12 bg-background-700 rounded-md flex items-center justify-center text-xs text-background-400">
+                                        No ID</div>
                                     <div>
                                         <div class="font-semibold text-black dark:text-white">
-                                            {{ item.is_npc ? attacker.faction_name : attacker.character_name }}
+                                            {{ (rawItem as BattleKill).is_npc ? (attacker.faction_name || 'NPC Faction')
+                                                :
+                                                (attacker.character_name || 'Unknown Pilot') }}
                                         </div>
                                         <div class="text-xs text-background-400">
-                                            {{ item.is_npc ? getLocalizedString(attacker.ship_group_name, locale) :
-                                                attacker.corporation_name }}
+                                            {{ (rawItem as BattleKill).is_npc ?
+                                                getLocalizedString(attacker.ship_group_name, locale) :
+                                                (attacker.corporation_name || "Unknown Corporation") }}
                                         </div>
-                                        <div v-if="!item.is_npc && attacker.alliance_name"
+                                        <div v-if="!(rawItem as BattleKill).is_npc && attacker.alliance_name"
                                             class="text-xs text-background-400">
                                             {{ attacker.alliance_name }}
                                         </div>
@@ -72,57 +92,77 @@
             <div class="mb-2 text-lg font-bold text-black dark:text-white">Red Team Losses</div>
             <Table :columns="killColumns" :items="redTeamKills" :bordered="true" :striped="false" :hover="true"
                 density="normal" background="transparent" table-class="kill-table" :link-fn="generateKillmailLink">
-                <template #cell-ship="{ item }">
-                    <div class="flex items-center gap-3">
-                        <img :src="`https://images.eve-kill.com/types/${item.victim.ship_id}/render?size=64`"
-                            :alt="`Ship: ${getLocalizedString(item.victim.ship_name, locale)}`"
-                            class="w-12 h-12 object-cover rounded-md border border-background-700" />
+                <template #cell-ship="{ item: rawItem }">
+                    <div v-if="rawItem" class="flex items-center gap-3">
+                        <Image v-if="(rawItem as BattleKill).victim && (rawItem as BattleKill).victim.ship_id"
+                            type="type-render" :id="(rawItem as BattleKill).victim.ship_id!"
+                            :alt="`Ship: ${getLocalizedString((rawItem as BattleKill).victim.ship_name, locale) || 'Unknown Ship'}`"
+                            :size="64" class="w-12 h-12" />
+                        <div v-else
+                            class="w-12 h-12 bg-background-700 rounded-md flex items-center justify-center text-xs text-background-400">
+                            No Ship ID</div>
                         <div>
                             <div class="font-semibold text-black dark:text-white">
-                                {{ truncateString(getLocalizedString(item.victim.ship_name, locale), 20) }}
+                                {{ truncateString(getLocalizedString((rawItem as BattleKill).victim.ship_name, locale)
+                                    || 'Unknown Ship',
+                                    20) }}
                             </div>
                             <div class="text-xs text-background-400">
-                                {{ formatNumber(item.total_value) }} ISK
+                                {{ formatNumber((rawItem as BattleKill).total_value) }} ISK
                             </div>
                         </div>
                     </div>
                 </template>
-                <template #cell-victim="{ item }">
-                    <div class="flex items-center gap-3">
-                        <img :src="`https://images.eve-kill.com/characters/${item.victim.character_id}/portrait?size=64`"
-                            :alt="`Character: ${item.victim.character_name}`"
-                            class="w-12 h-12 object-cover rounded-md border border-background-700" />
+                <template #cell-victim="{ item: rawItem }">
+                    <div v-if="rawItem" class="flex items-center gap-3">
+                        <Image v-if="(rawItem as BattleKill).victim && (rawItem as BattleKill).victim.character_id"
+                            type="character" :id="(rawItem as BattleKill).victim.character_id!"
+                            :alt="`Character: ${(rawItem as BattleKill).victim.character_name || 'Unknown Pilot'}`"
+                            :size="64" class="w-12 h-12" />
+                        <div v-else
+                            class="w-12 h-12 bg-background-700 rounded-md flex items-center justify-center text-xs text-background-400">
+                            No Pilot ID</div>
                         <div>
-                            <div class="font-semibold text-black dark:text-white">{{ item.victim.character_name }}</div>
-                            <div class="text-xs text-background-400">{{ item.victim.corporation_name }}</div>
-                            <div v-if="item.victim.alliance_name" class="text-xs text-background-400">{{
-                                item.victim.alliance_name }}</div>
+                            <div class="font-semibold text-black dark:text-white">
+                                {{ (rawItem as BattleKill).victim.character_name || 'Unknown Pilot' }}
+                            </div>
+                            <div class="text-xs text-background-400">
+                                {{ (rawItem as BattleKill).victim.corporation_name || 'Unknown Corporation' }}
+                            </div>
+                            <div v-if="(rawItem as BattleKill).victim.alliance_name"
+                                class="text-xs text-background-400">{{
+                                    (rawItem as BattleKill).victim.alliance_name }}</div>
                         </div>
                     </div>
                 </template>
-                <template #cell-finalBlow="{ item }">
-                    <template v-if="Array.isArray(item.attackers)">
-                        <template v-for="attacker in item.attackers"
-                            :key="attacker.character_id || attacker.faction_id">
+                <template #cell-finalBlow="{ item: rawItem }">
+                    <template v-if="rawItem && Array.isArray((rawItem as BattleKill).attackers)">
+                        <template v-for="attacker in (rawItem as BattleKill).attackers"
+                            :key="attacker.character_id || attacker.faction_id || attacker.ship_type_id">
                             <template v-if="attacker.final_blow">
                                 <div class="flex items-center gap-3">
-                                    <img v-if="!item.is_npc"
-                                        :src="`https://images.eve-kill.com/characters/${attacker.character_id}/portrait?size=64`"
-                                        :alt="attacker.character_name"
-                                        class="w-12 h-12 object-cover rounded-md border border-background-700" />
-                                    <img v-else
-                                        :src="`https://images.eve-kill.com/types/${attacker.ship_type_id || 0}/icon`"
-                                        :alt="attacker.faction_name"
-                                        class="w-12 h-12 object-cover rounded-md border border-background-700" />
+                                    <Image v-if="!(rawItem as BattleKill).is_npc && attacker.character_id"
+                                        type="character" :id="attacker.character_id"
+                                        :alt="attacker.character_name || 'Unknown Pilot'" :size="64"
+                                        class="w-12 h-12" />
+                                    <Image v-else-if="(rawItem as BattleKill).is_npc && attacker.ship_type_id"
+                                        type="type-icon" :id="attacker.ship_type_id"
+                                        :alt="attacker.faction_name || 'NPC Entity'" :size="64" class="w-12 h-12" />
+                                    <div v-else
+                                        class="w-12 h-12 bg-background-700 rounded-md flex items-center justify-center text-xs text-background-400">
+                                        No ID</div>
                                     <div>
                                         <div class="font-semibold text-black dark:text-white">
-                                            {{ item.is_npc ? attacker.faction_name : attacker.character_name }}
+                                            {{ (rawItem as BattleKill).is_npc ? (attacker.faction_name || 'NPC Faction')
+                                                :
+                                                (attacker.character_name || 'Unknown Pilot') }}
                                         </div>
                                         <div class="text-xs text-background-400">
-                                            {{ item.is_npc ? getLocalizedString(attacker.ship_group_name, locale) :
-                                                attacker.corporation_name }}
+                                            {{ (rawItem as BattleKill).is_npc ?
+                                                getLocalizedString(attacker.ship_group_name, locale) :
+                                                (attacker.corporation_name || "Unknown Corporation") }}
                                         </div>
-                                        <div v-if="!item.is_npc && attacker.alliance_name"
+                                        <div v-if="!(rawItem as BattleKill).is_npc && attacker.alliance_name"
                                             class="text-xs text-background-400">
                                             {{ attacker.alliance_name }}
                                         </div>
@@ -144,18 +184,18 @@ interface BattleKill {
     total_value: number;
     is_npc: boolean;
     victim: {
-        ship_id: number;
+        ship_id?: number; // Made optional to handle potential missing data
         ship_name: any;
-        character_id: number;
-        character_name: string;
-        corporation_name: string;
+        character_id?: number; // Made optional
+        character_name?: string; // Made optional
+        corporation_name?: string; // Made optional
         alliance_name?: string;
-        ship_image_url?: string;
-        character_image_url?: string;
+        // ship_image_url and character_image_url are not used with Image component
     };
     attackers: Array<{
         character_id?: number;
-        faction_id?: number;
+        faction_id?: number; // For NPCs that might not have a character_id but a faction_id
+        ship_type_id?: number; // For NPC ship icons
         final_blow: boolean;
         faction_name?: string;
         ship_group_name?: any;
