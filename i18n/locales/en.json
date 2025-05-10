@@ -46,6 +46,8 @@
     "searching": "Searching...",
     "noResults": "No results found",
     "more": "More",
+    "showMore": "Show {count} more",
+    "showLess": "Show less",
     "characters": "Characters",
     "character": "Character",
     "corporations": "Corporations",
@@ -478,5 +480,13 @@
         "shipCost": "Ship Cost",
         "fittedCost": "Fitted Value",
         "totalValue": "Total Value"
+    },
+    "killAttackers": {
+        "finalBlow": "Final Blow",
+        "topDamage": "Top Damage",
+        "organizationsInvolved": "Organizations Involved",
+        "showMore": "Show {count} more",
+        "showLess": "Show less",
+        "corporationsWithoutAlliance": "Corporations Without Alliance"
     }
 }
