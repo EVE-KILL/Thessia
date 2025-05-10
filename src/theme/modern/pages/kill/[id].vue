@@ -321,16 +321,178 @@
         <!-- Right Container -->
         <div
             class="w-full md:w-2/5 lg:w-1/3 xl:max-w-md text-black dark:text-white bg-background-900 rounded-md overflow-hidden">
-            <KillAttackers v-if="killmail" :killmail="killmail" :attackers="killmail.attackers" />
-            <KillComments v-if="killmail" :kill-id="killmail.killmail_id" @update:count="updateCommentCount" />
+            <template v-if="!killmail || isLoading">
+                <!-- Skeleton content for attackers -->
+                <div class="p-4">
+                    <div class="grid gap-4">
+                        <div v-for="i in 8" :key="i" class="flex items-center gap-3 p-2 border-b border-background-800">
+                            <div class="relative">
+                                <USkeleton class="h-10 w-10 rounded-full" />
+                                <USkeleton class="h-6 w-6 rounded-full absolute -bottom-1 -right-1" />
+                            </div>
+                            <div class="grid gap-1 flex-1 min-w-0">
+                                <div class="flex justify-between">
+                                    <USkeleton class="h-5 w-32" />
+                                    <USkeleton class="h-5 w-16" />
+                                </div>
+                                <div class="flex justify-between">
+                                    <USkeleton class="h-4 w-24" />
+                                    <USkeleton class="h-4 w-12" />
+                                </div>
+                                <div class="flex items-center gap-1">
+                                    <USkeleton class="h-4 w-4 rounded-full" />
+                                    <USkeleton class="h-4 w-20" />
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </template>
+            <div v-else>
+                <KillAttackers :killmail="killmail" />
+                <KillComments :killId="killmail.killmail_id" @count="updateCommentCount" />
+            </div>
         </div>
     </div>
 
     <!-- Mobile Layout -->
     <div v-else class="mt-4">
         <div class="text-black dark:text-white bg-background-900 rounded-md overflow-hidden">
-            <KillAttackers v-if="killmail" :killmail="killmail" :attackers="killmail.attackers" />
-            <KillComments v-if="killmail" :kill-id="killmail.killmail_id" @update:count="updateCommentCount" />
+            <template v-if="!killmail || isLoading">
+                <!-- Skeleton tabs -->
+                <div class="border-b border-background-700">
+                    <div class="flex gap-2 p-2 overflow-x-auto">
+                        <USkeleton v-for="i in 5" :key="i" class="h-8 w-20 flex-shrink-0" />
+                    </div>
+                </div>
+                <!-- Skeleton content -->
+                <div class="p-4">
+                    <!-- Enhanced fitting wheel skeleton -->
+                    <div class="fitting-wheel-skeleton mx-auto mb-4">
+                        <!-- Outer SVG ring -->
+                        <div class="skeleton-outer-ring">
+                            <svg viewBox="24 24 464 464" xmlns="http://www.w3.org/2000/svg">
+                                <g>
+                                    <circle cx="256" cy="256" r="224"
+                                        style="fill: none; stroke: rgba(40, 40, 40, 0.5); stroke-width: 16;"></circle>
+                                    <rect width="17" height="17" x="98" y="89" style="fill: rgba(40, 40, 40, 0.3);">
+                                    </rect>
+                                    <rect width="17" height="17" x="401" y="93" style="fill: rgba(40, 40, 40, 0.3);">
+                                    </rect>
+                                    <rect width="17" height="17" x="402" y="401" style="fill: rgba(40, 40, 40, 0.3);">
+                                    </rect>
+                                    <rect width="17" height="17" x="94" y="402" style="fill: rgba(40, 40, 40, 0.3);">
+                                    </rect>
+                                    <rect width="12" height="12" x="196" y="82" transform="rotate(56)"
+                                        style="fill: rgba(40, 40, 40, 0.3);"></rect>
+                                </g>
+                            </svg>
+                        </div>
+
+                        <!-- Inner SVG ring -->
+                        <div class="skeleton-inner-ring">
+                            <svg viewBox="24 24 464 464" xmlns="http://www.w3.org/2000/svg">
+                                <defs>
+                                    <mask id="skeleton-slot-corners-mobile">
+                                        <rect width="512" height="512" x="0" y="0"
+                                            style="fill: rgba(255, 255, 255, 0.2);"></rect>
+                                        <rect width="17" height="17" x="133" y="126" style="fill: rgb(0, 0, 0);"></rect>
+                                        <rect width="17" height="17" x="366" y="129" style="fill: rgb(0, 0, 0);"></rect>
+                                        <rect width="17" height="17" x="366" y="366" style="fill: rgb(0, 0, 0);"></rect>
+                                        <rect width="17" height="17" x="132" y="369" style="fill: rgb(0, 0, 0);"></rect>
+                                        <rect width="12" height="12" x="230" y="44" transform="rotate(56)"
+                                            style="fill: rgb(0, 0, 0);"></rect>
+                                    </mask>
+                                </defs>
+                                <g>
+                                    <circle cx="256" cy="256" r="195" mask="url(#skeleton-slot-corners-mobile)"
+                                        style="fill: none; stroke: rgba(40, 40, 40, 0.3); stroke-width: 46; stroke-opacity: 0.6;">
+                                    </circle>
+                                </g>
+                            </svg>
+                        </div>
+
+                        <!-- Ship skeleton -->
+                        <div class="skeleton-ship">
+                            <USkeleton class="h-full w-full rounded-full" />
+                        </div>
+
+                        <!-- Slot indicators -->
+                        <div class="skeleton-indicator high-indicator"
+                            :style="getSkeletonSlotPosition('indicator', 'top')">
+                            <div class="indicator-svg">
+                                <USkeleton class="h-full w-full rounded-sm" />
+                            </div>
+                        </div>
+                        <div class="skeleton-indicator mid-indicator"
+                            :style="getSkeletonSlotPosition('indicator', 'right')">
+                            <div class="indicator-svg">
+                                <USkeleton class="h-full w-full rounded-sm" />
+                            </div>
+                        </div>
+                        <div class="skeleton-indicator low-indicator"
+                            :style="getSkeletonSlotPosition('indicator', 'bottom')">
+                            <div class="indicator-svg">
+                                <USkeleton class="h-full w-full rounded-sm" />
+                            </div>
+                        </div>
+
+                        <!-- Slot skeletons for modules -->
+                        <div v-for="i in 8" :key="`mobile-high-${i}`" :style="getSkeletonSlotPosition(i - 1, 8, 'top')"
+                            class="skeleton-slot high-slot">
+                            <USkeleton class="h-full w-full rounded-full" />
+                        </div>
+                        <div v-for="i in 8" :key="`mobile-mid-${i}`" :style="getSkeletonSlotPosition(i - 1, 8, 'right')"
+                            class="skeleton-slot mid-slot">
+                            <USkeleton class="h-full w-full rounded-full" />
+                        </div>
+                        <div v-for="i in 8" :key="`mobile-low-${i}`"
+                            :style="getSkeletonSlotPosition(i - 1, 8, 'bottom')" class="skeleton-slot low-slot">
+                            <USkeleton class="h-full w-full rounded-full" />
+                        </div>
+                        <div v-for="i in 3" :key="`mobile-rig-${i}`" :style="getSkeletonSlotPosition(i - 1, 3, 'left')"
+                            class="skeleton-slot rig-slot">
+                            <USkeleton class="h-full w-full rounded-full" />
+                        </div>
+                    </div>
+                </div>
+            </template>
+            <UTabs v-else :items="mobileTabs" :ui="tabsUi" :default-index="defaultMobileTabIndex" color="neutral">
+                <!-- Fitting Wheel Tab -->
+                <template #fitting="{ item }">
+                    <div class="flex justify-center">
+                        <KillFittingWheel v-if="killmail" :key="killmail.killmail_id" :killmail="killmail" />
+                    </div>
+                </template>
+
+                <!-- Items Tab -->
+                <template #items="{ item }">
+                    <div class="">
+                        <KillItems v-if="killmail" :killmail="killmail" />
+                    </div>
+                </template>
+
+                <!-- Info Tab -->
+                <template #info="{ item }">
+                    <div class="">
+                        <KillInformationBox v-if="killmail" :killmail="killmail" />
+                    </div>
+                </template>
+
+                <!-- Attackers Tab -->
+                <template #attackers="{ item }">
+                    <div class="">
+                        <KillAttackers v-if="killmail" :attackers="killmail.attackers" />
+                    </div>
+                </template>
+
+                <!-- Comments Tab -->
+                <template #comments="{ item }">
+                    <div class="">
+                        <KillComments :killId="killmail.killmail_id" @count="updateCommentCount" />
+                    </div>
+                </template>
+            </UTabs>
         </div>
     </div>
 </template>
@@ -348,8 +510,54 @@ const isLoading = ref(true);
 // Responsive layout
 const { isMobile } = useResponsive();
 
+// Common UI configuration for tabs
+const tabsUi = {
+    list: "mb-0 border-b border-background-700",
+    tab: {
+        base: "text-sm inline-flex items-center h-10 px-4 cursor-pointer",
+        active: "text-black dark:text-white font-medium",
+        inactive: "text-gray-500 dark:text-gray-400 hover:text-black dark:hover:text-white",
+    },
+    panel: "p-0 sm:p-0",
+};
+
+// No longer needed since we're not using tabs for desktop
+
+// Mobile tabs
+const mobileTabs = computed(() => [
+    {
+        label: "Fitting",
+        slot: "fitting",
+        icon: "i-lucide-circle",
+    },
+    {
+        label: "Items",
+        slot: "items",
+        icon: "i-lucide-package",
+    },
+    {
+        label: "Info",
+        slot: "info",
+        icon: "i-lucide-info",
+    },
+    {
+        label: "Attackers",
+        slot: "attackers",
+        icon: "i-lucide-users",
+        trailing: killmail.value?.attackers?.length
+            ? `(${killmail.value.attackers.length})`
+            : undefined,
+    },
+    {
+        label: "Comments",
+        slot: "comments",
+        icon: "i-lucide-message-square",
+        trailing: commentCount.value ? `(${commentCount.value})` : undefined,
+    },
+]);
+
 // Fetch killmail as before
-const { data: fetchedKillmail, pending } = useAsyncData<IKillmail>(
+const { data: fetchedKillmail, pending } = useAsyncData<IKillmail | null>(
     `killmail-${route.params.id || "none"}`,
     async () => {
         if (!route.params.id) return null;
@@ -392,7 +600,7 @@ const battle = computed(() => battleStatus.value?.inBattle ?? false);
 const seoData = computed(() => {
     if (!fetchedKillmail.value) return null;
 
-    const data = fetchedKillmail.value;
+    const data = fetchedKillmail.value as IKillmail;
     const finalAttacker =
         data.attackers.length > 0 ? data.attackers[data.attackers.length - 1] : null;
 
@@ -422,12 +630,14 @@ useSeoMeta({
     ogType: "website",
     ogSiteName: "EVE-KILL",
     ogUrl: computed(() =>
-        fetchedKillmail.value ? `/kill/${fetchedKillmail.value.killmail_id}` : "",
+        fetchedKillmail.value ? `/kill/${(fetchedKillmail.value as IKillmail).killmail_id}` : "",
     ),
     ogLocale: "en_US",
     twitterCard: "summary_large_image",
     twitterSite: "@eve_kill",
-    twitterImageAlt: computed(() => fetchedKillmail.value?.victim?.ship_name?.en || "EVE Ship"),
+    twitterImageAlt: computed(() =>
+        fetchedKillmail.value ? (fetchedKillmail.value as IKillmail).victim?.ship_name?.en || "EVE Ship" : "EVE Ship"
+    ),
     twitterImageWidth: "512",
     twitterImageHeight: "512",
     twitterCreator: "@eve_kill",
@@ -441,9 +651,9 @@ watch(pending, (newPending) => {
 // Watch for changes in the fetched killmail data and update our ref
 watch(
     fetchedKillmail,
-    async (newData: IKillmail) => {
+    async (newData) => {
         if (newData) {
-            killmail.value = newData;
+            killmail.value = newData as IKillmail;
 
             try {
                 // Fetch sibling killmail id if it exists
@@ -529,6 +739,50 @@ function getSkeletonSlotPosition(
         transform: "translate(-50%, -50%)",
     };
 }
+
+// Default tab selection for mobile
+const defaultMobileTabIndex = ref("0"); // First tab (Fitting)
+
+// Handle comment fragment navigation
+function handleCommentFragment() {
+    if (import.meta.client) {
+        const fragment = window.location.hash;
+        if (fragment?.startsWith("#comment-")) {
+            // If we have a comment fragment, switch to the comments tab
+            if (isMobile.value) {
+                // Comments is the 5th tab (index 4) on mobile
+                defaultMobileTabIndex.value = "4";
+            }
+            // No else needed since desktop doesn't use tabs anymore
+        }
+    }
+}
+
+// Update UTabs to use the defaultIndex
+watch(
+    () => killmail.value,
+    () => {
+        if (killmail.value && import.meta.client) {
+            nextTick(() => {
+                handleCommentFragment();
+            });
+        }
+    },
+    { immediate: true },
+);
+
+// Listen for hash changes to update tab selection when fragments change
+onMounted(() => {
+    if (import.meta.client) {
+        window.addEventListener("hashchange", handleCommentFragment);
+    }
+});
+
+onBeforeUnmount(() => {
+    if (import.meta.client) {
+        window.removeEventListener("hashchange", handleCommentFragment);
+    }
+});
 </script>
 
 <style scoped>

@@ -1041,11 +1041,6 @@ function getTotalCorporationsCount(): number {
     color: light-dark(#6b7280, #9ca3af);
 }
 
-/* Attackers Section Styles */
-.attackers-table-section {
-    margin-top: 1rem;
-}
-
 /* Style for attacker sections */
 .attacker-section {
     padding: 0.5rem 0;
