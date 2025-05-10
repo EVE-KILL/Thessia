@@ -13,7 +13,12 @@
                     </div>
                 </div>
             </UCard>
-            <KillList killlistType="latest" :limit="100" :apiEndpoint="`/api/killlist/system/${system.system_id}`" />
+            <KillList
+                killlistType="latest"
+                :limit="100"
+                :apiEndpoint="`/api/killlist/system/${system.system_id}`"
+                :wsFilter="`system.${system.system_id}`"
+            />
         </div>
         <div v-else-if="pending" class="mx-auto p-4">
             <USkeleton class="h-32 rounded-lg mb-4" />
