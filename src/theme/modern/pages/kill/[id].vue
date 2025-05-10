@@ -350,7 +350,7 @@
             </template>
             <div v-else>
                 <KillAttackers :killmail="killmail" />
-                <KillComments :killId="killmail.killmail_id" @count="updateCommentCount" />
+                <KillComments :killId="killmail.killmail_id" />
             </div>
         </div>
     </div>
@@ -489,7 +489,7 @@
                 <!-- Comments Tab -->
                 <template #comments="{ item }">
                     <div class="">
-                        <KillComments :killId="killmail.killmail_id" @count="updateCommentCount" />
+                        <KillComments :killId="killmail.killmail_id" />
                     </div>
                 </template>
             </UTabs>

@@ -6,12 +6,6 @@
             {{ $t('common.loading') }}...
         </div>
 
-        <!-- No comments message -->
-        <div v-else-if="commentsLoaded && comments.length === 0"
-            class="no-comments p-4 text-center text-gray-500 dark:text-gray-400">
-            {{ $t('killComments.no_comments') || 'No comments yet' }}
-        </div>
-
         <!-- Display existing comments -->
         <div v-for="comment in comments" :key="comment.identifier" class="comment section mb-4 relative"
             :id="`comment-${comment.identifier}`">
