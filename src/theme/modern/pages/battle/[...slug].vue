@@ -9,7 +9,7 @@
                         {{ t('battle.in_system') }}:
                         <span class="text-blue-500">{{ battle.system_name || t('battle.unknown_system') }}</span>
                         <span class="ml-2 text-xs px-2 py-1 rounded bg-background-700 text-background-100 align-middle">
-                            {{ battle.system_security.toFixed(2) }}
+                            {{ battle.system_security ? battle.system_security.toFixed(2) : 'N/A' }}
                         </span>
                         <span class="ml-2 text-background-400">
                             ({{ getLocalizedString(battle.region_name, locale) }})
@@ -60,6 +60,9 @@
             <!-- Tabs -->
             <div class="mb-4">
                 <UTabs :items="tabs" :ui="tabsUi" color="neutral">
+                    <template #overview>
+                        <BattleOverview v-if="battleData" :battle="battleData" />
+                    </template>
                     <template #kills>
                         <BattleKills :blueTeamKills="blueTeamKills" :redTeamKills="redTeamKills" />
                     </template>
@@ -75,7 +78,7 @@
                             :redTeamCharacters="redTeamCharacters" />
                     </template>
                     <template #timeline>
-                        <BattleTimeline :killmails="killmails" :battle="battle" />
+                        <BattleTimeline v-if="battleData" :killmails="killmails" :battle="battleData" />
                     </template>
                 </UTabs>
             </div>
@@ -92,18 +95,58 @@
 </template>
 
 <script setup lang="ts">
-import { useFetch } from '#app'
-import { computed, ref, watchEffect } from 'vue'
-import { useI18n } from 'vue-i18n'
-import { useRoute } from 'vue-router'
+import { computed, ref, watchEffect } from 'vue';
+import { useI18n } from 'vue-i18n';
+import { useRoute } from 'vue-router';
 
 const { locale, t } = useI18n()
 
-const route = useRoute()
-const id = computed(() => route.params.id)
+const route = useRoute();
 
-const { data: battleData } = useFetch(() => id.value ? `/api/battles/killmail/${id.value}` : null)
-const battle = ref<any>(null)
+// This component will now be reached via a path like /battle/[...slug].vue
+// slug will be an array of path segments.
+// e.g., /battle/123 -> slug = ['123']
+// e.g., /battle/killmail/456 -> slug = ['killmail', '456']
+const slugParts = computed(() => {
+    if (Array.isArray(route.params.slug)) {
+        return route.params.slug as string[];
+    }
+    // Fallback if slug is somehow a string, though with [...slug].vue it should be an array
+    if (typeof route.params.slug === 'string') {
+        return [route.params.slug as string];
+    }
+    return [];
+});
+
+const isKillmailRoute = computed(() => {
+    return slugParts.value.length === 2 && slugParts.value[0].toLowerCase() === 'killmail';
+});
+
+const entityId = computed(() => {
+    if (isKillmailRoute.value) {
+        return slugParts.value[1]; // The ID part after 'killmail'
+    }
+    if (slugParts.value.length === 1 && slugParts.value[0]) {
+        return slugParts.value[0]; // The direct battle ID
+    }
+    return null; // Or handle error/redirect if slug is invalid
+});
+
+const apiUrl = computed(() => {
+    if (!entityId.value) return null;
+    if (isKillmailRoute.value) {
+        return `/api/battles/killmail/${entityId.value}`;
+    }
+    return `/api/battles/${entityId.value}`;
+});
+
+const { data: battleData, pending, error } = useFetch(apiUrl, {
+    key: `battle-${entityId.value}-${isKillmailRoute.value}`, // Unique key for caching
+    lazy: true,
+    watch: [entityId, isKillmailRoute] // Re-fetch if entityId or route type changes
+});
+
+const battle = ref<any>(null); // This will be populated by battleData
 const killmails = ref<any[]>([])
 
 const blueTeamKills = ref<any[]>([])
@@ -118,6 +161,7 @@ const blueTeamCharacters = ref<any[]>([])
 const redTeamCharacters = ref<any[]>([])
 
 const tabs = [
+    { label: 'Overview', slot: 'overview' },
     { label: 'Kills', slot: 'kills' },
     { label: 'Alliances', slot: 'alliances' },
     { label: 'Corporations', slot: 'corporations' },
@@ -200,10 +244,10 @@ watchEffect(async () => {
 
         if (uniqueKillmailIds.length > 0) {
             try {
-                // Fetch full killmail objects using the new batch endpoint
+                // Fetch full killmail objects using the batch endpoint
                 const fetchedKillmails: any[] = await $fetch('/api/killmails/batch', {
                     method: 'POST',
-                    body: { ids: uniqueKillmailIds },
+                    body: { ids: uniqueKillmailIds }
                 });
 
                 // Create a lookup map for easy access
@@ -285,8 +329,11 @@ useSeoMeta({
     twitterDescription: () => seoData.value?.description || "EVE Online battle details",
     ogType: "website",
     ogSiteName: "EVE-KILL",
-    ogUrl: () =>
-        battle.value ? `https://eve-kill.com/battle/${route.params.id}` : "",
+    ogUrl: () => {
+        // Use the current full path for the canonical URL
+        if (!battle.value || !route.fullPath) return "https://eve-kill.com/battles"; // Fallback
+        return `https://eve-kill.com${route.fullPath}`;
+    },
     ogLocale: "en_US",
     twitterCard: "summary_large_image",
     twitterSite: "@eve_kill",
