@@ -1,8 +1,13 @@
-import crypto from "crypto";
-import { processBattle } from "~/server/helpers/Battles";
+import { compileFullBattleData } from "~/server/helpers/Battles";
 import { cliLogger } from "~/server/helpers/Logger";
+import type { IKillmail } from "~/server/interfaces/IKillmail";
 import { Battles } from "~/server/models/Battles";
 import { Killmails } from "~/server/models/Killmails";
+
+// CAPSULE_IDS removed
+
+// getTopEntities function removed
+// getTopShipTypes function removed
 
 export default {
     name: "backfillBattles",
@@ -21,7 +26,8 @@ export default {
         let toTime = new Date(startTime.getTime() + 3600 * 1000);
 
         do {
-            const pipeline = [
+            // Pipeline to find systems with significant activity (potential battles)
+            const pipeline: any[] = [ // Using any[] for Mongoose aggregate typing flexibility
                 {
                     '$match': {
                         'kill_time': { '$gte': fromTime, '$lt': toTime },
@@ -29,51 +35,50 @@ export default {
                 },
                 {
                     '$group': {
-                        '_id': '$system_id',
-                        'count': { '$sum': 1 },
+                        '_id': '$system_id', // Group by system
+                        'count': { '$sum': 1 }, // Count killmails per system
                     }
                 },
                 {
                     '$match': {
-                        'count': {
-                            '$gte': 10,
-                        }
+                        'count': { '$gte': 10 } // Filter for systems with at least 10 killmails
                     }
                 },
                 {
-                    '$sort': {
-                        'count': -1,
-                    }
+                    '$sort': { 'count': -1 as -1 } // Sort by killmail count descending
                 },
             ];
 
             const potentialBattles = await Killmails.aggregate(pipeline, { allowDiskUse: true, hint: 'kill_time_-1' });
+
             if (potentialBattles.length > 0) {
                 for (const battle of potentialBattles) {
+                    // Process each identified potential battle system
                     await processPotentialBattle(battle._id, fromTime, toTime);
                 }
             }
 
-
-            //cliLogger.info(`ℹ️  No battles found between ${fromTime.toISOString()} and ${toTime.toISOString()}`);
-            fromTime = toTime;
-            toTime = new Date(toTime.getTime() + 3600 * 1000);
+            fromTime = toTime; // Move to the next time window
+            toTime = new Date(toTime.getTime() + 3600 * 1000); // Advance by 1 hour
         } while (fromTime < endTime);
-
     },
 };
 
+/**
+ * Processes killmails within a given system and time frame to define and store a battle.
+ */
 async function processPotentialBattle(systemId: number, fromTime: Date, toTime: Date) {
     let extensibleToTime = new Date(toTime.getTime());
     let segmentStart = new Date(fromTime.getTime());
-    let segmentEnd = new Date(fromTime.getTime() + (5 * 60 * 1000));
+    let segmentEnd = new Date(fromTime.getTime() + (5 * 60 * 1000)); // 5-minute segments
     let foundStart = false;
     let foundEnd = false;
     let battleStartTime: Date = new Date(0);
     let battleEndTime: Date = new Date(0);
-    let failCounter = 0;
-    let killCountToConsider = 10;
+    let failCounter = 0; // Counts consecutive inactive segments
+    const killCountToConsider = 5; // Minimum kills in a segment to be considered active part of a battle
 
+    // Determine the actual start and end times of the battle based on activity
     do {
         const killCount = await Killmails.countDocuments({
             kill_time: { $gte: segmentStart, $lt: segmentEnd },
@@ -85,115 +90,71 @@ async function processPotentialBattle(systemId: number, fromTime: Date, toTime: 
                 foundStart = true;
                 battleStartTime = new Date(segmentStart.getTime());
             }
+            failCounter = 0; // Reset counter on activity
         } else {
             failCounter++;
         }
 
         if (segmentEnd >= extensibleToTime && killCount >= killCountToConsider) {
-            cliLogger.info(`ℹ️  Extending toTime by 30m because we hit >5 kills in the last 5 minute segment`);
-            extensibleToTime = new Date(segmentEnd.getTime() + 30 * 60 * 1000);
+            cliLogger.info(`ℹ️  Extending battle search window for system ${systemId} due to ongoing activity.`);
+            extensibleToTime = new Date(segmentEnd.getTime() + 30 * 60 * 1000); // Extend by 30 minutes
         }
 
-        // Add 5 minutes to each
         segmentStart = new Date(segmentStart.getTime() + (5 * 60 * 1000));
         segmentEnd = new Date(segmentEnd.getTime() + (5 * 60 * 1000));
 
-        if (failCounter === 5) {
+        if (failCounter === 6) {
             foundEnd = true;
-            battleEndTime = new Date(segmentStart.getTime());
+            battleEndTime = new Date(segmentStart.getTime() - (6 * 5 * 60 * 1000));
             break;
         }
     } while (segmentEnd < extensibleToTime);
 
+    if (!foundEnd && foundStart) {
+        battleEndTime = new Date(extensibleToTime.getTime());
+        foundEnd = true;
+    }
+
     if (foundStart && foundEnd) {
-        if (battleEndTime < battleStartTime) {
-            cliLogger.info(`ℹ️  Battle end time is before start time, skipping`);
+        if (battleEndTime <= battleStartTime) {
+            cliLogger.info(`ℹ️  Battle in system ${systemId} has zero or negative duration, skipping.`);
             return;
         }
 
-        const battlePipeline = [
-            {
-                '$match': {
-                    'kill_time': { '$gte': battleStartTime, '$lt': battleEndTime },
-                    'system_id': systemId,
-                }
-            },
-            {
-                '$project': {
-                    '_id': 0,
-                    'items': 0,
-                }
-            }
-        ];
-        const battleData = await Killmails.aggregate(battlePipeline, { allowDiskUse: true, hint: 'system_id_-1_kill_time_-1' });
-        const seedKillmail = battleData[0];
-        const teams = processBattle(seedKillmail, battleData, systemId, battleStartTime, battleEndTime);
+        // Retrieve all killmails for the determined battle period
+        // Project fields needed by compileFullBattleData and its internal helpers
+        const battleData: IKillmail[] = await Killmails.find({
+            'kill_time': { '$gte': battleStartTime, '$lt': battleEndTime },
+            'system_id': systemId,
+        }, {
+            _id: 0,
+            killmail_id: 1,
+            kill_time: 1,
+            system_id: 1,
+            total_value: 1,
+            'victim': 1,          // Includes victim.damage_taken needed by compileFullBattleData
+            'attackers': 1,       // Includes attacker.damage_done and attacker.final_blow
+            // system_name, region_name, system_security are fetched by compileFullBattleData
+        }).lean() as IKillmail[];
 
-        // Generate a hash from the teams and system ID to create a unique battle ID
-        const dataToHash = {
-            systemId,
-            startTime: battleStartTime.toISOString(),
-            endTime: battleEndTime.toISOString(),
-            blueTeam: teams.blue_team,
-            redTeam: teams.red_team,
-        };
 
-        const hash = crypto.createHash('sha256')
-            .update(JSON.stringify(dataToHash))
-            .digest('hex');
+        if (battleData.length < killCountToConsider) {
+            cliLogger.info(`ℹ️  Not enough killmails (${battleData.length}) for a significant battle in system ${systemId}, skipping.`);
+            return;
+        }
 
-        // Convert hash to a numeric ID by taking first 10 characters and parsing as hex
-        const battleId = parseInt(hash.substring(0, 10), 16);
+        // Call compileFullBattleData which now handles all calculations:
+        // - battle_id generation
+        // - team siding
+        // - statistics calculations
+        // - top lists generation
+        const battleDocument = await compileFullBattleData(battleData, systemId, battleStartTime, battleEndTime);
 
-        const battle = {
-            'battle_id': battleId,
-            'killmailsCount': battleData.length,
-            'iskDestroyed': battleData.reduce((acc, killmail) => acc + (killmail.total_value || 0), 0),
-            'alliancesInvolved': battleData.reduce((acc, killmail) => {
-                if (killmail.victim.alliance_id && !acc.includes(killmail.victim.alliance_id)) {
-                    acc.push(killmail.victim.alliance_id);
-                }
-                for (const attacker of killmail.attackers) {
-                    if (attacker.alliance_id && !acc.includes(attacker.alliance_id)) {
-                        acc.push(attacker.alliance_id);
-                    }
-                }
-                return acc;
-            }, []), // Add initial empty array
-            'corporationsInvolved': battleData.reduce((acc, killmail) => {
-                if (killmail.victim.corporation_id && !acc.includes(killmail.victim.corporation_id)) {
-                    acc.push(killmail.victim.corporation_id);
-                }
-                for (const attacker of killmail.attackers) {
-                    if (attacker.corporation_id && !acc.includes(attacker.corporation_id)) {
-                        acc.push(attacker.corporation_id);
-                    }
-                }
-                return acc;
-            }, []), // Add initial empty array
-            'charactersInvolved': battleData.reduce((acc, killmail) => {
-                if (killmail.victim.character_id && !acc.includes(killmail.victim.character_id)) {
-                    acc.push(killmail.victim.character_id);
-                }
-                for (const attacker of killmail.attackers) {
-                    if (attacker.character_id && !acc.includes(attacker.character_id)) {
-                        acc.push(attacker.character_id);
-                    }
-                }
-                return acc;
-            }, []), // Add initial empty array
-            ...teams,
-        };
-
-        cliLogger.info(`ℹ️  Found battle in system ${systemId} from ${battleStartTime.toISOString()} to ${battleEndTime.toISOString()} with ${battleData.length} killmails (hash: ${hash})`);
+        cliLogger.info(`ℹ️  Battle identified in system ${systemId} (ID: ${battleDocument.battle_id}), ${battleStartTime.toISOString()} to ${battleEndTime.toISOString()}, ${battleData.length} killmails.`);
 
         await Battles.updateOne(
-            { battle_id: battleId },
-            {
-                $set: {
-                    ...battle,
-                },
-            },
+            { battle_id: battleDocument.battle_id }, // Use battle_id from the returned document
+            { $set: battleDocument }, // Use the entire battleDocument
             { upsert: true }
         );
     }
