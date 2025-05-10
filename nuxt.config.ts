@@ -84,7 +84,7 @@ export default defineNuxtConfig({
                     },
                     "/api/search/**": {
                         cors: true,
-                        cache: { maxAge: 30, staleMaxAge: -1, swr: true, base: "redis" },
+                        cache: false,
                     },
                     "/api/stats": {
                         cors: true,
