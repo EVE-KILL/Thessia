@@ -284,6 +284,9 @@ export default defineNuxtConfig({
             viewport: "width=device-width, initial-scale=1",
             title: "EVE-KILL",
             titleTemplate: "EVE-KILL | %s",
+            htmlAttrs: {
+                class: "dark"
+            },
             base: {
                 href: "/",
             },
