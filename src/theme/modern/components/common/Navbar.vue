@@ -79,19 +79,33 @@ const leftNavItems = computed(() => [
         ],
     },
     {
-        name: t("Query"),
-        label: t("Query"),
-        position: "left",
-        to: "/query",
-        icon: "lucide:search",
-    },
-    {
         name: t("battles"),
         label: t("battles"),
         position: "left",
         to: "/battles",
         icon: "lucide:shield",
-    }
+    },
+    {
+        name: t("tools"),
+        label: t("tools"),
+        position: "left",
+        children: [
+            {
+                name: t("Query"),
+                label: t("Query"),
+                position: "left",
+                to: "/query",
+                icon: "lucide:search",
+            },
+            {
+                name: t("battlegenerator"),
+                label: t("battlegenerator"),
+                position: "left",
+                to: "/battlegenerator",
+                icon: "lucide:shield",
+            }
+        ]
+    },
 ]);
 
 /**

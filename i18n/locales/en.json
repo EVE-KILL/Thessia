@@ -527,6 +527,8 @@
     "donate.koFiDescription": "Help sustain our infrastructure and fuel future innovations with a direct contribution through Ko-Fi. Choose between one-time donations or recurring support—every contribution, regardless of size, makes a meaningful difference to our development roadmap and server capacity. (Donations also gets a role on Discord that shows they are supporters)",
     "donate.koFi": "Tip a Coffee (Ko-fi)",
     "donate.thankYouMessage": "We extend our sincere gratitude to everyone who supports EVE-KILL. Your contributions directly enable us to enhance our services, maintain reliable infrastructure, and develop new features for the entire EVE Online community. Your generosity makes a tangible difference while keeping our platform accessible to all.",
+    "tools": "Tools",
+    "battlegenerator": "Battle Generator",
     "battleGenerator": {
         "title": "Battle Generator",
         "system": "System",
