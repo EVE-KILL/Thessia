@@ -206,3 +206,5 @@ battlesSchema.index({ corporationsInvolved: 1 });
 battlesSchema.index({ alliancesInvolved: 1 });
 battlesSchema.index({ system_id: 1 });
 battlesSchema.index({ region_id: 1 });
+battlesSchema.index({ start_time: 1 });
+battlesSchema.index({ end_time: 1 });
