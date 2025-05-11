@@ -283,6 +283,9 @@ export default defineNuxtConfig({
             charset: "utf-8",
             viewport: "width=device-width, initial-scale=1",
             title: "EVE-KILL",
+            htmlAttrs: {
+                class: "dark"
+            },
             titleTemplate: "EVE-KILL | %s",
             base: {
                 href: "/",
