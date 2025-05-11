@@ -37,6 +37,7 @@ export interface ITeamSummaryStats {
 // Main IBattles interface modification
 export interface IBattles {
     battle_id: number;
+    custom?: boolean;
     start_time: Date;
     end_time: Date;
     duration_ms?: number;

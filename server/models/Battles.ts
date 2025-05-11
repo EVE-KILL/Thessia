@@ -24,6 +24,7 @@ const characterShipManifestEntrySchema = new Schema({
 const battlesSchema = new Schema<IBattlesDocument>(
     {
         battle_id: { type: Number, unique: true },
+        custom: { type: Boolean, default: false },
         start_time: { type: Date },
         end_time: { type: Date },
         system_id: { type: Number },

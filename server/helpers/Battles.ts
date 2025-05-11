@@ -180,11 +180,13 @@ export async function compileFullBattleData(
     systemId: number,
     battleStartTime: Date,
     battleEndTime: Date,
-    existingBattleId?: number | string
+    existingBattleId?: number | string,
+    manualTeams?: { blue_team: IBattles['blue_team']; red_team: IBattles['red_team'] }
 ): Promise<IBattlesDocument> {
     let battle_id: number;
 
-    const teamsData = processBattle(allKillmailsInvolved, systemId, battleStartTime, battleEndTime);
+    // Use manual teams if provided, otherwise process the battle automatically
+    const teamsData = manualTeams || processBattle(allKillmailsInvolved, systemId, battleStartTime, battleEndTime);
 
     if (existingBattleId) {
         battle_id = Number(existingBattleId);
