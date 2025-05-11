@@ -44,7 +44,16 @@
 
         <!-- Quantity cell with badges -->
         <template #cell-quantity="{ item }">
-            <template v-if="item.type === 'item' || item.type === 'value' || item.type === 'container-item'">
+            <template v-if="item.type === 'header' && sectionItemCounts[item.sectionName] > 1">
+                <div class="sort-column-header" @click.stop="handleHeaderClick('quantity', item.sectionName)">
+                    <span v-if="currentSortColumn === 'quantity' && currentSortSection === item.sectionName"
+                        class="sort-active">
+                        {{ currentSortDirection === 'asc' ? '↑' : '↓' }}
+                    </span>
+                    <span v-else class="sort-hint">{{ t('clickToSort', 'Sort') }}</span>
+                </div>
+            </template>
+            <template v-else-if="item.type === 'item' || item.type === 'value' || item.type === 'container-item'">
                 <div class="quantity-badges">
                     <!-- Dropped badge -->
                     <UBadge v-if="item.dropped > 0" variant="solid" color="success" class="item-badge">
@@ -61,7 +70,16 @@
 
         <!-- Value cell -->
         <template #cell-value="{ item }: { item: Item }">
-            <template v-if="item.type === 'item' || item.type === 'value' || item.type === 'container-item'">
+            <template v-if="item.type === 'header' && sectionItemCounts[item.sectionName] > 1">
+                <div class="sort-column-header" @click.stop="handleHeaderClick('value', item.sectionName)">
+                    <span v-if="currentSortColumn === 'value' && currentSortSection === item.sectionName"
+                        class="sort-active">
+                        {{ currentSortDirection === 'asc' ? '↑' : '↓' }}
+                    </span>
+                    <span v-else class="sort-hint">{{ t('clickToSort', 'Sort') }}</span>
+                </div>
+            </template>
+            <template v-else-if="item.type === 'item' || item.type === 'value' || item.type === 'container-item'">
                 <div v-if="item.value" class="text-right font-medium">
                     {{ formatIsk(item.value) }}
                 </div>
@@ -137,7 +155,7 @@
 </template>
 
 <script setup lang="ts">
-import { resolveComponent } from "vue";
+import { computed, resolveComponent } from "vue";
 
 import type { IKillmail } from "~/server/interfaces/IKillmail";
 import type { TableColumn } from "../common/Table.vue";
@@ -148,6 +166,11 @@ const currentLocale = computed(() => locale.value);
 const props = defineProps<{
     killmail: IKillmail | null;
 }>();
+
+// Sorting state
+const currentSortColumn = ref<string | null>(null);
+const currentSortDirection = ref<'asc' | 'desc'>('desc');
+const currentSortSection = ref<string | null>(null);
 
 // Define table columns with proper width and alignment
 const columns = ref<TableColumn[]>([
@@ -163,15 +186,30 @@ const columns = ref<TableColumn[]>([
     },
     {
         id: "quantity",
-        header: computed(() => t("quantity")),
+        header: computed(() => {
+            const label = t("quantity");
+            if (currentSortColumn.value === 'quantity') {
+                return `${label} ${currentSortDirection.value === 'asc' ? '↑' : '↓'}`;
+            }
+            return label;
+        }),
         width: "120px",
         cellClass: "quantity-cell-container", // Add justify-end for right alignment
+        sortable: true,
     },
     {
         id: "value",
-        header: computed(() => t("value")),
+        header: computed(() => {
+            const label = t("value");
+            if (currentSortColumn.value === 'value') {
+                return `${label} ${currentSortDirection.value === 'asc' ? '↑' : '↓'}`;
+            }
+            return label;
+        }),
         width: "120px",
         cellClass: "value-cell-container justify-end", // Add justify-end for right alignment
+        headerClass: "text-right", // Right align the header text
+        sortable: true,
     },
 ]);
 
@@ -510,6 +548,68 @@ watch(
     { immediate: true },
 );
 
+/**
+ * Handle column header click for sorting
+ * @param columnId The ID of the column to sort by
+ * @param sectionName The name of the section to sort
+ */
+function handleHeaderClick(columnId: string, sectionName: string) {
+    // Only enable sorting for sections with more than 1 item
+    if (!columnId || !sectionName || sectionItemCounts.value[sectionName] <= 1) {
+        return;
+    }
+
+    // If clicking the same column in the same section, toggle direction
+    if (currentSortColumn.value === columnId && currentSortSection.value === sectionName) {
+        currentSortDirection.value = currentSortDirection.value === 'asc' ? 'desc' : 'asc';
+    } else {
+        // New column or section, set defaults
+        currentSortColumn.value = columnId;
+        currentSortDirection.value = 'desc'; // Default to descending
+        currentSortSection.value = sectionName;
+    }
+
+    // Reprocess data to apply the sort
+    if (props.killmail) {
+        processKillmailData(props.killmail);
+    }
+}
+
+/**
+ * Sort items within a section based on current sort settings
+ */
+function sortSectionItems(items: any[], sectionName: string) {
+    // Only sort if this is the section being sorted and it has more than 1 item
+    if (currentSortSection.value !== sectionName || !currentSortColumn.value || items.length <= 1) {
+        return items;
+    }
+
+    return [...items].sort((a, b) => {
+        let valueA, valueB;
+
+        if (currentSortColumn.value === 'quantity') {
+            // Sort by total quantity (dropped + destroyed)
+            valueA = (a.qty_dropped || 0) + (a.qty_destroyed || 0);
+            valueB = (b.qty_dropped || 0) + (b.qty_destroyed || 0);
+        } else if (currentSortColumn.value === 'value') {
+            // Sort by total value
+            valueA = (a.value || 0) * ((a.qty_dropped || 0) + (a.qty_destroyed || 0));
+            valueB = (b.value || 0) * ((b.qty_dropped || 0) + (b.qty_destroyed || 0));
+
+            // Add container items value if present
+            if (a.containerItemsValue) valueA += a.containerItemsValue;
+            if (b.containerItemsValue) valueB += b.containerItemsValue;
+        } else {
+            return 0;
+        }
+
+        // Apply sort direction
+        return currentSortDirection.value === 'asc'
+            ? valueA - valueB
+            : valueB - valueA;
+    });
+}
+
 // Extract killmail data processing into a separate function for reusability
 function processKillmailData(killmail: IKillmail) {
     if (!killmail) return;
@@ -603,7 +703,10 @@ function processKillmailData(killmail: IKillmail) {
 
         // Process each item in the group - hide if section is collapsed
         if (!sectionCollapsed) {
-            items.forEach((item) => {
+            // Sort items if needed
+            const processedItems = sortSectionItems(items, sectionName);
+
+            processedItems.forEach((item) => {
                 // Add the main item
                 data.value?.push({
                     type: "item",
@@ -621,7 +724,6 @@ function processKillmailData(killmail: IKillmail) {
                         const itemName = containerItem.type_name || containerItem.name || "";
                         data.value?.push({
                             type: "container-item",
-                            image: null,
                             itemName: getLocalizedString(itemName, currentLocale.value),
                             dropped: containerItem.qty_dropped,
                             destroyed: containerItem.qty_destroyed,
@@ -1087,5 +1189,52 @@ function generateItemLink(item: Item): string | null {
         backface-visibility: hidden;
         -webkit-backface-visibility: hidden;
     }
+}
+
+/* Sorting styles */
+.sort-indicator {
+    font-size: 0.7rem;
+    color: light-dark(#6b7280, #9ca3af);
+    font-weight: normal;
+    margin-left: 0.5rem;
+}
+
+.sort-active {
+    color: light-dark(#4b5563, #d1d5db);
+}
+
+.sort-hint {
+    opacity: 0.6;
+}
+
+/* Only show sort hint on hover */
+/* Sort column header styling */
+.sort-column-header {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    cursor: pointer;
+    height: 100%;
+    padding: 0.25rem;
+    border-radius: 0.25rem;
+}
+
+.sort-column-header:hover {
+    background-color: light-dark(rgba(229, 231, 235, 0.5), rgba(45, 45, 45, 0.5));
+}
+
+/* Sort hint is always visible but subtle */
+.sort-hint {
+    opacity: 0.6;
+    font-size: 0.75rem;
+}
+
+.sort-active {
+    font-size: 0.875rem;
+    font-weight: bold;
+}
+
+.sort-column-header:hover .sort-hint {
+    opacity: 0.9;
 }
 </style>
