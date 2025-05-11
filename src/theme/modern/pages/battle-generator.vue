@@ -26,6 +26,7 @@ const startTime = ref('');
 const endTime = ref('');
 const loading = ref(false);
 const error = ref('');
+const justSelected = ref(false); // New flag to prevent immediate search after selection
 
 // Define the three columns of entities
 const sideA = ref<Entity[]>([]);
@@ -70,6 +71,12 @@ const tabsUi = {
     tab: "p-2 text-sm font-semibold text-white rounded-lg bg-background-700 hover:bg-background-600 ml-2"
 };
 
+// Define common input styling
+const inputClass = "w-full font-sans text-sm h-10";
+
+// Add a ref to control corporation visibility
+const showCorpsInAlliances = ref(true);
+
 // Search for systems
 async function searchSystems(term: string) {
     // Don't search for short terms
@@ -104,6 +111,9 @@ const debouncedSearch = useDebounceFn(searchSystems, 300);
 
 // Watch for changes to the search term
 watch(systemSearchTerm, (newTerm) => {
+    // Skip search if we just selected an item
+    if (justSelected.value) return;
+
     if (newTerm && newTerm.length >= 2) {
         debouncedSearch(newTerm);
     } else {
@@ -113,9 +123,17 @@ watch(systemSearchTerm, (newTerm) => {
 
 // Select a system from search results
 function selectSystem(system: { id: number; name: string }) {
+    // Set the flag to prevent search
+    justSelected.value = true;
+
     selectedSystem.value = system;
     systemSearchTerm.value = system.name;
     systemSearchResults.value = [];
+
+    // Reset the flag after a short delay
+    setTimeout(() => {
+        justSelected.value = false;
+    }, 500);
 }
 
 // Function to load entities from the API
@@ -541,13 +559,13 @@ const previewBattle = async () => {
                     <label for="systemSearch" class="block text-sm font-medium mb-1">System</label>
                     <div class="relative">
                         <UInput id="systemSearch" v-model="systemSearchTerm" placeholder="Search for a system"
-                            class="w-full" />
+                            :class="inputClass" />
 
-                        <!-- Search results dropdown -->
+                        <!-- Search results dropdown with specific class name -->
                         <div v-if="systemSearchResults.length > 0"
-                            class="absolute z-10 w-full border dark:border-gray-700 bg-white dark:bg-gray-900 rounded-md mt-1 max-h-60 overflow-y-auto">
+                            class="system-search-dropdown absolute z-10 w-full rounded-md mt-1 max-h-60 overflow-y-auto">
                             <div v-for="result in systemSearchResults" :key="result.id"
-                                class="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 cursor-pointer"
+                                class="search-result-item p-2 cursor-pointer"
                                 @click="selectSystem(result)">
                                 {{ result.name }}
                             </div>
@@ -562,12 +580,12 @@ const previewBattle = async () => {
 
                 <div>
                     <label for="startTime" class="block text-sm font-medium mb-1">Start Time</label>
-                    <UInput id="startTime" v-model="startTime" type="datetime-local" class="w-full" />
+                    <UInput id="startTime" v-model="startTime" type="datetime-local" :class="inputClass" />
                 </div>
 
                 <div>
                     <label for="endTime" class="block text-sm font-medium mb-1">End Time</label>
-                    <UInput id="endTime" v-model="endTime" type="datetime-local" class="w-full" />
+                    <UInput id="endTime" v-model="endTime" type="datetime-local" :class="inputClass" />
                 </div>
             </div>
 
@@ -586,15 +604,29 @@ const previewBattle = async () => {
         <!-- Entity Columns -->
         <div v-if="undecided.length > 0 || sideA.length > 0 || sideB.length > 0"
             class="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <!-- Side A Column -->
+
+            <!-- Replace UToggle with UCheckbox for corporation visibility -->
+            <div class="md:col-span-3 mb-4 p-2 bg-gray-50 dark:bg-gray-800 rounded-lg flex items-center justify-between">
+                <span class="font-medium text-sm">Display Options:</span>
+                <UCheckbox v-model="showCorpsInAlliances" label="Show corporations in alliances" class="ml-4" />
+            </div>
+
+            <!-- Side A Column - Updated to match Side B structure -->
             <div class="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-lg">
                 <h2 class="text-lg font-semibold mb-3 text-center">Side A</h2>
                 <div class="space-y-2 min-h-300">
                     <div v-for="entity in sideA" :key="`a-${entity.type}-${entity.id}`"
+                        v-show="showCorpsInAlliances || entity.type === 'alliance' || !entity.alliance_id"
                         class="flex items-center justify-between p-2 bg-white dark:bg-gray-800 rounded">
-                        <div class="flex items-center">
+                        <div class="flex items-center justify-start flex-1">
                             <Image :id="entity.id" :type="entity.type" size="32" format="webp" class="w-8 h-8 mr-2" />
-                            <span>{{ entity.name }}</span>
+                            <div class="flex flex-col items-start">
+                                <span>{{ entity.name }}</span>
+                                <span v-if="entity.type === 'corporation' && entity.alliance_id"
+                                    class="text-xs text-gray-500">
+                                    Member of {{ entity.alliance_name }}
+                                </span>
+                            </div>
                         </div>
                         <UButton icon="i-heroicons-arrow-right" color="neutral" variant="ghost" size="xs"
                             @click="moveToUndecidedFromA(entity)" class="ml-2" />
@@ -602,11 +634,12 @@ const previewBattle = async () => {
                 </div>
             </div>
 
-            <!-- Undecided Column -->
+            <!-- Undecided Column - Add conditional visibility -->
             <div class="bg-gray-100 dark:bg-gray-800 p-4 rounded-lg">
                 <h2 class="text-lg font-semibold mb-3 text-center">Undecided</h2>
                 <div class="space-y-2 min-h-300">
                     <div v-for="entity in undecided" :key="`u-${entity.type}-${entity.id}`"
+                        v-show="showCorpsInAlliances || entity.type === 'alliance' || !entity.alliance_id"
                         class="flex items-center justify-between p-2 bg-white dark:bg-gray-700 rounded">
                         <UButton icon="i-heroicons-arrow-left" color="primary" variant="ghost" size="xs"
                             @click="moveToSideA(entity)" class="mr-2" />
@@ -626,17 +659,24 @@ const previewBattle = async () => {
                 </div>
             </div>
 
-            <!-- Side B Column -->
+            <!-- Side B Column - Add conditional visibility -->
             <div class="bg-red-50 dark:bg-red-900/20 p-4 rounded-lg">
                 <h2 class="text-lg font-semibold mb-3 text-center">Side B</h2>
                 <div class="space-y-2 min-h-300">
                     <div v-for="entity in sideB" :key="`b-${entity.type}-${entity.id}`"
+                        v-show="showCorpsInAlliances || entity.type === 'alliance' || !entity.alliance_id"
                         class="flex items-center justify-between p-2 bg-white dark:bg-gray-800 rounded">
                         <UButton icon="i-heroicons-arrow-left" color="neutral" variant="ghost" size="xs"
                             @click="moveToUndecidedFromB(entity)" class="mr-2" />
-                        <div class="flex items-center">
-                            <Image :id="entity.id" :type="entity.type" size="32" format="webp" class="w-8 h-8 mr-2" />
-                            <span>{{ entity.name }}</span>
+                        <div class="flex items-center justify-end flex-1 text-right">
+                            <div class="flex flex-col items-end">
+                                <span class="text-right">{{ entity.name }}</span>
+                                <span v-if="entity.type === 'corporation' && entity.alliance_id"
+                                    class="text-xs text-gray-500 text-right">
+                                    Member of {{ entity.alliance_name }}
+                                </span>
+                            </div>
+                            <Image :id="entity.id" :type="entity.type" size="32" format="webp" class="w-8 h-8 ml-2" />
                         </div>
                     </div>
                 </div>
@@ -697,5 +737,44 @@ const previewBattle = async () => {
 /* Add any additional custom styles here */
 .min-h-300 {
     min-height: 300px;
+}
+
+/* Force consistent styling for datetime-local inputs */
+input[type="datetime-local"] {
+    font-family: inherit;
+    font-size: inherit;
+}
+
+/* System dropdown styling with higher specificity */
+.system-search-dropdown {
+    border: 2px solid #ccc;
+    background-color: white;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+}
+
+.dark .system-search-dropdown {
+    border-color: #4b5563;
+    background-color: #1f2937;
+}
+
+.search-result-item {
+    color: #111827;
+}
+
+.search-result-item:hover {
+    background-color: #f3f4f6;
+}
+
+.dark .search-result-item {
+    color: #f9fafb;
+}
+
+.dark .search-result-item:hover {
+    background-color: #374151;
+}
+
+/* Add additional style to ensure text wrapping maintains right alignment */
+.text-right {
+    text-align: right;
 }
 </style>
