@@ -458,6 +458,7 @@ export async function compileFullBattleData(
         duration_ms,
         system_id: systemId,
         system_name: systemInfo?.system_name || "Unknown System",
+        region_id: systemInfo?.region_id || 0,
         region_name: regionInfo?.name || { en: "Unknown Region" },
         system_security: systemInfo?.security ?? 0.0,
         killmailsCount,

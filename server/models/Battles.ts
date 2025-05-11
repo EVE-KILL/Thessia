@@ -27,8 +27,9 @@ const battlesSchema = new Schema<IBattlesDocument>(
         start_time: { type: Date },
         end_time: { type: Date },
         system_id: { type: Number },
-        system_name: { type: String }, // Reverted to String
-        region_name: { type: Object }, // Stays Object for multilingual support
+        system_name: { type: String },
+        region_id: { type: Number },
+        region_name: { type: Object },
         system_security: { type: Number },
         duration_ms: { type: Number },
         killmailsCount: { type: Number },
@@ -42,21 +43,21 @@ const battlesSchema = new Schema<IBattlesDocument>(
         top_alliances: [
             {
                 id: Number,
-                name: String, // Reverted to String
+                name: String,
                 count: Number,
             },
         ],
         top_corporations: [
             {
                 id: Number,
-                name: String, // Reverted to String
+                name: String,
                 count: Number,
             },
         ],
         top_ship_types: [
             {
                 id: Number,
-                name: Object, // Stays Object for multilingual ship names
+                name: Object,
                 count: Number,
             },
         ],
@@ -88,11 +89,10 @@ const battlesSchema = new Schema<IBattlesDocument>(
                 }
             ]
         },
-        // New fields for detailed data based on IBattles interface
-        killmail_ids: [Number], // For the timeline, changed from killmails
+        killmail_ids: [Number],
 
-        blue_team_kill_ids: [Number], // Changed from blue_team_kills
-        red_team_kill_ids: [Number],   // Changed from red_team_kills
+        blue_team_kill_ids: [Number],
+        red_team_kill_ids: [Number],
 
         blue_team_stats: {
             iskLost: Number,
@@ -182,11 +182,11 @@ const battlesSchema = new Schema<IBattlesDocument>(
     },
     {
         collection: "battles",
-        timestamps: true, // Automatically adds createdAt and updatedAt fields
+        timestamps: true,
         toJSON: {
             transform: (_doc, ret) => {
-                delete ret._id; // Removes _id from the JSON output
-                delete ret.__v; // Removes __v (version key) from the JSON output
+                delete ret._id;
+                delete ret.__v;
             },
         },
     },
@@ -198,3 +198,10 @@ export const Battles: Model<IBattlesDocument> = model<IBattlesDocument>(
     battlesSchema,
     "battles",
 );
+
+// Apply indexes
+battlesSchema.index({ charactersInvolved: 1 });
+battlesSchema.index({ corporationsInvolved: 1 });
+battlesSchema.index({ alliancesInvolved: 1 });
+battlesSchema.index({ system_id: 1 });
+battlesSchema.index({ region_id: 1 });

@@ -42,6 +42,7 @@ export interface IBattles {
     duration_ms?: number;
     system_id: number;
     system_name?: string;
+    region_id: number;
     region_name?: Record<string, string> | ITranslation;
     system_security?: number;
     killmailsCount: number;
