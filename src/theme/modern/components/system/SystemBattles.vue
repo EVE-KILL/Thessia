@@ -63,7 +63,7 @@ const { data, pending, refresh } = useFetch<{
     currentPage: number;
     itemsPerPage: number;
 }>(
-    `/api/systems/${route.params.id}/battles`,
+    `/api/solarsystems/${route.params.id}/battles`,
     {
         query: computed(() => ({ page: currentPage.value, limit: pageSize.value })),
         key: computed(() => `system-battles-${route.params.id}-${currentPage.value}`),
