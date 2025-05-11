@@ -558,10 +558,12 @@ const previewBattle = async () => {
         <div class="bg-gray-100 dark:bg-gray-800 p-4 rounded-lg">
             <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div>
-                    <label for="systemSearch" class="block text-sm font-medium mb-1">{{ t('battleGenerator.system') }}</label>
+                    <label for="systemSearch" class="block text-sm font-medium mb-1">
+                        {{ t('battleGenerator.system') }}
+                    </label>
                     <div class="relative">
-                        <UInput id="systemSearch" v-model="systemSearchTerm" :placeholder="t('battleGenerator.searchForSystem')"
-                            :class="inputClass" />
+                        <UInput id="systemSearch" v-model="systemSearchTerm"
+                            :placeholder="t('battleGenerator.searchForSystem')" :class="inputClass" />
 
                         <!-- Search results dropdown with specific class name -->
                         <div v-if="systemSearchResults.length > 0"
@@ -580,12 +582,16 @@ const previewBattle = async () => {
                 </div>
 
                 <div>
-                    <label for="startTime" class="block text-sm font-medium mb-1">{{ t('battleGenerator.startTime') }}</label>
+                    <label for="startTime" class="block text-sm font-medium mb-1">
+                        {{ t('battleGenerator.startTime') }}
+                    </label>
                     <UInput id="startTime" v-model="startTime" type="datetime-local" :class="inputClass" />
                 </div>
 
                 <div>
-                    <label for="endTime" class="block text-sm font-medium mb-1">{{ t('battleGenerator.endTime') }}</label>
+                    <label for="endTime" class="block text-sm font-medium mb-1">
+                        {{ t('battleGenerator.endTime') }}
+                    </label>
                     <UInput id="endTime" v-model="endTime" type="datetime-local" :class="inputClass" />
                 </div>
             </div>
@@ -607,9 +613,11 @@ const previewBattle = async () => {
             class="grid grid-cols-1 md:grid-cols-3 gap-4">
 
             <!-- Replace UToggle with UCheckbox for corporation visibility -->
-            <div class="md:col-span-3 mb-4 p-2 bg-gray-50 dark:bg-gray-800 rounded-lg flex items-center justify-between">
+            <div
+                class="md:col-span-3 mb-4 p-2 bg-gray-50 dark:bg-gray-800 rounded-lg flex items-center justify-between">
                 <span class="font-medium text-sm">{{ t('battleGenerator.displayOptions') }}:</span>
-                <UCheckbox v-model="showCorpsInAlliances" :label="t('battleGenerator.showCorpsInAlliances')" class="ml-4" />
+                <UCheckbox v-model="showCorpsInAlliances" :label="t('battleGenerator.showCorpsInAlliances')"
+                    class="ml-4" />
             </div>
 
             <!-- Side A Column -->
