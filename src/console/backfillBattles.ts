@@ -132,11 +132,9 @@ async function processPotentialBattle(systemId: number, fromTime: Date, toTime: 
             kill_time: 1,
             system_id: 1,
             total_value: 1,
-            'victim': 1,          // Includes victim.damage_taken needed by compileFullBattleData
-            'attackers': 1,       // Includes attacker.damage_done and attacker.final_blow
-            // system_name, region_name, system_security are fetched by compileFullBattleData
+            'victim': 1,
+            'attackers': 1,
         }).lean() as IKillmail[];
-
 
         if (battleData.length < killCountToConsider) {
             cliLogger.info(`ℹ️  Not enough killmails (${battleData.length}) for a significant battle in system ${systemId}, skipping.`);
@@ -144,13 +142,13 @@ async function processPotentialBattle(systemId: number, fromTime: Date, toTime: 
         }
 
         const battleDocument = await compileFullBattleData(battleData, systemId, battleStartTime, battleEndTime);
-
-        cliLogger.info(`ℹ️  Battle identified in system ${systemId} (ID: ${battleDocument.battle_id}), ${battleStartTime.toISOString()} to ${battleEndTime.toISOString()}, ${battleData.length} killmails.`);
-
-        await Battles.updateOne(
-            { battle_id: battleDocument.battle_id }, // Use battle_id from the returned document
-            { $set: battleDocument }, // Use the entire battleDocument
-            { upsert: true }
-        );
+        // Skip if battle already exists
+        const exists = await Battles.exists({ battle_id: battleDocument.battle_id });
+        if (exists) {
+            cliLogger.info(`⚠️  Battle ${battleDocument.battle_id} already exists, skipping.`);
+        } else {
+            cliLogger.info(`ℹ️  Inserting new battle ${battleDocument.battle_id} for system ${systemId}.`);
+            await Battles.create(battleDocument);
+        }
     }
 }
