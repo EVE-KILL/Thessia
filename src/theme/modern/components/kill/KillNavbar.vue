@@ -1,23 +1,23 @@
 <script setup lang="ts">
+import { reactive } from 'vue';
 import type { IKillmail } from "~/server/interfaces/IKillmail";
 
 const props = defineProps<{
     killmail: IKillmail | null;
     battle: boolean | { value: boolean } | null;
-    siblings?: Array<{ killmail_id: number; victim: { ship_id: number; ship_name: { en: string } } }>;
+    siblings?: Array<{ killmail_id: number; victim: { ship_id: number; ship_name: { [key: string]: string } } }>;
 }>();
 
 const { t, locale } = useI18n();
 
 // Track dropdown states for menus with children
-const dropdownStates = ref({});
+const dropdownStates = reactive<Record<string, boolean>>({});
 
 /**
  * Navbar link interface
  */
 interface NavLink {
-    name?: string;
-    label?: string;
+    name: string;
     to?: string;
     target?: string;
     position: "left" | "center" | "right";
@@ -232,11 +232,6 @@ const leftNavItems = computed(() => {
 });
 
 /**
- * Center navigation items - empty for this component
- */
-const centerNavItems = computed(() => []);
-
-/**
  * Right navigation items
  */
 const rightNavItems = computed<NavLink[]>(() => {
@@ -276,15 +271,6 @@ const rightNavItems = computed<NavLink[]>(() => {
     }
     return items;
 });
-
-/**
- * All navigation items combined
- */
-const allNavItems = computed(() => [
-    ...leftNavItems.value,
-    ...centerNavItems.value,
-    ...centerNavItems.value,
-]);
 </script>
 
 <template>
@@ -293,11 +279,11 @@ const allNavItems = computed(() => [
         <div class="flex items-center space-x-2">
             <template v-for="(link, index) in leftNavItems" :key="index">
                 <!-- Dropdown menus -->
-                <Dropdown v-if="link.children" v-model="dropdownStates[link.name || '']" position="bottom" align="start"
+                <Dropdown v-if="link.children" v-model="dropdownStates[link.name]" position="bottom" align="start"
                     :max-height="60" width="auto" close-on-inner-click smart-position open-on-hover :hover-delay="100">
                     <template #trigger>
                         <div class="flex items-center py-1.5 px-2 rounded-md hover:bg-gray-100 dark:hover:bg-gray-800
-                    transition-colors cursor-pointer text-gray-700 dark:text-gray-200" :title="link.label">
+                    transition-colors cursor-pointer text-gray-700 dark:text-gray-200" :title="link.name">
                             <span class="text-sm font-medium">{{ link.name }}</span>
                         </div>
                     </template>
@@ -325,27 +311,20 @@ const allNavItems = computed(() => [
             </template>
         </div>
 
-        <!-- Center items would go here -->
-        <div class="flex items-center mx-auto">
-            <template v-for="(link, index) in centerNavItems" :key="index">
-                <!-- Similar structure to left items -->
-            </template>
-        </div>
-
         <!-- Right items -->
         <div class="flex items-center space-x-2">
             <template v-for="(link, index) in rightNavItems" :key="index">
                 <!-- Direct link -->
                 <a v-if="link.to" :href="link.to" class="flex items-center py-1.5 px-2 rounded-md hover:bg-gray-100 dark:hover:bg-gray-800
-                    transition-colors cursor-pointer text-gray-700 dark:text-gray-200" :title="link.label">
+                    transition-colors cursor-pointer text-gray-700 dark:text-gray-200" :title="link.name">
                     <span class="text-sm font-medium">{{ link.name }}</span>
                 </a>
                 <!-- Dropdown menus -->
-                <Dropdown v-if="link.children" v-model="dropdownStates[link.name || '']" position="bottom" align="end"
+                <Dropdown v-if="link.children" v-model="dropdownStates[link.name]" position="bottom" align="end"
                     :max-height="60" width="auto" close-on-inner-click smart-position open-on-hover :hover-delay="100">
                     <template #trigger>
                         <div class="flex items-center py-1.5 px-2 rounded-md hover:bg-gray-100 dark:hover:bg-gray-800
-                    transition-colors cursor-pointer text-gray-700 dark:text-gray-200" :title="link.label">
+                    transition-colors cursor-pointer text-gray-700 dark:text-gray-200" :title="link.name">
                             <span class="text-sm font-medium">{{ link.name }}</span>
                         </div>
                     </template>
