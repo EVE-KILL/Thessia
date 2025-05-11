@@ -8,6 +8,8 @@ import BattleOverview from '~/src/theme/modern/components/battle/BattleOverview.
 import BattleTeams from '~/src/theme/modern/components/battle/BattleTeams.vue';
 import BattleTimeline from '~/src/theme/modern/components/battle/BattleTimeline.vue';
 
+const { t, locale } = useI18n();
+
 // Define types for entities
 interface Entity {
     id: number;
@@ -139,17 +141,17 @@ function selectSystem(system: { id: number; name: string }) {
 // Function to load entities from the API
 const loadEntities = async () => {
     if (!selectedSystem.value) {
-        error.value = 'System is required';
+        error.value = t('battleGenerator.errors.systemRequired');
         return;
     }
 
     if (!startTime.value) {
-        error.value = 'Start time is required';
+        error.value = t('battleGenerator.errors.startTimeRequired');
         return;
     }
 
     if (!endTime.value) {
-        error.value = 'End time is required';
+        error.value = t('battleGenerator.errors.endTimeRequired');
         return;
     }
     // Enforce max timespan of 36 hours
@@ -159,7 +161,7 @@ const loadEntities = async () => {
         const diff = end.getTime() - start.getTime();
         const maxMs = 36 * 60 * 60 * 1000;
         if (diff > maxMs) {
-            error.value = 'Time range cannot exceed 36 hours';
+            error.value = t('battleGenerator.errors.maxTimespan');
             loading.value = false;
             return;
         }
@@ -207,7 +209,7 @@ const loadEntities = async () => {
             })),
         ];
     } catch (err) {
-        error.value = err instanceof Error ? err.message : 'An unknown error occurred';
+        error.value = err instanceof Error ? err.message : t('battleGenerator.errors.unknownError');
     } finally {
         loading.value = false;
     }
@@ -371,22 +373,22 @@ const moveToUndecidedFromB = (entity: Entity) => {
 // Function to save the battle
 const saveBattle = async () => {
     if (!selectedSystem.value) {
-        error.value = 'System is required';
+        error.value = t('battleGenerator.errors.systemRequired');
         return;
     }
 
     if (!startTime.value) {
-        error.value = 'Start time is required';
+        error.value = t('battleGenerator.errors.startTimeRequired');
         return;
     }
 
     if (!endTime.value) {
-        error.value = 'End time is required';
+        error.value = t('battleGenerator.errors.endTimeRequired');
         return;
     }
 
     if (sideA.value.length === 0 || sideB.value.length === 0) {
-        error.value = 'Both sides must have at least one entity';
+        error.value = t('battleGenerator.errors.bothSidesRequired');
         return;
     }
 
@@ -419,7 +421,7 @@ const saveBattle = async () => {
             window.location.href = `/battle/${data.battle_id}`;
         }
     } catch (err) {
-        error.value = err instanceof Error ? err.message : 'An unknown error occurred';
+        error.value = err instanceof Error ? err.message : t('battleGenerator.errors.unknownError');
     } finally {
         loading.value = false;
     }
@@ -428,22 +430,22 @@ const saveBattle = async () => {
 // Function to preview the battle
 const previewBattle = async () => {
     if (!selectedSystem.value) {
-        error.value = 'System is required';
+        error.value = t('battleGenerator.errors.systemRequired');
         return;
     }
 
     if (!startTime.value) {
-        error.value = 'Start time is required';
+        error.value = t('battleGenerator.errors.startTimeRequired');
         return;
     }
 
     if (!endTime.value) {
-        error.value = 'End time is required';
+        error.value = t('battleGenerator.errors.endTimeRequired');
         return;
     }
 
     if (sideA.value.length === 0 || sideB.value.length === 0) {
-        error.value = 'Both sides must have at least one entity';
+        error.value = t('battleGenerator.errors.bothSidesRequired');
         return;
     }
 
@@ -540,7 +542,7 @@ const previewBattle = async () => {
             redTeamCharacters.value = data?.red_team_characters_stats || [];
         }
     } catch (err) {
-        error.value = err instanceof Error ? err.message : 'An unknown error occurred';
+        error.value = err instanceof Error ? err.message : t('battleGenerator.errors.unknownError');
         previewData.value = null;
     } finally {
         loading.value = false;
@@ -550,41 +552,40 @@ const previewBattle = async () => {
 
 <template>
     <div class="space-y-6">
-        <h1 class="text-2xl font-bold">Battle Generator</h1>
+        <h1 class="text-2xl font-bold">{{ t('battleGenerator.title') }}</h1>
 
         <!-- Input Form -->
         <div class="bg-gray-100 dark:bg-gray-800 p-4 rounded-lg">
             <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div>
-                    <label for="systemSearch" class="block text-sm font-medium mb-1">System</label>
+                    <label for="systemSearch" class="block text-sm font-medium mb-1">{{ t('battleGenerator.system') }}</label>
                     <div class="relative">
-                        <UInput id="systemSearch" v-model="systemSearchTerm" placeholder="Search for a system"
+                        <UInput id="systemSearch" v-model="systemSearchTerm" :placeholder="t('battleGenerator.searchForSystem')"
                             :class="inputClass" />
 
                         <!-- Search results dropdown with specific class name -->
                         <div v-if="systemSearchResults.length > 0"
                             class="system-search-dropdown absolute z-10 w-full rounded-md mt-1 max-h-60 overflow-y-auto">
                             <div v-for="result in systemSearchResults" :key="result.id"
-                                class="search-result-item p-2 cursor-pointer"
-                                @click="selectSystem(result)">
+                                class="search-result-item p-2 cursor-pointer" @click="selectSystem(result)">
                                 {{ result.name }}
                             </div>
                         </div>
 
                         <!-- Selected system display -->
                         <div v-if="selectedSystem" class="mt-2 text-sm text-gray-600 dark:text-gray-400">
-                            Selected: {{ selectedSystem.name }} ({{ selectedSystem.id }})
+                            {{ t('battleGenerator.selected') }}: {{ selectedSystem.name }} ({{ selectedSystem.id }})
                         </div>
                     </div>
                 </div>
 
                 <div>
-                    <label for="startTime" class="block text-sm font-medium mb-1">Start Time</label>
+                    <label for="startTime" class="block text-sm font-medium mb-1">{{ t('battleGenerator.startTime') }}</label>
                     <UInput id="startTime" v-model="startTime" type="datetime-local" :class="inputClass" />
                 </div>
 
                 <div>
-                    <label for="endTime" class="block text-sm font-medium mb-1">End Time</label>
+                    <label for="endTime" class="block text-sm font-medium mb-1">{{ t('battleGenerator.endTime') }}</label>
                     <UInput id="endTime" v-model="endTime" type="datetime-local" :class="inputClass" />
                 </div>
             </div>
@@ -592,7 +593,7 @@ const previewBattle = async () => {
             <div class="mt-4 flex justify-end">
                 <UButton @click="loadEntities" :loading="loading" :disabled="loading || !selectedSystem"
                     color="primary">
-                    Load Entities
+                    {{ t('battleGenerator.loadEntities') }}
                 </UButton>
             </div>
         </div>
@@ -607,13 +608,13 @@ const previewBattle = async () => {
 
             <!-- Replace UToggle with UCheckbox for corporation visibility -->
             <div class="md:col-span-3 mb-4 p-2 bg-gray-50 dark:bg-gray-800 rounded-lg flex items-center justify-between">
-                <span class="font-medium text-sm">Display Options:</span>
-                <UCheckbox v-model="showCorpsInAlliances" label="Show corporations in alliances" class="ml-4" />
+                <span class="font-medium text-sm">{{ t('battleGenerator.displayOptions') }}:</span>
+                <UCheckbox v-model="showCorpsInAlliances" :label="t('battleGenerator.showCorpsInAlliances')" class="ml-4" />
             </div>
 
-            <!-- Side A Column - Updated to match Side B structure -->
+            <!-- Side A Column -->
             <div class="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-lg">
-                <h2 class="text-lg font-semibold mb-3 text-center">Side A</h2>
+                <h2 class="text-lg font-semibold mb-3 text-center">{{ t('battleGenerator.sideA') }}</h2>
                 <div class="space-y-2 min-h-300">
                     <div v-for="entity in sideA" :key="`a-${entity.type}-${entity.id}`"
                         v-show="showCorpsInAlliances || entity.type === 'alliance' || !entity.alliance_id"
@@ -624,7 +625,7 @@ const previewBattle = async () => {
                                 <span>{{ entity.name }}</span>
                                 <span v-if="entity.type === 'corporation' && entity.alliance_id"
                                     class="text-xs text-gray-500">
-                                    Member of {{ entity.alliance_name }}
+                                    {{ t('battleGenerator.memberOf') }} {{ entity.alliance_name }}
                                 </span>
                             </div>
                         </div>
@@ -634,9 +635,9 @@ const previewBattle = async () => {
                 </div>
             </div>
 
-            <!-- Undecided Column - Add conditional visibility -->
+            <!-- Undecided Column -->
             <div class="bg-gray-100 dark:bg-gray-800 p-4 rounded-lg">
-                <h2 class="text-lg font-semibold mb-3 text-center">Undecided</h2>
+                <h2 class="text-lg font-semibold mb-3 text-center">{{ t('battleGenerator.undecided') }}</h2>
                 <div class="space-y-2 min-h-300">
                     <div v-for="entity in undecided" :key="`u-${entity.type}-${entity.id}`"
                         v-show="showCorpsInAlliances || entity.type === 'alliance' || !entity.alliance_id"
@@ -649,7 +650,7 @@ const previewBattle = async () => {
                                 <span>{{ entity.name }}</span>
                                 <span v-if="entity.type === 'corporation' && entity.alliance_id"
                                     class="text-xs text-gray-500">
-                                    Member of {{ entity.alliance_name }}
+                                    {{ t('battleGenerator.memberOf') }} {{ entity.alliance_name }}
                                 </span>
                             </div>
                         </div>
@@ -659,9 +660,9 @@ const previewBattle = async () => {
                 </div>
             </div>
 
-            <!-- Side B Column - Add conditional visibility -->
+            <!-- Side B Column -->
             <div class="bg-red-50 dark:bg-red-900/20 p-4 rounded-lg">
-                <h2 class="text-lg font-semibold mb-3 text-center">Side B</h2>
+                <h2 class="text-lg font-semibold mb-3 text-center">{{ t('battleGenerator.sideB') }}</h2>
                 <div class="space-y-2 min-h-300">
                     <div v-for="entity in sideB" :key="`b-${entity.type}-${entity.id}`"
                         v-show="showCorpsInAlliances || entity.type === 'alliance' || !entity.alliance_id"
@@ -673,7 +674,7 @@ const previewBattle = async () => {
                                 <span class="text-right">{{ entity.name }}</span>
                                 <span v-if="entity.type === 'corporation' && entity.alliance_id"
                                     class="text-xs text-gray-500 text-right">
-                                    Member of {{ entity.alliance_name }}
+                                    {{ t('battleGenerator.memberOf') }} {{ entity.alliance_name }}
                                 </span>
                             </div>
                             <Image :id="entity.id" :type="entity.type" size="32" format="webp" class="w-8 h-8 ml-2" />
@@ -687,17 +688,17 @@ const previewBattle = async () => {
         <div v-if="sideA.length > 0 && sideB.length > 0" class="flex justify-end mt-6 gap-4">
             <UButton @click="saveBattle" :loading="loading" :disabled="loading || !selectedSystem" color="primary"
                 size="lg">
-                Save Battle
+                {{ t('battleGenerator.save') }}
             </UButton>
             <UButton @click="previewBattle" :loading="loading" :disabled="loading || !previewReady" color="secondary"
                 size="lg">
-                Preview Battle
+                {{ t('battleGenerator.preview') }}
             </UButton>
         </div>
 
         <!-- Preview Section -->
         <div v-if="previewData" class="mt-8">
-            <h2 class="text-xl font-bold mb-4">Battle Preview</h2>
+            <h2 class="text-xl font-bold mb-4">{{ t('battleGenerator.battlePreview') }}</h2>
 
             <!-- Teams Table -->
             <BattleTeams :blueTeamStats="blueTeamStats" :redTeamStats="redTeamStats"

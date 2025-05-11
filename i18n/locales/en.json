@@ -526,5 +526,32 @@
     "donate.koFiTitle": "Buy Us a Coffee",
     "donate.koFiDescription": "Help sustain our infrastructure and fuel future innovations with a direct contribution through Ko-Fi. Choose between one-time donations or recurring support—every contribution, regardless of size, makes a meaningful difference to our development roadmap and server capacity. (Donations also gets a role on Discord that shows they are supporters)",
     "donate.koFi": "Tip a Coffee (Ko-fi)",
-    "donate.thankYouMessage": "We extend our sincere gratitude to everyone who supports EVE-KILL. Your contributions directly enable us to enhance our services, maintain reliable infrastructure, and develop new features for the entire EVE Online community. Your generosity makes a tangible difference while keeping our platform accessible to all."
+    "donate.thankYouMessage": "We extend our sincere gratitude to everyone who supports EVE-KILL. Your contributions directly enable us to enhance our services, maintain reliable infrastructure, and develop new features for the entire EVE Online community. Your generosity makes a tangible difference while keeping our platform accessible to all.",
+    "battleGenerator": {
+        "title": "Battle Generator",
+        "system": "System",
+        "searchForSystem": "Search for a system",
+        "selected": "Selected",
+        "startTime": "Start Time",
+        "endTime": "End Time",
+        "loadEntities": "Load Entities",
+        "displayOptions": "Display Options",
+        "showCorpsInAlliances": "Show corporations in alliances",
+        "sideA": "Side A",
+        "sideB": "Side B",
+        "undecided": "Undecided",
+        "memberOf": "Member of",
+        "save": "Save",
+        "preview": "Preview",
+        "battlePreview": "Battle Preview",
+        "errors": {
+            "systemRequired": "System is required",
+            "startTimeRequired": "Start time is required",
+            "endTimeRequired": "End time is required",
+            "maxTimespan": "Time range cannot exceed 36 hours",
+            "bothSidesRequired": "Both sides must have at least one entity",
+            "apiError": "API error",
+            "unknownError": "An unknown error occurred"
+        }
+    }
 }
