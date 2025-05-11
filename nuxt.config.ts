@@ -229,6 +229,9 @@ export default defineNuxtConfig({
         bundle: {
             optimizeTranslationDirective: false,
         },
+        compilation: {
+            strictMessage: false,
+        },
         defaultLocale: "en",
         strategy: "no_prefix",
         lazy: true,

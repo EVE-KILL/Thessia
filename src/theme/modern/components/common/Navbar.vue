@@ -86,8 +86,8 @@ const leftNavItems = computed(() => [
         icon: "lucide:search",
     },
     {
-        name: t("Battles"),
-        label: t("Battles"),
+        name: t("battles"),
+        label: t("battles"),
         position: "left",
         to: "/battles",
         icon: "lucide:shield",
@@ -136,6 +136,7 @@ const rightNavItems = computed(() => [
             { name: t("faq"), label: t("faq"), to: "/faq" },
             { name: t("status"), label: t("status"), to: "/status" },
             { name: t("aboutTitle"), label: t("aboutTitle"), to: "/about" },
+            { name: t("Donate"), label: t("Donate"), to: "/donate" },
         ],
     },
     {
