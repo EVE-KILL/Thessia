@@ -18,8 +18,11 @@
                     class="collapse-icon" :class="{ 'rotate-icon': !isSectionCollapsed(item.itemName) }"
                     @click.stop="toggleSectionCollapse(item.itemName)" />
 
-                <Image v-if="(item.type === 'item' || item.type === 'container-item') && item.image" type="item"
-                    :id="item.itemId" size="24" class="w-6 h-6 rounded-md" :alt="item.itemName || ''" />
+                <!-- Show image only when not a skin -->
+                <Image
+                    v-if="(item.type === 'item' || item.type === 'container-item') && item.itemId && !isSkin(item.itemName || '')"
+                    :type="isBlueprint(item.itemName || '') ? 'blueprint-copy' : 'item'" :id="item.itemId" size="24"
+                    class="w-6 h-6 rounded-md" :alt="item.itemName || ''" />
 
             </div>
         </template>
@@ -33,14 +36,15 @@
                     ({{ getSectionItemCount(item.itemName) }})
                 </span>
             </div>
-            <div v-else-if="item.type === 'item' || item.type === 'container-item'" class="font-medium">{{ item.itemName
-            }}</div>
+            <div v-else-if="item.type === 'item' || item.type === 'container-item'" class="font-medium">
+                {{ item.itemName }}
+            </div>
             <div v-else-if="item.type === 'value'" class="font-medium">{{ item.itemName }}</div>
         </template>
 
         <!-- Quantity cell with badges -->
         <template #cell-quantity="{ item }">
-            <template v-if="item.type === 'item' || item.type === 'value'">
+            <template v-if="item.type === 'item' || item.type === 'value' || item.type === 'container-item'">
                 <div class="quantity-badges">
                     <!-- Dropped badge -->
                     <UBadge v-if="item.dropped > 0" variant="solid" color="success" class="item-badge">
@@ -56,8 +60,8 @@
         </template>
 
         <!-- Value cell -->
-        <template #cell-value="{ item }">
-            <template v-if="item.type === 'item' || item.type === 'value'">
+        <template #cell-value="{ item }: { item: Item }">
+            <template v-if="item.type === 'item' || item.type === 'value' || item.type === 'container-item'">
                 <div v-if="item.value" class="text-right font-medium">
                     {{ formatIsk(item.value) }}
                 </div>
@@ -66,7 +70,7 @@
         </template>
 
         <!-- Mobile view template -->
-        <template #mobile-content="{ item }">
+        <template #mobile-content="{ item }: { item: Item }">
             <div class="mobile-container">
                 <!-- Image cell -->
                 <div class="mobile-image-cell" :class="{ 'indented-mobile-image': item.isNested }">
@@ -80,8 +84,10 @@
                         :name="isSectionCollapsed(item.itemName) ? 'lucide:chevron-right' : 'lucide:chevron-down'"
                         class="collapse-icon-mobile" @click.stop="toggleSectionCollapse(item.itemName)" />
 
-                    <Image v-if="(item.type === 'item' || item.type === 'container-item') && item.image" type="item"
-                        :id="item.itemId" size="24" class="w-6 h-6 rounded-md" :alt="item.itemName || ''" />
+                    <!-- Show image only when not a skin -->
+                    <Image
+                        v-if="(item.type === 'item' || item.type === 'container-item') && item.itemId && !isSkin(item.itemName || '')"
+                        type="item" :id="item.itemId" size="24" class="w-6 h-6 rounded-md" :alt="item.itemName || ''" />
                 </div>
 
                 <!-- Mobile content -->
@@ -96,14 +102,16 @@
                             </span>
                         </div>
                         <div v-else-if="item.type === 'item' || item.type === 'container-item'"
-                            class="font-medium mobile-title">{{
-                                item.itemName }}</div>
+                            class="font-medium mobile-title">
+                            {{ item.itemName }}
+                        </div>
                         <div v-else-if="item.type === 'value'" class="font-medium mobile-title">{{ item.itemName }}
                         </div>
                     </div>
 
                     <!-- Mobile details - badges and value -->
-                    <div v-if="item.type === 'item' || item.type === 'value'" class="mobile-details">
+                    <div v-if="item.type === 'item' || item.type === 'value' || item.type === 'container-item'"
+                        class="mobile-details">
                         <div class="mobile-badges-wrapper">
                             <!-- Dropped badge -->
                             <UBadge v-if="item.dropped > 0" variant="solid" color="success"
@@ -136,7 +144,6 @@ import type { TableColumn } from "../common/Table.vue";
 
 const { t, locale } = useI18n();
 const currentLocale = computed(() => locale.value);
-const { isMobile } = useResponsive();
 
 const props = defineProps<{
     killmail: IKillmail | null;
@@ -469,12 +476,10 @@ function isBlueprint(itemName: string): boolean {
 }
 
 /**
- * Generates the correct image URL for an item, handling blueprints appropriately
+ * Determines if an item is a skin (no image available)
  */
-function getItemImageUrl(typeId: number, itemName: any, size = 64): string {
-    const localizedName = getLocalizedString(itemName, currentLocale.value);
-    const imageType = isBlueprint(localizedName) ? "bp" : "icon";
-    return `https://images.evetech.net/types/${typeId}/${imageType}?size=${size}`;
+function isSkin(itemName: string): boolean {
+    return !!itemName && itemName.toLowerCase().includes('skin');
 }
 
 // Watch for locale changes and reprocess data when language changes
@@ -547,7 +552,6 @@ function processKillmailData(killmail: IKillmail) {
     // Add hull section
     data.value?.push({
         type: "header",
-        image: null,
         itemName: t("hull"),
         dropped: null,
         destroyed: null,
@@ -557,7 +561,6 @@ function processKillmailData(killmail: IKillmail) {
     // Add ship item (always visible)
     data.value?.push({
         type: "item",
-        image: getItemImageUrl(killmail.victim.ship_id, killmail.victim.ship_name),
         itemName: getLocalizedString(killmail.victim.ship_name, currentLocale.value),
         dropped: 0,
         destroyed: 1,
@@ -588,7 +591,6 @@ function processKillmailData(killmail: IKillmail) {
         // Add group header with localized slot type name
         data.value?.push({
             type: "header",
-            image: null,
             itemName: sectionName,
             dropped: null,
             destroyed: null,
@@ -605,7 +607,6 @@ function processKillmailData(killmail: IKillmail) {
                 // Add the main item
                 data.value?.push({
                     type: "item",
-                    image: getItemImageUrl(item.type_id, item.name),
                     itemName: getLocalizedString(item.name, currentLocale.value),
                     dropped: item.qty_dropped,
                     destroyed: item.qty_destroyed,
@@ -620,7 +621,7 @@ function processKillmailData(killmail: IKillmail) {
                         const itemName = containerItem.type_name || containerItem.name || "";
                         data.value?.push({
                             type: "container-item",
-                            image: getItemImageUrl(containerItem.type_id, itemName),
+                            image: null,
                             itemName: getLocalizedString(itemName, currentLocale.value),
                             dropped: containerItem.qty_dropped,
                             destroyed: containerItem.qty_destroyed,
@@ -653,7 +654,6 @@ function processKillmailData(killmail: IKillmail) {
         // Add group total (always visible)
         data.value?.push({
             type: "value",
-            image: null,
             itemName: t("subTotal"),
             dropped: items.reduce((sum, item) => sum + (item.qty_dropped || 0), 0),
             destroyed: items.reduce((sum, item) => sum + (item.qty_destroyed || 0), 0),
@@ -667,7 +667,6 @@ function processKillmailData(killmail: IKillmail) {
     // Add grand total
     data.value?.push({
         type: "value",
-        image: null,
         itemName: t("total"),
         dropped: null,
         destroyed: null,
@@ -693,7 +692,6 @@ const UBadge = resolveComponent("UBadge");
 
 type Item = {
     type: "header" | "value" | "item" | "container-item";
-    image: string | null;
     itemName: string | null;
     dropped: number | null;
     destroyed: number | null;

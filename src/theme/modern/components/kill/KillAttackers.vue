@@ -75,7 +75,7 @@
                         <div class="ship-info flex items-center">
                             <Image v-if="finalBlowAttacker.ship_id" :type="'item'" :id="finalBlowAttacker.ship_id"
                                 :size="24" class="flex-shrink-0" />
-                            <span class="ship-name font-medium ml-0.5">
+                            <span class="ship-name font-medium ml-0.5" ref="finalShipNameRef">
                                 <NuxtLink v-if="finalBlowAttacker.ship_id" :to="`/item/${finalBlowAttacker.ship_id}`"
                                     class="entity-link">
                                     {{ getLocalizedString(finalBlowAttacker.ship_name, currentLocale) }}
@@ -92,7 +92,7 @@
                         <div class="weapon-info flex items-center">
                             <Image v-if="finalBlowAttacker.weapon_type_id" :type="'item'"
                                 :id="finalBlowAttacker.weapon_type_id" :size="24" class="flex-shrink-0" />
-                            <span class="weapon-name ml-0.5">
+                            <span class="weapon-name ml-0.5" ref="finalWeaponNameRef">
                                 <NuxtLink v-if="finalBlowAttacker.weapon_type_id"
                                     :to="`/item/${finalBlowAttacker.weapon_type_id}`" class="entity-link">
                                     {{ getLocalizedString(finalBlowAttacker.weapon_type_name, currentLocale) }}
@@ -191,7 +191,7 @@
                         <div class="ship-info flex items-center">
                             <Image v-if="topDamageAttacker.ship_id" :type="'item'" :id="topDamageAttacker.ship_id"
                                 :size="24" class="flex-shrink-0" />
-                            <span class="ship-name font-medium ml-0.5">
+                            <span class="ship-name font-medium ml-0.5" ref="topShipNameRef">
                                 <NuxtLink v-if="topDamageAttacker.ship_id" :to="`/item/${topDamageAttacker.ship_id}`"
                                     class="entity-link">
                                     {{ getLocalizedString(topDamageAttacker.ship_name, currentLocale) }}
@@ -208,7 +208,7 @@
                         <div class="weapon-info flex items-center">
                             <Image v-if="topDamageAttacker.weapon_type_id" :type="'item'"
                                 :id="topDamageAttacker.weapon_type_id" :size="24" class="flex-shrink-0" />
-                            <span class="weapon-name ml-0.5">
+                            <span class="weapon-name ml-0.5" ref="topWeaponNameRef">
                                 <NuxtLink v-if="topDamageAttacker.weapon_type_id"
                                     :to="`/item/${topDamageAttacker.weapon_type_id}`" class="entity-link">
                                     {{ getLocalizedString(topDamageAttacker.weapon_type_name, currentLocale) }}
@@ -454,6 +454,7 @@
 </template>
 
 <script setup lang="ts">
+import { nextTick, onBeforeUnmount, onMounted, onUpdated, ref } from 'vue';
 import type { IAttacker, IKillmail } from "~/server/interfaces/IKillmail";
 
 // i18n setup
@@ -465,6 +466,47 @@ const props = defineProps<{
     killmail?: IKillmail | null;
     attackers?: IAttacker[];
 }>();
+
+// Refs for detecting overflow fade on ship and weapon names
+const finalShipNameRef = ref<HTMLElement | null>(null);
+const finalWeaponNameRef = ref<HTMLElement | null>(null);
+const topShipNameRef = ref<HTMLElement | null>(null);
+const topWeaponNameRef = ref<HTMLElement | null>(null);
+
+/**
+ * Applies or removes the 'fade' class based on whether the element is truncated
+ */
+function updateFade(elRef: { value: HTMLElement | null }) {
+    const el = elRef.value;
+    if (!el) return;
+    if (el.scrollWidth > el.clientWidth) {
+        el.classList.add('fade');
+    } else {
+        el.classList.remove('fade');
+    }
+}
+
+/**
+ * Update all registered refs for overflow detection
+ */
+function updateAllFades() {
+    updateFade(finalShipNameRef);
+    updateFade(finalWeaponNameRef);
+    updateFade(topShipNameRef);
+    updateFade(topWeaponNameRef);
+}
+
+// Lifecycle hooks to trigger fade updates
+onMounted(() => {
+    nextTick(updateAllFades);
+    window.addEventListener('resize', updateAllFades);
+});
+onUpdated(() => {
+    nextTick(updateAllFades);
+});
+onBeforeUnmount(() => {
+    window.removeEventListener('resize', updateAllFades);
+});
 
 // Function to toggle organizations visibility
 function toggleOrganizations() {
@@ -660,6 +702,31 @@ function getTotalCorporationsCount(): number {
     );
     return allianceCorpsCount + organizationsTree.value.noAllianceCorporations.length;
 }
+
+/**
+ * Update fade class based on overflow
+ */
+function updateFades() {
+    const container = document.querySelector('.kill-attackers');
+    if (!container) return;
+    const elements = container.querySelectorAll<HTMLElement>('.ship-name, .weapon-name');
+    elements.forEach(el => {
+        if (el.scrollWidth > el.clientWidth) el.classList.add('fade');
+        else el.classList.remove('fade');
+    });
+}
+
+// Lifecycle hooks to trigger fade updates
+onMounted(() => {
+    updateFades();
+    window.addEventListener('resize', updateFades);
+});
+onUpdated(() => {
+    updateFades();
+});
+onBeforeUnmount(() => {
+    window.removeEventListener('resize', updateFades);
+});
 </script>
 
 <style scoped>
@@ -831,25 +898,27 @@ function getTotalCorporationsCount(): number {
 
 .ship-name {
     overflow: hidden;
-    text-overflow: ellipsis;
     white-space: nowrap;
     max-width: 150px;
     position: relative;
     transition: all 0.15s ease;
     will-change: overflow;
+}
+
+.ship-name.fade {
     mask-image: linear-gradient(to right, black 75%, transparent);
     -webkit-mask-image: linear-gradient(to right, black 75%, transparent);
 }
 
-.ship-name:hover {
+.ship-name.fade:hover {
     overflow: visible;
     z-index: 100;
     mask-image: none;
     -webkit-mask-image: none;
 }
 
-.ship-name:hover .entity-link,
-.ship-name:hover>span {
+.ship-name.fade:hover .entity-link,
+.ship-name.fade:hover>span {
     position: relative;
     z-index: 100;
     display: inline-block;
@@ -864,25 +933,27 @@ function getTotalCorporationsCount(): number {
 
 .weapon-name {
     overflow: hidden;
-    text-overflow: ellipsis;
     white-space: nowrap;
     max-width: 150px;
     position: relative;
     transition: all 0.15s ease;
     will-change: overflow;
+}
+
+.weapon-name.fade {
     mask-image: linear-gradient(to right, black 75%, transparent);
     -webkit-mask-image: linear-gradient(to right, black 75%, transparent);
 }
 
-.weapon-name:hover {
+.weapon-name.fade:hover {
     overflow: visible;
     z-index: 100;
     mask-image: none;
     -webkit-mask-image: none;
 }
 
-.weapon-name:hover .entity-link,
-.weapon-name:hover>span {
+.weapon-name.fade:hover .entity-link,
+.weapon-name.fade:hover>span {
     position: relative;
     z-index: 100;
     display: inline-block;
@@ -973,7 +1044,7 @@ function getTotalCorporationsCount(): number {
 .section {
     margin-bottom: 1rem;
     border-radius: 0.5rem;
-    padding: 1rem;
+    padding: 0.35rem;
     background-color: light-dark(rgba(245, 245, 245, 0.05), rgba(26, 26, 26, 0.3));
 }
 
