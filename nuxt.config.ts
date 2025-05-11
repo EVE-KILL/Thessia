@@ -171,7 +171,7 @@ export default defineNuxtConfig({
     ],
 
     colorMode: {
-        preference: "system",
+        preference: "dark",
         fallback: "dark",
         storage: "localStorage",
         storageKey: "theme",
@@ -227,7 +227,7 @@ export default defineNuxtConfig({
             },
         ],
         bundle: {
-            optimizeTranslationDirective: false,
+            optimizeTranslationDirective: true,
         },
         compilation: {
             strictMessage: false,
