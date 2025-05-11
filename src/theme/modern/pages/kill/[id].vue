@@ -1,6 +1,8 @@
 <template>
     <!-- Desktop Layout -->
     <div v-if="!isMobile" class="flex flex-wrap mt-4 gap-4">
+        <!-- Scroll to comments button -->
+        <ScrollTo targetSelector="#comments-section" title="Go to comments" :bottomOffset="80" />
         <KillNavbar :killmail="killmail" :battle="battle" :siblings="siblings" />
         <!-- Left Container -->
         <div class="flex-1 min-w-0 text-black dark:text-white bg-background-900 rounded-md overflow-hidden">
@@ -350,6 +352,7 @@
             </template>
             <div v-else>
                 <KillAttackers :killmail="killmail" />
+                <div id="comments-section"></div>
                 <KillComments :killId="killmail.killmail_id" />
             </div>
         </div>
@@ -499,6 +502,7 @@
 
 <script setup lang="ts">
 import type { IKillmail } from "~/server/interfaces/IKillmail";
+import ScrollTo from "~/src/theme/modern/components/common/ScrollTo.vue";
 
 const { t } = useI18n();
 const route = useRoute();

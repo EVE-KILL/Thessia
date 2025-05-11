@@ -2,41 +2,41 @@
 const { getOptimizedImageUrl, getSiteBackground } = siteBackground();
 const backgroundRef = getSiteBackground();
 const backgroundUrl = computed(() => {
-  return getOptimizedImageUrl(backgroundRef.value);
+    return getOptimizedImageUrl(backgroundRef.value);
 });
 
 useHead({
-  link: [{ rel: "preload", as: "image", href: backgroundUrl.value }],
+    link: [{ rel: "preload", as: "image", href: backgroundUrl.value }],
 });
 
 useSeoMeta({
-  titleTemplate: "EVE-KILL | %s",
-  description:
-    "EVE-KILL is a community-driven killboard for EVE Online, providing detailed statistics and analysis of player kills and losses.",
-  ogDescription:
-    "EVE-KILL is a community-driven killboard for EVE Online, providing detailed statistics and analysis of player kills and losses.",
-  twitterDescription:
-    "EVE-KILL is a community-driven killboard for EVE Online, providing detailed statistics and analysis of player kills and losses.",
-  ogImage: "/icon.svg",
-  twitterImage: "/icon.svg",
-  ogType: "website",
-  twitterCard: "summary_large_image",
-  twitterTitle: "EVE-KILL",
-  ogUrl: "https://eve-kill.com",
-  ogSiteName: "EVE-KILL",
-  twitterSite: "@eve_kill",
-  twitterCreator: "@eve_kill",
-  ogLocale: "en_US",
+    titleTemplate: "EVE-KILL | %s",
+    description:
+        "EVE-KILL is a community-driven killboard for EVE Online, providing detailed statistics and analysis of player kills and losses.",
+    ogDescription:
+        "EVE-KILL is a community-driven killboard for EVE Online, providing detailed statistics and analysis of player kills and losses.",
+    twitterDescription:
+        "EVE-KILL is a community-driven killboard for EVE Online, providing detailed statistics and analysis of player kills and losses.",
+    ogImage: "/icon.svg",
+    twitterImage: "/icon.svg",
+    ogType: "website",
+    twitterCard: "summary_large_image",
+    twitterTitle: "EVE-KILL",
+    ogUrl: "https://eve-kill.com",
+    ogSiteName: "EVE-KILL",
+    twitterSite: "@eve_kill",
+    twitterCreator: "@eve_kill",
+    ogLocale: "en_US",
 });
 
 useHead({
-  link: [
-    {
-      rel: "icon",
-      type: "image/png",
-      href: "/favicon.png",
-    },
-  ],
+    link: [
+        {
+            rel: "icon",
+            type: "image/png",
+            href: "/favicon.png",
+        },
+    ],
 });
 </script>
 
@@ -65,6 +65,8 @@ useHead({
         </UContainer>
 
         <BackgroundViewer />
+        <!-- Global scroll-to-top button -->
+        <ScrollTo targetSelector="#content" icon="lucide:arrow-up" title="Scroll to top" />
     </div>
 </template>
 
@@ -219,30 +221,34 @@ html #content>#inner-content {
     right: 0;
     bottom: 0;
     left: 0;
-    background: radial-gradient(
-        circle,
-        transparent 30%,
-        rgba(245, 245, 245, 0.3) 70%,
-        rgba(220, 220, 220, 0.8) 100%
-    );
+    background: radial-gradient(circle,
+            transparent 30%,
+            rgba(245, 245, 245, 0.3) 70%,
+            rgba(220, 220, 220, 0.8) 100%);
     pointer-events: none;
     z-index: 1;
     transition: background 0.5s ease;
 }
 
 html.dark .vignette-overlay {
-    background: radial-gradient(
-        circle,
-        transparent 30%,
-        rgba(0, 0, 0, 0.5) 70%,
-        rgba(0, 0, 0, 0.85) 100%
-    );
+    background: radial-gradient(circle,
+            transparent 30%,
+            rgba(0, 0, 0, 0.5) 70%,
+            rgba(0, 0, 0, 0.85) 100%);
 }
 
 @keyframes subtle-pulse {
-    0% { opacity: 0.95; }
-    50% { opacity: 1; }
-    100% { opacity: 0.95; }
+    0% {
+        opacity: 0.95;
+    }
+
+    50% {
+        opacity: 1;
+    }
+
+    100% {
+        opacity: 0.95;
+    }
 }
 
 .vignette-overlay {
