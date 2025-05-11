@@ -171,12 +171,12 @@ export default defineNuxtConfig({
     ],
 
     colorMode: {
-        preference: "dark",
-        fallback: "dark",
+        classSuffix: "",
         storage: "localStorage",
         storageKey: "theme",
+        preference: "dark",
+        fallback: "dark"
     },
-
     imports: {
         dirs: ["src/core/utils/**"],
     },
