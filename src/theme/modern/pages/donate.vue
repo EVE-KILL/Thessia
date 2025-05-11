@@ -24,7 +24,7 @@
                         <UButton as="a"
                             href="https://store.markeedragon.com/affiliate.php?id=1104&redirect=index.php?cat=4"
                             target="_blank" rel="noopener" color="primary" size="lg" block>
-                            {{ t('donate.markeeDragon') }}
+                            <div v-html="t('donate.markeeDragon')"></div>
                         </UButton>
                     </div>
 

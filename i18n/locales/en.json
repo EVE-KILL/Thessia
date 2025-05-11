@@ -522,7 +522,7 @@
     "donate.disclaimer": "We firmly believe in providing our services without barriers—using EVE-KILL will always remain completely free. Donations are entirely voluntary expressions of support, and we maintain our commitment to equal access and functionality for all users regardless of contribution status.",
     "donate.markeeDragonTitle": "Game Time & PLEX",
     "donate.markeeDragonDescription": "Support our development while enhancing your EVE Online experience by purchasing game time or PLEX through our official MarkeeDragon affiliate link. Each transaction directly contributes to our ongoing development efforts without any additional cost to you.",
-    "donate.markeeDragon": "Go to MarkeeDragon",
+    "donate.markeeDragon": "Go to MarkeeDragon <br/>Use code <b>evekill</b> for 3% off",
     "donate.koFiTitle": "Buy Us a Coffee",
     "donate.koFiDescription": "Help sustain our infrastructure and fuel future innovations with a direct contribution through Ko-Fi. Choose between one-time donations or recurring support—every contribution, regardless of size, makes a meaningful difference to our development roadmap and server capacity. (Donations also gets a role on Discord that shows they are supporters)",
     "donate.koFi": "Tip a Coffee (Ko-fi)",
