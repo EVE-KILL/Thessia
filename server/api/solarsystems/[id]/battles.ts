@@ -5,8 +5,10 @@ import { Battles } from '~/server/models/Battles';
 export default defineEventHandler(async (event) => {
     const query = getQuery(event);
     const idParam = event.context.params?.id;
-    const systemId = idParam ? parseInt(idParam.toString(), 10) : NaN;
+    // The idParam is guaranteed by the route to be digits.
+    const systemId = idParam ? parseInt(idParam.toString(), 10) : NaN; 
     if (isNaN(systemId)) {
+        // This should not be reached if routing works correctly.
         throw createError({ statusCode: 400, statusMessage: 'Invalid system ID' });
     }
 
