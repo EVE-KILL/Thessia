@@ -172,9 +172,9 @@ export default defineNuxtConfig({
 
     colorMode: {
         classSuffix: "",
-        storage: "localStorage",
+        storage: "cookie",
         storageKey: "theme",
-        preference: "dark",
+        preference: "system",
         fallback: "dark"
     },
     imports: {
@@ -283,9 +283,6 @@ export default defineNuxtConfig({
             charset: "utf-8",
             viewport: "width=device-width, initial-scale=1",
             title: "EVE-KILL",
-            htmlAttrs: {
-                class: "dark"
-            },
             titleTemplate: "EVE-KILL | %s",
             base: {
                 href: "/",
