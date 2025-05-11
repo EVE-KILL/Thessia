@@ -1,7 +1,7 @@
 // API endpoint to fetch a single region by region_id or name
 
-import { Regions } from "~/server/models/Regions";
 import { createError } from 'h3';
+import { Regions } from "~/server/models/Regions";
 
 export default defineEventHandler(async (event) => {
     const param = event.context.params?.id;
@@ -20,12 +20,12 @@ export default defineEventHandler(async (event) => {
             throw createError({ statusCode: 404, statusMessage: `Region with ID ${numericId} not found` });
         }
     } else { // Treat as a region name
+        const decodedName = decodeURIComponent(param);
         // Perform a case-insensitive search for the name
-        const nameRegex = new RegExp(`^${param}$`, 'i');
-        // Assuming the field for region name is 'name' in your model
+        const nameRegex = new RegExp(`^${decodedName}$`, 'i');
         region = await Regions.findOne({ "name.en": nameRegex }, { _id: 0, __v: 0 });
         if (!region) {
-            throw createError({ statusCode: 404, statusMessage: `Region with name "${param}" not found` });
+            throw createError({ statusCode: 404, statusMessage: `Region with name "${decodedName}" not found` });
         }
     }
 

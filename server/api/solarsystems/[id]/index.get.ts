@@ -19,11 +19,12 @@ export default defineEventHandler(async (event) => {
             throw createError({ statusCode: 404, statusMessage: `Solar system with ID ${numericId} not found` });
         }
     } else { // Treat as a system name
+        const decodedName = decodeURIComponent(param);
         // Perform a case-insensitive search for the system name
-        const nameRegex = new RegExp(`^${param}$`, 'i');
+        const nameRegex = new RegExp(`^${decodedName}$`, 'i');
         system = await SolarSystems.findOne({ system_name: nameRegex }, { _id: 0, __v: 0 });
         if (!system) {
-            throw createError({ statusCode: 404, statusMessage: `Solar system with name "${param}" not found` });
+            throw createError({ statusCode: 404, statusMessage: `Solar system with name "${decodedName}" not found` });
         }
     }
 

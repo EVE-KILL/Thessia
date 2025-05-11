@@ -20,12 +20,12 @@ export default defineEventHandler(async (event) => {
             throw createError({ statusCode: 404, statusMessage: `Constellation with ID ${numericId} not found` });
         }
     } else { // Treat as a constellation name
+        const decodedName = decodeURIComponent(param);
         // Perform a case-insensitive search for the name
-        const nameRegex = new RegExp(`^${param}$`, 'i');
-        // Assuming the field for constellation name is 'name' in your model
+        const nameRegex = new RegExp(`^${decodedName}$`, 'i');
         constellation = await Constellations.findOne({ constellation_name: nameRegex }, { _id: 0, __v: 0 });
         if (!constellation) {
-            throw createError({ statusCode: 404, statusMessage: `Constellation with name "${param}" not found` });
+            throw createError({ statusCode: 404, statusMessage: `Constellation with name "${decodedName}" not found` });
         }
     }
 
