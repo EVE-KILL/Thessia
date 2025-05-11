@@ -4,10 +4,10 @@ import type { IKillmail } from "~/server/interfaces/IKillmail";
 const props = defineProps<{
     killmail: IKillmail | null;
     battle: boolean | { value: boolean } | null;
-    sibling?: number | null; // Accept sibling killmail id as a prop
+    siblings?: Array<{ killmail_id: number; victim: { ship_id: number; ship_name: { en: string } } }>;
 }>();
 
-const { t } = useI18n();
+const { t, locale } = useI18n();
 
 // Track dropdown states for menus with children
 const dropdownStates = ref({});
@@ -19,7 +19,7 @@ interface NavLink {
     name?: string;
     label?: string;
     to?: string;
-    url?: string;
+    target?: string;
     position: "left" | "center" | "right";
     children?: NavLink[];
     disabled?: boolean;
@@ -40,13 +40,15 @@ const leftNavItems = computed(() => {
                 {
                     name: "System",
                     description: props.killmail.system_name,
-                    url: `https://evemaps.dotlan.net/system/${props.killmail.system_name || ""}`,
+                    to: `https://evemaps.dotlan.net/system/${props.killmail.system_name || ""}`,
+                    target: '_blank',
                     disabled: false,
                 },
                 {
                     name: "Region",
                     description: props.killmail.region_name.en,
-                    url: `https://evemaps.dotlan.net/region/${props.killmail.region_name.en || ""}`,
+                    to: `https://evemaps.dotlan.net/region/${props.killmail.region_name.en || ""}`,
+                    target: '_blank',
                     disabled: false,
                 },
             ],
@@ -58,7 +60,8 @@ const leftNavItems = computed(() => {
                 {
                     name: "Region",
                     description: props.killmail.region_name.en,
-                    url: `https://eveeye.com/?m=${encodeURIComponent(props.killmail.region_name.en || "")}`,
+                    to: `https://eveeye.com/?m=${encodeURIComponent(props.killmail.region_name.en || "")}`,
+                    target: '_blank',
                     disabled: false,
                 },
             ],
@@ -70,13 +73,15 @@ const leftNavItems = computed(() => {
                 {
                     name: "System",
                     description: props.killmail.system_name,
-                    url: `https://evemissioneer.com/s/${encodeURIComponent(props.killmail.system_name || "")}`,
+                    to: `https://evemissioneer.com/s/${encodeURIComponent(props.killmail.system_name || "")}`,
+                    target: '_blank',
                     disabled: false,
                 },
                 {
                     name: "Region",
                     description: props.killmail.region_name.en,
-                    url: `https://evemissioneer.com/r/${encodeURIComponent(props.killmail.region_id || "")}`,
+                    to: `https://evemissioneer.com/r/${encodeURIComponent(props.killmail.region_id || "")}`,
+                    target: '_blank',
                     disabled: false,
                 },
             ],
@@ -88,7 +93,8 @@ const leftNavItems = computed(() => {
                 {
                     name: "Fitting",
                     description: `Fitting for ship: ${props.killmail.victim.ship_name.en}`,
-                    url: `https://eveship.fit/?fit=killmail:${props.killmail.killmail_id || ""}/${props.killmail.killmail_hash || ""}`,
+                    to: `https://eveship.fit/?fit=killmail:${props.killmail.killmail_id || ""}/${props.killmail.killmail_hash || ""}`,
+                    target: '_blank',
                     disabled: false,
                 },
             ],
@@ -100,13 +106,15 @@ const leftNavItems = computed(() => {
                 {
                     name: "Ship Group",
                     description: props.killmail.victim.ship_group_name.en,
-                    url: `https://everef.net/groups/${props.killmail.victim.ship_group_id || ""}`,
+                    to: `https://everef.net/groups/${props.killmail.victim.ship_group_id || ""}`,
+                    target: '_blank',
                     disabled: false,
                 },
                 {
                     name: "Ship",
                     description: props.killmail.victim.ship_name.en,
-                    url: `https://everef.net/type/${props.killmail.victim.ship_id || ""}`,
+                    to: `https://everef.net/type/${props.killmail.victim.ship_id || ""}`,
+                    target: '_blank',
                     disabled: false,
                 },
             ],
@@ -118,13 +126,15 @@ const leftNavItems = computed(() => {
                 {
                     name: "System",
                     description: props.killmail.system_name,
-                    url: `https://jita.space/system/${props.killmail.system_id || ""}`,
+                    to: `https://jita.space/system/${props.killmail.system_id || ""}`,
+                    target: '_blank',
                     disabled: false,
                 },
                 {
                     name: "Region",
                     description: props.killmail.region_name.en,
-                    url: `https://jita.space/region/${props.killmail.region_id || ""}`,
+                    to: `https://jita.space/region/${props.killmail.region_id || ""}`,
+                    target: '_blank',
                     disabled: false,
                 },
             ],
@@ -136,19 +146,22 @@ const leftNavItems = computed(() => {
                 {
                     name: "Character",
                     description: props.killmail.victim.character_name,
-                    url: `https://evewho.com/character/${props.killmail.victim.character_id || ""}`,
+                    to: `https://evewho.com/character/${props.killmail.victim.character_id || ""}`,
+                    target: '_blank',
                     disabled: !props.killmail.victim.character_id,
                 },
                 {
                     name: "Corporation",
                     description: props.killmail.victim.corporation_name,
-                    url: `https://evewho.com/corporation/${props.killmail.victim.corporation_id || ""}`,
+                    to: `https://evewho.com/corporation/${props.killmail.victim.corporation_id || ""}`,
+                    target: '_blank',
                     disabled: !props.killmail.victim.corporation_id,
                 },
                 {
                     name: "Alliance",
                     description: props.killmail.victim.alliance_name,
-                    url: `https://evewho.com/alliance/${props.killmail.victim.alliance_id || ""}`,
+                    to: `https://evewho.com/alliance/${props.killmail.victim.alliance_id || ""}`,
+                    target: '_blank',
                     disabled: !props.killmail.victim.alliance_id || props.killmail.victim.alliance_id === 0,
                 },
             ],
@@ -160,49 +173,57 @@ const leftNavItems = computed(() => {
                 {
                     name: "Killmail",
                     description: props.killmail.killmail_id?.toString(),
-                    url: `https://zkillboard.com/kill/${props.killmail.killmail_id || ""}`,
+                    to: `https://zkillboard.com/kill/${props.killmail.killmail_id || ""}`,
+                    target: '_blank',
                     disabled: false,
                 },
                 {
                     name: "System",
                     description: props.killmail.system_name,
-                    url: `https://zkillboard.com/system/${props.killmail.system_id || ""}`,
+                    to: `https://zkillboard.com/system/${props.killmail.system_id || ""}`,
+                    target: '_blank',
                     disabled: false,
                 },
                 {
                     name: "Region",
                     description: props.killmail.region_name.en,
-                    url: `https://zkillboard.com/region/${props.killmail.region_id || ""}`,
+                    to: `https://zkillboard.com/region/${props.killmail.region_id || ""}`,
+                    target: '_blank',
                     disabled: false,
                 },
                 {
                     name: "Ship Group",
                     description: props.killmail.victim.ship_group_name.en,
-                    url: `https://zkillboard.com/group/${props.killmail.victim.ship_group_id || ""}`,
+                    to: `https://zkillboard.com/group/${props.killmail.victim.ship_group_id || ""}`,
+                    target: '_blank',
                     disabled: false,
                 },
                 {
                     name: "Ship",
                     description: props.killmail.victim.ship_name.en,
-                    url: `https://zkillboard.com/item/${props.killmail.victim.ship_id || ""}`,
+                    to: `https://zkillboard.com/item/${props.killmail.victim.ship_id || ""}`,
+                    target: '_blank',
                     disabled: false,
                 },
                 {
                     name: "Character",
                     description: props.killmail.victim.character_name,
-                    url: `https://zkillboard.com/character/${props.killmail.victim.character_id || ""}`,
+                    to: `https://zkillboard.com/character/${props.killmail.victim.character_id || ""}`,
+                    target: '_blank',
                     disabled: !props.killmail.victim.character_id,
                 },
                 {
                     name: "Corporation",
                     description: props.killmail.victim.corporation_name,
-                    url: `https://zkillboard.com/corporation/${props.killmail.victim.corporation_id || ""}`,
+                    to: `https://zkillboard.com/corporation/${props.killmail.victim.corporation_id || ""}`,
+                    target: '_blank',
                     disabled: !props.killmail.victim.corporation_id,
                 },
                 {
                     name: "Alliance",
                     description: props.killmail.victim.alliance_name,
-                    url: `https://zkillboard.com/alliance/${props.killmail.victim.alliance_id || ""}`,
+                    to: `https://zkillboard.com/alliance/${props.killmail.victim.alliance_id || ""}`,
+                    target: '_blank',
                     disabled: !props.killmail.victim.alliance_id || props.killmail.victim.alliance_id === 0,
                 },
             ],
@@ -218,36 +239,41 @@ const centerNavItems = computed(() => []);
 /**
  * Right navigation items
  */
-const rightNavItems = computed(() => {
+const rightNavItems = computed<NavLink[]>(() => {
     if (!props.killmail) return [];
     // Unwrap battle if it's a ref
-    const battleValue = typeof props.battle === "object" && props.battle !== null && "value" in props.battle
+    const battleValue = typeof props.battle === 'object' && props.battle !== null && 'value' in props.battle
         ? props.battle.value
         : props.battle;
-    // Sibling link logic
-    const siblingValue = typeof props.sibling === "number" ? props.sibling : null;
-
-    const items = [
-        // If battle is true include a link to the battle page
-        ...(battleValue
-            ? [
-                {
-                    name: "Battle Report",
-                    position: "right",
-                    to: `/battle/killmail/${props.killmail.killmail_id}`
-                },
-            ]
-            : []),
-        ...(siblingValue
-            ? [
-                {
-                    name: "Sibling Killmail",
-                    position: "right",
-                    to: `/kill/${siblingValue}`
-                },
-            ]
-            : []),
-    ];
+    const items: NavLink[] = [];
+    if (battleValue) {
+        items.push({
+            name: 'Battle Report',
+            position: 'right',
+            to: `/battle/killmail/${props.killmail.killmail_id}`,
+            target: '',
+        });
+    }
+    const sibs = Array.isArray(props.siblings) ? props.siblings : [];
+    if (sibs.length === 1) {
+        items.push({
+            name: 'Sibling Killmail',
+            position: 'right',
+            to: `/kill/${sibs[0].killmail_id}`,
+            target: '',
+        });
+    } else if (sibs.length > 1) {
+        items.push({
+            name: 'Sibling Killmails',
+            position: 'right',
+            children: sibs.map((s) => ({
+                name: s.victim.ship_name.en,
+                position: 'right',
+                to: `/kill/${s.killmail_id}`,
+                target: '',
+            }))
+        });
+    }
     return items;
 });
 
@@ -279,8 +305,8 @@ const allNavItems = computed(() => [
                     <!-- Dropdown items -->
                     <div class="py-1 min-w-[240px]">
                         <div class="py-1">
-                            <a v-for="(item, itemIndex) in link.children" :key="itemIndex" :href="item.url"
-                                target="_blank" rel="noopener noreferrer" :class="[
+                            <a v-for="(item, itemIndex) in link.children" :key="itemIndex" :href="item.to"
+                                :target="item.target" rel="noopener noreferrer" :class="[
                                     'flex px-4 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors',
                                     item.disabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'
                                 ]" :tabindex="item.disabled ? -1 : 0"
@@ -327,8 +353,8 @@ const allNavItems = computed(() => [
                     <!-- Dropdown items -->
                     <div class="py-1 min-w-[240px]">
                         <div class="py-1">
-                            <a v-for="(item, itemIndex) in link.children" :key="itemIndex" :href="item.url"
-                                target="_blank" rel="noopener noreferrer" :class="[
+                            <a v-for="(item, itemIndex) in link.children" :key="itemIndex" :href="item.to"
+                                :target="item.target" rel="noopener noreferrer" :class="[
                                     'flex px-4 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors',
                                     item.disabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'
                                 ]" :tabindex="item.disabled ? -1 : 0"

@@ -1,7 +1,7 @@
 <template>
     <!-- Desktop Layout -->
     <div v-if="!isMobile" class="flex flex-wrap mt-4 gap-4">
-        <KillNavbar :killmail="killmail" :battle="battle" :sibling="sibling" />
+        <KillNavbar :killmail="killmail" :battle="battle" :siblings="siblings" />
         <!-- Left Container -->
         <div class="flex-1 min-w-0 text-black dark:text-white bg-background-900 rounded-md overflow-hidden">
             <!-- Header -->
@@ -503,7 +503,7 @@ import type { IKillmail } from "~/server/interfaces/IKillmail";
 const { t } = useI18n();
 const route = useRoute();
 const killmail = ref<IKillmail | null>(null);
-const sibling = ref<number | null>(null); // Only store the sibling killmail id
+const siblings = ref<Array<{ killmail_id: number; victim: { ship_id: number; ship_name: any } }>>([]);
 const commentCount = ref(0);
 const isLoading = ref(true);
 
@@ -654,19 +654,15 @@ watch(
     async (newData) => {
         if (newData) {
             killmail.value = newData as IKillmail;
-
             try {
-                // Fetch sibling killmail id if it exists
-                const siblingResponse = await $fetch<number[]>(`/api/killmail/${route.params.id}/sibling`);
-
-                if (Array.isArray(siblingResponse) && siblingResponse.length > 0) {
-                    sibling.value = siblingResponse[0];
-                } else {
-                    sibling.value = null;
-                }
+                // Fetch all sibling killmails
+                const siblingResponse = await $fetch<Array<{ killmail_id: number; victim: { ship_id: number; ship_name: any } }>>(
+                    `/api/killmail/${route.params.id}/sibling`
+                );
+                siblings.value = Array.isArray(siblingResponse) ? siblingResponse : [];
             } catch (error) {
-                console.error("Error fetching sibling killmail:", error);
-                sibling.value = null;
+                console.error("Error fetching sibling killmails:", error);
+                siblings.value = [];
             } finally {
                 isLoading.value = false;
             }

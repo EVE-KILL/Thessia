@@ -29,17 +29,18 @@ export default defineEventHandler(async (event) => {
         killmail_id: { $ne: killmail_id },
     };
 
-    const sibling = await Killmails.findOne(
+    // Find all sibling killmails within the time window
+    const siblings = await Killmails.find(
         query,
-        { _id: 0, killmail_id: 1 },
-        {
-            sort: { kill_time: -1 },
-        },
+        { _id: 0, killmail_id: 1, 'victim.ship_id': 1, 'victim.ship_name': 1 },
+        { sort: { kill_time: -1 } },
     );
-
-    if (!sibling?.killmail_id) {
+    if (!siblings || siblings.length === 0) {
         return [];
     }
-
-    return [sibling.killmail_id];
+    // Return array of sibling objects
+    return siblings.map((k) => ({
+        killmail_id: k.killmail_id,
+        victim: { ship_id: k.victim.ship_id, ship_name: k.victim.ship_name },
+    }));
 });
