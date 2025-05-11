@@ -642,11 +642,12 @@ onBeforeUnmount(() => {
             <!-- Final Blow column -->
             <template #cell-finalBlow="{ item }">
                 <div class="flex items-center py-1 whitespace-nowrap">
-                    <!-- NPC Fallback Image or Character Image -->
-                    <template v-if="item.is_npc">
-                        <Image type="character" id="0" size="44" alt="NPC" class="rounded w-10 mx-2" />
+                    <!-- Character or placeholder when finalblow.character_id missing -->
+                    <template v-if="item.finalblow.character_id > 0">
+                        <Image type="character" :id="item.finalblow.character_id" format="webp"
+                            :alt="`Character: ${item.finalblow.character_name}`" class="rounded w-10 mx-2" size="44" />
                         <div class="flex flex-col items-start">
-                            <span class="text-sm text-black dark:text-white">{{ item.finalblow.faction_name }}</span>
+                            <span class="text-sm text-black dark:text-white">{{ item.finalblow.character_name }}</span>
                             <span class="text-xs text-gray-600 dark:text-gray-400">
                                 {{ truncateString(getLocalizedString(item.finalblow.ship_group_name, currentLocale), 22)
                                 }}
@@ -654,10 +655,10 @@ onBeforeUnmount(() => {
                         </div>
                     </template>
                     <template v-else>
-                        <Image type="character" :id="item.finalblow.character_id" format="webp"
-                            :alt="`Character: ${item.finalblow.character_name}`" class="rounded w-10 mx-2" size="44" />
+                        <Image type="character" :id="1" size="44" alt="NPC/Structure" class="rounded w-10 mx-2" />
                         <div class="flex flex-col items-start">
-                            <span class="text-sm text-black dark:text-white">{{ item.finalblow.character_name }}</span>
+                            <span class="text-sm text-black dark:text-white">{{ item.finalblow.faction_name ||
+                                item.finalblow.character_name }}</span>
                             <span class="text-xs text-gray-600 dark:text-gray-400">
                                 {{ truncateString(getLocalizedString(item.finalblow.ship_group_name, currentLocale), 22)
                                 }}
@@ -677,7 +678,7 @@ onBeforeUnmount(() => {
                         <span>{{ item.system_name }}</span>
                         <span> (</span>
                         <span :class="getSecurityColor(item.system_security)">{{ item.system_security.toFixed(1)
-                            }}</span>
+                        }}</span>
                         <span>)</span>
                     </div>
                 </div>
@@ -736,7 +737,7 @@ onBeforeUnmount(() => {
                                 <span>{{ item.system_name }}</span>
                                 <span> (</span>
                                 <span :class="getSecurityColor(item.system_security)">{{ item.system_security.toFixed(1)
-                                    }}</span>
+                                }}</span>
                                 <span>)</span>
                             </div>
                         </div>

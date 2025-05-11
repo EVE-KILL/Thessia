@@ -7,15 +7,16 @@
                 <!-- Portraits Block -->
                 <div class="attacker-portraits-layout flex items-start gap-2">
                     <!-- Character Image -->
-                    <NuxtLink v-if="finalBlowAttacker.character_id"
+                    <NuxtLink v-if="finalBlowAttacker.character_id > 0"
                         :to="`/character/${finalBlowAttacker.character_id}`">
                         <Image :type="'character'" :id="finalBlowAttacker.character_id" :size="64"
                             class="portrait-image" />
                     </NuxtLink>
-                    <div v-else class="portrait-image placeholder-main" style="width: 64px; height: 64px;"></div>
+                    <Image v-else :type="'character'" :id="1" :size="64" class="portrait-image" />
 
                     <!-- Stacked Corp/Alliance -->
-                    <div class="stacked-icons-container">
+                    <div v-if="finalBlowAttacker.corporation_id || finalBlowAttacker.alliance_id"
+                        class="stacked-icons-container">
                         <NuxtLink v-if="finalBlowAttacker.corporation_id"
                             :to="`/corporation/${finalBlowAttacker.corporation_id}`" class="h-[32px]">
                             <Image :type="'corporation'" :id="finalBlowAttacker.corporation_id" :size="32"
@@ -31,10 +32,13 @@
                     </div>
 
                     <!-- Ship Image -->
-                    <NuxtLink v-if="finalBlowAttacker.ship_id" :to="`/item/${finalBlowAttacker.ship_id}`">
-                        <Image :type="'item'" :id="finalBlowAttacker.ship_id" :size="64" class="ship-image ml-2" />
+                    <NuxtLink v-if="finalBlowAttacker.ship_id" :to="`/item/${finalBlowAttacker.ship_id}`"
+                        :class="['ship-image', (finalBlowAttacker.corporation_id || finalBlowAttacker.alliance_id) ? 'ml-2' : 'ml-0']">
+                        <Image :type="'item'" :id="finalBlowAttacker.ship_id" :size="64" />
                     </NuxtLink>
-                    <div v-else class="ship-image placeholder-main ml-2" style="width: 64px; height: 64px;"></div>
+                    <div v-else
+                        :class="['ship-image placeholder-main', (finalBlowAttacker.corporation_id || finalBlowAttacker.alliance_id) ? 'ml-2' : 'ml-0']"
+                        style="width: 64px; height: 64px;"></div>
                 </div>
                 <!-- Info Block -->
                 <div class="attacker-details flex flex-col min-w-0 flex-1">
@@ -124,15 +128,16 @@
                 <!-- Portraits Block -->
                 <div class="attacker-portraits-layout flex items-start gap-2">
                     <!-- Character Image -->
-                    <NuxtLink v-if="topDamageAttacker.character_id"
+                    <NuxtLink v-if="topDamageAttacker.character_id > 0"
                         :to="`/character/${topDamageAttacker.character_id}`">
                         <Image :type="'character'" :id="topDamageAttacker.character_id" :size="64"
                             class="portrait-image" />
                     </NuxtLink>
-                    <div v-else class="portrait-image placeholder-main" style="width: 64px; height: 64px;"></div>
+                    <Image v-else :type="'character'" :id="1" :size="64" class="portrait-image" />
 
                     <!-- Stacked Corp/Alliance -->
-                    <div class="stacked-icons-container">
+                    <div v-if="topDamageAttacker.corporation_id || topDamageAttacker.alliance_id"
+                        class="stacked-icons-container">
                         <NuxtLink v-if="topDamageAttacker.corporation_id"
                             :to="`/corporation/${topDamageAttacker.corporation_id}`" class="h-[32px]">
                             <Image :type="'corporation'" :id="topDamageAttacker.corporation_id" :size="32"
@@ -148,10 +153,13 @@
                     </div>
 
                     <!-- Ship Image -->
-                    <NuxtLink v-if="topDamageAttacker.ship_id" :to="`/item/${topDamageAttacker.ship_id}`">
-                        <Image :type="'item'" :id="topDamageAttacker.ship_id" :size="64" class="ship-image ml-2" />
+                    <NuxtLink v-if="topDamageAttacker.ship_id" :to="`/item/${topDamageAttacker.ship_id}`"
+                        :class="['ship-image', (topDamageAttacker.corporation_id || topDamageAttacker.alliance_id) ? 'ml-2' : 'ml-0']">
+                        <Image :type="'item'" :id="topDamageAttacker.ship_id" :size="64" />
                     </NuxtLink>
-                    <div v-else class="ship-image placeholder-main ml-2" style="width: 64px; height: 64px;"></div>
+                    <div v-else
+                        :class="['ship-image placeholder-main', (topDamageAttacker.corporation_id || topDamageAttacker.alliance_id) ? 'ml-2' : 'ml-0']"
+                        style="width: 64px; height: 64px;"></div>
                 </div>
                 <!-- Info Block -->
                 <div class="attacker-details flex flex-col min-w-0 flex-1">
@@ -307,13 +315,13 @@
                     <!-- Portraits Block -->
                     <div class="attacker-portraits-layout flex items-start gap-2">
                         <!-- Character Image -->
-                        <NuxtLink v-if="attacker.character_id" :to="`/character/${attacker.character_id}`">
+                        <NuxtLink v-if="attacker.character_id > 0" :to="`/character/${attacker.character_id}`">
                             <Image :type="'character'" :id="attacker.character_id" :size="64" class="portrait-image" />
                         </NuxtLink>
-                        <div v-else class="portrait-image placeholder-main" style="width: 64px; height: 64px;"></div>
+                        <Image v-else :type="'character'" :id="1" :size="64" class="portrait-image" />
 
                         <!-- Stacked Corp/Alliance -->
-                        <div class="stacked-icons-container">
+                        <div v-if="attacker.corporation_id || attacker.alliance_id" class="stacked-icons-container">
                             <NuxtLink v-if="attacker.corporation_id" :to="`/corporation/${attacker.corporation_id}`"
                                 class="h-[32px]">
                                 <Image :type="'corporation'" :id="attacker.corporation_id" :size="32"
@@ -331,10 +339,13 @@
                         </div>
 
                         <!-- Ship Image -->
-                        <NuxtLink v-if="attacker.ship_id" :to="`/item/${attacker.ship_id}`">
-                            <Image :type="'item'" :id="attacker.ship_id" :size="64" class="ship-image ml-2" />
+                        <NuxtLink v-if="attacker.ship_id" :to="`/item/${attacker.ship_id}`"
+                            :class="['ship-image', (attacker.corporation_id || attacker.alliance_id) ? 'ml-2' : 'ml-0']">
+                            <Image :type="'item'" :id="attacker.ship_id" :size="64" />
                         </NuxtLink>
-                        <div v-else class="ship-image placeholder-main ml-2" style="width: 64px; height: 64px;"></div>
+                        <div v-else
+                            :class="['ship-image placeholder-main', (attacker.corporation_id || attacker.alliance_id) ? 'ml-2' : 'ml-0']"
+                            style="width: 64px; height: 64px;"></div>
                     </div>
 
                     <!-- Info Block -->
