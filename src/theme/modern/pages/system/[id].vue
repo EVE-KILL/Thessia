@@ -13,8 +13,20 @@
                     </div>
                 </div>
             </UCard>
-            <KillList killlistType="latest" :limit="100" :apiEndpoint="`/api/killlist/system/${system.system_id}`"
-                :wsFilter="`system.${system.system_id}`" />
+            <UTabs :items="tabItems" :default-index="getInitialTabIndex()" @change="handleTabChange" class="space-y-4">
+                <template #overview>
+                    <div class="tab-content">
+                        <KillList killlistType="latest" :limit="100"
+                            :apiEndpoint="`/api/killlist/system/${system.system_id}`"
+                            :wsFilter="`system.${system.system_id}`" />
+                    </div>
+                </template>
+                <template #battles>
+                    <div class="tab-content">
+                        <SystemBattles />
+                    </div>
+                </template>
+            </UTabs>
         </div>
         <div v-else-if="pending" class="mx-auto p-4">
             <USkeleton class="h-32 rounded-lg mb-4" />
@@ -40,10 +52,14 @@
 </template>
 
 <script setup lang="ts">
-import { useRoute } from 'vue-router';
+import { ref } from 'vue';
+import { useI18n } from 'vue-i18n';
+import { useRoute, useRouter } from 'vue-router';
+import SystemBattles from '~/components/system/SystemBattles.vue';
 import KillList from '../../components/common/KillList.vue';
 
 const route = useRoute();
+const router = useRouter();
 const { id } = route.params;
 
 const {
@@ -57,5 +73,25 @@ const getSecurityStatusColor = (security: number): string => {
     if (security >= 0.0) return "#FFFF00";
     if (security >= -5.0) return "#FF8C00";
     return "#FF0000";
+};
+
+const { t } = useI18n();
+const tabItems = [
+    { id: "overview", label: t("overview"), icon: "i-lucide-home", slot: "overview" as const },
+    { id: "battles", label: t("battles"), icon: "i-lucide-swords", slot: "battles" as const },
+];
+const activeTab = ref(route.query.tab?.toString() || "overview");
+const getInitialTabIndex = () => {
+    const index = tabItems.findIndex((item) => item.id === activeTab.value);
+    return index >= 0 ? index : 0;
+};
+const handleTabChange = (tabId: string) => {
+    activeTab.value = tabId;
+    router.replace({
+        query: {
+            ...route.query,
+            tab: tabId,
+        },
+    });
 };
 </script>

@@ -455,6 +455,9 @@
     "battle.attacker": "Attacker",
     "battle.unassignable_blue": "Possible friendly fire / Unassignable to blue team (top damage and final blow not from Blue Team)",
     "battle.unassignable_red": "Possible friendly fire / Unassignable to red team (top damage and final blow not from Red Team)",
+    "battles": "Battles",
+    "time": "Time",
+    "involved": "Involved",
     "killInfo": {
         "details": "Details",
         "victim": "Victim",
@@ -488,5 +491,8 @@
         "showMore": "Show {count} more",
         "showLess": "Show less",
         "corporationsWithoutAlliance": "Corporations Without Alliance"
-    }
+    },
+    "previous": "Previous",
+    "next": "Next",
+    "duration": "Duration"
 }

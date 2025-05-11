@@ -10,8 +10,20 @@
                     </div>
                 </div>
             </UCard>
-            <KillList killlistType="latest" :limit="100" :apiEndpoint="`/api/killlist/region/${region.region_id}`"
-                :wsFilter="`region.${region.region_id}`" />
+            <UTabs :items="tabItems" :default-index="getInitialTabIndex()" @change="handleTabChange" class="space-y-4">
+                <template #overview>
+                    <div class="tab-content">
+                        <KillList killlistType="latest" :limit="100"
+                            :apiEndpoint="`/api/killlist/region/${region.region_id}`"
+                            :wsFilter="`region.${region.region_id}`" />
+                    </div>
+                </template>
+                <template #battles>
+                    <div class="tab-content">
+                        <RegionBattles />
+                    </div>
+                </template>
+            </UTabs>
         </div>
         <div v-else-if="pending" class="mx-auto p-4">
             <USkeleton class="h-32 rounded-lg mb-4" />
@@ -37,10 +49,14 @@
 </template>
 
 <script setup lang="ts">
-import { useRoute } from 'vue-router';
+import { ref } from 'vue';
+import { useI18n } from 'vue-i18n';
+import { useRoute, useRouter } from 'vue-router';
+import RegionBattles from '~/components/region/RegionBattles.vue';
 import KillList from '../../components/common/KillList.vue';
 
 const route = useRoute();
+const router = useRouter();
 const { id } = route.params;
 
 const {
@@ -48,4 +64,19 @@ const {
     pending,
     error,
 } = useFetch(`/api/regions/${id}`);
+
+const { t } = useI18n();
+const tabItems = [
+    { id: "overview", label: t("overview"), icon: "i-lucide-home", slot: "overview" as const },
+    { id: "battles", label: t("battles"), icon: "i-lucide-swords", slot: "battles" as const },
+];
+const activeTab = ref(route.query.tab?.toString() || "overview");
+const getInitialTabIndex = () => {
+    const idx = tabItems.findIndex(item => item.id === activeTab.value);
+    return idx >= 0 ? idx : 0;
+};
+const handleTabChange = (tabId: string) => {
+    activeTab.value = tabId;
+    router.replace({ query: { ...route.query, tab: tabId } });
+};
 </script>

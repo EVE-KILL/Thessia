@@ -48,25 +48,25 @@
                                                 <span class="text-gray-300">{{ $t('kills') }}:</span>
                                                 <span class="text-white font-medium">{{
                                                     formatNumber(validShortStats.kills)
-                                                    }}</span>
+                                                }}</span>
                                             </div>
                                             <div class="flex justify-between">
                                                 <span class="text-gray-300">{{ $t('losses') }}:</span>
                                                 <span class="text-white font-medium">{{
                                                     formatNumber(validShortStats.losses)
-                                                    }}</span>
+                                                }}</span>
                                             </div>
                                             <div class="flex justify-between">
                                                 <span class="text-gray-300">{{ $t('isk') + ' ' + $t('killed') }}:</span>
                                                 <span class="text-white font-medium">{{
                                                     formatIsk(validShortStats.iskKilled)
-                                                    }}</span>
+                                                }}</span>
                                             </div>
                                             <div class="flex justify-between">
                                                 <span class="text-gray-300">{{ $t('isk') + ' ' + $t('lost') }}:</span>
                                                 <span class="text-white font-medium">{{
                                                     formatIsk(validShortStats.iskLost)
-                                                    }}</span>
+                                                }}</span>
                                             </div>
                                         </div>
                                         <div class="space-y-1">
@@ -82,14 +82,14 @@
                                             </div>
                                             <div class="flex justify-between">
                                                 <span class="text-gray-300">{{ $t('solo') + ' ' + $t('losses')
-                                                    }}:</span>
+                                                }}:</span>
                                                 <span class="text-white font-medium">{{
                                                     formatNumber(validShortStats.soloLosses) }}</span>
                                             </div>
                                             <div class="flex justify-between">
                                                 <span class="text-gray-300">{{ $t('dangerRatio') }}:</span>
                                                 <span class="text-white font-medium">{{ calcDangerRatio(validShortStats)
-                                                    }}%</span>
+                                                }}%</span>
                                             </div>
                                         </div>
                                     </template>
@@ -142,6 +142,11 @@
                         <AllianceStats />
                     </div>
                 </template>
+                <template #battles>
+                    <div class="tab-content">
+                        <AllianceBattles />
+                    </div>
+                </template>
             </UTabs>
         </div>
         <div v-else-if="pending" class="mx-auto p-4">
@@ -171,14 +176,15 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref, onMounted } from 'vue'
+import { computed, onMounted, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useRoute, useRouter } from 'vue-router'
+import AllianceBattles from '~/components/alliance/AllianceBattles.vue'
+import AllianceCharacterMembers from '~/src/theme/modern/components/alliance/AllianceCharacterMembers.vue'
 import AllianceCombined from '~/src/theme/modern/components/alliance/AllianceCombined.vue'
+import AllianceCorporationMembers from '~/src/theme/modern/components/alliance/AllianceCorporationMembers.vue'
 import AllianceKills from '~/src/theme/modern/components/alliance/AllianceKills.vue'
 import AllianceLosses from '~/src/theme/modern/components/alliance/AllianceLosses.vue'
-import AllianceCorporationMembers from '~/src/theme/modern/components/alliance/AllianceCorporationMembers.vue'
-import AllianceCharacterMembers from '~/src/theme/modern/components/alliance/AllianceCharacterMembers.vue'
 import AllianceStats from '~/src/theme/modern/components/alliance/AllianceStats.vue'
 
 const { t, locale } = useI18n()
@@ -290,6 +296,12 @@ const tabItems = [
         label: t("stats"),
         icon: "i-lucide-bar-chart",
         slot: "stats" as const,
+    },
+    {
+        id: "battles",
+        label: t("battles"),
+        icon: "i-lucide-swords",
+        slot: "battles" as const,
     },
 ]
 

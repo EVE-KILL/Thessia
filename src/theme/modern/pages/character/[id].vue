@@ -87,22 +87,22 @@
                                         <div class="flex justify-between">
                                             <span class="text-gray-300">{{ $t('kills') }}:</span>
                                             <span class="text-white font-medium">{{ formatNumber(validShortStats.kills)
-                                            }}</span>
+                                                }}</span>
                                         </div>
                                         <div class="flex justify-between">
                                             <span class="text-gray-300">{{ $t('losses') }}:</span>
                                             <span class="text-white font-medium">{{ formatNumber(validShortStats.losses)
-                                            }}</span>
+                                                }}</span>
                                         </div>
                                         <div class="flex justify-between">
                                             <span class="text-gray-300">{{ $t('isk') + ' ' + $t('killed') }}:</span>
                                             <span class="text-white font-medium">{{ formatIsk(validShortStats.iskKilled)
-                                            }}</span>
+                                                }}</span>
                                         </div>
                                         <div class="flex justify-between">
                                             <span class="text-gray-300">{{ $t('isk') + ' ' + $t('lost') }}:</span>
                                             <span class="text-white font-medium">{{ formatIsk(validShortStats.iskLost)
-                                            }}</span>
+                                                }}</span>
                                         </div>
                                     </div>
 
@@ -126,7 +126,7 @@
                                         <div class="flex justify-between">
                                             <span class="text-gray-300">{{ $t('dangerRatio') }}:</span>
                                             <span class="text-white font-medium">{{ calcDangerRatio(validShortStats)
-                                            }}%</span>
+                                                }}%</span>
                                         </div>
                                     </div>
                                 </template>
@@ -164,6 +164,13 @@
                 <template #combined>
                     <div class="tab-content">
                         <CharacterCombined :character="character" />
+                    </div>
+                </template>
+
+                <!-- Battles Tab -->
+                <template #battles>
+                    <div class="tab-content">
+                        <CharacterBattles />
                     </div>
                 </template>
 
@@ -217,8 +224,8 @@
 import type { TabsItem } from "@nuxt/ui";
 import { formatDistanceToNow } from "date-fns";
 import { de, enUS, es, fr, ja, ko, ru, zhCN } from "date-fns/locale";
+import { computed, onMounted, ref } from 'vue';
 import { useI18n } from "vue-i18n";
-import { computed, ref, onMounted } from 'vue';
 import type { ICharacter } from '~/server/interfaces/ICharacter'; // Add ICharacter import
 // Removed explicit import for CharacterKills - relying on Nuxt auto-import
 
@@ -360,6 +367,12 @@ const tabItems = [
         label: t("combined"), // Use t() directly
         icon: "i-lucide-layers",
         slot: "combined" as const,
+    },
+    {
+        id: "battles",
+        label: t("battles"), // Use t() directly
+        icon: "i-lucide-swords",
+        slot: "battles" as const,
     },
     {
         id: "corporation-history",
