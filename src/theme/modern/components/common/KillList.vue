@@ -496,7 +496,6 @@ const tableColumns = [
     },
     {
         id: "details",
-        header: computed(() => t("details")),
         headerClass: "text-right",
         width: "15%",
     },
@@ -628,8 +627,11 @@ onBeforeUnmount(() => {
             <!-- Victim column -->
             <template #cell-victim="{ item }">
                 <div class="flex items-center py-1">
-                    <Image type="character" :id="item.victim.character_id" format="webp"
-                        :alt="`Character: ${item.victim.character_name}`" class="rounded w-10 mx-2" size="44" />
+                    <template v-if="item.victim.character_id > 0">
+                        <Image type="character" :id="item.victim.character_id" format="webp"
+                            :alt="`Character: ${item.victim.character_name}`" class="rounded w-10 mx-2" size="44" />
+                    </template>
+                    <Image v-else type="character" :id="1" alt="Placeholder" class="rounded w-10 mx-2" size="44" />
                     <div class="flex flex-col items-start">
                         <span class="text-sm text-black dark:text-white">{{ item.victim.character_name }}</span>
                         <span class="text-xs text-gray-600 dark:text-gray-400 whitespace-nowrap">
@@ -678,7 +680,7 @@ onBeforeUnmount(() => {
                         <span>{{ item.system_name }}</span>
                         <span> (</span>
                         <span :class="getSecurityColor(item.system_security)">{{ item.system_security.toFixed(1)
-                        }}</span>
+                            }}</span>
                         <span>)</span>
                     </div>
                 </div>
@@ -737,7 +739,7 @@ onBeforeUnmount(() => {
                                 <span>{{ item.system_name }}</span>
                                 <span> (</span>
                                 <span :class="getSecurityColor(item.system_security)">{{ item.system_security.toFixed(1)
-                                }}</span>
+                                    }}</span>
                                 <span>)</span>
                             </div>
                         </div>
