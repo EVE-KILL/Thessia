@@ -9,11 +9,11 @@ export default {
     description: "Finds battles for the past week and up to 4 hours ago",
     schedule: "0 * * * *",
     run: async () => {
-        // Time window: from 7 days ago (rounded to hour) until 4 hours ago (rounded to hour)
+        // Time window: from 7 days ago (rounded to hour) until 1 hour ago (rounded to hour)
         const now = new Date();
         // Round down to start of current hour
         now.setMinutes(0, 0, 0);
-        const endTime = new Date(now.getTime() - 4 * 3600 * 1000);
+        const endTime = new Date(now.getTime() - 1 * 3600 * 1000);
         const startTime = new Date(now.getTime() - 7 * 24 * 3600 * 1000);
         cliLogger.info(
             `ℹ️  Finding battles from ${startTime.toISOString()} to ${endTime.toISOString()}`
@@ -130,14 +130,22 @@ async function processPotentialBattle(
                 battleEnd
             );
 
-            // Skip if battle already exists
-            const exists = await Battles.exists({ battle_id: doc.battle_id });
-            if (exists) {
-                cliLogger.info(`⚠️  Battle ${doc.battle_id} already exists, skipping.`);
-            } else {
-                cliLogger.info(
-                    `⚔️ Battle ${doc.battle_id} in system ${systemId}, ${battleStart.toISOString()} - ${battleEnd.toISOString()}`
+            // Collapse into overlapping existing battle
+            const overlapping = await Battles.findOne({
+                system_id: doc.system_id,
+                start_time: { $lt: doc.end_time },
+                end_time: { $gt: doc.start_time },
+            });
+            if (overlapping) {
+                if (overlapping.battle_id !== doc.battle_id) {
+                    cliLogger.info(`🔄 Merging battle ${doc.battle_id} into existing ${overlapping.battle_id} for system ${systemId} from ${battleStart.toISOString()} to ${battleEnd.toISOString()}`);
+                }
+                await Battles.updateOne(
+                    { _id: overlapping._id },
+                    { $set: doc }
                 );
+            } else {
+                cliLogger.info(`ℹ️  Inserting new battle ${doc.battle_id} for system ${systemId} from ${battleStart.toISOString()} to ${battleEnd.toISOString()}`);
                 await Battles.create(doc);
             }
         }

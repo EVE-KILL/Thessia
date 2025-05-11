@@ -147,7 +147,7 @@ async function processPotentialBattle(systemId: number, fromTime: Date, toTime: 
         if (exists) {
             cliLogger.info(`⚠️  Battle ${battleDocument.battle_id} already exists, skipping.`);
         } else {
-            cliLogger.info(`ℹ️  Inserting new battle ${battleDocument.battle_id} for system ${systemId}.`);
+            cliLogger.info(`ℹ️  Inserting new battle ${battleDocument.battle_id} for system ${systemId}. Start: ${battleStartTime.toISOString()}, End: ${battleEndTime.toISOString()}`);
             await Battles.create(battleDocument);
         }
     }
