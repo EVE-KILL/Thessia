@@ -24,7 +24,6 @@ const scrollToTarget = () => {
         if (props.offset) window.scrollBy({ top: props.offset, behavior: 'smooth' });
     }
 };
-// Cleanup is not required as we don't add event listeners
 </script>
 
 <style scoped>
