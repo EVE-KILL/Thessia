@@ -119,7 +119,7 @@ const tabsUi = {
 const inputClass = "w-full font-sans text-sm";
 
 // Add a ref to control corporation visibility
-const showCorpsInAlliances = ref(true);
+const showCorpsInAlliances = ref(false);
 
 // Search for systems
 async function searchSystems(term: string) {
@@ -1320,7 +1320,8 @@ const previewBattle = async () => {
 input[type="datetime-local"] {
     font-family: inherit;
     font-size: inherit;
-    height: 38px; /* Match height of text inputs */
+    height: 38px;
+    /* Match height of text inputs */
     padding: 0.5rem 0.75rem;
     box-sizing: border-box;
 }
