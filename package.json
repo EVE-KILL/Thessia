@@ -76,7 +76,7 @@
         "@types/unbzip2-stream": "^1.4.3",
         "@vueuse/nuxt": "^13.1.0",
         "husky": "^9.1.7",
-        "lint-staged": "^15.5.2",
+        "lint-staged": "^16.0.0",
         "@types/glob": "^8.1.0",
         "glob": "^11.0.2"
     }
