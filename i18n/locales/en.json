@@ -608,15 +608,38 @@
             "sideDRequired": "Side D must have at least one entity when 4 sides are selected."
         }
     },
-    "customBattle": {
-        "seo": {
-            "titlePattern": "Custom Battle in {systemName} ({regionName}) | {start} - {end}",
-            "defaultTitle": "Custom Battle | EVE-KILL",
-            "descriptionPattern": "Custom Battle in {systemName} ({regionName}) from {start} to {end}. ISK Lost: {isk}, Ships Lost: {ships}.",
-            "defaultDescription": "EVE Online custom battle details",
-            "twitterImageAlt": {
-                "default": "EVE System"
-            }
-        }
-    }
+    "customBattle.seo.titlePattern": "Custom Battle in {systemName} ({regionName}) | {start} - {end}",
+    "customBattle.seo.defaultTitle": "Custom Battle | EVE-KILL",
+    "customBattle.seo.descriptionPattern": "Custom Battle in {systemName} ({regionName}) from {start} to {end}. ISK Lost: {isk}, Ships Lost: {ships}.",
+    "customBattle.seo.defaultDescription": "EVE Online custom battle details",
+    "customBattle.seo.twitterImageAlt.default": "EVE System",
+    "tools.dscan.title": "D-Scan Analyzer",
+    "tools.dscan.instruction": "Copy a D-Scan from EVE and click the button below",
+    "tools.dscan.paste_button": "Paste D-Scan",
+    "tools.dscan.empty_clipboard": "Clipboard is empty",
+    "tools.dscan.error_processing": "Error processing D-Scan data",
+    "tools.dscan.invalid_response": "Invalid response from server",
+    "tools.dscan.clipboard_error": "Error accessing clipboard",
+    "tools.dscan.result_title": "D-Scan Results",
+    "tools.dscan.result_description": "Analysis of EVE Online D-Scan data",
+    "tools.dscan.ships_breakdown": "Ship Breakdown",
+    "tools.dscan.ship_type": "Ship Type",
+    "tools.dscan.count": "Count",
+    "tools.dscan.error_loading": "Error loading D-Scan data",
+    "tools.dscan.no_data": "No D-Scan data found",
+    "tools.localscan.title": "Local Scan Analyzer",
+    "tools.localscan.instruction": "Copy a list of character names from EVE and click the button below",
+    "tools.localscan.paste_button": "Paste Characters",
+    "tools.localscan.empty_clipboard": "Clipboard is empty",
+    "tools.localscan.no_names": "No character names found",
+    "tools.localscan.error_processing": "Error processing character data",
+    "tools.localscan.invalid_response": "Invalid response from server",
+    "tools.localscan.clipboard_error": "Error accessing clipboard",
+    "tools.localscan.result_title": "Local Scan Results",
+    "tools.localscan.result_description": "Analysis of EVE Online local chat character data",
+    "tools.localscan.alliance_corp_breakdown": "Alliance / Corporation Breakdown",
+    "tools.localscan.corps_without_alliance": "Corporations Without Alliance",
+    "tools.localscan.error_loading": "Error loading local scan data",
+    "tools.localscan.no_data": "No local scan data found",
+    "general.back": "Back"
 }

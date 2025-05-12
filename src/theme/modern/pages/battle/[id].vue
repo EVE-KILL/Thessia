@@ -7,8 +7,8 @@
                 <span class="text-xl font-medium">{{ t('battle.loading') }}</span>
             </div>
         </div>
-        <!-- Only when not pending, check for battle data -->
-        <div v-else-if="battle && battle.blue_team && battle.red_team">
+        <!-- Then check if we have valid battle data -->
+        <div v-else-if="battle">
             <!-- Top Info - Redesigned battle-topbox -->
             <div class="battle-topbox">
                 <!-- System Information Header -->
@@ -31,12 +31,12 @@
                                 </template>
                                 <template v-else>
                                     <span class="text-blue-500">{{ battle.system_name || t('battle.unknown_system')
-                                        }}</span>
+                                    }}</span>
                                     <span class="security-badge">
                                         {{ battle.system_security ? battle.system_security.toFixed(2) : 'N/A' }}
                                     </span>
                                     <span class="region-name">({{ getLocalizedString(battle.region_name, locale)
-                                        }})</span>
+                                    }})</span>
                                 </template>
                             </div>
                         </div>
@@ -159,12 +159,6 @@
                 </UTabs>
             </div>
         </div>
-        <div v-else-if="error">
-            <div class="flex flex-col items-center justify-center py-12">
-                <UIcon name="lucide:alert-circle" class="w-12 h-12 text-red-500 mb-4" />
-                <span class="text-xl font-medium">{{ t('battle.no_battle_found_custom') }}</span>
-            </div>
-        </div>
         <div v-else>
             <div class="flex flex-col items-center justify-center py-12">
                 <UIcon name="lucide:alert-circle" class="w-12 h-12 text-red-500 mb-4" />
@@ -190,19 +184,19 @@ const apiUrl = computed(() => {
     return `/api/battles/${entityId.value}`;
 });
 
-// Remove console.log that's showing the API URL
-// console.log(apiUrl.value);
-
 const { data: battleData, pending, error } = useFetch(apiUrl, {
     key: computed(() => entityId.value ? `battle-${entityId.value}` : null),
     lazy: true,
     watch: [entityId],
+    onRequest({ request, options }) {
+        // Reset battle value when starting a new request
+        battle.value = null;
+    },
     onResponseError(context) {
         // Log error details for debugging purposes
         console.error('Battle fetch error:', {
             status: context.response.status,
-            statusText: context.response.statusText,
-            url: context.request
+            statusText: context.response.statusText
         });
     }
 });
@@ -216,6 +210,9 @@ const teamStats = ref<Record<string, any>>({});
 const teamAlliances = ref<Record<string, any[]>>({});
 const teamCorporations = ref<Record<string, any[]>>({});
 const teamCharacters = ref<Record<string, any[]>>({});
+
+// Add debug flag - set to true temporarily for debugging
+const showDebug = ref(true);
 
 // Get the primary system info for simplified display
 const primarySystem = computed(() => {
@@ -374,7 +371,9 @@ function duration(start: Date | number | string, end: Date | number | string) {
 }
 
 watchEffect(async () => {
-    if (battleData.value) {
+    // Only process battle data if we have it and it has content
+    if (battleData.value && Object.keys(battleData.value).length > 0) {
+        // Explicitly assign the battle data
         battle.value = battleData.value;
 
         // Reset team data containers
@@ -448,6 +447,11 @@ watchEffect(async () => {
                     teamKills.value[sideId] = [];
                 }
             }
+        }
+    } else {
+        // Only clear battle if we're not still loading
+        if (!pending.value) {
+            battle.value = null;
         }
     }
 });

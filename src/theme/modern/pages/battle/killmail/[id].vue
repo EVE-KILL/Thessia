@@ -1,6 +1,15 @@
 <template>
     <div class="p-4 bg-background-900 rounded-lg shadow-lg text-black dark:text-white">
-        <div v-if="battle && battle.blue_team && battle.red_team">
+        <!-- Loading state -->
+        <div v-if="isLoading">
+            <div class="flex flex-col items-center justify-center py-12">
+                <UIcon name="lucide:loader" class="w-12 h-12 animate-spin text-primary mb-4" />
+                <span class="text-xl font-medium">{{ t('battle.loading') }}</span>
+            </div>
+        </div>
+        
+        <!-- Battle data display -->
+        <div v-else-if="battle">
             <!-- Top Info -->
             <div class="battle-topbox mb-6">
                 <div class="flex items-center gap-2 text-2xl font-extrabold text-black dark:text-white mb-1">
@@ -61,7 +70,7 @@
             <div class="mb-4">
                 <UTabs :items="tabs" :ui="tabsUi" color="neutral">
                     <template #overview>
-                        <BattleOverview v-if="battleData" :battle="battleData" />
+                        <BattleOverview v-if="battle" :battle="battle" />
                     </template>
                     <template #kills>
                         <BattleKills :blueTeamKills="blueTeamKills" :redTeamKills="redTeamKills" />
@@ -78,27 +87,17 @@
                             :redTeamCharacters="redTeamCharacters" />
                     </template>
                     <template #timeline>
-                        <BattleTimeline v-if="battleData" :killmails="killmails" :battle="battleData" />
+                        <BattleTimeline v-if="battle" :killmails="killmails" :battle="battle" />
                     </template>
                 </UTabs>
             </div>
         </div>
-        <div v-else-if="pending">
-            <div class="flex flex-col items-center justify-center py-12">
-                <UIcon name="lucide:loader" class="w-12 h-12 animate-spin text-primary mb-4" />
-                <span class="text-xl font-medium">{{ t('battle.loading') }}</span>
-            </div>
-        </div>
-        <div v-else-if="error && !pending">
+        
+        <!-- Error state -->
+        <div v-else>
             <div class="flex flex-col items-center justify-center py-12">
                 <UIcon name="lucide:alert-circle" class="w-12 h-12 text-red-500 mb-4" />
-                <span class="text-xl font-medium">{{ t('battle.no_battle_found') }}</span>
-            </div>
-        </div>
-        <div v-else-if="!battleData && !pending">
-            <div class="flex flex-col items-center justify-center py-12">
-                <UIcon name="lucide:alert-circle" class="w-12 h-12 text-red-500 mb-4" />
-                <span class="text-xl font-medium">{{ t('battle.no_battle_found') }}</span>
+                <span class="text-xl font-medium">{{ loadingError || t('battle.no_battle_found') }}</span>
             </div>
         </div>
     </div>
@@ -109,93 +108,148 @@ import { computed, ref, watchEffect } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useRoute } from 'vue-router';
 
-const { locale, t } = useI18n()
-
+const { locale, t } = useI18n();
 const route = useRoute();
 
 const entityId = computed(() => route.params.id as string || null);
 
-const battleUrl = computed(() => {
-    if (!entityId.value) return null;
-    return `/api/battles/${entityId.value}`;
-});
-
-const killmailBattleUrl = computed(() => {
-    if (!entityId.value) return null;
-    return `/api/battles/killmail/${entityId.value}`;
-});
-
-// First attempt to get battle data by battle ID
-const { data: battleByIdData, pending: battleByIdPending, error: battleByIdError } = useFetch(battleUrl, {
-    key: computed(() => entityId.value ? `battle-${entityId.value}` : null),
-    lazy: true,
-    watch: [entityId]
-});
-
-// If first attempt fails, try to get battle data by killmail ID
-const shouldFetchByKillmailId = computed(() => {
-    return !battleByIdPending.value && (
-        battleByIdError.value ||
-        battleByIdData.value === null ||
-        (battleByIdData.value && Object.keys(battleByIdData.value).length === 0)
-    );
-});
-
-const { data: battleByKillmailData, pending: battleByKillmailPending, error: battleByKillmailError } = useFetch(
-    killmailBattleUrl, {
-    key: computed(() => shouldFetchByKillmailId.value && entityId.value ? `battle-killmail-${entityId.value}` : null),
-    lazy: true,
-    watch: [shouldFetchByKillmailId, entityId],
-    immediate: false
-});
-
-// Combined state variables for template usage
-const battleData = computed(() => battleByIdData.value || battleByKillmailData.value || null);
-const pending = computed(() => {
-    // Consider loading if either request is pending
-    // If the first request is still pending, we're loading
-    if (battleByIdPending.value) return true;
-
-    // If the first request completed and we should fetch by killmail ID,
-    // check if the second request is pending
-    if (shouldFetchByKillmailId.value && battleByKillmailPending.value) return true;
-
-    return false;
-});
-
-const error = computed(() => {
-    // Only show error if we're not loading and both requests failed or returned no data
-    if (pending.value) return null;
-
-    const firstRequestFailed = battleByIdError.value ||
-        !battleByIdData.value ||
-        Object.keys(battleByIdData.value || {}).length === 0;
-
-    const secondRequestFailed = battleByKillmailError.value ||
-        !battleByKillmailData.value ||
-        Object.keys(battleByKillmailData.value || {}).length === 0;
-
-    if (firstRequestFailed && (secondRequestFailed || !shouldFetchByKillmailId.value)) {
-        return new Error("No battle found for this killmail");
-    }
-
-    return null;
-});
-
+// State management
 const battle = ref<any>(null);
-const killmails = ref<any[]>([])
+const killmails = ref<any[]>([]);
+const isLoading = ref(true);
+const loadingError = ref<string | null>(null);
 
-const blueTeamKills = ref<any[]>([])
-const redTeamKills = ref<any[]>([])
-const blueTeamStats = ref({ iskLost: 0, shipsLost: 0, damageInflicted: 0 })
-const redTeamStats = ref({ iskLost: 0, shipsLost: 0, damageInflicted: 0 })
-const blueTeamAlliances = ref<any[]>([])
-const redTeamAlliances = ref<any[]>([])
-const blueTeamCorporations = ref<any[]>([])
-const redTeamCorporations = ref<any[]>([])
-const blueTeamCharacters = ref<any[]>([])
-const redTeamCharacters = ref<any[]>([])
+// Team data refs
+const blueTeamKills = ref<any[]>([]);
+const redTeamKills = ref<any[]>([]);
+const blueTeamStats = ref({ iskLost: 0, shipsLost: 0, damageInflicted: 0 });
+const redTeamStats = ref({ iskLost: 0, shipsLost: 0, damageInflicted: 0 });
+const blueTeamAlliances = ref<any[]>([]);
+const redTeamAlliances = ref<any[]>([]);
+const blueTeamCorporations = ref<any[]>([]);
+const redTeamCorporations = ref<any[]>([]);
+const blueTeamCharacters = ref<any[]>([]);
+const redTeamCharacters = ref<any[]>([]);
 
+// Fetch data from both endpoints simultaneously
+async function fetchBattleData() {
+  if (!entityId.value) return;
+  
+  isLoading.value = true;
+  loadingError.value = null;
+  battle.value = null;
+
+  try {
+    // Fetch from both endpoints in parallel
+    const [battleResponse, killmailBattleResponse] = await Promise.all([
+      $fetch(`/api/battles/${entityId.value}`).catch(() => null),
+      $fetch(`/api/battles/killmail/${entityId.value}`).catch(() => null)
+    ]);
+
+    // Handle the different possible outcomes
+    if (battleResponse && killmailBattleResponse) {
+      // Edge case: Both endpoints returned data - this shouldn't happen
+      console.warn('Both endpoints returned data for the same ID. Using battle endpoint data.');
+      processBattleData(battleResponse);
+    } else if (battleResponse) {
+      // Battle endpoint had data
+      processBattleData(battleResponse);
+    } else if (killmailBattleResponse) {
+      // Killmail endpoint had data
+      processBattleData(killmailBattleResponse);
+    } else {
+      // Neither endpoint had data
+      loadingError.value = t('battle.no_battle_found');
+    }
+  } catch (error) {
+    console.error('Error fetching battle data:', error);
+    loadingError.value = t('battle.error_loading');
+  } finally {
+    isLoading.value = false;
+  }
+}
+
+// Process the battle data once we have it
+async function processBattleData(data: any) {
+  battle.value = data;
+
+  const allKillmailIds = [
+    ...(data?.killmail_ids || []),
+    ...(data?.blue_team_kill_ids || []),
+    ...(data?.red_team_kill_ids || []),
+  ];
+
+  // Get unique IDs
+  const uniqueKillmailIds = Array.from(new Set(allKillmailIds));
+
+  if (uniqueKillmailIds.length > 0) {
+    try {
+      // Fetch full killmail objects using the batch endpoint
+      const fetchedKillmails: any[] = await $fetch('/api/killmails/batch', {
+        method: 'POST',
+        body: { ids: uniqueKillmailIds }
+      });
+
+      // Create a lookup map for easy access
+      const killmailMap = new Map(fetchedKillmails.map(km => [km.killmail_id, km]));
+
+      // Populate killmails for timeline (sorted by time)
+      killmails.value = (data?.killmail_ids || [])
+        .map((id: number) => killmailMap.get(id))
+        .filter((km: any) => km !== undefined)
+        .sort((a: any, b: any) => new Date(a.kill_time).getTime() - new Date(b.kill_time).getTime());
+
+      // Populate team kills (sorted by value)
+      blueTeamKills.value = (data?.blue_team_kill_ids || [])
+        .map((id: number) => killmailMap.get(id))
+        .filter((km: any) => km !== undefined)
+        .sort((a: any, b: any) => (b.total_value || 0) - (a.total_value || 0));
+
+      redTeamKills.value = (data?.red_team_kill_ids || [])
+        .map((id: number) => killmailMap.get(id))
+        .filter((km: any) => km !== undefined)
+        .sort((a: any, b: any) => (b.total_value || 0) - (a.total_value || 0));
+
+      // Populate stats and entity lists directly from data
+      blueTeamStats.value = data?.blue_team_stats || { iskLost: 0, shipsLost: 0, damageInflicted: 0 };
+      redTeamStats.value = data?.red_team_stats || { iskLost: 0, shipsLost: 0, damageInflicted: 0 };
+      blueTeamAlliances.value = data?.blue_team_alliances_stats || [];
+      redTeamAlliances.value = data?.red_team_alliances_stats || [];
+      blueTeamCorporations.value = data?.blue_team_corporations_stats || [];
+      redTeamCorporations.value = data?.red_team_corporations_stats || [];
+      blueTeamCharacters.value = data?.blue_team_characters_stats || [];
+      redTeamCharacters.value = data?.red_team_characters_stats || [];
+    } catch (error) {
+      console.error('Error fetching killmails in batch:', error);
+      // Initialize empty arrays if killmail fetching fails
+      killmails.value = [];
+      blueTeamKills.value = [];
+      redTeamKills.value = [];
+    }
+  } else {
+    // No killmail IDs found in data
+    killmails.value = [];
+    blueTeamKills.value = [];
+    redTeamKills.value = [];
+    blueTeamStats.value = data?.blue_team_stats || { iskLost: 0, shipsLost: 0, damageInflicted: 0 };
+    redTeamStats.value = data?.red_team_stats || { iskLost: 0, shipsLost: 0, damageInflicted: 0 };
+    blueTeamAlliances.value = data?.blue_team_alliances_stats || [];
+    redTeamAlliances.value = data?.red_team_alliances_stats || [];
+    blueTeamCorporations.value = data?.blue_team_corporations_stats || [];
+    redTeamCorporations.value = data?.red_team_corporations_stats || [];
+    blueTeamCharacters.value = data?.blue_team_characters_stats || [];
+    redTeamCharacters.value = data?.red_team_characters_stats || [];
+  }
+}
+
+// Trigger data fetch when entityId changes
+watchEffect(() => {
+  if (entityId.value) {
+    fetchBattleData();
+  }
+});
+
+// Tabs and other utility functions
 const tabs = [
     { label: 'Overview', slot: 'overview' },
     { label: 'Kills', slot: 'kills' },
@@ -203,12 +257,12 @@ const tabs = [
     { label: 'Corporations', slot: 'corporations' },
     { label: 'Characters', slot: 'characters' },
     { label: 'Timeline', slot: 'timeline' }
-]
+];
 
 const tabsUi = {
-    list: "mb-0", // Removed border-b border-background-700
+    list: "mb-0",
     tab: "p-2 text-sm font-semibold text-white rounded-lg bg-background-700 hover:bg-background-600 ml-2"
-}
+};
 
 const getLocalizedString = (obj: any, localeKey: string): string => {
     if (!obj) return "";
@@ -216,26 +270,18 @@ const getLocalizedString = (obj: any, localeKey: string): string => {
 };
 
 function formatNumber(n: number) {
-    if (typeof n !== 'number') return '0'
-    return n.toLocaleString(undefined, { maximumFractionDigits: 2 })
+    if (typeof n !== 'number') return '0';
+    return n.toLocaleString(undefined, { maximumFractionDigits: 2 });
 }
 
 function formatDate(dateInput: Date | number | string) {
     if (dateInput instanceof Date) {
         return dateInput.toLocaleString();
     }
-    // Handle ISO string dates (from JSON serialization)
     if (typeof dateInput === 'string') {
         return new Date(dateInput).toLocaleString();
     }
-    // Maintain backward compatibility with Unix timestamps
     return new Date(dateInput * 1000).toLocaleString();
-}
-
-function truncateString(str: any, num: number) {
-    if (str === null || str === undefined) return '';
-    if (typeof str !== 'string') str = String(str);
-    return str.length <= num ? str : str.slice(0, num) + '...';
 }
 
 function duration(start: Date | number | string, end: Date | number | string) {
@@ -244,19 +290,17 @@ function duration(start: Date | number | string, end: Date | number | string) {
     if (start instanceof Date) {
         startMs = start.getTime();
     } else if (typeof start === 'string') {
-        // Handle ISO string dates (from JSON serialization)
         startMs = new Date(start).getTime();
     } else {
-        startMs = start * 1000; // Convert seconds to milliseconds
+        startMs = start * 1000;
     }
 
     if (end instanceof Date) {
         endMs = end.getTime();
     } else if (typeof end === 'string') {
-        // Handle ISO string dates (from JSON serialization)
         endMs = new Date(end).getTime();
     } else {
-        endMs = end * 1000; // Convert seconds to milliseconds
+        endMs = end * 1000;
     }
 
     const dSeconds = Math.floor((endMs - startMs) / 1000);
@@ -264,118 +308,6 @@ function duration(start: Date | number | string, end: Date | number | string) {
     const s = dSeconds % 60;
     return `${m}m ${s}s`;
 }
-
-watchEffect(async () => {
-    if (battleData.value) {
-        battle.value = battleData.value;
-
-        const allKillmailIds = [
-            ...(battleData.value?.killmail_ids || []),
-            ...(battleData.value?.blue_team_kill_ids || []),
-            ...(battleData.value?.red_team_kill_ids || []),
-        ];
-
-        // Get unique IDs
-        const uniqueKillmailIds = Array.from(new Set(allKillmailIds));
-
-        if (uniqueKillmailIds.length > 0) {
-            try {
-                // Fetch full killmail objects using the batch endpoint
-                const fetchedKillmails: any[] = await $fetch('/api/killmails/batch', {
-                    method: 'POST',
-                    body: { ids: uniqueKillmailIds }
-                });
-
-                // Create a lookup map for easy access
-                const killmailMap = new Map(fetchedKillmails.map(km => [km.killmail_id, km]));
-
-                // Populate killmails for timeline (sorted by time)
-                killmails.value = (battleData.value?.killmail_ids || [])
-                    .map((id: number) => killmailMap.get(id))
-                    .filter((km: any) => km !== undefined) // Filter out any potential undefineds
-                    .sort((a: any, b: any) => new Date(a.kill_time).getTime() - new Date(b.kill_time).getTime());
-
-                // Populate team kills (sorted by value)
-                blueTeamKills.value = (battleData.value?.blue_team_kill_ids || [])
-                    .map((id: number) => killmailMap.get(id))
-                    .filter((km: any) => km !== undefined)
-                    .sort((a: any, b: any) => (b.total_value || 0) - (a.total_value || 0));
-
-                redTeamKills.value = (battleData.value?.red_team_kill_ids || [])
-                    .map((id: number) => killmailMap.get(id))
-                    .filter((km: any) => km !== undefined)
-                    .sort((a: any, b: any) => (b.total_value || 0) - (a.total_value || 0));
-
-                // Populate stats and entity lists directly from battleData (already computed on backend)
-                blueTeamStats.value = battleData.value?.blue_team_stats || { iskLost: 0, shipsLost: 0, damageInflicted: 0 };
-                redTeamStats.value = battleData.value?.red_team_stats || { iskLost: 0, shipsLost: 0, damageInflicted: 0 };
-                blueTeamAlliances.value = battleData.value?.blue_team_alliances_stats || [];
-                redTeamAlliances.value = battleData.value?.red_team_alliances_stats || [];
-                blueTeamCorporations.value = battleData.value?.blue_team_corporations_stats || [];
-                redTeamCorporations.value = battleData.value?.red_team_corporations_stats || [];
-                blueTeamCharacters.value = battleData.value?.blue_team_characters_stats || [];
-                redTeamCharacters.value = battleData.value?.red_team_characters_stats || [];
-
-            } catch (error) {
-                console.error('Error fetching killmails in batch:', error);
-                // Handle error, maybe set killmails/teamKills to empty arrays or show an error message
-                killmails.value = [];
-                blueTeamKills.value = [];
-                redTeamKills.value = [];
-            }
-        } else {
-            // No killmail IDs found in battle data
-            killmails.value = [];
-            blueTeamKills.value = [];
-            redTeamKills.value = [];
-            blueTeamStats.value = battleData.value?.blue_team_stats || { iskLost: 0, shipsLost: 0, damageInflicted: 0 };
-            redTeamStats.value = battleData.value?.red_team_stats || { iskLost: 0, shipsLost: 0, damageInflicted: 0 };
-            blueTeamAlliances.value = battleData.value?.blue_team_alliances_stats || [];
-            redTeamAlliances.value = battleData.value?.red_team_alliances_stats || [];
-            blueTeamCorporations.value = battleData.value?.blue_team_corporations_stats || [];
-            redTeamCorporations.value = battleData.value?.red_team_corporations_stats || [];
-            blueTeamCharacters.value = battleData.value?.blue_team_characters_stats || [];
-            redTeamCharacters.value = battleData.value?.red_team_characters_stats || [];
-        }
-    }
-});
-
-const seoData = computed(() => {
-    if (!battle.value) return null;
-    const systemName = battle.value.system_name || t('battle.unknown_system');
-    const regionName = getLocalizedString(battle.value.region_name, locale) || '';
-    const start = battle.value.start_time ? formatDate(battle.value.start_time) : '';
-    const end = battle.value.end_time ? formatDate(battle.value.end_time) : '';
-    const totalIsk = formatIsk(blueTeamStats.value.iskLost + redTeamStats.value.iskLost);
-    const totalShips = blueTeamStats.value.shipsLost + redTeamStats.value.shipsLost;
-    const title = `Battle in ${systemName} (${regionName}) | ${start} - ${end}`;
-    const description = `Battle in ${systemName} (${regionName}) from ${start} to ${end}. ISK Lost: ${totalIsk}, Ships Lost: ${totalShips}.`;
-    return {
-        title,
-        description,
-    };
-});
-
-useSeoMeta({
-    title: () => seoData.value?.title || "Battle | EVE-KILL",
-    ogTitle: () => seoData.value?.title || "Battle | EVE-KILL",
-    twitterTitle: () => seoData.value?.title || "Battle | EVE-KILL",
-    description: () => seoData.value?.description || "EVE Online battle details",
-    ogDescription: () => seoData.value?.description || "EVE Online battle details",
-    twitterDescription: () => seoData.value?.description || "EVE Online battle details",
-    ogType: "website",
-    ogSiteName: "EVE-KILL",
-    ogUrl: () => {
-        // Use the current full path for the canonical URL
-        if (!battle.value || !route.fullPath) return "https://eve-kill.com/battles"; // Fallback
-        return `https://eve-kill.com${route.fullPath}`;
-    },
-    ogLocale: "en_US",
-    twitterCard: "summary_large_image",
-    twitterSite: "@eve_kill",
-    twitterImageAlt: () => battle.value?.system_name || "EVE System",
-    twitterCreator: "@eve_kill",
-});
 </script>
 
 <style scoped>
