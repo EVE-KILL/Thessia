@@ -1,5 +1,5 @@
 import { createError, defineEventHandler, getRouterParam } from 'h3';
-import { Battles } from '~/server/models/Battles';
+import { CustomBattles } from '~/server/models/CustomBattles';
 
 export default defineEventHandler(async (event) => {
     const idParam = getRouterParam(event, 'id');
@@ -15,12 +15,13 @@ export default defineEventHandler(async (event) => {
     }
 
     try {
-        const battle = await Battles.findOne({ battle_id: battleId }).lean();
+        const battle = await CustomBattles.findOne({ battle_id: battleId }).lean();
 
         if (!battle) {
-            throw createError({ statusCode: 404, statusMessage: 'Battle not found' });
+            throw createError({ statusCode: 404, statusMessage: 'Custom battle not found' });
         }
 
+        // Transform any Date objects to ISO strings for JSON serialization
         return battle;
     } catch (error: any) {
         if (error.name === 'CastError') {
@@ -29,7 +30,7 @@ export default defineEventHandler(async (event) => {
         if (error.statusCode === 404) {
             throw error;
         }
-        console.error(`Error fetching battle with ID ${battleId}:`, error);
-        throw createError({ statusCode: 500, statusMessage: 'Internal Server Error fetching battle' });
+        console.error(`Error fetching custom battle with ID ${battleId}:`, error);
+        throw createError({ statusCode: 500, statusMessage: 'Internal Server Error fetching custom battle' });
     }
 });

@@ -1,12 +1,5 @@
 <script setup lang="ts">
-import { computed, ref, watch, onMounted } from 'vue';
-import BattleAlliances from '~/src/theme/modern/components/battle/BattleAlliances.vue';
-import BattleCharacters from '~/src/theme/modern/components/battle/BattleCharacters.vue';
-import BattleCorporations from '~/src/theme/modern/components/battle/BattleCorporations.vue';
-import BattleKills from '~/src/theme/modern/components/battle/BattleKills.vue';
-import BattleOverview from '~/src/theme/modern/components/battle/BattleOverview.vue';
-import BattleTeams from '~/src/theme/modern/components/battle/BattleTeams.vue';
-import BattleTimeline from '~/src/theme/modern/components/battle/BattleTimeline.vue';
+import { computed, onMounted, ref, watch } from 'vue';
 
 const { t, locale } = useI18n();
 
@@ -686,6 +679,12 @@ onMounted(() => {
 
 // Function to save the battle
 const saveBattle = async () => {
+    if (!previewData.value) {
+        error.value = t('battleGenerator.errors.previewRequired'); // Or a more specific error
+        return;
+    }
+
+    // Basic checks can remain, or be removed if previewData implies these are met
     if (selectedSystems.value.length === 0) {
         error.value = t('battleGenerator.errors.systemRequired');
         return;
@@ -706,12 +705,13 @@ const saveBattle = async () => {
         return;
     }
 
-    if (numSides.value >= 3 && sideC.value.length === 0) {
+    // Conditional checks for sideC and sideD can also be inferred from previewData if it's robust
+    if (numSides.value >= 3 && sideC.value.length === 0 && (!previewData.value.sides.green || previewData.value.sides.green.entities.length === 0)) {
         error.value = t('battleGenerator.errors.sideCRequired');
         return;
     }
 
-    if (numSides.value >= 4 && sideD.value.length === 0) {
+    if (numSides.value >= 4 && sideD.value.length === 0 && (!previewData.value.sides.yellow || previewData.value.sides.yellow.entities.length === 0)) {
         error.value = t('battleGenerator.errors.sideDRequired');
         return;
     }
@@ -720,44 +720,27 @@ const saveBattle = async () => {
     loading.value = true;
 
     try {
-        const systemIds = selectedSystems.value.map(system => system.id);
-
-        // Prepare sides data based on number of sides
-        const sidesData: Record<string, Entity[]> = {
-            sideA: sideA.value,
-            sideB: sideB.value,
-        };
-
-        if (numSides.value >= 3) {
-            sidesData.sideC = sideC.value;
-        }
-
-        if (numSides.value >= 4) {
-            sidesData.sideD = sideD.value;
-        }
-
         const response = await fetch('/api/customBattles/custom', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
             },
-            body: JSON.stringify({
-                systems: systemIds,
-                startTime: startTime.value,
-                endTime: endTime.value,
-                sides: sidesData
-            }),
+            body: JSON.stringify(previewData.value), // Send previewData directly
         });
 
         if (!response.ok) {
-            throw new Error(`API error: ${response.status}`);
+            const errorData = await response.json().catch(() => ({ message: `API error: ${response.status}` }));
+            throw new Error(errorData.message || `API error: ${response.status}`);
         }
 
-        const data = await response.json();
+        const data = await response.json(); // Expects { battle_id: number, message: string }
 
-        // Redirect to the newly created battle
+        // Redirect to the newly created custom battle
         if (data.battle_id) {
-            window.location.href = `/battle/${data.battle_id}`;
+            window.location.href = `/custombattle/${data.battle_id}`;
+        } else {
+            // Handle cases where battle_id might be missing, though API should always return it on success
+            error.value = data.message || t('battleGenerator.errors.unknownError');
         }
     } catch (err) {
         error.value = err instanceof Error ? err.message : t('battleGenerator.errors.unknownError');
