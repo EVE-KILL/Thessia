@@ -23,20 +23,23 @@
                                         <template v-for="(system, index) in groupSystemsByRegion()" :key="index">
                                             <div class="system-region-group">
                                                 <span class="text-blue-500">{{ system.systems.join(', ') }}</span>
-                                                <span class="region-name">({{ getLocalizedString(system.regionName,
-                                                    locale) }})</span>
+                                                <span class="region-name">
+                                                    ({{ getLocalizedString(system.regionName, locale) }})
+                                                </span>
                                             </div>
                                         </template>
                                     </div>
                                 </template>
                                 <template v-else>
-                                    <span class="text-blue-500">{{ battle.system_name || t('battle.unknown_system')
-                                    }}</span>
+                                    <span class="text-blue-500">
+                                        {{ battle.system_name || t('battle.unknown_system') }}
+                                    </span>
                                     <span class="security-badge">
                                         {{ battle.system_security ? battle.system_security.toFixed(2) : 'N/A' }}
                                     </span>
-                                    <span class="region-name">({{ getLocalizedString(battle.region_name, locale)
-                                    }})</span>
+                                    <span class="region-name">
+                                        ({{ getLocalizedString(battle.region_name, locale) }})
+                                    </span>
                                 </template>
                             </div>
                         </div>

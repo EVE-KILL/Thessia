@@ -641,5 +641,14 @@
     "tools.localscan.corps_without_alliance": "Corporations Without Alliance",
     "tools.localscan.error_loading": "Error loading local scan data",
     "tools.localscan.no_data": "No local scan data found",
+    "tools.localscan.kills_last_week_short": "k/w",
+    "tools.localscan.isk_killed_short": "ISK killed",
+    "tools.localscan.unknown_corp": "Unknown corporation",
+    "tools.localscan.total_characters": "{count} characters",
+    "tools.localscan.corps_and_chars": "{corps} corps, {chars} chars",
+    "tools.localscan.potential_threats": "Potential Threats",
+    "tools.localscan.alliances": "Alliances",
+    "tools.localscan.corporations": "Corporations",
+    "tools.localscan.characters": "Characters",
     "general.back": "Back"
 }
