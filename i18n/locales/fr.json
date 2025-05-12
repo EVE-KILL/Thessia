@@ -469,6 +469,7 @@
     "battle.corporations": "Corporations",
     "battle.characters": "Personnages",
     "battle.timeline": "Chronologie",
+    "battle.unknown_region": "Région inconnue",
     "battle.ship": "Vaisseau",
     "battle.victim": "Victime",
     "battle.attacker": "Attaquant",
@@ -478,6 +479,35 @@
     "battles": "Batailles",
     "time": "L'heure",
     "involved": "Impliqué",
+    "apiErrors": {
+        "customBattles": {
+            "custom": {
+                "invalidBattleData": "Données de bataille invalides reçues. L'identifiant de bataille est manquant ou les données sont mal formées.",
+                "databaseError": "Erreur de base de données : {message}",
+                "unknownDatabaseError": "Erreur de base de données inconnue",
+                "internalServerError": "Erreur de serveur interne"
+            },
+            "preview": {
+                "systemRequired": "Au moins un système est nécessaire",
+                "maxSystems": "Maximum de 5 systèmes autorisés",
+                "startTimeRequired": "L'heure de début est requise",
+                "endTimeRequired": "L'heure de fin est requise",
+                "minSides": "Au moins deux faces sont nécessaires",
+                "maxSides": "Un maximum de 4 côtés est autorisé",
+                "maxTimespan": "La durée de la bataille ne peut excéder 36 heures. Veuillez sélectionner un délai plus court.",
+                "noKillmails": "Aucun killmail n'a été trouvé pour les systèmes et la période spécifiés.",
+                "internalServerError": "Erreur de serveur interne"
+            },
+            "entities": {
+                "systemIdRequired": "Au moins un numéro d'identification du système est requis",
+                "maxSystems": "Maximum de 5 systèmes autorisés",
+                "startTimeRequired": "L'heure de début est requise",
+                "endTimeRequired": "L'heure de fin est requise",
+                "maxTimespan": "La durée de la bataille ne peut excéder 36 heures. Veuillez sélectionner un délai plus court.",
+                "internalServerError": "Erreur de serveur interne"
+            }
+        }
+    },
     "killInfo": {
         "details": "Détails",
         "victim": "Victime",
@@ -541,11 +571,26 @@
         "showCorpsInAlliances": "Montrer les entreprises dans les alliances",
         "sideA": "Face A",
         "sideB": "Côté B",
+        "sideC": "Côté C",
+        "sideD": "Côté D",
         "undecided": "Indécis",
         "memberOf": "Membre de",
         "save": "Enregistrer",
         "preview": "Avant-première",
         "battlePreview": "Aperçu de la bataille",
+        "numSides": {
+            "two": "2 faces",
+            "three": "3 faces",
+            "four": "4 faces"
+        },
+        "tabs": {
+            "overview": "Vue d'ensemble",
+            "kills": "Tue",
+            "alliances": "Alliances",
+            "corporations": "Corporations",
+            "characters": "Personnages",
+            "timeline": "Chronologie"
+        },
         "errors": {
             "systemRequired": "Le système est nécessaire",
             "startTimeRequired": "L'heure de début est requise",
@@ -553,7 +598,22 @@
             "maxTimespan": "L'intervalle de temps ne peut excéder 36 heures",
             "bothSidesRequired": "Les deux parties doivent avoir au moins une entité",
             "apiError": "Erreur de l'API",
-            "unknownError": "Une erreur inconnue s'est produite"
+            "unknownError": "Une erreur inconnue s'est produite",
+            "maxSystemsReached": "Le nombre maximum de systèmes {max} a été atteint.",
+            "previewRequired": "Les données de prévisualisation sont requises avant l'enregistrement. Veuillez d'abord cliquer sur Aperçu.",
+            "sideCRequired": "La face C doit comporter au moins une entité lorsque 3 ou 4 faces sont sélectionnées.",
+            "sideDRequired": "Le côté D doit avoir au moins une entité lorsque 4 côtés sont sélectionnés."
+        }
+    },
+    "customBattle": {
+        "seo": {
+            "titlePattern": "Bataille personnalisée dans {systemName} ({regionName}) | {start} - {end}",
+            "defaultTitle": "Bataille personnalisée | EVE-KILL",
+            "descriptionPattern": "Bataille personnalisée à {systemName} ({regionName}) de {start} à {end}. ISK perdus : {isk}, Navires perdus : {ships}.",
+            "defaultDescription": "Détails de la bataille personnalisée dans EVE Online",
+            "twitterImageAlt": {
+                "default": "Système EVE"
+            }
         }
     }
 }
