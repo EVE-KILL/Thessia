@@ -140,9 +140,14 @@ async function processPotentialBattle(
                 if (overlapping.battle_id !== doc.battle_id) {
                     cliLogger.info(`🔄 Merging battle ${doc.battle_id} into existing ${overlapping.battle_id} for system ${systemId} from ${battleStart.toISOString()} to ${battleEnd.toISOString()}`);
                 }
+
+                // Create a new update object without the battle_id to avoid duplicate key errors
+                const updateDoc = { ...doc };
+                delete updateDoc.battle_id; // Keep the original battle_id
+
                 await Battles.updateOne(
                     { _id: overlapping._id },
-                    { $set: doc }
+                    { $set: updateDoc }
                 );
             } else {
                 cliLogger.info(`ℹ️  Inserting new battle ${doc.battle_id} for system ${systemId} from ${battleStart.toISOString()} to ${battleEnd.toISOString()}`);
