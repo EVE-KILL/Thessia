@@ -156,7 +156,7 @@ const primarySystem = computed(() => {
 
 // Get the primary system region name for display
 const primarySystemRegionName = computed(() => {
-    return primarySystem.value?.region_name || { en: 'Unknown Region' };
+    return primarySystem.value?.region_name || { en: t('battle.unknown_region') };
 });
 
 // Format system names for display (shows first system + count if multiple)
@@ -186,14 +186,14 @@ const totalDamageInflicted = computed(() => {
     return Object.values(teamStats.value).reduce((sum, stats) => sum + (stats?.damageInflicted || 0), 0);
 });
 
-const tabs = [
-    { label: 'Overview', slot: 'overview' },
-    { label: 'Kills', slot: 'kills' },
-    { label: 'Alliances', slot: 'alliances' },
-    { label: 'Corporations', slot: 'corporations' },
-    { label: 'Characters', slot: 'characters' },
-    { label: 'Timeline', slot: 'timeline' }
-]
+const tabs = computed(() => [
+    { label: t('battleGenerator.tabs.overview'), slot: 'overview' },
+    { label: t('battleGenerator.tabs.kills'), slot: 'kills' },
+    { label: t('battleGenerator.tabs.alliances'), slot: 'alliances' },
+    { label: t('battleGenerator.tabs.corporations'), slot: 'corporations' },
+    { label: t('battleGenerator.tabs.characters'), slot: 'characters' },
+    { label: t('battleGenerator.tabs.timeline'), slot: 'timeline' }
+]);
 
 const tabsUi = {
     list: "mb-0",
@@ -366,8 +366,8 @@ const seoData = computed(() => {
     const isk = formatIsk(totalIskLost.value);
     const ships = totalShipsLost.value;
 
-    const title = `Custom Battle in ${systemName} (${regionName}) | ${start} - ${end}`;
-    const description = `Custom Battle in ${systemName} (${regionName}) from ${start} to ${end}. ISK Lost: ${isk}, Ships Lost: ${ships}.`;
+    const title = t('customBattle.seo.titlePattern', { systemName, regionName, start, end });
+    const description = t('customBattle.seo.descriptionPattern', { systemName, regionName, start, end, isk, ships });
 
     return {
         title,
@@ -376,12 +376,12 @@ const seoData = computed(() => {
 });
 
 useSeoMeta({
-    title: () => seoData.value?.title || "Custom Battle | EVE-KILL",
-    ogTitle: () => seoData.value?.title || "Custom Battle | EVE-KILL",
-    twitterTitle: () => seoData.value?.title || "Custom Battle | EVE-KILL",
-    description: () => seoData.value?.description || "EVE Online custom battle details",
-    ogDescription: () => seoData.value?.description || "EVE Online custom battle details",
-    twitterDescription: () => seoData.value?.description || "EVE Online custom battle details",
+    title: () => seoData.value?.title || t('customBattle.seo.defaultTitle'),
+    ogTitle: () => seoData.value?.title || t('customBattle.seo.defaultTitle'),
+    twitterTitle: () => seoData.value?.title || t('customBattle.seo.defaultTitle'),
+    description: () => seoData.value?.description || t('customBattle.seo.defaultDescription'),
+    ogDescription: () => seoData.value?.description || t('customBattle.seo.defaultDescription'),
+    twitterDescription: () => seoData.value?.description || t('customBattle.seo.defaultDescription'),
     ogType: "website",
     ogSiteName: "EVE-KILL",
     ogUrl: () => {
@@ -395,7 +395,7 @@ useSeoMeta({
         if (battle.value?.systems && battle.value.systems.length > 0) {
             return battle.value.systems[0].system_name;
         }
-        return battle.value?.system_name || "EVE System";
+        return battle.value?.system_name || t('customBattle.seo.twitterImageAlt.default');
     },
     twitterCreator: "@eve_kill",
 });

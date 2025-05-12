@@ -11,7 +11,7 @@ export default defineEventHandler(async (event) => {
 
         // Validate if battleDocument is received
         if (!battleDocument || typeof battleDocument !== 'object' || !battleDocument.battle_id) {
-            throw createError({ statusCode: 400, statusMessage: 'Invalid battle data received. battle_id is missing or data is malformed.' });
+            throw createError({ statusCode: 400, statusMessage: 'apiErrors.customBattles.custom.invalidBattleData' });
         }
 
         // Ensure this is marked as a custom battle
@@ -35,15 +35,18 @@ export default defineEventHandler(async (event) => {
             throw error;
         }
         // For database errors or other unexpected errors
-        let errorMessage = 'Internal Server Error';
-        if (error.name === 'MongoServerError' || error.message?.includes('database')) {
-            errorMessage = `Database error: ${error.message || 'Unknown database error'}`;
-            // Log more specific db error if available
-            console.error('Database operation failed:', error);
+        let statusMessageKey = 'apiErrors.customBattles.custom.internalServerError';
+        // The detailed error message is logged for the server admin,
+        // the user will see a generic translated error message.
+        // If a more specific key for database errors was desired for the frontend,
+        // it could be set here. For now, all 500s from this block use internalServerError.
+        if (error.name === 'MongoServerError') {
+            // Still using a generic key for the user, but logging details.
+            console.error('Database operation failed (MongoServerError):', error);
         }
         throw createError({
             statusCode: 500,
-            statusMessage: errorMessage
+            statusMessage: statusMessageKey
         });
     }
 });

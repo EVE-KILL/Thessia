@@ -20,11 +20,11 @@ interface SelectedSystem {
 
 // Number of sides to display
 const numSides = ref(2);
-const sideOptions = [
-    { value: 2, label: '2 Sides' },
-    { value: 3, label: '3 Sides' },
-    { value: 4, label: '4 Sides' }
-];
+const sideOptions = computed(() => [
+    { value: 2, label: t('battleGenerator.numSides.two') },
+    { value: 3, label: t('battleGenerator.numSides.three') },
+    { value: 4, label: t('battleGenerator.numSides.four') }
+]);
 
 // Side names with defaults
 const sideAName = ref(t('battleGenerator.sideA'));
@@ -100,14 +100,14 @@ const previewReady = computed(() => {
 });
 
 // Tabs for preview
-const tabs = [
-    { label: 'Overview', slot: 'overview' },
-    { label: 'Kills', slot: 'kills' },
-    { label: 'Alliances', slot: 'alliances' },
-    { label: 'Corporations', slot: 'corporations' },
-    { label: 'Characters', slot: 'characters' },
-    { label: 'Timeline', slot: 'timeline' }
-];
+const tabs = computed(() => [
+    { label: t('battleGenerator.tabs.overview'), slot: 'overview' },
+    { label: t('battleGenerator.tabs.kills'), slot: 'kills' },
+    { label: t('battleGenerator.tabs.alliances'), slot: 'alliances' },
+    { label: t('battleGenerator.tabs.corporations'), slot: 'corporations' },
+    { label: t('battleGenerator.tabs.characters'), slot: 'characters' },
+    { label: t('battleGenerator.tabs.timeline'), slot: 'timeline' }
+]);
 
 const tabsUi = {
     list: "mb-0",
@@ -280,8 +280,20 @@ const loadEntities = async () => {
 
         // Update generated data
         updateGeneratedData();
-    } catch (err) {
-        error.value = err instanceof Error ? err.message : t('battleGenerator.errors.unknownError');
+    } catch (err: any) {
+        let messageKey = 'battleGenerator.errors.unknownError';
+        const messageParams = {}; // Future use if API sends params with keys
+        if (err && err.message && typeof err.message === 'string' && err.message.startsWith('apiErrors.')) {
+            messageKey = err.message;
+            // Example for future: if (err.data) { messageParams = err.data; }
+        } else if (err && err.message && typeof err.message === 'string' && !err.message.startsWith('API error:')) {
+            // If it's not an API key, but also not our generic "API error: status" message,
+            // it might be a direct message from an unexpected client-side error.
+            // For now, we'll let it fall through to unknownError, or you could display it directly if deemed safe.
+            // error.value = err.message; // Potentially display direct non-keyed client error
+            // return;
+        }
+        error.value = t(messageKey, messageParams);
     } finally {
         loading.value = false;
     }
@@ -742,8 +754,16 @@ const saveBattle = async () => {
             // Handle cases where battle_id might be missing, though API should always return it on success
             error.value = data.message || t('battleGenerator.errors.unknownError');
         }
-    } catch (err) {
-        error.value = err instanceof Error ? err.message : t('battleGenerator.errors.unknownError');
+    } catch (err: any) {
+        let messageKey = 'battleGenerator.errors.unknownError';
+        const messageParams = {}; // Future use if API sends params with keys
+        if (err && err.message && typeof err.message === 'string' && err.message.startsWith('apiErrors.')) {
+            messageKey = err.message;
+            // Example for future: if (err.data) { messageParams = err.data; }
+        } else if (err && err.message && typeof err.message === 'string' && !err.message.startsWith('API error:')) {
+            // Non-keyed client error
+        }
+        error.value = t(messageKey, messageParams);
     } finally {
         loading.value = false;
     }
@@ -926,9 +946,17 @@ const previewBattle = async () => {
 
         // Show the generated data section
         showGeneratedData.value = true;
-    } catch (err) {
-        error.value = err instanceof Error ? err.message : t('battleGenerator.errors.unknownError');
-        previewData.value = null;
+    } catch (err: any) {
+        previewData.value = null; // Clear previous preview
+        let messageKey = 'battleGenerator.errors.unknownError';
+        const messageParams = {}; // Future use if API sends params with keys
+        if (err && err.message && typeof err.message === 'string' && err.message.startsWith('apiErrors.')) {
+            messageKey = err.message;
+            // Example for future: if (err.data) { messageParams = err.data; }
+        } else if (err && err.message && typeof err.message === 'string' && !err.message.startsWith('API error:')) {
+            // Non-keyed client error
+        }
+        error.value = t(messageKey, messageParams);
     } finally {
         loading.value = false;
     }

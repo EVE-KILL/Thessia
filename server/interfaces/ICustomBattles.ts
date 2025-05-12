@@ -1,7 +1,7 @@
 import type { ITranslation } from "./ITranslation";
 
 // Ship manifest entry for character tracking in battles
-export interface ICharacterShipManifestEntry {
+export interface ICustomCharacterShipManifestEntry {
     character_id?: number;
     character_name?: string;
     corporation_id?: number;
@@ -19,7 +19,7 @@ export interface ICharacterShipManifestEntry {
 }
 
 // New helper interfaces
-export interface IEntityStats {
+export interface ICustomEntityStats {
     id: number;
     name: string;
     alliance_id?: number;
@@ -30,18 +30,18 @@ export interface IEntityStats {
     valueSuffered: number;
 }
 
-export interface ITeamSummaryStats {
+export interface ICustomTeamSummaryStats {
     iskLost: number;
     shipsLost: number;
     damageInflicted: number;
 }
 
-export interface IEntityItem {
+export interface ICustomEntityItem {
     id: number;
     name?: string;
 }
 
-export interface ISystemInfo {
+export interface ICustomSystemInfo {
     system_id: number;
     system_name: string;
     system_security: number;
@@ -49,27 +49,27 @@ export interface ISystemInfo {
     region_name: Record<string, string> | ITranslation;
 }
 
-export interface ISideData {
+export interface ICustomSideData {
     id: string;
     name: string;
-    alliances: IEntityItem[];
-    corporations: IEntityItem[];
+    alliances: ICustomEntityItem[];
+    corporations: ICustomEntityItem[];
     kill_ids: number[];
-    stats: ITeamSummaryStats;
-    alliances_stats: IEntityStats[];
-    corporations_stats: IEntityStats[];
-    characters_stats: IEntityStats[];
-    ship_manifest: ICharacterShipManifestEntry[];
+    stats: ICustomTeamSummaryStats;
+    alliances_stats: ICustomEntityStats[];
+    corporations_stats: ICustomEntityStats[];
+    characters_stats: ICustomEntityStats[];
+    ship_manifest: ICustomCharacterShipManifestEntry[];
 }
 
-export interface ITopEntity {
+export interface ICustomTopEntity {
     id: number;
     name: string | Record<string, string>;
     count: number;
 }
 
 // Main IBattles interface modification
-export interface IBattles {
+export interface ICustomBattles {
     battle_id: number;
     custom?: boolean;
     start_time: Date;
@@ -120,15 +120,15 @@ export interface IBattles {
     blue_team_kill_ids?: number[]; // Changed from blue_team_kills
     red_team_kill_ids?: number[];   // Changed from red_team_kills
 
-    blue_team_stats?: ITeamSummaryStats;
-    red_team_stats?: ITeamSummaryStats;
+    blue_team_stats?: ICustomTeamSummaryStats;
+    red_team_stats?: ICustomTeamSummaryStats;
 
-    blue_team_alliances_stats?: IEntityStats[];
-    red_team_alliances_stats?: IEntityStats[];
-    blue_team_corporations_stats?: IEntityStats[];
-    red_team_corporations_stats?: IEntityStats[];
-    blue_team_characters_stats?: IEntityStats[];
-    red_team_characters_stats?: IEntityStats[];
+    blue_team_alliances_stats?: ICustomEntityStats[];
+    red_team_alliances_stats?: ICustomEntityStats[];
+    blue_team_corporations_stats?: ICustomEntityStats[];
+    red_team_corporations_stats?: ICustomEntityStats[];
+    blue_team_characters_stats?: ICustomEntityStats[];
+    red_team_characters_stats?: ICustomEntityStats[];
 
     updatedAt?: Date;
     createdAt?: Date;

@@ -1,8 +1,8 @@
 import { type Document, type Model, Schema, model } from "mongoose";
-import type { IBattles } from "~/server/interfaces/IBattles"; // Adjust the path as necessary
+import type { ICustomBattles } from "~/server/interfaces/ICustomBattles"; // Adjust the path as necessary
 
 // Extend the IBattles interface with Mongoose's Document interface
-export interface IBattlesDocument extends IBattles, Document { }
+export interface IBattlesDocument extends ICustomBattles, Document { }
 
 // Define a sub-schema for ICharacterShipManifestEntry
 const characterShipManifestEntrySchema = new Schema({

@@ -20,25 +20,25 @@ export default defineEventHandler(async (event) => {
 
         // Validate required parameters
         if (!systems || !Array.isArray(systems) || systems.length === 0) {
-            throw createError({ statusCode: 400, statusMessage: 'At least one system is required' });
+            throw createError({ statusCode: 400, statusMessage: 'apiErrors.customBattles.preview.systemRequired' });
         }
 
         // Enforce maximum system limit
         if (systems.length > 5) {
-            throw createError({ statusCode: 400, statusMessage: 'Maximum of 5 systems allowed' });
+            throw createError({ statusCode: 400, statusMessage: 'apiErrors.customBattles.preview.maxSystems' });
         }
 
         if (!startTime) {
-            throw createError({ statusCode: 400, statusMessage: 'Start time is required' });
+            throw createError({ statusCode: 400, statusMessage: 'apiErrors.customBattles.preview.startTimeRequired' });
         }
         if (!endTime) {
-            throw createError({ statusCode: 400, statusMessage: 'End time is required' });
+            throw createError({ statusCode: 400, statusMessage: 'apiErrors.customBattles.preview.endTimeRequired' });
         }
         if (!sides || !Array.isArray(sides) || sides.length < 2) {
-            throw createError({ statusCode: 400, statusMessage: 'At least two sides are required' });
+            throw createError({ statusCode: 400, statusMessage: 'apiErrors.customBattles.preview.minSides' });
         }
         if (sides.length > 4) {
-            throw createError({ statusCode: 400, statusMessage: 'Maximum of 4 sides are allowed' });
+            throw createError({ statusCode: 400, statusMessage: 'apiErrors.customBattles.preview.maxSides' });
         }
 
         // Convert string dates to Date objects
@@ -55,7 +55,7 @@ export default defineEventHandler(async (event) => {
         if (timeDiffMs > maxTimespan) {
             throw createError({
                 statusCode: 400,
-                statusMessage: 'Battle timespan cannot exceed 36 hours. Please select a smaller timespan.'
+                statusMessage: 'apiErrors.customBattles.preview.maxTimespan'
             });
         }
 
@@ -71,7 +71,7 @@ export default defineEventHandler(async (event) => {
         if (killmails.length === 0) {
             throw createError({
                 statusCode: 404,
-                statusMessage: 'No killmails found for the specified systems and time range'
+                statusMessage: 'apiErrors.customBattles.preview.noKillmails'
             });
         }
 
@@ -120,9 +120,12 @@ export default defineEventHandler(async (event) => {
         return battleDocument;
     } catch (error: any) {
         console.error('Error in customBattles/preview endpoint:', error);
+        // If statusMessage is already a key (e.g. from a previous createError), use it.
+        // Otherwise, use the generic internal server error key.
+        const messageIsKey = typeof error.statusMessage === 'string' && error.statusMessage.startsWith('apiErrors.');
         throw createError({
             statusCode: error.statusCode || 500,
-            statusMessage: error.statusMessage || 'Internal Server Error'
+            statusMessage: messageIsKey ? error.statusMessage : 'apiErrors.customBattles.preview.internalServerError'
         });
     }
 });

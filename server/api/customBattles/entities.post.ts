@@ -7,19 +7,19 @@ export default defineEventHandler(async (event) => {
 
         // Validate required parameters
         if (!systemIds || !Array.isArray(systemIds) || systemIds.length === 0) {
-            throw createError({ statusCode: 400, statusMessage: 'At least one system ID is required' });
+            throw createError({ statusCode: 400, statusMessage: 'apiErrors.customBattles.entities.systemIdRequired' });
         }
 
         // Enforce maximum system limit
         if (systemIds.length > 5) {
-            throw createError({ statusCode: 400, statusMessage: 'Maximum of 5 systems allowed' });
+            throw createError({ statusCode: 400, statusMessage: 'apiErrors.customBattles.entities.maxSystems' });
         }
 
         if (!startTime) {
-            throw createError({ statusCode: 400, statusMessage: 'Start time is required' });
+            throw createError({ statusCode: 400, statusMessage: 'apiErrors.customBattles.entities.startTimeRequired' });
         }
         if (!endTime) {
-            throw createError({ statusCode: 400, statusMessage: 'End time is required' });
+            throw createError({ statusCode: 400, statusMessage: 'apiErrors.customBattles.entities.endTimeRequired' });
         }
 
         // Check if the timespan is within the allowed limit (36 hours)
@@ -31,7 +31,7 @@ export default defineEventHandler(async (event) => {
         if (timeDiffMs > maxTimespan) {
             throw createError({
                 statusCode: 400,
-                statusMessage: 'Battle timespan cannot exceed 36 hours. Please select a smaller timespan.'
+                statusMessage: 'apiErrors.customBattles.entities.maxTimespan'
             });
         }
 
@@ -105,9 +105,12 @@ export default defineEventHandler(async (event) => {
         };
     } catch (error: any) {
         console.error('Error in battles/entities endpoint:', error);
+        // If statusMessage is already a key (e.g. from a previous createError), use it.
+        // Otherwise, use the generic internal server error key.
+        const messageIsKey = typeof error.statusMessage === 'string' && error.statusMessage.startsWith('apiErrors.');
         throw createError({
             statusCode: error.statusCode || 500,
-            statusMessage: error.statusMessage || 'Internal Server Error'
+            statusMessage: messageIsKey ? error.statusMessage : 'apiErrors.customBattles.entities.internalServerError'
         });
     }
 });

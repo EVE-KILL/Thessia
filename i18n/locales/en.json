@@ -469,6 +469,7 @@
     "battle.corporations": "Corporations",
     "battle.characters": "Characters",
     "battle.timeline": "Timeline",
+    "battle.unknown_region": "Unknown Region",
     "battle.ship": "Ship",
     "battle.victim": "Victim",
     "battle.attacker": "Attacker",
@@ -478,6 +479,35 @@
     "battles": "Battles",
     "time": "Time",
     "involved": "Involved",
+    "apiErrors": {
+        "customBattles": {
+            "custom": {
+                "invalidBattleData": "Invalid battle data received. battle_id is missing or data is malformed.",
+                "databaseError": "Database error: {message}",
+                "unknownDatabaseError": "Unknown database error",
+                "internalServerError": "Internal Server Error"
+            },
+            "preview": {
+                "systemRequired": "At least one system is required",
+                "maxSystems": "Maximum of 5 systems allowed",
+                "startTimeRequired": "Start time is required",
+                "endTimeRequired": "End time is required",
+                "minSides": "At least two sides are required",
+                "maxSides": "Maximum of 4 sides are allowed",
+                "maxTimespan": "Battle timespan cannot exceed 36 hours. Please select a smaller timespan.",
+                "noKillmails": "No killmails found for the specified systems and time range",
+                "internalServerError": "Internal Server Error"
+            },
+            "entities": {
+                "systemIdRequired": "At least one system ID is required",
+                "maxSystems": "Maximum of 5 systems allowed",
+                "startTimeRequired": "Start time is required",
+                "endTimeRequired": "End time is required",
+                "maxTimespan": "Battle timespan cannot exceed 36 hours. Please select a smaller timespan.",
+                "internalServerError": "Internal Server Error"
+            }
+        }
+    },
     "killInfo": {
         "details": "Details",
         "victim": "Victim",
@@ -541,11 +571,26 @@
         "showCorpsInAlliances": "Show corporations in alliances",
         "sideA": "Side A",
         "sideB": "Side B",
+        "sideC": "Side C",
+        "sideD": "Side D",
         "undecided": "Undecided",
         "memberOf": "Member of",
         "save": "Save",
         "preview": "Preview",
         "battlePreview": "Battle Preview",
+        "numSides": {
+            "two": "2 Sides",
+            "three": "3 Sides",
+            "four": "4 Sides"
+        },
+        "tabs": {
+            "overview": "Overview",
+            "kills": "Kills",
+            "alliances": "Alliances",
+            "corporations": "Corporations",
+            "characters": "Characters",
+            "timeline": "Timeline"
+        },
         "errors": {
             "systemRequired": "System is required",
             "startTimeRequired": "Start time is required",
@@ -553,7 +598,22 @@
             "maxTimespan": "Time range cannot exceed 36 hours",
             "bothSidesRequired": "Both sides must have at least one entity",
             "apiError": "API error",
-            "unknownError": "An unknown error occurred"
+            "unknownError": "An unknown error occurred",
+            "maxSystemsReached": "Maximum of {max} systems reached.",
+            "previewRequired": "Preview data is required before saving. Please click Preview first.",
+            "sideCRequired": "Side C must have at least one entity when 3 or 4 sides are selected.",
+            "sideDRequired": "Side D must have at least one entity when 4 sides are selected."
+        }
+    },
+    "customBattle": {
+        "seo": {
+            "titlePattern": "Custom Battle in {systemName} ({regionName}) | {start} - {end}",
+            "defaultTitle": "Custom Battle | EVE-KILL",
+            "descriptionPattern": "Custom Battle in {systemName} ({regionName}) from {start} to {end}. ISK Lost: {isk}, Ships Lost: {ships}.",
+            "defaultDescription": "EVE Online custom battle details",
+            "twitterImageAlt": {
+                "default": "EVE System"
+            }
         }
     }
 }
