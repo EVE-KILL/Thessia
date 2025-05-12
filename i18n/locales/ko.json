@@ -469,6 +469,7 @@
     "battle.corporations": "기업",
     "battle.characters": "문자",
     "battle.timeline": "타임라인",
+    "battle.unknown_region": "알 수 없는 지역",
     "battle.ship": "Ship",
     "battle.victim": "피해자",
     "battle.attacker": "공격자",
@@ -478,6 +479,35 @@
     "battles": "전투",
     "time": "시간",
     "involved": "참여",
+    "apiErrors": {
+        "customBattles": {
+            "custom": {
+                "invalidBattleData": "잘못된 전투 데이터가 수신되었습니다. battle_id가 누락되었거나 데이터가 잘못되었습니다.",
+                "databaseError": "데이터베이스 오류입니다: {message}",
+                "unknownDatabaseError": "알 수 없는 데이터베이스 오류",
+                "internalServerError": "내부 서버 오류"
+            },
+            "preview": {
+                "systemRequired": "하나 이상의 시스템이 필요합니다.",
+                "maxSystems": "최대 5개 시스템 허용",
+                "startTimeRequired": "시작 시간이 필요합니다.",
+                "endTimeRequired": "종료 시간이 필요합니다.",
+                "minSides": "최소 두 면이 필요합니다.",
+                "maxSides": "최대 4면까지 허용",
+                "maxTimespan": "전투 시간은 36시간을 초과할 수 없습니다. 더 짧은 기간을 선택해 주세요.",
+                "noKillmails": "지정된 시스템 및 시간 범위에 대한 킬메일을 찾을 수 없습니다.",
+                "internalServerError": "내부 서버 오류"
+            },
+            "entities": {
+                "systemIdRequired": "하나 이상의 시스템 ID가 필요합니다.",
+                "maxSystems": "최대 5개 시스템 허용",
+                "startTimeRequired": "시작 시간이 필요합니다.",
+                "endTimeRequired": "종료 시간이 필요합니다.",
+                "maxTimespan": "전투 시간은 36시간을 초과할 수 없습니다. 더 짧은 기간을 선택해 주세요.",
+                "internalServerError": "내부 서버 오류"
+            }
+        }
+    },
     "killInfo": {
         "details": "세부 정보",
         "victim": "피해자",
@@ -541,11 +571,26 @@
         "showCorpsInAlliances": "제휴 기업 표시",
         "sideA": "측면 A",
         "sideB": "B면",
+        "sideC": "측면 C",
+        "sideD": "측면 D",
         "undecided": "미정",
         "memberOf": "회원",
         "save": "저장",
         "preview": "미리 보기",
         "battlePreview": "전투 미리보기",
+        "numSides": {
+            "two": "2면",
+            "three": "3면",
+            "four": "4면"
+        },
+        "tabs": {
+            "overview": "개요",
+            "kills": "킬",
+            "alliances": "제휴",
+            "corporations": "기업",
+            "characters": "문자",
+            "timeline": "타임라인"
+        },
         "errors": {
             "systemRequired": "시스템 필요",
             "startTimeRequired": "시작 시간이 필요합니다.",
@@ -553,7 +598,22 @@
             "maxTimespan": "시간 범위는 36시간을 초과할 수 없습니다.",
             "bothSidesRequired": "양쪽 모두 엔티티가 하나 이상 있어야 합니다.",
             "apiError": "API 오류",
-            "unknownError": "알 수 없는 오류가 발생했습니다."
+            "unknownError": "알 수 없는 오류가 발생했습니다.",
+            "maxSystemsReached": "최대 {max} 시스템에 도달했습니다.",
+            "previewRequired": "저장하기 전에 데이터 미리보기가 필요합니다. 먼저 미리 보기를 클릭하세요.",
+            "sideCRequired": "3면 또는 4면이 선택된 경우 C면에는 엔티티가 하나 이상 있어야 합니다.",
+            "sideDRequired": "4면이 선택된 경우 D면에는 엔티티가 하나 이상 있어야 합니다."
+        }
+    },
+    "customBattle": {
+        "seo": {
+            "titlePattern": "{systemName} ({regionName}) | {start} - 커스텀 배틀 {end}",
+            "defaultTitle": "커스텀 배틀 | EVE-KILL",
+            "descriptionPattern": "사용자 지정 전투: {systemName} ({regionName})에서 {start} 에서 {end} 으로 이동합니다. ISK 손실: {isk}, 선박 손실: {ships}.",
+            "defaultDescription": "EVE 온라인 커스텀 전투 세부 정보",
+            "twitterImageAlt": {
+                "default": "EVE 시스템"
+            }
         }
     }
 }
