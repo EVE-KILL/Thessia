@@ -1,60 +1,132 @@
 <template>
     <div class="p-4 bg-background-900 rounded-lg shadow-lg text-black dark:text-white">
-        <div v-if="battle && battle.sides">
-            <!-- Top Info -->
-            <div class="battle-topbox mb-6">
-                <div class="flex items-center gap-2 text-2xl font-extrabold text-black dark:text-white mb-1">
-                    <UIcon name="lucide:map-pin" class="w-7 h-7 text-blue-400" />
-                    <span>
-                        {{ t('battle.in_system') }}:
-                        <template v-if="battle.systems && battle.systems.length > 0">
-                            <span class="text-blue-500">{{ formatSystemNames() }}</span>
-                            <span class="ml-2 text-background-400">
-                                ({{ getLocalizedString(primarySystemRegionName, locale) }})
-                            </span>
-                        </template>
-                        <template v-else>
-                            <span class="text-blue-500">{{ battle.system_name || t('battle.unknown_system') }}</span>
-                            <span
-                                class="ml-2 text-xs px-2 py-1 rounded bg-background-700 text-background-100 align-middle">
-                                {{ battle.system_security ? battle.system_security.toFixed(2) : 'N/A' }}
-                            </span>
-                            <span class="ml-2 text-background-400">
-                                ({{ getLocalizedString(battle.region_name, locale) }})
-                            </span>
-                        </template>
-                    </span>
+        <!-- Check pending state first to ensure loading indicator is always shown when loading -->
+        <div v-if="pending">
+            <div class="flex flex-col items-center justify-center py-12">
+                <UIcon name="lucide:loader" class="w-12 h-12 animate-spin text-primary mb-4" />
+                <span class="text-xl font-medium">{{ t('battle.loading') }}</span>
+            </div>
+        </div>
+        <!-- Only when not pending, check for battle data -->
+        <div v-else-if="battle && battle.blue_team && battle.red_team">
+            <!-- Top Info - Redesigned battle-topbox -->
+            <div class="battle-topbox">
+                <!-- System Information Header -->
+                <div class="battle-header">
+                    <div class="system-info">
+                        <UIcon name="lucide:map-pin" class="system-icon" />
+                        <div class="system-text">
+                            <div class="text-xl font-bold">
+                                {{ t('battle.in_system') }}:
+                                <template v-if="battle.systems && battle.systems.length > 0">
+                                    <div class="systems-container">
+                                        <template v-for="(system, index) in groupSystemsByRegion()" :key="index">
+                                            <div class="system-region-group">
+                                                <span class="text-blue-500">{{ system.systems.join(', ') }}</span>
+                                                <span class="region-name">({{ getLocalizedString(system.regionName,
+                                                    locale) }})</span>
+                                            </div>
+                                        </template>
+                                    </div>
+                                </template>
+                                <template v-else>
+                                    <span class="text-blue-500">{{ battle.system_name || t('battle.unknown_system')
+                                        }}</span>
+                                    <span class="security-badge">
+                                        {{ battle.system_security ? battle.system_security.toFixed(2) : 'N/A' }}
+                                    </span>
+                                    <span class="region-name">({{ getLocalizedString(battle.region_name, locale)
+                                        }})</span>
+                                </template>
+                            </div>
+                        </div>
+                    </div>
                 </div>
-                <div class="flex flex-wrap gap-6 mt-2 text-base font-medium">
-                    <div class="flex items-center gap-1">
-                        <UIcon name="lucide:clock" class="w-5 h-5 text-background-400" />
-                        <span>{{ t('battle.start_time') }}:</span>
-                        <span class="font-semibold">{{ formatDate(battle.start_time) }}</span>
+
+                <!-- Battle Stats Grid -->
+                <div class="battle-stats-grid">
+                    <!-- Time Information -->
+                    <div class="stat-group">
+                        <h3 class="stat-group-title">{{ t('battle.time') }}</h3>
+                        <div class="stat-item">
+                            <div class="stat-label">
+                                <UIcon name="lucide:clock" class="stat-icon" />
+                                {{ t('battle.start_time') }}:
+                            </div>
+                            <div class="stat-value">{{ formatDate(battle.start_time) }}</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-label">
+                                <UIcon name="lucide:clock" class="stat-icon" />
+                                {{ t('battle.end_time') }}:
+                            </div>
+                            <div class="stat-value">{{ formatDate(battle.end_time) }}</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-label">
+                                <UIcon name="lucide:timer" class="stat-icon" />
+                                {{ t('battle.duration') }}:
+                            </div>
+                            <div class="stat-value">{{ duration(battle.start_time, battle.end_time) }}</div>
+                        </div>
                     </div>
-                    <div class="flex items-center gap-1">
-                        <UIcon name="lucide:clock" class="w-5 h-5 text-background-400" />
-                        <span>{{ t('battle.end_time') }}:</span>
-                        <span class="font-semibold">{{ formatDate(battle.end_time) }}</span>
+
+                    <!-- Battle Metrics -->
+                    <div class="stat-group">
+                        <h3 class="stat-group-title">{{ t('stats') }}</h3>
+                        <div class="stat-item">
+                            <div class="stat-label">
+                                <UIcon name="lucide:coins" class="stat-icon text-yellow-500" />
+                                {{ t('battle.isk_lost') }}:
+                            </div>
+                            <div class="stat-value">{{ formatIsk(totalIskLost) }} ISK</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-label">
+                                <UIcon name="lucide:ship" class="stat-icon" />
+                                {{ t('battle.ships_lost') }}:
+                            </div>
+                            <div class="stat-value">{{ totalShipsLost }}</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-label">
+                                <UIcon name="lucide:flame" class="stat-icon text-red-500" />
+                                {{ t('battle.damage_inflicted') }}:
+                            </div>
+                            <div class="stat-value">{{ formatNumber(totalDamageInflicted) }}</div>
+                        </div>
                     </div>
-                    <div class="flex items-center gap-1">
-                        <UIcon name="lucide:timer" class="w-5 h-5 text-background-400" />
-                        <span>{{ t('battle.duration') }}:</span>
-                        <span class="font-semibold">{{ duration(battle.start_time, battle.end_time) }}</span>
-                    </div>
-                    <div class="flex items-center gap-1">
-                        <UIcon name="lucide:coins" class="w-5 h-5 text-yellow-500" />
-                        <span>{{ t('battle.isk_lost') }}:</span>
-                        <span class="font-semibold">{{ formatIsk(totalIskLost) }} ISK</span>
-                    </div>
-                    <div class="flex items-center gap-1">
-                        <UIcon name="lucide:ship" class="w-5 h-5 text-background-400" />
-                        <span>{{ t('battle.ships_lost') }}:</span>
-                        <span class="font-semibold">{{ totalShipsLost }}</span>
-                    </div>
-                    <div class="flex items-center gap-1">
-                        <UIcon name="lucide:flame" class="w-5 h-5 text-red-500" />
-                        <span>{{ t('battle.damage_inflicted') }}:</span>
-                        <span class="font-semibold">{{ formatNumber(totalDamageInflicted) }}</span>
+
+                    <!-- Participants Information -->
+                    <div class="stat-group">
+                        <h3 class="stat-group-title">{{ t('involved') }}</h3>
+                        <div class="stat-item">
+                            <div class="stat-label">
+                                <UIcon name="lucide:users" class="stat-icon text-blue-500" />
+                                {{ t('characters') }}:
+                            </div>
+                            <div class="stat-value">
+                                {{ battle.involved_characters_count || battle.charactersInvolved?.length || 0 }}
+                            </div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-label">
+                                <UIcon name="lucide:building" class="stat-icon text-purple-500" />
+                                {{ t('corporations') }}:
+                            </div>
+                            <div class="stat-value">
+                                {{ battle.involved_corporations_count || battle.corporationsInvolved?.length || 0 }}
+                            </div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-label">
+                                <UIcon name="lucide:flag" class="stat-icon text-indigo-500" />
+                                {{ t('alliances') }}:
+                            </div>
+                            <div class="stat-value">
+                                {{ battle.involved_alliances_count || battle.alliancesInvolved?.length || 0 }}
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -87,12 +159,16 @@
                 </UTabs>
             </div>
         </div>
-        <div v-else>
-            <div v-if="battleData && Object.keys(battleData).length === 0">
-                <span class="text-black dark:text-white">{{ t('battle.no_battle_found') }}</span>
+        <div v-else-if="error">
+            <div class="flex flex-col items-center justify-center py-12">
+                <UIcon name="lucide:alert-circle" class="w-12 h-12 text-red-500 mb-4" />
+                <span class="text-xl font-medium">{{ t('battle.no_battle_found_custom') }}</span>
             </div>
-            <div v-else>
-                <span class="text-black dark:text-white">{{ t('battle.loading') }}</span>
+        </div>
+        <div v-else>
+            <div class="flex flex-col items-center justify-center py-12">
+                <UIcon name="lucide:alert-circle" class="w-12 h-12 text-red-500 mb-4" />
+                <span class="text-xl font-medium">{{ t('battle.no_battle_found_custom') }}</span>
             </div>
         </div>
     </div>
@@ -107,33 +183,28 @@ const { locale, t } = useI18n()
 
 const route = useRoute();
 
-const slugParts = computed(() => {
-    if (Array.isArray(route.params.slug)) {
-        return route.params.slug as string[];
-    }
-    if (typeof route.params.slug === 'string') {
-        return [route.params.slug as string];
-    }
-    return [];
-});
-
-const entityId = computed(() => {
-    if (slugParts.value.length === 1 && slugParts.value[0]) {
-        return slugParts.value[0];
-    }
-    return null;
-});
+const entityId = computed(() => route.params.id as string || null);
 
 const apiUrl = computed(() => {
     if (!entityId.value) return null;
-    // Use the custom battles API endpoint
-    return `/api/customBattles/${entityId.value}`;
+    return `/api/battles/${entityId.value}`;
 });
 
+// Remove console.log that's showing the API URL
+// console.log(apiUrl.value);
+
 const { data: battleData, pending, error } = useFetch(apiUrl, {
-    key: `custom-battle-${entityId.value}`,
+    key: computed(() => entityId.value ? `battle-${entityId.value}` : null),
     lazy: true,
-    watch: [entityId]
+    watch: [entityId],
+    onResponseError(context) {
+        // Log error details for debugging purposes
+        console.error('Battle fetch error:', {
+            status: context.response.status,
+            statusText: context.response.statusText,
+            url: context.request
+        });
+    }
 });
 
 const battle = ref<any>(null);
@@ -171,6 +242,39 @@ function formatSystemNames(): string {
 
     // Show first system plus count
     return `${battle.value.systems[0].system_name} +${battle.value.systems.length - 1}`;
+}
+
+/**
+ * Groups all systems by their regions for display
+ * @returns An array of objects with regionName and systems array
+ */
+function groupSystemsByRegion() {
+    if (!battle.value?.systems || battle.value.systems.length === 0) {
+        return [{
+            regionName: { en: t('battle.unknown_region') },
+            systems: [t('battle.unknown_system')]
+        }];
+    }
+
+    // Group systems by region
+    const regionMap = new Map();
+
+    for (const system of battle.value.systems) {
+        const regionId = system.region_id;
+        const regionKey = regionId || 'unknown';
+
+        if (!regionMap.has(regionKey)) {
+            regionMap.set(regionKey, {
+                regionName: system.region_name || { en: t('battle.unknown_region') },
+                systems: []
+            });
+        }
+
+        regionMap.get(regionKey).systems.push(system.system_name);
+    }
+
+    // Convert map to array for template
+    return Array.from(regionMap.values());
 }
 
 // Computed properties for totals across all teams
@@ -423,17 +527,145 @@ useSeoMeta({
     color: #ef4444;
 }
 
+.text-purple-500 {
+    color: #8b5cf6;
+}
+
+.text-indigo-500 {
+    color: #6366f1;
+}
+
 .rounded-lg {
     border-radius: 0.5rem;
 }
 
+/* Redesigned battle-topbox */
 .battle-topbox {
-    background: light-dark(rgba(245, 245, 245, 0.7), rgba(26, 26, 26, 0.7));
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    background-color: var(--color-background-800);
     border-radius: 0.75rem;
     border: 1.5px solid var(--color-background-700, #282828);
-    box-shadow: 0 2px 8px 0 rgba(0, 0, 0, 0.07);
-    padding: 1.5rem 2rem 1.25rem 2rem;
+    box-shadow: 0 4px 12px 0 rgba(0, 0, 0, 0.1);
+    padding: 1.5rem;
     margin-bottom: 2rem;
-    border-bottom: 3px solid var(--color-background-700, #282828);
+}
+
+/* System header styling */
+.battle-header {
+    padding-bottom: 1rem;
+    border-bottom: 1px solid rgba(75, 85, 99, 0.2);
+}
+
+.system-info {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.system-icon {
+    width: 2rem;
+    height: 2rem;
+    color: #3b82f6;
+}
+
+.system-text {
+    flex: 1;
+    color: light-dark(#111827, #f9fafb);
+}
+
+.security-badge {
+    margin-left: 0.5rem;
+    padding: 0.25rem 0.5rem;
+    border-radius: 0.25rem;
+    background-color: var(--color-background-700);
+    color: var(--color-background-100);
+    font-size: 0.75rem;
+    vertical-align: middle;
+}
+
+.region-name {
+    margin-left: 0.5rem;
+    color: light-dark(#6b7280, #9ca3af);
+}
+
+.systems-container {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.system-region-group {
+    display: flex;
+    flex-direction: row;
+    gap: 0.5rem;
+    align-items: center;
+}
+
+/* Stats grid styling */
+.battle-stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 1rem;
+}
+
+.stat-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    background-color: light-dark(rgba(245, 245, 245, 0.1), rgba(26, 26, 26, 0.4));
+    border-radius: 0.5rem;
+    padding: 1rem;
+}
+
+.stat-group-title {
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: light-dark(#4b5563, #9ca3af);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-bottom: 0.25rem;
+    border-bottom: 1px solid light-dark(rgba(229, 231, 235, 0.3), rgba(75, 85, 99, 0.2));
+    padding-bottom: 0.5rem;
+}
+
+.stat-item {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+}
+
+.stat-label {
+    display: flex;
+    align-items: center;
+    gap: 0.375rem;
+    font-size: 0.875rem;
+    color: light-dark(#6b7280, #9ca3af);
+    font-weight: 500;
+}
+
+.stat-icon {
+    width: 1rem;
+    height: 1rem;
+}
+
+.stat-value {
+    font-size: 1rem;
+    font-weight: 600;
+    color: light-dark(#111827, #f9fafb);
+}
+
+/* Responsive adjustments */
+@media (max-width: 640px) {
+    .battle-stats-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (min-width: 768px) and (max-width: 1023px) {
+    .battle-stats-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
 }
 </style>

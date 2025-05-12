@@ -83,12 +83,22 @@
                 </UTabs>
             </div>
         </div>
-        <div v-else>
-            <div v-if="battleData && Object.keys(battleData).length === 0">
-                <span class="text-black dark:text-white">{{ t('battle.no_battle_found') }}</span>
+        <div v-else-if="pending">
+            <div class="flex flex-col items-center justify-center py-12">
+                <UIcon name="lucide:loader" class="w-12 h-12 animate-spin text-primary mb-4" />
+                <span class="text-xl font-medium">{{ t('battle.loading') }}</span>
             </div>
-            <div v-else>
-                <span class="text-black dark:text-white">{{ t('battle.loading') }}</span>
+        </div>
+        <div v-else-if="error && !pending">
+            <div class="flex flex-col items-center justify-center py-12">
+                <UIcon name="lucide:alert-circle" class="w-12 h-12 text-red-500 mb-4" />
+                <span class="text-xl font-medium">{{ t('battle.no_battle_found') }}</span>
+            </div>
+        </div>
+        <div v-else-if="!battleData && !pending">
+            <div class="flex flex-col items-center justify-center py-12">
+                <UIcon name="lucide:alert-circle" class="w-12 h-12 text-red-500 mb-4" />
+                <span class="text-xl font-medium">{{ t('battle.no_battle_found') }}</span>
             </div>
         </div>
     </div>
@@ -103,42 +113,73 @@ const { locale, t } = useI18n()
 
 const route = useRoute();
 
-const slugParts = computed(() => {
-    if (Array.isArray(route.params.slug)) {
-        return route.params.slug as string[];
-    }
-    if (typeof route.params.slug === 'string') { // Should be array with [...slug].vue
-        return [route.params.slug as string];
-    }
-    return [];
-});
+const entityId = computed(() => route.params.id as string || null);
 
-const isKillmailRoute = computed(() => {
-    return slugParts.value.length === 2 && slugParts.value[0].toLowerCase() === 'killmail';
-});
-
-const entityId = computed(() => {
-    if (isKillmailRoute.value) {
-        return slugParts.value[1];
-    }
-    if (slugParts.value.length === 1 && slugParts.value[0]) {
-        return slugParts.value[0];
-    }
-    return null;
-});
-
-const apiUrl = computed(() => {
+const battleUrl = computed(() => {
     if (!entityId.value) return null;
-    if (isKillmailRoute.value) {
-        return `/api/battles/killmail/${entityId.value}`;
-    }
     return `/api/battles/${entityId.value}`;
 });
 
-const { data: battleData, pending, error } = useFetch(apiUrl, {
-    key: `battle-${entityId.value}-${isKillmailRoute.value}`,
+const killmailBattleUrl = computed(() => {
+    if (!entityId.value) return null;
+    return `/api/battles/killmail/${entityId.value}`;
+});
+
+// First attempt to get battle data by battle ID
+const { data: battleByIdData, pending: battleByIdPending, error: battleByIdError } = useFetch(battleUrl, {
+    key: computed(() => entityId.value ? `battle-${entityId.value}` : null),
     lazy: true,
-    watch: [entityId, isKillmailRoute]
+    watch: [entityId]
+});
+
+// If first attempt fails, try to get battle data by killmail ID
+const shouldFetchByKillmailId = computed(() => {
+    return !battleByIdPending.value && (
+        battleByIdError.value ||
+        battleByIdData.value === null ||
+        (battleByIdData.value && Object.keys(battleByIdData.value).length === 0)
+    );
+});
+
+const { data: battleByKillmailData, pending: battleByKillmailPending, error: battleByKillmailError } = useFetch(
+    killmailBattleUrl, {
+    key: computed(() => shouldFetchByKillmailId.value && entityId.value ? `battle-killmail-${entityId.value}` : null),
+    lazy: true,
+    watch: [shouldFetchByKillmailId, entityId],
+    immediate: false
+});
+
+// Combined state variables for template usage
+const battleData = computed(() => battleByIdData.value || battleByKillmailData.value || null);
+const pending = computed(() => {
+    // Consider loading if either request is pending
+    // If the first request is still pending, we're loading
+    if (battleByIdPending.value) return true;
+
+    // If the first request completed and we should fetch by killmail ID,
+    // check if the second request is pending
+    if (shouldFetchByKillmailId.value && battleByKillmailPending.value) return true;
+
+    return false;
+});
+
+const error = computed(() => {
+    // Only show error if we're not loading and both requests failed or returned no data
+    if (pending.value) return null;
+
+    const firstRequestFailed = battleByIdError.value ||
+        !battleByIdData.value ||
+        Object.keys(battleByIdData.value || {}).length === 0;
+
+    const secondRequestFailed = battleByKillmailError.value ||
+        !battleByKillmailData.value ||
+        Object.keys(battleByKillmailData.value || {}).length === 0;
+
+    if (firstRequestFailed && (secondRequestFailed || !shouldFetchByKillmailId.value)) {
+        return new Error("No battle found for this killmail");
+    }
+
+    return null;
 });
 
 const battle = ref<any>(null);

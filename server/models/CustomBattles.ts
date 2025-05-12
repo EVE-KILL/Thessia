@@ -11,7 +11,7 @@ import type {
 } from "~/server/interfaces/ICustomBattles"; // Adjust the path as necessary
 
 // Extend the IBattles interface with Mongoose's Document interface
-export interface IBattlesDocument extends ICustomBattles, Document { }
+export interface ICustomBattlesDocument extends ICustomBattles, Document { }
 
 // Define a sub-schema for ICharacterShipManifestEntry
 const characterShipManifestEntrySchema = new Schema<ICustomCharacterShipManifestEntry>({
@@ -86,7 +86,7 @@ const topEntitySchema = new Schema<ICustomTopEntity>({
 }, { _id: false });
 
 // Define the battles schema
-const customBattlesSchema = new Schema<IBattlesDocument>(
+const customBattlesSchema = new Schema<ICustomBattlesDocument>(
     {
         battle_id: { type: Number, unique: true },
         custom: { type: Boolean, default: true },
@@ -140,7 +140,7 @@ const customBattlesSchema = new Schema<IBattlesDocument>(
 );
 
 // Create and export the battles model
-export const CustomBattles: Model<IBattlesDocument> = model<IBattlesDocument>(
+export const CustomBattles: Model<ICustomBattlesDocument> = model<ICustomBattlesDocument>(
     "custom_battles",
     customBattlesSchema,
     "custom_battles",

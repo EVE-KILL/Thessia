@@ -98,7 +98,7 @@ const formatNumber = (n: number | undefined | null): string => {
     return n.toLocaleString(undefined, { maximumFractionDigits: 0 });
 };
 
-const linkFn = (item: IBattlesDocument) => `/battle/${item.battle_id}`;
+const linkFn = (item: IBattlesDocument) => `/battle/killmail/${item.battle_id}`;
 const goToBattle = (item: IBattlesDocument) => router.push(linkFn(item));
 
 const getLocalizedString = (obj: any, localeKey: string): string => {

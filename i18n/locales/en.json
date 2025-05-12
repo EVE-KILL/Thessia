@@ -453,6 +453,7 @@
     "battle.damage_inflicted": "Damage Inflicted",
     "battle.no_battle_found": "No battle found for this killmail.",
     "battle.loading": "Loading...",
+    "battle.participants": "Participants",
     "teams.blue_team_organizations": "Blue Team Organizations",
     "teams.red_team_organizations": "Red Team Organizations",
     "teams.standalone_corporations": "Standalone Corporations",
@@ -559,6 +560,7 @@
     "donate.thankYouMessage": "We extend our sincere gratitude to everyone who supports EVE-KILL. Your contributions directly enable us to enhance our services, maintain reliable infrastructure, and develop new features for the entire EVE Online community. Your generosity makes a tangible difference while keeping our platform accessible to all.",
     "tools": "Tools",
     "battlegenerator": "Battle Generator",
+    "battle.no_battle_found_custom": "No battle has been found",
     "battleGenerator": {
         "title": "Battle Generator",
         "system": "System",
