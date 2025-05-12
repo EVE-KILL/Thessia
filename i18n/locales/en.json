@@ -564,6 +564,7 @@
     "battleGenerator": {
         "title": "Battle Generator",
         "system": "System",
+        "systems": "Systems",
         "searchForSystem": "Search for a system",
         "selected": "Selected",
         "startTime": "Start Time",

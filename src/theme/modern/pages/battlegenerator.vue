@@ -41,9 +41,7 @@ const editingSideD = ref(false);
 // Define reactive state
 const systemSearchTerm = ref('');
 const systemSearchResults = ref<{ id: number; name: string }[]>([]);
-const selectedSystems = ref<SelectedSystem[]>([
-
-]);
+const selectedSystems = ref<SelectedSystem[]>([]);
 const lastSystemSearchTerm = ref('');
 const startTime = ref();
 const endTime = ref();
@@ -53,6 +51,9 @@ const justSelected = ref(false); // New flag to prevent immediate search after s
 const showGeneratedData = ref(false); // Hide generated data by default
 const generatedData = ref<string>(''); // Keep this ref as it's used by other functions
 const MAX_SYSTEMS = 5;
+
+// Add a ref to track the currently selected result in the dropdown
+const selectedResultIndex = ref(-1);
 
 // Define the columns of entities
 const sideA = ref<Entity[]>([]);
@@ -149,8 +150,34 @@ async function searchSystems(term: string) {
     }
 }
 
-// Debounce the search function
+// Create a debounced version of the search function
 const debouncedSearch = useDebounceFn(searchSystems, 300);
+
+// Handle keyboard navigation
+const handleKeyDown = (e: KeyboardEvent) => {
+    // Only process if we have results and not at system limit
+    if (systemSearchResults.value.length === 0 || systemLimitReached.value) return;
+
+    switch (e.key) {
+        case 'ArrowDown':
+            e.preventDefault(); // Prevent cursor movement
+            selectedResultIndex.value = Math.min(selectedResultIndex.value + 1, systemSearchResults.value.length - 1);
+            break;
+        case 'ArrowUp':
+            e.preventDefault(); // Prevent cursor movement
+            selectedResultIndex.value = Math.max(selectedResultIndex.value - 1, 0);
+            break;
+        case 'Enter':
+            e.preventDefault(); // Prevent form submission
+            if (selectedResultIndex.value >= 0) {
+                selectSystem(systemSearchResults.value[selectedResultIndex.value]);
+            }
+            break;
+        case 'Escape':
+            systemSearchResults.value = []; // Clear results
+            break;
+    }
+};
 
 // Watch for changes to the search term
 watch(systemSearchTerm, (newTerm) => {
@@ -161,6 +188,19 @@ watch(systemSearchTerm, (newTerm) => {
         debouncedSearch(newTerm);
     } else {
         systemSearchResults.value = [];
+    }
+
+    // Reset the selected index whenever search term changes
+    selectedResultIndex.value = -1;
+});
+
+// Watch for changes to search results to auto-select a single result
+watch(systemSearchResults, (results) => {
+    // If there's only one result, select it automatically after a short delay
+    if (results.length === 1 && !justSelected.value) {
+        setTimeout(() => {
+            selectSystem(results[0]);
+        }, 500);
     }
 });
 
@@ -977,13 +1017,15 @@ const previewBattle = async () => {
                     <div class="relative">
                         <UInput id="systemSearch" v-model="systemSearchTerm"
                             :placeholder="t('battleGenerator.searchForSystem')" :class="inputClass"
-                            :disabled="systemLimitReached" />
+                            :disabled="systemLimitReached" @keydown="handleKeyDown" />
 
                         <!-- Search results dropdown with specific class name -->
                         <div v-if="systemSearchResults.length > 0 && !systemLimitReached"
                             class="system-search-dropdown absolute z-10 w-full rounded-md mt-1 max-h-60 overflow-y-auto">
-                            <div v-for="result in systemSearchResults" :key="result.id"
-                                class="search-result-item p-2 cursor-pointer" @click="selectSystem(result)">
+                            <div v-for="(result, index) in systemSearchResults" :key="result.id"
+                                class="search-result-item p-2 cursor-pointer"
+                                :class="{ 'search-result-selected': index === selectedResultIndex }"
+                                @click="selectSystem(result)">
                                 {{ result.name }}
                             </div>
                         </div>
@@ -1306,6 +1348,21 @@ input[type="datetime-local"] {
 
 .dark .search-result-item:hover {
     background-color: #374151;
+}
+
+/* Add styling for the selected item in dropdown */
+.search-result-selected {
+    background-color: #e0f2fe;
+    /* Light blue background */
+    color: #0369a1;
+    /* Darker blue text */
+}
+
+.dark .search-result-selected {
+    background-color: #0c4a6e;
+    /* Dark blue background */
+    color: #7dd3fc;
+    /* Light blue text */
 }
 
 /* Add additional style to ensure text wrapping maintains right alignment */
