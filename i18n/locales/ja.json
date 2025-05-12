@@ -469,6 +469,7 @@
     "battle.corporations": "企業",
     "battle.characters": "登場人物",
     "battle.timeline": "タイムライン",
+    "battle.unknown_region": "地域不明",
     "battle.ship": "船",
     "battle.victim": "被害者",
     "battle.attacker": "アタッカー",
@@ -478,6 +479,35 @@
     "battles": "バトル",
     "time": "時間",
     "involved": "関係者",
+    "apiErrors": {
+        "customBattles": {
+            "custom": {
+                "invalidBattleData": "無効な対戦データを受信した。battle_id が見つからないか、データが不正である。",
+                "databaseError": "データベースエラー：{message}",
+                "unknownDatabaseError": "不明なデータベースエラー",
+                "internalServerError": "内部サーバーエラー"
+            },
+            "preview": {
+                "systemRequired": "少なくとも1つのシステムが必要",
+                "maxSystems": "最大5システムまで使用可能",
+                "startTimeRequired": "開始時間が必要",
+                "endTimeRequired": "終了時間が必要",
+                "minSides": "少なくとも2面必要",
+                "maxSides": "最大4面まで",
+                "maxTimespan": "バトル時間は36時間を超えることはできません。より短い時間を選択してください。",
+                "noKillmails": "指定されたシステムと時間範囲にkillmailが見つかりませんでした。",
+                "internalServerError": "内部サーバーエラー"
+            },
+            "entities": {
+                "systemIdRequired": "少なくとも1つのシステムIDが必要",
+                "maxSystems": "最大5システムまで使用可能",
+                "startTimeRequired": "開始時間が必要",
+                "endTimeRequired": "終了時間が必要",
+                "maxTimespan": "バトル時間は36時間を超えることはできません。より短い時間を選択してください。",
+                "internalServerError": "内部サーバーエラー"
+            }
+        }
+    },
     "killInfo": {
         "details": "詳細",
         "victim": "被害者",
@@ -541,11 +571,26 @@
         "showCorpsInAlliances": "アライアンス企業の表示",
         "sideA": "サイドA",
         "sideB": "サイドB",
+        "sideC": "サイドC",
+        "sideD": "サイドD",
         "undecided": "未定",
         "memberOf": "メンバー",
         "save": "セーブ",
         "preview": "プレビュー",
         "battlePreview": "バトル・プレビュー",
+        "numSides": {
+            "two": "2面",
+            "three": "3面",
+            "four": "4面"
+        },
+        "tabs": {
+            "overview": "概要",
+            "kills": "キルズ",
+            "alliances": "アライアンス",
+            "corporations": "企業",
+            "characters": "登場人物",
+            "timeline": "タイムライン"
+        },
         "errors": {
             "systemRequired": "システムが必要",
             "startTimeRequired": "開始時間が必要",
@@ -553,7 +598,22 @@
             "maxTimespan": "時間幅は36時間を超えてはならない",
             "bothSidesRequired": "双方に少なくとも1つのエンティティが必要",
             "apiError": "APIエラー",
-            "unknownError": "不明なエラーが発生しました"
+            "unknownError": "不明なエラーが発生しました",
+            "maxSystemsReached": "{max} システムの最大数に達した。",
+            "previewRequired": "保存する前にプレビューデータが必要です。まずプレビューをクリックしてください。",
+            "sideCRequired": "3面または4面を選択した場合、C面には少なくとも1つの実体がなければならない。",
+            "sideDRequired": "4面を選択した場合、D面には少なくとも1つの実体がなければならない。"
+        }
+    },
+    "customBattle": {
+        "seo": {
+            "titlePattern": "カスタムバトル in{systemName} ({regionName}) |{start} -{end}",
+            "defaultTitle": "カスタムバトル｜イヴキル",
+            "descriptionPattern": "{systemName} ({regionName}) のカスタムバトル{start} から{end}. ISK Lost:{isk}, Ships Lost:{ships}.",
+            "defaultDescription": "EVE Online カスタムバトルの詳細",
+            "twitterImageAlt": {
+                "default": "EVEシステム"
+            }
         }
     }
 }
