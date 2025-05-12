@@ -115,8 +115,8 @@ const tabsUi = {
     tab: "p-2 text-sm font-semibold text-white rounded-lg bg-background-700 hover:bg-background-600 ml-2"
 };
 
-// Define common input styling
-const inputClass = "w-full font-sans text-sm h-10";
+// Define common input styling - updating to ensure consistent height and appearance
+const inputClass = "w-full font-sans text-sm";
 
 // Add a ref to control corporation visibility
 const showCorpsInAlliances = ref(true);
@@ -1015,8 +1015,8 @@ const previewBattle = async () => {
                         {{ t('battleGenerator.systems') }} ({{ selectedSystems.length }}/{{ MAX_SYSTEMS }})
                     </label>
                     <div class="relative">
-                        <UInput id="systemSearch" v-model="systemSearchTerm"
-                            :placeholder="t('battleGenerator.searchForSystem')" :class="inputClass"
+                        <input id="systemSearch" v-model="systemSearchTerm"
+                            :placeholder="t('battleGenerator.searchForSystem')" class="custom-input"
                             :disabled="systemLimitReached" @keydown="handleKeyDown" />
 
                         <!-- Search results dropdown with specific class name -->
@@ -1046,14 +1046,14 @@ const previewBattle = async () => {
                     <label for="startTime" class="block text-sm font-medium mb-1">
                         {{ t('battleGenerator.startTime') }}
                     </label>
-                    <UInput id="startTime" v-model="startTime" type="datetime-local" :class="inputClass" />
+                    <input id="startTime" v-model="startTime" type="datetime-local" class="custom-input" />
                 </div>
 
                 <div>
                     <label for="endTime" class="block text-sm font-medium mb-1">
                         {{ t('battleGenerator.endTime') }}
                     </label>
-                    <UInput id="endTime" v-model="endTime" type="datetime-local" :class="inputClass" />
+                    <input id="endTime" v-model="endTime" type="datetime-local" class="custom-input" />
                 </div>
             </div>
 
@@ -1095,7 +1095,7 @@ const previewBattle = async () => {
                         <UIcon name="i-lucide-edit-2" class="ml-2 w-4 h-4" />
                     </div>
                     <div v-else class="flex items-center">
-                        <UInput v-model="sideDName" size="sm" class="w-40" autofocus @blur="toggleEditSideD"
+                        <input v-model="sideDName" size="sm" class="custom-input w-40" autofocus @blur="toggleEditSideD"
                             @keyup.enter="toggleEditSideD" />
                     </div>
                 </div>
@@ -1129,7 +1129,7 @@ const previewBattle = async () => {
                         <UIcon name="i-lucide-edit-2" class="ml-2 w-4 h-4" />
                     </div>
                     <div v-else class="flex items-center">
-                        <UInput v-model="sideAName" size="sm" class="w-40" autofocus @blur="toggleEditSideA"
+                        <input v-model="sideAName" size="sm" class="custom-input w-40" autofocus @blur="toggleEditSideA"
                             @keyup.enter="toggleEditSideA" />
                     </div>
                 </div>
@@ -1202,7 +1202,7 @@ const previewBattle = async () => {
                         <UIcon name="i-lucide-edit-2" class="ml-2 w-4 h-4" />
                     </div>
                     <div v-else class="flex items-center">
-                        <UInput v-model="sideBName" size="sm" class="w-40" autofocus @blur="toggleEditSideB"
+                        <input v-model="sideBName" size="sm" class="custom-input w-40" autofocus @blur="toggleEditSideB"
                             @keyup.enter="toggleEditSideB" />
                     </div>
                 </div>
@@ -1236,7 +1236,7 @@ const previewBattle = async () => {
                         <UIcon name="i-lucide-edit-2" class="ml-2 w-4 h-4" />
                     </div>
                     <div v-else class="flex items-center">
-                        <UInput v-model="sideCName" size="sm" class="w-40" autofocus @blur="toggleEditSideC"
+                        <input v-model="sideCName" size="sm" class="custom-input w-40" autofocus @blur="toggleEditSideC"
                             @keyup.enter="toggleEditSideC" />
                     </div>
                 </div>
@@ -1320,9 +1320,56 @@ const previewBattle = async () => {
 input[type="datetime-local"] {
     font-family: inherit;
     font-size: inherit;
+    height: 38px; /* Match height of text inputs */
+    padding: 0.5rem 0.75rem;
+    box-sizing: border-box;
 }
 
-/* System dropdown styling with higher specificity */
+/* Unified custom input styling */
+.custom-input {
+    display: block;
+    width: 100%;
+    height: 38px;
+    padding: 0.5rem 0.75rem;
+    font-size: 0.875rem;
+    font-family: inherit;
+    color: #111827;
+    background-color: white;
+    border: 1px solid #d1d5db;
+    border-radius: 0.375rem;
+    box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+    outline: none;
+    transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+}
+
+.custom-input:focus {
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.3);
+}
+
+.custom-input:disabled {
+    background-color: #f3f4f6;
+    opacity: 0.7;
+    cursor: not-allowed;
+}
+
+/* Dark mode styles */
+.dark .custom-input {
+    color: #f9fafb;
+    background-color: #1f2937;
+    border-color: #4b5563;
+}
+
+.dark .custom-input:focus {
+    border-color: #60a5fa;
+    box-shadow: 0 0 0 2px rgba(96, 165, 250, 0.3);
+}
+
+.dark .custom-input:disabled {
+    background-color: #374151;
+}
+
+/* System dropdown styling */
 .system-search-dropdown {
     border: 2px solid #ccc;
     background-color: white;
