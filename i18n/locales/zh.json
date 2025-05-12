@@ -469,6 +469,7 @@
     "battle.corporations": "公司",
     "battle.characters": "人物",
     "battle.timeline": "时间表",
+    "battle.unknown_region": "未知地区",
     "battle.ship": "船舶",
     "battle.victim": "受害者",
     "battle.attacker": "攻击者",
@@ -478,6 +479,35 @@
     "battles": "战斗",
     "time": "时间",
     "involved": "参与",
+    "apiErrors": {
+        "customBattles": {
+            "custom": {
+                "invalidBattleData": "收到无效战斗数据。缺少 battle_id 或数据畸形。",
+                "databaseError": "数据库错误：{message}",
+                "unknownDatabaseError": "未知数据库错误",
+                "internalServerError": "内部服务器错误"
+            },
+            "preview": {
+                "systemRequired": "至少需要一个系统",
+                "maxSystems": "最多允许 5 个系统",
+                "startTimeRequired": "需要开始时间",
+                "endTimeRequired": "需要结束时间",
+                "minSides": "至少需要两面",
+                "maxSides": "最多允许 4 面",
+                "maxTimespan": "战斗时间跨度不能超过 36 小时。请选择更短的时间跨度。",
+                "noKillmails": "未找到指定系统和时间范围的 killmails",
+                "internalServerError": "内部服务器错误"
+            },
+            "entities": {
+                "systemIdRequired": "至少需要一个系统 ID",
+                "maxSystems": "最多允许 5 个系统",
+                "startTimeRequired": "需要开始时间",
+                "endTimeRequired": "需要结束时间",
+                "maxTimespan": "战斗时间跨度不能超过 36 小时。请选择更短的时间跨度。",
+                "internalServerError": "内部服务器错误"
+            }
+        }
+    },
     "killInfo": {
         "details": "详细信息",
         "victim": "受害者",
@@ -541,11 +571,26 @@
         "showCorpsInAlliances": "显示联盟中的公司",
         "sideA": "A 面",
         "sideB": "B 侧",
+        "sideC": "C 侧",
+        "sideD": "D 侧",
         "undecided": "未定",
         "memberOf": "成员",
         "save": "节省",
         "preview": "预览",
         "battlePreview": "战斗预告",
+        "numSides": {
+            "two": "2 面",
+            "three": "3 面",
+            "four": "4 面"
+        },
+        "tabs": {
+            "overview": "概述",
+            "kills": "击毙",
+            "alliances": "联盟",
+            "corporations": "公司",
+            "characters": "人物",
+            "timeline": "时间表"
+        },
         "errors": {
             "systemRequired": "需要系统",
             "startTimeRequired": "需要开始时间",
@@ -553,7 +598,22 @@
             "maxTimespan": "时间范围不能超过 36 小时",
             "bothSidesRequired": "双方必须至少有一个实体",
             "apiError": "API 错误",
-            "unknownError": "出现未知错误"
+            "unknownError": "出现未知错误",
+            "maxSystemsReached": "{max} 系统的最大访问量。",
+            "previewRequired": "保存前需要预览数据。请先点击预览。",
+            "sideCRequired": "选择 3 或 4 边时，C 边必须至少有一个实体。",
+            "sideDRequired": "选择 4 边时，D 边必须至少有一个实体。"
+        }
+    },
+    "customBattle": {
+        "seo": {
+            "titlePattern": "{systemName} 中的自定义战斗 ({regionName}) |{start} -{end}",
+            "defaultTitle": "自定义战斗 | EVE-KILL",
+            "descriptionPattern": "自定义战斗在{systemName} ({regionName}) 从{start} 到{end} 。 ISK 损失：{isk} ，船只损失：{ships} 。",
+            "defaultDescription": "EVE Online 自定义战斗详情",
+            "twitterImageAlt": {
+                "default": "EVE 系统"
+            }
         }
     }
 }
