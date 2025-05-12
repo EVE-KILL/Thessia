@@ -18,122 +18,104 @@ export interface ICustomCharacterShipManifestEntry {
     damage_dealt?: number;
 }
 
-// New helper interfaces
+// Helper interface for entity statistics (alliances, corporations, characters)
 export interface ICustomEntityStats {
     id: number;
     name: string;
-    alliance_id?: number;
-    alliance_name?: string;
+    alliance_id?: number; // Optional, e.g., for characters or corps not in an alliance
+    alliance_name?: string; // Optional
     kills: number;
     losses: number;
     valueInflicted: number;
     valueSuffered: number;
 }
 
+// Helper interface for team summary statistics
 export interface ICustomTeamSummaryStats {
     iskLost: number;
     shipsLost: number;
-    damageInflicted: number;
+    damageInflicted: number; // Total damage dealt by this team
 }
 
+// Helper interface for entity items (e.g., in team definitions)
 export interface ICustomEntityItem {
     id: number;
     name?: string;
 }
 
+// Helper interface for system information (multiple systems can be involved)
 export interface ICustomSystemInfo {
     system_id: number;
-    system_name: string;
+    system_name: string; // Name is typically string from SDE
     system_security: number;
     region_id: number;
-    region_name: Record<string, string> | ITranslation;
+    region_name: ITranslation | string; // Name can be ITranslation or string
 }
 
+// Helper interface for data specific to a side/team in a battle
 export interface ICustomSideData {
-    id: string;
-    name: string;
+    id: string; // e.g., "blue", "red", or a generated ID
+    name: string; // Team name, e.g., "Team A"
     alliances: ICustomEntityItem[];
     corporations: ICustomEntityItem[];
-    kill_ids: number[];
+    kill_ids: number[]; // Killmails attributed to this side's victims or inflicted by this side
     stats: ICustomTeamSummaryStats;
     alliances_stats: ICustomEntityStats[];
     corporations_stats: ICustomEntityStats[];
     characters_stats: ICustomEntityStats[];
-    ship_manifest: ICustomCharacterShipManifestEntry[];
+    ship_manifest: ICustomCharacterShipManifestEntry[]; // Ships involved for this side
 }
 
+// Helper interface for top entities (alliances, corporations, ship types)
 export interface ICustomTopEntity {
     id: number;
-    name: string | Record<string, string>;
+    name: string | ITranslation; // Name can be string or ITranslation (e.g., for ship types)
     count: number;
 }
 
-// Main IBattles interface modification
+// Main interface for Custom Battles, reflecting the structure from compileFullBattleData
 export interface ICustomBattles {
     battle_id: number;
-    custom?: boolean;
+    custom?: boolean; // Indicates if the battle was manually created/defined
     start_time: Date;
     end_time: Date;
     duration_ms?: number;
-    system_id: number;
-    system_name?: string;
-    region_id: number;
-    region_name?: Record<string, string> | ITranslation;
-    system_security?: number;
+
+    systems?: ICustomSystemInfo[]; // Array of systems involved in the battle
+
     killmailsCount: number;
-    iskDestroyed: number;
+    iskDestroyed: number; // Total ISK value of ships destroyed
+
+    // Arrays of IDs for all involved entities across all sides
     alliancesInvolved: number[];
     corporationsInvolved: number[];
     charactersInvolved: number[];
+
+    // Counts of unique involved entities
     involved_alliances_count?: number;
     involved_corporations_count?: number;
     involved_characters_count?: number;
+
+    // Top entities involved in the battle
     top_alliances?: Array<{
         id: number;
-        name: string;
-        count: number;
+        name: string; // Alliance names are typically strings
+        count: number; // e.g., number of members involved or killmails
     }>;
     top_corporations?: Array<{
         id: number;
-        name: string;
+        name: string; // Corporation names are typically strings
         count: number;
     }>;
-    top_ship_types?: Array<{
-        id: number;
-        name: Record<string, string> | ITranslation;
-        count: number;
-    }>;
+    top_ship_types?: ICustomTopEntity[]; // Ship types, name can be ITranslation
 
-    // Existing team definitions (identifying members)
-    blue_team: {
-        alliances: Array<{ id: number; name: string; }>;
-        corporations: Array<{ id: number; name: string; }>;
-    };
-    red_team: {
-        alliances: Array<{ id: number; name: string; }>;
-        corporations: Array<{ id: number; name: string; }>;
-    };
+    killmail_ids?: number[]; // All killmail IDs included in this battle
 
-    // New fields for detailed data
-    killmail_ids?: number[]; // For the timeline, changed from killmails
+    // Defines the participating sides and their specific data
+    side_ids?: string[]; // Array of keys used in the 'sides' object (e.g., ["blue", "red"])
+    sides?: Record<string, ICustomSideData>; // Object mapping side ID to detailed side data
 
-    blue_team_kill_ids?: number[]; // Changed from blue_team_kills
-    red_team_kill_ids?: number[];   // Changed from red_team_kills
-
-    blue_team_stats?: ICustomTeamSummaryStats;
-    red_team_stats?: ICustomTeamSummaryStats;
-
-    blue_team_alliances_stats?: ICustomEntityStats[];
-    red_team_alliances_stats?: ICustomEntityStats[];
-    blue_team_corporations_stats?: ICustomEntityStats[];
-    red_team_corporations_stats?: ICustomEntityStats[];
-    blue_team_characters_stats?: ICustomEntityStats[];
-    red_team_characters_stats?: ICustomEntityStats[];
-
+    // Timestamps automatically managed by Mongoose
     updatedAt?: Date;
     createdAt?: Date;
-
-    // Ship manifest tracking
-    blue_team_ship_manifest?: ICharacterShipManifestEntry[];
-    red_team_ship_manifest?: ICharacterShipManifestEntry[];
 }
