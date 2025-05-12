@@ -469,6 +469,7 @@
     "battle.corporations": "Корпорации",
     "battle.characters": "Персонажи",
     "battle.timeline": "Временная шкала",
+    "battle.unknown_region": "Неизвестный регион",
     "battle.ship": "Корабль",
     "battle.victim": "Жертва",
     "battle.attacker": "Атакующий",
@@ -478,6 +479,35 @@
     "battles": "Сражения",
     "time": "Время",
     "involved": "Вовлеченные",
+    "apiErrors": {
+        "customBattles": {
+            "custom": {
+                "invalidBattleData": "Получены неверные данные о сражении. Отсутствует battle_id или данные неправильно сформированы.",
+                "databaseError": "Ошибка базы данных: {message}",
+                "unknownDatabaseError": "Неизвестная ошибка базы данных",
+                "internalServerError": "Внутренняя ошибка сервера"
+            },
+            "preview": {
+                "systemRequired": "Требуется как минимум одна система",
+                "maxSystems": "Разрешено не более 5 систем",
+                "startTimeRequired": "Необходимо время начала",
+                "endTimeRequired": "Требуется время окончания",
+                "minSides": "Необходимо наличие как минимум двух сторон",
+                "maxSides": "Допускается не более 4 сторон",
+                "maxTimespan": "Продолжительность битвы не может превышать 36 часов. Пожалуйста, выберите меньший промежуток времени.",
+                "noKillmails": "Не найдено ни одного killmails для указанных систем и временного диапазона",
+                "internalServerError": "Внутренняя ошибка сервера"
+            },
+            "entities": {
+                "systemIdRequired": "Требуется хотя бы один системный идентификатор",
+                "maxSystems": "Разрешено не более 5 систем",
+                "startTimeRequired": "Необходимо время начала",
+                "endTimeRequired": "Требуется время окончания",
+                "maxTimespan": "Продолжительность битвы не может превышать 36 часов. Пожалуйста, выберите меньший промежуток времени.",
+                "internalServerError": "Внутренняя ошибка сервера"
+            }
+        }
+    },
     "killInfo": {
         "details": "Подробности",
         "victim": "Жертва",
@@ -541,11 +571,26 @@
         "showCorpsInAlliances": "Покажите корпорации в альянсах",
         "sideA": "Сторона A",
         "sideB": "Сторона B",
+        "sideC": "Сторона C",
+        "sideD": "Сторона D",
         "undecided": "Не определившиеся",
         "memberOf": "Член",
         "save": "Сохранить",
         "preview": "Предварительный просмотр",
         "battlePreview": "Предварительный просмотр битвы",
+        "numSides": {
+            "two": "2 стороны",
+            "three": "3 стороны",
+            "four": "4 стороны"
+        },
+        "tabs": {
+            "overview": "Обзор",
+            "kills": "Убивает",
+            "alliances": "Альянсы",
+            "corporations": "Корпорации",
+            "characters": "Персонажи",
+            "timeline": "Временная шкала"
+        },
         "errors": {
             "systemRequired": "Требуется система",
             "startTimeRequired": "Необходимо время начала",
@@ -553,7 +598,22 @@
             "maxTimespan": "Диапазон времени не может превышать 36 часов",
             "bothSidesRequired": "Обе стороны должны иметь хотя бы одну сущность",
             "apiError": "Ошибка API",
-            "unknownError": "Произошла неизвестная ошибка"
+            "unknownError": "Произошла неизвестная ошибка",
+            "maxSystemsReached": "Максимальное количество систем {max} достигнуто.",
+            "previewRequired": "Перед сохранением требуется предварительный просмотр данных. Пожалуйста, сначала нажмите кнопку Предварительный просмотр.",
+            "sideCRequired": "Сторона C должна содержать хотя бы одну сущность, если выбраны 3 или 4 стороны.",
+            "sideDRequired": "Сторона D должна содержать хотя бы одну сущность, если выбраны 4 стороны."
+        }
+    },
+    "customBattle": {
+        "seo": {
+            "titlePattern": "Пользовательская битва в {systemName} ({regionName}) | {start} - {end}",
+            "defaultTitle": "Пользовательская битва | EVE-KILL",
+            "descriptionPattern": "Пользовательский бой в {systemName} ({regionName}) с {start} по {end}. Потеряно ISK: {isk}, Потеряно кораблей: {ships}.",
+            "defaultDescription": "Подробности пользовательского боя EVE Online",
+            "twitterImageAlt": {
+                "default": "Система EVE"
+            }
         }
     }
 }
