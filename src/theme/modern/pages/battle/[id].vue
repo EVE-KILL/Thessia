@@ -1,7 +1,7 @@
 <template>
     <div class="p-4 bg-background-900 rounded-lg shadow-lg text-black dark:text-white">
-        <!-- Check pending state first to ensure loading indicator is always shown when loading -->
-        <div v-if="pending">
+        <!-- Show loading state based on either pending or our custom isLoading flag -->
+        <div v-if="pending || isLoading">
             <div class="flex flex-col items-center justify-center py-12">
                 <UIcon name="lucide:loader" class="w-12 h-12 animate-spin text-primary mb-4" />
                 <span class="text-xl font-medium">{{ t('battle.loading') }}</span>
@@ -162,6 +162,7 @@
                 </UTabs>
             </div>
         </div>
+        <!-- Only show error if we're not loading and there's no battle data -->
         <div v-else>
             <div class="flex flex-col items-center justify-center py-12">
                 <UIcon name="lucide:alert-circle" class="w-12 h-12 text-red-500 mb-4" />
@@ -172,7 +173,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref, watchEffect } from 'vue';
+import { computed, ref, watchEffect, onMounted } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useRoute } from 'vue-router';
 
@@ -182,25 +183,35 @@ const route = useRoute();
 
 const entityId = computed(() => route.params.id as string || null);
 
+// Used to track the loading state separately from useFetch's pending
+const isLoading = ref(true);
+
 const apiUrl = computed(() => {
     if (!entityId.value) return null;
     return `/api/battles/${entityId.value}`;
 });
 
-const { data: battleData, pending, error } = useFetch(apiUrl, {
+// Set immediate to true and remove lazy to ensure it runs properly on page load
+const { data: battleData, pending, error, refresh } = useFetch(apiUrl, {
     key: computed(() => entityId.value ? `battle-${entityId.value}` : null),
-    lazy: true,
+    immediate: true,
     watch: [entityId],
     onRequest({ request, options }) {
-        // Reset battle value when starting a new request
         battle.value = null;
+        isLoading.value = true;
+    },
+    onResponse({ response }) {
+        isLoading.value = false;
     },
     onResponseError(context) {
-        // Log error details for debugging purposes
-        console.error('Battle fetch error:', {
-            status: context.response.status,
-            statusText: context.response.statusText
-        });
+        isLoading.value = false;
+    }
+});
+
+// Add this to ensure the fetch runs if entityId is already available
+onMounted(() => {
+    if (entityId.value) {
+        refresh();
     }
 });
 
@@ -213,9 +224,6 @@ const teamStats = ref<Record<string, any>>({});
 const teamAlliances = ref<Record<string, any[]>>({});
 const teamCorporations = ref<Record<string, any[]>>({});
 const teamCharacters = ref<Record<string, any[]>>({});
-
-// Add debug flag - set to true temporarily for debugging
-const showDebug = ref(true);
 
 // Get the primary system info for simplified display
 const primarySystem = computed(() => {
@@ -431,7 +439,6 @@ watchEffect(async () => {
                     }
                 }
             } catch (error) {
-                console.error('Error fetching killmails in batch:', error);
                 killmails.value = [];
             }
         } else {

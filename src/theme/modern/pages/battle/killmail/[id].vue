@@ -104,7 +104,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref, watchEffect } from 'vue';
+import { computed, ref, watchEffect, onMounted } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useRoute } from 'vue-router';
 
@@ -142,14 +142,13 @@ async function fetchBattleData() {
     try {
         // Fetch from both endpoints in parallel
         const [battleResponse, killmailBattleResponse] = await Promise.all([
-            $fetch(`/api/battles/${entityId.value}`).catch(() => null),
+            $fetch(`/api/battles/killmail/${entityId.value}/saved`).catch(() => null),
             $fetch(`/api/battles/killmail/${entityId.value}`).catch(() => null)
         ]);
 
         // Handle the different possible outcomes
         if (battleResponse && killmailBattleResponse) {
             // Edge case: Both endpoints returned data - this shouldn't happen
-            console.warn('Both endpoints returned data for the same ID. Using battle endpoint data.');
             processBattleData(battleResponse);
         } else if (battleResponse) {
             // Battle endpoint had data
@@ -162,7 +161,6 @@ async function fetchBattleData() {
             loadingError.value = t('battle.no_battle_found');
         }
     } catch (error) {
-        console.error('Error fetching battle data:', error);
         loadingError.value = t('battle.error_loading');
     } finally {
         isLoading.value = false;
@@ -244,6 +242,13 @@ async function processBattleData(data: any) {
 
 // Trigger data fetch when entityId changes
 watchEffect(() => {
+    if (entityId.value) {
+        fetchBattleData();
+    }
+});
+
+// Add explicit onMounted to ensure it runs on initial load
+onMounted(() => {
     if (entityId.value) {
         fetchBattleData();
     }
