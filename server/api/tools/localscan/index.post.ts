@@ -1,10 +1,10 @@
 import { createHash } from 'crypto';
 import { calculateShortStats } from '~/server/helpers/Stats';
-import { Alliances } from '~/server/models/Alliances'; // Assuming Alliances model
-import { Characters } from '~/server/models/Characters'; // Assuming Characters model
-import { Corporations } from '~/server/models/Corporations'; // Assuming Corporations model
-import { Killmails } from '~/server/models/Killmails'; // Assuming Killmails model is exported like this
-import { LocalScan } from '~/server/models/LocalScan'; // Assuming LocalScan model
+import { Alliances } from '~/server/models/Alliances';
+import { Characters } from '~/server/models/Characters';
+import { Corporations } from '~/server/models/Corporations';
+import { Killmails } from '~/server/models/Killmails';
+import { LocalScan } from '~/server/models/LocalScan';
 
 // Define interfaces for the stats and character data
 interface ShortStats {
@@ -26,13 +26,13 @@ interface CharacterScanStats {
 
 interface CharacterWithStats {
     name: string;
-    character_id?: number; // Include character_id for potential future use
+    character_id?: number;
     stats: CharacterScanStats;
 }
 
-function escapeRegExp(string: string): string {
-    return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); // $& means the whole matched string
-}
+// Constants for validation limits
+const MAX_LINE_LENGTH = 64;
+const MAX_LINES = 4096;
 
 export default defineEventHandler(async (event) => {
     try {
@@ -42,6 +42,26 @@ export default defineEventHandler(async (event) => {
             throw createError({
                 statusCode: 400,
                 message: 'No valid character names provided'
+            });
+        }
+
+        // Validate line count
+        if (characterNames.length > MAX_LINES) {
+            throw createError({
+                statusCode: 400,
+                message: `Too many character names. Maximum allowed is ${MAX_LINES}`
+            });
+        }
+
+        // Filter out names that are too long
+        const validNames = characterNames.filter(name =>
+            typeof name === 'string' && name.trim().length > 0 && name.trim().length <= MAX_LINE_LENGTH
+        );
+
+        if (validNames.length === 0) {
+            throw createError({
+                statusCode: 400,
+                message: 'No valid character names found after filtering'
             });
         }
 
@@ -67,23 +87,12 @@ export default defineEventHandler(async (event) => {
         };
 
         // Process each character name in parallel
-        const characterProcessingPromises = characterNames.map(async (characterNameInput) => {
-            const originalTrimmedName = String(characterNameInput).trim();
-            if (!originalTrimmedName) return null;
+        const characterProcessingPromises = validNames.map(async (characterNameInput) => {
+            const trimmedName = String(characterNameInput).trim();
+            if (!trimmedName) return null;
 
-            const nameForQueryPurposes = originalTrimmedName.replace(/[^\w\s.-]/g, '');
-            if (!nameForQueryPurposes) return null;
-
-            let query;
-            if (originalTrimmedName === nameForQueryPurposes) {
-                // Case-sensitive exact match
-                query = { name: originalTrimmedName };
-            } else {
-                // Case-insensitive exact match on the sanitized name
-                query = { name: { $regex: `^${escapeRegExp(nameForQueryPurposes)}$`, $options: 'i' } };
-            }
-
-            const character = await Characters.findOne(query).lean();
+            // Simplified direct lookup by name - no regex
+            const character = await Characters.findOne({ name: trimmedName }).lean();
             if (!character || !character.character_id) return null;
 
             let shortStatsData: ShortStats;
@@ -138,10 +147,17 @@ export default defineEventHandler(async (event) => {
         });
 
         const processedCharacterDataArray = await Promise.all(characterProcessingPromises);
+        // Filter out null values to handle cases where no matching character was found
+        const validProcessedData = processedCharacterDataArray.filter(Boolean);
 
-        for (const processedData of processedCharacterDataArray) {
-            if (!processedData) continue;
+        if (validProcessedData.length === 0) {
+            throw createError({
+                statusCode: 404,
+                message: 'No valid characters found in EVE database'
+            });
+        }
 
+        for (const processedData of validProcessedData) {
             const { characterDoc, corporationDoc, allianceDoc, characterDataWithStats } = processedData;
 
             if (characterDoc.corporation_id) {

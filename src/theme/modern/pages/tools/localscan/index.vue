@@ -8,6 +8,10 @@ const router = useRouter();
 const isLoading = ref(false);
 const error = ref<string | null>(null);
 
+// Constants for validation limits
+const MAX_LINE_LENGTH = 64;
+const MAX_LINES = 4096;
+
 const processNamesAndSubmit = async (text: string) => {
     if (!text.trim()) {
         error.value = t('tools.localscan.empty_clipboard');
@@ -15,37 +19,78 @@ const processNamesAndSubmit = async (text: string) => {
     }
 
     // Parse names and remove empty lines
-    const names = text.split('\n')
+    const lines = text.split('\n');
+
+    // Check for line count limit
+    if (lines.length > MAX_LINES) {
+        error.value = t('tools.localscan.too_many_lines', { max: MAX_LINES });
+        return;
+    }
+
+    const names = lines
         .map(name => name.trim())
-        .filter(name => name !== '');
+        .filter(name => name !== '' && name.length <= MAX_LINE_LENGTH); // Filter out lines that are too long
 
     if (names.length === 0) {
         error.value = t('tools.localscan.no_names');
         return;
     }
 
-    // Send to API
-    const { data, error: fetchError } = await useFetch('/api/tools/localscan', {
-        method: 'POST',
-        body: names
-    });
-
-    if (fetchError.value) {
-        error.value = t('tools.localscan.error_processing');
-        console.error(fetchError.value);
-        return;
+    // Log if any lines were skipped due to length
+    if (names.length < lines.filter(line => line.trim() !== '').length) {
+        console.warn(`Skipped ${lines.filter(line => line.trim() !== '').length - names.length} names that exceeded the maximum length of ${MAX_LINE_LENGTH} characters`);
     }
 
-    // Navigate to result page with hash
-    console.log('LocalScan API Response Data:', JSON.stringify(data.value, null, 2));
-    if (data.value && typeof data.value.hash === 'string' && data.value.hash.length > 0) {
-        try {
-            await router.push(`/tools/localscan/${data.value.hash}`);
-        } catch (navigationError) {
-            error.value = t('tools.localscan.navigation_error');
+    // Send to API
+    try {
+        isLoading.value = true;
+        error.value = null;
+
+        const response = await fetch('/api/tools/localscan', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(names)
+        });
+
+        // First check if response is ok
+        if (!response.ok) {
+            // Try to parse error message from JSON response
+            try {
+                const errorData = await response.json();
+                // Use the server's error message if available
+                error.value = errorData.message || t('tools.localscan.error_processing');
+            } catch (parseError) {
+                // If JSON parsing fails, use a generic error based on status code
+                if (response.status === 404) {
+                    error.value = t('tools.localscan.no_valid_characters');
+                } else {
+                    error.value = `${t('tools.localscan.error_processing')} (${response.status})`;
+                }
+            }
+
+            console.error('API error:', response.status, error.value);
+            return;
         }
-    } else {
-        error.value = t('tools.localscan.invalid_response');
+
+        // If we get here, the response is ok, so parse the data
+        const data = await response.json();
+
+        // Navigate to result page with hash
+        if (data && typeof data.hash === 'string' && data.hash.length > 0) {
+            try {
+                await router.push(`/tools/localscan/${data.hash}`);
+            } catch (navigationError) {
+                error.value = t('tools.localscan.navigation_error');
+            }
+        } else {
+            error.value = t('tools.localscan.invalid_response');
+        }
+    } catch (e) {
+        error.value = t('tools.localscan.error_processing');
+    } finally {
+        isLoading.value = false;
     }
 };
 
@@ -59,7 +104,6 @@ const handlePaste = async () => {
         await processNamesAndSubmit(text);
     } catch (e) {
         error.value = t('tools.localscan.clipboard_error');
-    } finally {
         isLoading.value = false;
     }
 };
@@ -75,7 +119,6 @@ const onDocumentPaste = async (event: ClipboardEvent) => {
         await processNamesAndSubmit(text);
     } catch (e) {
         error.value = t('tools.localscan.clipboard_error');
-    } finally {
         isLoading.value = false;
     }
 };
@@ -111,14 +154,12 @@ onUnmounted(() => {
 
                 <div class="flex justify-center mt-2">
                     <UButton :loading="isLoading" :disabled="isLoading" @click="handlePaste">
-                        <UIcon name="clipboard" class="mr-2" />
+                        <UIcon name="i-lucide-clipboard" class="mr-2" />
                         {{ t('tools.localscan.paste_button') }}
                     </UButton>
                 </div>
 
-                <UAlert v-if="error" color="red">
-                    {{ error }}
-                </UAlert>
+                <UAlert v-if="error" color="error" class="mt-4" :description="error" />
             </div>
         </UContainer>
     </div>
