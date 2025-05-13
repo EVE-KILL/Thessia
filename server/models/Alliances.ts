@@ -1,6 +1,8 @@
 // models/Alliances.ts
 
 import { type Document, type Model, Schema, model } from "mongoose";
+import { cliLogger } from "~/server/helpers/Logger";
+import { Meilisearch } from "~/server/helpers/Meilisearch";
 import type { IAlliance } from "~/server/interfaces/IAlliance"; // Adjust the path as necessary
 
 // Extend the IAlliance interface with Mongoose's Document interface
@@ -38,6 +40,27 @@ alliancesSchema.index({ creator_corporation_id: 1 }, { sparse: true }); // Spars
 alliancesSchema.index({ executor_corporation_id: 1 }, { sparse: true }); // Sparse index on executor_corporation_id
 alliancesSchema.index({ createdAt: 1 }, { sparse: true }); // Sparse index on createdAt
 alliancesSchema.index({ updatedAt: 1 }, { sparse: true }); // Sparse index on updatedAt
+
+// Hook to update Meilisearch on new document save
+alliancesSchema.post<IAllianceDocument>('save', async function (doc) {
+    if (this.isNew) {
+        try {
+            const meilisearch = new Meilisearch();
+            const allianceDocument = {
+                id: doc.alliance_id,
+                name: doc.name,
+                ticker: doc.ticker,
+                type: 'alliance',
+                rank: 5,
+                lang: 'all',
+            };
+            await meilisearch.addDocuments('nitro', [allianceDocument]);
+            cliLogger.info(`Indexed new alliance ${doc.alliance_id} in Meilisearch`);
+        } catch (error) {
+            cliLogger.error(`Error indexing new alliance ${doc.alliance_id} in Meilisearch: ${error}`);
+        }
+    }
+});
 
 // Create and export the Alliances model
 export const Alliances: Model<IAllianceDocument> = model<IAllianceDocument>(
