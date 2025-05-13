@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, ref, watch } from "vue";
+import { computed, onMounted, onUnmounted, ref, watch } from "vue";
 import {
     DEFAULT_LIMIT,
     type FilterCondition,
@@ -171,6 +171,145 @@ const savedQueryId = ref<string | null>(null);
 
 const route = useRoute();
 const router = useRouter();
+
+// Create refs for custom dropdowns
+const fieldDropdownOpen = ref<Record<string, boolean>>({});
+const operatorDropdownOpen = ref<Record<string, boolean>>({});
+const sortFieldDropdownOpen = ref(false);
+const sortDirectionDropdownOpen = ref(false);
+const conjunctionDropdownOpen = ref(false);
+
+// Functions to toggle dropdowns
+const toggleFieldDropdown = (facetId: string) => {
+    // Close any other open dropdowns
+    for (const key in fieldDropdownOpen.value) {
+        if (key !== facetId) fieldDropdownOpen.value[key] = false;
+    }
+    for (const key in operatorDropdownOpen.value) {
+        operatorDropdownOpen.value[key] = false;
+    }
+    sortFieldDropdownOpen.value = false;
+    sortDirectionDropdownOpen.value = false;
+    conjunctionDropdownOpen.value = false;
+
+    // Toggle this dropdown
+    fieldDropdownOpen.value[facetId] = !fieldDropdownOpen.value[facetId];
+};
+
+const toggleOperatorDropdown = (facetId: string) => {
+    // Close any other open dropdowns
+    for (const key in fieldDropdownOpen.value) {
+        fieldDropdownOpen.value[key] = false;
+    }
+    for (const key in operatorDropdownOpen.value) {
+        if (key !== facetId) operatorDropdownOpen.value[key] = false;
+    }
+    sortFieldDropdownOpen.value = false;
+    sortDirectionDropdownOpen.value = false;
+    conjunctionDropdownOpen.value = false;
+
+    // Toggle this dropdown
+    operatorDropdownOpen.value[facetId] = !operatorDropdownOpen.value[facetId];
+};
+
+const toggleSortFieldDropdown = () => {
+    // Close other dropdowns
+    for (const key in fieldDropdownOpen.value) {
+        fieldDropdownOpen.value[key] = false;
+    }
+    for (const key in operatorDropdownOpen.value) {
+        operatorDropdownOpen.value[key] = false;
+    }
+    sortDirectionDropdownOpen.value = false;
+    conjunctionDropdownOpen.value = false;
+
+    // Toggle this dropdown
+    sortFieldDropdownOpen.value = !sortFieldDropdownOpen.value;
+};
+
+const toggleSortDirectionDropdown = () => {
+    // Close other dropdowns
+    for (const key in fieldDropdownOpen.value) {
+        fieldDropdownOpen.value[key] = false;
+    }
+    for (const key in operatorDropdownOpen.value) {
+        operatorDropdownOpen.value[key] = false;
+    }
+    sortFieldDropdownOpen.value = false;
+    conjunctionDropdownOpen.value = false;
+
+    // Toggle this dropdown
+    sortDirectionDropdownOpen.value = !sortDirectionDropdownOpen.value;
+};
+
+const toggleConjunctionDropdown = () => {
+    // Close other dropdowns
+    for (const key in fieldDropdownOpen.value) {
+        fieldDropdownOpen.value[key] = false;
+    }
+    for (const key in operatorDropdownOpen.value) {
+        operatorDropdownOpen.value[key] = false;
+    }
+    sortFieldDropdownOpen.value = false;
+    sortDirectionDropdownOpen.value = false;
+
+    // Toggle this dropdown
+    conjunctionDropdownOpen.value = !conjunctionDropdownOpen.value;
+};
+
+// Close dropdown when clicking outside
+const clickOutsideHandler = (e: MouseEvent) => {
+    const target = e.target as HTMLElement;
+
+    // If click is on dropdown toggle button or inside dropdown, don't close
+    if (target.closest('.dropdown-toggle') || target.closest('.dropdown-menu')) return;
+
+    // Close all dropdowns
+    for (const key in fieldDropdownOpen.value) {
+        fieldDropdownOpen.value[key] = false;
+    }
+    for (const key in operatorDropdownOpen.value) {
+        operatorDropdownOpen.value[key] = false;
+    }
+    sortFieldDropdownOpen.value = false;
+    sortDirectionDropdownOpen.value = false;
+    conjunctionDropdownOpen.value = false;
+};
+
+// Set up click outside listener
+onMounted(() => {
+    document.addEventListener('click', clickOutsideHandler);
+});
+
+onUnmounted(() => {
+    document.removeEventListener('click', clickOutsideHandler);
+});
+
+// Exposed methods for setting values in custom dropdown
+const setFieldValue = (facetId: string, value: string) => {
+    handleFieldChange(facetId, value);
+    fieldDropdownOpen.value[facetId] = false;
+};
+
+const setOperatorValue = (facetId: string, value: string) => {
+    handleOperatorChange(facetId, value);
+    operatorDropdownOpen.value[facetId] = false;
+};
+
+const setSortFieldValue = (value: QueryableField) => {
+    sortField.value = value;
+    sortFieldDropdownOpen.value = false;
+};
+
+const setSortDirectionValue = (value: SortDirection) => {
+    sortDirection.value = value;
+    sortDirectionDropdownOpen.value = false;
+};
+
+const setConjunctionValue = (value: "and" | "or") => {
+    conjunction.value = value;
+    conjunctionDropdownOpen.value = false;
+};
 
 // Parse a saved query into facets, sort, etc.
 function parseQueryToUI(savedQuery: QueryAPIRequest) {
@@ -563,6 +702,56 @@ const removeValueFromArray = (facetId: string, value: any) => {
     }
 };
 
+// Add a ref to track the currently selected result in the dropdown for keyboard navigation
+const selectedResultIndex = ref<Record<string, number>>({});
+
+// Handle keyboard navigation for search dropdowns
+const handleKeyDown = (facetId: string, e: KeyboardEvent) => {
+    const facet = facets.value.find(f => f.id === facetId);
+    if (!facet || !facet.searchResults || facet.searchResults.length === 0) return;
+
+    // Initialize selectedResultIndex for this facet if not exists
+    if (selectedResultIndex.value[facetId] === undefined) {
+        selectedResultIndex.value[facetId] = -1;
+    }
+
+    switch (e.key) {
+        case 'ArrowDown':
+            e.preventDefault(); // Prevent cursor movement
+            selectedResultIndex.value[facetId] = Math.min(
+                (selectedResultIndex.value[facetId] + 1),
+                facet.searchResults.length - 1
+            );
+            break;
+        case 'ArrowUp':
+            e.preventDefault(); // Prevent cursor movement
+            selectedResultIndex.value[facetId] = Math.max(
+                (selectedResultIndex.value[facetId] - 1),
+                0
+            );
+            break;
+        case 'Enter':
+            e.preventDefault(); // Prevent form submission
+            if (selectedResultIndex.value[facetId] >= 0) {
+                selectSearchResult(facetId, facet.searchResults[selectedResultIndex.value[facetId]]);
+            }
+            break;
+        case 'Escape':
+            facet.searchResults = []; // Clear results
+            selectedResultIndex.value[facetId] = -1;
+            break;
+    }
+};
+
+// Reset the selected index when search term changes or results update
+watch(facets, (newFacets) => {
+    for (const facet of newFacets) {
+        if (facet.searchTerm !== lastSearchTerms.value[facet.id]) {
+            selectedResultIndex.value[facet.id] = -1;
+        }
+    }
+}, { deep: true });
+
 // Build the query object from facets
 const buildQueryObject = (): QueryAPIRequest => {
     const validFacets = facets.value.filter(
@@ -870,41 +1059,61 @@ if (facets.value.length === 0) {
 </script>
 
 <template>
-    <div class="query-builder container mx-auto py-6 px-4">
+    <div class="space-y-6">
+        <h1 class="text-2xl font-bold">{{ $t('queryBuilder') }}</h1>
+
         <!-- Show saved query title and description when viewing a saved query -->
-        <div v-if="!showSaveFields && savedQueryId">
+        <div v-if="!showSaveFields && savedQueryId" class="bg-gray-50 dark:bg-gray-800 p-4 rounded-lg mb-4">
             <h1 class="text-2xl font-bold mb-2">{{ saveTitle }}</h1>
             <p v-if="saveDescription" class="text-gray-600 dark:text-gray-400 mb-4">{{ saveDescription }}</p>
-            <div class="mb-6">
+            <div class="mb-2">
                 <UButton color="primary" icon="i-lucide-edit" @click="handleEditQuery">
                     Edit Query
                 </UButton>
             </div>
         </div>
 
-        <!-- Show query builder title when creating a new query or editing -->
-        <h1 v-if="showSaveFields" class="text-2xl font-bold mb-4">{{ $t('queryBuilder') }}</h1>
-
         <!-- Query builder components - only show when editing -->
         <template v-if="showSaveFields">
+            <!-- Validation warnings -->
+            <div v-if="validationWarnings.length" class="mb-4">
+                <UAlert color="amber" icon="i-lucide-alert-triangle">
+                    <template #title>Potential Query Issues</template>
+                    <template #description>
+                        <ul class="list-disc pl-5">
+                            <li v-for="(warn, i) in validationWarnings" :key="i">{{ warn }}</li>
+                        </ul>
+                    </template>
+                </UAlert>
+            </div>
+
+            <!-- Filters Section -->
             <div class="mb-6">
-                <UCard>
-                    <!-- Validation warnings -->
-                    <div v-if="validationWarnings.length" class="mb-4">
-                        <UAlert color="amber" icon="i-lucide-alert-triangle">
-                            <template #title>Potential Query Issues</template>
-                            <template #description>
-                                <ul class="list-disc pl-5">
-                                    <li v-for="(warn, i) in validationWarnings" :key="i">{{ warn }}</li>
-                                </ul>
-                            </template>
-                        </UAlert>
-                    </div>
+                <UCard class="filter-card bg-blue-50 dark:bg-blue-900/20 border-0">
                     <template #header>
                         <div class="flex justify-between items-center">
-                            <h2 class="text-lg font-medium">{{ $t('filters') }}</h2>
+                            <h2 class="text-lg font-bold">{{ $t('filters') }}</h2>
                             <div class="flex gap-4">
-                                <USelect v-model="conjunction" :items="CONJUNCTION_OPTIONS" size="sm" class="w-36" />
+                                <!-- Custom conjunction dropdown -->
+                                <div class="custom-select-container relative">
+                                    <button @click.stop="toggleConjunctionDropdown"
+                                        class="custom-select dropdown-toggle flex items-center justify-between px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-800 text-sm">
+                                        <span>{{ conjunction === 'and' ? t('and') : t('or') }}</span>
+                                        <span class="ml-2">
+                                            <Icon name="lucide:chevron-down" class="w-4 h-4" />
+                                        </span>
+                                    </button>
+
+                                    <div v-show="conjunctionDropdownOpen"
+                                        class="dropdown-menu absolute z-50 w-full mt-1 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-md shadow-lg max-h-60 overflow-y-auto">
+                                        <div v-for="option in CONJUNCTION_OPTIONS" :key="option.value"
+                                            @click="setConjunctionValue(option.value as 'and' | 'or')"
+                                            class="custom-option px-3 py-2 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700"
+                                            :class="{ 'bg-blue-100 dark:bg-blue-900/30': conjunction === option.value }">
+                                            {{ option.label }}
+                                        </div>
+                                    </div>
+                                </div>
 
                                 <UButton v-if="facets.length < MAX_FACETS" icon="i-lucide-plus-circle" size="sm"
                                     color="primary" @click="addFacet">
@@ -917,50 +1126,93 @@ if (facets.value.length === 0) {
                     <!-- Individual facets -->
                     <div v-if="facets.length > 0" class="space-y-4">
                         <div v-for="facet in facets" :key="facet.id"
-                            class="facet-row border border-gray-200 dark:border-gray-700 rounded-lg p-4">
+                            class="facet-row bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-4 shadow-sm transition-all hover:shadow-md">
                             <div class="flex flex-wrap md:flex-nowrap gap-3 items-start">
                                 <!-- Field selector -->
                                 <div class="w-full md:w-1/3">
-                                    <UFormField :label="$t('field')">
-                                        <USelect v-model="facet.field" :items="FIELD_OPTIONS"
-                                            @update:modelValue="(val) => handleFieldChange(facet.id, val)"
-                                            class="field-selector w-64" />
-                                    </UFormField>
+                                    <div class="form-field">
+                                        <label class="block text-sm font-medium mb-1">{{ $t('field') }}</label>
+                                        <div class="custom-select-container relative">
+                                            <button @click.stop="toggleFieldDropdown(facet.id)"
+                                                class="custom-select dropdown-toggle flex items-center justify-between px-3 py-2 w-full border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-800">
+                                                <span class="truncate">{{FIELD_OPTIONS.find(f => f.value ===
+                                                    facet.field)?.label ||
+                                                    facet.field}}</span>
+                                                <span class="ml-2">
+                                                    <Icon name="lucide:chevron-down" class="w-4 h-4" />
+                                                </span>
+                                            </button>
+
+                                            <div v-show="fieldDropdownOpen[facet.id]"
+                                                class="dropdown-menu absolute z-50 w-full mt-1 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-md shadow-lg max-h-60 overflow-y-auto">
+                                                <div v-for="option in FIELD_OPTIONS" :key="option.value"
+                                                    @click="setFieldValue(facet.id, option.value)"
+                                                    class="custom-option px-3 py-2 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700"
+                                                    :class="{ 'bg-blue-100 dark:bg-blue-900/30': facet.field === option.value }">
+                                                    {{ option.label }}
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
                                 </div>
 
                                 <!-- Operator selector -->
                                 <div class="w-full md:w-1/4">
-                                    <UFormField :label="$t('operator')">
-                                        <USelect v-model="facet.operator" :items="OPERATOR_OPTIONS"
-                                            @update:modelValue="(val) => handleOperatorChange(facet.id, val)"
-                                            class="operator-selector w-64" />
-                                    </UFormField>
+                                    <div class="form-field">
+                                        <label class="block text-sm font-medium mb-1">{{ $t('operator') }}</label>
+                                        <div class="custom-select-container relative">
+                                            <button @click.stop="toggleOperatorDropdown(facet.id)"
+                                                class="custom-select dropdown-toggle flex items-center justify-between px-3 py-2 w-full border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-800">
+                                                <span>{{OPERATOR_OPTIONS.find(o => o.value === facet.operator)?.label
+                                                    ||
+                                                    facet.operator}}</span>
+                                                <span class="ml-2">
+                                                    <Icon name="lucide:chevron-down" class="w-4 h-4" />
+                                                </span>
+                                            </button>
+
+                                            <div v-show="operatorDropdownOpen[facet.id]"
+                                                class="dropdown-menu absolute z-50 w-full mt-1 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-md shadow-lg max-h-60 overflow-y-auto">
+                                                <div v-for="option in OPERATOR_OPTIONS" :key="option.value"
+                                                    @click="setOperatorValue(facet.id, option.value)"
+                                                    class="custom-option px-3 py-2 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700"
+                                                    :class="{ 'bg-blue-100 dark:bg-blue-900/30': facet.operator === option.value }">
+                                                    {{ option.label }}
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
                                 </div>
 
                                 <!-- Value input -->
                                 <div class="w-full md:w-1/3">
-                                    <UFormField :label="$t('value')">
+                                    <div class="form-field">
+                                        <label class="block text-sm font-medium mb-1">{{ $t('value') }}</label>
                                         <!-- Boolean selectors -->
                                         <template
                                             v-if="facet.field === 'is_npc' || facet.field === 'is_solo' || facet.operator === '$exists'">
                                             <URadioGroup v-model="facet.value" :items="BOOLEAN_OPTIONS"
-                                                class="flex gap-4" />
+                                                class="flex gap-4 radio-group" />
                                         </template>
 
                                         <!-- Multi-value (in/not in array) -->
                                         <template v-else-if="['$in', '$nin'].includes(facet.operator)">
                                             <div class="space-y-2">
                                                 <div class="flex gap-2">
-                                                    <UInput v-model="facet.searchTerm"
-                                                        :placeholder="$t('typeToSearch')" />
-                                                    <UButton icon="i-lucide-plus" @click="addValueToArray(facet.id)" />
+                                                    <input v-model="facet.searchTerm" :placeholder="$t('typeToSearch')"
+                                                        class="custom-input flex-1"
+                                                        @keydown="(e) => handleKeyDown(facet.id, e)" />
+                                                    <button @click="addValueToArray(facet.id)"
+                                                        class="custom-btn flex items-center justify-center px-3 py-2 bg-gray-100 dark:bg-gray-700 rounded-md hover:bg-gray-200 dark:hover:bg-gray-600">
+                                                        <Icon name="lucide:plus" class="w-4 h-4" />
+                                                    </button>
                                                 </div>
 
                                                 <!-- Selected values -->
                                                 <div v-if="Array.isArray(facet.value) && facet.value.length > 0"
                                                     class="flex flex-wrap gap-2 mt-2">
                                                     <UBadge v-for="(val, i) in facet.value" :key="i" color="primary"
-                                                        class="flex items-center gap-1">
+                                                        class="flex items-center gap-1 py-1 px-2">
                                                         {{ val }}
                                                         <UButton color="white" variant="ghost" icon="i-lucide-x"
                                                             size="xs" class="p-0"
@@ -971,8 +1223,9 @@ if (facets.value.length === 0) {
                                                 <!-- Search results for entity lookups -->
                                                 <div v-if="supportsSearch(facet.field) && facet.searchTerm && facet.searchResults && facet.searchResults.length > 0"
                                                     class="search-results border dark:border-gray-700 rounded-md mt-1 max-h-60 overflow-y-auto">
-                                                    <div v-for="result in facet.searchResults" :key="result.id"
-                                                        class="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 cursor-pointer"
+                                                    <div v-for="(result, index) in facet.searchResults" :key="result.id"
+                                                        class="search-result-item p-2 cursor-pointer"
+                                                        :class="{ 'search-result-selected': index === selectedResultIndex[facet.id] }"
                                                         @click="selectSearchResult(facet.id, result)">
                                                         {{ result.name }}
                                                     </div>
@@ -983,25 +1236,27 @@ if (facets.value.length === 0) {
                                         <!-- Entity search for ID fields -->
                                         <template v-else-if="supportsSearch(facet.field)">
                                             <div class="relative">
-                                                <UInput v-model="facet.searchTerm"
-                                                    :placeholder="$t('searchFor') + ' ' + facet.entityType" />
+                                                <input v-model="facet.searchTerm"
+                                                    :placeholder="$t('searchFor') + ' ' + facet.entityType"
+                                                    class="custom-input w-full"
+                                                    @keydown="(e) => handleKeyDown(facet.id, e)" />
 
                                                 <input v-model="facet.value" type="hidden" />
 
                                                 <!-- Search results dropdown -->
                                                 <div v-if="facet.searchResults && facet.searchResults.length > 0"
-                                                    class="search-results absolute z-10 w-full border dark:border-gray-700 bg-white dark:bg-gray-900 rounded-md mt-1 max-h-60 overflow-y-auto">
-                                                    <div v-for="result in facet.searchResults" :key="result.id"
-                                                        class="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 cursor-pointer"
+                                                    class="search-results absolute z-10 w-full border dark:border-gray-700 bg-white dark:bg-gray-900 rounded-md mt-1 max-h-60 overflow-y-auto shadow-lg">
+                                                    <div v-for="(result, index) in facet.searchResults" :key="result.id"
+                                                        class="search-result-item p-2 cursor-pointer"
+                                                        :class="{ 'search-result-selected': index === selectedResultIndex[facet.id] }"
                                                         @click="selectSearchResult(facet.id, result)">
                                                         {{ result.name }}
                                                     </div>
-
                                                 </div>
 
                                                 <!-- Selected entity display -->
                                                 <div v-if="facet.valueLabel"
-                                                    class="mt-2 text-sm text-gray-600 dark:text-gray-400">
+                                                    class="mt-2 text-sm text-blue-600 dark:text-blue-400 font-medium">
                                                     {{ $t('selected') }}: {{ facet.valueLabel }} ({{ facet.value }})
                                                 </div>
                                             </div>
@@ -1010,29 +1265,31 @@ if (facets.value.length === 0) {
                                         <!-- Numeric input for numeric fields -->
                                         <template
                                             v-else-if="['killmail_id', 'total_value', 'system_security'].includes(facet.field)">
-                                            <UInput v-model.number="facet.value" type="number"
+                                            <input v-model.number="facet.value" type="number"
+                                                class="custom-input w-full"
                                                 :step="facet.field === 'system_security' ? '0.1' : '1'" />
                                         </template>
 
                                         <!-- Date/time input for kill_time -->
                                         <template v-else-if="facet.field === 'kill_time'">
-                                            <!-- Using timestamp input for now (could enhance with date picker) -->
-                                            <UInput v-model.number="facet.value" type="number"
-                                                :placeholder="$t('unixTimestamp')" />
+                                            <input v-model.number="facet.value" type="number"
+                                                class="custom-input w-full" :placeholder="$t('unixTimestamp')" />
                                             <p class="text-xs text-gray-500 mt-1">{{ $t('unixTimestampHelp') }}</p>
                                         </template>
 
                                         <!-- Default text input for other fields -->
                                         <template v-else>
-                                            <UInput v-model="facet.value" />
+                                            <input v-model="facet.value" class="custom-input w-full" />
                                         </template>
-                                    </UFormField>
+                                    </div>
                                 </div>
 
                                 <!-- Remove facet button -->
                                 <div class="flex items-center pt-8 md:w-10">
-                                    <UButton color="red" variant="ghost" icon="i-lucide-trash-2"
-                                        @click="removeFacet(facet.id)" />
+                                    <button @click="removeFacet(facet.id)"
+                                        class="p-2 text-red-500 hover:bg-red-100 dark:hover:bg-red-900/20 rounded-md">
+                                        <Icon name="lucide:trash-2" class="w-5 h-5" />
+                                    </button>
                                 </div>
                             </div>
                         </div>
@@ -1046,68 +1303,148 @@ if (facets.value.length === 0) {
 
             <!-- Sort and limit controls -->
             <div class="mb-6">
-                <UCard>
+                <UCard class="options-card bg-green-50 dark:bg-green-900/20 border-0">
                     <template #header>
-                        <h2 class="text-lg font-medium">{{ $t('options') }}</h2>
+                        <h2 class="text-lg font-bold">{{ $t('options') }}</h2>
                     </template>
 
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div class="sort-controls">
+                        <div class="sort-controls bg-white dark:bg-gray-800 p-4 rounded-lg shadow-sm">
                             <h3 class="text-md font-medium mb-2">{{ $t('sort') }}</h3>
                             <div class="flex flex-wrap md:flex-nowrap gap-3">
-                                <USelect v-model="sortField" :items="FIELD_OPTIONS" class="flex-1" />
-                                <USelect v-model="sortDirection" :items="SORT_DIRECTION_OPTIONS" class="w-40" />
+                                <!-- Custom sort field dropdown -->
+                                <div class="flex-1 relative">
+                                    <div class="custom-select-container relative">
+                                        <button @click.stop="toggleSortFieldDropdown"
+                                            class="custom-select dropdown-toggle flex items-center justify-between px-3 py-2 w-full border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-800">
+                                            <span class="truncate">{{FIELD_OPTIONS.find(f => f.value ===
+                                                sortField)?.label ||
+                                                sortField}}</span>
+                                            <span class="ml-2">
+                                                <Icon name="lucide:chevron-down" class="w-4 h-4" />
+                                            </span>
+                                        </button>
+
+                                        <div v-show="sortFieldDropdownOpen"
+                                            class="dropdown-menu absolute z-50 w-full mt-1 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-md shadow-lg max-h-60 overflow-y-auto">
+                                            <div v-for="option in FIELD_OPTIONS" :key="option.value"
+                                                @click="setSortFieldValue(option.value as QueryableField)"
+                                                class="custom-option px-3 py-2 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700"
+                                                :class="{ 'bg-blue-100 dark:bg-blue-900/30': sortField === option.value }">
+                                                {{ option.label }}
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Custom sort direction dropdown -->
+                                <div class="w-40 relative">
+                                    <div class="custom-select-container relative">
+                                        <button @click.stop="toggleSortDirectionDropdown"
+                                            class="custom-select dropdown-toggle flex items-center justify-between px-3 py-2 w-full border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-800">
+                                            <span>{{SORT_DIRECTION_OPTIONS.find(d => d.value === sortDirection)?.label
+                                                ||
+                                                sortDirection}}</span>
+                                            <span class="ml-2">
+                                                <Icon name="lucide:chevron-down" class="w-4 h-4" />
+                                            </span>
+                                        </button>
+
+                                        <div v-show="sortDirectionDropdownOpen"
+                                            class="dropdown-menu absolute z-50 w-full mt-1 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-md shadow-lg">
+                                            <div v-for="option in SORT_DIRECTION_OPTIONS" :key="option.value"
+                                                @click="setSortDirectionValue(option.value as SortDirection)"
+                                                class="custom-option px-3 py-2 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700"
+                                                :class="{ 'bg-blue-100 dark:bg-blue-900/30': sortDirection === option.value }">
+                                                {{ option.label }}
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
                         </div>
 
-                        <div class="limit-controls">
+                        <div class="limit-controls bg-white dark:bg-gray-800 p-4 rounded-lg shadow-sm">
                             <h3 class="text-md font-medium mb-2">{{ $t('limit') }}</h3>
-                            <UInput v-model.number="limit" type="number" :min="1" :max="MAX_LIMIT" />
+                            <input v-model.number="limit" type="number" :min="1" :max="MAX_LIMIT"
+                                class="custom-input w-full" />
                             <p class="text-xs text-gray-500 mt-1">{{ $t('maxLimit', { max: MAX_LIMIT }) }}</p>
                         </div>
                     </div>
                 </UCard>
             </div>
-        </template>
 
-        <!-- Query execution controls and Save Query fields -->
-        <template v-if="showSaveFields">
-            <div class="mb-6 flex gap-4">
-                <UButton color="primary" icon="i-lucide-search" :loading="isLoading" @click="executeQuery">
-                    {{ $t('executeQuery') }}
+            <!-- Query execution controls and Save Query fields -->
+            <div
+                class="mb-6 bg-gray-100 dark:bg-gray-800 p-4 rounded-lg flex flex-wrap gap-4 items-center justify-between">
+                <div class="flex gap-3">
+                    <UButton color="primary" icon="i-lucide-search" :loading="isLoading" @click="executeQuery"
+                        class="btn-execute" size="lg">
+                        {{ $t('executeQuery') }}
+                    </UButton>
+                    <UButton color="primary" variant="outline" icon="i-lucide-save" @click="saveQuery"
+                        :loading="isSaving" class="btn-save" size="lg">
+                        {{ savedQueryId ? 'Update Query' : 'Save Query' }}
+                    </UButton>
+                    <div class="flex items-center px-2 py-1 bg-white dark:bg-gray-700 rounded-lg">
+                        <UCheckbox v-model="generateQuery" name="auto-generate" class="mr-2" />
+                        <span class="text-sm">
+                            {{ $t('autoGenerateQuery') }}
+                            <UTooltip
+                                text="Automatically generates and updates the query whenever you change filters, sort options, or limit">
+                                <UButton icon="i-lucide-help-circle" variant="ghost" color="gray" size="xs"
+                                    class="p-0" />
+                            </UTooltip>
+                        </span>
+                    </div>
+                </div>
+                <UButton v-if="!generateQuery" @click="updateQuery" variant="soft" size="lg">{{ $t('generateQuery') }}
                 </UButton>
-                <UButton color="primary" icon="i-lucide-save" @click="saveQuery" :loading="isSaving">
-                    {{ savedQueryId ? 'Update Query' : 'Save Query' }}
-                </UButton>
-                <UCheckbox v-model="generateQuery" name="auto-generate">
-                    {{ $t('autoGenerateQuery') }}
-                </UCheckbox>
-                <UButton v-if="!generateQuery" @click="updateQuery">{{ $t('generateQuery') }}</UButton>
             </div>
 
             <!-- Save Query fields -->
             <div class="mb-6">
-                <UCard>
+                <UCard class="save-card bg-yellow-50 dark:bg-yellow-900/20 border-0">
                     <template #header>
-                        <h2 class="text-lg font-medium">{{ savedQueryId ? 'Update Query' : 'Save Query' }}</h2>
+                        <h2 class="text-lg font-bold">{{ savedQueryId ? 'Update Query' : 'Save Query' }}</h2>
                     </template>
-                    <div class="flex flex-col md:flex-row gap-4 items-start">
-                        <div class="flex-1">
-                            <UFormField label="Title">
-                                <UInput id="saveTitle" v-model="saveTitle" placeholder="Enter a title for your query"
-                                    required />
-                            </UFormField>
+                    <div class="bg-white dark:bg-gray-800 p-4 rounded-lg shadow-sm">
+                        <div class="flex flex-col md:flex-row gap-4 items-start">
+                            <div class="flex-1">
+                                <label for="saveTitle" class="block text-sm font-medium mb-1">Title</label>
+                                <input id="saveTitle" v-model="saveTitle" placeholder="Enter a title for your query"
+                                    class="custom-input w-full" required />
+                            </div>
+                            <div class="flex-1">
+                                <label for="saveDescription" class="block text-sm font-medium mb-1">Description</label>
+                                <textarea id="saveDescription" v-model="saveDescription"
+                                    placeholder="Describe this query (optional)"
+                                    class="custom-textarea w-full"></textarea>
+                            </div>
                         </div>
-                        <div class="flex-1">
-                            <UFormField label="Description">
-                                <UTextarea id="saveDescription" v-model="saveDescription"
-                                    placeholder="Describe this query (optional)" />
-                            </UFormField>
+                        <div v-if="saveError" class="text-red-600 mt-2 p-2 bg-red-50 dark:bg-red-900/20 rounded">{{
+                            saveError }}
                         </div>
                     </div>
-                    <div v-if="saveError" class="text-red-600 mt-2">{{ saveError }}</div>
                 </UCard>
             </div>
+
+            <!-- Query preview - only show when editing -->
+            <UCard v-if="generatedQuery" class="mb-6 generated-card bg-gray-100 dark:bg-gray-800 border-0">
+                <template #header>
+                    <div class="flex items-center justify-between">
+                        <h2 class="text-lg font-bold">{{ $t('generatedQuery') }}</h2>
+                        <UButton @click="showRawQuery = !showRawQuery" variant="ghost" size="xs"
+                            class="text-xs hover:bg-gray-200 dark:hover:bg-gray-700">
+                            {{ showRawQuery ? $t('hideQuery') : $t('showQuery') }}
+                        </UButton>
+                    </div>
+                </template>
+                <div v-if="showRawQuery">
+                    <pre class="overflow-auto p-4 bg-white dark:bg-gray-900 rounded-lg shadow-inner font-mono text-sm">{{
+                        generatedQuery }}</pre>
+                </div>
+            </UCard>
         </template>
 
         <!-- Error display -->
@@ -1116,26 +1453,20 @@ if (facets.value.length === 0) {
             <template #description>{{ error }}</template>
         </UAlert>
 
-        <!-- Query preview - only show when editing -->
-        <UCard v-if="showSaveFields && generatedQuery" class="mb-6">
-            <template #header>
-                <h2 class="text-lg font-medium">{{ $t('generatedQuery') }}</h2>
-            </template>
-            <pre class="overflow-auto p-4 bg-gray-50 dark:bg-gray-800 rounded">{{ generatedQuery }}</pre>
-        </UCard>
-
         <!-- Query results visualization with transformed data and pagination -->
-        <div v-if="queryResult" class="mb-6">
-            <div v-if="showSaveFields" class="flex justify-between items-center mb-4">
-                <h2 class="text-lg font-medium">{{ $t('results') }}</h2>
-                <UBadge color="primary" class="text-sm">
+        <div v-if="queryResult" class="mt-8">
+            <div
+                class="results-header bg-gray-100 dark:bg-gray-800 p-4 rounded-lg mb-4 flex justify-between items-center">
+                <h2 class="text-xl font-bold">{{ $t('results') }}</h2>
+                <UBadge color="primary" class="text-sm px-3 py-1">
                     {{ $t('resultCount', { count: queryResult.length }) }}
                 </UBadge>
             </div>
 
-            <!-- Top pagination controls -->
-            <div class="flex justify-between mb-4">
-                <UBadge v-if="isLoading" color="gray" class="text-sm animate-pulse">
+            <!-- Pagination controls -->
+            <div
+                class="pagination-controls bg-gray-50 dark:bg-gray-900/50 p-3 rounded-lg flex justify-between items-center mb-4">
+                <UBadge v-if="isLoading" color="gray" class="text-sm animate-pulse px-3 py-1">
                     {{ $t('loading') }}
                 </UBadge>
 
@@ -1151,13 +1482,17 @@ if (facets.value.length === 0) {
                 }" />
             </div>
 
-            <!-- Use the transformed query results with proper props -->
-            <KillList :externalKilllistData="transformedQueryResult" :limit="limit" :enablePagination="false"
-                wsDisabled />
+            <!-- Results -->
+            <div class="results-container bg-white dark:bg-gray-900/20 rounded-lg p-4 shadow-lg">
+                <!-- Use the transformed query results with proper props -->
+                <KillList :externalKilllistData="transformedQueryResult" :limit="limit" :enablePagination="false"
+                    wsDisabled />
+            </div>
 
             <!-- Bottom pagination controls -->
-            <div class="flex justify-between mt-4">
-                <UBadge v-if="isLoading" color="gray" class="text-sm animate-pulse">
+            <div
+                class="pagination-controls bg-gray-50 dark:bg-gray-900/50 p-3 rounded-lg flex justify-between items-center mt-4">
+                <UBadge v-if="isLoading" color="gray" class="text-sm animate-pulse px-3 py-1">
                     {{ $t('loading') }}
                 </UBadge>
 
@@ -1175,82 +1510,229 @@ if (facets.value.length === 0) {
 
             <!-- Show warning when approaching max pages -->
             <div v-if="currentPage >= MAX_PAGES - 5"
-                class="mt-2 text-xs text-amber-600 dark:text-amber-400 text-center">
+                class="mt-2 text-xs text-amber-600 dark:text-amber-400 text-center p-2 bg-amber-50 dark:bg-amber-900/20 rounded-lg">
                 {{ $t('paginationLimitWarning', { max: MAX_PAGES }) }}
-            </div>
-
-            <!-- Toggle to show the raw query -->
-            <div v-if="generatedQuery" class="mt-4">
-                <UButton variant="soft" size="sm" @click="showRawQuery = !showRawQuery" class="text-xs">
-                    {{ showRawQuery ? $t('hideQuery') : $t('showQuery') }}
-                </UButton>
-                <div v-if="showRawQuery" class="mt-2">
-                    <pre class="overflow-auto p-4 bg-gray-50 dark:bg-gray-800 rounded text-xs font-mono">{{ generatedQuery }}
-            </pre>
-                </div>
             </div>
         </div>
     </div>
 </template>
 
 <style scoped>
-.search-results {
+/* Card colors and styling */
+.filter-card {
+    transition: all 0.2s ease;
     box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
 }
 
-/* Make dropdown text readable with proper wrapping */
-:deep(.u-select-input .u-input) {
-    white-space: normal;
-    word-wrap: break-word;
+.options-card {
+    transition: all 0.2s ease;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+}
+
+.save-card {
+    transition: all 0.2s ease;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+}
+
+.generated-card {
+    transition: all 0.2s ease;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+}
+
+/* Facet row transitions */
+.facet-row {
+    transition: all 0.2s ease;
+}
+
+.facet-row:hover {
+    border-color: #93c5fd;
+}
+
+/* Custom input styling */
+.custom-input {
+    display: block;
+    height: 42px;
+    padding: 0.5rem 0.75rem;
+    font-size: 0.875rem;
+    font-family: inherit;
+    border: 1px solid #d1d5db;
+    border-radius: 0.375rem;
+    box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+    outline: none;
+    transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+}
+
+.custom-input:focus {
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.3);
+}
+
+.custom-input:disabled {
+    background-color: #f3f4f6;
+    opacity: 0.7;
+    cursor: not-allowed;
+}
+
+.custom-textarea {
+    display: block;
+    min-height: 80px;
+    padding: 0.5rem 0.75rem;
+    font-size: 0.875rem;
+    font-family: inherit;
+    color: #111827;
+    background-color: white;
+    border: 1px solid #d1d5db;
+    border-radius: 0.375rem;
+    box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+    outline: none;
+    transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+}
+
+.custom-textarea:focus {
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.3);
+}
+
+/* Custom dropdown styling - with solid backgrounds */
+.custom-select-container {
+    position: relative;
+    width: 100%;
+}
+
+.custom-select {
+    width: 100%;
     min-height: 42px;
+    background-color: #ffffff;
+    border: 1px solid #d1d5db;
+    border-radius: 0.375rem;
+    font-size: 0.875rem;
+    cursor: pointer;
+    text-align: left;
+    transition: all 0.2s ease;
 }
 
-/* Ensure dropdown menus are wide enough */
-:deep(.u-select-dropdown) {
-    min-width: 280px !important;
-    width: auto !important;
-    max-width: 500px !important;
+.custom-select:hover {
+    border-color: #93c5fd;
 }
 
-/* Custom styling for specific selectors */
-:deep(.field-selector .u-select-dropdown) {
-    min-width: 350px !important;
-    width: auto !important;
+/* Ensure dropdown menus have solid backgrounds */
+.dropdown-menu {
+    position: absolute;
+    z-index: 100;
+    /* Higher z-index to ensure visibility */
+    width: 100%;
+    max-height: 250px;
+    overflow-y: auto;
+    background-color: #ffffff !important;
+    /* Force solid white background */
+    border: 2px solid #d1d5db;
+    border-radius: 0.375rem;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
 }
 
-:deep(.operator-selector .u-select-dropdown) {
-    min-width: 250px !important;
-    width: auto !important;
+.custom-option {
+    padding: 0.5rem 0.75rem;
+    cursor: pointer;
+    transition: background-color 0.15s ease;
+    background-color: transparent;
+    /* Start transparent for hover effect */
 }
 
-/* Ensure options in dropdown have enough space and wrap text */
-:deep(.u-select-option) {
-    white-space: normal !important;
-    word-wrap: break-word !important;
-    padding: 10px 14px !important;
-    width: 100% !important;
-    text-overflow: clip !important;
+.custom-option:hover {
+    background-color: #f3f4f6 !important;
+    /* Force hover color */
 }
 
-/* Increase specificity to override default styles */
-:deep(.u-select-dropdown .u-select-options .u-select-option) {
-    white-space: normal !important;
-    overflow: visible !important;
+/* Dark mode styles with forced solid backgrounds */
+.dark .custom-select {
+    color: #f9fafb;
+    background-color: #1f2937;
+    border-color: #4b5563;
 }
 
-/* Fix dropdown placement */
-:deep(.u-popper) {
-    width: auto !important;
-    max-width: none !important;
+.dark .dropdown-menu {
+    background-color: #111827 !important;
+    /* Force solid dark background */
+    border-color: #374151;
+    border-width: 2px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.5);
 }
 
-/* Ensure popper content is sized correctly */
-:deep(.u-popper-content) {
-    width: auto !important;
-    max-width: none !important;
+.dark .custom-option:hover {
+    background-color: #374151 !important;
+    /* Force hover color in dark mode */
 }
 
-/* Add animation for loading indicator */
+/* Search results styling with solid backgrounds */
+.search-results {
+    position: absolute;
+    z-index: 100;
+    /* Higher z-index to ensure visibility */
+    background-color: #ffffff !important;
+    /* Force solid background */
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    border-radius: 0.375rem;
+    border: 2px solid #d1d5db;
+    width: 100%;
+}
+
+.search-result-item {
+    padding: 0.5rem 0.75rem;
+    color: #111827;
+    transition: background-color 0.15s ease;
+    background-color: transparent;
+    /* Start transparent for hover effect */
+}
+
+.search-result-item:hover {
+    background-color: #f3f4f6 !important;
+    /* Force hover color */
+}
+
+.dark .search-results {
+    background-color: #111827 !important;
+    /* Force solid background in dark mode */
+    border-color: #374151;
+}
+
+.dark .search-result-item {
+    color: #f9fafb;
+}
+
+.dark .search-result-item:hover {
+    background-color: #374151 !important;
+    /* Force hover color in dark mode */
+}
+
+.search-result-selected {
+    background-color: #e0f2fe !important;
+    /* Light blue background */
+    color: #0369a1 !important;
+    /* Darker blue text */
+}
+
+.dark .search-result-selected {
+    background-color: #0c4a6e !important;
+    /* Dark blue background */
+    color: #7dd3fc !important;
+    /* Light blue text */
+}
+
+/* Form field alignment */
+.form-field {
+    margin-bottom: 0;
+    height: 100%;
+}
+
+/* Align radio buttons with other inputs */
+.radio-group {
+    height: 42px;
+    /* Match other input heights */
+    display: flex;
+    align-items: center;
+}
+
+/* Animation for loading indicator */
 .animate-pulse {
     animation: pulse 1.5s ease-in-out infinite;
 }
@@ -1264,6 +1746,19 @@ if (facets.value.length === 0) {
 
     50% {
         opacity: 0.3;
+    }
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .facet-row {
+        padding: 1rem 0.5rem;
+    }
+
+    .results-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.5rem;
     }
 }
 </style>
