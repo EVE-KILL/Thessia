@@ -3,6 +3,42 @@ import { Alliances } from '../../models/Alliances';
 import { Corporations } from '../../models/Corporations';
 import { HistoricalStats } from '../../models/HistoricalStats';
 
+// Arrays of alliance and corporation IDs to ignore in historical stats
+const IGNORED_ALLIANCE_IDS: number[] = [
+];
+
+const IGNORED_CORPORATION_IDS: number[] = [
+    1000001,
+    1000167,
+    1000168,
+    1000169,
+    1000045,
+    1000044,
+    1000170,
+    1000166,
+    1000115,
+    1000077,
+    1000172,
+    1000049,
+    1000046,
+    1000111,
+    1000066,
+    1000014,
+    1000006,
+    1000009,
+    1000107,
+    1000171,
+    1000165,
+    1000080,
+    1000114,
+    1000072,
+    1000060,
+    1000180,
+    1000181,
+    1000182,
+    1000179
+];
+
 interface QueryParams {
     entityType?: string;
     listType?: string;
@@ -54,8 +90,20 @@ export default defineEventHandler(async (event) => {
     try {
         // Base query for HistoricalStats - directly filter at DB level
         const mongoQuery: any = entityType === 'alliance'
-            ? { corporation_id: 0, alliance_id: { $ne: 0 } }
-            : { alliance_id: 0, corporation_id: { $ne: 0 } };
+            ? {
+                corporation_id: 0,
+                alliance_id: {
+                    $ne: 0,
+                    $nin: IGNORED_ALLIANCE_IDS
+                }
+            }
+            : {
+                alliance_id: 0,
+                corporation_id: {
+                    $ne: 0,
+                    $nin: IGNORED_CORPORATION_IDS
+                }
+            };
 
         // Add specific filters
         if (listType === 'dead') {
@@ -125,7 +173,9 @@ export default defineEventHandler(async (event) => {
         if (listType === 'newest') {
             let entityInfo = [];
             if (entityType === 'alliance') {
-                entityInfo = await Alliances.find()
+                entityInfo = await Alliances.find({
+                    alliance_id: { $nin: IGNORED_ALLIANCE_IDS }
+                })
                     .select('alliance_id name date_founded')
                     .sort({ date_founded: -1 })
                     .limit(limit)
@@ -157,7 +207,9 @@ export default defineEventHandler(async (event) => {
                     avg_sec_status: statsMap.get(alliance.alliance_id)?.avg_sec_status || 0,
                 }));
             } else {
-                entityInfo = await Corporations.find()
+                entityInfo = await Corporations.find({
+                    corporation_id: { $nin: IGNORED_CORPORATION_IDS }
+                })
                     .select('corporation_id name date_founded')
                     .sort({ date_founded: -1 })
                     .limit(limit)
