@@ -157,6 +157,34 @@
 <script setup lang="ts">
 import { computed, resolveComponent } from "vue";
 
+// Helper function to parse human-readable ISK strings (e.g., "1.4b", "79m", "1,500.5k")
+const parseHumanReadableIsk = (val: any): number => {
+    if (typeof val === 'number') {
+        return val;
+    }
+    if (val === null || val === undefined) {
+        return 0;
+    }
+
+    let s = String(val).toLowerCase().trim();
+    s = s.replace(/,/g, ''); // Remove commas
+
+    let multiplier = 1;
+    if (s.endsWith('k')) {
+        multiplier = 1000;
+        s = s.slice(0, -1);
+    } else if (s.endsWith('m')) {
+        multiplier = 1000000;
+        s = s.slice(0, -1);
+    } else if (s.endsWith('b')) {
+        multiplier = 1000000000;
+        s = s.slice(0, -1);
+    }
+
+    const num = parseFloat(s);
+    return isNaN(num) ? 0 : num * multiplier;
+};
+
 import type { IKillmail } from "~/server/interfaces/IKillmail";
 import type { TableColumn } from "../common/Table.vue";
 
@@ -592,13 +620,19 @@ function sortSectionItems(items: any[], sectionName: string) {
             valueA = (a.qty_dropped || 0) + (a.qty_destroyed || 0);
             valueB = (b.qty_dropped || 0) + (b.qty_destroyed || 0);
         } else if (currentSortColumn.value === 'value') {
-            // Sort by total value
-            valueA = (a.value || 0) * ((a.qty_dropped || 0) + (a.qty_destroyed || 0));
-            valueB = (b.value || 0) * ((b.qty_dropped || 0) + (b.qty_destroyed || 0));
+            // Sort by total value, ensuring numerical inputs by parsing potentially human-readable ISK strings
+            const unitPriceA = parseHumanReadableIsk(a.value);
+            const unitPriceB = parseHumanReadableIsk(b.value);
 
-            // Add container items value if present
-            if (a.containerItemsValue) valueA += a.containerItemsValue;
-            if (b.containerItemsValue) valueB += b.containerItemsValue;
+            const quantityA = (Number(a.qty_dropped) || 0) + (Number(a.qty_destroyed) || 0);
+            const quantityB = (Number(b.qty_dropped) || 0) + (Number(b.qty_destroyed) || 0);
+
+            valueA = unitPriceA * quantityA;
+            valueB = unitPriceB * quantityB;
+
+            // Add container items value, also ensuring it's numerical by parsing
+            valueA += parseHumanReadableIsk(a.containerItemsValue);
+            valueB += parseHumanReadableIsk(b.containerItemsValue);
         } else {
             return 0;
         }
