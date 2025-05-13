@@ -254,7 +254,7 @@ const closeMobileMenu = () => {
             </div>
 
             <!-- Center items - takes all available space -->
-            <div class="flex-1 flex items-center justify-center">
+            <div class="flex-1 flex items-center justify-center ml-4 mr-4">
                 <template v-for="(link, index) in centerNavItems" :key="index">
                     <component v-if="link.component && link.inline" :is="link.component" class="w-full max-w-3xl" />
                     <UButton v-else-if="link.onClick" color="neutral" variant="ghost" :aria-label="link.label"
