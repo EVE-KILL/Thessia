@@ -44,11 +44,16 @@ const INDEXED_FIELDS = [
     "victim.alliance_id",
     "victim.ship_id",
     "victim.ship_group_id",
+    "victim.faction_id", // Already present, but good to confirm its intended inclusion
     "attackers.character_id",
     "attackers.corporation_id",
     "attackers.alliance_id",
     "attackers.ship_id",
+    "attackers.ship_group_id", // Added for query builder
+    "attackers.faction_id",    // Added for query builder
+    "attackers.weapon_type_id",// Added for query builder
     "items.type_id",
+    "items.group_id",          // Added for query builder
 ];
 
 /**

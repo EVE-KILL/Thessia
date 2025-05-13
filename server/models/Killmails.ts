@@ -141,10 +141,20 @@ const indexes = [
     { fields: { is_npc: -1, kill_time: -1 }, options: { sparse: true } },
     { fields: { is_solo: -1, kill_time: -1 }, options: { sparse: true } },
     { fields: { total_value: -1, kill_time: -1 }, options: { sparse: true } },
-    { fields: { total_value: -1 }, options: { sparse: true } },
 
     // Spatial queries
     { fields: { system_id: -1, x: -1, y: -1, z: -1 }, options: { sparse: true } },
+    // Specific Query Optimizations
+    { fields: { "victim.character_id": 1, "system_id": 1, "kill_time": -1 }, options: { sparse: true } },
+    { fields: { "victim.ship_group_id": 1, "total_value": -1, "kill_time": -1 }, options: { sparse: true } },
+
+    // For Query Builder - Attacker fields often filtered with kill_time sort
+    { fields: { "attackers.ship_group_id": -1, "kill_time": -1 }, options: { sparse: true } },
+    { fields: { "attackers.faction_id": -1, "kill_time": -1 }, options: { sparse: true } },
+    { fields: { "attackers.weapon_type_id": -1, "kill_time": -1 }, options: { sparse: true } },
+
+    // For Query Builder - Item fields often filtered with kill_time sort
+    { fields: { "items.group_id": -1, "kill_time": -1 }, options: { sparse: true } },
 ];
 
 for (const { fields, options } of indexes) {
