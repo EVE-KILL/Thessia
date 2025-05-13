@@ -103,6 +103,20 @@ const leftNavItems = computed(() => [
                 position: "left",
                 to: "/battlegenerator",
                 icon: "lucide:shield",
+            },
+            {
+                name: t("tools.localscan.title"),
+                label: t("tools.localscan.title"),
+                position: "left",
+                to: "/tools/localscan",
+                icon: "lucide:search",
+            },
+            {
+                name: t("tools.dscan.title"),
+                label: t("tools.dscan.title"),
+                position: "left",
+                to: "/tools/dscan",
+                icon: "lucide:search",
             }
         ]
     },
