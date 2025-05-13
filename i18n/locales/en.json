@@ -378,6 +378,8 @@
     "common.goToHomepage": "Go to Homepage",
     "common.goHome": "Go Home",
     "common.cancel": "Cancel",
+    "common.hide": "Hide Details",
+    "common.showMore": "Show Details",
     "corporation.noMembers": "No members found",
     "corporation.noAllianceHistory": "No alliance history found",
     "corporation.topShips": "Top Ships",
@@ -690,5 +692,32 @@
     "killmail.clear_list": "Clear List",
     "killmail.already_exists": "Killmail already exists in the database",
     "killmail.successfully_added": "Killmail successfully added to the database",
-    "killmail.options": "Options"
+    "killmail.options": "Options",
+    "buttons": {
+        "loadMoreStats": "Load More Statistics"
+    },
+    "historicalStats": {
+        "entity": "Entity",
+        "members": "Members",
+        "change1d": "24h",
+        "change7d": "7d",
+        "change14d": "14d",
+        "change30d": "30d",
+        "secStatus": "Sec Status",
+        "founded": "Founded",
+        "memberCount": "Member Count",
+        "change": "Change ({period}d)",
+        "pirateMembers": "Pirate Members",
+        "carebearMembers": "Carebear Members",
+        "dateFounded": "Date Founded",
+        "noData": "No data available",
+        "securityRankings": "Security Status Rankings",
+        "weightedScoreInfo": "The rankings for Most Pirate and Most Carebear are based on a weighted score that considers both the entity's average security status and its member count.",
+        "pirateScoreTitle": "Pirate Score Calculation",
+        "pirateScoreExplanation": "For pirates, the most negative score is best. Larger organizations with more negative average security status will rank higher in the pirate list.",
+        "carebearScoreTitle": "Carebear Score Calculation",
+        "carebearScoreExplanation": "For carebears, the most positive score is best. Larger organizations with more positive average security status will rank higher in the carebear list.",
+        "minimumRequirements": "Note: Only entities with at least 10 members and appropriate security status (negative for pirates, positive for carebears) are included in these rankings.",
+        "score": "Weighted Score"
+    }
 }
