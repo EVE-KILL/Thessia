@@ -205,9 +205,10 @@ const closeMobileMenu = () => {
 <template>
     <!-- Desktop Navbar -->
     <nav
-        class="hidden md:flex h-16 items-center justify-between sticky top-0 z-50 bg-white bg-opacity-90 dark:bg-black dark:bg-opacity-90 backdrop-blur-sm shadow-sm">
-        <!-- Left items -->
-        <div class="flex items-center space-x-4">
+        class="hidden md:flex h-16 sticky top-0 z-50 bg-white bg-opacity-90 dark:bg-black dark:bg-opacity-90 backdrop-blur-sm shadow-sm">
+        <!-- Three-section layout with flexbox -->
+        <div class="container mx-auto px-4 flex items-center justify-between w-full h-full">
+            <!-- Left items - natural width -->
             <div class="flex items-center space-x-2">
                 <template v-for="(link, index) in leftNavItems" :key="index">
                     <!-- Regular links -->
@@ -251,59 +252,59 @@ const closeMobileMenu = () => {
                     </UButton>
                 </template>
             </div>
-        </div>
 
-        <!-- Center items -->
-        <div class="flex items-center">
-            <template v-for="(link, index) in centerNavItems" :key="index">
-                <component v-if="link.component && link.inline" :is="link.component" />
-                <UButton v-else-if="link.onClick" color="neutral" variant="ghost" :aria-label="link.label"
-                    @click="link.onClick">
-                    <UIcon v-if="link.icon" :name="link.icon" class="mr-2 text-lg" />
-                    <span class="text-lg">{{ link.name }}</span>
-                </UButton>
-            </template>
-        </div>
+            <!-- Center items - takes all available space -->
+            <div class="flex-1 flex items-center justify-center">
+                <template v-for="(link, index) in centerNavItems" :key="index">
+                    <component v-if="link.component && link.inline" :is="link.component" class="w-full max-w-3xl" />
+                    <UButton v-else-if="link.onClick" color="neutral" variant="ghost" :aria-label="link.label"
+                        @click="link.onClick">
+                        <UIcon v-if="link.icon" :name="link.icon" class="mr-2 text-lg" />
+                        <span class="text-lg">{{ link.name }}</span>
+                    </UButton>
+                </template>
+            </div>
 
-        <!-- Right items -->
-        <div class="flex items-center space-x-2">
-            <template v-for="(link, index) in rightNavItems" :key="index">
-                <!-- Inline components -->
-                <component v-if="link.component && link.inline" :is="link.component" />
+            <!-- Right items - natural width -->
+            <div class="flex items-center space-x-2">
+                <template v-for="(link, index) in rightNavItems" :key="index">
+                    <!-- Inline components -->
+                    <component v-if="link.component && link.inline" :is="link.component" />
 
-                <!-- Component buttons without dropdown -->
-                <component v-else-if="link.component" :is="link.component" />
+                    <!-- Component buttons without dropdown -->
+                    <component v-else-if="link.component" :is="link.component" />
 
-                <!-- Dropdown menus for right side -->
-                <Dropdown v-else-if="link.children" v-model="dropdownStates[link.label || '']" position="bottom"
-                    align="end" :smart-position="true">
-                    <template #trigger>
-                        <UButton color="neutral" variant="ghost" class="flex items-center" :aria-label="link.label">
-                            <UIcon v-if="link.icon" :name="link.icon" class="text-lg" />
-                            <span v-if="link.name" class="text-lg ml-2">{{ link.name }}</span>
-                        </UButton>
-                    </template>
+                    <!-- Dropdown menus for right side -->
+                    <Dropdown v-else-if="link.children" v-model="dropdownStates[link.label || '']" position="bottom"
+                        align="end" :smart-position="true">
+                        <template #trigger>
+                            <UButton color="neutral" variant="ghost" class="flex items-center" :aria-label="link.label">
+                                <UIcon v-if="link.icon" :name="link.icon" class="text-lg" />
+                                <span v-if="link.name" class="text-lg ml-2">{{ link.name }}</span>
+                            </UButton>
+                        </template>
 
-                    <!-- Render dropdown items -->
-                    <template v-for="(item, itemIndex) in link.children" :key="itemIndex">
-                        <NuxtLink :to="item.to"
-                            class="block px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-md"
-                            :aria-label="item.label" @click="dropdownStates[link.label || ''] = false">
-                            <div class="flex items-center">
-                                <UIcon v-if="item.icon" :name="item.icon" class="mr-2 text-sm" />
-                                {{ item.name }}
-                            </div>
-                        </NuxtLink>
-                    </template>
-                </Dropdown>
+                        <!-- Render dropdown items -->
+                        <template v-for="(item, itemIndex) in link.children" :key="itemIndex">
+                            <NuxtLink :to="item.to"
+                                class="block px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-md"
+                                :aria-label="item.label" @click="dropdownStates[link.label || ''] = false">
+                                <div class="flex items-center">
+                                    <UIcon v-if="item.icon" :name="item.icon" class="mr-2 text-sm" />
+                                    {{ item.name }}
+                                </div>
+                            </NuxtLink>
+                        </template>
+                    </Dropdown>
 
-                <!-- Buttons with click handlers -->
-                <UButton v-else-if="link.onClick" color="neutral" variant="ghost" class="flex items-center"
-                    :aria-label="link.label" @click="link.onClick">
-                    <UIcon v-if="link.icon" :name="link.icon" class="text-lg" />
-                    <span v-if="link.name" class="text-lg ml-2">{{ link.name }}</span>
-                </UButton>
-            </template>
+                    <!-- Buttons with click handlers -->
+                    <UButton v-else-if="link.onClick" color="neutral" variant="ghost" class="flex items-center"
+                        :aria-label="link.label" @click="link.onClick">
+                        <UIcon v-if="link.icon" :name="link.icon" class="text-lg" />
+                        <span v-if="link.name" class="text-lg ml-2">{{ link.name }}</span>
+                    </UButton>
+                </template>
+            </div>
         </div>
     </nav>
 

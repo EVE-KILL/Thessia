@@ -221,6 +221,11 @@ const capitalizeFirstLetter = (string: string) => {
     return string.charAt(0).toUpperCase() + string.slice(1);
 };
 
+// Helper function to determine if entity type should show ticker
+const shouldShowTicker = (type: string) => {
+    return ['corporation', 'alliance'].includes(type.toLowerCase());
+};
+
 // Show dropdown when input is focused - UPDATED
 const handleFocus = () => {
     // Only show dropdown if we already have results
@@ -296,8 +301,8 @@ onUnmounted(() => { });
         </form>
 
         <!-- Desktop searchResults using Dropdown component -->
-        <Dropdown v-model="shouldShowDropdown" position="bottom" align="center" :smart-position="true" width="800px"
-            :max-height="70">
+        <Dropdown v-model="shouldShowDropdown" position="bottom" align="center" :smart-position="true" :max-height="70"
+            width="50%">
             <template #trigger>
                 <!-- Empty invisible trigger because we control open state separately -->
                 <div class="invisible h-0 w-0"></div>
@@ -328,15 +333,28 @@ onUnmounted(() => { });
                             <!-- Category Items -->
                             <div class="category-items">
                                 <div v-for="(hit, index) in hits.slice(0, 5)" :key="`${hit.id}-${index}`"
-                                    class="search-result-item py-1.5 px-3 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-md cursor-pointer transition-colors"
+                                    class="search-result-item py-2 px-3 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-md cursor-pointer transition-colors"
                                     :class="{
                                         'bg-gray-100 dark:bg-gray-700 active':
                                             flattenedResults.indexOf(hit) === activeItemIndex
                                     }" @click="handleResultClick(hit)">
                                     <div class="flex items-center">
-                                        <div class="flex-1 min-w-0">
-                                            <div class="font-medium text-sm truncate text-gray-800 dark:text-gray-200">
-                                                {{ hit.name }}</div>
+                                        <!-- Entity Image -->
+                                        <div class="flex-shrink-0 mr-3">
+                                            <Image :type="hit.type" :id="hit.id" :size="32" />
+                                        </div>
+
+                                        <div class="flex-1 min-w-0 flex items-center">
+                                            <!-- Entity Name (with truncation) -->
+                                            <div class="font-medium text-sm text-gray-800 dark:text-gray-200 truncate mr-2">
+                                                {{ hit.name }}
+                                            </div>
+                                            
+                                            <!-- Ticker (if applicable) -->
+                                            <div v-if="hit.ticker && shouldShowTicker(hit.type)" 
+                                                class="text-xs text-gray-500 dark:text-gray-400 flex-shrink-0">
+                                                [{{ hit.ticker }}]
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
@@ -398,11 +416,30 @@ onUnmounted(() => { });
                                 'bg-gray-100 dark:bg-gray-700 border-l-4 border-primary-500':
                                     flattenedResults.indexOf(hit) === activeItemIndex
                             }" @click="handleResultClick(hit)">
-                            <div class="font-medium text-gray-800 dark:text-gray-200">
-                                {{ hit.name }}
-                            </div>
-                            <div class="text-sm text-gray-500 dark:text-gray-400">
-                                {{ capitalizeFirstLetter(hit.type) }}
+                            <div class="flex items-center">
+                                <!-- Entity Image -->
+                                <div class="flex-shrink-0 mr-3">
+                                    <Image :type="hit.type" :id="hit.id" :size="40" />
+                                </div>
+
+                                <div class="flex-1 min-w-0 flex items-center">
+                                    <!-- Entity Name (with truncation) -->
+                                    <div class="font-medium text-gray-800 dark:text-gray-200 truncate mr-2">
+                                        {{ hit.name }}
+                                    </div>
+                                    
+                                    <!-- Ticker (if applicable) -->
+                                    <div v-if="hit.ticker && shouldShowTicker(hit.type)" 
+                                        class="text-sm text-gray-500 dark:text-gray-400 flex-shrink-0">
+                                        [{{ hit.ticker }}]
+                                    </div>
+                                    
+                                    <!-- Type (if no ticker) -->
+                                    <div v-else
+                                        class="text-sm text-gray-500 dark:text-gray-400 flex-shrink-0">
+                                        {{ capitalizeFirstLetter(hit.type) }}
+                                    </div>
+                                </div>
                             </div>
                         </div>
 
@@ -451,24 +488,37 @@ onUnmounted(() => { });
 </template>
 
 <style scoped>
+/* Search input takes full available width */
+.search-input {
+    width: 100%;
+}
+
+/* Medium screens and up */
 @media (min-width: 768px) {
-    .search-input {
-        width: 640px;
-        /* Double the original width (was 320px) */
+    .search-container {
+        width: 100%;
+        max-width: 640px;
     }
 }
 
+/* Large screens */
 @media (min-width: 1024px) {
-    .search-input {
-        width: 720px;
-        /* Double the original width (was 360px) */
+    .search-container {
+        max-width: 720px;
+    }
+}
+
+/* X-Large screens */
+@media (min-width: 1280px) {
+    .search-container {
+        max-width: 800px;
     }
 }
 
 /* Custom input styling matching battle generator */
 .custom-input {
     display: block;
-    width: 450px;
+    width: 100%;
     height: 38px;
     padding: 0.5rem 0.75rem;
     font-size: 0.875rem;
@@ -549,5 +599,14 @@ button,
 .search-result-item,
 a {
     cursor: pointer;
+}
+
+/* Additional styling for the redesigned dropdown items */
+.search-result-item {
+    transition: all 0.15s ease;
+}
+
+.category-items .search-result-item:hover {
+    transform: translateX(2px);
 }
 </style>
