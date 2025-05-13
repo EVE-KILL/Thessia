@@ -194,16 +194,6 @@ watch(systemSearchTerm, (newTerm) => {
     selectedResultIndex.value = -1;
 });
 
-// Watch for changes to search results to auto-select a single result
-watch(systemSearchResults, (results) => {
-    // If there's only one result, select it automatically after a short delay
-    if (results.length === 1 && !justSelected.value) {
-        setTimeout(() => {
-            selectSystem(results[0]);
-        }, 500);
-    }
-});
-
 // Select a system from search results
 function selectSystem(system: { id: number; name: string }) {
     // Set the flag to prevent search
