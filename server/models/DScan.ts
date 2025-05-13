@@ -20,7 +20,6 @@ const dScanSchema = new Schema<IDScanDocument>(
     }
 );
 
-dScanSchema.index({ hash: 1 }, { unique: true });
 dScanSchema.index({ createdAt: 1 }, { sparse: true });
 dScanSchema.index({ updatedAt: 1 }, { sparse: true });
 

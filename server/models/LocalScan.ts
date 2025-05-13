@@ -22,7 +22,6 @@ const localScanSchema = new Schema<ILocalScanDocument>(
     }
 );
 
-localScanSchema.index({ hash: 1 }, { unique: true });
 localScanSchema.index({ createdAt: 1 }, { sparse: true });
 localScanSchema.index({ updatedAt: 1 }, { sparse: true });
 
