@@ -920,7 +920,7 @@ const previewBattle = async () => {
         if (uniqueKillmailIds.length > 0) {
             try {
                 // Fetch full killmail objects using the batch endpoint
-                const fetchedKillmails: any[] = await $fetch('/api/killmails/batch', {
+                const fetchedKillmails: any[] = await $fetch('/api/killmail/batch', {
                     method: 'POST',
                     body: { ids: uniqueKillmailIds }
                 });

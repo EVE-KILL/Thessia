@@ -138,6 +138,12 @@ const centerNavItems = computed(() => [
  */
 const rightNavItems = computed(() => [
     {
+        icon: "lucide:mail",
+        position: "right",
+        mobile: false,
+        to: "/killmail"
+    },
+    {
         position: "right",
         component: LanguageSelector,
         mobile: true,
@@ -268,8 +274,16 @@ const closeMobileMenu = () => {
             <!-- Right items - natural width -->
             <div class="flex items-center space-x-2">
                 <template v-for="(link, index) in rightNavItems" :key="index">
+                    <!-- Regular links -->
+                    <NuxtLink v-if="link.to && !link.children && !link.component" :to="link.to"
+                        class="flex items-center px-3 py-2 rounded-md text-sm font-medium hover:bg-gray-700 dark:hover:bg-gray-700"
+                        :aria-label="link.label" color="neutral" variant="ghost">
+                        <UIcon v-if="link.icon" :name="link.icon" class="text-lg" />
+                        <span v-if="link.name" class="text-lg ml-2">{{ link.name }}</span>
+                    </NuxtLink>
+
                     <!-- Inline components -->
-                    <component v-if="link.component && link.inline" :is="link.component" />
+                    <component v-else-if="link.component && link.inline" :is="link.component" />
 
                     <!-- Component buttons without dropdown -->
                     <component v-else-if="link.component" :is="link.component" />
@@ -336,6 +350,13 @@ const closeMobileMenu = () => {
                         <UIcon v-if="link.icon" :name="link.icon" class="text-xl text-black dark:text-white" />
                     </UButton>
                 </template>
+
+                <!-- Regular links that should appear in mobile header -->
+                <NuxtLink
+                    v-for="(link, index) in rightNavItems.filter(l => l.to && !l.mobile && !l.children && !l.component)"
+                    :key="`mobile-link-${index}`" :to="link.to" class="flex items-center" :aria-label="link.label">
+                    <UIcon v-if="link.icon" :name="link.icon" class="text-xl text-black dark:text-white" />
+                </NuxtLink>
 
                 <!-- Mobile menu toggle button -->
                 <UButton color="neutral" variant="ghost" aria-label="Menu" @click="isMobileMenuOpen = true">

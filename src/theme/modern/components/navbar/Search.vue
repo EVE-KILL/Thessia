@@ -346,12 +346,13 @@ onUnmounted(() => { });
 
                                         <div class="flex-1 min-w-0 flex items-center">
                                             <!-- Entity Name (with truncation) -->
-                                            <div class="font-medium text-sm text-gray-800 dark:text-gray-200 truncate mr-2">
+                                            <div
+                                                class="font-medium text-sm text-gray-800 dark:text-gray-200 truncate mr-2">
                                                 {{ hit.name }}
                                             </div>
-                                            
+
                                             <!-- Ticker (if applicable) -->
-                                            <div v-if="hit.ticker && shouldShowTicker(hit.type)" 
+                                            <div v-if="hit.ticker && shouldShowTicker(hit.type)"
                                                 class="text-xs text-gray-500 dark:text-gray-400 flex-shrink-0">
                                                 [{{ hit.ticker }}]
                                             </div>
@@ -427,16 +428,15 @@ onUnmounted(() => { });
                                     <div class="font-medium text-gray-800 dark:text-gray-200 truncate mr-2">
                                         {{ hit.name }}
                                     </div>
-                                    
+
                                     <!-- Ticker (if applicable) -->
-                                    <div v-if="hit.ticker && shouldShowTicker(hit.type)" 
+                                    <div v-if="hit.ticker && shouldShowTicker(hit.type)"
                                         class="text-sm text-gray-500 dark:text-gray-400 flex-shrink-0">
                                         [{{ hit.ticker }}]
                                     </div>
-                                    
+
                                     <!-- Type (if no ticker) -->
-                                    <div v-else
-                                        class="text-sm text-gray-500 dark:text-gray-400 flex-shrink-0">
+                                    <div v-else class="text-sm text-gray-500 dark:text-gray-400 flex-shrink-0">
                                         {{ capitalizeFirstLetter(hit.type) }}
                                     </div>
                                 </div>
