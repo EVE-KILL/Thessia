@@ -2,12 +2,11 @@
 import { useI18n } from 'vue-i18n';
 import { useRoute } from 'vue-router';
 
-// Define the CharacterWithStats interface as per the requirements
+// Define the CharacterWithStats interface without shortStats
 interface CharacterWithStats {
     name: string;
     character_id?: number;
     stats: {
-        shortStats: { kills: number; losses: number; iskKilled: number; iskLost: number; npcLosses: number; soloKills: number; soloLosses: number; lastActive: Date | null; };
         killsLastWeek: number;
         isPotentiallyDangerous: boolean;
     };
@@ -261,15 +260,10 @@ useSeoMeta({
                                     </div>
                                 </div>
                                 <div class="text-right">
-                                    <UBadge color="red" variant="soft" size="md" class="px-2 py-1">
-                                        {{ threat.stats.killsLastWeek }} {{ t('tools.localscan.kills_last_week_short')
-                                        }}
+                                    <UBadge color="error" variant="soft" size="md" class="px-2 py-1">
+                                        {{ threat.stats.killsLastWeek }}
+                                        {{ t('tools.localscan.kills_last_week_short') }}
                                     </UBadge>
-                                    <div v-if="threat.stats?.shortStats?.iskKilled !== undefined"
-                                        class="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                                        {{ t('tools.localscan.isk_killed_short') }}: {{
-                                            formatIsk(threat.stats.shortStats.iskKilled) }}
-                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -341,7 +335,7 @@ useSeoMeta({
                                         </div>
                                     </div>
 
-                                    <UBadge color="primary" size="sm" class="flex items-center gap-1">
+                                    <UBadge color="primary" class="flex items-center gap-1">
                                         {{ alliance.characterCount }}
                                         <UIcon
                                             :name="isCollapsed(`alliance-${alliance.id}`) ? 'chevron-down' : 'chevron-up'"
@@ -373,7 +367,7 @@ useSeoMeta({
                                                 </div>
                                             </div>
 
-                                            <UBadge color="gray" size="sm" class="flex items-center gap-1">
+                                            <UBadge color="info" class="flex items-center gap-1">
                                                 {{ corp.characterCount }}
                                                 <UIcon
                                                     :name="isCollapsed(`corp-${alliance.id}-${corp.id}`) ? 'chevron-down' : 'chevron-up'"
@@ -393,7 +387,7 @@ useSeoMeta({
                                                         class="hover:underline">{{ character.name }}</NuxtLink>
                                                     <span v-else>{{ character.name }}</span>
                                                     <UBadge v-if="character.stats?.killsLastWeek !== undefined"
-                                                        size="sm" color="red" variant="soft" class="ml-1">
+                                                        color="error" variant="soft" class="ml-1">
                                                         {{ character.stats.killsLastWeek }} {{
                                                             t('tools.localscan.kills_last_week_short') }}
                                                     </UBadge>

@@ -1,25 +1,12 @@
 import { createHash } from 'crypto';
-import { calculateShortStats } from '~/server/helpers/Stats';
 import { Alliances } from '~/server/models/Alliances';
 import { Characters } from '~/server/models/Characters';
 import { Corporations } from '~/server/models/Corporations';
 import { Killmails } from '~/server/models/Killmails';
 import { LocalScan } from '~/server/models/LocalScan';
 
-// Define interfaces for the stats and character data
-interface ShortStats {
-    kills: number;
-    losses: number;
-    iskKilled: number;
-    iskLost: number;
-    npcLosses: number;
-    soloKills: number;
-    soloLosses: number;
-    lastActive: Date | null;
-}
-
+// Define interfaces for character data
 interface CharacterScanStats {
-    shortStats: ShortStats;
     killsLastWeek: number;
     isPotentiallyDangerous: boolean;
 }
@@ -95,24 +82,16 @@ export default defineEventHandler(async (event) => {
             const character = await Characters.findOne({ name: trimmedName }).lean();
             if (!character || !character.character_id) return null;
 
-            let shortStatsData: ShortStats;
             let killsInLastWeek = 0;
 
             try {
-                // @ts-ignore TODO: Fix type for calculateShortStats if it expects days
-                shortStatsData = await calculateShortStats('character_id', character.character_id, 7) as ShortStats;
-
                 const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
                 killsInLastWeek = await Killmails.countDocuments({
                     'attackers.character_id': character.character_id,
                     kill_time: { $gte: sevenDaysAgo }
                 });
-            } catch (statError) {
-                console.error(`Error fetching stats for ${character.name}:`, statError);
-                shortStatsData = {
-                    kills: 0, losses: 0, iskKilled: 0, iskLost: 0, npcLosses: 0,
-                    soloKills: 0, soloLosses: 0, lastActive: null
-                };
+            } catch (error) {
+                console.error(`Error fetching kills for ${character.name}:`, error);
                 killsInLastWeek = 0;
             }
 
@@ -122,7 +101,6 @@ export default defineEventHandler(async (event) => {
                 name: character.name,
                 character_id: character.character_id,
                 stats: {
-                    shortStats: shortStatsData,
                     killsLastWeek: killsInLastWeek,
                     isPotentiallyDangerous: isPotentiallyDangerous
                 }

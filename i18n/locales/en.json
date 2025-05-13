@@ -649,7 +649,7 @@
     "tools.localscan.corps_without_alliance": "Corporations Without Alliance",
     "tools.localscan.error_loading": "Error loading local scan data",
     "tools.localscan.no_data": "No local scan data found",
-    "tools.localscan.kills_last_week_short": "k/w",
+    "tools.localscan.kills_last_week_short": "kills pr. week",
     "tools.localscan.isk_killed_short": "ISK killed",
     "tools.localscan.unknown_corp": "Unknown corporation",
     "tools.localscan.total_characters": "{count} characters",
