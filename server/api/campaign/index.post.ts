@@ -1,0 +1,96 @@
+import { createError, defineEventHandler, parseCookies, readBody } from 'h3';
+import { Campaigns } from '~/server/models/Campaigns';
+
+export default defineEventHandler(async (event) => {
+    try {
+        // Get authentication cookie directly from the request
+        const cookies = parseCookies(event);
+        const token = cookies.evelogin;
+
+        if (!token) {
+            throw createError({ statusCode: 401, statusMessage: 'Authentication required' });
+        }
+
+        // Get user data from the session
+        const session = await $fetch("/api/auth/me", {
+            headers: {
+                cookie: `evelogin=${token}`,
+            },
+        }).catch(() => null);
+
+        if (!session || !session.authenticated) {
+            throw createError({
+                statusCode: 401,
+                statusMessage: "Authentication failed"
+            });
+        }
+
+        const user = session.user;
+
+        // Validate required fields
+        const { name, description, startTime, endTime, query } = await readBody(event);
+
+        if (!name || typeof name !== 'string' || !name.trim()) {
+            throw createError({ statusCode: 400, statusMessage: 'Campaign name is required' });
+        }
+
+        if (!startTime) {
+            throw createError({ statusCode: 400, statusMessage: 'Start time is required' });
+        }
+
+        if (!query || typeof query !== 'object') {
+            throw createError({ statusCode: 400, statusMessage: 'Valid query object is required' });
+        }
+
+        // Create dates from string timestamps
+        const startTimeDate = new Date(startTime);
+        const endTimeDate = endTime ? new Date(endTime) : undefined;
+
+        // Validate dates
+        if (isNaN(startTimeDate.getTime())) {
+            throw createError({ statusCode: 400, statusMessage: 'Invalid start time format' });
+        }
+
+        if (endTimeDate && isNaN(endTimeDate.getTime())) {
+            throw createError({ statusCode: 400, statusMessage: 'Invalid end time format' });
+        }
+
+        if (endTimeDate && endTimeDate < startTimeDate) {
+            throw createError({ statusCode: 400, statusMessage: 'End time cannot be before start time' });
+        }
+
+        // Create campaign document with creator ID from authenticated user
+        const campaignData = {
+            name: name.trim(),
+            description: description?.trim(),
+            startTime: startTimeDate,
+            endTime: endTimeDate,
+            query,
+            creator_id: user.characterId, // Add creator ID from authenticated user
+            public: true // Default to public for now
+        };
+
+        // Save to database
+        const campaign = new Campaigns(campaignData);
+        await campaign.save();
+
+        // Return campaign data with ID
+        return {
+            success: true,
+            message: 'Campaign saved successfully',
+            campaign: {
+                id: campaign.campaign_id,
+                name: campaign.name
+            }
+        };
+    } catch (error: any) {
+        // Log the error server-side
+        console.error('Error saving campaign:', error);
+
+        // Return appropriate error to client
+        throw createError({
+            statusCode: error.statusCode || 500,
+            statusMessage: error.statusMessage || 'Error saving campaign'
+        });
+    }
+});
