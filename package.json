@@ -45,7 +45,7 @@
         "moment-timezone": "^0.5.48",
         "mongoose": "^8.14.2",
         "node-gyp": "^11.2.0",
-        "nuxt": "^3.17.2",
+        "nuxt": "^3.17.3",
         "nuxt-security": "2.2.0",
         "server-health": "^6.0.2",
         "sharp": "^0.34.1",
