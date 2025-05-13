@@ -627,6 +627,7 @@
     "tools.dscan.count": "Count",
     "tools.dscan.error_loading": "Error loading D-Scan data",
     "tools.dscan.no_data": "No D-Scan data found",
+    "tools.dscan.total_ships": "{count} ships",
     "tools.localscan.title": "Local Scan Analyzer",
     "tools.localscan.instruction": "Copy a list of character names from EVE and paste it below",
     "tools.localscan.paste_button": "Paste Characters",
