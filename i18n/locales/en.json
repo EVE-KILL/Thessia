@@ -644,7 +644,6 @@
     "tools.localscan.clipboard_error": "Error accessing clipboard",
     "tools.localscan.navigation_error": "Error navigating to results page",
     "tools.localscan.result_title": "Local Scan Results",
-    "tools.localscan.navigation_error": "Error navigating to results page",
     "tools.localscan.result_description": "Analysis of EVE Online local chat character data",
     "tools.localscan.alliance_corp_breakdown": "Alliance / Corporation Breakdown",
     "tools.localscan.corps_without_alliance": "Corporations Without Alliance",
