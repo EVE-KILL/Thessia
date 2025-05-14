@@ -119,6 +119,11 @@ useSeoMeta({
  * @returns The killmail ID and hash, or null if invalid
  */
 const extractKillmailInfo = (url: string) => {
+    // First check if the URL is from the ESI API
+    if (!url.startsWith('https://esi.evetech.net/')) {
+        throw new Error(t('killmail.not_esi_url'));
+    }
+    
     if (!url.includes('killmails')) {
         throw new Error(t('killmail.not_killmail_url'));
     }

@@ -694,6 +694,7 @@
     "killmail.already_exists": "Killmail already exists in the database",
     "killmail.successfully_added": "Killmail successfully added to the database",
     "killmail.options": "Options",
+    "killmail.not_esi_url": "The killmail url does not contain esi.evetech.net",
     "buttons": {
         "loadMoreStats": "Load More Statistics"
     },
