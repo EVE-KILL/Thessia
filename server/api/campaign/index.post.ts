@@ -1,4 +1,4 @@
-import { createError, defineEventHandler, getCookie, getHeaders, parseCookies, readBody } from 'h3';
+import { createError, defineEventHandler, parseCookies, readBody } from 'h3';
 import { Campaigns } from '~/server/models/Campaigns';
 
 // Define constants for entity limits
@@ -7,43 +7,22 @@ const ENTITY_MAX_ENTITIES = 15;
 
 export default defineEventHandler(async (event) => {
     try {
-        // Use multiple methods to extract the cookie for more reliability
-        let token = getCookie(event, 'evelogin');
+        // Get authentication cookie directly from the request
+        const cookies = parseCookies(event);
+        const token = cookies.evelogin;
 
         if (!token) {
-            // Fall back to parseCookies if getCookie fails
-            const cookies = parseCookies(event);
-            token = cookies.evelogin;
-        }
-
-        if (!token) {
-            // Try to extract from raw headers as last resort
-            const headers = getHeaders(event);
-            const cookieHeader = headers.cookie || '';
-            const cookieMatch = cookieHeader.match(/evelogin=([^;]+)/);
-            token = cookieMatch ? cookieMatch[1] : null;
-        }
-
-        if (!token) {
-            console.error('Authentication token not found in request');
             throw createError({ statusCode: 401, statusMessage: 'Authentication required' });
         }
 
-        // Get user data with explicit fetch options
+        // Get user data from the session
         const session = await $fetch("/api/auth/me", {
             headers: {
                 cookie: `evelogin=${token}`,
             },
-            // Add more fetch options for production environment
-            retry: 1,
-            timeout: 10000,
-        }).catch((error) => {
-            console.error('Error fetching auth session:', error);
-            return null;
-        });
+        }).catch(() => null);
 
         if (!session || !session.authenticated) {
-            console.error('Authentication failed with token:', session ? 'Invalid session' : 'No session returned');
             throw createError({
                 statusCode: 401,
                 statusMessage: "Authentication failed"

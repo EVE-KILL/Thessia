@@ -587,10 +587,13 @@ const previewCampaign = async () => {
     showPreview.value = true;
 
     try {
-        const { data, error } = await useFetch('/api/campaign/preview', {
-            method: 'POST',
-            body: previewCampaignData.value
-        });
+        const { data, error } = await useFetch<ICampaignOutput>(
+            '/api/campaign/preview',
+            {
+                method: 'POST',
+                body: previewCampaignData.value
+            }
+        );
 
         if (error.value) {
             previewError.value = error.value.message || 'Error loading preview';
