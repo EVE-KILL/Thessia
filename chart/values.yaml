@@ -102,7 +102,7 @@ thessia:
             memory: 256Mi
         limits:
             cpu: 8000m
-            memory: 2048Mi
+            memory: 4096Mi
     service:
         port: 3000
         targetPort: 3000

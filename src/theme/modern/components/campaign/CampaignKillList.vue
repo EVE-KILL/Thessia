@@ -252,14 +252,14 @@ const tableColumns = [
         </div>
 
         <!-- Error state -->
-        <div v-else-if="error" class="bg-red-50 dark:bg-red-900/20 p-6 rounded-lg text-center">
+        <div v-else-if="error" class="bg-red-50 dark:bg-red-900/20 rounded-lg text-center">
             <UIcon name="lucide:alert-circle" class="w-12 h-12 text-red-500 mb-4 mx-auto" />
             <p class="text-red-600 dark:text-red-400">{{ error.message || t('common.errorLoadingData') }}</p>
             <UButton class="mt-4" icon="i-lucide-refresh-cw" @click="refresh">{{ t('retry') }}</UButton>
         </div>
 
         <!-- No data state -->
-        <div v-else-if="!killmails.length" class="bg-gray-50 dark:bg-gray-800 p-6 rounded-lg text-center">
+        <div v-else-if="!killmails.length" class="bg-gray-50 dark:bg-gray-800 rounded-lg text-center">
             <UIcon name="lucide:search" class="w-12 h-12 text-gray-400 mb-4 mx-auto" />
             <p class="text-gray-600 dark:text-gray-400">{{ t('campaign.no_killmails_found') }}</p>
         </div>
@@ -294,9 +294,9 @@ const tableColumns = [
                     </template>
                     <Image v-else type="character" :id="1" alt="Placeholder" class="rounded w-10 mx-2" size="44" />
                     <div class="flex flex-col items-start">
-                        <span class="text-sm text-black dark:text-white">{{ item.victim.character_name ||
-                            t('campaign.unknown_pilot')
-                            }}</span>
+                        <span class="text-sm text-black dark:text-white">
+                            {{ item.victim.character_name || t('campaign.unknown_pilot') }}
+                        </span>
                         <span class="text-xs text-gray-600 dark:text-gray-400 whitespace-nowrap">
                             {{ truncateString(item.victim.corporation_name, 22) }}
                         </span>
@@ -312,11 +312,13 @@ const tableColumns = [
                         <Image type="character" :id="item.finalblow.character_id" format="webp"
                             :alt="`Character: ${item.finalblow.character_name}`" class="rounded w-10 mx-2" size="44" />
                         <div class="flex flex-col items-start">
-                            <span class="text-sm text-black dark:text-white">{{ item.finalblow.character_name
-                                }}</span>
+                            <span class="text-sm text-black dark:text-white">
+                                {{ item.finalblow.character_name }}
+                            </span>
                             <span class="text-xs text-gray-600 dark:text-gray-400">
-                                {{ truncateString(getLocalizedString(item.finalblow.ship_group_name, currentLocale),
-                                    22) }}
+                                {{ truncateString(
+                                    getLocalizedString(item.finalblow.ship_group_name, currentLocale)
+                                    , 22) }}
                             </span>
                         </div>
                     </template>
@@ -326,8 +328,9 @@ const tableColumns = [
                             <span class="text-sm text-black dark:text-white">{{ item.finalblow.faction_name ||
                                 item.finalblow.character_name || t('campaign.unknown_pilot') }}</span>
                             <span class="text-xs text-gray-600 dark:text-gray-400">
-                                {{ truncateString(getLocalizedString(item.finalblow.ship_group_name, currentLocale),
-                                    22) }}
+                                {{ truncateString(
+                                    getLocalizedString(item.finalblow.ship_group_name, currentLocale)
+                                    , 22) }}
                             </span>
                         </div>
                     </template>
@@ -343,8 +346,9 @@ const tableColumns = [
                     <div class="text-xs text-gray-600 dark:text-gray-400 whitespace-nowrap">
                         <span>{{ item.system_name }}</span>
                         <span> (</span>
-                        <span :class="getSecurityColor(item.system_security)">{{ item.system_security.toFixed(1)
-                            }}</span>
+                        <span :class="getSecurityColor(item.system_security)">
+                            {{ item.system_security.toFixed(1) }}
+                        </span>
                         <span>)</span>
                     </div>
                 </div>
@@ -395,14 +399,16 @@ const tableColumns = [
                         <!-- Final Blow + Location -->
                         <div class="mobile-meta flex justify-between text-xs text-gray-600 dark:text-gray-400">
                             <span class="final-blow truncate max-w-[50%]">
-                                {{ item.is_npc ? item.finalblow.faction_name : (item.finalblow.character_name ||
-                                    t('campaign.unknown_pilot')) }}
+                                {{ item.is_npc ?
+                                    item.finalblow.faction_name :
+                                    (item.finalblow.character_name || t('campaign.unknown_pilot')) }}
                             </span>
                             <div class="system-info flex whitespace-nowrap">
                                 <span>{{ item.system_name }}</span>
                                 <span> (</span>
-                                <span :class="getSecurityColor(item.system_security)">{{
-                                    item.system_security.toFixed(1) }}</span>
+                                <span :class="getSecurityColor(item.system_security)">
+                                    {{ item.system_security.toFixed(1) }}
+                                </span>
                                 <span>)</span>
                             </div>
                         </div>
