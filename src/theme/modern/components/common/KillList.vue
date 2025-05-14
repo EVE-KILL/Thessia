@@ -1,8 +1,8 @@
 <script setup lang="ts">
 import moment from "moment";
-import type { IAttacker } from "~/interfaces/IAttacker";
-import type { IKillList } from "~/interfaces/IKillList";
-import type { IKillmail } from "~/interfaces/IKillmail";
+import type { IAttacker } from "~/server/interfaces/IAttacker";
+import type { IKillList } from "~/server/interfaces/IKillList";
+import type { IKillmail } from "~/server/interfaces/IKillmail";
 import { useWebSocket } from "~/src/theme/modern/composables/useWebsocket";
 
 const { t, locale } = useI18n();
@@ -680,7 +680,7 @@ onBeforeUnmount(() => {
                         <span>{{ item.system_name }}</span>
                         <span> (</span>
                         <span :class="getSecurityColor(item.system_security)">{{ item.system_security.toFixed(1)
-                            }}</span>
+                        }}</span>
                         <span>)</span>
                     </div>
                 </div>
@@ -739,7 +739,7 @@ onBeforeUnmount(() => {
                                 <span>{{ item.system_name }}</span>
                                 <span> (</span>
                                 <span :class="getSecurityColor(item.system_security)">{{ item.system_security.toFixed(1)
-                                    }}</span>
+                                }}</span>
                                 <span>)</span>
                             </div>
                         </div>

@@ -413,10 +413,12 @@ const handleCreateCampaign = async () => {
                 icon: 'i-lucide-check-circle',
                 timeout: 5000
             });
-            // Optionally redirect to view the campaign
+            // Redirect to view the campaign
             if (data.value.campaign && data.value.campaign.id) {
-                // Redirect to campaign view page when available
-                // window.location.href = `/campaign/${data.value.campaign.id}`;
+                // Short timeout to allow the toast to be shown before redirect
+                setTimeout(() => {
+                    window.location.href = `/campaign/${data.value.campaign.id}`;
+                }, 1000);
             }
         }
     } catch (err) {

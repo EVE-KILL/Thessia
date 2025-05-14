@@ -114,7 +114,7 @@ export default defineNuxtConfig({
                         cors: true,
                         cache: { maxAge: 3600, staleMaxAge: -1, swr: true, base: "redis" },
                     },
-                    "/api/campaigns/**": {
+                    "/api/campaign/**": {
                         cors: true,
                         cache: { maxAge: 3600, staleMaxAge: -1, swr: true, base: "redis" },
                     },

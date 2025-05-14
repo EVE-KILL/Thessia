@@ -105,6 +105,13 @@ const leftNavItems = computed(() => [
                 icon: "lucide:shield",
             },
             {
+                name: t("campaigncreator"),
+                label: t("campaigncreator"),
+                position: "left",
+                to: "/campaigncreator",
+                icon: "lucide:flag",
+            },
+            {
                 name: t("tools.localscan.title"),
                 label: t("tools.localscan.title"),
                 position: "left",
