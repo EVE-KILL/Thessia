@@ -20,7 +20,7 @@
             <div class="campaign-header mb-6">
                 <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-4">
                     <h1 class="text-2xl font-bold">{{ stats.name }} <span class="text-sm text-gray-400">({{
-                            t('campaign.preview') }})</span></h1>
+                        t('campaign.preview') }})</span></h1>
                 </div>
                 <p v-if="stats.description" class="text-gray-300 mb-4">{{ stats.description }}</p>
             </div>
@@ -112,7 +112,7 @@ import CampaignOverview from '~/src/theme/modern/components/campaign/CampaignOve
 import CampaignShipStats from '~/src/theme/modern/components/campaign/CampaignShipStats.vue';
 import CampaignTopBox from '~/src/theme/modern/components/campaign/CampaignTopBox.vue';
 
-// Props
+// Define props properly for the component
 const props = defineProps({
     campaignData: {
         type: Object,
@@ -120,7 +120,7 @@ const props = defineProps({
     }
 });
 
-// Emits
+// Define emits
 defineEmits(['close', 'save']);
 
 // Composables
@@ -135,15 +135,17 @@ const entities = ref({
     characters: []
 });
 
-// Fetch campaign preview data
+// Fetch campaign preview data with proper access to props
 const { data: stats, pending } = useFetch<ICampaignOutput>(
     '/api/campaign/preview',
     {
         method: 'POST',
         body: props.campaignData,
         key: `campaign-preview-${JSON.stringify(props.campaignData)}`,
-        onResponseError(error) {
-            console.error('Error loading campaign preview:', error);
+        credentials: 'include',
+        onResponseError(err) {
+            console.error('Error loading campaign preview:', err);
+            error.value = err.message || 'Error loading preview';
         }
     }
 );
