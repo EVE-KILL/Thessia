@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, onMounted, ref, watch } from "vue";
-import { type ICampaignOutput } from '~/server/interfaces/ICampaignOutput';
+import CampaignPreview from '~/src/theme/modern/components/campaign/CampaignPreview.vue';
 
 // i18n setup
 const { t } = useI18n();
@@ -650,13 +650,43 @@ const loginToCreateCampaign = () => {
 
 // Add new state for preview
 const showPreview = ref(false);
-const previewCampaignData = ref<any>(null);
-const previewStats = ref<ICampaignOutput | null>(null);
-const isLoadingPreview = ref(false);
-const previewError = ref<string | null>(null);
+const previewCampaignData = ref(null);
 
 // Function to preview the campaign
-const previewCampaign = async () => {
+const previewCampaign = () => {
+    if (!campaignName.value.trim()) {
+        toast.add({
+            title: t('error'),
+            description: t('campaignCreator.nameRequired'),
+            color: 'error',
+            icon: 'i-lucide-alert-circle',
+            timeout: 5000
+        });
+        return;
+    }
+
+    if (!campaignStartTime.value) {
+        toast.add({
+            title: t('error'),
+            description: t('campaignCreator.startTimeRequired'),
+            color: 'error',
+            icon: 'i-lucide-alert-circle',
+            timeout: 5000
+        });
+        return;
+    }
+
+    if (!campaignQuery.value || Object.keys(campaignQuery.value).length === 0) {
+        toast.add({
+            title: t('error'),
+            description: t('campaignCreator.scopeRequired'),
+            color: 'error',
+            icon: 'i-lucide-alert-circle',
+            timeout: 5000
+        });
+        return;
+    }
+
     if (!hasNonTimeFilter.value) {
         toast.add({
             title: t('error'),
@@ -676,45 +706,39 @@ const previewCampaign = async () => {
         query: campaignQuery.value
     };
 
-    isLoadingPreview.value = true;
-    previewError.value = null;
-    previewStats.value = null;
     showPreview.value = true;
-
-    try {
-        const { data, error } = await useFetch<ICampaignOutput>(
-            '/api/campaign/preview',
-            {
-                method: 'POST',
-                body: previewCampaignData.value,
-                credentials: 'include'
-            }
-        );
-
-        if (error.value) {
-            previewError.value = error.value.message || 'Error loading preview';
-            console.error('Error loading campaign preview:', error.value);
-        } else if (data.value) {
-            previewStats.value = data.value;
-        }
-    } catch (err) {
-        previewError.value = err.message || 'Unknown error';
-        console.error('Error loading campaign preview:', err);
-    } finally {
-        isLoadingPreview.value = false;
-    }
 };
 
-// Close preview
+// Function to close the preview
 const closePreview = () => {
     showPreview.value = false;
-    previewStats.value = null;
+    previewCampaignData.value = null;
 };
 
-// Save from preview
+// Function to save from the preview
 const saveFromPreview = () => {
     handleCreateCampaign();
+    closePreview();
 };
+
+// Modify the button's text based on edit mode
+const submitButtonText = computed(() => {
+    return isEditMode.value ? t('campaignCreator.updateCampaign') : t('createCampaign');
+});
+
+// Modify the preview fetch to include credentials
+const { data: stats, pending } = useFetch<ICampaignOutput>(
+    '/api/campaign/preview',
+    {
+        method: 'POST',
+        body: props.campaignData,
+        key: `campaign-preview-${JSON.stringify(props.campaignData)}`,
+        credentials: 'include', // Add this line
+        onResponseError(error) {
+            console.error('Error loading campaign preview:', error);
+        }
+    }
+);
 </script>
 
 <template>
@@ -1339,46 +1363,8 @@ const saveFromPreview = () => {
             </template>
 
             <div class="p-4">
-                <!-- Fix: Replace the previewCampaign component with proper content -->
-                <div v-if="isLoadingPreview" class="flex flex-col items-center justify-center py-12">
-                    <UIcon name="lucide:loader" class="w-12 h-12 animate-spin text-primary mb-4" />
-                    <span class="text-xl font-medium">{{ $t('campaign.loading') }}</span>
-                </div>
-                <div v-else-if="previewError" class="flex flex-col items-center justify-center py-12">
-                    <UIcon name="lucide:alert-circle" class="w-12 h-12 text-red-500 mb-4" />
-                    <span class="text-xl font-medium">{{ $t('campaign.preview_error') }}</span>
-                    <p class="text-gray-500 mt-2">{{ previewError }}</p>
-                    <UButton class="mt-4" @click="closePreview">{{ $t('cancel') }}</UButton>
-                </div>
-                <div v-else-if="previewStats" class="max-w-7xl mx-auto">
-                    <!-- Create direct template for preview stats display -->
-                    <!-- Campaign Header -->
-                    <div class="campaign-header mb-6">
-                        <h1 class="text-2xl font-bold">{{ previewStats.name }}
-                            <span class="text-sm text-gray-400">({{ $t('campaign.preview') }})</span>
-                        </h1>
-                        <p v-if="previewStats.description" class="text-gray-300 mb-4">{{ previewStats.description }}</p>
-                    </div>
-
-                    <!-- Campaign Filters Box -->
-                    <CampaignFilters :campaignId="'preview'" :campaignQuery="previewStats.campaignQuery"
-                        :filterEntities="previewStats.filterEntities" class="mb-6" />
-
-                    <!-- Campaign Overview -->
-                    <div class="mb-6">
-                        <CampaignOverview :stats="previewStats" />
-                    </div>
-
-                    <!-- Ship Stats -->
-                    <CampaignShipStats :stats="previewStats" class="mb-6" />
-
-                    <!-- Action buttons -->
-                    <div class="flex justify-end space-x-4 mt-6">
-                        <UButton @click="closePreview" variant="outline">{{ $t('cancel') }}</UButton>
-                        <UButton @click="handleCreateCampaign" color="primary">{{ $t('campaign.save_campaign') }}
-                        </UButton>
-                    </div>
-                </div>
+                <CampaignPreview v-if="previewCampaignData" :campaignData="previewCampaignData" @close="closePreview"
+                    @save="saveFromPreview" />
             </div>
         </UCard>
     </div>
