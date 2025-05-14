@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, watch } from "vue";
+import { onMounted, ref, watch } from "vue";
 
 // i18n setup
 const { t } = useI18n();
@@ -19,221 +19,247 @@ const campaignDescription = ref("");
 const campaignStartTime = ref(""); // ISO string format from datetime-local
 const campaignEndTime = ref("");   // ISO string format from datetime-local
 
-// --- Query Builder Logic ---
-const MAX_FACETS = 10; // Simplified limit for campaign scope
-const MAX_IN_VALUES = 10; // Maximum entity limit for multiple selections
+// --- Fixed Filter Structure ---
+// Define the entity limits
+const LOCATION_MAX_ENTITIES = 5;
+const ENTITY_MAX_ENTITIES = 15;
 
-const BOOLEAN_OPTIONS = [
-    { value: true, label: t("true") },
-    { value: false, label: t("false") },
-];
+// Create a structured filter state object with default values
+const filterState = ref({
+    // Location/Time section
+    region: createFilterField('region_id', 'region', LOCATION_MAX_ENTITIES),
+    system: createFilterField('system_id', 'system', LOCATION_MAX_ENTITIES),
+    constellation: createFilterField('constellation_id', 'constellation', LOCATION_MAX_ENTITIES),
 
-const FIELD_OPTIONS = [
-    { value: "region_id", label: "Region" },
-    { value: "system_id", label: "System" },
-    { value: "constellation_id", label: "Constellation" },
-    { value: "victim.character_id", label: "Victim Character" },
-    { value: "victim.corporation_id", label: "Victim Corporation" },
-    { value: "victim.alliance_id", label: "Victim Alliance" },
-    { value: "victim.faction_id", label: "Victim Faction" },
-    { value: "attackers.character_id", label: "Attacker Character" },
-    { value: "attackers.corporation_id", label: "Attacker Corporation" },
-    { value: "attackers.alliance_id", label: "Attacker Alliance" },
-    { value: "attackers.faction_id", label: "Attacker Faction" },
-];
+    // Attackers section
+    attackerCharacter: createFilterField('attackers.character_id', 'character', ENTITY_MAX_ENTITIES),
+    attackerCorporation: createFilterField('attackers.corporation_id', 'corporation', ENTITY_MAX_ENTITIES),
+    attackerAlliance: createFilterField('attackers.alliance_id', 'alliance', ENTITY_MAX_ENTITIES),
+    attackerFaction: createFilterField('attackers.faction_id', 'faction', ENTITY_MAX_ENTITIES),
 
-function supportsSearch(fieldId: string): boolean {
-    return [
-        "region_id", "system_id", "victim.character_id",
-        "victim.corporation_id", "victim.alliance_id", "victim.faction_id",
-        "attackers.character_id", "attackers.corporation_id",
-        "attackers.alliance_id", "attackers.faction_id", "items.type_id",
-    ].includes(fieldId);
-}
+    // Victims section
+    victimCharacter: createFilterField('victim.character_id', 'character', ENTITY_MAX_ENTITIES),
+    victimCorporation: createFilterField('victim.corporation_id', 'corporation', ENTITY_MAX_ENTITIES),
+    victimAlliance: createFilterField('victim.alliance_id', 'alliance', ENTITY_MAX_ENTITIES),
+    victimFaction: createFilterField('victim.faction_id', 'faction', ENTITY_MAX_ENTITIES)
+});
 
-function getEntityTypeForField(fieldId: string): string {
-    if (fieldId.includes("character_id")) return "character";
-    if (fieldId.includes("corporation_id")) return "corporation";
-    if (fieldId.includes("alliance_id")) return "alliance";
-    if (fieldId.includes("faction_id")) return "faction";
-    if (fieldId.includes("items.type_id")) return "item"; // ship_id and weapon_type_id removed from FIELD_OPTIONS context
-    if (fieldId === "system_id") return "system";
-    if (fieldId === "region_id") return "region";
-    return "";
-}
-
-// Updated facets type to remove explicit operator
-const facets = ref<
-    Array<{
-        id: string;
-        field: string;
-        value: any;
-        multipleValues: any[]; // Array for multiple values
-        searchTerm?: string;
-        searchResults?: any[];
-        entityType?: string;
-        valueLabel?: string;
-    }>
->([]);
-
-const campaignQuery = ref<Record<string, any> | null>(null);
-const generatedQueryString = ref<string>(""); // For display if needed
-
-// Dropdown states - only need field dropdown now
-const fieldDropdownOpen = ref<Record<string, boolean>>({});
-
-const toggleFieldDropdown = (facetId?: string) => {
-    const closeAll = () => {
-        Object.keys(fieldDropdownOpen.value).forEach(key => fieldDropdownOpen.value[key] = false);
-    };
-
-    if (facetId) {
-        const currentState = fieldDropdownOpen.value[facetId];
-        closeAll();
-        fieldDropdownOpen.value[facetId] = !currentState;
-    }
-};
-
-const addFacet = () => {
-    if (facets.value.length >= MAX_FACETS) return;
-    const id = `facet-${Date.now()}-${Math.random().toString(36).substr(2, 5)}`;
-    facets.value.push({
-        id,
-        field: "region_id",
+// Helper function to create a filter field with consistent structure
+function createFilterField(field: string, entityType: string, maxEntities: number) {
+    return {
+        field,
+        entityType,
         value: "",
         multipleValues: [],
         searchTerm: "",
         searchResults: [],
-        entityType: getEntityTypeForField("region_id"),
-    });
-    fieldDropdownOpen.value[id] = false;
-};
+        valueLabel: "",
+        error: "",
+        maxEntities
+    };
+}
 
-const removeFacet = (id: string) => {
-    facets.value = facets.value.filter((f) => f.id !== id);
-    delete fieldDropdownOpen.value[id];
-};
+// Check if limit is reached for a specific filter
+function isLimitReached(filterId: string): boolean {
+    const filter = filterState.value[filterId];
+    return filter?.multipleValues.length >= filter?.maxEntities;
+}
 
-const handleFieldChange = (facetId: string, newField: string) => {
-    const facet = facets.value.find((f) => f.id === facetId);
-    if (!facet) return;
+const campaignQuery = ref<Record<string, any> | null>(null);
+const generatedQueryString = ref<string>("");
 
-    facet.field = newField;
-    facet.value = ""; // Reset value
-    facet.multipleValues = []; // Reset multiple values
-    facet.searchTerm = "";
-    facet.searchResults = [];
-    facet.entityType = getEntityTypeForField(newField);
+// Additional state management
+const selectedResultIndex = ref<Record<string, number>>({});
+const lastSearchTerms = ref<Record<string, string>>({});
 
-    if (newField === "is_npc" || newField === "is_solo") {
-        facet.value = true;
-    }
-
-    fieldDropdownOpen.value[facetId] = false;
-};
-
-// Add error message for too many entities
-const selectionError = ref<Record<string, string>>({});
-
-// Updated selectSearchResult to handle single/multiple values automatically
-const selectSearchResult = (facetId: string, result: any) => {
-    const facet = facets.value.find(f => f.id === facetId);
-    if (!facet) return;
+// Handle selection of a search result
+const selectSearchResult = (filterId: string, result: any) => {
+    const filter = filterState.value[filterId];
+    if (!filter) return;
 
     const displayName = result.ticker ? `${result.name} (${result.ticker})` : result.name;
 
     // Check if this is already in multipleValues
-    if (facet.multipleValues.some(item => item.id === result.id)) {
+    if (filter.multipleValues.some(item => item.id === result.id)) {
         return; // Skip if already added
     }
 
     // Check if we've reached the limit
-    if (facet.multipleValues.length >= MAX_IN_VALUES) {
-        selectionError[facetId] = `Maximum of ${MAX_IN_VALUES} entities allowed`;
+    if (filter.multipleValues.length >= filter.maxEntities) {
+        filter.error = `Maximum of ${filter.maxEntities} entities allowed`;
         return;
     }
 
     // Clear any previous error
-    selectionError[facetId] = '';
+    filter.error = '';
 
     // Add to multipleValues array
-    facet.multipleValues.push({
+    filter.multipleValues.push({
         id: result.id,
         name: displayName
     });
 
     // If it's the first value, also set it as single value
-    if (facet.multipleValues.length === 1) {
-        facet.value = result.id;
-        facet.valueLabel = displayName;
+    if (filter.multipleValues.length === 1) {
+        filter.value = result.id;
+        filter.valueLabel = displayName;
     } else {
         // If we already have a value and add a second, clear single value
-        facet.value = "";
-        facet.valueLabel = "";
+        filter.value = "";
+        filter.valueLabel = "";
     }
 
-    // Clear search term and close dropdown by clearing search results
-    facet.searchTerm = '';
-    facet.searchResults = [];
+    // Clear search term and results
+    filter.searchTerm = '';
+    filter.searchResults = [];
 };
 
-// Function to remove a selected entity
-const removeSelectedEntity = (facetId: string, entityId: number) => {
-    const facet = facets.value.find(f => f.id === facetId);
-    if (!facet) return;
+// Remove a selected entity
+const removeSelectedEntity = (filterId: string, entityId: number) => {
+    const filter = filterState.value[filterId];
+    if (!filter) return;
 
     // Remove from multipleValues array
-    facet.multipleValues = facet.multipleValues.filter(item => item.id !== entityId);
+    filter.multipleValues = filter.multipleValues.filter(item => item.id !== entityId);
 
     // Update single value if needed
-    if (facet.multipleValues.length === 1) {
+    if (filter.multipleValues.length === 1) {
         // If only one value remains, set it as the single value
-        facet.value = facet.multipleValues[0].id;
-        facet.valueLabel = facet.multipleValues[0].name;
-    } else if (facet.multipleValues.length === 0) {
+        filter.value = filter.multipleValues[0].id;
+        filter.valueLabel = filter.multipleValues[0].name;
+    } else if (filter.multipleValues.length === 0) {
         // If no values remain, clear single value
-        facet.value = "";
-        facet.valueLabel = "";
+        filter.value = "";
+        filter.valueLabel = "";
     }
 
     // Clear error if we're now below the limit
-    if (facet.multipleValues.length < MAX_IN_VALUES) {
-        selectionError[facetId] = '';
+    if (filter.multipleValues.length < filter.maxEntities) {
+        filter.error = '';
     }
 };
 
-// Updated buildCampaignQueryObject to remove filter wrapper
+// Handle keyboard navigation in search dropdowns
+const handleKeyDown = (filterId: string, e: KeyboardEvent) => {
+    const filter = filterState.value[filterId];
+    if (!filter || !filter.searchResults || filter.searchResults.length === 0) return;
+
+    if (selectedResultIndex.value[filterId] === undefined) {
+        selectedResultIndex.value[filterId] = -1;
+    }
+
+    switch (e.key) {
+        case 'ArrowDown':
+            e.preventDefault();
+            selectedResultIndex.value[filterId] = Math.min(
+                (selectedResultIndex.value[filterId] + 1),
+                filter.searchResults.length - 1
+            );
+            break;
+        case 'ArrowUp':
+            e.preventDefault();
+            selectedResultIndex.value[filterId] = Math.max(
+                (selectedResultIndex.value[filterId] - 1),
+                0
+            );
+            break;
+        case 'Enter':
+            e.preventDefault();
+            if (selectedResultIndex.value[filterId] >= 0) {
+                selectSearchResult(filterId, filter.searchResults[selectedResultIndex.value[filterId]]);
+            }
+            break;
+        case 'Escape':
+            filter.searchResults = [];
+            selectedResultIndex.value[filterId] = -1;
+            break;
+    }
+};
+
+// Reset index when search term changes
+watch(filterState, (newState) => {
+    Object.entries(newState).forEach(([filterId, filter]) => {
+        if (filter.searchTerm !== lastSearchTerms.value[filterId]) {
+            selectedResultIndex.value[filterId] = -1;
+        }
+    });
+}, { deep: true });
+
+// Search entities function
+const searchEntities = async (filterId: string, searchTerm: string) => {
+    const filter = filterState.value[filterId];
+    if (!filter) return;
+
+    // Don't search if we've already reached the limit for this filter
+    if (isLimitReached(filterId)) {
+        filter.searchResults = [];
+        return;
+    }
+
+    if (!searchTerm || searchTerm.length < 2) {
+        filter.searchResults = [];
+        return;
+    }
+
+    if (lastSearchTerms.value[filterId] === searchTerm) return;
+
+    lastSearchTerms.value[filterId] = searchTerm;
+
+    try {
+        const encoded = encodeURIComponent(searchTerm);
+        const { data } = await useFetch(`/api/search/${encoded}`);
+
+        if (data.value && data.value.hits) {
+            filter.searchResults = data.value.hits
+                .filter((hit) => hit.type === filter.entityType)
+                .slice(0, 10);
+        } else {
+            console.log(`Searching for ${filter.entityType}: ${searchTerm}`);
+            const mockResults = [
+                { id: 1, name: `${filter.entityType} Result 1 for ${searchTerm}` },
+                { id: 2, name: `${filter.entityType} Result 2 for ${searchTerm}` },
+            ];
+            filter.searchResults = mockResults;
+        }
+    } catch (error) {
+        console.error("Search error:", error);
+        filter.searchResults = [];
+    }
+};
+
+// Create the debounced search function
+const debouncedSearch = useDebounceFn(searchEntities, 300);
+
+// Build the campaign query object from filter state
 const buildCampaignQueryObject = (): Record<string, any> | null => {
     // Create a map to collect conditions by field name
     const fieldConditions: Record<string, any> = {};
 
-    // Process facets
-    const validFacets = facets.value.filter(
-        (f) => f.field && (f.value !== undefined && f.value !== "" || f.multipleValues.length > 0)
-    );
+    // Process each filter in the filterState
+    Object.values(filterState.value).forEach((filter) => {
+        // Skip empty filters
+        if (!filter.value && filter.multipleValues.length === 0) return;
 
-    // Process each facet and group by field name
-    validFacets.forEach((f) => {
         // Determine operator based on number of values
-        if (f.multipleValues.length > 1) {
+        if (filter.multipleValues.length > 1) {
             // Multiple values - use $in operator
-            const processedIds = f.multipleValues.map(item => item.id);
-            fieldConditions[f.field] = { $in: processedIds };
-        } else if (f.multipleValues.length === 1) {
+            const processedIds = filter.multipleValues.map(item => item.id);
+            fieldConditions[filter.field] = { $in: processedIds };
+        } else if (filter.multipleValues.length === 1) {
             // Single value - use direct equality
-            fieldConditions[f.field] = f.multipleValues[0].id;
-        } else if (f.value !== "" && f.value !== undefined) {
-            // Direct value (for non-search fields like booleans)
-            let processedValue = f.value;
+            fieldConditions[filter.field] = filter.multipleValues[0].id;
+        } else if (filter.value !== "") {
+            // Direct value (for non-search fields)
+            let processedValue = filter.value;
 
-            if (typeof f.value === 'string' && (f.field.includes("_id") || f.field.includes("security"))) {
-                const numVal = parseFloat(f.value);
+            if (typeof filter.value === 'string' && (filter.field.includes("_id") || filter.field.includes("security"))) {
+                const numVal = parseFloat(filter.value);
                 if (!isNaN(numVal)) {
                     processedValue = numVal;
                 }
             }
 
-            fieldConditions[f.field] = processedValue;
+            fieldConditions[filter.field] = processedValue;
         }
     });
 
@@ -257,27 +283,26 @@ const buildCampaignQueryObject = (): Record<string, any> | null => {
         return null;
     }
 
-    // Return field conditions directly instead of wrapping in createQuery
     return fieldConditions;
 };
 
-// Create a function to update the query on demand
+// Update the query when filterState changes
 const updateQuery = () => {
     campaignQuery.value = buildCampaignQueryObject();
-    generatedQueryString.value = campaignQuery.value ? JSON.stringify(campaignQuery.value, null, 2) : "No valid query defined.";
+    generatedQueryString.value = campaignQuery.value
+        ? JSON.stringify(campaignQuery.value, null, 2)
+        : "No valid query defined.";
 };
 
-// Watch for changes to facets and update the query
-watch(facets, updateQuery, { deep: true });
+// Watch for changes to filterState and time fields
+watch([filterState, campaignStartTime, campaignEndTime], updateQuery, { deep: true });
 
-// Also watch for changes to campaign start and end time to update the query
-watch([campaignStartTime, campaignEndTime], updateQuery);
+// Initialize query on mount
+onMounted(() => {
+    updateQuery();
+});
 
-if (facets.value.length === 0) {
-    addFacet();
-}
-
-// Update handleCreateCampaign to check for empty query correctly
+// Handle campaign creation
 const handleCreateCampaign = async () => {
     if (!isAuthenticated) {
         alert("You must be logged in to create campaigns.");
@@ -334,107 +359,17 @@ const handleCreateCampaign = async () => {
     }
 };
 
-// Add a loginToCreateCampaign function
+// Login function
 const loginToCreateCampaign = () => {
     login();
 };
-
-// Add these missing refs and functions to restore search functionality
-const selectedResultIndex = ref<Record<string, number>>({});
-const lastSearchTerms = ref<Record<string, string>>({});
-
-// Handle keyboard navigation for search dropdowns
-const handleKeyDown = (facetId: string, e: KeyboardEvent) => {
-    const facet = facets.value.find(f => f.id === facetId);
-    if (!facet || !facet.searchResults || facet.searchResults.length === 0) return;
-
-    if (selectedResultIndex.value[facetId] === undefined) {
-        selectedResultIndex.value[facetId] = -1;
-    }
-
-    switch (e.key) {
-        case 'ArrowDown':
-            e.preventDefault();
-            selectedResultIndex.value[facetId] = Math.min(
-                (selectedResultIndex.value[facetId] + 1),
-                facet.searchResults.length - 1
-            );
-            break;
-        case 'ArrowUp':
-            e.preventDefault();
-            selectedResultIndex.value[facetId] = Math.max(
-                (selectedResultIndex.value[facetId] - 1),
-                0
-            );
-            break;
-        case 'Enter':
-            e.preventDefault();
-            if (selectedResultIndex.value[facetId] >= 0) {
-                selectSearchResult(facetId, facet.searchResults[selectedResultIndex.value[facetId]]);
-            }
-            break;
-        case 'Escape':
-            facet.searchResults = [];
-            selectedResultIndex.value[facetId] = -1;
-            break;
-    }
-};
-
-// Reset the selected index when search term changes
-watch(facets, (newFacets) => {
-    for (const facet of newFacets) {
-        if (facet.searchTerm !== lastSearchTerms.value[facet.id]) {
-            selectedResultIndex.value[facet.id] = -1;
-        }
-    }
-}, { deep: true });
-
-// Search entities function
-const searchEntities = async (facetId: string, searchTerm: string) => {
-    if (!searchTerm || searchTerm.length < 2) {
-        const facet = facets.value.find(f => f.id === facetId);
-        if (facet) facet.searchResults = [];
-        return;
-    }
-
-    const facet = facets.value.find((f) => f.id === facetId);
-    if (!facet || !facet.entityType) return;
-
-    if (lastSearchTerms.value[facetId] === searchTerm) return;
-
-    lastSearchTerms.value[facetId] = searchTerm;
-
-    try {
-        const encoded = encodeURIComponent(searchTerm);
-        const { data } = await useFetch(`/api/search/${encoded}`);
-
-        if (data.value && data.value.hits) {
-            facet.searchResults = data.value.hits
-                .filter((hit) => hit.type === facet.entityType)
-                .slice(0, 10);
-        } else {
-            console.log(`Searching for ${facet.entityType}: ${searchTerm}`);
-            const mockResults = [
-                { id: 1, name: `${facet.entityType} Result 1 for ${searchTerm}` },
-                { id: 2, name: `${facet.entityType} Result 2 for ${searchTerm}` },
-            ];
-            facet.searchResults = mockResults;
-        }
-    } catch (error) {
-        console.error("Search error:", error);
-        facet.searchResults = [];
-    }
-};
-
-// Create the debounced search function
-const debouncedSearch = useDebounceFn(searchEntities, 300);
 </script>
 
 <template>
     <div class="space-y-6 p-4 md:p-6">
         <h1 class="text-3xl font-bold text-gray-900 dark:text-white">{{ $t('createCampaign') }}</h1>
 
-        <!-- Authentication notice - correctly use isAuthenticated -->
+        <!-- Authentication notice -->
         <UAlert v-if="!isAuthenticated" color="amber" icon="i-lucide-alert-triangle" class="mb-4">
             <template #title>{{ $t('authenticationRequired') }}</template>
             <template #description>
@@ -443,165 +378,572 @@ const debouncedSearch = useDebounceFn(searchEntities, 300);
             </template>
         </UAlert>
 
-        <!-- Campaign Details -->
+        <!-- Campaign Details Section -->
         <UCard class="bg-yellow-50 dark:bg-yellow-900/20 border-0">
             <template #header>
                 <h2 class="text-xl font-semibold text-gray-800 dark:text-gray-100">{{ $t('campaignDetails') }}</h2>
             </template>
             <div class="space-y-4">
                 <div>
-                    <label for="campaignName" class="block text-sm font-medium text-gray-700 dark:text-gray-300">{{
-                        $t('campaignName') }} *</label>
+                    <label for="campaignName" class="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                        {{ $t('campaignName') }} *
+                    </label>
                     <input type="text" id="campaignName" class="custom-input" v-model="campaignName"
                         :placeholder="$t('enterCampaignName')" required>
                 </div>
                 <div>
-                    <label for="campaignDescription"
-                        class="block text-sm font-medium text-gray-700 dark:text-gray-300">{{
-                            $t('campaignDescription') }}</label>
+                    <label for="campaignDescription" class="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                        {{ $t('campaignDescription') }}
+                    </label>
                     <textarea id="campaignDescription" class="custom-input" v-model="campaignDescription"
                         :placeholder="$t('enterCampaignDescription')" rows="3"></textarea>
                 </div>
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            </div>
+        </UCard>
+
+        <!-- Campaign Scope Definition - New Structured Layout -->
+        <UCard class="bg-blue-50 dark:bg-blue-900/20 border-0">
+            <template #header>
+                <div class="flex justify-between items-center">
+                    <h2 class="text-xl font-semibold text-gray-800 dark:text-gray-100">
+                        {{ $t('campaignScopeDefinition') }}
+                    </h2>
+                </div>
+            </template>
+
+            <!-- Region/System/Constellation Section + Time Range -->
+            <div class="p-4 border border-gray-200 dark:border-gray-700 rounded-lg bg-gray-50 dark:bg-gray-800/30 mb-4">
+                <h3 class="font-medium text-gray-800 dark:text-gray-200 mb-3">{{
+                    $t('campaignCreator.locationTimeFilters') }}
+                </h3>
+
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+                    <!-- Region Filter -->
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                            {{ $t('region') }}
+                            <span class="text-xs text-gray-500 ml-1">
+                                ({{ filterState.region.multipleValues.length }}/{{ filterState.region.maxEntities }})
+                            </span>
+                        </label>
+                        <div class="relative">
+                            <input type="text" class="custom-input w-full" v-model="filterState.region.searchTerm"
+                                placeholder="Search for a region..."
+                                @input="debouncedSearch('region', filterState.region.searchTerm)"
+                                @keydown="(e) => handleKeyDown('region', e)" :disabled="isLimitReached('region')" />
+
+                            <!-- Search results dropdown -->
+                            <div v-if="filterState.region.searchResults && filterState.region.searchResults.length > 0"
+                                class="absolute z-10 mt-1 w-full system-search-dropdown rounded-md shadow-lg max-h-48 overflow-y-auto">
+                                <a v-for="(result, index) in filterState.region.searchResults" :key="result.id"
+                                    @click="selectSearchResult('region', result)"
+                                    class="search-result-item block px-4 py-2 text-sm cursor-pointer"
+                                    :class="{ 'search-result-selected': index === selectedResultIndex['region'] }">
+                                    {{ result.name }}
+                                </a>
+                            </div>
+                        </div>
+
+                        <!-- Selected values -->
+                        <div v-if="filterState.region.multipleValues.length > 0" class="flex flex-wrap gap-2 mt-2">
+                            <UBadge v-for="entity in filterState.region.multipleValues" :key="entity.id" color="primary"
+                                class="flex items-center gap-1 py-1 px-2">
+                                {{ entity.name }}
+                                <UButton color="white" variant="ghost" icon="i-lucide-x" size="xs" class="p-0"
+                                    @click="removeSelectedEntity('region', entity.id)" />
+                            </UBadge>
+                        </div>
+                        <div v-if="filterState.region.error" class="text-red-500 text-xs mt-1">
+                            {{ filterState.region.error }}
+                        </div>
+                    </div>
+
+                    <!-- System Filter -->
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                            {{ $t('system') }}
+                            <span class="text-xs text-gray-500 ml-1">
+                                ({{ filterState.system.multipleValues.length }}/{{ filterState.system.maxEntities }})
+                            </span>
+                        </label>
+                        <div class="relative">
+                            <input type="text" class="custom-input w-full" v-model="filterState.system.searchTerm"
+                                placeholder="Search for a system..."
+                                @input="debouncedSearch('system', filterState.system.searchTerm)"
+                                @keydown="(e) => handleKeyDown('system', e)" :disabled="isLimitReached('system')" />
+
+                            <!-- Search results dropdown -->
+                            <div v-if="filterState.system.searchResults && filterState.system.searchResults.length > 0"
+                                class="absolute z-10 mt-1 w-full system-search-dropdown rounded-md shadow-lg max-h-48 overflow-y-auto">
+                                <a v-for="(result, index) in filterState.system.searchResults" :key="result.id"
+                                    @click="selectSearchResult('system', result)"
+                                    class="search-result-item block px-4 py-2 text-sm cursor-pointer"
+                                    :class="{ 'search-result-selected': index === selectedResultIndex['system'] }">
+                                    {{ result.name }}
+                                </a>
+                            </div>
+                        </div>
+
+                        <!-- Selected values -->
+                        <div v-if="filterState.system.multipleValues.length > 0" class="flex flex-wrap gap-2 mt-2">
+                            <UBadge v-for="entity in filterState.system.multipleValues" :key="entity.id" color="primary"
+                                class="flex items-center gap-1 py-1 px-2">
+                                {{ entity.name }}
+                                <UButton color="white" variant="ghost" icon="i-lucide-x" size="xs" class="p-0"
+                                    @click="removeSelectedEntity('system', entity.id)" />
+                            </UBadge>
+                        </div>
+                        <div v-if="filterState.system.error" class="text-red-500 text-xs mt-1">
+                            {{ filterState.system.error }}
+                        </div>
+                    </div>
+
+                    <!-- Constellation Filter -->
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                            {{ $t('constellation') }}
+                            <span class="text-xs text-gray-500 ml-1">
+                                ({{ filterState.constellation.multipleValues.length }}/{{
+                                    filterState.constellation.maxEntities
+                                }})
+                            </span>
+                        </label>
+                        <div class="relative">
+                            <input type="text" class="custom-input w-full"
+                                v-model="filterState.constellation.searchTerm"
+                                placeholder="Search for a constellation..."
+                                @input="debouncedSearch('constellation', filterState.constellation.searchTerm)"
+                                @keydown="(e) => handleKeyDown('constellation', e)"
+                                :disabled="isLimitReached('constellation')" />
+
+                            <!-- Search results dropdown -->
+                            <div v-if="filterState.constellation.searchResults && filterState.constellation.searchResults.length > 0"
+                                class="absolute z-10 mt-1 w-full system-search-dropdown rounded-md shadow-lg max-h-48 overflow-y-auto">
+                                <a v-for="(result, index) in filterState.constellation.searchResults" :key="result.id"
+                                    @click="selectSearchResult('constellation', result)"
+                                    class="search-result-item block px-4 py-2 text-sm cursor-pointer"
+                                    :class="{ 'search-result-selected': index === selectedResultIndex['constellation'] }">
+                                    {{ result.name }}
+                                </a>
+                            </div>
+                        </div>
+
+                        <!-- Selected values -->
+                        <div v-if="filterState.constellation.multipleValues.length > 0"
+                            class="flex flex-wrap gap-2 mt-2">
+                            <UBadge v-for="entity in filterState.constellation.multipleValues" :key="entity.id"
+                                color="primary" class="flex items-center gap-1 py-1 px-2">
+                                {{ entity.name }}
+                                <UButton color="white" variant="ghost" icon="i-lucide-x" size="xs" class="p-0"
+                                    @click="removeSelectedEntity('constellation', entity.id)" />
+                            </UBadge>
+                        </div>
+                        <div v-if="filterState.constellation.error" class="text-red-500 text-xs mt-1">
+                            {{ filterState.constellation.error }}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Time Range Fields -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
                     <div>
                         <label for="campaignStartTime"
-                            class="block text-sm font-medium text-gray-700 dark:text-gray-300">{{
-                                $t('startTime') }} *</label>
+                            class="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                            {{ $t('startTime') }} *
+                        </label>
                         <input type="datetime-local" id="campaignStartTime" class="custom-input"
                             v-model="campaignStartTime" required>
                     </div>
                     <div>
-                        <label for="campaignEndTime"
-                            class="block text-sm font-medium text-gray-700 dark:text-gray-300">{{
-                                $t('endTime') }}</label>
+                        <label for="campaignEndTime" class="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                            {{ $t('endTime') }}
+                            <span class="text-xs text-gray-500 ml-1">({{ $t('campaignCreator.optional') }})</span>
+                        </label>
                         <input type="datetime-local" id="campaignEndTime" class="custom-input"
                             v-model="campaignEndTime">
                     </div>
                 </div>
             </div>
-        </UCard>
 
-        <!-- Campaign Scope Definition (Query Builder) -->
-        <UCard class="bg-blue-50 dark:bg-blue-900/20 border-0">
-            <template #header>
-                <div class="flex justify-between items-center">
-                    <h2 class="text-xl font-semibold text-gray-800 dark:text-gray-100">{{ $t('campaignScopeDefinition')
-                        }}</h2>
-                    <div class="flex items-center gap-2">
-                        <UButton v-if="facets.length < MAX_FACETS" icon="i-lucide-plus-circle" @click="addFacet">
-                            {{ $t('addFilter') }}
-                        </UButton>
-                    </div>
-                </div>
-            </template>
+            <!-- Optional Filters Note -->
+            <div class="mb-4 text-sm text-gray-600 dark:text-gray-400 italic">
+                {{ $t('campaignCreator.optionalFiltersNote') }}
+            </div>
 
-            <div v-if="facets.length > 0" class="space-y-4">
-                <div v-for="facet in facets" :key="facet.id"
-                    class="p-4 border border-gray-200 dark:border-gray-700 rounded-lg bg-gray-50 dark:bg-gray-800/30">
-                    <div class="grid grid-cols-1 md:grid-cols-12 gap-3 items-end">
-                        <!-- Field Selector -->
-                        <div class="md:col-span-5">
-                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{{
-                                $t('field')
-                                }}</label>
-                            <div class="relative">
-                                <button @click.stop="toggleFieldDropdown(facet.id)"
-                                    class="custom-input w-full text-left flex items-center justify-between">
-                                    <span>{{FIELD_OPTIONS.find(f => f.value === facet.field)?.label ||
-                                        facet.field}}</span>
-                                    <UIcon name="i-lucide-chevron-down" class="h-4 w-4" />
-                                </button>
-                                <div v-if="fieldDropdownOpen[facet.id]"
-                                    class="absolute z-10 mt-1 w-full rounded-md shadow-lg max-h-60 overflow-y-auto dropdown-menu">
-                                    <a v-for="option in FIELD_OPTIONS" :key="option.value"
-                                        @click="handleFieldChange(facet.id, option.value)"
-                                        class="dropdown-item block px-4 py-2 text-sm cursor-pointer"
-                                        :class="{ 'search-result-selected': facet.field === option.value }">
-                                        {{ option.label }}
-                                    </a>
-                                </div>
+            <!-- Attackers and Victims Section - Side by Side -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <!-- Attackers Section -->
+                <div class="p-4 border border-gray-200 dark:border-gray-700 rounded-lg bg-gray-50 dark:bg-gray-800/30">
+                    <h3 class="font-medium text-gray-800 dark:text-gray-200 mb-3">
+                        {{ $t('campaignCreator.attackerFilters') }}
+                        <span class="text-xs font-normal text-gray-500 ml-1">({{ $t('campaignCreator.optional')
+                            }})</span>
+                    </h3>
+
+                    <!-- Attacker Character -->
+                    <div class="mb-4">
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                            {{ $t('character') }}
+                            <span class="text-xs text-gray-500 ml-1">
+                                ({{ filterState.attackerCharacter.multipleValues.length }}/{{
+                                    filterState.attackerCharacter.maxEntities }})
+                            </span>
+                        </label>
+                        <div class="relative">
+                            <input type="text" class="custom-input w-full"
+                                v-model="filterState.attackerCharacter.searchTerm"
+                                placeholder="Search for a character..."
+                                @input="debouncedSearch('attackerCharacter', filterState.attackerCharacter.searchTerm)"
+                                @keydown="(e) => handleKeyDown('attackerCharacter', e)"
+                                :disabled="isLimitReached('attackerCharacter')" />
+
+                            <!-- Search results dropdown -->
+                            <div v-if="filterState.attackerCharacter.searchResults && filterState.attackerCharacter.searchResults.length > 0"
+                                class="absolute z-10 mt-1 w-full system-search-dropdown rounded-md shadow-lg max-h-48 overflow-y-auto">
+                                <a v-for="(result, index) in filterState.attackerCharacter.searchResults"
+                                    :key="result.id" @click="selectSearchResult('attackerCharacter', result)"
+                                    class="search-result-item block px-4 py-2 text-sm cursor-pointer"
+                                    :class="{ 'search-result-selected': index === selectedResultIndex['attackerCharacter'] }">
+                                    {{ result.name }}
+                                </a>
                             </div>
                         </div>
 
-                        <!-- Value Input (expanded to take space from removed operator) -->
-                        <div class="md:col-span-6">
-                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{{
-                                $t('value')
-                                }}</label>
-                            <template v-if="facet.field === 'is_npc' || facet.field === 'is_solo'">
-                                <URadioGroup v-model="facet.value" :options="BOOLEAN_OPTIONS" legend="Select value" />
-                            </template>
+                        <!-- Selected values -->
+                        <div v-if="filterState.attackerCharacter.multipleValues.length > 0"
+                            class="flex flex-wrap gap-2 mt-2">
+                            <UBadge v-for="entity in filterState.attackerCharacter.multipleValues" :key="entity.id"
+                                color="primary" class="flex items-center gap-1 py-1 px-2">
+                                {{ entity.name }}
+                                <UButton color="white" variant="ghost" icon="i-lucide-x" size="xs" class="p-0"
+                                    @click="removeSelectedEntity('attackerCharacter', entity.id)" />
+                            </UBadge>
+                        </div>
+                        <div v-if="filterState.attackerCharacter.error" class="text-red-500 text-xs mt-1">
+                            {{ filterState.attackerCharacter.error }}
+                        </div>
+                    </div>
 
-                            <!-- Search-based fields with multi-select support -->
-                            <template v-else-if="supportsSearch(facet.field)">
-                                <div class="space-y-2">
-                                    <!-- Search input -->
-                                    <div class="relative">
-                                        <input type="text" class="custom-input w-full" v-model="facet.searchTerm"
-                                            :placeholder="$t('searchToAddEntities')"
-                                            @input="debouncedSearch(facet.id, facet.searchTerm || '')"
-                                            @keydown="(e) => handleKeyDown(facet.id, e)" />
+                    <!-- Remaining attacker fields with similar pattern... -->
+                    <!-- Attacker Corporation -->
+                    <div class="mb-4">
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                            {{ $t('corporation') }}
+                            <span class="text-xs text-gray-500 ml-1">
+                                ({{ filterState.attackerCorporation.multipleValues.length }}/{{
+                                    filterState.attackerCorporation.maxEntities }})
+                            </span>
+                        </label>
+                        <div class="relative">
+                            <input type="text" class="custom-input w-full"
+                                v-model="filterState.attackerCorporation.searchTerm"
+                                placeholder="Search for a corporation..."
+                                @input="debouncedSearch('attackerCorporation', filterState.attackerCorporation.searchTerm)"
+                                @keydown="(e) => handleKeyDown('attackerCorporation', e)"
+                                :disabled="isLimitReached('attackerCorporation')" />
 
-                                        <!-- Search results dropdown -->
-                                        <div v-if="facet.searchResults && facet.searchResults.length > 0"
-                                            class="absolute z-10 mt-1 w-full bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-md shadow-lg max-h-48 overflow-y-auto system-search-dropdown">
-                                            <a v-for="(result, index) in facet.searchResults" :key="result.id"
-                                                @click="selectSearchResult(facet.id, result)"
-                                                class="search-result-item block px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer"
-                                                :class="{ 'search-result-selected': index === selectedResultIndex[facet.id] }">
-                                                {{ result.ticker ? `${result.name} (${result.ticker})` : result.name }}
-                                            </a>
-                                        </div>
-                                    </div>
-
-                                    <!-- Error message -->
-                                    <div v-if="selectionError[facet.id]" class="text-red-500 text-xs">
-                                        {{ selectionError[facet.id] }}
-                                    </div>
-
-                                    <!-- Show helper text based on selection count -->
-                                    <div v-if="facet.multipleValues.length > 1"
-                                        class="text-xs text-blue-600 dark:text-blue-400">
-                                        {{ $t('multipleValuesSelected', { count: facet.multipleValues.length }) }}
-                                    </div>
-                                    <div v-else-if="facet.multipleValues.length === 1"
-                                        class="text-xs text-blue-600 dark:text-blue-400">
-                                        {{ $t('singleValueSelected') }}
-                                    </div>
-
-                                    <!-- Display selected entities as badges -->
-                                    <div v-if="facet.multipleValues.length > 0" class="flex flex-wrap gap-2 mt-2">
-                                        <UBadge v-for="entity in facet.multipleValues" :key="entity.id" color="primary"
-                                            class="flex items-center gap-1 py-1 px-2">
-                                            {{ entity.name }}
-                                            <UButton color="white" variant="ghost" icon="i-lucide-x" size="xs"
-                                                class="p-0" @click="removeSelectedEntity(facet.id, entity.id)" />
-                                        </UBadge>
-                                    </div>
-                                </div>
-                            </template>
-
-                            <!-- Default input for non-search fields -->
-                            <template v-else>
-                                <input type="text" class="custom-input w-full" v-model="facet.value"
-                                    :placeholder="$t('enterValue')">
-                            </template>
+                            <!-- Search results dropdown -->
+                            <div v-if="filterState.attackerCorporation.searchResults && filterState.attackerCorporation.searchResults.length > 0"
+                                class="absolute z-10 mt-1 w-full system-search-dropdown rounded-md shadow-lg max-h-48 overflow-y-auto">
+                                <a v-for="(result, index) in filterState.attackerCorporation.searchResults"
+                                    :key="result.id" @click="selectSearchResult('attackerCorporation', result)"
+                                    class="search-result-item block px-4 py-2 text-sm cursor-pointer"
+                                    :class="{ 'search-result-selected': index === selectedResultIndex['attackerCorporation'] }">
+                                    {{ result.ticker ? `${result.name} [${result.ticker}]` : result.name }}
+                                </a>
+                            </div>
                         </div>
 
-                        <!-- Remove Facet Button -->
-                        <div class="md:col-span-1 flex items-center justify-end">
-                            <UButton icon="i-lucide-trash-2" color="error" variant="ghost"
-                                @click="removeFacet(facet.id)" />
+                        <!-- Selected values -->
+                        <div v-if="filterState.attackerCorporation.multipleValues.length > 0"
+                            class="flex flex-wrap gap-2 mt-2">
+                            <UBadge v-for="entity in filterState.attackerCorporation.multipleValues" :key="entity.id"
+                                color="primary" class="flex items-center gap-1 py-1 px-2">
+                                {{ entity.name }}
+                                <UButton color="white" variant="ghost" icon="i-lucide-x" size="xs" class="p-0"
+                                    @click="removeSelectedEntity('attackerCorporation', entity.id)" />
+                            </UBadge>
+                        </div>
+                        <div v-if="filterState.attackerCorporation.error" class="text-red-500 text-xs mt-1">
+                            {{ filterState.attackerCorporation.error }}
+                        </div>
+                    </div>
+
+                    <!-- Attacker Alliance -->
+                    <div class="mb-4">
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                            {{ $t('alliance') }}
+                            <span class="text-xs text-gray-500 ml-1">
+                                ({{ filterState.attackerAlliance.multipleValues.length }}/{{
+                                    filterState.attackerAlliance.maxEntities }})
+                            </span>
+                        </label>
+                        <div class="relative">
+                            <input type="text" class="custom-input w-full"
+                                v-model="filterState.attackerAlliance.searchTerm"
+                                placeholder="Search for an alliance..."
+                                @input="debouncedSearch('attackerAlliance', filterState.attackerAlliance.searchTerm)"
+                                @keydown="(e) => handleKeyDown('attackerAlliance', e)"
+                                :disabled="isLimitReached('attackerAlliance')" />
+
+                            <!-- Search results dropdown -->
+                            <div v-if="filterState.attackerAlliance.searchResults && filterState.attackerAlliance.searchResults.length > 0"
+                                class="absolute z-10 mt-1 w-full system-search-dropdown rounded-md shadow-lg max-h-48 overflow-y-auto">
+                                <a v-for="(result, index) in filterState.attackerAlliance.searchResults"
+                                    :key="result.id" @click="selectSearchResult('attackerAlliance', result)"
+                                    class="search-result-item block px-4 py-2 text-sm cursor-pointer"
+                                    :class="{ 'search-result-selected': index === selectedResultIndex['attackerAlliance'] }">
+                                    {{ result.ticker ? `${result.name} [${result.ticker}]` : result.name }}
+                                </a>
+                            </div>
+                        </div>
+
+                        <!-- Selected values -->
+                        <div v-if="filterState.attackerAlliance.multipleValues.length > 0"
+                            class="flex flex-wrap gap-2 mt-2">
+                            <UBadge v-for="entity in filterState.attackerAlliance.multipleValues" :key="entity.id"
+                                color="primary" class="flex items-center gap-1 py-1 px-2">
+                                {{ entity.name }}
+                                <UButton color="white" variant="ghost" icon="i-lucide-x" size="xs" class="p-0"
+                                    @click="removeSelectedEntity('attackerAlliance', entity.id)" />
+                            </UBadge>
+                        </div>
+                        <div v-if="filterState.attackerAlliance.error" class="text-red-500 text-xs mt-1">
+                            {{ filterState.attackerAlliance.error }}
+                        </div>
+                    </div>
+
+                    <!-- Attacker Faction -->
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                            {{ $t('faction') }}
+                            <span class="text-xs text-gray-500 ml-1">
+                                ({{ filterState.attackerFaction.multipleValues.length }}/{{
+                                    filterState.attackerFaction.maxEntities }})
+                            </span>
+                        </label>
+                        <div class="relative">
+                            <input type="text" class="custom-input w-full"
+                                v-model="filterState.attackerFaction.searchTerm" placeholder="Search for a faction..."
+                                @input="debouncedSearch('attackerFaction', filterState.attackerFaction.searchTerm)"
+                                @keydown="(e) => handleKeyDown('attackerFaction', e)"
+                                :disabled="isLimitReached('attackerFaction')" />
+
+                            <!-- Search results dropdown -->
+                            <div v-if="filterState.attackerFaction.searchResults && filterState.attackerFaction.searchResults.length > 0"
+                                class="absolute z-10 mt-1 w-full system-search-dropdown rounded-md shadow-lg max-h-48 overflow-y-auto">
+                                <a v-for="(result, index) in filterState.attackerFaction.searchResults" :key="result.id"
+                                    @click="selectSearchResult('attackerFaction', result)"
+                                    class="search-result-item block px-4 py-2 text-sm cursor-pointer"
+                                    :class="{ 'search-result-selected': index === selectedResultIndex['attackerFaction'] }">
+                                    {{ result.name }}
+                                </a>
+                            </div>
+                        </div>
+
+                        <!-- Selected values -->
+                        <div v-if="filterState.attackerFaction.multipleValues.length > 0"
+                            class="flex flex-wrap gap-2 mt-2">
+                            <UBadge v-for="entity in filterState.attackerFaction.multipleValues" :key="entity.id"
+                                color="primary" class="flex items-center gap-1 py-1 px-2">
+                                {{ entity.name }}
+                                <UButton color="white" variant="ghost" icon="i-lucide-x" size="xs" class="p-0"
+                                    @click="removeSelectedEntity('attackerFaction', entity.id)" />
+                            </UBadge>
+                        </div>
+                        <div v-if="filterState.attackerFaction.error" class="text-red-500 text-xs mt-1">
+                            {{ filterState.attackerFaction.error }}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Victims Section -->
+                <div class="p-4 border border-gray-200 dark:border-gray-700 rounded-lg bg-gray-50 dark:bg-gray-800/30">
+                    <h3 class="font-medium text-gray-800 dark:text-gray-200 mb-3">
+                        {{ $t('campaignCreator.victimFilters') }}
+                        <span class="text-xs font-normal text-gray-500 ml-1">({{ $t('campaignCreator.optional')
+                            }})</span>
+                    </h3>
+
+                    <!-- Victim Character -->
+                    <div class="mb-4">
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                            {{ $t('character') }}
+                            <span class="text-xs text-gray-500 ml-1">
+                                ({{ filterState.victimCharacter.multipleValues.length }}/{{
+                                    filterState.victimCharacter.maxEntities }})
+                            </span>
+                        </label>
+                        <div class="relative">
+                            <input type="text" class="custom-input w-full"
+                                v-model="filterState.victimCharacter.searchTerm" placeholder="Search for a character..."
+                                @input="debouncedSearch('victimCharacter', filterState.victimCharacter.searchTerm)"
+                                @keydown="(e) => handleKeyDown('victimCharacter', e)"
+                                :disabled="isLimitReached('victimCharacter')" />
+
+                            <!-- Search results dropdown -->
+                            <div v-if="filterState.victimCharacter.searchResults && filterState.victimCharacter.searchResults.length > 0"
+                                class="absolute z-10 mt-1 w-full system-search-dropdown rounded-md shadow-lg max-h-48 overflow-y-auto">
+                                <a v-for="(result, index) in filterState.victimCharacter.searchResults" :key="result.id"
+                                    @click="selectSearchResult('victimCharacter', result)"
+                                    class="search-result-item block px-4 py-2 text-sm cursor-pointer"
+                                    :class="{ 'search-result-selected': index === selectedResultIndex['victimCharacter'] }">
+                                    {{ result.name }}
+                                </a>
+                            </div>
+                        </div>
+
+                        <!-- Selected values -->
+                        <div v-if="filterState.victimCharacter.multipleValues.length > 0"
+                            class="flex flex-wrap gap-2 mt-2">
+                            <UBadge v-for="entity in filterState.victimCharacter.multipleValues" :key="entity.id"
+                                color="primary" class="flex items-center gap-1 py-1 px-2">
+                                {{ entity.name }}
+                                <UButton color="white" variant="ghost" icon="i-lucide-x" size="xs" class="p-0"
+                                    @click="removeSelectedEntity('victimCharacter', entity.id)" />
+                            </UBadge>
+                        </div>
+                        <div v-if="filterState.victimCharacter.error" class="text-red-500 text-xs mt-1">
+                            {{ filterState.victimCharacter.error }}
+                        </div>
+                    </div>
+
+                    <!-- Remaining victim fields with similar pattern... -->
+                    <!-- Victim Corporation -->
+                    <div class="mb-4">
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                            {{ $t('corporation') }}
+                            <span class="text-xs text-gray-500 ml-1">
+                                ({{ filterState.victimCorporation.multipleValues.length }}/{{
+                                    filterState.victimCorporation.maxEntities }})
+                            </span>
+                        </label>
+                        <div class="relative">
+                            <input type="text" class="custom-input w-full"
+                                v-model="filterState.victimCorporation.searchTerm"
+                                placeholder="Search for a corporation..."
+                                @input="debouncedSearch('victimCorporation', filterState.victimCorporation.searchTerm)"
+                                @keydown="(e) => handleKeyDown('victimCorporation', e)"
+                                :disabled="isLimitReached('victimCorporation')" />
+
+                            <!-- Search results dropdown -->
+                            <div v-if="filterState.victimCorporation.searchResults && filterState.victimCorporation.searchResults.length > 0"
+                                class="absolute z-10 mt-1 w-full system-search-dropdown rounded-md shadow-lg max-h-48 overflow-y-auto">
+                                <a v-for="(result, index) in filterState.victimCorporation.searchResults"
+                                    :key="result.id" @click="selectSearchResult('victimCorporation', result)"
+                                    class="search-result-item block px-4 py-2 text-sm cursor-pointer"
+                                    :class="{ 'search-result-selected': index === selectedResultIndex['victimCorporation'] }">
+                                    {{ result.ticker ? `${result.name} [${result.ticker}]` : result.name }}
+                                </a>
+                            </div>
+                        </div>
+
+                        <!-- Selected values -->
+                        <div v-if="filterState.victimCorporation.multipleValues.length > 0"
+                            class="flex flex-wrap gap-2 mt-2">
+                            <UBadge v-for="entity in filterState.victimCorporation.multipleValues" :key="entity.id"
+                                color="primary" class="flex items-center gap-1 py-1 px-2">
+                                {{ entity.name }}
+                                <UButton color="white" variant="ghost" icon="i-lucide-x" size="xs" class="p-0"
+                                    @click="removeSelectedEntity('victimCorporation', entity.id)" />
+                            </UBadge>
+                        </div>
+                        <div v-if="filterState.victimCorporation.error" class="text-red-500 text-xs mt-1">
+                            {{ filterState.victimCorporation.error }}
+                        </div>
+                    </div>
+
+                    <!-- Victim Alliance -->
+                    <div class="mb-4">
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                            {{ $t('alliance') }}
+                            <span class="text-xs text-gray-500 ml-1">
+                                ({{ filterState.victimAlliance.multipleValues.length }}/{{
+                                    filterState.victimAlliance.maxEntities }})
+                            </span>
+                        </label>
+                        <div class="relative">
+                            <input type="text" class="custom-input w-full"
+                                v-model="filterState.victimAlliance.searchTerm" placeholder="Search for an alliance..."
+                                @input="debouncedSearch('victimAlliance', filterState.victimAlliance.searchTerm)"
+                                @keydown="(e) => handleKeyDown('victimAlliance', e)"
+                                :disabled="isLimitReached('victimAlliance')" />
+
+                            <!-- Search results dropdown -->
+                            <div v-if="filterState.victimAlliance.searchResults && filterState.victimAlliance.searchResults.length > 0"
+                                class="absolute z-10 mt-1 w-full system-search-dropdown rounded-md shadow-lg max-h-48 overflow-y-auto">
+                                <a v-for="(result, index) in filterState.victimAlliance.searchResults" :key="result.id"
+                                    @click="selectSearchResult('victimAlliance', result)"
+                                    class="search-result-item block px-4 py-2 text-sm cursor-pointer"
+                                    :class="{ 'search-result-selected': index === selectedResultIndex['victimAlliance'] }">
+                                    {{ result.ticker ? `${result.name} [${result.ticker}]` : result.name }}
+                                </a>
+                            </div>
+                        </div>
+
+                        <!-- Selected values -->
+                        <div v-if="filterState.victimAlliance.multipleValues.length > 0"
+                            class="flex flex-wrap gap-2 mt-2">
+                            <UBadge v-for="entity in filterState.victimAlliance.multipleValues" :key="entity.id"
+                                color="primary" class="flex items-center gap-1 py-1 px-2">
+                                {{ entity.name }}
+                                <UButton color="white" variant="ghost" icon="i-lucide-x" size="xs" class="p-0"
+                                    @click="removeSelectedEntity('victimAlliance', entity.id)" />
+                            </UBadge>
+                        </div>
+                        <div v-if="filterState.victimAlliance.error" class="text-red-500 text-xs mt-1">
+                            {{ filterState.victimAlliance.error }}
+                        </div>
+                    </div>
+
+                    <!-- Victim Faction -->
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                            {{ $t('faction') }}
+                            <span class="text-xs text-gray-500 ml-1">
+                                ({{ filterState.victimFaction.multipleValues.length }}/{{
+                                    filterState.victimFaction.maxEntities
+                                }})
+                            </span>
+                        </label>
+                        <div class="relative">
+                            <input type="text" class="custom-input w-full"
+                                v-model="filterState.victimFaction.searchTerm" placeholder="Search for a faction..."
+                                @input="debouncedSearch('victimFaction', filterState.victimFaction.searchTerm)"
+                                @keydown="(e) => handleKeyDown('victimFaction', e)"
+                                :disabled="isLimitReached('victimFaction')" />
+
+                            <!-- Search results dropdown -->
+                            <div v-if="filterState.victimFaction.searchResults && filterState.victimFaction.searchResults.length > 0"
+                                class="absolute z-10 mt-1 w-full system-search-dropdown rounded-md shadow-lg max-h-48 overflow-y-auto">
+                                <a v-for="(result, index) in filterState.victimFaction.searchResults" :key="result.id"
+                                    @click="selectSearchResult('victimFaction', result)"
+                                    class="search-result-item block px-4 py-2 text-sm cursor-pointer"
+                                    :class="{ 'search-result-selected': index === selectedResultIndex['victimFaction'] }">
+                                    {{ result.name }}
+                                </a>
+                            </div>
+                        </div>
+
+                        <!-- Selected values -->
+                        <div v-if="filterState.victimFaction.multipleValues.length > 0"
+                            class="flex flex-wrap gap-2 mt-2">
+                            <UBadge v-for="entity in filterState.victimFaction.multipleValues" :key="entity.id"
+                                color="primary" class="flex items-center gap-1 py-1 px-2">
+                                {{ entity.name }}
+                                <UButton color="white" variant="ghost" icon="i-lucide-x" size="xs" class="p-0"
+                                    @click="removeSelectedEntity('victimFaction', entity.id)" />
+                            </UBadge>
+                        </div>
+                        <div v-if="filterState.victimFaction.error" class="text-red-500 text-xs mt-1">
+                            {{ filterState.victimFaction.error }}
                         </div>
                     </div>
                 </div>
             </div>
-            <div v-else class="text-center py-4 text-gray-500 dark:text-gray-400">
-                {{ $t('noFiltersAddedClickToAdd') }}
-            </div>
 
-            <!-- Generated Query Preview (Optional) -->
-            <div v-if="generatedQueryString && facets.length > 0" class="mt-6">
+            <!-- Generated Query Preview -->
+            <div v-if="generatedQueryString" class="mt-6">
                 <h3 class="text-sm font-medium text-gray-600 dark:text-gray-400">{{ $t('generatedCampaignQuery') }}:
                 </h3>
                 <pre
@@ -610,7 +952,7 @@ const debouncedSearch = useDebounceFn(searchEntities, 300);
             </div>
         </UCard>
 
-        <!-- Action Buttons - use isAuthenticated directly -->
+        <!-- Action Buttons -->
         <div class="flex justify-end mt-6 gap-4">
             <UButton @click="handleCreateCampaign" color="primary" size="lg" :disabled="!isAuthenticated"
                 :tooltip="!isAuthenticated ? $t('loginToCreateCampaigns') : ''">
@@ -629,34 +971,7 @@ const debouncedSearch = useDebounceFn(searchEntities, 300);
     margin-top: 1rem;
 }
 
-.relative .absolute {
-    z-index: 50;
-    background-color: #ffffff !important;
-    border: 2px solid #ccc;
-    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
-}
-
-.dark .relative .absolute {
-    background-color: #1f2937 !important;
-    border-color: #4b5563;
-}
-
-.bg-gray-100 {
-    background-color: #f3f4f6;
-}
-
-.dark .bg-gray-700 {
-    background-color: #374151;
-}
-
-:deep(.form-radio-group legend) {
-    display: none;
-}
-
-:deep(.form-radio-group .form-radio) {
-    margin-right: 1rem;
-}
-
+/* Improved input styling to match battlegenerator */
 .custom-input {
     display: block;
     width: 100%;
@@ -713,15 +1028,18 @@ input[type="datetime-local"].custom-input {
     background-color: #374151;
 }
 
+/* Solid background for dropdown menus */
 .system-search-dropdown {
     border: 2px solid #ccc;
-    background-color: #ffffff !important;
+    background-color: white !important;
+    /* Force solid background */
     box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
 }
 
 .dark .system-search-dropdown {
     border-color: #4b5563;
     background-color: #1f2937 !important;
+    /* Force solid background */
 }
 
 .search-result-item {
@@ -730,6 +1048,7 @@ input[type="datetime-local"].custom-input {
 
 .search-result-item:hover {
     background-color: #f3f4f6 !important;
+    /* Force hover color */
 }
 
 .dark .search-result-item {
@@ -738,6 +1057,7 @@ input[type="datetime-local"].custom-input {
 
 .dark .search-result-item:hover {
     background-color: #374151 !important;
+    /* Force hover color */
 }
 
 .search-result-selected {

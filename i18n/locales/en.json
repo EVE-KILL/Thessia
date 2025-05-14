@@ -719,5 +719,28 @@
         "carebearScoreExplanation": "For carebears, the most positive score is best. Larger organizations with more positive average security status will rank higher in the carebear list.",
         "minimumRequirements": "Note: Only entities with at least 10 members and appropriate security status (negative for pirates, positive for carebears) are included in these rankings.",
         "score": "Weighted Score"
-    }
+    },
+    "campaignCreator": {
+        "locationTimeFilters": "Location & Time Filters",
+        "attackerFilters": "Attacker Filters",
+        "victimFilters": "Victim Filters",
+        "optional": "optional",
+        "optionalFiltersNote": "Attacker and Victim filters are optional. If you don't specify any, the campaign will include all kills in the selected locations and time range.",
+        "createCampaign": "Create Campaign",
+        "enterCampaignName": "Enter campaign name",
+        "enterCampaignDescription": "Enter campaign description",
+        "campaignDetails": "Campaign Details",
+        "campaignName": "Campaign Name",
+        "campaignDescription": "Campaign Description",
+        "campaignScopeDefinition": "Campaign Scope Definition",
+        "generatedCampaignQuery": "Generated Campaign Query"
+    },
+    "createCampaign": "Create Campaign",
+    "enterCampaignName": "Enter campaign name",
+    "enterCampaignDescription": "Enter campaign description",
+    "campaignDetails": "Campaign Details",
+    "campaignName": "Campaign Name",
+    "campaignDescription": "Campaign Description",
+    "campaignScopeDefinition": "Campaign Scope Definition",
+    "generatedCampaignQuery": "Generated Campaign Query"
 }

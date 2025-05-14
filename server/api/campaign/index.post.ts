@@ -1,6 +1,10 @@
 import { createError, defineEventHandler, parseCookies, readBody } from 'h3';
 import { Campaigns } from '~/server/models/Campaigns';
 
+// Define constants for entity limits
+const LOCATION_MAX_ENTITIES = 5;
+const ENTITY_MAX_ENTITIES = 15;
+
 export default defineEventHandler(async (event) => {
     try {
         // Get authentication cookie directly from the request
@@ -59,6 +63,9 @@ export default defineEventHandler(async (event) => {
             throw createError({ statusCode: 400, statusMessage: 'End time cannot be before start time' });
         }
 
+        // Validate entity limits in query
+        validateEntityLimits(query);
+
         // Create campaign document with creator ID from authenticated user
         const campaignData = {
             name: name.trim(),
@@ -94,3 +101,50 @@ export default defineEventHandler(async (event) => {
         });
     }
 });
+
+/**
+ * Validates entity limits in the campaign query to prevent bypassing frontend restrictions
+ * @param query - The campaign query object
+ * @throws {Error} If entity limits are exceeded
+ */
+function validateEntityLimits(query: Record<string, any>): void {
+    // Check for location field limits
+    validateFieldLimit(query, 'region_id', LOCATION_MAX_ENTITIES);
+    validateFieldLimit(query, 'system_id', LOCATION_MAX_ENTITIES);
+    validateFieldLimit(query, 'constellation_id', LOCATION_MAX_ENTITIES);
+
+    // Check for attacker field limits
+    validateFieldLimit(query, 'attackers.character_id', ENTITY_MAX_ENTITIES);
+    validateFieldLimit(query, 'attackers.corporation_id', ENTITY_MAX_ENTITIES);
+    validateFieldLimit(query, 'attackers.alliance_id', ENTITY_MAX_ENTITIES);
+    validateFieldLimit(query, 'attackers.faction_id', ENTITY_MAX_ENTITIES);
+
+    // Check for victim field limits
+    validateFieldLimit(query, 'victim.character_id', ENTITY_MAX_ENTITIES);
+    validateFieldLimit(query, 'victim.corporation_id', ENTITY_MAX_ENTITIES);
+    validateFieldLimit(query, 'victim.alliance_id', ENTITY_MAX_ENTITIES);
+    validateFieldLimit(query, 'victim.faction_id', ENTITY_MAX_ENTITIES);
+}
+
+/**
+ * Validates the number of entities in a specific field of the query
+ * @param query - The campaign query object
+ * @param fieldName - The field name to check
+ * @param maxEntities - The maximum number of entities allowed
+ * @throws {Error} If entity limit is exceeded
+ */
+function validateFieldLimit(query: Record<string, any>, fieldName: string, maxEntities: number): void {
+    if (!query[fieldName]) return;
+
+    // Check if the field exists and is using $in operator
+    if (typeof query[fieldName] === 'object' && query[fieldName].$in) {
+        // Count entities in the $in array
+        const count = query[fieldName].$in.length;
+        if (count > maxEntities) {
+            throw createError({
+                statusCode: 400,
+                statusMessage: `Too many entities for ${fieldName}. Maximum allowed is ${maxEntities}.`
+            });
+        }
+    }
+}
