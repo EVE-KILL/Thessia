@@ -98,7 +98,7 @@ const formatNumber = (n: number | undefined | null): string => {
     return n.toLocaleString(undefined, { maximumFractionDigits: 0 });
 };
 
-const linkFn = (item: IBattlesDocument) => `/battle/killmail/${item.battle_id}`;
+const linkFn = (item: IBattlesDocument) => `/battle/${item.battle_id}`;
 const goToBattle = (item: IBattlesDocument) => router.push(linkFn(item));
 
 const getLocalizedString = (obj: any, localeKey: string): string => {
@@ -123,6 +123,37 @@ const generateSkeletonRows = (count: number) => {
         }));
 };
 const skeletonRows = computed(() => generateSkeletonRows(selectedPageSize.value));
+
+// Add this new helper function to format systems from battles
+const getSystemsDisplay = (battle: IBattlesDocument) => {
+    if (battle.systems && battle.systems.length > 0) {
+        return battle.systems.map(system => {
+            const securityDisplay = system.system_security !== undefined && system.system_security !== null
+                ? system.system_security.toFixed(1)
+                : 'N/A';
+            const regionName = getLocalizedString(system.region_name, currentLocale.value);
+            return {
+                id: system.system_id,
+                name: system.system_name,
+                security: securityDisplay,
+                region: regionName
+            };
+        });
+    } else if (battle.system_id) {
+        // Handle legacy format
+        const securityDisplay = battle.system_security !== undefined && battle.system_security !== null
+            ? battle.system_security.toFixed(1)
+            : 'N/A';
+        const regionName = getLocalizedString(battle.region_name, currentLocale.value);
+        return [{
+            id: battle.system_id,
+            name: battle.system_name || t('unknownSystem', 'Unknown System'),
+            security: securityDisplay,
+            region: regionName
+        }];
+    }
+    return [];
+};
 
 // Refresh on page/size change
 watch([currentPage, selectedPageSize, currentLocale], () => {
@@ -202,15 +233,19 @@ if (!pending.value) {
                 </template>
 
                 <template #cell-system="{ item }">
-                    <div class="flex items-center gap-2 cursor-pointer" @click.stop="goToSystem(item.system_id)">
-                        <Image :id="item.system_id" type="system" size="32" format="webp"
-                            class="w-8 h-8 rounded flex-shrink-0" />
-                        <div class="text-sm">
-                            <div class="hover:underline">{{ getLocalizedString(item.system_name, currentLocale) }} ({{
-                                item.system_security?.toFixed(1) ?? 'N/A' }})</div>
-                            <div class="text-xs text-gray-500 dark:text-gray-400">{{
-                                getLocalizedString(item.region_name, currentLocale) }}</div>
-                        </div>
+                    <div class="flex flex-col space-y-1">
+                        <template v-for="(system, index) in getSystemsDisplay(item)"
+                            :key="`system-${system.id}-${index}`">
+                            <div class="flex items-center gap-2 cursor-pointer" @click.stop="goToSystem(system.id)">
+                                <Image :id="system.id" type="system" size="24" format="webp"
+                                    class="w-6 h-6 rounded flex-shrink-0" />
+                                <div class="text-sm">
+                                    <span class="hover:underline">{{ system.name }} </span>
+                                    <span class="text-gray-500"> ({{ system.security }})</span>
+                                    <span class="text-gray-400"> ({{ system.region }})</span>
+                                </div>
+                            </div>
+                        </template>
                     </div>
                 </template>
 
@@ -304,11 +339,18 @@ if (!pending.value) {
                             </div>
                             <!-- System Column Skeleton -->
                             <div class="battles-skeleton-cell" :style="{ width: columns[1].width }">
-                                <div class="flex items-center gap-2">
-                                    <div class="battles-skeleton-image"></div>
-                                    <div class="flex flex-col space-y-1">
-                                        <div class="battles-skeleton-title" style="width: 100px;"></div>
-                                        <div class="battles-skeleton-subtitle" style="width: 70px;"></div>
+                                <div class="flex flex-col space-y-2">
+                                    <div class="flex items-center gap-2">
+                                        <div class="battles-skeleton-image" style="width:24px; height:24px;"></div>
+                                        <div class="flex flex-col">
+                                            <div class="battles-skeleton-title" style="width: 100px;"></div>
+                                        </div>
+                                    </div>
+                                    <div class="flex items-center gap-2">
+                                        <div class="battles-skeleton-image" style="width:24px; height:24px;"></div>
+                                        <div class="flex flex-col">
+                                            <div class="battles-skeleton-title" style="width: 80px;"></div>
+                                        </div>
                                     </div>
                                 </div>
                             </div>

@@ -181,21 +181,40 @@ const { locale, t } = useI18n()
 
 const route = useRoute();
 
-const entityId = computed(() => route.params.id as string || null);
+// Get either the ID from the route or a killmail ID from query params
+const entityId = computed(() => {
+    // Check if we have a killmail parameter in the query
+    if (route.query.killmail) {
+        return String(route.query.killmail);
+    }
+    // Otherwise use the ID from the route
+    return route.params.id as string || null;
+});
+
+// Track if we're in killmail mode
+const isKillmailMode = computed(() => Boolean(route.query.killmail));
 
 // Used to track the loading state separately from useFetch's pending
 const isLoading = ref(true);
 
+// Compute the API URL based on whether we're using a battle ID or a killmail ID
 const apiUrl = computed(() => {
     if (!entityId.value) return null;
+    
+    // If we're in killmail mode, use the killmail endpoint
+    if (isKillmailMode.value) {
+        return `/api/battles/killmail/${entityId.value}`;
+    }
+    
+    // Otherwise use the regular battle endpoint
     return `/api/battles/${entityId.value}`;
 });
 
 // Set immediate to true and remove lazy to ensure it runs properly on page load
 const { data: battleData, pending, error, refresh } = useFetch(apiUrl, {
-    key: computed(() => entityId.value ? `battle-${entityId.value}` : null),
+    key: computed(() => entityId.value ? `battle-${isKillmailMode.value ? 'killmail-' : ''}${entityId.value}` : null),
     immediate: true,
-    watch: [entityId],
+    watch: [entityId, isKillmailMode],
     onRequest({ request, options }) {
         battle.value = null;
         isLoading.value = true;

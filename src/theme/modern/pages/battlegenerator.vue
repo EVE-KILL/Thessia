@@ -268,7 +268,7 @@ const loadEntities = async () => {
 
     try {
         const systemIds = selectedSystems.value.map(system => system.id);
-        const response = await fetch('/api/customBattles/entities', {
+        const response = await fetch('/api/battles/entities', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -762,7 +762,7 @@ const saveBattle = async () => {
     loading.value = true;
 
     try {
-        const response = await fetch('/api/customBattles/custom', {
+        const response = await fetch('/api/battles/custom', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -881,7 +881,7 @@ const previewBattle = async () => {
             });
         }
 
-        const response = await fetch('/api/customBattles/preview', {
+        const response = await fetch('/api/battles/preview', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',

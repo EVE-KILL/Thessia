@@ -885,7 +885,7 @@ onBeforeUnmount(() => {
                                 <span>{{ item.system_name }}</span>
                                 <span> (</span>
                                 <span :class="getSecurityColor(item.system_security)">{{ item.system_security.toFixed(1)
-                                }}</span>
+                                    }}</span>
                                 <span>)</span>
                             </div>
                         </div>

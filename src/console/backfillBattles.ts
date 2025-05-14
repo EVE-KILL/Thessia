@@ -1,4 +1,4 @@
-import { compileFullBattleData } from "~/server/helpers/Battles";
+import { compileFullBattleData, determineTeamsFromKillmails } from "~/server/helpers/Battles";
 import { cliLogger } from "~/server/helpers/Logger";
 import type { IKillmail } from "~/server/interfaces/IKillmail";
 import { Battles } from "~/server/models/Battles";
@@ -141,7 +141,9 @@ async function processPotentialBattle(systemId: number, fromTime: Date, toTime: 
             return;
         }
 
-        const battleDocument = await compileFullBattleData(battleData, systemId, battleStartTime, battleEndTime);
+        const battleSides = await determineTeamsFromKillmails(battleData);
+        const battleDocument = await compileFullBattleData(battleData, [systemId], battleStartTime, battleEndTime, undefined, battleSides);
+
         // Skip if battle already exists
         const exists = await Battles.exists({ battle_id: battleDocument.battle_id });
         if (exists) {

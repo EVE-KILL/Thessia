@@ -2,31 +2,51 @@ import { createError, defineEventHandler, readBody } from 'h3';
 import { compileFullBattleData } from '~/server/helpers/Battles';
 import { Corporations } from '~/server/models/Corporations';
 import { Killmails } from '~/server/models/Killmails';
+import { Regions } from '~/server/models/Regions';
+import { SolarSystems } from '~/server/models/SolarSystems';
+
+interface Side {
+    side_id: string;
+    name: string;
+    entities: Array<{
+        id: number;
+        type: 'alliance' | 'corporation';
+    }>;
+}
 
 export default defineEventHandler(async (event) => {
     try {
-        const { systemId, startTime, endTime, sideA, sideB } = await readBody(event);
+        const { systems, sides, startTime, endTime } = await readBody(event);
 
         // Validate required parameters
-        if (!systemId) {
-            throw createError({ statusCode: 400, statusMessage: 'System ID is required' });
+        if (!systems || !Array.isArray(systems) || systems.length === 0) {
+            throw createError({ statusCode: 400, statusMessage: 'apiErrors.customBattles.preview.systemRequired' });
         }
+
+        // Enforce maximum system limit
+        if (systems.length > 5) {
+            throw createError({ statusCode: 400, statusMessage: 'apiErrors.customBattles.preview.maxSystems' });
+        }
+
         if (!startTime) {
-            throw createError({ statusCode: 400, statusMessage: 'Start time is required' });
+            throw createError({ statusCode: 400, statusMessage: 'apiErrors.customBattles.preview.startTimeRequired' });
         }
         if (!endTime) {
-            throw createError({ statusCode: 400, statusMessage: 'End time is required' });
+            throw createError({ statusCode: 400, statusMessage: 'apiErrors.customBattles.preview.endTimeRequired' });
         }
-        if (!Array.isArray(sideA) || sideA.length === 0) {
-            throw createError({ statusCode: 400, statusMessage: 'Side A must be a non-empty array' });
+        if (!sides || !Array.isArray(sides) || sides.length < 2) {
+            throw createError({ statusCode: 400, statusMessage: 'apiErrors.customBattles.preview.minSides' });
         }
-        if (!Array.isArray(sideB) || sideB.length === 0) {
-            throw createError({ statusCode: 400, statusMessage: 'Side B must be a non-empty array' });
+        if (sides.length > 4) {
+            throw createError({ statusCode: 400, statusMessage: 'apiErrors.customBattles.preview.maxSides' });
         }
 
         // Convert string dates to Date objects
         const startTimeDate = new Date(startTime);
         const endTimeDate = new Date(endTime);
+
+        // Get system IDs array
+        const systemIds = systems.map(system => system.system_id);
 
         // Check if the timespan is within the allowed limit (36 hours)
         const timeDiffMs = endTimeDate.getTime() - startTimeDate.getTime();
@@ -35,13 +55,13 @@ export default defineEventHandler(async (event) => {
         if (timeDiffMs > maxTimespan) {
             throw createError({
                 statusCode: 400,
-                statusMessage: 'Battle timespan cannot exceed 36 hours. Please select a smaller timespan.'
+                statusMessage: 'apiErrors.customBattles.preview.maxTimespan'
             });
         }
 
-        // Query killmails within the specified system and time range
+        // Query killmails within all specified systems and time range
         const killmails = await Killmails.find({
-            system_id: systemId,
+            system_id: { $in: systemIds },
             kill_time: {
                 $gte: startTimeDate,
                 $lte: endTimeDate
@@ -51,60 +71,46 @@ export default defineEventHandler(async (event) => {
         if (killmails.length === 0) {
             throw createError({
                 statusCode: 404,
-                statusMessage: 'No killmails found for the specified system and time range'
+                statusMessage: 'apiErrors.customBattles.preview.noKillmails'
             });
         }
 
-        // Extract alliance and corporation IDs for each side
-        const allianceIdsA = sideA.filter(entity => entity.type === 'alliance').map(entity => entity.id);
-        const corpIdsA = sideA.filter(entity => entity.type === 'corporation').map(entity => entity.id);
-        const allianceIdsB = sideB.filter(entity => entity.type === 'alliance').map(entity => entity.id);
-        const corpIdsB = sideB.filter(entity => entity.type === 'corporation').map(entity => entity.id);
+        // Process systems data properly for the preview endpoint
+        const systemsData = await Promise.all(systems.map(async (system) => {
+            const systemInfo = await SolarSystems.findOne(
+                { system_id: system.system_id },
+                { system_name: 1, region_id: 1, security: 1 }
+            ).lean();
 
-        // Query the Corporations collection to get alliance information
-        const corpDocsA = await Corporations.find({ corporation_id: { $in: corpIdsA } }, { corporation_id: 1, alliance_id: 1, name: 1 }).lean();
-        const corpDocsB = await Corporations.find({ corporation_id: { $in: corpIdsB } }, { corporation_id: 1, alliance_id: 1, name: 1 }).lean();
+            const regionInfo = systemInfo?.region_id ?
+                await Regions.findOne({ region_id: systemInfo.region_id }, { name: 1 }).lean() :
+                null;
 
-        // Filter each side's corporation list to only include those where:
-        // - alliance_id is undefined/null OR
-        // - alliance_id is not in that side's alliance IDs
-        const filteredCorpIdsA = corpDocsA
-            .filter(doc => !doc.alliance_id || !allianceIdsA.includes(doc.alliance_id))
-            .map(doc => doc.corporation_id);
+            return {
+                system_id: system.system_id,
+                system_name: systemInfo?.system_name || "Unknown System",
+                system_security: systemInfo?.security || 0,
+                region_id: systemInfo?.region_id || 0,
+                region_name: regionInfo?.name || { en: "Unknown Region" }
+            };
+        }));
 
-        const filteredCorpIdsB = corpDocsB
-            .filter(doc => !doc.alliance_id || !allianceIdsB.includes(doc.alliance_id))
-            .map(doc => doc.corporation_id);
+        // Prepare teams structure
+        // First, extract all alliance and corporation IDs for each side
+        const teamsData = await prepareTeamsData(sides);
 
-        // Prepare the teams data with filtered corporations
-        const blueTeam = {
-            alliances: sideA.filter(entity => entity.type === 'alliance').map(entity => ({ id: entity.id, name: entity.name })),
-            corporations: sideA
-                .filter(entity => entity.type === 'corporation' && filteredCorpIdsA.includes(entity.id))
-                .map(entity => ({ id: entity.id, name: entity.name }))
-        };
+        // Use the first system ID for the battle ID generation
+        // (compatible with existing battle ID generation logic)
+        const primarySystemId = systemIds[0];
 
-        const redTeam = {
-            alliances: sideB.filter(entity => entity.type === 'alliance').map(entity => ({ id: entity.id, name: entity.name })),
-            corporations: sideB
-                .filter(entity => entity.type === 'corporation' && filteredCorpIdsB.includes(entity.id))
-                .map(entity => ({ id: entity.id, name: entity.name }))
-        };
-
-        // Create manual teams object
-        const manualTeams = {
-            blue_team: blueTeam,
-            red_team: redTeam
-        };
-
-        // Generate a battle document using compileFullBattleData with manual teams
+        // Generate a battle document using compileFullBattleData with dynamic teams
         const battleDocument = await compileFullBattleData(
             killmails,
-            systemId,
+            systemIds, // still pass systemIds array for internal processing
             startTimeDate,
             endTimeDate,
             undefined,
-            manualTeams
+            teamsData
         );
 
         // Mark as custom battle
@@ -113,10 +119,46 @@ export default defineEventHandler(async (event) => {
         // Return the battle document without saving it
         return battleDocument;
     } catch (error: any) {
-        console.error('Error in battles/preview endpoint:', error);
+        console.error('Error in customBattles/preview endpoint:', error);
+        // If statusMessage is already a key (e.g. from a previous createError), use it.
+        // Otherwise, use the generic internal server error key.
+        const messageIsKey = typeof error.statusMessage === 'string' && error.statusMessage.startsWith('apiErrors.');
         throw createError({
             statusCode: error.statusCode || 500,
-            statusMessage: error.statusMessage || 'Internal Server Error'
+            statusMessage: messageIsKey ? error.statusMessage : 'apiErrors.customBattles.preview.internalServerError'
         });
     }
 });
+
+/**
+ * Process sides data to prepare teams structure for compileFullBattleData
+ */
+async function prepareTeamsData(sides: Side[]) {
+    const teamsData: Record<string, { alliances: any[], corporations: any[] }> = {};
+
+    for (const side of sides) {
+        const allianceIds = side.entities.filter(e => e.type === 'alliance').map(e => e.id);
+        let corpIds = side.entities.filter(e => e.type === 'corporation').map(e => e.id);
+
+        // Query corporations to get alliance relationships
+        const corpDocs = await Corporations.find(
+            { corporation_id: { $in: corpIds } },
+            { corporation_id: 1, alliance_id: 1, name: 1 }
+        ).lean();
+
+        // Filter out corporations that belong to alliances already in this side
+        // (they'll be included implicitly with their alliance)
+        const filteredCorpIds = corpDocs
+            .filter(doc => !doc.alliance_id || !allianceIds.includes(doc.alliance_id))
+            .map(doc => doc.corporation_id);
+
+        // Prepare the team data structure
+        teamsData[side.side_id] = {
+            name: side.name,
+            alliances: allianceIds.map(id => ({ id })),
+            corporations: filteredCorpIds.map(id => ({ id })),
+        };
+    }
+
+    return teamsData;
+}

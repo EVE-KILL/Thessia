@@ -245,7 +245,7 @@ const rightNavItems = computed<NavLink[]>(() => {
         items.push({
             name: 'Battle Report',
             position: 'right',
-            to: `/battle/killmail/${props.killmail.killmail_id}`,
+            to: `/battle/${props.killmail.killmail_id}?killmail=${props.killmail.killmail_id}`,
             target: '',
         });
     }

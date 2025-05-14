@@ -8,137 +8,114 @@ export interface ICharacterShipManifestEntry {
     corporation_name?: string;
     alliance_id?: number;
     alliance_name?: string;
-    ship_type_id: number;
+    ship_type_id: number; // Ship type ID
     ship_name: ITranslation | string;
     ship_group_id?: number;
     ship_group_name?: ITranslation | string;
-    was_lost: boolean;
-    killmail_id_if_lost?: number;
+    was_lost: boolean; // True if this specific ship instance was a victim
+    killmail_id_if_lost?: number; // The killmail_id where this ship was lost
     damage_taken?: number;
     damage_dealt?: number;
 }
 
-// Entity statistics
+// Helper interface for entity statistics (alliances, corporations, characters)
 export interface IEntityStats {
     id: number;
     name: string;
-    alliance_id?: number;
-    alliance_name?: string;
+    alliance_id?: number; // Optional, e.g., for characters or corps not in an alliance
+    alliance_name?: string; // Optional
     kills: number;
     losses: number;
     valueInflicted: number;
     valueSuffered: number;
 }
 
-// Team summary statistics
+// Helper interface for team summary statistics
 export interface ITeamSummaryStats {
     iskLost: number;
     shipsLost: number;
-    damageInflicted: number;
+    damageInflicted: number; // Total damage dealt by this team
 }
 
-// Entity descriptor (alliance or corporation)
-export interface IEntityDescriptor {
+// Helper interface for entity items (e.g., in team definitions)
+export interface IEntityItem {
     id: number;
     name?: string;
 }
 
-// Single system information
+// Helper interface for system information (multiple systems can be involved)
 export interface ISystemInfo {
     system_id: number;
-    system_name?: string;
-    system_security?: number;
-    region_id?: number;
-    region_name?: Record<string, string> | ITranslation;
+    system_name: string; // Name is typically string from SDE
+    system_security: number;
+    region_id: number;
+    region_name: ITranslation | string; // Name can be ITranslation or string
 }
 
-// Side/team data structure
+// Helper interface for data specific to a side/team in a battle
 export interface ISideData {
-    name: string;
-    alliances: IEntityDescriptor[];
-    corporations: IEntityDescriptor[];
-    kill_ids?: number[];
-    stats?: ITeamSummaryStats;
-    alliances_stats?: IEntityStats[];
-    corporations_stats?: IEntityStats[];
-    characters_stats?: IEntityStats[];
-    ship_manifest?: ICharacterShipManifestEntry[];
+    id: string; // e.g., "blue", "red", or a generated ID
+    name: string; // Team name, e.g., "Team A"
+    alliances: IEntityItem[];
+    corporations: IEntityItem[];
+    kill_ids: number[]; // Killmails attributed to this side's victims or inflicted by this side
+    stats: ITeamSummaryStats;
+    alliances_stats: IEntityStats[];
+    corporations_stats: IEntityStats[];
+    characters_stats: IEntityStats[];
+    ship_manifest: ICharacterShipManifestEntry[]; // Ships involved for this side
 }
 
-// Main Battle interface
+// Helper interface for top entities (alliances, corporations, ship types)
+export interface ITopEntity {
+    id: number;
+    name: string | ITranslation; // Name can be string or ITranslation (e.g., for ship types)
+    count: number;
+}
+
+// Main interface for Custom Battles, reflecting the structure from compileFullBattleData
 export interface IBattles {
     battle_id: number;
-    custom?: boolean;
+    custom?: boolean; // Indicates if the battle was manually created/defined
     start_time: Date;
     end_time: Date;
     duration_ms?: number;
 
-    // Multi-system support
-    systems?: ISystemInfo[];
+    systems?: ISystemInfo[]; // Array of systems involved in the battle
 
-    // Legacy single-system fields
-    system_id?: number;
-    system_name?: string;
-    region_id?: number;
-    region_name?: Record<string, string> | ITranslation;
-    system_security?: number;
+    killmailsCount: number;
+    iskDestroyed: number; // Total ISK value of ships destroyed
 
-    // Battle statistics
-    killmailsCount?: number;
-    iskDestroyed?: number;
-    alliancesInvolved?: number[];
-    corporationsInvolved?: number[];
-    charactersInvolved?: number[];
+    // Arrays of IDs for all involved entities across all sides
+    alliancesInvolved: number[];
+    corporationsInvolved: number[];
+    charactersInvolved: number[];
+
+    // Counts of unique involved entities
     involved_alliances_count?: number;
     involved_corporations_count?: number;
     involved_characters_count?: number;
 
+    // Top entities involved in the battle
     top_alliances?: Array<{
         id: number;
-        name: string;
-        count: number;
+        name: string; // Alliance names are typically strings
+        count: number; // e.g., number of members involved or killmails
     }>;
     top_corporations?: Array<{
         id: number;
-        name: string;
+        name: string; // Corporation names are typically strings
         count: number;
     }>;
-    top_ship_types?: Array<{
-        id: number;
-        name: Record<string, string> | ITranslation;
-        count: number;
-    }>;
+    top_ship_types?: ITopEntity[]; // Ship types, name can be ITranslation
 
-    // Dynamic team structure
-    side_ids?: string[];
-    sides?: Record<string, ISideData>;
+    killmail_ids?: number[]; // All killmail IDs included in this battle
 
-    // All killmails in the battle
-    killmail_ids?: number[];
+    // Defines the participating sides and their specific data
+    side_ids?: string[]; // Array of keys used in the 'sides' object (e.g., ["blue", "red"])
+    sides?: Record<string, ISideData>; // Object mapping side ID to detailed side data
 
-    // Legacy team fields for backward compatibility
-    blue_team?: {
-        alliances: IEntityDescriptor[];
-        corporations: IEntityDescriptor[];
-    };
-    red_team?: {
-        alliances: IEntityDescriptor[];
-        corporations: IEntityDescriptor[];
-    };
-    blue_team_kill_ids?: number[];
-    red_team_kill_ids?: number[];
-    blue_team_stats?: ITeamSummaryStats;
-    red_team_stats?: ITeamSummaryStats;
-    blue_team_alliances_stats?: IEntityStats[];
-    red_team_alliances_stats?: IEntityStats[];
-    blue_team_corporations_stats?: IEntityStats[];
-    red_team_corporations_stats?: IEntityStats[];
-    blue_team_characters_stats?: IEntityStats[];
-    red_team_characters_stats?: IEntityStats[];
-    blue_team_ship_manifest?: ICharacterShipManifestEntry[];
-    red_team_ship_manifest?: ICharacterShipManifestEntry[];
-
-    // Timestamps
+    // Timestamps automatically managed by Mongoose
     updatedAt?: Date;
     createdAt?: Date;
 }
