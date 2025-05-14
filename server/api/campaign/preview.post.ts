@@ -1,12 +1,13 @@
-import { createError, defineEventHandler, getCookie, readBody } from 'h3';
+import { createError, defineEventHandler, parseCookies, readBody } from 'h3';
 import { nanoid } from 'nanoid';
 import { generateCampaignStats } from '~/server/helpers/CampaignsHelper';
 import type { ICampaign } from '~/server/interfaces/ICampaign';
 
 export default defineEventHandler(async (event) => {
     try {
-        // Get authentication cookie directly from the request with more reliable method
-        const token = getCookie(event, 'evelogin');
+        // Get authentication cookie directly from the request
+        const cookies = parseCookies(event);
+        const token = cookies.evelogin;
 
         if (!token) {
             throw createError({ statusCode: 401, statusMessage: 'Authentication required' });
@@ -15,7 +16,7 @@ export default defineEventHandler(async (event) => {
         // Get user data from the session
         const session = await $fetch("/api/auth/me", {
             headers: {
-                cookie: `evelogin=${token}`
+                cookie: `evelogin=${token}`,
             },
         }).catch(() => null);
 
