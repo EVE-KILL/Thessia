@@ -741,7 +741,11 @@
         "scopeRequired": "Campaign scope must be defined with at least one filter",
         "creationError": "Error creating campaign",
         "unexpectedError": "Failed to create campaign. Please try again.",
-        "creationSuccess": "Campaign created successfully!"
+        "creationSuccess": "Campaign created successfully!",
+        "updateCampaign": "Update Campaign",
+        "updateSuccess": "Campaign updated successfully!",
+        "loadError": "Failed to load campaign for editing",
+        "notYourCampaign": "You can only edit campaigns you created"
     },
     "createCampaign": "Create Campaign",
     "enterCampaignName": "Enter campaign name",
@@ -816,5 +820,6 @@
         "killmail_preview_note": "Killmail Data Preview",
         "killmail_preview_description": "Actual killmails will appear here after saving the campaign."
     },
-    "campaigncreator": "Campaign Creator"
+    "campaigncreator": "Campaign Creator",
+    "edit": "Edit"
 }

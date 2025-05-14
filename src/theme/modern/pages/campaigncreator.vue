@@ -10,11 +10,16 @@ const { isAuthenticated, currentUser, login } = useAuth();
 
 // Add the toast composable
 const toast = useToast();
+const route = useRoute();
 
-// SEO
+// Check if we're in edit mode
+const campaignId = computed(() => route.query.campaignId as string | undefined);
+const isEditMode = computed(() => !!campaignId.value);
+
+// SEO - Update title based on edit/create mode
 useSeoMeta({
-    title: "Campaign Creator - EVE Kill",
-    description: "Create new campaigns by defining scope and details.",
+    title: () => isEditMode.value ? "Edit Campaign - EVE Kill" : "Campaign Creator - EVE Kill",
+    description: "Create or edit campaigns by defining scope and details.",
 });
 
 // Campaign Specific Fields
@@ -23,7 +28,11 @@ const campaignDescription = ref("");
 const campaignStartTime = ref(""); // ISO string format from datetime-local
 const campaignEndTime = ref("");   // ISO string format from datetime-local
 
-// --- Fixed Filter Structure ---
+// Add state for edit mode authorization
+const isLoading = ref(false);
+const isAuthorized = ref(false);
+const editCampaignData = ref<any>(null);
+
 // Define the entity limits
 const LOCATION_MAX_ENTITIES = 5;
 const ENTITY_MAX_ENTITIES = 15;
@@ -320,9 +329,201 @@ onMounted(() => {
     updateQuery();
 });
 
+// Load campaign data if in edit mode
+onMounted(async () => {
+    if (isEditMode.value) {
+        await loadCampaignForEditing();
+    }
+});
+
+// Function to load campaign data for editing
+async function loadCampaignForEditing() {
+    if (!campaignId.value) return;
+
+    try {
+        isLoading.value = true;
+
+        // Check if user is logged in
+        if (!isAuthenticated.value) {
+            toast.add({
+                title: t('error'),
+                description: t('authenticationRequired'),
+                color: 'error',
+                icon: 'i-lucide-alert-circle',
+                timeout: 5000
+            });
+            return;
+        }
+
+        // Fetch campaign data
+        const { data } = await useFetch(`/api/campaign/${campaignId.value}`);
+        editCampaignData.value = data.value;
+
+        // Check if user is the creator
+        if (!editCampaignData.value ||
+            !currentUser.value ||
+            editCampaignData.value.creator_id !== currentUser.value.characterId) {
+            toast.add({
+                title: t('error'),
+                description: t('campaignCreator.notYourCampaign'),
+                color: 'error',
+                icon: 'i-lucide-alert-circle',
+                timeout: 5000
+            });
+            return;
+        }
+
+        // User is authorized to edit
+        isAuthorized.value = true;
+
+        // Populate form fields with campaign data
+        populateFormFields(editCampaignData.value);
+
+    } catch (error) {
+        console.error('Error loading campaign for editing:', error);
+        toast.add({
+            title: t('error'),
+            description: t('campaignCreator.loadError'),
+            color: 'error',
+            icon: 'i-lucide-alert-circle',
+            timeout: 5000
+        });
+    } finally {
+        isLoading.value = false;
+    }
+}
+
+// Function to populate form fields from campaign data
+function populateFormFields(campaignData) {
+    if (!campaignData) return;
+
+    // Basic fields
+    campaignName.value = campaignData.name || '';
+    campaignDescription.value = campaignData.description || '';
+
+    // Format dates for datetime-local inputs
+    if (campaignData.startTime) {
+        campaignStartTime.value = new Date(campaignData.startTime)
+            .toISOString()
+            .slice(0, 16); // Format as YYYY-MM-DDThh:mm
+    }
+
+    if (campaignData.endTime) {
+        campaignEndTime.value = new Date(campaignData.endTime)
+            .toISOString()
+            .slice(0, 16);
+    }
+
+    // Reset all filter values
+    Object.keys(filterState.value).forEach(key => {
+        const filter = filterState.value[key];
+        filter.value = '';
+        filter.multipleValues = [];
+        filter.searchTerm = '';
+        filter.searchResults = [];
+        filter.valueLabel = '';
+        filter.error = '';
+    });
+
+    // Populate filters from campaign query
+    if (campaignData.campaignQuery) {
+        populateFilters(campaignData.campaignQuery, campaignData.filterEntities);
+    }
+}
+
+// Function to populate filters from campaign query
+function populateFilters(query, filterEntities) {
+    if (!query || !filterEntities) return;
+
+    // Populate region filter
+    if (filterEntities.regions && filterEntities.regions.length > 0) {
+        filterState.value.region.multipleValues = filterEntities.regions.map(region => ({
+            id: region.id,
+            name: region.name
+        }));
+    }
+
+    // Populate constellation filter
+    if (filterEntities.constellations && filterEntities.constellations.length > 0) {
+        filterState.value.constellation.multipleValues = filterEntities.constellations.map(constellation => ({
+            id: constellation.id,
+            name: constellation.name
+        }));
+    }
+
+    // Populate system filter
+    if (filterEntities.systems && filterEntities.systems.length > 0) {
+        filterState.value.system.multipleValues = filterEntities.systems.map(system => ({
+            id: system.id,
+            name: system.name
+        }));
+    }
+
+    // Populate attacker filters
+    if (filterEntities.attackerCharacters && filterEntities.attackerCharacters.length > 0) {
+        filterState.value.attackerCharacter.multipleValues = filterEntities.attackerCharacters.map(char => ({
+            id: char.id,
+            name: char.name
+        }));
+    }
+
+    if (filterEntities.attackerCorporations && filterEntities.attackerCorporations.length > 0) {
+        filterState.value.attackerCorporation.multipleValues = filterEntities.attackerCorporations.map(corp => ({
+            id: corp.id,
+            name: corp.name
+        }));
+    }
+
+    if (filterEntities.attackerAlliances && filterEntities.attackerAlliances.length > 0) {
+        filterState.value.attackerAlliance.multipleValues = filterEntities.attackerAlliances.map(alliance => ({
+            id: alliance.id,
+            name: alliance.name
+        }));
+    }
+
+    if (filterEntities.attackerFactions && filterEntities.attackerFactions.length > 0) {
+        filterState.value.attackerFaction.multipleValues = filterEntities.attackerFactions.map(faction => ({
+            id: faction.id,
+            name: faction.name
+        }));
+    }
+
+    // Populate victim filters
+    if (filterEntities.victimCharacters && filterEntities.victimCharacters.length > 0) {
+        filterState.value.victimCharacter.multipleValues = filterEntities.victimCharacters.map(char => ({
+            id: char.id,
+            name: char.name
+        }));
+    }
+
+    if (filterEntities.victimCorporations && filterEntities.victimCorporations.length > 0) {
+        filterState.value.victimCorporation.multipleValues = filterEntities.victimCorporations.map(corp => ({
+            id: corp.id,
+            name: corp.name
+        }));
+    }
+
+    if (filterEntities.victimAlliances && filterEntities.victimAlliances.length > 0) {
+        filterState.value.victimAlliance.multipleValues = filterEntities.victimAlliances.map(alliance => ({
+            id: alliance.id,
+            name: alliance.name
+        }));
+    }
+
+    if (filterEntities.victimFactions && filterEntities.victimFactions.length > 0) {
+        filterState.value.victimFaction.multipleValues = filterEntities.victimFactions.map(faction => ({
+            id: faction.id,
+            name: faction.name
+        }));
+    }
+
+    // Update query after populating filters
+    updateQuery();
+}
+
 // Handle campaign creation
 const handleCreateCampaign = async () => {
-    if (!isAuthenticated) {
+    if (!isAuthenticated.value) {
         toast.add({
             title: t('authenticationRequired'),
             description: t('loginToCreateCampaigns'),
@@ -378,16 +579,21 @@ const handleCreateCampaign = async () => {
     }
 
     const campaignData = {
-        name: campaignName.value,
-        description: campaignDescription.value,
+        name: campaignName.value.trim(),
+        description: campaignDescription.value?.trim(),
         startTime: campaignStartTime.value,
         endTime: campaignEndTime.value || null,
         query: campaignQuery.value,
-        creatorInfo: currentUser ? {
-            characterId: currentUser.characterId,
-            characterName: currentUser.characterName
+        creatorInfo: currentUser.value ? {
+            characterId: currentUser.value.characterId,
+            characterName: currentUser.value.characterName
         } : null
     };
+
+    // If in edit mode, add campaign_id to the data
+    if (isEditMode.value && isAuthorized.value) {
+        campaignData.campaign_id = campaignId.value;
+    }
 
     try {
         const { data, error } = await useFetch('/api/campaign', {
@@ -409,7 +615,9 @@ const handleCreateCampaign = async () => {
         if (data.value && data.value.success) {
             toast.add({
                 title: t('success'),
-                description: t('campaignCreator.creationSuccess'),
+                description: isEditMode.value
+                    ? t('campaignCreator.updateSuccess')
+                    : t('campaignCreator.creationSuccess'),
                 color: 'green',
                 icon: 'i-lucide-check-circle',
                 timeout: 5000
@@ -423,7 +631,7 @@ const handleCreateCampaign = async () => {
             }
         }
     } catch (err) {
-        console.error('Error creating campaign:', err);
+        console.error('Error creating/updating campaign:', err);
         toast.add({
             title: t('error'),
             description: t('campaignCreator.unexpectedError'),
@@ -511,11 +719,17 @@ const saveFromPreview = () => {
     handleCreateCampaign();
     closePreview();
 };
+
+// Modify the button's text based on edit mode
+const submitButtonText = computed(() => {
+    return isEditMode.value ? t('campaignCreator.updateCampaign') : t('createCampaign');
+});
 </script>
 
 <template>
     <div class="space-y-6 p-4 md:p-6">
-        <h1 class="text-3xl font-bold text-gray-900 dark:text-white">{{ $t('createCampaign') }}</h1>
+        <h1 class="text-3xl font-bold text-gray-900 dark:text-white">{{ isEditMode ? $t('editCampaign') :
+            $t('createCampaign') }}</h1>
 
         <!-- Authentication notice -->
         <UAlert v-if="!isAuthenticated" color="amber" icon="i-lucide-alert-triangle" class="mb-4">
@@ -1119,8 +1333,8 @@ const saveFromPreview = () => {
                 {{ $t('campaign.preview') }}
             </UButton>
             <UButton @click="handleCreateCampaign" color="primary" size="lg" :disabled="!isAuthenticated"
-                :tooltip="!isAuthenticated ? $t('loginToCreateCampaigns') : ''">
-                {{ $t('createCampaign') }}
+                :loading="isLoading" :tooltip="!isAuthenticated ? $t('loginToCreateCampaigns') : ''">
+                {{ submitButtonText }}
             </UButton>
         </div>
 

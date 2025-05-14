@@ -188,7 +188,7 @@ export function buildExpandedQuery(campaignQuery: ICampaign['query']): Record<st
  * @param campaignQuery - The campaign query object
  * @returns Object containing resolved entity data for the UI
  */
-async function processQueryForUI(campaignQuery: ICampaign['query']): Promise<ICampaignFilterEntities> {
+export async function processQueryForUI(campaignQuery: ICampaign['query']): Promise<ICampaignFilterEntities> {
     // Initialize the filter entities object
     const filterEntities: ICampaignFilterEntities = {
         regions: [],

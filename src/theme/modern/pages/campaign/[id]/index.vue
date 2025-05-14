@@ -20,15 +20,23 @@
             <div class="campaign-header mb-6">
                 <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-4">
                     <h1 class="text-2xl font-bold">{{ stats.name }}</h1>
-                    <div class="campaign-meta">
-                        <span class="text-gray-400 text-sm">
-                            {{ t('campaign.created_by') }}:
-                            <a v-if="creatorName" :href="`/character/${stats.creator_id}`"
-                                class="text-blue-500 hover:underline">
-                                {{ creatorName }}
-                            </a>
-                            <span v-else>{{ t('campaign.unknown') }}</span>
-                        </span>
+                    <div class="flex flex-col md:flex-row gap-2 items-end md:items-center">
+                        <!-- Edit button - only show for campaign creator -->
+                        <UButton v-if="isCreator" :to="`/campaigncreator?campaignId=${campaignId}`" size="sm"
+                            class="mr-2" icon="lucide:edit-2">
+                            {{ t('edit') }}
+                        </UButton>
+
+                        <div class="campaign-meta">
+                            <span class="text-gray-400 text-sm">
+                                {{ t('campaign.created_by') }}:
+                                <a v-if="creatorName" :href="`/character/${stats.creator_id}`"
+                                    class="text-blue-500 hover:underline">
+                                    {{ creatorName }}
+                                </a>
+                                <span v-else>{{ t('campaign.unknown') }}</span>
+                            </span>
+                        </div>
                     </div>
                 </div>
 
@@ -117,6 +125,7 @@ import CampaignTopBox from '~/src/theme/modern/components/campaign/CampaignTopBo
 const { t } = useI18n();
 const toast = useToast();
 const route = useRoute();
+const { isAuthenticated, currentUser } = useAuth();
 
 // Get campaign ID from route
 const campaignId = computed(() => route.params.id as string);
@@ -128,6 +137,14 @@ const entities = ref({
     alliances: [],
     corporations: [],
     characters: []
+});
+
+// Check if current user is the creator
+const isCreator = computed(() => {
+    if (!isAuthenticated.value || !currentUser.value || !stats.value?.creator_id) {
+        return false;
+    }
+    return currentUser.value.characterId === stats.value.creator_id;
 });
 
 // Fetch campaign data

@@ -32,7 +32,8 @@ export default defineEventHandler(async (event) => {
         const user = session.user;
 
         // Validate required fields
-        const { name, description, startTime, endTime, query } = await readBody(event);
+        const { name, description, startTime, endTime, query, campaign_id } = await readBody(event);
+        const isUpdate = !!campaign_id;
 
         if (!name || typeof name !== 'string' || !name.trim()) {
             throw createError({ statusCode: 400, statusMessage: 'Campaign name is required' });
@@ -88,19 +89,58 @@ export default defineEventHandler(async (event) => {
             public: true // Default to public for now
         };
 
-        // Save to database
-        const campaign = new Campaigns(campaignData);
-        await campaign.save();
+        // If we're updating an existing campaign
+        if (isUpdate) {
+            // Check if the campaign exists and the user is the creator
+            const existingCampaign = await Campaigns.findOne({ campaign_id });
 
-        // Return campaign data with ID
-        return {
-            success: true,
-            message: 'Campaign saved successfully',
-            campaign: {
-                id: campaign.campaign_id,
-                name: campaign.name
+            if (!existingCampaign) {
+                throw createError({
+                    statusCode: 404,
+                    statusMessage: 'Campaign not found'
+                });
             }
-        };
+
+            if (existingCampaign.creator_id !== user.characterId) {
+                throw createError({
+                    statusCode: 403,
+                    statusMessage: 'You are not authorized to update this campaign'
+                });
+            }
+
+            // Update the campaign
+            await Campaigns.updateOne(
+                { campaign_id },
+                {
+                    $set: campaignData
+                }
+            );
+
+            return {
+                success: true,
+                message: 'Campaign updated successfully',
+                campaign: {
+                    id: campaign_id,
+                    name: name.trim()
+                }
+            };
+        }
+        // Creating a new campaign
+        else {
+            // Save to database
+            const campaign = new Campaigns(campaignData);
+            await campaign.save();
+
+            // Return campaign data with ID
+            return {
+                success: true,
+                message: 'Campaign created successfully',
+                campaign: {
+                    id: campaign.campaign_id,
+                    name: campaign.name
+                }
+            };
+        }
     } catch (error: any) {
         // Log the error server-side
         console.error('Error saving campaign:', error);
