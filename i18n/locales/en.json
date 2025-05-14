@@ -809,7 +809,12 @@
         "characters": "Characters",
         "default_description": "View statistics and killmails for this EVE Online campaign",
         "link_copied": "Campaign Link Copied",
-        "link_copied_desc": "The campaign link has been copied to your clipboard"
+        "link_copied_desc": "The campaign link has been copied to your clipboard",
+        "preview": "Preview",
+        "preview_error": "Error Loading Preview",
+        "save_campaign": "Save Campaign",
+        "killmail_preview_note": "Killmail Data Preview",
+        "killmail_preview_description": "Actual killmails will appear here after saving the campaign."
     },
     "campaigncreator": "Campaign Creator"
 }

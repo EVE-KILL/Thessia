@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed, onMounted, ref, watch } from "vue";
+import CampaignPreview from '~/src/theme/modern/components/campaign/CampaignPreview.vue';
 
 // i18n setup
 const { t } = useI18n();
@@ -436,6 +437,79 @@ const handleCreateCampaign = async () => {
 // Login function
 const loginToCreateCampaign = () => {
     login();
+};
+
+// Add new state for preview
+const showPreview = ref(false);
+const previewCampaignData = ref(null);
+
+// Function to preview the campaign
+const previewCampaign = () => {
+    if (!campaignName.value.trim()) {
+        toast.add({
+            title: t('error'),
+            description: t('campaignCreator.nameRequired'),
+            color: 'error',
+            icon: 'i-lucide-alert-circle',
+            timeout: 5000
+        });
+        return;
+    }
+
+    if (!campaignStartTime.value) {
+        toast.add({
+            title: t('error'),
+            description: t('campaignCreator.startTimeRequired'),
+            color: 'error',
+            icon: 'i-lucide-alert-circle',
+            timeout: 5000
+        });
+        return;
+    }
+
+    if (!campaignQuery.value || Object.keys(campaignQuery.value).length === 0) {
+        toast.add({
+            title: t('error'),
+            description: t('campaignCreator.scopeRequired'),
+            color: 'error',
+            icon: 'i-lucide-alert-circle',
+            timeout: 5000
+        });
+        return;
+    }
+
+    if (!hasNonTimeFilter.value) {
+        toast.add({
+            title: t('error'),
+            description: t('campaignCreator.needNonTimeFilter'),
+            color: 'error',
+            icon: 'i-lucide-alert-circle',
+            timeout: 5000
+        });
+        return;
+    }
+
+    previewCampaignData.value = {
+        name: campaignName.value,
+        description: campaignDescription.value,
+        startTime: campaignStartTime.value,
+        endTime: campaignEndTime.value || null,
+        query: campaignQuery.value
+    };
+
+    showPreview.value = true;
+};
+
+// Function to close the preview
+const closePreview = () => {
+    showPreview.value = false;
+    previewCampaignData.value = null;
+};
+
+// Function to save from the preview
+const saveFromPreview = () => {
+    handleCreateCampaign();
+    closePreview();
 };
 </script>
 
@@ -1037,13 +1111,33 @@ const loginToCreateCampaign = () => {
             </div>
         </UCard>
 
-        <!-- Action Buttons -->
+        <!-- Save and Preview Buttons -->
         <div class="flex justify-end mt-6 gap-4">
+            <UButton @click="previewCampaign" color="secondary" size="lg"
+                :disabled="!isAuthenticated || !hasNonTimeFilter"
+                :tooltip="!isAuthenticated ? $t('loginToCreateCampaigns') : (!hasNonTimeFilter ? $t('campaignCreator.needNonTimeFilter') : '')">
+                {{ $t('campaign.preview') }}
+            </UButton>
             <UButton @click="handleCreateCampaign" color="primary" size="lg" :disabled="!isAuthenticated"
                 :tooltip="!isAuthenticated ? $t('loginToCreateCampaigns') : ''">
                 {{ $t('createCampaign') }}
             </UButton>
         </div>
+
+        <!-- Inline Campaign Preview - Only shown when preview is active -->
+        <UCard v-if="showPreview && previewCampaignData" class="bg-blue-50 dark:bg-blue-900/20 border-0 mt-6">
+            <template #header>
+                <div class="flex items-center justify-between">
+                    <h3 class="text-lg font-medium">{{ $t('campaign.preview') }}</h3>
+                    <UButton icon="i-lucide-x" color="gray" variant="ghost" @click="closePreview" />
+                </div>
+            </template>
+
+            <div class="p-4">
+                <CampaignPreview v-if="previewCampaignData" :campaignData="previewCampaignData" @close="closePreview"
+                    @save="saveFromPreview" />
+            </div>
+        </UCard>
     </div>
 </template>
 

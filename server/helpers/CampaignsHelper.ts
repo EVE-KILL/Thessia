@@ -350,21 +350,29 @@ async function processFactionIds(factionIdField: any, filterEntities: ICampaignF
 }
 
 /**
- * Generates aggregated statistics for a campaign based on its ID.
- * @param campaignId - The unique identifier of the campaign.
+ * Generates aggregated statistics for a campaign based on its ID or direct campaign data.
+ * @param campaignIdOrData - Either the unique identifier of the campaign or complete campaign data object.
  * @returns An object containing the campaign statistics.
  */
 export async function generateCampaignStats(
-    campaignId: string
+    campaignIdOrData: string | ICampaign
 ): Promise<ICampaignOutput> {
-    // Fetch the campaign data
-    const campaign = await Campaigns.findOne({ campaign_id: campaignId }).lean();
+    // Fetch the campaign data or use provided data directly
+    let campaign: ICampaign | null = null;
 
-    if (!campaign) {
-        throw createError({
-            statusCode: 404,
-            statusMessage: 'Campaign not found',
-        });
+    if (typeof campaignIdOrData === 'string') {
+        // Fetch the campaign data using ID
+        campaign = await Campaigns.findOne({ campaign_id: campaignIdOrData }).lean();
+
+        if (!campaign) {
+            throw createError({
+                statusCode: 404,
+                statusMessage: 'Campaign not found',
+            });
+        }
+    } else {
+        // Use provided data directly
+        campaign = campaignIdOrData;
     }
 
     // Process the campaign query to resolve entity names
