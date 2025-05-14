@@ -2,42 +2,6 @@ import { cliLogger } from "~/server/helpers/Logger";
 import { Characters } from "~/server/models/Characters";
 import { HistoricalStats } from "~/server/models/HistoricalStats";
 
-// Arrays of alliance and corporation IDs to ignore in historical stats
-const IGNORED_ALLIANCE_IDS: number[] = [
-];
-
-const IGNORED_CORPORATION_IDS: number[] = [
-    1000001,
-    1000167,
-    1000168,
-    1000169,
-    1000045,
-    1000044,
-    1000170,
-    1000166,
-    1000115,
-    1000077,
-    1000172,
-    1000049,
-    1000046,
-    1000111,
-    1000066,
-    1000014,
-    1000006,
-    1000009,
-    1000107,
-    1000171,
-    1000165,
-    1000080,
-    1000114,
-    1000072,
-    1000060,
-    1000180,
-    1000181,
-    1000182,
-    1000179
-];
-
 export default {
     name: "updateHistoricalCounts",
     description: "Update historical counts",
@@ -57,8 +21,7 @@ export default {
 
         const allianceCounts = (await Characters.aggregate(allianceCountAggregation))
             .filter(ac => ac._id.alliance_id != null &&
-                ac._id.alliance_id !== 0 &&
-                !IGNORED_ALLIANCE_IDS.includes(ac._id.alliance_id));
+                ac._id.alliance_id !== 0);
 
         const allianceIDs = allianceCounts.map((a) => a._id.alliance_id);
         const existingAllianceStats = await HistoricalStats.find({
@@ -149,9 +112,7 @@ export default {
         ];
 
         const corporationCounts = (await Characters.aggregate(corporationCountAggregation))
-            .filter(cc => cc._id.corporation_id != null &&
-                cc._id.corporation_id !== 0 &&
-                !IGNORED_CORPORATION_IDS.includes(cc._id.corporation_id));
+            .filter(cc => cc._id.corporation_id != null && cc._id.corporation_id !== 0 && cc._id.corporation_id > 1999999);
 
         const corporationIDs = corporationCounts.map((c) => c._id.corporation_id);
         const existingCorpStats = await HistoricalStats.find({

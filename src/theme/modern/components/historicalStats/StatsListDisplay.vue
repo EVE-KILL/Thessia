@@ -4,7 +4,8 @@
         <div class="stats-table bg-gray-900 rounded overflow-hidden">
             <!-- Table Header -->
             <div class="stats-header flex bg-gray-800 text-gray-400 text-xs font-semibold py-2 px-3">
-                <div class="w-[50%] flex items-center">{{ t('historicalStats.entity') }}</div>
+                <div class="w-[7%] flex items-center pl-2">#</div>
+                <div class="w-[43%] flex items-center">{{ t('historicalStats.entity') }}</div>
                 <div class="w-[50%] grid" :class="getColumnsClass()">
                     <!-- Member count header -->
                     <div v-if="props.showMemberCount" class="text-right">
@@ -35,7 +36,8 @@
             <div v-if="pending" class="stats-body">
                 <div v-for="i in props.limit" :key="`skeleton-${i}`"
                     class="stats-row flex items-center py-2 px-3 border-t border-gray-800">
-                    <div class="w-[50%] flex items-center">
+                    <div class="w-[7%] text-left pl-2 font-medium text-gray-500">{{ i }}</div>
+                    <div class="w-[43%] flex items-center">
                         <div class="w-8 h-8 bg-gray-700 rounded-full mr-3 animate-pulse"></div>
                         <div class="h-4 w-32 bg-gray-700 rounded animate-pulse"></div>
                     </div>
@@ -67,7 +69,8 @@
             <div v-else class="stats-body">
                 <div v-for="(item, idx) in statsData" :key="`entity-${item.id}-${idx}`"
                     class="stats-row flex items-center py-2 px-3 border-t border-gray-800 hover:bg-gray-800">
-                    <div class="w-[50%] flex items-center">
+                    <div class="w-[7%] text-left pl-2 font-medium text-gray-400">{{ idx + 1 }}</div>
+                    <div class="w-[43%] flex items-center">
                         <NuxtLink :to="`/${props.entityType}/${item.id}`" class="flex items-center">
                             <Image :type="props.entityType" :id="item.id" :alt="`${item.name}`"
                                 class="w-8 h-8 mr-3 rounded-full" size="64" format="webp" />

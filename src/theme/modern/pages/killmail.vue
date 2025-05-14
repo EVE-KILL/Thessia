@@ -123,7 +123,7 @@ const extractKillmailInfo = (url: string) => {
     if (!url.startsWith('https://esi.evetech.net/')) {
         throw new Error(t('killmail.not_esi_url'));
     }
-    
+
     if (!url.includes('killmails')) {
         throw new Error(t('killmail.not_killmail_url'));
     }

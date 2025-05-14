@@ -1,43 +1,7 @@
 import { defineEventHandler, getQuery } from 'h3';
-import { Alliances } from '../../models/Alliances';
-import { Corporations } from '../../models/Corporations';
-import { HistoricalStats } from '../../models/HistoricalStats';
-
-// Arrays of alliance and corporation IDs to ignore in historical stats
-const IGNORED_ALLIANCE_IDS: number[] = [
-];
-
-const IGNORED_CORPORATION_IDS: number[] = [
-    1000001,
-    1000167,
-    1000168,
-    1000169,
-    1000045,
-    1000044,
-    1000170,
-    1000166,
-    1000115,
-    1000077,
-    1000172,
-    1000049,
-    1000046,
-    1000111,
-    1000066,
-    1000014,
-    1000006,
-    1000009,
-    1000107,
-    1000171,
-    1000165,
-    1000080,
-    1000114,
-    1000072,
-    1000060,
-    1000180,
-    1000181,
-    1000182,
-    1000179
-];
+import { Alliances } from '~/server/models/Alliances';
+import { Corporations } from '~/server/models/Corporations';
+import { HistoricalStats } from '~/server/models/HistoricalStats';
 
 interface QueryParams {
     entityType?: string;
@@ -58,7 +22,7 @@ export default defineEventHandler(async (event) => {
         return { error: 'Invalid or missing entityType. Must be "alliance" or "corporation".' };
     }
 
-    const validListTypes = ['largest', 'growing', 'shrinking', 'most_pirate', 'most_carebear', 'dead', 'newest'];
+    const validListTypes = ['largest', 'growing', 'shrinking', 'most_pirate', 'most_carebear', 'newest'];
     if (!listType || !validListTypes.includes(listType)) {
         event.node.res.statusCode = 400;
         return { error: `Invalid or missing listType. Must be one of: ${validListTypes.join(', ')}.` };
@@ -93,22 +57,16 @@ export default defineEventHandler(async (event) => {
             ? {
                 corporation_id: 0,
                 alliance_id: {
-                    $ne: 0,
-                    $nin: IGNORED_ALLIANCE_IDS
+                    $ne: 0
                 }
             }
             : {
                 alliance_id: 0,
                 corporation_id: {
                     $ne: 0,
-                    $nin: IGNORED_CORPORATION_IDS
+                    $gt: 1999999
                 }
             };
-
-        // Add specific filters
-        if (listType === 'dead') {
-            mongoQuery.count = { $eq: 0 };  // Changed from $lte: 1 to $eq: 0
-        }
 
         // Determine sort order at the database level
         let sortQuery: any = {};
@@ -160,10 +118,6 @@ export default defineEventHandler(async (event) => {
                     offset
                 );
 
-            case 'dead':
-                // Sort by the date the entity became dead (most recent first)
-                sortQuery = { date: -1 };
-                break;
             case 'newest':
                 // We'll handle newest specially below by fetching from Alliance/Corp collections
                 break;
@@ -173,9 +127,7 @@ export default defineEventHandler(async (event) => {
         if (listType === 'newest') {
             let entityInfo = [];
             if (entityType === 'alliance') {
-                entityInfo = await Alliances.find({
-                    alliance_id: { $nin: IGNORED_ALLIANCE_IDS }
-                })
+                entityInfo = await Alliances.find({})
                     .select('alliance_id name date_founded')
                     .sort({ date_founded: -1 })
                     .limit(limit)
@@ -208,7 +160,7 @@ export default defineEventHandler(async (event) => {
                 }));
             } else {
                 entityInfo = await Corporations.find({
-                    corporation_id: { $nin: IGNORED_CORPORATION_IDS }
+                    corporation_id: { $gt: 1999999 }
                 })
                     .select('corporation_id name date_founded')
                     .sort({ date_founded: -1 })
