@@ -200,12 +200,12 @@ const isLoading = ref(true);
 // Compute the API URL based on whether we're using a battle ID or a killmail ID
 const apiUrl = computed(() => {
     if (!entityId.value) return null;
-    
+
     // If we're in killmail mode, use the killmail endpoint
     if (isKillmailMode.value) {
         return `/api/battles/killmail/${entityId.value}`;
     }
-    
+
     // Otherwise use the regular battle endpoint
     return `/api/battles/${entityId.value}`;
 });

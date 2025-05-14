@@ -109,10 +109,6 @@ export default defineNuxtConfig({
                     "/api/corporations/**/shortstats": {
                         cors: true,
                         cache: { maxAge: 3600, staleMaxAge: -1, swr: true, base: "redis" },
-                    },
-                    "/api/battles/**": {
-                        cors: true,
-                        cache: { maxAge: 3600, staleMaxAge: -1, swr: true, base: "redis" },
                     }
                 },
 
