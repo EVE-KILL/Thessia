@@ -28,11 +28,11 @@ const countColumnTitle = computed(() => {
 
     // Default titles based on countField
     const titleMap = {
-        'kills': t('common.kills'),
-        'damageDone': t('common.damage'),
+        'kills': t('kills'),
+        'damageDone': t('damage'),
     };
 
-    return titleMap[props.countField] || t('common.count');
+    return titleMap[props.countField] || t('count');
 });
 
 // Format numbers with commas (for kills)
@@ -113,7 +113,7 @@ const getEntityName = (entity: Entity): string => {
     if (entity.name) return entity.name;
     if (entity.character_name) return entity.character_name;
 
-    return t('common.unknown');
+    return t('unknown');
 };
 
 const getEntityCount = (entity: Entity): number | string => {

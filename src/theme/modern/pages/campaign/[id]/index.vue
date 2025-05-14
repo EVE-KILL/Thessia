@@ -79,22 +79,22 @@
                     <!-- Top Killers Box -->
                     <div class="mb-6 campaign-sidebar-box">
                         <CampaignTopBox :title="t('campaign.top_killers')" :entities="stats.topKillersByCharacter || []"
-                            :countField="'kills'" :countTitle="t('common.kills')" entityType="character"
-                            :loading="pending" :limit="10" />
+                            :countField="'kills'" :countTitle="t('kills')" entityType="character" :loading="pending"
+                            :limit="10" />
                     </div>
 
                     <!-- Top Damage Dealers Box -->
                     <div class="mb-6 campaign-sidebar-box">
                         <CampaignTopBox :title="t('campaign.top_damage_dealers')"
                             :entities="stats.topDamageDealersByCharacter || []" :countField="'damageDone'"
-                            :countTitle="t('common.damage')" entityType="character" :loading="pending" :limit="10" />
+                            :countTitle="t('damage')" entityType="character" :loading="pending" :limit="10" />
                     </div>
 
                     <!-- Characters Box -->
                     <div class="mb-6 campaign-sidebar-box">
                         <CampaignTopBox :title="t('campaign.characters')" :entities="entities.characters"
-                            :countField="'kills'" :countTitle="t('common.kills')" entityType="character"
-                            :loading="pending" :limit="10" />
+                            :countField="'kills'" :countTitle="t('kills')" entityType="character" :loading="pending"
+                            :limit="10" />
                     </div>
                 </div>
             </div>
