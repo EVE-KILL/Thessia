@@ -37,7 +37,7 @@ const { t } = useI18n();
 
 // SEO
 useSeoMeta({
-    title: "Query Builder - EVE Kill",
+    title: "Query Builder",
     description: "Advanced killmail search and filtering",
 });
 
