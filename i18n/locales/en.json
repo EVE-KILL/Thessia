@@ -733,7 +733,14 @@
         "campaignName": "Campaign Name",
         "campaignDescription": "Campaign Description",
         "campaignScopeDefinition": "Campaign Scope Definition",
-        "generatedCampaignQuery": "Generated Campaign Query"
+        "generatedCampaignQuery": "Generated Campaign Query",
+        "needNonTimeFilter": "You need at least one filter (location, attacker, or victim). Start time alone is not sufficient.",
+        "nameRequired": "Campaign name is required",
+        "startTimeRequired": "Start time is required",
+        "scopeRequired": "Campaign scope must be defined with at least one filter",
+        "creationError": "Error creating campaign",
+        "unexpectedError": "Failed to create campaign. Please try again.",
+        "creationSuccess": "Campaign created successfully!"
     },
     "createCampaign": "Create Campaign",
     "enterCampaignName": "Enter campaign name",
@@ -742,5 +749,8 @@
     "campaignName": "Campaign Name",
     "campaignDescription": "Campaign Description",
     "campaignScopeDefinition": "Campaign Scope Definition",
-    "generatedCampaignQuery": "Generated Campaign Query"
+    "generatedCampaignQuery": "Generated Campaign Query",
+    "error": "Error",
+    "success": "Success",
+    "authenticationRequired": "Authentication Required"
 }

@@ -1,11 +1,14 @@
 <script setup lang="ts">
-import { onMounted, ref, watch } from "vue";
+import { computed, onMounted, ref, watch } from "vue";
 
 // i18n setup
 const { t } = useI18n();
 
 // Use the auth composable instead of direct API call
 const { isAuthenticated, currentUser, login } = useAuth();
+
+// Add the toast composable
+const toast = useToast();
 
 // SEO
 useSeoMeta({
@@ -286,6 +289,20 @@ const buildCampaignQueryObject = (): Record<string, any> | null => {
     return fieldConditions;
 };
 
+// Check if we have at least one non-time filter
+const hasNonTimeFilter = computed(() => {
+    if (!campaignQuery.value) return false;
+
+    // Extract all keys from the query
+    const queryKeys = Object.keys(campaignQuery.value);
+
+    // Filter out the time-related keys
+    const nonTimeKeys = queryKeys.filter(key => key !== 'kill_time');
+
+    // Return true if there's at least one non-time key
+    return nonTimeKeys.length > 0;
+});
+
 // Update the query when filterState changes
 const updateQuery = () => {
     campaignQuery.value = buildCampaignQueryObject();
@@ -305,20 +322,57 @@ onMounted(() => {
 // Handle campaign creation
 const handleCreateCampaign = async () => {
     if (!isAuthenticated) {
-        alert("You must be logged in to create campaigns.");
+        toast.add({
+            title: t('authenticationRequired'),
+            description: t('loginToCreateCampaigns'),
+            color: 'info',
+            icon: 'i-lucide-alert-triangle',
+            timeout: 5000
+        });
         return;
     }
 
     if (!campaignName.value.trim()) {
-        alert("Campaign Name is required.");
+        toast.add({
+            title: t('error'),
+            description: t('campaignCreator.nameRequired'),
+            color: 'error',
+            icon: 'i-lucide-alert-circle',
+            timeout: 5000
+        });
         return;
     }
+
     if (!campaignStartTime.value) {
-        alert("Start Time is required.");
+        toast.add({
+            title: t('error'),
+            description: t('campaignCreator.startTimeRequired'),
+            color: 'red',
+            icon: 'i-lucide-alert-circle',
+            timeout: 5000
+        });
         return;
     }
+
     if (!campaignQuery.value || Object.keys(campaignQuery.value).length === 0) {
-        alert("Campaign Scope must be defined with at least one filter.");
+        toast.add({
+            title: t('error'),
+            description: t('campaignCreator.scopeRequired'),
+            color: 'red',
+            icon: 'i-lucide-alert-circle',
+            timeout: 5000
+        });
+        return;
+    }
+
+    if (!hasNonTimeFilter.value) {
+        toast.add({
+            title: t('error'),
+            description: t('campaignCreator.needNonTimeFilter'),
+            color: 'red',
+            icon: 'i-lucide-alert-circle',
+            timeout: 5000
+        });
         return;
     }
 
@@ -341,12 +395,24 @@ const handleCreateCampaign = async () => {
         });
 
         if (error.value) {
-            alert(`Error creating campaign: ${error.value.message}`);
+            toast.add({
+                title: t('error'),
+                description: `${t('campaignCreator.creationError')}: ${error.value.message}`,
+                color: 'red',
+                icon: 'i-lucide-alert-circle',
+                timeout: 5000
+            });
             return;
         }
 
         if (data.value && data.value.success) {
-            alert('Campaign created successfully!');
+            toast.add({
+                title: t('success'),
+                description: t('campaignCreator.creationSuccess'),
+                color: 'green',
+                icon: 'i-lucide-check-circle',
+                timeout: 5000
+            });
             // Optionally redirect to view the campaign
             if (data.value.campaign && data.value.campaign.id) {
                 // Redirect to campaign view page when available
@@ -355,7 +421,13 @@ const handleCreateCampaign = async () => {
         }
     } catch (err) {
         console.error('Error creating campaign:', err);
-        alert('Failed to create campaign. Please try again.');
+        toast.add({
+            title: t('error'),
+            description: t('campaignCreator.unexpectedError'),
+            color: 'red',
+            icon: 'i-lucide-alert-circle',
+            timeout: 5000
+        });
     }
 };
 

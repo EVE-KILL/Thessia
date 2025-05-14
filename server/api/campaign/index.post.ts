@@ -46,6 +46,17 @@ export default defineEventHandler(async (event) => {
             throw createError({ statusCode: 400, statusMessage: 'Valid query object is required' });
         }
 
+        // Ensure there's at least one non-time filter
+        const queryKeys = Object.keys(query);
+        const nonTimeKeys = queryKeys.filter(key => key !== 'kill_time');
+
+        if (nonTimeKeys.length === 0) {
+            throw createError({
+                statusCode: 400,
+                statusMessage: 'At least one filter beyond time range is required'
+            });
+        }
+
         // Create dates from string timestamps
         const startTimeDate = new Date(startTime);
         const endTimeDate = endTime ? new Date(endTime) : undefined;
