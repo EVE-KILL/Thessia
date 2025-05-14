@@ -359,7 +359,6 @@ async function loadCampaignForEditing() {
 
         // Fetch campaign data
         const { data: campaignData, error } = await useFetch(`/api/campaign/${campaignId.value}`, {
-            credentials: 'include',
             key: `edit-campaign-${campaignId.value}`
         });
 
@@ -590,8 +589,7 @@ const previewCampaign = async () => {
     try {
         const { data, error } = await useFetch('/api/campaign/preview', {
             method: 'POST',
-            body: previewCampaignData.value,
-            credentials: 'include'
+            body: previewCampaignData.value
         });
 
         if (error.value) {
@@ -687,8 +685,7 @@ const handleCreateCampaign = async () => {
     try {
         const { data, error } = await useFetch('/api/campaign', {
             method: 'POST',
-            body: campaignData,
-            credentials: 'include'
+            body: campaignData
         });
 
         if (error.value) {
@@ -788,7 +785,7 @@ const submitButtonText = computed(() => {
                     <UCard class="bg-yellow-50 dark:bg-yellow-900/20 border-0">
                         <template #header>
                             <h2 class="text-xl font-semibold text-gray-800 dark:text-gray-100">{{ $t('campaignDetails')
-                                }}</h2>
+                            }}</h2>
                         </template>
                         <div class="space-y-4">
                             <div>
@@ -834,7 +831,7 @@ const submitButtonText = computed(() => {
                                         {{ $t('region') }}
                                         <span class="text-xs text-gray-500 ml-1">
                                             ({{ filterState.region.multipleValues.length }}/{{
-                                            filterState.region.maxEntities }})
+                                                filterState.region.maxEntities }})
                                         </span>
                                         <span class="text-xs font-normal text-gray-500 ml-1">
                                             ({{ $t('campaignCreator.optional') }})
@@ -880,7 +877,7 @@ const submitButtonText = computed(() => {
                                         {{ $t('system') }}
                                         <span class="text-xs text-gray-500 ml-1">
                                             ({{ filterState.system.multipleValues.length }}/{{
-                                            filterState.system.maxEntities }})
+                                                filterState.system.maxEntities }})
                                         </span>
                                         <span class="text-xs font-normal text-gray-500 ml-1">
                                             ({{ $t('campaignCreator.optional') }})
@@ -984,7 +981,7 @@ const submitButtonText = computed(() => {
                                         class="block text-sm font-medium text-gray-700 dark:text-gray-300">
                                         {{ $t('endTime') }}
                                         <span class="text-xs text-gray-500 ml-1">({{ $t('campaignCreator.optional')
-                                            }})</span>
+                                        }})</span>
                                     </label>
                                     <input type="datetime-local" id="campaignEndTime" class="custom-input"
                                         v-model="campaignEndTime">
