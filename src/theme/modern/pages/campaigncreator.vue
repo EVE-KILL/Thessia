@@ -425,6 +425,9 @@ const loginToCreateCampaign = () => {
                             <span class="text-xs text-gray-500 ml-1">
                                 ({{ filterState.region.multipleValues.length }}/{{ filterState.region.maxEntities }})
                             </span>
+                            <span class="text-xs font-normal text-gray-500 ml-1">
+                                ({{ $t('campaignCreator.optional') }})
+                            </span>
                         </label>
                         <div class="relative">
                             <input type="text" class="custom-input w-full" v-model="filterState.region.searchTerm"
@@ -464,6 +467,9 @@ const loginToCreateCampaign = () => {
                             {{ $t('system') }}
                             <span class="text-xs text-gray-500 ml-1">
                                 ({{ filterState.system.multipleValues.length }}/{{ filterState.system.maxEntities }})
+                            </span>
+                            <span class="text-xs font-normal text-gray-500 ml-1">
+                                ({{ $t('campaignCreator.optional') }})
                             </span>
                         </label>
                         <div class="relative">
@@ -506,6 +512,9 @@ const loginToCreateCampaign = () => {
                                 ({{ filterState.constellation.multipleValues.length }}/{{
                                     filterState.constellation.maxEntities
                                 }})
+                            </span>
+                            <span class="text-xs font-normal text-gray-500 ml-1">
+                                ({{ $t('campaignCreator.optional') }})
                             </span>
                         </label>
                         <div class="relative">
@@ -576,8 +585,9 @@ const loginToCreateCampaign = () => {
                 <div class="p-4 border border-gray-200 dark:border-gray-700 rounded-lg bg-gray-50 dark:bg-gray-800/30">
                     <h3 class="font-medium text-gray-800 dark:text-gray-200 mb-3">
                         {{ $t('campaignCreator.attackerFilters') }}
-                        <span class="text-xs font-normal text-gray-500 ml-1">({{ $t('campaignCreator.optional')
-                            }})</span>
+                        <span class="text-xs font-normal text-gray-500 ml-1">
+                            ({{ $t('campaignCreator.optional') }})
+                        </span>
                     </h3>
 
                     <!-- Attacker Character -->
@@ -762,7 +772,7 @@ const loginToCreateCampaign = () => {
                     <h3 class="font-medium text-gray-800 dark:text-gray-200 mb-3">
                         {{ $t('campaignCreator.victimFilters') }}
                         <span class="text-xs font-normal text-gray-500 ml-1">({{ $t('campaignCreator.optional')
-                            }})</span>
+                        }})</span>
                     </h3>
 
                     <!-- Victim Character -->
