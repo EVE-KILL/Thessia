@@ -598,7 +598,8 @@ const handleCreateCampaign = async () => {
     try {
         const { data, error } = await useFetch('/api/campaign', {
             method: 'POST',
-            body: campaignData
+            body: campaignData,
+            credentials: 'include', // Add this line
         });
 
         if (error.value) {
@@ -724,6 +725,20 @@ const saveFromPreview = () => {
 const submitButtonText = computed(() => {
     return isEditMode.value ? t('campaignCreator.updateCampaign') : t('createCampaign');
 });
+
+// Modify the preview fetch to include credentials
+const { data: stats, pending } = useFetch<ICampaignOutput>(
+    '/api/campaign/preview',
+    {
+        method: 'POST',
+        body: props.campaignData,
+        key: `campaign-preview-${JSON.stringify(props.campaignData)}`,
+        credentials: 'include', // Add this line
+        onResponseError(error) {
+            console.error('Error loading campaign preview:', error);
+        }
+    }
+);
 </script>
 
 <template>
