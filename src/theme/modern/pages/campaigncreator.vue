@@ -347,7 +347,7 @@ const handleCreateCampaign = async () => {
         toast.add({
             title: t('error'),
             description: t('campaignCreator.startTimeRequired'),
-            color: 'red',
+            color: 'error',
             icon: 'i-lucide-alert-circle',
             timeout: 5000
         });
@@ -358,7 +358,7 @@ const handleCreateCampaign = async () => {
         toast.add({
             title: t('error'),
             description: t('campaignCreator.scopeRequired'),
-            color: 'red',
+            color: 'error',
             icon: 'i-lucide-alert-circle',
             timeout: 5000
         });
@@ -369,7 +369,7 @@ const handleCreateCampaign = async () => {
         toast.add({
             title: t('error'),
             description: t('campaignCreator.needNonTimeFilter'),
-            color: 'red',
+            color: 'error',
             icon: 'i-lucide-alert-circle',
             timeout: 5000
         });
@@ -843,8 +843,9 @@ const loginToCreateCampaign = () => {
                 <div class="p-4 border border-gray-200 dark:border-gray-700 rounded-lg bg-gray-50 dark:bg-gray-800/30">
                     <h3 class="font-medium text-gray-800 dark:text-gray-200 mb-3">
                         {{ $t('campaignCreator.victimFilters') }}
-                        <span class="text-xs font-normal text-gray-500 ml-1">({{ $t('campaignCreator.optional')
-                        }})</span>
+                        <span class="text-xs font-normal text-gray-500 ml-1">
+                            ({{ $t('campaignCreator.optional') }})
+                        </span>
                     </h3>
 
                     <!-- Victim Character -->
