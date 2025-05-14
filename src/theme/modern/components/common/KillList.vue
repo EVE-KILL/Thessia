@@ -225,7 +225,10 @@ const handleMouseLeave = () => {
     }
 };
 
-const handleMouseMove = () => {
+const handleMouseMove = (e: MouseEvent) => {
+    mouseX.value = e.clientX;
+    mouseY.value = e.clientY;
+
     if (
         isWebSocketPaused.value &&
         pagination.value.pageIndex === 0 &&
@@ -325,12 +328,15 @@ const formatKillmail = (killmail: IKillmail): IKillList => {
         victim: {
             ship_id: killmail.victim.ship_id,
             ship_name: killmail.victim.ship_name,
+            ship_group_name: killmail.victim.ship_group_name || {},
             character_id: killmail.victim.character_id,
             character_name: killmail.victim.character_name,
             corporation_id: killmail.victim.corporation_id,
             corporation_name: killmail.victim.corporation_name,
+            corporation_ticker: killmail.victim.corporation_ticker || "",
             alliance_id: killmail.victim.alliance_id || 0,
             alliance_name: killmail.victim.alliance_name || "",
+            alliance_ticker: killmail.victim.alliance_ticker || "",
             faction_id: killmail.victim.faction_id || 0,
             faction_name: killmail.victim.faction_name || "",
         },
@@ -339,11 +345,12 @@ const formatKillmail = (killmail: IKillmail): IKillList => {
             character_name: finalBlowAttacker?.character_name || "",
             corporation_id: finalBlowAttacker?.corporation_id || 0,
             corporation_name: finalBlowAttacker?.corporation_name || "",
+            corporation_ticker: finalBlowAttacker?.corporation_ticker || "",
             alliance_id: finalBlowAttacker?.alliance_id || 0,
             alliance_name: finalBlowAttacker?.alliance_name || "",
+            alliance_ticker: finalBlowAttacker?.alliance_ticker || "",
             faction_id: finalBlowAttacker?.faction_id || 0,
             faction_name: finalBlowAttacker?.faction_name || "",
-            ship_group_name: finalBlowAttacker?.ship_group_name || {},
         },
     };
 };
@@ -477,17 +484,17 @@ const tableColumns = [
     {
         id: "ship",
         header: computed(() => t("ship")),
-        width: "20%",
+        width: "22%",
     },
     {
         id: "victim",
         header: computed(() => t("victim")),
-        width: "25%",
+        width: "27%",
     },
     {
         id: "finalBlow",
         header: computed(() => t("finalBlow")),
-        width: "25%",
+        width: "27%",
     },
     {
         id: "location",
@@ -497,7 +504,7 @@ const tableColumns = [
     {
         id: "details",
         headerClass: "text-right",
-        width: "15%",
+        width: "9%",
     },
 ];
 
@@ -514,6 +521,108 @@ const generateKillLink = (item: any): string | null => {
     if (!item || !item.killmail_id) return null;
     return `/kill/${item.killmail_id}`;
 };
+
+// Add refs for detecting text overflow
+const shipNameRefs = ref<Map<number, HTMLElement>>(new Map());
+const characterNameRefs = ref<Map<number, HTMLElement>>(new Map());
+const corporationNameRefs = ref<Map<number, HTMLElement>>(new Map());
+const allianceNameRefs = ref<Map<number, HTMLElement>>(new Map());
+const finalBlowNameRefs = ref<Map<number, HTMLElement>>(new Map());
+const finalBlowCorpRefs = ref<Map<number, HTMLElement>>(new Map());
+const finalBlowAllianceRefs = ref<Map<number, HTMLElement>>(new Map());
+
+// Add mouse position tracking
+const mouseX = ref(0);
+const mouseY = ref(0);
+const tooltipText = ref('');
+const showTooltip = ref(false);
+
+/**
+ * Updates fade effect on elements that overflow
+ */
+const updateTextFade = (refMap: Map<number, HTMLElement>) => {
+    refMap.forEach((el) => {
+        if (el && el.scrollWidth > el.clientWidth) {
+            el.classList.add('fade-text');
+            // Store the full text in a data attribute for the hover effect
+            el.setAttribute('data-full-text', el.textContent || '');
+
+            // Add event listeners for custom tooltip
+            el.addEventListener('mouseenter', (e) => {
+                tooltipText.value = el.textContent || '';
+                mouseX.value = e.clientX;
+                mouseY.value = e.clientY;
+                showTooltip.value = true;
+            });
+
+            el.addEventListener('mouseleave', () => {
+                showTooltip.value = false;
+            });
+
+        } else if (el) {
+            el.classList.remove('fade-text');
+            el.removeAttribute('data-full-text');
+
+            // Remove event listeners
+            el.removeEventListener('mouseenter', () => { });
+            el.removeEventListener('mouseleave', () => { });
+        }
+    });
+};
+
+/**
+ * Update all text fade effects
+ */
+const updateAllFades = () => {
+    updateTextFade(shipNameRefs.value);
+    updateTextFade(characterNameRefs.value);
+    updateTextFade(corporationNameRefs.value);
+    updateTextFade(allianceNameRefs.value);
+    updateTextFade(finalBlowNameRefs.value);
+    updateTextFade(finalBlowCorpRefs.value);
+    updateTextFade(finalBlowAllianceRefs.value);
+};
+
+/**
+ * Set reference for an element by killmail ID
+ */
+const setElementRef = (el: HTMLElement | null, id: number, refMap: Map<number, HTMLElement>) => {
+    if (el) {
+        refMap.set(id, el);
+    }
+};
+
+// Lifecycle hooks for fade effect
+onMounted(() => {
+    nextTick(() => {
+        updateAllFades();
+        window.addEventListener('resize', updateAllFades);
+    });
+});
+
+onUpdated(() => {
+    nextTick(updateAllFades);
+});
+
+onBeforeUnmount(() => {
+    window.removeEventListener('resize', updateAllFades);
+
+    // Clean up tooltip event listeners
+    [
+        ...shipNameRefs.value.values(),
+        ...characterNameRefs.value.values(),
+        ...corporationNameRefs.value.values(),
+        ...allianceNameRefs.value.values(),
+        ...finalBlowNameRefs.value.values(),
+        ...finalBlowCorpRefs.value.values(),
+        ...finalBlowAllianceRefs.value.values()
+    ].forEach(el => {
+        if (el) {
+            el.removeEventListener('mouseenter', () => { });
+            el.removeEventListener('mouseleave', () => { });
+        }
+    });
+});
 
 // Set up mouse event handlers for the table container on mounted
 onMounted(() => {
@@ -545,7 +654,7 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
-    <div class="w-full kill-list-container">
+    <div class="w-full kill-list-container" @mousemove="handleMouseMove">
         <!-- Top navigation bar with responsive layout -->
         <div class="flex flex-col sm:flex-row justify-between items-center mb-3">
             <!-- Left side: Limit selector and WebSocket status -->
@@ -612,10 +721,14 @@ onBeforeUnmount(() => {
                 <div class="flex items-center py-1">
                     <Image type="type-render" :id="item.victim.ship_id" format="webp"
                         :alt="`Ship: ${getLocalizedString(item.victim.ship_name, currentLocale)}`"
-                        class="rounded w-10 mx-2" size="64" />
+                        class="rounded w-16 h-16 mx-2" size="64" />
                     <div class="flex flex-col items-start">
-                        <span class="text-sm text-black dark:text-white">
-                            {{ truncateString(getLocalizedString(item.victim.ship_name, currentLocale), 20) }}
+                        <span class="text-sm text-black dark:text-white truncate max-w-[150px]"
+                            :ref="(el) => setElementRef(el, item.killmail_id, shipNameRefs)">
+                            {{ getLocalizedString(item.victim.ship_name, currentLocale) }}
+                        </span>
+                        <span class="text-xs text-gray-500 dark:text-gray-400 truncate max-w-[150px]">
+                            {{ getLocalizedString(item.victim.ship_group_name || {}, currentLocale) }}
                         </span>
                         <span v-if="item.total_value > 50" class="text-xs text-gray-600 dark:text-gray-400">
                             {{ formatIsk(item.total_value) }} ISK
@@ -629,13 +742,27 @@ onBeforeUnmount(() => {
                 <div class="flex items-center py-1">
                     <template v-if="item.victim.character_id > 0">
                         <Image type="character" :id="item.victim.character_id" format="webp"
-                            :alt="`Character: ${item.victim.character_name}`" class="rounded w-10 mx-2" size="44" />
+                            :alt="`Character: ${item.victim.character_name}`" class="rounded-full w-16 h-16 mx-2"
+                            size="64" />
                     </template>
-                    <Image v-else type="character" :id="1" alt="Placeholder" class="rounded w-10 mx-2" size="44" />
-                    <div class="flex flex-col items-start">
-                        <span class="text-sm text-black dark:text-white">{{ item.victim.character_name }}</span>
-                        <span class="text-xs text-gray-600 dark:text-gray-400 whitespace-nowrap">
-                            {{ truncateString(item.victim.corporation_name, 22) }}
+                    <Image v-else type="character" :id="1" alt="Placeholder" class="rounded-full w-16 h-16 mx-2"
+                        size="64" />
+                    <div class="flex flex-col items-start min-w-0 flex-1">
+                        <!-- Character Name -->
+                        <span class="text-sm text-black dark:text-white truncate max-w-full"
+                            :ref="(el) => setElementRef(el, item.killmail_id, characterNameRefs)">
+                            {{ item.victim.character_name }}
+                        </span>
+                        <!-- Corporation Name (without ticker) -->
+                        <span class="text-xs text-gray-600 dark:text-gray-400 truncate max-w-full"
+                            :ref="(el) => setElementRef(el, item.killmail_id, corporationNameRefs)">
+                            {{ item.victim.corporation_name }}
+                        </span>
+                        <!-- Alliance Name (without ticker) -->
+                        <span v-if="item.victim.alliance_name"
+                            class="text-xs text-gray-500 dark:text-gray-500 truncate max-w-full"
+                            :ref="(el) => setElementRef(el, item.killmail_id, allianceNameRefs)">
+                            {{ item.victim.alliance_name }}
                         </span>
                     </div>
                 </div>
@@ -643,27 +770,45 @@ onBeforeUnmount(() => {
 
             <!-- Final Blow column -->
             <template #cell-finalBlow="{ item }">
-                <div class="flex items-center py-1 whitespace-nowrap">
+                <div class="flex items-center py-1">
                     <!-- Character or placeholder when finalblow.character_id missing -->
                     <template v-if="item.finalblow.character_id > 0">
                         <Image type="character" :id="item.finalblow.character_id" format="webp"
-                            :alt="`Character: ${item.finalblow.character_name}`" class="rounded w-10 mx-2" size="44" />
-                        <div class="flex flex-col items-start">
-                            <span class="text-sm text-black dark:text-white">{{ item.finalblow.character_name }}</span>
-                            <span class="text-xs text-gray-600 dark:text-gray-400">
-                                {{ truncateString(getLocalizedString(item.finalblow.ship_group_name, currentLocale), 22)
-                                }}
+                            :alt="`Character: ${item.finalblow.character_name}`" class="rounded-full w-16 h-16 mx-2"
+                            size="64" />
+                        <div class="flex flex-col items-start min-w-0 flex-1">
+                            <!-- Character Name -->
+                            <span class="text-sm text-black dark:text-white truncate max-w-full"
+                                :ref="(el) => setElementRef(el, `fb-${item.killmail_id}`, finalBlowNameRefs)">
+                                {{ item.finalblow.character_name }}
+                            </span>
+                            <!-- Corporation Name (without ticker) -->
+                            <span class="text-xs text-gray-600 dark:text-gray-400 truncate max-w-full"
+                                :ref="(el) => setElementRef(el, `fb-${item.killmail_id}`, finalBlowCorpRefs)">
+                                {{ item.finalblow.corporation_name }}
+                            </span>
+                            <!-- Alliance Name (without ticker) -->
+                            <span v-if="item.finalblow.alliance_name"
+                                class="text-xs text-gray-500 dark:text-gray-500 truncate max-w-full"
+                                :ref="(el) => setElementRef(el, `fb-${item.killmail_id}`, finalBlowAllianceRefs)">
+                                {{ item.finalblow.alliance_name }}
                             </span>
                         </div>
                     </template>
                     <template v-else>
-                        <Image type="character" :id="1" size="44" alt="NPC/Structure" class="rounded w-10 mx-2" />
-                        <div class="flex flex-col items-start">
-                            <span class="text-sm text-black dark:text-white">{{ item.finalblow.faction_name ||
-                                item.finalblow.character_name }}</span>
-                            <span class="text-xs text-gray-600 dark:text-gray-400">
-                                {{ truncateString(getLocalizedString(item.finalblow.ship_group_name, currentLocale), 22)
-                                }}
+                        <Image type="character" :id="1" size="64" alt="NPC/Structure"
+                            class="rounded-full w-16 h-16 mx-2" />
+                        <div class="flex flex-col items-start min-w-0 flex-1">
+                            <span class="text-sm text-black dark:text-white truncate max-w-full">
+                                {{ item.finalblow.faction_name || item.finalblow.character_name }}
+                            </span>
+                            <span v-if="item.finalblow.corporation_name"
+                                class="text-xs text-gray-600 dark:text-gray-400 truncate max-w-full">
+                                {{ item.finalblow.corporation_name }}
+                            </span>
+                            <span v-if="item.finalblow.ship_group_name"
+                                class="text-xs text-gray-500 dark:text-gray-500 truncate max-w-full">
+                                {{ getLocalizedString(item.finalblow.ship_group_name, currentLocale) }}
                             </span>
                         </div>
                     </template>
@@ -679,8 +824,9 @@ onBeforeUnmount(() => {
                     <div class="text-xs text-gray-600 dark:text-gray-400 whitespace-nowrap">
                         <span>{{ item.system_name }}</span>
                         <span> (</span>
-                        <span :class="getSecurityColor(item.system_security)">{{ item.system_security.toFixed(1)
-                        }}</span>
+                        <span :class="getSecurityColor(item.system_security)">
+                            {{ item.system_security.toFixed(1) }}
+                        </span>
                         <span>)</span>
                     </div>
                 </div>
@@ -875,6 +1021,16 @@ onBeforeUnmount(() => {
                 </template>
             </UPagination>
         </div>
+
+        <!-- Global tooltip that follows mouse cursor -->
+        <Teleport to="body">
+            <div v-if="showTooltip" class="global-tooltip" :style="{
+                left: `${mouseX + 15}px`,
+                top: `${mouseY + 10}px`
+            }">
+                {{ tooltipText }}
+            </div>
+        </Teleport>
     </div>
 </template>
 
@@ -1038,8 +1194,8 @@ onBeforeUnmount(() => {
 }
 
 .killlist-skeleton-image {
-    width: 40px;
-    height: 40px;
+    width: 64px;
+    height: 64px;
     flex-shrink: 0;
     margin: 0 8px;
     border-radius: 6px;
@@ -1156,5 +1312,74 @@ onBeforeUnmount(() => {
     opacity: 0.7;
     z-index: 0;
     pointer-events: none;
+}
+
+/* Add truncation with fade effect */
+.fade-text {
+    position: relative;
+    mask-image: linear-gradient(to right, black 85%, transparent);
+    -webkit-mask-image: linear-gradient(to right, black 85%, transparent);
+}
+
+/* Remove the old hover tooltip behavior */
+.fade-text:hover {
+    overflow: visible;
+    position: relative;
+    z-index: 5;
+    mask-image: linear-gradient(to right, black 85%, transparent);
+    -webkit-mask-image: linear-gradient(to right, black 85%, transparent);
+}
+
+/* Remove old tooltip */
+.fade-text:hover::before {
+    content: none;
+}
+
+/* Global tooltip that follows cursor */
+.global-tooltip {
+    position: fixed;
+    z-index: 10000;
+    background-color: light-dark(rgba(255, 255, 255, 0.98), rgba(30, 30, 30, 0.98));
+    padding: 4px 10px;
+    border-radius: 4px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+    border: 1px solid light-dark(rgba(229, 231, 235, 0.5), rgba(75, 85, 99, 0.5));
+    font-size: 0.875rem;
+    max-width: 300px;
+    white-space: normal;
+    word-break: break-word;
+    pointer-events: none;
+    /* Allow interacting with elements below */
+    animation: tooltip-fade-in 0.15s ease-out;
+}
+
+@keyframes tooltip-fade-in {
+    from {
+        opacity: 0;
+        transform: translateY(5px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Fix responsive image sizes */
+@media (max-width: 640px) {
+    .w-16 {
+        width: 48px !important;
+    }
+
+    .h-16 {
+        height: 48px !important;
+    }
+}
+
+/* Override the skeleton size for consistency */
+.killlist-skeleton-image {
+    width: 64px;
+    height: 64px;
+    margin: 0 8px;
 }
 </style>

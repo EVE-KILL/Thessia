@@ -47,6 +47,7 @@ export default defineEventHandler(async (event) => {
             victim: {
                 ship_id: killmail.victim.ship_id,
                 ship_name: killmail.victim.ship_name,
+                ship_group_name: killmail.victim.ship_group_name,
                 character_id: killmail.victim.character_id,
                 character_name: killmail.victim.character_name,
                 corporation_id: killmail.victim.corporation_id,
