@@ -1,3 +1,4 @@
+import { createError, defineEventHandler, getCookie, getHeaders, parseCookies, readBody } from 'h3';
 import { Campaigns } from '~/server/models/Campaigns';
 
 // Define constants for entity limits
@@ -5,139 +6,172 @@ const LOCATION_MAX_ENTITIES = 5;
 const ENTITY_MAX_ENTITIES = 15;
 
 export default defineEventHandler(async (event) => {
-    // Get authentication cookie directly from the request
-    const cookies = parseCookies(event);
-    const token = cookies.evelogin;
+    try {
+        // Use multiple methods to extract the cookie for more reliability
+        let token = getCookie(event, 'evelogin');
 
-    if (!token) {
-        throw createError({ statusCode: 401, statusMessage: 'Authentication required' });
-    }
+        if (!token) {
+            // Fall back to parseCookies if getCookie fails
+            const cookies = parseCookies(event);
+            token = cookies.evelogin;
+        }
 
-    // Get user data from the session
-    const session = await $fetch("/api/auth/me", {
-        headers: {
-            cookie: `evelogin=${token}`,
-        },
-    }).catch(() => null);
+        if (!token) {
+            // Try to extract from raw headers as last resort
+            const headers = getHeaders(event);
+            const cookieHeader = headers.cookie || '';
+            const cookieMatch = cookieHeader.match(/evelogin=([^;]+)/);
+            token = cookieMatch ? cookieMatch[1] : null;
+        }
 
-    if (!session || !session.authenticated) {
-        throw createError({
-            statusCode: 401,
-            statusMessage: "Authentication failed"
+        if (!token) {
+            console.error('Authentication token not found in request');
+            throw createError({ statusCode: 401, statusMessage: 'Authentication required' });
+        }
+
+        // Get user data with explicit fetch options
+        const session = await $fetch("/api/auth/me", {
+            headers: {
+                cookie: `evelogin=${token}`,
+            },
+            // Add more fetch options for production environment
+            retry: 1,
+            timeout: 10000,
+        }).catch((error) => {
+            console.error('Error fetching auth session:', error);
+            return null;
         });
-    }
 
-    const user = session.user;
-
-    // Validate required fields
-    const { name, description, startTime, endTime, query, campaign_id } = await readBody(event);
-    const isUpdate = !!campaign_id;
-
-    if (!name || typeof name !== 'string' || !name.trim()) {
-        throw createError({ statusCode: 400, statusMessage: 'Campaign name is required' });
-    }
-
-    if (!startTime) {
-        throw createError({ statusCode: 400, statusMessage: 'Start time is required' });
-    }
-
-    if (!query || typeof query !== 'object') {
-        throw createError({ statusCode: 400, statusMessage: 'Valid query object is required' });
-    }
-
-    // Ensure there's at least one non-time filter
-    const queryKeys = Object.keys(query);
-    const nonTimeKeys = queryKeys.filter(key => key !== 'kill_time');
-
-    if (nonTimeKeys.length === 0) {
-        throw createError({
-            statusCode: 400,
-            statusMessage: 'At least one filter beyond time range is required'
-        });
-    }
-
-    // Create dates from string timestamps
-    const startTimeDate = new Date(startTime);
-    const endTimeDate = endTime ? new Date(endTime) : undefined;
-
-    // Validate dates
-    if (isNaN(startTimeDate.getTime())) {
-        throw createError({ statusCode: 400, statusMessage: 'Invalid start time format' });
-    }
-
-    if (endTimeDate && isNaN(endTimeDate.getTime())) {
-        throw createError({ statusCode: 400, statusMessage: 'Invalid end time format' });
-    }
-
-    if (endTimeDate && endTimeDate < startTimeDate) {
-        throw createError({ statusCode: 400, statusMessage: 'End time cannot be before start time' });
-    }
-
-    // Validate entity limits in query
-    validateEntityLimits(query);
-
-    // Create campaign document with creator ID from authenticated user
-    const campaignData = {
-        name: name.trim(),
-        description: description?.trim(),
-        startTime: startTimeDate,
-        endTime: endTimeDate,
-        query,
-        creator_id: user.characterId, // Add creator ID from authenticated user
-        public: true // Default to public for now
-    };
-
-    // If we're updating an existing campaign
-    if (isUpdate) {
-        // Check if the campaign exists and the user is the creator
-        const existingCampaign = await Campaigns.findOne({ campaign_id });
-
-        if (!existingCampaign) {
+        if (!session || !session.authenticated) {
+            console.error('Authentication failed with token:', session ? 'Invalid session' : 'No session returned');
             throw createError({
-                statusCode: 404,
-                statusMessage: 'Campaign not found'
+                statusCode: 401,
+                statusMessage: "Authentication failed"
             });
         }
 
-        if (existingCampaign.creator_id !== user.characterId) {
+        const user = session.user;
+
+        // Validate required fields
+        const { name, description, startTime, endTime, query, campaign_id } = await readBody(event);
+        const isUpdate = !!campaign_id;
+
+        if (!name || typeof name !== 'string' || !name.trim()) {
+            throw createError({ statusCode: 400, statusMessage: 'Campaign name is required' });
+        }
+
+        if (!startTime) {
+            throw createError({ statusCode: 400, statusMessage: 'Start time is required' });
+        }
+
+        if (!query || typeof query !== 'object') {
+            throw createError({ statusCode: 400, statusMessage: 'Valid query object is required' });
+        }
+
+        // Ensure there's at least one non-time filter
+        const queryKeys = Object.keys(query);
+        const nonTimeKeys = queryKeys.filter(key => key !== 'kill_time');
+
+        if (nonTimeKeys.length === 0) {
             throw createError({
-                statusCode: 403,
-                statusMessage: 'You are not authorized to update this campaign'
+                statusCode: 400,
+                statusMessage: 'At least one filter beyond time range is required'
             });
         }
 
-        // Update the campaign
-        await Campaigns.updateOne(
-            { campaign_id },
-            {
-                $set: campaignData
-            }
-        );
+        // Create dates from string timestamps
+        const startTimeDate = new Date(startTime);
+        const endTimeDate = endTime ? new Date(endTime) : undefined;
 
-        return {
-            success: true,
-            message: 'Campaign updated successfully',
-            campaign: {
-                id: campaign_id,
-                name: name.trim()
-            }
-        };
-    }
-    // Creating a new campaign
-    else {
-        // Save to database
-        const campaign = new Campaigns(campaignData);
-        await campaign.save();
+        // Validate dates
+        if (isNaN(startTimeDate.getTime())) {
+            throw createError({ statusCode: 400, statusMessage: 'Invalid start time format' });
+        }
 
-        // Return campaign data with ID
-        return {
-            success: true,
-            message: 'Campaign created successfully',
-            campaign: {
-                id: campaign.campaign_id,
-                name: campaign.name
-            }
+        if (endTimeDate && isNaN(endTimeDate.getTime())) {
+            throw createError({ statusCode: 400, statusMessage: 'Invalid end time format' });
+        }
+
+        if (endTimeDate && endTimeDate < startTimeDate) {
+            throw createError({ statusCode: 400, statusMessage: 'End time cannot be before start time' });
+        }
+
+        // Validate entity limits in query
+        validateEntityLimits(query);
+
+        // Create campaign document with creator ID from authenticated user
+        const campaignData = {
+            name: name.trim(),
+            description: description?.trim(),
+            startTime: startTimeDate,
+            endTime: endTimeDate,
+            query,
+            creator_id: user.characterId, // Add creator ID from authenticated user
+            public: true // Default to public for now
         };
+
+        // If we're updating an existing campaign
+        if (isUpdate) {
+            // Check if the campaign exists and the user is the creator
+            const existingCampaign = await Campaigns.findOne({ campaign_id });
+
+            if (!existingCampaign) {
+                throw createError({
+                    statusCode: 404,
+                    statusMessage: 'Campaign not found'
+                });
+            }
+
+            if (existingCampaign.creator_id !== user.characterId) {
+                throw createError({
+                    statusCode: 403,
+                    statusMessage: 'You are not authorized to update this campaign'
+                });
+            }
+
+            // Update the campaign
+            await Campaigns.updateOne(
+                { campaign_id },
+                {
+                    $set: campaignData
+                }
+            );
+
+            return {
+                success: true,
+                message: 'Campaign updated successfully',
+                campaign: {
+                    id: campaign_id,
+                    name: name.trim()
+                }
+            };
+        }
+        // Creating a new campaign
+        else {
+            // Save to database
+            const campaign = new Campaigns(campaignData);
+            await campaign.save();
+
+            // Return campaign data with ID
+            return {
+                success: true,
+                message: 'Campaign created successfully',
+                campaign: {
+                    id: campaign.campaign_id,
+                    name: campaign.name
+                }
+            };
+        }
+    } catch (error: any) {
+        // Log the error server-side with more details
+        console.error('Save campaign error:', error,
+            error.stack ? error.stack : 'No stack trace');
+
+        // Return appropriate error to client
+        throw createError({
+            statusCode: error.statusCode || 500,
+            statusMessage: error.statusMessage || 'Error saving campaign'
+        });
     }
 });
 
