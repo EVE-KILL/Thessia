@@ -1,8 +1,8 @@
-import { createError, defineEventHandler, getRouterParam } from 'h3';
+import { createError, getRouterParam } from 'h3';
 import { processQueryForUI } from '~/server/helpers/CampaignsHelper';
 import { Campaigns } from '~/server/models/Campaigns';
 
-export default defineEventHandler(async (event) => {
+export default defineCachedEventHandler(async (event) => {
     const campaignId = getRouterParam(event, 'id');
 
     if (!campaignId) {
@@ -55,4 +55,9 @@ export default defineEventHandler(async (event) => {
             message: error.message || 'Error fetching campaign',
         });
     }
+}, {
+    maxAge: 3600,
+    staleMaxAge: -1,
+    swr: true,
+    base: "redis"
 });

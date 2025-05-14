@@ -1,7 +1,7 @@
-import { createError, defineEventHandler, getRouterParam } from 'h3';
+import { createError, getRouterParam } from 'h3';
 import { generateCampaignStats } from '~/server/helpers/CampaignsHelper';
 
-export default defineEventHandler(async (event) => {
+export default defineCachedEventHandler(async (event) => {
     const campaignId = getRouterParam(event, 'id');
 
     if (!campaignId) {
@@ -30,4 +30,9 @@ export default defineEventHandler(async (event) => {
             message: error.message || 'Error generating campaign statistics',
         });
     }
+}, {
+    maxAge: 3600,
+    staleMaxAge: -1,
+    swr: true,
+    base: "redis"
 });

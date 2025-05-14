@@ -1,10 +1,10 @@
-import { createError, defineEventHandler, getQuery, getRouterParam } from 'h3';
+import { createError, getQuery, getRouterParam } from 'h3';
 import { buildExpandedQuery } from '~/server/helpers/CampaignsHelper';
 import { type IKillList } from '~/server/interfaces/IKillList';
 import { Campaigns } from '~/server/models/Campaigns';
 import { Killmails } from '~/server/models/Killmails';
 
-export default defineEventHandler(async (event) => {
+export default defineCachedEventHandler(async (event) => {
     const campaignId = getRouterParam(event, 'id');
 
     if (!campaignId) {
@@ -126,4 +126,9 @@ export default defineEventHandler(async (event) => {
             message: error.message || 'Error fetching campaign killmails',
         });
     }
+}, {
+    maxAge: 3600,
+    staleMaxAge: -1,
+    swr: true,
+    base: "redis"
 });
