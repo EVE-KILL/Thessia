@@ -224,7 +224,7 @@
                                     </div>
                                     <div class="stat-row">
                                         <div class="stat-label text-gray-600 dark:text-gray-400">{{ $t('iskEfficiency')
-                                            }}</div>
+                                        }}</div>
                                         <div class="stat-value text-gray-900 dark:text-white">
                                             {{ calcIskEfficiency(validShortStats) }}%
                                         </div>
@@ -262,13 +262,13 @@
                                     </div>
                                     <div class="stat-row">
                                         <div class="stat-label text-gray-600 dark:text-gray-400">{{ $t('soloKillRatio')
-                                            }}</div>
+                                        }}</div>
                                         <div class="stat-value text-gray-900 dark:text-white">{{
                                             calcSoloKillRatio(validShortStats) }}%</div>
                                     </div>
                                     <div class="stat-row">
                                         <div class="stat-label text-gray-600 dark:text-gray-400">{{ $t('soloEfficiency')
-                                            }}
+                                        }}
                                         </div>
                                         <div class="stat-value text-gray-900 dark:text-white">{{
                                             calcSoloEfficiency(validShortStats) }}%</div>
@@ -292,13 +292,13 @@
                                     </div>
                                     <div class="stat-row">
                                         <div class="stat-label text-gray-600 dark:text-gray-400">{{ $t('npcLossRatio')
-                                            }}</div>
+                                        }}</div>
                                         <div class="stat-value text-gray-900 dark:text-white">{{
                                             calcNpcLossRatio(validShortStats) }}</div>
                                     </div>
                                     <div class="stat-row">
                                         <div class="stat-label text-gray-600 dark:text-gray-400">{{ $t('avgKillsPerDay')
-                                            }}
+                                        }}
                                         </div>
                                         <div class="stat-value text-gray-900 dark:text-white">{{
                                             calcAvgKillsPerDay(validShortStats) }}</div>
@@ -881,23 +881,29 @@ const getSecurityStatusColor = (securityStatus: number): string => {
 /* Updated security status indicator to match race/bloodline positioning */
 .security-status-indicator {
     position: absolute;
-    bottom: 5px; /* Position inside the portrait */
-    right: 5px;  /* Position inside the portrait */
+    bottom: 5px;
+    /* Position inside the portrait */
+    right: 5px;
+    /* Position inside the portrait */
     padding: 4px 8px;
-    border-radius: 6px; /* Match race/bloodline radius */
-    font-size: 0.75rem; /* Match race/bloodline size */
+    border-radius: 6px;
+    /* Match race/bloodline radius */
+    font-size: 0.75rem;
+    /* Match race/bloodline size */
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
     border: 1px solid rgba(255, 255, 255, 0.2);
     min-width: 60px;
     text-align: center;
-    z-index: 10; /* Ensure it appears above the image */
+    z-index: 10;
+    /* Ensure it appears above the image */
 }
 
 /* Updated styles for race and bloodline indicators with fixed positioning */
 .race-indicator,
 .bloodline-indicator {
     position: absolute;
-    left: 5px; /* Position inside the portrait instead of outside */
+    left: 5px;
+    /* Position inside the portrait instead of outside */
     padding: 4px 8px;
     border-radius: 6px;
     font-size: 0.75rem;
@@ -906,29 +912,36 @@ const getSecurityStatusColor = (securityStatus: number): string => {
     min-width: 60px;
     text-align: center;
     transition: background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease;
-    z-index: 10; /* Ensure they appear above the image */
+    z-index: 10;
+    /* Ensure they appear above the image */
     /* Force opaque backgrounds that override Tailwind's transparent classes */
-    background-color: #f3f4f6 !important; /* Light mode - solid gray-100 */
+    background-color: #f3f4f6 !important;
+    /* Light mode - solid gray-100 */
 }
 
 .race-indicator {
-    bottom: 5px; /* Position inside the portrait */
+    bottom: 5px;
+    /* Position inside the portrait */
 }
 
 .bloodline-indicator {
-    bottom: 40px; /* Stack above race indicator with enough separation */
+    bottom: 40px;
+    /* Stack above race indicator with enough separation */
 }
 
 /* Dark mode override */
 @media (prefers-color-scheme: dark) {
+
     .race-indicator,
     .bloodline-indicator {
-        background-color: #111827 !important; /* Dark mode - solid gray-900 */
+        background-color: #111827 !important;
+        /* Dark mode - solid gray-900 */
     }
 }
 
 /* Responsive adjustments for race/bloodline indicators */
 @media (max-width: 768px) {
+
     .race-indicator,
     .bloodline-indicator {
         font-size: 0.7rem;
@@ -941,7 +954,8 @@ const getSecurityStatusColor = (securityStatus: number): string => {
     }
 
     .bloodline-indicator {
-        bottom: 35px; /* Slightly closer on mobile */
+        bottom: 35px;
+        /* Slightly closer on mobile */
     }
 }
 

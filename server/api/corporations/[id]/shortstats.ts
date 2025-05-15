@@ -2,7 +2,7 @@ import type { H3Event } from "h3";
 import { sendError } from "h3";
 import { calculateShortStats } from "~/server/helpers/Stats";
 
-export default defineEventHandler(async (event: H3Event) => {
+export default defineCachedEventHandler(async (event: H3Event) => {
     const corporationId: number | null = event.context.params?.id
         ? Number.parseInt(event.context.params.id)
         : null;
@@ -19,4 +19,9 @@ export default defineEventHandler(async (event: H3Event) => {
     } catch (error) {
         return sendError(event, createError({ statusCode: 500, statusMessage: "Failed to fetch corporation short stats" }));
     }
+}, {
+    maxAge: 3600,
+    staleMaxAge: -1,
+    swr: true,
+    base: "redis"
 });

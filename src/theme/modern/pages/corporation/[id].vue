@@ -1,116 +1,233 @@
 <template>
     <div class="min-h-screen">
-        <div v-if="corporation" class="mx-auto p-4 text-white">
+        <div v-if="corporation" class="mx-auto p-4 text-gray-900 dark:text-white">
             <!-- Corporation Profile Header -->
-            <UCard class="mb-4 bg-black bg-opacity-30 dark:bg-gray-900 dark:bg-opacity-30">
-                <div class="flex flex-col md:flex-row items-start gap-4">
-                    <!-- Left: Corporation logo -->
-                    <div class="flex flex-col md:flex-row items-center gap-4">
-                        <div class="relative">
-                            <Image type="corporation" :id="corporation.corporation_id"
-                                :alt="`Corporation: ${corporation.name}`"
-                                class="rounded-full w-32 h-32 md:w-48 md:h-48 lg:w-64 lg:h-64" format="webp"
-                                size="256" />
+            <div
+                class="corporation-header rounded-lg overflow-hidden mb-6 bg-gray-100 bg-opacity-90 dark:bg-gray-900 dark:bg-opacity-30 border border-gray-300 dark:border-gray-800">
+                <div class="p-6">
+                    <div class="flex flex-col md:flex-row items-start gap-6">
+                        <!-- Left: Corporation logo -->
+                        <div class="corporation-logo-container">
+                            <div class="relative">
+                                <Image type="corporation" :id="corporation.corporation_id"
+                                    :alt="`Corporation: ${corporation.name}`"
+                                    class="corporation-logo rounded-lg shadow-lg" format="webp" size="256" />
+                            </div>
                         </div>
-                        <!-- Alliance, Faction logos -->
-                        <div class="flex flex-row md:flex-col gap-2 mt-2 md:mt-0">
-                            <NuxtLink v-if="corporation.alliance_id" :to="`/alliance/${corporation.alliance_id}`"
-                                class="block">
-                                <Image type="alliance" :id="corporation.alliance_id"
-                                    :alt="`Alliance: ${corporation.alliance_name}`"
-                                    class="rounded-full w-12 h-12 md:w-16 md:h-16" format="webp" size="64" />
-                            </NuxtLink>
-                            <NuxtLink v-if="corporation.faction_id" :to="`/faction/${corporation.faction_id}`"
-                                class="block">
-                                <Image type="corporation" :id="corporation.faction_id"
-                                    :alt="`Faction: ${corporation.faction_name}`"
-                                    class="rounded-full w-12 h-12 md:w-16 md:h-16" format="webp" size="64" />
-                            </NuxtLink>
-                        </div>
-                    </div>
-                    <!-- Right: Corporation info and stats -->
-                    <div class="flex-grow w-full md:w-auto">
-                        <div class="flex flex-col md:flex-row w-full">
-                            <!-- Corporation basic info -->
-                            <div class="md:w-1/3 mb-4 md:mb-0">
-                                <h1 class="text-xl md:text-2xl font-bold">{{ corporation.name }}</h1>
-                                <div class="text-gray-300">{{ corporation.ticker }}</div>
-                                <NuxtLink v-if="corporation.alliance_id && corporation.alliance_name"
-                                    :to="`/alliance/${corporation.alliance_id}`"
-                                    class="hover:underline text-gray-300 block">
-                                    {{ corporation.alliance_name }}
-                                </NuxtLink>
-                                <NuxtLink v-if="corporation.faction_id && corporation.faction_name"
-                                    :to="`/faction/${corporation.faction_id}`"
-                                    class="hover:underline text-gray-300 block">
-                                    {{ corporation.faction_name }}
-                                </NuxtLink>
-                                <div v-if="!shortStatsLoading && validShortStats?.lastActive"
-                                    class="text-gray-400 text-sm mt-1">
-                                    {{ $t('lastActive') }}: {{ formatDate(validShortStats.lastActive) }}
+
+                        <!-- Right: Corporation details -->
+                        <div class="flex-grow flex flex-col md:flex-row">
+                            <!-- Corporation info -->
+                            <div class="corporation-info md:mr-6 mb-4 md:mb-0 w-full md:w-1/3">
+                                <!-- Updated to show name and ticker together -->
+                                <h1 class="text-2xl md:text-3xl font-bold mb-2 text-gray-900 dark:text-white">
+                                    {{ corporation.name }} <span class="text-gray-600 dark:text-gray-400">[{{
+                                        corporation.ticker }}]</span>
+                                </h1>
+
+                                <!-- Affiliations -->
+                                <div class="affiliations space-y-3">
+                                    <NuxtLink v-if="corporation.alliance_id && corporation.alliance_name"
+                                        :to="`/alliance/${corporation.alliance_id}`"
+                                        class="flex items-center gap-2 text-gray-800 dark:text-gray-200 hover:text-blue-600 dark:hover:text-blue-400 transition-colors">
+                                        <Image type="alliance" :id="corporation.alliance_id"
+                                            class="w-6 h-6 rounded-full" format="webp" size="64" />
+                                        {{ corporation.alliance_name }}
+                                    </NuxtLink>
+
+                                    <NuxtLink v-if="corporation.faction_id && corporation.faction_name"
+                                        :to="`/faction/${corporation.faction_id}`"
+                                        class="flex items-center gap-2 text-gray-800 dark:text-gray-200 hover:text-blue-600 dark:hover:text-blue-400 transition-colors">
+                                        <Image type="corporation" :id="corporation.faction_id"
+                                            class="w-6 h-6 rounded-full" format="webp" size="64" />
+                                        {{ corporation.faction_name }}
+                                    </NuxtLink>
+
+                                    <div v-if="!shortStatsLoading && validShortStats?.lastActive"
+                                        class="flex items-center gap-2 text-gray-600 dark:text-gray-400">
+                                        <UIcon name="i-lucide-clock" class="w-4 h-4" />
+                                        {{ $t('lastActive') }}: {{ formatDate(validShortStats.lastActive) }}
+                                    </div>
                                 </div>
-                                <div v-if="corporation.member_count !== undefined" class="text-gray-400 text-sm mt-1">
+
+                                <!-- Added member count here instead of on image -->
+                                <div v-if="corporation.member_count !== undefined"
+                                    class="flex items-center gap-2 text-gray-700 dark:text-gray-300 mb-3">
+                                    <UIcon name="i-lucide-users" class="w-4 h-4" />
                                     {{ $t('members') }}: {{ formatNumber(corporation.member_count) }}
                                 </div>
-                            </div>
-                            <!-- Corporation stats -->
-                            <div class="md:flex-grow grid grid-cols-1 md:grid-cols-2 gap-4">
-                                <UCard v-if="shortStatsLoading"
-                                    class="col-span-2 h-32 flex items-center justify-center bg-black bg-opacity-20">
-                                    <UIcon name="i-lucide-loader-2" class="animate-spin text-gray-400" size="lg" />
-                                    <span class="ml-2 text-gray-400">{{ $t('loading') }}</span>
-                                </UCard>
-                                <template v-else-if="validShortStats">
-                                    <div class="space-y-1">
-                                        <div class="flex justify-between">
-                                            <span class="text-gray-300">{{ $t('kills') }}:</span>
-                                            <span class="text-white font-medium">{{ formatNumber(validShortStats.kills)
-                                                }}</span>
-                                        </div>
-                                        <div class="flex justify-between">
-                                            <span class="text-gray-300">{{ $t('losses') }}:</span>
-                                            <span class="text-white font-medium">{{ formatNumber(validShortStats.losses)
-                                                }}</span>
-                                        </div>
-                                        <div class="flex justify-between">
-                                            <span class="text-gray-300">{{ $t('isk') + ' ' + $t('killed') }}:</span>
-                                            <span class="text-white font-medium">{{ formatIsk(validShortStats.iskKilled)
-                                                }}</span>
-                                        </div>
-                                        <div class="flex justify-between">
-                                            <span class="text-gray-300">{{ $t('isk') + ' ' + $t('lost') }}:</span>
-                                            <span class="text-white font-medium">{{ formatIsk(validShortStats.iskLost)
-                                                }}</span>
-                                        </div>
-                                    </div>
-                                    <div class="space-y-1">
-                                        <div class="flex justify-between">
-                                            <span class="text-gray-300">{{ $t('npc') + ' ' + $t('losses') }}:</span>
-                                            <span class="text-white font-medium">{{
-                                                formatNumber(validShortStats.npcLosses) }}</span>
-                                        </div>
-                                        <div class="flex justify-between">
-                                            <span class="text-gray-300">{{ $t('solo') + ' ' + $t('kills') }}:</span>
-                                            <span class="text-white font-medium">{{
-                                                formatNumber(validShortStats.soloKills) }}</span>
-                                        </div>
-                                        <div class="flex justify-between">
-                                            <span class="text-gray-300">{{ $t('solo') + ' ' + $t('losses') }}:</span>
-                                            <span class="text-white font-medium">{{
-                                                formatNumber(validShortStats.soloLosses) }}</span>
-                                        </div>
-                                        <div class="flex justify-between">
-                                            <span class="text-gray-300">{{ $t('dangerRatio') }}:</span>
-                                            <span class="text-white font-medium">{{ calcDangerRatio(validShortStats)
-                                                }}%</span>
-                                        </div>
-                                    </div>
-                                </template>
                             </div>
                         </div>
                     </div>
                 </div>
-            </UCard>
+
+                <!-- Stats dashboard section -->
+                <div
+                    class="stats-dashboard p-6 bg-gradient-to-b from-gray-200/50 to-gray-100/50 dark:from-gray-900/50 dark:to-black/50 border-t border-gray-300 dark:border-gray-800">
+                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                        <!-- Stats loading state -->
+                        <div v-if="shortStatsLoading" class="col-span-full flex items-center justify-center py-6">
+                            <UIcon name="i-lucide-loader-2" class="animate-spin text-gray-400 mr-2" size="lg" />
+                            <span class="text-gray-400">{{ $t('loading') }}</span>
+                        </div>
+
+                        <template v-else-if="validShortStats">
+                            <!-- Kills & Losses Stats -->
+                            <div class="stat-card">
+                                <div class="stat-header">
+                                    <UIcon name="i-lucide-swords" class="stat-icon text-red-500" />
+                                    <h3 class="stat-title text-gray-700 dark:text-gray-200">{{ $t('combatMetrics') }}
+                                    </h3>
+                                </div>
+                                <div class="stat-body">
+                                    <div class="stat-row">
+                                        <div class="stat-label text-gray-600 dark:text-gray-400">{{ $t('kills') }}</div>
+                                        <div class="stat-value text-green-600 dark:text-green-400">{{
+                                            formatNumber(validShortStats.kills) }}</div>
+                                    </div>
+                                    <div class="stat-row">
+                                        <div class="stat-label text-gray-600 dark:text-gray-400">{{ $t('losses') }}
+                                        </div>
+                                        <div class="stat-value text-red-600 dark:text-red-400">{{
+                                            formatNumber(validShortStats.losses) }}</div>
+                                    </div>
+                                    <div class="stat-row">
+                                        <div class="stat-label text-gray-600 dark:text-gray-400">{{ $t('efficiency') }}
+                                        </div>
+                                        <div class="stat-value text-gray-900 dark:text-white">
+                                            {{ calcEfficiency(validShortStats) }}%
+                                        </div>
+                                    </div>
+                                    <div class="stat-row">
+                                        <div class="stat-label text-gray-600 dark:text-gray-400">{{ $t('dangerRatio') }}
+                                        </div>
+                                        <div class="stat-value" :class="getDangerClassColor(validShortStats)">
+                                            {{ calcDangerRatio(validShortStats) }}%
+                                            <UTooltip :text="$t('tooltips.dangerRatio')">
+                                                <UIcon name="i-lucide-info" class="ml-1 w-3.5 h-3.5 text-gray-400" />
+                                            </UTooltip>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- ISK Stats -->
+                            <div class="stat-card">
+                                <div class="stat-header">
+                                    <UIcon name="i-lucide-coins" class="stat-icon text-yellow-500" />
+                                    <h3 class="stat-title text-gray-700 dark:text-gray-200">{{ $t('iskMetrics') }}</h3>
+                                </div>
+                                <div class="stat-body">
+                                    <div class="stat-row">
+                                        <div class="stat-label text-gray-600 dark:text-gray-400">{{ $t('iskKilled') }}
+                                        </div>
+                                        <div class="stat-value text-green-600 dark:text-green-400">{{
+                                            formatIsk(validShortStats.iskKilled) }}</div>
+                                    </div>
+                                    <div class="stat-row">
+                                        <div class="stat-label text-gray-600 dark:text-gray-400">{{ $t('iskLost') }}
+                                        </div>
+                                        <div class="stat-value text-red-600 dark:text-red-400">{{
+                                            formatIsk(validShortStats.iskLost) }}</div>
+                                    </div>
+                                    <div class="stat-row">
+                                        <div class="stat-label text-gray-600 dark:text-gray-400">{{ $t('iskEfficiency')
+                                        }}</div>
+                                        <div class="stat-value text-gray-900 dark:text-white">
+                                            {{ calcIskEfficiency(validShortStats) }}%
+                                        </div>
+                                    </div>
+                                    <div class="stat-row">
+                                        <div class="stat-label text-gray-600 dark:text-gray-400">{{ $t('iskBalance') }}
+                                        </div>
+                                        <div class="stat-value"
+                                            :class="validShortStats.iskKilled > validShortStats.iskLost ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'">
+                                            {{ formatIsk(validShortStats.iskKilled - validShortStats.iskLost) }}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Solo Stats -->
+                            <div class="stat-card">
+                                <div class="stat-header">
+                                    <UIcon name="i-lucide-user" class="stat-icon text-blue-500" />
+                                    <h3 class="stat-title text-gray-700 dark:text-gray-200">{{ $t('soloActivity') }}
+                                    </h3>
+                                </div>
+                                <div class="stat-body">
+                                    <div class="stat-row">
+                                        <div class="stat-label text-gray-600 dark:text-gray-400">{{ $t('soloKills') }}
+                                        </div>
+                                        <div class="stat-value text-green-600 dark:text-green-400">{{
+                                            formatNumber(validShortStats.soloKills) }}</div>
+                                    </div>
+                                    <div class="stat-row">
+                                        <div class="stat-label text-gray-600 dark:text-gray-400">{{ $t('soloLosses') }}
+                                        </div>
+                                        <div class="stat-value text-red-600 dark:text-red-400">{{
+                                            formatNumber(validShortStats.soloLosses) }}</div>
+                                    </div>
+                                    <div class="stat-row">
+                                        <div class="stat-label text-gray-600 dark:text-gray-400">{{ $t('soloKillRatio')
+                                        }}</div>
+                                        <div class="stat-value text-gray-900 dark:text-white">
+                                            {{ calcSoloKillRatio(validShortStats) }}%
+                                        </div>
+                                    </div>
+                                    <div class="stat-row">
+                                        <div class="stat-label text-gray-600 dark:text-gray-400">{{ $t('soloEfficiency')
+                                        }}</div>
+                                        <div class="stat-value text-gray-900 dark:text-white">
+                                            {{ calcSoloEfficiency(validShortStats) }}%
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Other Stats -->
+                            <div class="stat-card">
+                                <div class="stat-header">
+                                    <UIcon name="i-lucide-bar-chart-2" class="stat-icon text-purple-500" />
+                                    <h3 class="stat-title text-gray-700 dark:text-gray-200">{{ $t('otherMetrics') }}
+                                    </h3>
+                                </div>
+                                <div class="stat-body">
+                                    <div class="stat-row">
+                                        <div class="stat-label text-gray-600 dark:text-gray-400">{{ $t('npcLosses') }}
+                                        </div>
+                                        <div class="stat-value text-gray-900 dark:text-white">{{
+                                            formatNumber(validShortStats.npcLosses) }}</div>
+                                    </div>
+                                    <div class="stat-row">
+                                        <div class="stat-label text-gray-600 dark:text-gray-400">{{ $t('npcLossRatio')
+                                        }}</div>
+                                        <div class="stat-value text-gray-900 dark:text-white">
+                                            {{ validShortStats.losses > 0 ? ((validShortStats.npcLosses /
+                                                validShortStats.losses) * 100).toFixed(1) : "0" }}%
+                                        </div>
+                                    </div>
+                                    <div v-if="corporation.member_count" class="stat-row">
+                                        <div class="stat-label text-gray-600 dark:text-gray-400">{{ $t('members') }}
+                                        </div>
+                                        <div class="stat-value text-gray-900 dark:text-white">{{
+                                            corporation.member_count }}</div>
+                                    </div>
+                                    <div class="stat-row">
+                                        <div class="stat-label text-gray-600 dark:text-gray-400">{{ $t('lastActive') }}
+                                        </div>
+                                        <div class="stat-value text-gray-900 dark:text-white">
+                                            {{ validShortStats.lastActive ? formatDate(validShortStats.lastActive) :
+                                                $t('unknown') }}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </template>
+                    </div>
+                </div>
+            </div>
+
             <!-- Tabs Navigation -->
             <UTabs :items="tabItems" :default-index="getInitialTabIndex()" @change="handleTabChange" class="space-y-4">
                 <template #dashboard>
@@ -331,12 +448,106 @@ const formatIsk = (value: number): string => {
     return `${Math.round(value).toLocaleString()} ISK`;
 };
 
+/**
+ * Calculate a decay factor based on time since last activity
+ * Returns a value between 0 and 1, where:
+ * - 1 = fully active (active today)
+ * - Values decreasing toward 0 as inactivity time increases
+ */
+function calculateActivityDecay(lastActiveDate: string | null): number {
+    if (!lastActiveDate) return 0; // No activity data means no activity
+
+    const now = new Date();
+    const lastActive = new Date(lastActiveDate);
+
+    // Get days since last activity
+    const daysSinceActive = Math.max(0, Math.floor((now.getTime() - lastActive.getTime()) / (1000 * 60 * 60 * 24)));
+
+    // Decay function parameters - more gradual decay than character page
+    // - Full activity (100%) for up to 14 days of inactivity (corporations inactive less quickly)
+    // - Linear decay from day 14 to day 120 (4 months)
+    // - Below 30% after 120 days
+    // - Below 15% after 240 days (8 months)
+    // - Minimum 10% after 365 days (1 year)
+
+    if (daysSinceActive <= 14) {
+        return 1; // Full activity if active within the last two weeks
+    } else if (daysSinceActive <= 120) {
+        // Linear decay from 100% to 30% between 14 and 120 days
+        return 1 - (0.7 * (daysSinceActive - 14) / (120 - 14));
+    } else if (daysSinceActive <= 240) {
+        // Linear decay from 30% to 15% between 120 and 240 days
+        return 0.3 - (0.15 * (daysSinceActive - 120) / (240 - 120));
+    } else if (daysSinceActive <= 365) {
+        // Linear decay from 15% to 10% between 240 and 365 days
+        return 0.15 - (0.05 * (daysSinceActive - 240) / (365 - 240));
+    } else {
+        // Bottom 10% for anything over a year
+        return 0.1;
+    }
+}
+
+/**
+ * Modified danger ratio calculation that includes time decay
+ */
 const calcDangerRatio = (stats: IShortStats | null): string => {
+    if (!stats) return "0";
+
+    const { kills = 0, losses = 0 } = stats;
+    if (kills === 0 && losses === 0) return "0";
+
+    // Base danger ratio
+    const baseRatio = (kills / (kills + losses)) * 100;
+
+    // Apply activity decay to the ratio - but less aggressive than for characters
+    const activityDecay = calculateActivityDecay(stats.lastActive);
+    const decayedRatio = baseRatio * activityDecay;
+
+    return decayedRatio.toFixed(1);
+};
+
+/**
+ * Get a CSS class for coloring the danger ratio text
+ */
+const getDangerClassColor = (stats: IShortStats | null): string => {
+    if (!stats) return "text-gray-600 dark:text-gray-400";
+
+    const dangerRatio = parseFloat(calcDangerRatio(stats));
+
+    // Color based on danger ratio
+    if (dangerRatio >= 80) return "text-green-600 dark:text-green-400";
+    if (dangerRatio >= 60) return "text-green-500 dark:text-green-300";
+    if (dangerRatio >= 40) return "text-yellow-600 dark:text-yellow-300";
+    if (dangerRatio >= 20) return "text-orange-600 dark:text-orange-300";
+    return "text-red-600 dark:text-red-300";
+};
+
+const calcEfficiency = (stats: IShortStats | null): string => {
     if (!stats) return "0";
     const { kills = 0, losses = 0 } = stats;
     if (kills === 0 && losses === 0) return "0";
-    const ratio = (kills / (kills + losses)) * 100;
-    return ratio.toFixed(1);
+    return ((kills / (kills + losses)) * 100).toFixed(1);
+};
+
+const calcIskEfficiency = (stats: IShortStats | null): string => {
+    if (!stats) return "0";
+    const { iskKilled = 0, iskLost = 0 } = stats;
+    if (iskKilled === 0 && iskLost === 0) return "0";
+    return ((iskKilled / (iskKilled + iskLost)) * 100).toFixed(1);
+};
+
+const calcSoloKillRatio = (stats: IShortStats | null): string => {
+    if (!stats) return "0";
+    const { kills = 0, soloKills = 0 } = stats;
+    if (kills === 0) return "0";
+    return ((soloKills / kills) * 100).toFixed(1);
+};
+
+const calcSoloEfficiency = (stats: IShortStats | null): string => {
+    if (!stats) return "0";
+    const { soloKills = 0, soloLosses = 0 } = stats;
+    if (soloKills === 0 && soloLosses === 0) return "0";
+    return ((soloKills / (soloKills + soloLosses)) * 100).toFixed(1);
 };
 
 const formatDate = (dateString: string) => {
@@ -360,6 +571,98 @@ const formatDate = (dateString: string) => {
 @media (prefers-color-scheme: dark) {
     .tab-content {
         background-color: rgba(17, 24, 39, 0.3);
+    }
+}
+
+/* Corporation header and indicator styling */
+.corporation-header {
+    position: relative;
+    overflow: hidden;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+}
+
+.corporation-logo-container {
+    position: relative;
+    display: flex;
+    justify-content: center;
+}
+
+.corporation-logo {
+    width: 164px;
+    height: 164px;
+    object-fit: cover;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+}
+
+/* Removed member-count style as we're not using it on the image anymore */
+
+/* Stat card styles */
+.stat-card {
+    border-radius: 8px;
+    border: 1px solid rgba(209, 213, 219, 0.5);
+    padding: 16px;
+}
+
+@media (prefers-color-scheme: dark) {
+    .stat-card {
+        border-color: rgba(75, 85, 99, 0.3);
+    }
+}
+
+.stat-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 12px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid rgba(209, 213, 219, 0.5);
+}
+
+@media (prefers-color-scheme: dark) {
+    .stat-header {
+        border-color: rgba(75, 85, 99, 0.2);
+    }
+}
+
+.stat-icon {
+    width: 20px;
+    height: 20px;
+}
+
+.stat-title {
+    font-weight: 600;
+    font-size: 0.95rem;
+}
+
+.stat-label {
+    font-size: 0.85rem;
+}
+
+.stat-value {
+    font-weight: 500;
+    font-size: 0.95rem;
+}
+
+.stat-body {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.stat-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+/* Animation for loading spinner */
+.animate-spin {
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    to {
+        transform: rotate(360deg);
     }
 }
 </style>
