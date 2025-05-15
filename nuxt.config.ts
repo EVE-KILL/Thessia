@@ -24,6 +24,28 @@ export default defineNuxtConfig({
         url: "https://eve-kill.com",
     },
     logLevel: process.env.NODE_ENV !== "production" ? "info" : "silent",
+    vite: {
+        build: {
+            cssCodeSplit: true,
+            chunkSizeWarningLimit: 1000,
+            cssMinify: 'lightningcss',
+            sourcemap: process.env.NODE_ENV !== "production",
+            minify: "terser",
+        },
+        css: {
+            devSourcemap: process.env.NODE_ENV !== "production",
+            transformer: 'lightningcss',
+        },
+        optimizeDeps: {
+            include: ['vue', 'vue-router']
+        },
+    },
+    build: {
+        // Only include critical libraries that need transpilation
+        transpile: process.env.NODE_ENV === 'production'
+            ? ['@nuxt/ui']
+            : []
+    },
     nitro: {
         preset: "bun",
         srcDir: "server",
@@ -38,79 +60,9 @@ export default defineNuxtConfig({
                 minifyIdentifiers: true,
                 treeShaking: true,
                 charset: "utf8",
+                keepNames: false,
             },
         },
-
-        routeRules:
-            process.env.NODE_ENV === "development"
-                ? {}
-                : {
-                    "/api/**": { cors: true },
-                    "/api/alliances/**": {
-                        cors: true,
-                        cache: { maxAge: 3600, staleMaxAge: -1, swr: true, base: "redis" },
-                    },
-                    "/api/characters/**": {
-                        cors: true,
-                        cache: { maxAge: 3600, staleMaxAge: -1, swr: true, base: "redis" },
-                    },
-                    "/api/corporations/**": {
-                        cors: true,
-                        cache: { maxAge: 3600, staleMaxAge: -1, swr: true, base: "redis" },
-                    },
-                    "/api/factions/**": {
-                        cors: true,
-                        cache: { maxAge: 3600, staleMaxAge: -1, swr: true, base: "redis" },
-                    },
-                    "/api/fitting/**": {
-                        cors: true,
-                        cache: { maxAge: 86400, staleMaxAge: -1, swr: true, base: "redis" },
-                    },
-                    "/api/items/**": {
-                        cors: true,
-                        cache: { maxAge: 3600, staleMaxAge: -1, swr: true, base: "redis" },
-                    },
-                    "/api/killlist/**": {
-                        cors: true,
-                        cache: { maxAge: 30, staleMaxAge: 0, swr: true, base: "redis" },
-                    },
-                    "/api/killmail/**": {
-                        cors: true,
-                        cache: { maxAge: 300, staleMaxAge: -1, swr: true, base: "redis" },
-                    },
-                    "/api/prices/**": {
-                        cors: true,
-                        cache: { maxAge: 300, staleMaxAge: -1, swr: true, base: "redis" },
-                    },
-                    "/api/search/**": {
-                        cors: true,
-                        cache: false,
-                    },
-                    "/api/stats": {
-                        cors: true,
-                        cache: { maxAge: 300, staleMaxAge: -1, swr: true, base: "redis" },
-                    },
-                    "/api/wars/**": {
-                        cors: true,
-                        cache: { maxAge: 3600, staleMaxAge: -1, swr: true, base: "redis" },
-                    },
-                    "/api/status": {
-                        cors: true,
-                        cache: { maxAge: 5, staleMaxAge: 0, swr: false, base: "redis" },
-                    },
-                    "/api/alliances/**/shortstats": {
-                        cors: true,
-                        cache: { maxAge: 3600, staleMaxAge: -1, swr: true, base: "redis" },
-                    },
-                    "/api/characters/**/shortstats": {
-                        cors: true,
-                        cache: { maxAge: 3600, staleMaxAge: -1, swr: true, base: "redis" },
-                    },
-                    "/api/corporations/**/shortstats": {
-                        cors: true,
-                        cache: { maxAge: 3600, staleMaxAge: -1, swr: true, base: "redis" },
-                    }
-                },
 
         imports: {
             autoImport: true,
@@ -140,6 +92,16 @@ export default defineNuxtConfig({
                 },
             },
         },
+
+        future: {
+            nativeSWR: true,
+        },
+    },
+
+    experimental: {
+        renderJsonPayloads: true,
+        writeEarlyHints: true,
+        viewTransition: true,
     },
 
     // Ensure modern compatibility mode
@@ -167,7 +129,7 @@ export default defineNuxtConfig({
         "@nuxtjs/color-mode",
         "@nuxtjs/device",
         "@nuxtjs/partytown",
-        "@vueuse/nuxt",
+        "@vueuse/nuxt"
     ],
 
     colorMode: {
@@ -298,9 +260,15 @@ export default defineNuxtConfig({
                     title: "EVE-KILL",
                     href: "/search.xml",
                 },
+                // Preload critical fonts if you use any
+                // { rel: 'preload', as: 'font', href: '/fonts/your-font.woff2', crossorigin: 'anonymous' }
             ],
         },
+        // Extract critical CSS for above-the-fold content
+        rootId: 'app',
+        buildAssetsDir: '/_nuxt/',
     },
+
     hooks: {
         // Generate loaders before build
         "build:before": async () => {
