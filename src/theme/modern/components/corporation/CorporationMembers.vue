@@ -16,7 +16,7 @@
                 </div>
             </div>
             <!-- Tabs for Grid/Table views -->
-            <UTabs :items="viewTabs" class="mb-4">
+            <Tabs v-model="activeTabId" :items="viewTabs" class="mb-4">
                 <!-- Grid View (Default) -->
                 <template #grid>
                     <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
@@ -53,7 +53,7 @@
                         </table>
                     </div>
                 </template>
-            </UTabs>
+            </Tabs>
             <div class="flex justify-end mt-6">
                 <UPagination v-if="total > limit" v-model:page="page" :total="total" :items-per-page="limit"
                     :ui="{ wrapper: 'flex justify-center' }" />
@@ -66,9 +66,10 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watch, onMounted } from 'vue';
+import { onMounted, ref, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useRoute, useRouter } from 'vue-router';
+import Tabs from '~/src/theme/modern/components/common/Tabs.vue';
 
 interface IMember {
     character_id: number;
@@ -88,6 +89,8 @@ const page = ref(1)
 const limit = 1000
 const total = ref(0)
 const pageCount = ref(1)
+
+const activeTabId = ref('grid');
 
 const viewTabs = [
     {

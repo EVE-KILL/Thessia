@@ -460,7 +460,7 @@
                     </div>
                 </div>
             </template>
-            <UTabs v-else :items="mobileTabs" :ui="tabsUi" :default-index="defaultMobileTabIndex" color="neutral">
+            <Tabs v-else :items="mobileTabs" :ui="tabsUi" :default-index="defaultMobileTabIndex" color="neutral">
                 <!-- Fitting Wheel Tab -->
                 <template #fitting="{ item }">
                     <div class="flex justify-center">
@@ -495,7 +495,7 @@
                         <KillComments :killId="killmail.killmail_id" />
                     </div>
                 </template>
-            </UTabs>
+            </Tabs>
         </div>
     </div>
 </template>
@@ -758,7 +758,7 @@ function handleCommentFragment() {
     }
 }
 
-// Update UTabs to use the defaultIndex
+// Update Tabs to use the defaultIndex
 watch(
     () => killmail.value,
     () => {

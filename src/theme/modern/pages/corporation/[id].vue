@@ -229,7 +229,7 @@
             </div>
 
             <!-- Tabs Navigation -->
-            <UTabs :items="tabItems" v-model="selectedTabIndex" class="space-y-4">
+            <Tabs :items="tabItems" v-model="activeTabId" class="space-y-4">
                 <template #dashboard>
                     <div class="tab-content">
                         <CorporationDashboard :corporation="corporation" />
@@ -265,7 +265,7 @@
                         <CorporationBattles />
                     </div>
                 </template>
-            </UTabs>
+            </Tabs>
         </div>
         <div v-else-if="pending" class="mx-auto p-4">
             <USkeleton class="h-64 rounded-lg mb-4" />
@@ -298,6 +298,7 @@ import { computed, onMounted, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useRoute, useRouter } from 'vue-router'
 import CorporationBattles from '~/components/corporation/CorporationBattles.vue'
+import Tabs from '~/src/theme/modern/components/common/Tabs.vue'
 import CorporationCombined from '~/src/theme/modern/components/corporation/CorporationCombined.vue'
 import CorporationDashboard from '~/src/theme/modern/components/corporation/CorporationDashboard.vue'
 import CorporationKills from '~/src/theme/modern/components/corporation/CorporationKills.vue'
@@ -360,14 +361,17 @@ onMounted(() => {
             console.error('Error fetching corporation short stats:', error)
             shortStatsLoading.value = false
             shortStatsData.value = { error: 'Failed to fetch corporation stats' }
-        })
+        });
 
-    // If no hash in URL, set to default tab
-    if (!route.hash) {
-        router.replace({
-            path: route.path,
-            hash: '#dashboard'
-        }, { preserveState: true });
+    const currentHash = route.hash.slice(1);
+    if (tabItems.value.length > 0) { // Ensure tabItems is populated
+        const isValidHash = tabItems.value.some(tab => tab.id === currentHash);
+        if (currentHash && isValidHash) {
+            activeTabId.value = currentHash;
+        } else {
+            activeTabId.value = tabItems.value[0].id;
+            router.replace({ hash: `#${activeTabId.value}` });
+        }
     }
 })
 
@@ -378,7 +382,9 @@ const validShortStats = computed(() => {
     return null;
 })
 
-const tabItems = [
+const activeTabId = ref('');
+
+const tabItems = computed(() => [
     {
         id: "dashboard",
         label: t("dashboard"),
@@ -421,31 +427,21 @@ const tabItems = [
         icon: "i-lucide-swords",
         slot: "battles" as const,
     },
-]
+]);
 
-const selectedTabIndex = computed({
-    get() {
-        // Get the hash from the URL (without the # symbol)
-        const hash = route.hash.slice(1);
+watch(() => route.hash, (newHash) => {
+    const newId = newHash.slice(1);
+    if (tabItems.value.some(tab => tab.id === newId)) {
+        activeTabId.value = newId;
+    } else if (tabItems.value.length > 0 && !newId) { // Handle case where hash is removed
+        activeTabId.value = tabItems.value[0].id;
+        // Optionally, you might want to router.replace({ hash: `#${activeTabId.value}` }); here too
+    }
+});
 
-        // Find the index of the tab matching the hash
-        const tabIndex = tabItems.findIndex(item => item.id === hash);
-
-        // Return the index as a string or '0' if not found
-        return tabIndex >= 0 ? String(tabIndex) : '0';
-    },
-    set(newIndex) {
-        // Convert string index to number to safely access the tabItems array
-        const index = parseInt(newIndex, 10);
-
-        // Get the tab id from the tabItems array
-        const tabId = tabItems[index]?.id || 'dashboard';
-
-        // Update the URL with the hash
-        router.push({
-            path: `/corporation/${corporationId}`,
-            hash: `#${tabId}`,
-        });
+watch(activeTabId, (newId) => {
+    if (newId && route.hash !== `#${newId}`) {
+        router.push({ hash: `#${newId}` });
     }
 });
 

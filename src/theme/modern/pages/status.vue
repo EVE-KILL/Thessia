@@ -360,16 +360,8 @@ const hasKeyspaceInfo = computed(() => {
             <USwitch v-model="autoRefresh" @change="toggleAutoRefresh" />
             <span class="ml-2 text-xs sm:text-sm">{{ $t('autoRefresh', { seconds: autoRefreshInterval }) }}</span>
           </div>
-          <UButton
-            color="primary"
-            variant="ghost"
-            icon="lucide:refresh-cw"
-            size="sm"
-            @click="refresh"
-            :loading="loading"
-            :disabled="loading"
-            :title="$t('refreshNow')"
-          />
+          <UButton color="primary" variant="ghost" icon="lucide:refresh-cw" size="sm" @click="refresh"
+            :loading="loading" :disabled="loading" :title="$t('refreshNow')" />
         </div>
       </div>
 
@@ -377,7 +369,8 @@ const hasKeyspaceInfo = computed(() => {
         <UProgress class="w-1/2" />
       </div>
 
-      <div v-else-if="error" class="bg-red-100 dark:bg-red-900 border border-red-400 text-red-700 dark:text-red-300 px-4 py-3 rounded">
+      <div v-else-if="error"
+        class="bg-red-100 dark:bg-red-900 border border-red-400 text-red-700 dark:text-red-300 px-4 py-3 rounded">
         <p>{{ error }}</p>
         <UButton class="mt-4" @click="refresh">{{ $t('retry') }}</UButton>
       </div>
@@ -395,8 +388,8 @@ const hasKeyspaceInfo = computed(() => {
               <div class="text-xl font-mono">
                 {{ formatNumber(summaryStats?.totalProcessed) }}
                 <span v-if="processedDiff !== 0"
-                      :class="processedDiff > 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'"
-                      class="text-sm ml-1">
+                  :class="processedDiff > 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'"
+                  class="text-sm ml-1">
                   ({{ processedDiff > 0 ? '+' : '' }}{{ formatNumber(processedDiff) }})
                 </span>
               </div>
@@ -406,8 +399,8 @@ const hasKeyspaceInfo = computed(() => {
               <div class="text-xl font-mono">
                 {{ formatNumber(summaryStats?.totalQueued) }}
                 <span v-if="queuedDiff !== 0"
-                      :class="queuedDiff > 0 ? 'text-amber-600 dark:text-amber-400' : 'text-green-600 dark:text-green-400'"
-                      class="text-sm ml-1">
+                  :class="queuedDiff > 0 ? 'text-amber-600 dark:text-amber-400' : 'text-green-600 dark:text-green-400'"
+                  class="text-sm ml-1">
                   ({{ queuedDiff > 0 ? '+' : '' }}{{ formatNumber(queuedDiff) }})
                 </span>
               </div>
@@ -415,17 +408,13 @@ const hasKeyspaceInfo = computed(() => {
           </div>
 
           <!-- Main Content Tabs - Using the correct default-selected prop -->
-          <UTabs
-            :items="[
-              { label: isMobile ? '' : $t('overview'), icon: 'lucide:layout-dashboard', slot: 'overview', defaultSelected: true },
-              { label: isMobile ? '' : $t('processing'), icon: 'lucide:bar-chart-2', slot: 'processing' },
-              { label: isMobile ? '' : $t('database'), icon: 'lucide:database', slot: 'database' },
-              { label: isMobile ? '' : $t('cache'), icon: 'lucide:hard-drive', slot: 'cache' },
-              { label: isMobile ? '' : $t('redis'), icon: 'lucide:database', slot: 'redis' },
-            ]"
-            class="mb-6"
-            color="neutral"
-          >
+          <Tabs :items="[
+            { label: isMobile ? '' : $t('overview'), icon: 'lucide:layout-dashboard', slot: 'overview', defaultSelected: true },
+            { label: isMobile ? '' : $t('processing'), icon: 'lucide:bar-chart-2', slot: 'processing' },
+            { label: isMobile ? '' : $t('database'), icon: 'lucide:database', slot: 'database' },
+            { label: isMobile ? '' : $t('cache'), icon: 'lucide:hard-drive', slot: 'cache' },
+            { label: isMobile ? '' : $t('redis'), icon: 'lucide:database', slot: 'redis' },
+          ]" class="mb-6" color="neutral">
             <template #overview>
               <!-- Overview with refined 3-column layout -->
               <div class="space-y-4">
@@ -460,16 +449,19 @@ const hasKeyspaceInfo = computed(() => {
                         <span>{{ $t('redisClients') }}:</span>
                         <span class="font-mono">{{ formatNumber(statusData.redis?.clients?.connected_clients) }}</span>
                       </div>
-                        <div class="flex justify-between">
-                          <span>{{ $t('hitRatio') }}:</span>
-                          <span class="font-mono">{{ calculateHitRatio(statusData.redis?.stats?.keyspace_hits, statusData.redis?.stats?.keyspace_misses) }}%</span>
-                        </div>
-                        <div class="flex justify-between">
-                          <span>{{ $t('totalKeys') }}:</span>
-                          <span class="font-mono">{{
-                            statusData.redis?.keyspace ? formatNumber(Object.values(statusData.redis.keyspace).reduce((total, info) => total + parseKeyspaceInfo(info as string).keys, 0)) : 'N/A'
-                          }}</span>
-                        </div>
+                      <div class="flex justify-between">
+                        <span>{{ $t('hitRatio') }}:</span>
+                        <span class="font-mono">{{ calculateHitRatio(statusData.redis?.stats?.keyspace_hits,
+                          statusData.redis?.stats?.keyspace_misses) }}%</span>
+                      </div>
+                      <div class="flex justify-between">
+                        <span>{{ $t('totalKeys') }}:</span>
+                        <span class="font-mono">{{
+                          statusData.redis?.keyspace ?
+                            formatNumber(Object.values(statusData.redis.keyspace).reduce((total, info) => total +
+                              parseKeyspaceInfo(info as string).keys, 0)) : 'N/A'
+                        }}</span>
+                      </div>
                     </div>
                   </UCard>
 
@@ -483,10 +475,13 @@ const hasKeyspaceInfo = computed(() => {
                     </template>
                     <div class="space-y-2 text-sm">
                       <!-- Top 3 processed items in 5min -->
-                    <div v-for="(queue, index) in Object.keys(statusData.processedCounts).sort((a, b) => (statusData.processedCounts[b]['5min'] || 0) - (statusData.processedCounts[a]['5min'] || 0))" :key="queue" class="flex justify-between">
+                      <div
+                        v-for="(queue, index) in Object.keys(statusData.processedCounts).sort((a, b) => (statusData.processedCounts[b]['5min'] || 0) - (statusData.processedCounts[a]['5min'] || 0))"
+                        :key="queue" class="flex justify-between">
                         <span class="capitalize">{{ queue }}:</span>
-                        <span class="font-mono">{{ formatNumber(statusData.processedCounts[queue]['5min'] || 0) }}</span>
-                    </div>
+                        <span class="font-mono">{{ formatNumber(statusData.processedCounts[queue]['5min'] || 0)
+                        }}</span>
+                      </div>
                     </div>
                   </UCard>
 
@@ -501,7 +496,9 @@ const hasKeyspaceInfo = computed(() => {
 
                     <div class="space-y-2 text-sm">
                       <!-- Top 5 queues -->
-                      <div v-for="(queue, index) in Object.entries(statusData.queueCounts || {}).sort(([,a], [,b]) => Number(b) - Number(a))" :key="queue[0]" class="flex justify-between">
+                      <div
+                        v-for="(queue, index) in Object.entries(statusData.queueCounts || {}).sort(([, a], [, b]) => Number(b) - Number(a))"
+                        :key="queue[0]" class="flex justify-between">
                         <span class="capitalize">{{ queue[0] }}:</span>
                         <span class="font-mono">{{ formatNumber(queue[1]) }}</span>
                       </div>
@@ -523,12 +520,15 @@ const hasKeyspaceInfo = computed(() => {
                       <!-- Cache stats -->
                       <div class="space-y-2 text-sm">
                         <div class="overflow-y-auto">
-                          <div v-for="cacheName in Object.keys(statusData.cacheSizes || {}).splice(0, 6)" :key="cacheName" class="flex justify-between py-1">
+                          <div v-for="cacheName in Object.keys(statusData.cacheSizes || {}).splice(0, 6)"
+                            :key="cacheName" class="flex justify-between py-1">
                             <span class="truncate" :title="cacheName">{{ cacheName }}:</span>
                             <span class="font-mono">
                               {{ formatNumber(statusData.cacheSizes[cacheName]) }} /
                               <!-- cacheName below should have Cache stripped from the end of the string -->
-                              {{ formatNumber(statusData.cacheHits[cacheName.endsWith('Cache') ? cacheName.slice(0, -5) : cacheName] || 0) }}
+                              {{ formatNumber(statusData.cacheHits[cacheName.endsWith('Cache') ? cacheName.slice(0, -5)
+                                : cacheName] ||
+                                0) }}
                             </span>
                           </div>
                         </div>
@@ -537,12 +537,15 @@ const hasKeyspaceInfo = computed(() => {
                       <!-- Additional cache stats or chart could go here -->
                       <div class="space-y-2 text-sm">
                         <div class="overflow-y-auto">
-                          <div v-for="cacheName in Object.keys(statusData.cacheSizes || {}).splice(6)" :key="cacheName" class="flex justify-between py-1">
+                          <div v-for="cacheName in Object.keys(statusData.cacheSizes || {}).splice(6)" :key="cacheName"
+                            class="flex justify-between py-1">
                             <span class="truncate" :title="cacheName">{{ cacheName }}:</span>
                             <span class="font-mono">
                               {{ formatNumber(statusData.cacheSizes[cacheName]) }} /
                               <!-- cacheName below should have Cache stripped from the end of the string -->
-                              {{ formatNumber(statusData.cacheHits[cacheName.endsWith('Cache') ? cacheName.slice(0, -5) : cacheName] || 0) }}
+                              {{ formatNumber(statusData.cacheHits[cacheName.endsWith('Cache') ? cacheName.slice(0, -5)
+                                : cacheName] ||
+                                0) }}
                             </span>
                           </div>
                         </div>
@@ -570,18 +573,13 @@ const hasKeyspaceInfo = computed(() => {
 
                 <div class="mb-4">
                   <label for="timePeriod" class="block text-xs font-medium mb-1">{{ $t('selectTimePeriod') }}:</label>
-                  <USelect
-                    id="timePeriod"
-                    v-model="selectedTimePeriod"
-                    :items="timePeriods"
-                    size="sm"
-                    placeholder="Select time period"
-                    icon="lucide:clock"
-                  />
+                  <USelect id="timePeriod" v-model="selectedTimePeriod" :items="timePeriods" size="sm"
+                    placeholder="Select time period" icon="lucide:clock" />
                 </div>
 
                 <div class="h-64 relative mb-4">
-                  <div v-if="loading" class="absolute inset-0 flex items-center justify-center bg-gray-50/50 dark:bg-gray-800/50 backdrop-blur-sm z-10">
+                  <div v-if="loading"
+                    class="absolute inset-0 flex items-center justify-center bg-gray-50/50 dark:bg-gray-800/50 backdrop-blur-sm z-10">
                     <UIcon name="lucide:loader" class="animate-spin h-6 w-6" />
                   </div>
                   <v-chart class="w-full h-full" :option="chartOptions" autoresize />
@@ -603,7 +601,7 @@ const hasKeyspaceInfo = computed(() => {
                       </thead>
                       <tbody>
                         <tr v-for="(data, queue) in statusData.processedCounts" :key="queue"
-                            class="border-t border-gray-200 dark:border-gray-700">
+                          class="border-t border-gray-200 dark:border-gray-700">
                           <td class="py-1 capitalize">{{ queue }}</td>
                           <td v-for="period in timePeriods" :key="period.value" class="py-1 px-1 text-right font-mono">
                             {{ formatNumber(data[period.value]) }}
@@ -635,8 +633,8 @@ const hasKeyspaceInfo = computed(() => {
                     </thead>
                     <tbody>
                       <tr v-for="(count, collection) in statusData.databaseCounts" :key="collection"
-                          class="border-t border-gray-200 dark:border-gray-700"
-                          :class="{'bg-amber-100 dark:bg-amber-900/50': collection === 'unprocessedCount'}">
+                        class="border-t border-gray-200 dark:border-gray-700"
+                        :class="{ 'bg-amber-100 dark:bg-amber-900/50': collection === 'unprocessedCount' }">
                         <td class="py-1 capitalize text-sm">{{ collection }}</td>
                         <td class="py-1 text-right font-mono text-sm">{{ formatNumber(count) }}</td>
                       </tr>
@@ -667,7 +665,7 @@ const hasKeyspaceInfo = computed(() => {
                       </thead>
                       <tbody>
                         <tr v-for="(size, cache) in statusData.cacheSizes" :key="cache"
-                            class="border-t border-gray-200 dark:border-gray-700">
+                          class="border-t border-gray-200 dark:border-gray-700">
                           <td class="py-1 text-sm">{{ cache }}</td>
                           <td class="py-1 text-right font-mono text-sm">{{ formatNumber(size) }}</td>
                         </tr>
@@ -695,7 +693,7 @@ const hasKeyspaceInfo = computed(() => {
                       </thead>
                       <tbody>
                         <tr v-for="(hits, cache) in statusData.cacheHits" :key="cache"
-                            class="border-t border-gray-200 dark:border-gray-700">
+                          class="border-t border-gray-200 dark:border-gray-700">
                           <td class="py-1 text-sm">{{ cache }}</td>
                           <td class="py-1 text-right font-mono text-sm">{{ formatNumber(hits) }}</td>
                         </tr>
@@ -722,11 +720,13 @@ const hasKeyspaceInfo = computed(() => {
                       <tbody>
                         <tr class="border-t border-gray-200 dark:border-gray-700">
                           <td class="py-1 text-sm">{{ $t('version') }}</td>
-                          <td class="py-1 text-right font-mono text-sm">{{ statusData.redis.server.redis_version || 'N/A' }}</td>
+                          <td class="py-1 text-right font-mono text-sm">{{ statusData.redis.server.redis_version ||
+                            'N/A' }}</td>
                         </tr>
                         <tr class="border-t border-gray-200 dark:border-gray-700">
                           <td class="py-1 text-sm">{{ $t('mode') }}</td>
-                          <td class="py-1 text-right font-mono text-sm">{{ statusData.redis.server.redis_mode || 'N/A' }}</td>
+                          <td class="py-1 text-right font-mono text-sm">{{ statusData.redis.server.redis_mode || 'N/A'
+                          }}</td>
                         </tr>
                         <tr class="border-t border-gray-200 dark:border-gray-700">
                           <td class="py-1 text-sm">{{ $t('os') }}</td>
@@ -734,7 +734,9 @@ const hasKeyspaceInfo = computed(() => {
                         </tr>
                         <tr class="border-t border-gray-200 dark:border-gray-700">
                           <td class="py-1 text-sm">{{ $t('uptime') }}</td>
-                          <td class="py-1 text-right font-mono text-sm">{{ formatRedisUptime(statusData.redis.server.uptime_in_seconds) }}</td>
+                          <td class="py-1 text-right font-mono text-sm">{{
+                            formatRedisUptime(statusData.redis.server.uptime_in_seconds) }}
+                          </td>
                         </tr>
                       </tbody>
                     </table>
@@ -755,15 +757,19 @@ const hasKeyspaceInfo = computed(() => {
                       <tbody>
                         <tr class="border-t border-gray-200 dark:border-gray-700">
                           <td class="py-1 text-sm">{{ $t('usedMemory') }}</td>
-                          <td class="py-1 text-right font-mono text-sm">{{ formatBytes(statusData.redis.memory.used_memory) }}</td>
+                          <td class="py-1 text-right font-mono text-sm">{{
+                            formatBytes(statusData.redis.memory.used_memory) }}</td>
                         </tr>
                         <tr class="border-t border-gray-200 dark:border-gray-700">
                           <td class="py-1 text-sm">{{ $t('usedMemoryPeak') }}</td>
-                          <td class="py-1 text-right font-mono text-sm">{{ formatBytes(statusData.redis.memory.used_memory_peak) }}</td>
+                          <td class="py-1 text-right font-mono text-sm">{{
+                            formatBytes(statusData.redis.memory.used_memory_peak) }}</td>
                         </tr>
                         <tr class="border-t border-gray-200 dark:border-gray-700">
                           <td class="py-1 text-sm">{{ $t('memFragmentationRatio') }}</td>
-                          <td class="py-1 text-right font-mono text-sm">{{ formatNumber(statusData.redis.memory.mem_fragmentation_ratio) }}</td>
+                          <td class="py-1 text-right font-mono text-sm">{{
+                            formatNumber(statusData.redis.memory.mem_fragmentation_ratio)
+                          }}</td>
                         </tr>
                       </tbody>
                     </table>
@@ -784,28 +790,36 @@ const hasKeyspaceInfo = computed(() => {
                       <tbody>
                         <tr class="border-t border-gray-200 dark:border-gray-700">
                           <td class="py-1 text-sm">{{ $t('connectedClients') }}</td>
-                          <td class="py-1 text-right font-mono text-sm">{{ formatNumber(statusData.redis.clients.connected_clients) }}</td>
+                          <td class="py-1 text-right font-mono text-sm">{{
+                            formatNumber(statusData.redis.clients.connected_clients) }}
+                          </td>
                         </tr>
                         <tr class="border-t border-gray-200 dark:border-gray-700">
                           <td class="py-1 text-sm">{{ $t('totalConnections') }}</td>
-                          <td class="py-1 text-right font-mono text-sm">{{ formatNumber(statusData.redis.stats.total_connections_received) }}</td>
+                          <td class="py-1 text-right font-mono text-sm">{{
+                            formatNumber(statusData.redis.stats.total_connections_received) }}</td>
                         </tr>
                         <tr class="border-t border-gray-200 dark:border-gray-700">
                           <td class="py-1 text-sm">{{ $t('totalCommands') }}</td>
-                          <td class="py-1 text-right font-mono text-sm">{{ formatNumber(statusData.redis.stats.total_commands_processed) }}</td>
+                          <td class="py-1 text-right font-mono text-sm">{{
+                            formatNumber(statusData.redis.stats.total_commands_processed)
+                          }}</td>
                         </tr>
                         <tr class="border-t border-gray-200 dark:border-gray-700">
                           <td class="py-1 text-sm">{{ $t('keyspaceHits') }}</td>
-                          <td class="py-1 text-right font-mono text-sm">{{ formatNumber(statusData.redis.stats.keyspace_hits) }}</td>
+                          <td class="py-1 text-right font-mono text-sm">{{
+                            formatNumber(statusData.redis.stats.keyspace_hits) }}</td>
                         </tr>
                         <tr class="border-t border-gray-200 dark:border-gray-700">
                           <td class="py-1 text-sm">{{ $t('keyspaceMisses') }}</td>
-                          <td class="py-1 text-right font-mono text-sm">{{ formatNumber(statusData.redis.stats.keyspace_misses) }}</td>
+                          <td class="py-1 text-right font-mono text-sm">{{
+                            formatNumber(statusData.redis.stats.keyspace_misses) }}</td>
                         </tr>
                         <tr class="border-t border-gray-200 dark:border-gray-700">
                           <td class="py-1 text-sm">{{ $t('hitRatio') }}</td>
                           <td class="py-1 text-right font-mono text-sm">
-                            {{ calculateHitRatio(statusData.redis.stats.keyspace_hits, statusData.redis.stats.keyspace_misses) }}%
+                            {{ calculateHitRatio(statusData.redis.stats.keyspace_hits,
+                              statusData.redis.stats.keyspace_misses) }}%
                           </td>
                         </tr>
                       </tbody>
@@ -834,11 +848,14 @@ const hasKeyspaceInfo = computed(() => {
                       </thead>
                       <tbody>
                         <tr v-for="(info, db) in statusData.redis.keyspace" :key="db"
-                            class="border-t border-gray-200 dark:border-gray-700">
+                          class="border-t border-gray-200 dark:border-gray-700">
                           <td class="py-1 text-sm">{{ db }}</td>
-                          <td class="py-1 text-right font-mono text-sm">{{ formatNumber(parseKeyspaceInfo(info).keys) }}</td>
-                          <td class="py-1 text-right font-mono text-sm">{{ formatNumber(parseKeyspaceInfo(info).expires) }}</td>
-                          <td class="py-1 text-right font-mono text-sm">{{ formatTime(parseKeyspaceInfo(info).avg_ttl) }}</td>
+                          <td class="py-1 text-right font-mono text-sm">{{ formatNumber(parseKeyspaceInfo(info).keys) }}
+                          </td>
+                          <td class="py-1 text-right font-mono text-sm">{{ formatNumber(parseKeyspaceInfo(info).expires)
+                          }}</td>
+                          <td class="py-1 text-right font-mono text-sm">{{ formatTime(parseKeyspaceInfo(info).avg_ttl)
+                          }}</td>
                         </tr>
                       </tbody>
                     </table>
@@ -846,7 +863,7 @@ const hasKeyspaceInfo = computed(() => {
                 </UCard>
               </div>
             </template>
-          </UTabs>
+          </Tabs>
 
           <!-- Last update indicator -->
           <div class="text-center text-xs text-gray-500 dark:text-gray-400 mt-4">

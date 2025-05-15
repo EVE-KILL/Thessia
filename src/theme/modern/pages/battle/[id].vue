@@ -140,7 +140,7 @@
 
             <!-- Tabs -->
             <div class="mb-4">
-                <UTabs :items="tabs" :ui="tabsUi" color="neutral">
+                <Tabs v-model="activeTabId" :items="tabItems" :ui="tabsUi" color="neutral">
                     <template #overview>
                         <CustomBattleOverview v-if="battle" :battle="battle" />
                     </template>
@@ -159,7 +159,7 @@
                     <template #timeline>
                         <CustomBattleTimeline v-if="battle" :killmails="killmails" :battle="battle" />
                     </template>
-                </UTabs>
+                </Tabs>
             </div>
         </div>
         <!-- Only show error if we're not loading and there's no battle data -->
@@ -173,13 +173,15 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, ref, watchEffect } from 'vue';
+import { computed, onMounted, ref, watch, watchEffect } from 'vue';
 import { useI18n } from 'vue-i18n';
-import { useRoute } from 'vue-router';
+import { useRoute, useRouter } from 'vue-router';
+import Tabs from '~/src/theme/modern/components/common/Tabs.vue';
 
 const { locale, t } = useI18n()
 
 const route = useRoute();
+const router = useRouter();
 
 // Get either the ID from the route or a killmail ID from query params
 const entityId = computed(() => {
@@ -317,14 +319,16 @@ const totalDamageInflicted = computed(() => {
     return Object.values(teamStats.value).reduce((sum, stats) => sum + (stats?.damageInflicted || 0), 0);
 });
 
-const tabs = computed(() => [
-    { label: t('battleGenerator.tabs.overview'), slot: 'overview' },
-    { label: t('battleGenerator.tabs.kills'), slot: 'kills' },
-    { label: t('battleGenerator.tabs.alliances'), slot: 'alliances' },
-    { label: t('battleGenerator.tabs.corporations'), slot: 'corporations' },
-    { label: t('battleGenerator.tabs.characters'), slot: 'characters' },
-    { label: t('battleGenerator.tabs.timeline'), slot: 'timeline' }
+const tabItems = computed(() => [
+    { id: 'overview', label: t('battleGenerator.tabs.overview'), slot: 'overview' },
+    { id: 'kills', label: t('battleGenerator.tabs.kills'), slot: 'kills' },
+    { id: 'alliances', label: t('battleGenerator.tabs.alliances'), slot: 'alliances' },
+    { id: 'corporations', label: t('battleGenerator.tabs.corporations'), slot: 'corporations' },
+    { id: 'characters', label: t('battleGenerator.tabs.characters'), slot: 'characters' },
+    { id: 'timeline', label: t('battleGenerator.tabs.timeline'), slot: 'timeline' }
 ]);
+
+const activeTabId = ref('');
 
 const tabsUi = {
     list: "mb-0",
@@ -481,6 +485,38 @@ watchEffect(async () => {
         // Only clear battle if we're not still loading
         if (!pending.value) {
             battle.value = null;
+        }
+    }
+});
+
+onMounted(() => {
+    if (tabItems.value.length > 0) {
+        const hash = route.hash.substring(1);
+        const validTab = tabItems.value.find(item => item.id === hash);
+        if (validTab) {
+            activeTabId.value = hash;
+        } else {
+            activeTabId.value = tabItems.value[0].id;
+            // Update URL if we defaulted, but only if not on server
+            if (typeof window !== 'undefined') {
+                router.replace({ query: route.query, hash: `#${activeTabId.value}` });
+            }
+        }
+    }
+});
+
+watch(() => route.hash, (newHash) => {
+    const tabIdFromHash = newHash.substring(1);
+    if (tabItems.value.some(item => item.id === tabIdFromHash) && activeTabId.value !== tabIdFromHash) {
+        activeTabId.value = tabIdFromHash;
+    }
+});
+
+watch(activeTabId, (newId) => {
+    if (newId && `#${newId}` !== route.hash) {
+        // Use push to allow back button navigation for tabs
+        if (typeof window !== 'undefined') {
+            router.push({ query: route.query, hash: `#${newId}` });
         }
     }
 });

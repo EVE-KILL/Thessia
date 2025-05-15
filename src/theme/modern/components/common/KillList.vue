@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import moment from "moment";
+import { computed } from 'vue'; // Ensure computed is imported
 import type { IAttacker } from "~/server/interfaces/IAttacker";
 import type { IKillList } from "~/server/interfaces/IKillList";
 import type { IKillmail } from "~/server/interfaces/IKillmail";
@@ -47,6 +48,14 @@ const queryParams = computed(() => ({
     limit: selectedPageSize.value,
 }));
 
+const fetchKey = computed(() => {
+    // Ensure all reactive parts that define a unique request are included
+    // props.apiEndpoint is crucial.
+    // queryParams.value.page and queryParams.value.limit are also important for pagination.
+    // Add any other props or reactive values that alter the fetch request.
+    return `killlist-${props.apiEndpoint}-${queryParams.value.page}-${queryParams.value.limit}`;
+});
+
 // Determine if we should use external data
 const useExternalData = computed(() => props.externalKilllistData !== null);
 
@@ -61,7 +70,7 @@ const {
     refresh,
 } = !useExternalData.value
         ? useFetch<IKillList[]>(props.apiEndpoint, {
-            key: "killlist",
+            key: fetchKey.value,
             query: queryParams,
             watch: [queryParams],
         })

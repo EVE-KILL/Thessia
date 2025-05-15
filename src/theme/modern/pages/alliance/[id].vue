@@ -127,7 +127,7 @@
                                     </div>
                                     <div class="stat-row">
                                         <div class="stat-label text-gray-600 dark:text-gray-400">{{ $t('iskEfficiency')
-                                            }}</div>
+                                        }}</div>
                                         <div class="stat-value text-gray-900 dark:text-white">
                                             {{ calcIskEfficiency(validShortStats) }}%
                                         </div>
@@ -165,14 +165,14 @@
                                     </div>
                                     <div class="stat-row">
                                         <div class="stat-label text-gray-600 dark:text-gray-400">{{ $t('soloKillRatio')
-                                            }}</div>
+                                        }}</div>
                                         <div class="stat-value text-gray-900 dark:text-white">
                                             {{ calcSoloKillRatio(validShortStats) }}%
                                         </div>
                                     </div>
                                     <div class="stat-row">
                                         <div class="stat-label text-gray-600 dark:text-gray-400">{{ $t('soloEfficiency')
-                                            }}</div>
+                                        }}</div>
                                         <div class="stat-value text-gray-900 dark:text-white">
                                             {{ calcSoloEfficiency(validShortStats) }}%
                                         </div>
@@ -190,7 +190,7 @@
                                 <div class="stat-body">
                                     <div class="stat-row">
                                         <div class="stat-label text-gray-600 dark:text-gray-400">{{ $t('corporations')
-                                            }}</div>
+                                        }}</div>
                                         <div class="stat-value text-gray-900 dark:text-white">{{
                                             formatNumber(alliance.corporation_count || 0) }}</div>
                                     </div>
@@ -220,7 +220,7 @@
             </div>
 
             <!-- Tabs Navigation -->
-            <UTabs :items="tabItems" v-model="selectedTabIndex" class="space-y-4">
+            <Tabs :items="tabItems" v-model="activeTabId" class="space-y-4">
                 <template #kills>
                     <div class="tab-content">
                         <AllianceKills :alliance="alliance" />
@@ -256,7 +256,7 @@
                         <AllianceBattles />
                     </div>
                 </template>
-            </UTabs>
+            </Tabs>
         </div>
         <div v-else-if="pending" class="mx-auto p-4">
             <USkeleton class="h-64 rounded-lg mb-4" />
@@ -287,7 +287,7 @@
 <script setup lang="ts">
 import { formatDistanceToNow } from "date-fns"
 import { de, enUS, es, fr, ja, ko, ru, zhCN } from "date-fns/locale"
-import { computed, onMounted, ref } from 'vue'
+import { computed, onMounted, ref, watch } from 'vue'; // Added watch
 import { useI18n } from 'vue-i18n'
 import { useRoute, useRouter } from 'vue-router'
 import AllianceBattles from '~/components/alliance/AllianceBattles.vue'
@@ -297,6 +297,7 @@ import AllianceCorporationMembers from '~/src/theme/modern/components/alliance/A
 import AllianceKills from '~/src/theme/modern/components/alliance/AllianceKills.vue'
 import AllianceLosses from '~/src/theme/modern/components/alliance/AllianceLosses.vue'
 import AllianceStats from '~/src/theme/modern/components/alliance/AllianceStats.vue'
+import Tabs from '~/src/theme/modern/components/common/Tabs.vue'; // Added Tabs import
 
 const { t, locale } = useI18n()
 const route = useRoute()
@@ -386,12 +387,14 @@ onMounted(() => {
             shortStatsData.value = { error: 'Failed to fetch alliance stats' }
         })
 
-    // If no hash in URL, set to default tab
-    if (!route.hash) {
-        router.replace({
-            path: route.path,
-            hash: '#kills'
-        }, { preserveState: true });
+    // Initialize activeTabId from hash or default
+    const hash = route.hash.slice(1);
+    const initialTab = tabItems.value.find(item => item.id === hash);
+    if (initialTab) {
+        activeTabId.value = initialTab.id;
+    } else if (tabItems.value.length > 0) {
+        activeTabId.value = tabItems.value[0].id;
+        router.replace({ hash: `#${activeTabId.value}` });
     }
 })
 
@@ -402,7 +405,7 @@ const validShortStats = computed(() => {
     return null;
 })
 
-const tabItems = [
+const tabItems = computed(() => [
     {
         id: "kills",
         label: t("kills"),
@@ -445,31 +448,27 @@ const tabItems = [
         icon: "i-lucide-swords",
         slot: "battles" as const,
     },
-]
+]);
 
-const selectedTabIndex = computed({
-    get() {
-        // Get the hash from the URL (without the # symbol)
-        const hash = route.hash.slice(1);
+const activeTabId = ref('');
 
-        // Find the index of the tab matching the hash
-        const tabIndex = tabItems.findIndex(item => item.id === hash);
+// Watch for changes in route.hash to update activeTabId
+watch(() => route.hash, (newHash) => {
+    const tabId = newHash.slice(1);
+    if (tabItems.value.some(item => item.id === tabId)) {
+        activeTabId.value = tabId;
+    } else if (tabItems.value.length > 0 && activeTabId.value !== tabItems.value[0].id) {
+        // If hash is invalid, and current activeTabId is not the default, reset to default
+        // This handles cases where user manually enters an invalid hash
+        activeTabId.value = tabItems.value[0].id;
+        router.replace({ hash: `#${activeTabId.value}` });
+    }
+});
 
-        // Return the index as a string or '0' if not found
-        return tabIndex >= 0 ? String(tabIndex) : '0';
-    },
-    set(newIndex) {
-        // Convert string index to number to safely access the tabItems array
-        const index = parseInt(newIndex, 10);
-
-        // Get the tab id from the tabItems array
-        const tabId = tabItems[index]?.id || 'kills';
-
-        // Update the URL with the hash
-        router.push({
-            path: `/alliance/${allianceId}`,
-            hash: `#${tabId}`,
-        });
+// Watch for changes in activeTabId to update URL hash
+watch(activeTabId, (newId) => {
+    if (newId && route.hash !== `#${newId}`) {
+        router.push({ hash: `#${newId}` });
     }
 });
 

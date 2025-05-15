@@ -321,7 +321,7 @@
             </div>
 
             <!-- Tabs Navigation -->
-            <UTabs :items="tabItems" class="space-y-4" v-model="selectedTabIndex">
+            <Tabs :items="tabItems" class="space-y-4" v-model="activeTabId">
                 <template #dashboard>
                     <div class="tab-content">
                         <characterDashboard :character="character" />
@@ -363,7 +363,7 @@
                         <CharacterStats />
                     </div>
                 </template>
-            </UTabs>
+            </Tabs>
         </div>
 
         <!-- Loading State -->
@@ -400,9 +400,10 @@
 import type { TabsItem } from "@nuxt/ui";
 import { addYears, differenceInDays, format, formatDistanceToNow } from "date-fns";
 import { de, enUS, es, fr, ja, ko, ru, zhCN } from "date-fns/locale";
-import { computed, onMounted, ref } from 'vue';
+import { computed, onMounted, ref, watch } from 'vue';
 import { useI18n } from "vue-i18n";
 import type { ICharacter } from '~/server/interfaces/ICharacter';
+import Tabs from '~/src/theme/modern/components/common/Tabs.vue';
 
 const { t, locale } = useI18n();
 const currentLocale = computed(() => locale.value);
@@ -410,41 +411,85 @@ const route = useRoute();
 const router = useRouter();
 const { id } = route.params;
 
-// Fixed selectedTabIndex to return a string ('0', '1', etc.) instead of hardcoded '0'
-const selectedTabIndex = computed({
-    get() {
-        // Get the hash from the URL
-        const hash = route.hash.slice(1); // Remove the # symbol
-
-        // Find the index of the tab matching the hash
-        const tabIndex = tabItems.findIndex(item => item.id === hash);
-
-        // Return the index as a string or '0' if not found
-        return tabIndex >= 0 ? String(tabIndex) : '0';
+const tabItems = [
+    {
+        id: "dashboard",
+        label: t("dashboard"),
+        icon: "i-lucide-layout-dashboard",
+        slot: "dashboard" as const,
     },
-    set(newIndex) {
-        // Convert string index to number to safely access the tabItems array
-        const index = parseInt(newIndex, 10);
+    {
+        id: "kills",
+        label: t("kills"),
+        icon: "i-lucide-trophy",
+        slot: "kills" as const,
+    },
+    {
+        id: "losses",
+        label: t("losses"),
+        icon: "i-lucide-skull",
+        slot: "losses" as const,
+    },
+    {
+        id: "combined",
+        label: t("combined"),
+        icon: "i-lucide-layers",
+        slot: "combined" as const,
+    },
+    {
+        id: "battles",
+        label: t("battles"),
+        icon: "i-lucide-swords",
+        slot: "battles" as const,
+    },
+    {
+        id: "corporation-history",
+        label: t("corporationHistory"),
+        icon: "i-lucide-history",
+        slot: "corporation-history" as const,
+    },
+    {
+        id: "stats",
+        label: t("stats"),
+        icon: "i-lucide-bar-chart",
+        slot: "stats" as const,
+    },
+] satisfies TabsItem[];
 
-        // Get the tab id from the tabItems array
-        const tabId = tabItems[index]?.id || 'dashboard';
+const activeTabId = ref(tabItems[0].id); // Default to the first tab's ID
 
-        // Update the URL with the hash
-        router.push({
-            path: `/character/${id}`,
-            hash: `#${tabId}`,
-        });
+// Sync activeTabId with URL hash
+watch(() => route.hash, (newHash) => {
+    const hashValue = newHash.slice(1);
+    if (hashValue && tabItems.some(item => item.id === hashValue)) {
+        activeTabId.value = hashValue;
+    } else if (!hashValue && tabItems.length > 0) {
+        // If hash is empty or invalid, and we have tabs, default to the first tab
+        activeTabId.value = tabItems[0].id;
+        // Optionally, update the URL to reflect this default
+        // router.replace({ hash: `#${tabItems[0].id}` });
+    }
+}, { immediate: true }); // immediate: true to run on component mount
+
+// Sync URL hash with activeTabId
+watch(activeTabId, (newTabId) => {
+    if (route.hash !== `#${newTabId}`) {
+        router.push({ hash: `#${newTabId}` });
     }
 });
 
-// Add this to ensure correct tab is selected on page load
+// Ensure correct tab is selected on page load and default hash is set
 onMounted(() => {
-    // If no hash in URL, set to default tab
-    if (!route.hash) {
-        router.replace({
-            path: route.path,
-            hash: '#dashboard'
-        }, { preserveState: true });
+    const currentHash = route.hash.slice(1);
+    const isValidHash = tabItems.some(item => item.id === currentHash);
+
+    if (isValidHash) {
+        activeTabId.value = currentHash;
+    } else if (tabItems.length > 0) {
+        activeTabId.value = tabItems[0].id;
+        if (route.hash !== `#${tabItems[0].id}`) {
+            router.replace({ hash: `#${tabItems[0].id}` });
+        }
     }
 });
 
@@ -534,7 +579,7 @@ const getDaysUntilBirthday = (birthday: string) => {
     return differenceInDays(nextBirthday, today);
 };
 
-const fetchKey = computed(() => `character-${id}-${Date.now()}`);
+const fetchKey = computed(() => `character-${id}`);
 
 const {
     data: characterData,
@@ -609,51 +654,6 @@ useSeoMeta({
             : "/images/default-og.png";
     }),
 });
-
-const tabItems = [
-    {
-        id: "dashboard",
-        label: t("dashboard"),
-        icon: "i-lucide-layout-dashboard",
-        slot: "dashboard" as const,
-    },
-    {
-        id: "kills",
-        label: t("kills"),
-        icon: "i-lucide-trophy",
-        slot: "kills" as const,
-    },
-    {
-        id: "losses",
-        label: t("losses"),
-        icon: "i-lucide-skull",
-        slot: "losses" as const,
-    },
-    {
-        id: "combined",
-        label: t("combined"),
-        icon: "i-lucide-layers",
-        slot: "combined" as const,
-    },
-    {
-        id: "battles",
-        label: t("battles"),
-        icon: "i-lucide-swords",
-        slot: "battles" as const,
-    },
-    {
-        id: "corporation-history",
-        label: t("corporationHistory"),
-        icon: "i-lucide-history",
-        slot: "corporation-history" as const,
-    },
-    {
-        id: "stats",
-        label: t("stats"),
-        icon: "i-lucide-bar-chart",
-        slot: "stats" as const,
-    },
-] satisfies TabsItem[];
 
 const formatNumber = (value: number): string => {
     return value?.toLocaleString() || "0";

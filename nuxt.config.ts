@@ -260,6 +260,7 @@ export default defineNuxtConfig({
                 // { rel: 'preload', as: 'font', href: '/fonts/your-font.woff2', crossorigin: 'anonymous' }
             ],
         },
+        keepalive: true,
         // Extract critical CSS for above-the-fold content
         rootId: 'app',
         buildAssetsDir: '/_nuxt/',

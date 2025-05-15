@@ -1,7 +1,10 @@
 <script setup lang="ts">
 import { computed, onMounted, ref, watch } from 'vue';
+import { useRoute, useRouter } from 'vue-router';
 
 const { t, locale } = useI18n();
+const route = useRoute();
+const router = useRouter();
 
 // Define types for entities
 interface Entity {
@@ -71,6 +74,8 @@ const teamAlliances = ref<Record<string, any[]>>({});
 const teamCorporations = ref<Record<string, any[]>>({});
 const teamCharacters = ref<Record<string, any[]>>({});
 
+const activeTabId = ref('');
+
 // Check if systems limit reached
 const systemLimitReached = computed(() => {
     return selectedSystems.value.length >= MAX_SYSTEMS;
@@ -102,12 +107,12 @@ const previewReady = computed(() => {
 
 // Tabs for preview
 const tabs = computed(() => [
-    { label: t('battleGenerator.tabs.overview'), slot: 'overview' },
-    { label: t('battleGenerator.tabs.kills'), slot: 'kills' },
-    { label: t('battleGenerator.tabs.alliances'), slot: 'alliances' },
-    { label: t('battleGenerator.tabs.corporations'), slot: 'corporations' },
-    { label: t('battleGenerator.tabs.characters'), slot: 'characters' },
-    { label: t('battleGenerator.tabs.timeline'), slot: 'timeline' }
+    { id: 'overview', label: t('battleGenerator.tabs.overview'), slot: 'overview' },
+    { id: 'kills', label: t('battleGenerator.tabs.kills'), slot: 'kills' },
+    { id: 'alliances', label: t('battleGenerator.tabs.alliances'), slot: 'alliances' },
+    { id: 'corporations', label: t('battleGenerator.tabs.corporations'), slot: 'corporations' },
+    { id: 'characters', label: t('battleGenerator.tabs.characters'), slot: 'characters' },
+    { id: 'timeline', label: t('battleGenerator.tabs.timeline'), slot: 'timeline' }
 ]);
 
 const tabsUi = {
@@ -717,6 +722,59 @@ const toggleEditSideD = () => {
 // Update the generated data on component mount
 onMounted(() => {
     updateGeneratedData();
+
+    if (tabs.value.length > 0) {
+        const hash = route.hash.substring(1);
+        const validTab = tabs.value.find(item => item.id === hash);
+        if (validTab) {
+            activeTabId.value = hash;
+        } else if (tabs.value[0]?.id) {
+            activeTabId.value = tabs.value[0].id;
+            // Update URL if we defaulted, but only if not on server and preview is visible
+            if (typeof window !== 'undefined' && previewData.value) {
+                router.replace({ hash: `#${activeTabId.value}` });
+            }
+        }
+    }
+});
+
+watch(() => route.hash, (newHash) => {
+    if (previewData.value) { // Only update from hash if preview is visible
+        const tabIdFromHash = newHash.substring(1);
+        if (tabs.value.some(item => item.id === tabIdFromHash) && activeTabId.value !== tabIdFromHash) {
+            activeTabId.value = tabIdFromHash;
+        }
+    }
+});
+
+watch(activeTabId, (newId) => {
+    if (previewData.value && newId && `#${newId}` !== route.hash) { // Only update hash if preview is visible
+        if (typeof window !== 'undefined') {
+            router.push({ hash: `#${newId}` });
+        }
+    }
+});
+
+// When previewData becomes available, set the active tab and update URL if needed
+watch(previewData, (newPreviewData) => {
+    if (newPreviewData && tabs.value.length > 0) {
+        const hash = route.hash.substring(1);
+        const validTab = tabs.value.find(item => item.id === hash);
+        if (validTab) {
+            activeTabId.value = hash;
+        } else if (tabs.value[0]?.id) {
+            activeTabId.value = tabs.value[0].id;
+            if (typeof window !== 'undefined') {
+                router.replace({ hash: `#${activeTabId.value}` });
+            }
+        }
+    } else if (!newPreviewData) {
+        // Optionally clear hash when preview is hidden or reset activeTabId
+        // if (typeof window !== 'undefined' && route.hash) {
+        //     router.replace({ hash: '' });
+        // }
+        // activeTabId.value = tabs.value[0]?.id || ''; // Reset to first tab or empty
+    }
 });
 
 // Function to save the battle
@@ -1274,7 +1332,7 @@ const previewBattle = async () => {
 
             <!-- Tabs -->
             <div class="mb-4 mt-6">
-                <UTabs :items="tabs" :ui="tabsUi" color="neutral">
+                <Tabs v-model="activeTabId" :items="tabs" :ui="tabsUi" color="neutral">
                     <template #overview>
                         <CustomBattleOverview v-if="previewData" :battle="previewData" />
                     </template>
@@ -1294,7 +1352,7 @@ const previewBattle = async () => {
                     <template #timeline>
                         <CustomBattleTimeline v-if="previewData" :killmails="previewKillmails" :battle="previewData" />
                     </template>
-                </UTabs>
+                </Tabs>
             </div>
         </div>
     </div>

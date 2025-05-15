@@ -10,7 +10,7 @@
                     </div>
                 </div>
             </UCard>
-            <UTabs :items="tabItems" v-model="selectedTabIndex" class="space-y-4">
+            <Tabs :items="tabItems" v-model="selectedTabIndex" class="space-y-4">
                 <template #overview>
                     <div class="tab-content">
                         <KillList killlistType="latest" :limit="100"
@@ -23,7 +23,7 @@
                         <RegionBattles />
                     </div>
                 </template>
-            </UTabs>
+            </Tabs>
         </div>
         <div v-else-if="pending" class="mx-auto p-4">
             <USkeleton class="h-32 rounded-lg mb-4" />

@@ -267,7 +267,7 @@ const hasScope = (scope: string) => {
         </UAlert>
 
         <!-- Settings Tabs - Combined into single ESI tab -->
-        <UTabs v-else-if="profileData && profileData.authenticated" :items="[
+        <Tabs v-else-if="profileData && profileData.authenticated" :items="[
             { label: isMobile ? '' : $t('settings.esi', 'EVE SSO Authentication'), icon: 'lucide:shield', slot: 'esi', defaultSelected: true },
         ]" class="mb-6" color="neutral">
             <!-- ESI Tab (Combined Profile and Permissions) -->
@@ -375,6 +375,6 @@ const hasScope = (scope: string) => {
                     </div>
                 </UCard>
             </template>
-        </UTabs>
+        </Tabs>
     </div>
 </template>

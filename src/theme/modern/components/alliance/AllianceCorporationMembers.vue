@@ -16,7 +16,7 @@
                 </div>
             </div>
             <!-- Tabs for Grid/Table views -->
-            <UTabs :items="viewTabs" class="mb-4">
+            <Tabs v-model="activeTabId" :items="tabItems" class="mb-4">
                 <!-- Grid View (Default) -->
                 <template #grid>
                     <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
@@ -54,7 +54,7 @@
                         </table>
                     </div>
                 </template>
-            </UTabs>
+            </Tabs>
             <div class="flex justify-end mt-6">
                 <UPagination v-if="total > limit" v-model:page="page" :total="total" :items-per-page="limit"
                     :ui="{ wrapper: 'flex justify-center' }" />
@@ -67,9 +67,10 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watch, onMounted } from 'vue';
+import { computed, onMounted, ref, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useRoute, useRouter } from 'vue-router';
+import Tabs from '~/src/theme/modern/components/common/Tabs.vue';
 
 interface ICorporation {
     corporation_id: number;
@@ -91,7 +92,7 @@ const total = ref(0)
 const pageCount = ref(1)
 
 // Define view tabs
-const viewTabs = [
+const tabItems = computed(() => [
     {
         id: 'grid',
         label: t('grid'),
@@ -104,7 +105,9 @@ const viewTabs = [
         icon: 'i-lucide-list',
         slot: 'table'
     }
-]
+]);
+
+const activeTabId = ref('grid');
 
 watch(page, async (newPage) => {
     await fetchCorporations();
