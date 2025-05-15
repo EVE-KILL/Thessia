@@ -1,29 +1,37 @@
-import createDOMPurify from "dompurify";
-import { JSDOM } from "jsdom";
+import DOMPurify from "isomorphic-dompurify";
 import { v4 as uuidv4 } from "uuid";
 import { DiscordWebhooks } from "~/server/helpers/DiscordWebhooks";
 import { cliLogger } from "~/server/helpers/Logger";
 import { broadcastCommentEvent } from "~/server/helpers/WSClientManager";
 import { Comments } from "~/server/models/Comments";
 
-// Create a DOM environment for server-side sanitization
-const { window } = new JSDOM("");
-const DOMPurify = createDOMPurify(window);
-
-// Configure DOMPurify to match the client-side configuration in KillComments.vue
-DOMPurify.setConfig({
-    // No need to specifically whitelist tags since we're using ADD_TAGS instead
-    // Just ensure ALLOWED_TAGS isn't overriding our settings by not setting it explicitly
-
-    // Use the same forbidden tags as the client
+// Configure sanitize options - these will be passed to DOMPurify internally
+const SANITIZE_CONFIG = {
+    ADD_TAGS: ["iframe", "blockquote", "video", "source"],
+    ADD_ATTR: [
+        "allow",
+        "allowfullscreen",
+        "frameborder",
+        "scrolling",
+        "target",
+        "rel",
+        "async",
+        "charset",
+        "data-id",
+        "lang",
+        "controls",
+        "loop",
+        "muted",
+        "playsinline",
+        "type",
+        "src",
+    ],
     FORBID_TAGS: ["script", "style", "form", "input", "button", "textarea", "select", "option"],
     FORBID_ATTR: ["onerror", "onload", "onclick", "onmouseover", "onmouseout", "eval"],
-
-    // Force HTTPS on links
     FORCE_HTTPS: true,
-});
+};
 
-// Hook to add security attributes to all links
+// Add hooks to DOMPurify to add security attributes to links just like in the frontend
 DOMPurify.addHook("afterSanitizeAttributes", function (node) {
     // Add security attributes to links
     if (node.tagName === "A") {
@@ -78,34 +86,7 @@ interface ModerationResponse {
  * @returns Sanitized HTML content
  */
 function sanitizeComment(content: string): string {
-    return DOMPurify.sanitize(content, {
-        // Match the client-side configuration exactly
-        ADD_TAGS: ["iframe", "blockquote", "video", "source"],
-        ADD_ATTR: [
-            "allow",
-            "allowfullscreen",
-            "frameborder",
-            "scrolling",
-            "target",
-            "rel",
-            "async",
-            "charset",
-            "data-id",
-            "lang",
-            "controls",
-            "loop",
-            "muted",
-            "playsinline",
-            "type",
-            "src",
-        ],
-        // These settings match what's in the client-side code
-        FORBID_TAGS: ["script", "style", "form", "input", "button", "textarea", "select", "option"],
-        FORBID_ATTR: ["onerror", "onload", "onclick", "onmouseover", "onmouseout", "eval"],
-        RETURN_DOM_FRAGMENT: false,
-        RETURN_DOM: false,
-        RETURN_TRUSTED_TYPE: false,
-    });
+    return DOMPurify.sanitize(content, SANITIZE_CONFIG);
 }
 
 /**

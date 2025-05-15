@@ -37,6 +37,7 @@
         "dompurify": "^3.2.5",
         "echarts": "^5.6.0",
         "ioredis": "^5.6.1",
+        "isomorphic-dompurify": "^2.24.0",
         "jsonwebtoken": "^9.0.2",
         "lru-cache": "^11.1.0",
         "marked": "^15.0.11",
