@@ -822,5 +822,37 @@
         "killmail_preview_description": "Actual killmails will appear here after saving the campaign."
     },
     "campaigncreator": "Campaign Creator",
-    "edit": "Edit"
+    "edit": "Edit",
+    "nextBirthday": "Next Birthday",
+    "yearsOld": "years old",
+    "daysRemaining": "days remaining",
+    "combatMetrics": "Combat Metrics",
+    "iskMetrics": "ISK Metrics",
+    "soloActivity": "Solo Activity",
+    "otherMetrics": "Other Metrics",
+    "efficiency": "Efficiency",
+    "iskKilled": "ISK Killed",
+    "iskLost": "ISK Lost",
+    "iskEfficiency": "ISK Efficiency",
+    "iskBalance": "ISK Balance",
+    "soloKills": "Solo Kills",
+    "soloLosses": "Solo Losses",
+    "soloKillRatio": "Solo Kill Ratio",
+    "soloEfficiency": "Solo Efficiency",
+    "npcLosses": "NPC Losses",
+    "npcLossRatio": "NPC Loss Ratio",
+    "avgKillsPerDay": "Avg. Kills/Day",
+    "activity": "Activity",
+    "activityLevel": {
+        "veryHigh": "Very High",
+        "high": "High",
+        "medium": "Medium",
+        "low": "Low",
+        "minimal": "Minimal",
+        "inactive": "Inactive"
+    },
+    "tooltips": {
+        "dangerRatio": "Danger ratio decreases over time if the character is inactive",
+        "activityLevel": "Activity level factors in recent combat history and time since last activity"
+    }
 }
