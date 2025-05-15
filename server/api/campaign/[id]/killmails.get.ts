@@ -69,15 +69,15 @@ export default defineCachedEventHandler(async (event) => {
                 system_name: killmail.system_name,
                 system_security: killmail.system_security,
                 region_id: killmail.region_id,
-                region_name: killmail.region_name,
-                kill_time: killmail.kill_time,
+                region_name: killmail.region_name.en,
+                kill_time: killmail.kill_time.toISOString(),
                 attackerCount: killmail.attackers.length,
                 commentCount: 0, // Default to 0 for now
                 is_npc: killmail.is_npc,
                 is_solo: killmail.is_solo,
                 victim: {
                     ship_id: killmail.victim.ship_id,
-                    ship_name: killmail.victim.ship_name,
+                    ship_name: killmail.victim.ship_name.en,
                     character_id: killmail.victim.character_id,
                     character_name: killmail.victim.character_name,
                     corporation_id: killmail.victim.corporation_id,
@@ -97,7 +97,7 @@ export default defineCachedEventHandler(async (event) => {
                     faction_id: finalBlowAttacker.faction_id || 0,
                     faction_name: finalBlowAttacker.faction_name || "",
                     ship_group_name: finalBlowAttacker.ship_group_name || {},
-                }
+                },
             };
         });
 
@@ -130,5 +130,17 @@ export default defineCachedEventHandler(async (event) => {
     maxAge: 3600,
     staleMaxAge: -1,
     swr: true,
-    base: "redis"
+    base: "redis",
+    shouldBypassCache: (event) => {
+        return process.env.NODE_ENV !== "production";
+    },
+    getKey: (event) => {
+        const campaignId = getRouterParam(event, 'id');
+        const query = getQuery(event);
+        const page = query?.page ? query.page.toString() : '1';
+        const limit = query?.limit ? query.limit.toString() : '25'; // Include limit in key as it affects the result set
+        // Add other relevant query parameters if they are used for filtering/sorting beyond pagination
+        // Based on the code, 'page' and 'limit' are the primary query params affecting the result set.
+        return `campaign:${campaignId}:killmails:page:${page}:limit:${limit}`;
+    }
 });

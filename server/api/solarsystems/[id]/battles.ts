@@ -1,12 +1,12 @@
-import { createError, defineEventHandler, getQuery } from 'h3';
+import { createError, getQuery } from 'h3';
 import type { PipelineStage } from 'mongoose';
 import { Battles } from '~/server/models/Battles';
 
-export default defineEventHandler(async (event) => {
+export default defineCachedEventHandler(async (event) => {
     const query = getQuery(event);
     const idParam = event.context.params?.id;
     // The idParam is guaranteed by the route to be digits.
-    const systemId = idParam ? parseInt(idParam.toString(), 10) : NaN; 
+    const systemId = idParam ? parseInt(idParam.toString(), 10) : NaN;
     if (isNaN(systemId)) {
         // This should not be reached if routing works correctly.
         throw createError({ statusCode: 400, statusMessage: 'Invalid system ID' });
@@ -48,5 +48,20 @@ export default defineEventHandler(async (event) => {
     } catch (error) {
         console.error('Error fetching system battles:', error);
         throw createError({ statusCode: 500, statusMessage: 'Internal Server Error fetching system battles' });
+    }
+}, {
+    maxAge: 86400, // Using a maxAge of 86400 seconds for static solar system data
+    staleMaxAge: -1,
+    swr: true,
+    base: "redis", // Assuming redis is the default cache base
+    shouldBypassCache: (event) => {
+        return process.env.NODE_ENV !== "production";
+    },
+    getKey: (event) => {
+        const systemId = (event as any).context.params?.id;
+        const query = getQuery(event as any);
+        const page = query?.page ? query.page.toString() : '1';
+        // Include systemId and page in the cache key
+        return `solarsystems:${systemId}:battles:page:${page}`;
     }
 });

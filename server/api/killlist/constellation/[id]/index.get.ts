@@ -3,7 +3,7 @@
 import type { IKillmail } from "~/server/interfaces/IKillmail";
 import { Killmails } from "~/server/models/Killmails";
 
-export default defineEventHandler(async (event) => {
+export default defineCachedEventHandler(async (event) => {
     const query = getQuery(event);
     const id = event.context.params?.id;
     let page: number = Number(query.page) || 1;
@@ -72,4 +72,22 @@ export default defineEventHandler(async (event) => {
     });
 
     return result;
+}, {
+    maxAge: 30,
+    staleMaxAge: 0,
+    swr: true,
+    base: "redis",
+    shouldBypassCache: (event) => {
+        return process.env.NODE_ENV !== "production";
+    },
+    getKey: (event) => {
+        if (!event.context.params) {
+            return 'killlist:constellation:undefined';
+        }
+        const constellationId = event.context.params.id;
+        const query = getQuery(event);
+        const page = query?.page ? query.page.toString() : '1';
+        const limit = query?.limit ? query.limit.toString() : '100';
+        return `killlist:constellation:${constellationId}:index:page:${page}:limit:${limit}`;
+    }
 });

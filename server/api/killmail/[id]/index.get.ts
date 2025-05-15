@@ -44,7 +44,7 @@ export default defineCachedEventHandler(
             }
 
             return killmail;
-        } catch (error) {
+        } catch (error: any) {
             if (error.statusCode) {
                 throw error;
             }
@@ -60,6 +60,15 @@ export default defineCachedEventHandler(
         maxAge: 3600,
         staleMaxAge: -1,
         swr: true,
-        base: "redis"
+        base: "redis",
+        getKey: (event) => {
+            const idParam = event.context.params?.id;
+            const query = getQuery(event);
+            const fields = query.fields as string | undefined;
+            return `killmail:${idParam}:fields:${fields || 'all'}`;
+        },
+        shouldBypassCache: (event) => {
+            return process.env.NODE_ENV !== "production";
+        }
     },
 );

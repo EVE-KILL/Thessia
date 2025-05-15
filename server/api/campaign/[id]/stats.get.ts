@@ -1,7 +1,9 @@
 import { createError, getRouterParam } from 'h3';
 import { generateCampaignStats } from '~/server/helpers/CampaignsHelper';
 
-export default defineCachedEventHandler(async (event) => {
+import { H3Event } from 'h3';
+
+export default defineCachedEventHandler(async (event: H3Event) => {
     const campaignId = getRouterParam(event, 'id');
 
     if (!campaignId) {
@@ -34,5 +36,17 @@ export default defineCachedEventHandler(async (event) => {
     maxAge: 3600,
     staleMaxAge: -1,
     swr: true,
-    base: "redis"
+    base: "redis",
+    shouldBypassCache: (event) => {
+        return process.env.NODE_ENV !== "production";
+    },
+    getKey: (event) => {
+        // Access the parameter directly and add a check for robustness
+        const campaignId = event.context.params?.id;
+        if (!campaignId) {
+            console.error('Campaign ID is missing in getKey for stats endpoint');
+            return 'campaign:missing-id:stats';
+        }
+        return `campaign:${campaignId}:stats`;
+    }
 });

@@ -1,8 +1,8 @@
 import { LocalScan } from '~/server/models/LocalScan';
 
-export default defineEventHandler(async (event) => {
+export default defineCachedEventHandler(async (event) => {
     try {
-        const id = getRouterParam(event, 'id');
+        const id = event.context.params?.id;
 
         if (!id) {
             throw createError({
@@ -27,11 +27,24 @@ export default defineEventHandler(async (event) => {
         }
 
         return data;
-    } catch (error) {
+    } catch (error: any) {
         console.error('Error fetching LocalScan:', error);
         throw createError({
             statusCode: error.statusCode || 500,
             message: error.message || 'Failed to retrieve LocalScan data'
         });
+    }
+}, {
+    maxAge: 86400, // Using a maxAge of 86400 seconds for static Local Scan results
+    staleMaxAge: -1,
+    swr: true,
+    base: "redis", // Assuming redis is the default cache base
+    shouldBypassCache: (event) => {
+        return process.env.NODE_ENV !== "production";
+    },
+    getKey: (event) => {
+        const localscanId = event.context.params?.id;
+        // No query parameters are used in this handler, so the key only needs the ID.
+        return `tools:localscan:${localscanId}`;
     }
 });

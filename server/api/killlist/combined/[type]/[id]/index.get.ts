@@ -1,7 +1,10 @@
+import { getQuery } from "h3";
 import type { IKillmail } from "~/server/interfaces/IKillmail";
 import { Killmails } from "~/server/models/Killmails";
 
-export default defineEventHandler(async (event) => {
+import { H3Event } from "h3";
+
+export default defineCachedEventHandler(async (event: H3Event) => {
     const query = getQuery(event);
     const type = event.context.params?.type;
     const id = event.context.params?.id;
@@ -54,7 +57,7 @@ export default defineEventHandler(async (event) => {
                 faction_id: killmail.victim.faction_id,
                 faction_name: killmail.victim.faction_name,
             },
-            finalblow: {
+            finalblow: finalBlowAttacker ? {
                 character_id: finalBlowAttacker.character_id,
                 character_name: finalBlowAttacker.character_name,
                 corporation_id: finalBlowAttacker.corporation_id,
@@ -64,9 +67,25 @@ export default defineEventHandler(async (event) => {
                 faction_id: finalBlowAttacker.faction_id,
                 faction_name: finalBlowAttacker.faction_name,
                 ship_group_name: finalBlowAttacker.ship_group_name,
-            },
+            } : null,
         };
     });
 
     return result;
+}, {
+    maxAge: 30,
+    staleMaxAge: 0,
+    swr: true,
+    base: "redis",
+    shouldBypassCache: (event) => {
+        return process.env.NODE_ENV !== "production";
+    },
+    getKey: (event: H3Event) => {
+        const type = event.context.params?.type;
+        const id = event.context.params?.id;
+        const query = getQuery(event);
+        const page = query?.page ? query.page.toString() : '1';
+        const limit = query?.limit ? query.limit.toString() : '100';
+        return `killlist:combined:${type}:${id}:page:${page}:limit:${limit}`;
+    }
 });

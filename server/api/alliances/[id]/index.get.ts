@@ -1,4 +1,3 @@
-import { defineEventHandler } from "h3";
 import { getAlliance } from "~/server/helpers/ESIData";
 import { Characters } from "~/server/models/Characters";
 import { Corporations } from "~/server/models/Corporations";
@@ -15,8 +14,8 @@ export default defineCachedEventHandler(async (event) => {
     const allianceRaw = await getAlliance(allianceId);
     // If the result is a Mongoose document, convert to plain object
     const alliance =
-        allianceRaw && typeof allianceRaw.toObject === "function"
-            ? allianceRaw.toObject()
+        allianceRaw && typeof (allianceRaw as any).toObject === "function"
+            ? (allianceRaw as any).toObject()
             : allianceRaw;
 
     // Add corporation_count and member_count
@@ -40,5 +39,12 @@ export default defineCachedEventHandler(async (event) => {
     maxAge: 3600,
     staleMaxAge: -1,
     swr: true,
-    base: "redis"
+    base: "redis",
+    shouldBypassCache: (event) => {
+        return process.env.NODE_ENV !== "production";
+    },
+    getKey: (event) => {
+        const idParam = event.context.params?.id;
+        return `alliances:${idParam}`;
+    }
 });

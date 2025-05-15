@@ -1,9 +1,10 @@
-import { createError, getQuery } from 'h3';
+import { createError, getQuery } from 'h3'; // Revert getQuery import
 import type { PipelineStage } from 'mongoose';
+import * as url from 'url'; // Import url module
 import { Battles } from '~/server/models/Battles';
 
 export default defineCachedEventHandler(async (event) => {
-    const query = getQuery(event);
+    const query = getQuery(event as any); // Add type assertion
     const page = parseInt(query.page?.toString() || '1', 10);
     const limit = parseInt(query.limit?.toString() || '20', 10);
 
@@ -53,11 +54,20 @@ export default defineCachedEventHandler(async (event) => {
         throw createError({ statusCode: 500, statusMessage: 'Internal Server Error fetching battles' });
     }
 }, {
-    maxAge: 3600,
+    maxAge: 300,
     staleMaxAge: -1,
     swr: true,
     base: "redis",
-    getKey: async () => {
-        return 'battle-count' + await Battles.estimatedDocumentCount();
+    shouldBypassCache: (event) => {
+        return process.env.NODE_ENV !== "production";
+    },
+    getKey: (event) => {
+        // Use url.parse to get query parameters
+        const parsedUrl = url.parse(event.node.req.url || '', true);
+        const query = parsedUrl.query;
+        const page = query?.page ? query.page.toString() : '1';
+        const limit = query?.limit ? query.limit.toString() : '20';
+        // Include other relevant query parameters if they are added later
+        return `battles:index:page:${page}:limit:${limit}`;
     }
 });

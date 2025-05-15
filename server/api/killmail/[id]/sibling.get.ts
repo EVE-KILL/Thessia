@@ -1,7 +1,7 @@
 import type { IKillmail } from "~/server/interfaces/IKillmail";
 import { Killmails } from "~/server/models/Killmails";
 
-export default defineEventHandler(async (event) => {
+export default defineCachedEventHandler(async (event) => {
     const killmail_id = event.context.params?.id;
 
     const killmail: IKillmail | null = await Killmails.findOne(
@@ -43,4 +43,16 @@ export default defineEventHandler(async (event) => {
         killmail_id: k.killmail_id,
         victim: { ship_id: k.victim.ship_id, ship_name: k.victim.ship_name },
     }));
+}, {
+    maxAge: 300,
+    staleMaxAge: -1,
+    swr: true,
+    base: "redis",
+    getKey: (event) => {
+        const idParam = event.context.params?.id;
+        return `killmail:${idParam}:sibling`;
+    },
+    shouldBypassCache: (event) => {
+        return process.env.NODE_ENV !== "production";
+    },
 });

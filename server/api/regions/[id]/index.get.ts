@@ -3,7 +3,7 @@
 import { createError } from 'h3';
 import { Regions } from "~/server/models/Regions";
 
-export default defineEventHandler(async (event) => {
+export default defineCachedEventHandler(async (event) => {
     const param = event.context.params?.id;
 
     if (!param) {
@@ -30,4 +30,16 @@ export default defineEventHandler(async (event) => {
     }
 
     return region;
+}, {
+    maxAge: 86400,
+    staleMaxAge: -1,
+    swr: true,
+    base: "redis",
+    shouldBypassCache: (event) => {
+        return process.env.NODE_ENV !== "production";
+    },
+    getKey: (event) => {
+        const param = event.context.params?.id;
+        return `regions:id:${param}`;
+    }
 });

@@ -127,7 +127,7 @@
                                     </div>
                                     <div class="stat-row">
                                         <div class="stat-label text-gray-600 dark:text-gray-400">{{ $t('iskEfficiency')
-                                            }}</div>
+                                        }}</div>
                                         <div class="stat-value text-gray-900 dark:text-white">
                                             {{ calcIskEfficiency(validShortStats) }}%
                                         </div>
@@ -165,14 +165,14 @@
                                     </div>
                                     <div class="stat-row">
                                         <div class="stat-label text-gray-600 dark:text-gray-400">{{ $t('soloKillRatio')
-                                            }}</div>
+                                        }}</div>
                                         <div class="stat-value text-gray-900 dark:text-white">
                                             {{ calcSoloKillRatio(validShortStats) }}%
                                         </div>
                                     </div>
                                     <div class="stat-row">
                                         <div class="stat-label text-gray-600 dark:text-gray-400">{{ $t('soloEfficiency')
-                                            }}</div>
+                                        }}</div>
                                         <div class="stat-value text-gray-900 dark:text-white">
                                             {{ calcSoloEfficiency(validShortStats) }}%
                                         </div>
@@ -190,7 +190,7 @@
                                 <div class="stat-body">
                                     <div class="stat-row">
                                         <div class="stat-label text-gray-600 dark:text-gray-400">{{ $t('corporations')
-                                            }}</div>
+                                        }}</div>
                                         <div class="stat-value text-gray-900 dark:text-white">{{
                                             formatNumber(alliance.corporation_count || 0) }}</div>
                                     </div>
@@ -211,7 +211,7 @@
                                         </div>
                                         <div class="stat-value text-gray-900 dark:text-white">
                                             {{ validShortStats.lastActive ? formatDate(validShortStats.lastActive) :
-                                            $t('unknown') }}
+                                                $t('unknown') }}
                                         </div>
                                     </div>
                                 </div>
@@ -287,11 +287,11 @@
 </template>
 
 <script setup lang="ts">
+import { formatDistanceToNow } from "date-fns"
+import { de, enUS, es, fr, ja, ko, ru, zhCN } from "date-fns/locale"
 import { computed, onMounted, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useRoute, useRouter } from 'vue-router'
-import { formatDistanceToNow } from "date-fns"
-import { de, enUS, es, fr, ja, ko, ru, zhCN } from "date-fns/locale"
 import AllianceBattles from '~/components/alliance/AllianceBattles.vue'
 import AllianceCharacterMembers from '~/src/theme/modern/components/alliance/AllianceCharacterMembers.vue'
 import AllianceCombined from '~/src/theme/modern/components/alliance/AllianceCombined.vue'

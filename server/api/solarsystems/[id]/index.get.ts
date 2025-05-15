@@ -1,9 +1,8 @@
 // API endpoint to fetch a single solar system by system_id or system_name
 
-import { createError } from 'h3';
-import { SolarSystems } from "~/server/models/SolarSystems";
 
-export default defineEventHandler(async (event) => {
+
+export default defineCachedEventHandler(async (event) => {
     const param = event.context.params?.id;
 
     if (!param) {
@@ -29,4 +28,20 @@ export default defineEventHandler(async (event) => {
     }
 
     return system;
+}, {
+    maxAge: 86400, // Using a maxAge of 86400 seconds for static solar system data
+    staleMaxAge: -1,
+    swr: true,
+    base: "redis", // Assuming redis is the default cache base
+    shouldBypassCache: (event) => {
+        return process.env.NODE_ENV !== "production";
+    },
+    getKey: (event) => {
+        // Construct a unique key for this endpoint.
+        // This file uses a dynamic parameter `[id]`, likely representing a solar system ID or name.
+        // You MUST include this parameter in the cache key.
+        const param = event.context.params?.id;
+        // No query parameters are used in this handler, so the key only needs the dynamic parameter.
+        return `solarsystems:${param}:index`;
+    }
 });

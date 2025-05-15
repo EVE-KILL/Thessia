@@ -59,5 +59,12 @@ export default defineCachedEventHandler(async (event) => {
     maxAge: 3600,
     staleMaxAge: -1,
     swr: true,
-    base: "redis"
+    base: "redis",
+    shouldBypassCache: (event) => {
+        return process.env.NODE_ENV !== "production";
+    },
+    getKey: (event: any) => { // Explicitly type event
+        const campaignId = getRouterParam(event, 'id');
+        return `campaign:${campaignId}:index`;
+    }
 });

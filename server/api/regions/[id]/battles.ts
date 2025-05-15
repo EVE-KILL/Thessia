@@ -1,9 +1,9 @@
-import { createError, defineEventHandler, getQuery } from 'h3';
+import { createError, getQuery } from 'h3';
 import type { PipelineStage } from 'mongoose';
 import { Battles } from '~/server/models/Battles';
 
-export default defineEventHandler(async (event) => {
-    const query = getQuery(event);
+export default defineCachedEventHandler(async (event) => {
+    const query = getQuery(event as any);
     const idParam = event.context.params?.id;
     const regionId = idParam ? parseInt(idParam.toString(), 10) : NaN;
     if (!regionId) {
@@ -46,5 +46,22 @@ export default defineEventHandler(async (event) => {
     } catch (error) {
         console.error('Error fetching region battles:', error);
         throw createError({ statusCode: 500, statusMessage: 'Internal Server Error fetching region battles' });
+    }
+}, {
+    maxAge: 86400,
+    staleMaxAge: -1,
+    swr: true,
+    base: "redis",
+    shouldBypassCache: (event) => {
+        return process.env.NODE_ENV !== "production";
+    },
+    getKey: (event) => {
+        const regionId = event.context.params?.id;
+        if (!regionId) {
+            throw createError({ statusCode: 400, statusMessage: 'Invalid region id for cache key' });
+        }
+        const query = getQuery(event as any);
+        const page = query?.page ? query.page.toString() : '1';
+        return `regions:${regionId}:battles:page:${page}`;
     }
 });

@@ -1,3 +1,4 @@
+import { getQuery } from "h3";
 import type { IKillmail } from "~/server/interfaces/IKillmail";
 import { Killmails } from "~/server/models/Killmails";
 
@@ -171,7 +172,7 @@ const killlistQueries: Record<string, QueryConfig> = {
     },
 };
 
-export default defineEventHandler(async (event) => {
+export default defineCachedEventHandler(async (event) => {
     const query = getQuery(event);
     const type = (query.type as string) || "latest";
     const page = Number.parseInt((query.page as string) || "1", 10);
@@ -231,7 +232,7 @@ export default defineEventHandler(async (event) => {
                 faction_id: killmail.victim.faction_id,
                 faction_name: killmail.victim.faction_name,
             },
-            finalblow: {
+            finalblow: finalBlowAttacker ? {
                 character_id: finalBlowAttacker.character_id,
                 character_name: finalBlowAttacker.character_name,
                 corporation_id: finalBlowAttacker.corporation_id,
@@ -241,9 +242,24 @@ export default defineEventHandler(async (event) => {
                 faction_id: finalBlowAttacker.faction_id,
                 faction_name: finalBlowAttacker.faction_name,
                 ship_group_name: finalBlowAttacker.ship_group_name,
-            },
+            } : null, // Or handle the case where finalBlowAttacker is undefined appropriately
         };
     });
 
     return result;
+}, {
+    maxAge: 30,
+    staleMaxAge: 0,
+    swr: true,
+    base: "redis",
+    shouldBypassCache: (event) => {
+        return process.env.NODE_ENV !== "production";
+    },
+    getKey: (event) => {
+        const query = getQuery(event);
+        const type = (query.type as string) || "latest";
+        const page = (query.page as string) || "1";
+        const limit = (query.limit as string) || "100";
+        return `killlist:index:type:${type}:page:${page}:limit:${limit}`;
+    }
 });

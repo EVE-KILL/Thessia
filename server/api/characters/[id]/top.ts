@@ -1,7 +1,6 @@
-import { defineEventHandler } from "h3";
 import { topRegions, topShips, topSystems } from "~/server/helpers/TopLists";
 
-export default defineEventHandler(async (event) => {
+export default defineCachedEventHandler(async (event) => {
     const query = getQuery(event);
     const characterId: number | null = event.context.params?.id
         ? Number.parseInt(event.context.params.id)
@@ -24,4 +23,18 @@ export default defineEventHandler(async (event) => {
         case "regions":
             return await topRegions("character_id", characterId, 7, 10);
     }
+}, {
+    maxAge: 3600,
+    staleMaxAge: -1,
+    swr: true,
+    base: "redis",
+    getKey: (event) => {
+        const idParam = event.context.params?.id;
+        const query = getQuery(event);
+        const type = query.type?.toString() || "";
+        return `characters:${idParam}:top:type:${type}`;
+    },
+    shouldBypassCache: (event) => {
+        return process.env.NODE_ENV !== "production";
+    },
 });

@@ -1,6 +1,6 @@
 import { DScan } from '~/server/models/DScan';
 
-export default defineEventHandler(async (event) => {
+export default defineCachedEventHandler(async (event: any) => { // Cast event to any
     try {
         const id = getRouterParam(event, 'id');
 
@@ -27,11 +27,23 @@ export default defineEventHandler(async (event) => {
         }
 
         return data;
-    } catch (error) {
+    } catch (error: any) {
         console.error('Error fetching DScan:', error);
         throw createError({
             statusCode: error.statusCode || 500,
             message: error.message || 'Failed to retrieve DScan data'
         });
+    }
+}, {
+    maxAge: 86400,
+    staleMaxAge: -1,
+    swr: true,
+    base: "redis",
+    shouldBypassCache: (event: any) => { // Cast event to any
+        return process.env.NODE_ENV !== "production";
+    },
+    getKey: (event: any) => { // Cast event to any
+        const dscanId = getRouterParam(event, 'id');
+        return `tools:dscan:${dscanId}:index`;
     }
 });

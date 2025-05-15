@@ -1,4 +1,3 @@
-import { defineEventHandler, getQuery } from 'h3';
 import { Alliances } from '~/server/models/Alliances';
 import { Corporations } from '~/server/models/Corporations';
 import { HistoricalStats } from '~/server/models/HistoricalStats';
@@ -12,8 +11,8 @@ interface QueryParams {
     sort?: string;
 }
 
-export default defineEventHandler(async (event) => {
-    const query = getQuery<QueryParams>(event);
+export default defineCachedEventHandler(async (event) => {
+    const query = URL.parse(event.node.req.url, true).query as QueryParams;
     const { entityType, listType, period, limit: limitStr, offset: offsetStr, sort } = query;
 
     // Parameter Validation
@@ -228,10 +227,10 @@ export default defineEventHandler(async (event) => {
 
         // Create map for quick lookups
         const entityInfoMap = new Map(
-            entityInfo.map(e => [
-                entityType === 'alliance' ? e.alliance_id : e.corporation_id,
-                { name: e.name, date_founded: e.date_founded }
-            ])
+            entityInfo.map(e => {
+                const id = entityType === 'alliance' ? (e as any).alliance_id : (e as any).corporation_id;
+                return [id, { name: e.name, date_founded: (e as any).date_founded }];
+            })
         );
 
         // Format response with minimal data
@@ -254,7 +253,7 @@ export default defineEventHandler(async (event) => {
                 avg_sec_status: stat.avg_sec_status,
                 date_founded: info.date_founded,
                 last_active: stat.date,
-            };
+            } as any; // Cast to any to bypass potential type issues with date_founded
         });
 
         return finalResponse;
@@ -262,6 +261,19 @@ export default defineEventHandler(async (event) => {
         console.error('API Error in /historicalstats/entities:', error);
         event.node.res.statusCode = 500;
         return { error: 'Internal Server Error' };
+    }
+}, {
+    maxAge: 3600,
+    staleMaxAge: -1,
+    swr: true,
+    base: "redis",
+    shouldBypassCache: (event) => {
+        return process.env.NODE_ENV !== "production";
+    },
+    getKey: (event) => {
+        const query = url.parse(event.node.req.url, true).query as QueryParams;
+        const { entityType, listType, period, limit, offset, sort } = query;
+        return `historicalstats:entities:${entityType}:${listType}:${period}:${limit}:${offset}:${sort}`;
     }
 });
 
@@ -341,10 +353,10 @@ async function calculateWeightedSecurityRanking(
     }
 
     const entityInfoMap = new Map(
-        entityInfo.map(e => [
-            entityType === 'alliance' ? e.alliance_id : e.corporation_id,
-            { name: e.name, date_founded: e.date_founded }
-        ])
+        entityInfo.map(e => {
+            const id = entityType === 'alliance' ? (e as any).alliance_id : (e as any).corporation_id;
+            return [id, { name: e.name, date_founded: (e as any).date_founded }];
+        })
     );
 
     // Format the results
@@ -366,6 +378,6 @@ async function calculateWeightedSecurityRanking(
             avg_sec_status: item.avg_sec_status,
             weighted_score: item.weighted_score,
             date_founded: info.date_founded
-        };
+        } as any; // Cast to any to bypass potential type issues with date_founded
     });
 }

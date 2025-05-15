@@ -18,11 +18,11 @@ export default defineCachedEventHandler(async (event) => {
     // Add corporation and alliance names
     const corporation = await Corporations.findOne({ corporation_id: character.corporation_id });
     let alliance = null;
-    if (character?.alliance_id > 0) {
+    if ((character?.alliance_id ?? 0) > 0) {
         alliance = await Alliances.findOne({ alliance_id: character.alliance_id });
     }
     let faction = null;
-    if (character?.faction_id > 0) {
+    if ((character?.faction_id ?? 0) > 0) {
         faction = await Factions.findOne({ faction_id: character.faction_id });
     }
 
@@ -32,7 +32,7 @@ export default defineCachedEventHandler(async (event) => {
 
     // Add the corporation and alliance names to the character object
     // And add in all the race and bloodline data
-    const characterData = character.toObject ? character.toObject() : character;
+    const characterData = (character as any).toObject ? (character as any).toObject() : character;
     const enhancedCharacter = {
         ...characterData,
         corporation_name: corporation?.name || null,
@@ -49,5 +49,13 @@ export default defineCachedEventHandler(async (event) => {
     maxAge: 3600,
     staleMaxAge: -1,
     swr: true,
-    base: "redis"
+    base: "redis",
+    shouldBypassCache: (event) => {
+        return process.env.NODE_ENV !== "production";
+    },
+    getKey: (event) => {
+        const characterId = event.context.params?.id;
+        // Check for query parameters if needed, but based on the handler code, none are used.
+        return `characters:${characterId}:index`;
+    }
 });

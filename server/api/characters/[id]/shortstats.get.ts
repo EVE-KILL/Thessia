@@ -15,5 +15,14 @@ export default defineCachedEventHandler(async (event) => {
     maxAge: 3600,
     staleMaxAge: -1,
     swr: true,
-    base: "redis"
+    base: "redis",
+    getKey: (event) => {
+        const idParam = event.context.params?.id;
+        const query = getQuery(event);
+        const days = query?.days ? query.days.toString() : '0';
+        return `characters:${idParam}:shortstats:days:${days}`;
+    },
+    shouldBypassCache: (event) => {
+        return process.env.NODE_ENV !== "production";
+    }
 });

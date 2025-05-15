@@ -1,7 +1,8 @@
+import { getQuery } from "h3";
 import type { IKillmail } from "~/server/interfaces/IKillmail";
 import { Killmails } from "~/server/models/Killmails";
 
-export default defineEventHandler(async (event) => {
+export default defineCachedEventHandler(async (event) => {
     const query = getQuery(event);
     const type = event.context.params?.type;
     const id = event.context.params?.id;
@@ -56,18 +57,34 @@ export default defineEventHandler(async (event) => {
                 faction_name: killmail.victim.faction_name,
             },
             finalblow: {
-                character_id: finalBlowAttacker.character_id,
-                character_name: finalBlowAttacker.character_name,
-                corporation_id: finalBlowAttacker.corporation_id,
-                corporation_name: finalBlowAttacker.corporation_name,
-                alliance_id: finalBlowAttacker.alliance_id,
-                alliance_name: finalBlowAttacker.alliance_name,
-                faction_id: finalBlowAttacker.faction_id,
-                faction_name: finalBlowAttacker.faction_name,
-                ship_group_name: finalBlowAttacker.ship_group_name,
-            },
+                character_id: finalBlowAttacker?.character_id,
+                character_name: finalBlowAttacker?.character_name,
+                corporation_id: finalBlowAttacker?.corporation_id,
+                corporation_name: finalBlowAttacker?.corporation_name,
+                alliance_id: finalBlowAttacker?.alliance_id,
+                alliance_name: finalBlowAttacker?.alliance_name,
+                faction_id: finalBlowAttacker?.faction_id,
+                faction_name: finalBlowAttacker?.faction_name,
+                ship_group_name: finalBlowAttacker?.ship_group_name,
+            }
         };
     });
 
     return result;
+}, {
+    maxAge: 30,
+    staleMaxAge: 0,
+    swr: true,
+    base: "redis",
+    shouldBypassCache: (event) => {
+        return process.env.NODE_ENV !== "production";
+    },
+    getKey: (event) => {
+        const type = event.context.params?.type;
+        const id = event.context.params?.id;
+        const query = getQuery(event);
+        const page = query?.page ? query.page.toString() : '1';
+        const limit = query?.limit ? query.limit.toString() : '100';
+        return `killlist:losses:${type}:${id}:page:${page}:limit:${limit}`;
+    }
 });

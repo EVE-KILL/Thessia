@@ -1,8 +1,8 @@
-import { createError, defineEventHandler, getRouterParam } from 'h3';
+import { createError } from 'h3';
 import { Battles } from '~/server/models/Battles';
 
-export default defineEventHandler(async (event) => {
-    const idParam = getRouterParam(event, 'id');
+export default defineCachedEventHandler(async (event) => {
+    const idParam = event.context.params?.id;
 
     if (!idParam) {
         throw createError({ statusCode: 400, statusMessage: 'Battle ID parameter is missing' });
@@ -32,5 +32,22 @@ export default defineEventHandler(async (event) => {
         }
         console.error(`Error fetching custom battle with ID ${battleId}:`, error);
         throw createError({ statusCode: 500, statusMessage: 'Internal Server Error fetching custom battle' });
+    }
+}, {
+    maxAge: 300,
+    staleMaxAge: -1,
+    swr: true,
+    base: "redis",
+    shouldBypassCache: (event) => {
+        return process.env.NODE_ENV !== "production";
+    },
+    getKey: (event) => {
+        // Ensure params and id are available
+        const battleId = event.context.params?.id;
+        if (!battleId) {
+            // This case should ideally not happen with route params, but for type safety:
+            throw createError({ statusCode: 500, statusMessage: 'Battle ID not found in context' });
+        }
+        return `battles:${battleId}:index`;
     }
 });

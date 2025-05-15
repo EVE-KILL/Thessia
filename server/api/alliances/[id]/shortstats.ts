@@ -1,8 +1,6 @@
-import type { H3Event } from "h3";
-import { sendError } from "h3";
 import { calculateShortStats } from "~/server/helpers/Stats";
 
-export default defineCachedEventHandler(async (event: H3Event) => {
+export default defineCachedEventHandler(async (event) => {
     const allianceId: number | null = event.context.params?.id
         ? Number.parseInt(event.context.params.id)
         : null;
@@ -23,5 +21,14 @@ export default defineCachedEventHandler(async (event: H3Event) => {
     maxAge: 3600,
     staleMaxAge: -1,
     swr: true,
-    base: "redis"
+    base: "redis",
+    getKey: (event) => {
+        const idParam = event.context.params?.id;
+        const query = getQuery(event);
+        const days = query?.days ? query.days.toString() : '0';
+        return `alliances:${idParam}:shortstats:days:${days}`;
+    },
+    shouldBypassCache: (event) => {
+        return process.env.NODE_ENV !== "production";
+    },
 });

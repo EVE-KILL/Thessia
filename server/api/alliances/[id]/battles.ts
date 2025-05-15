@@ -1,8 +1,8 @@
-import { createError, defineEventHandler, getQuery } from 'h3';
+import { createError } from 'h3';
 import type { PipelineStage } from 'mongoose';
 import { Battles } from '~/server/models/Battles';
 
-export default defineEventHandler(async (event) => {
+export default defineCachedEventHandler(async (event) => {
     const query = getQuery(event);
     const idParam = event.context.params?.id;
     const allianceId = idParam ? parseInt(idParam.toString(), 10) : NaN;
@@ -47,4 +47,19 @@ export default defineEventHandler(async (event) => {
         console.error('Error fetching alliance battles:', error);
         throw createError({ statusCode: 500, statusMessage: 'Internal Server Error fetching alliance battles' });
     }
+}, {
+    maxAge: 3600,
+    staleMaxAge: -1,
+    swr: true,
+    base: "redis",
+    getKey: (event) => {
+        const idParam = event.context.params?.id;
+        const query = getQuery(event);
+        const page = query.page?.toString() || '1';
+        const limit = query.limit?.toString() || '20';
+        return `alliances:${idParam}:battles:page:${page}:limit:${limit}`;
+    },
+    shouldBypassCache: (event) => {
+        return process.env.NODE_ENV !== "production";
+    },
 });

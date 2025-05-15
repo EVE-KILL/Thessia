@@ -1,11 +1,18 @@
 import { Meilisearch } from "~/server/helpers/Meilisearch";
 
+interface SearchHit {
+    id: any;
+    originalId?: any;
+    type: string;
+    [key: string]: any; // Allow other properties
+}
+
 /**
  * Search endpoint that first tries exact matching with quotes, then falls back to fuzzy search if no results.
  * Also handles translation IDs properly for multilingual search.
  */
-export default defineEventHandler(async (event) => {
-    const searchTerm = decodeURIComponent(event.context.params?.searchTerm);
+export default defineCachedEventHandler(async (event) => {
+    const searchTerm = decodeURIComponent(event.context.params?.searchTerm || '');
 
     if (!searchTerm) {
         throw createError({
@@ -15,7 +22,7 @@ export default defineEventHandler(async (event) => {
     }
 
     // Get query parameters
-    const query = getQuery(event);
+    const query = getQuery(event as any);
     const lang = (query.lang as string) || "en"; // Default to English if no language specified
 
     const meilisearch = new Meilisearch();
@@ -39,7 +46,7 @@ export default defineEventHandler(async (event) => {
     }
 
     // Process hits to replace id with originalId when it exists
-    results.hits = results.hits.map((hit) => {
+    results.hits = results.hits.map((hit: SearchHit) => {
         if (hit.originalId !== undefined) {
             // Replace the ID with the original ID
             hit.id = hit.originalId;
@@ -125,4 +132,18 @@ export default defineEventHandler(async (event) => {
     results.isExactMatch = exactResults.hits.length > 0;
 
     return results;
+}, {
+    maxAge: 60,
+    staleMaxAge: -1,
+    swr: true,
+    base: "redis",
+    shouldBypassCache: (event) => {
+        return process.env.NODE_ENV !== "production";
+    },
+    getKey: (event) => {
+        const searchTerm = decodeURIComponent(event.context.params?.searchTerm || '');
+        const query = getQuery(event as any);
+        const lang = (query.lang as string) || "en";
+        return `search:${searchTerm}:${lang}`;
+    }
 });

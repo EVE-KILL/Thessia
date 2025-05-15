@@ -1,4 +1,3 @@
-import { defineEventHandler } from "h3";
 import { getCorporation } from "~/server/helpers/ESIData";
 import { Alliances } from "~/server/models/Alliances";
 import { Factions } from "~/server/models/Factions";
@@ -14,15 +13,15 @@ export default defineCachedEventHandler(async (event) => {
     const corporation = await getCorporation(corporationId);
     let alliance = null;
 
-    if (corporation.alliance_id > 0) {
+    if ((corporation.alliance_id ?? 0) > 0) {
         alliance = await Alliances.findOne({ alliance_id: corporation.alliance_id });
     }
     let faction = null;
-    if (corporation.faction_id > 0) {
+    if ((corporation.faction_id ?? 0) > 0) {
         faction = await Factions.findOne({ faction_id: corporation.faction_id });
     }
 
-    const corporationData = corporation.toObject ? corporation.toObject() : corporation;
+    const corporationData = (corporation as any).toObject ? (corporation as any).toObject() : corporation;
     const enhancedCorporation = {
         ...corporationData,
         alliance_name: alliance?.name || null,
@@ -34,5 +33,13 @@ export default defineCachedEventHandler(async (event) => {
     maxAge: 3600,
     staleMaxAge: -1,
     swr: true,
-    base: "redis"
+    base: "redis",
+    shouldBypassCache: (event) => {
+        return process.env.NODE_ENV !== "production";
+    },
+    getKey: (event) => {
+        const idParam = event.context.params?.id;
+        // No query parameters are used in this handler, so only include the id and the endpoint suffix.
+        return `corporations:${idParam}:index`;
+    }
 });

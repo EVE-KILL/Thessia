@@ -1,11 +1,17 @@
 // API endpoint to fetch killlist data for a specific solar system
 
+import { getQuery } from "h3";
 import type { IKillmail } from "~/server/interfaces/IKillmail";
 import { Killmails } from "~/server/models/Killmails";
 
-export default defineEventHandler(async (event) => {
+export default defineCachedEventHandler(async (event) => {
     const query = getQuery(event);
     const id = event.context.params?.id;
+    if (!id) {
+        // Handle the case where id is missing, maybe return an error or a default value
+        // For now, let's throw an error as it's a required parameter for this route
+        throw createError({ statusCode: 400, statusMessage: 'System ID is required' });
+    }
     let page: number = Number(query.page) || 1;
     let limit: number = Number(query.limit) || 100;
     if (page < 1) page = 1;
@@ -70,4 +76,23 @@ export default defineEventHandler(async (event) => {
     });
 
     return result;
+}, {
+    maxAge: 30,
+    staleMaxAge: 0,
+    swr: true,
+    base: "redis",
+    shouldBypassCache: (event) => {
+        return process.env.NODE_ENV !== "production";
+    },
+    getKey: (event) => {
+        const systemId = event.context.params?.id;
+        if (!systemId) {
+            // This should ideally not happen if the main handler validates, but for safety:
+            return 'killlist:system:unknown';
+        }
+        const query = getQuery(event);
+        const page = query?.page ? query.page.toString() : '1';
+        const limit = query?.limit ? query.limit.toString() : '100';
+        return `killlist:system:${systemId}:index:page:${page}:limit:${limit}`;
+    }
 });

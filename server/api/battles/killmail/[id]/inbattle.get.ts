@@ -1,6 +1,6 @@
 import { isKillInBattle } from "~/server/helpers/Battles";
 
-export default defineEventHandler(async (event) => {
+export default defineCachedEventHandler(async (event) => {
     const killmail_id = event.context.params?.id;
 
     if (!killmail_id) {
@@ -16,4 +16,16 @@ export default defineEventHandler(async (event) => {
     return {
         inBattle: inBattle,
     };
+}, {
+    maxAge: 300,
+    staleMaxAge: -1,
+    swr: true,
+    base: "redis",
+    shouldBypassCache: (event) => {
+        return process.env.NODE_ENV !== "production";
+    },
+    getKey: (event) => {
+        const idParam = event.context.params?.id;
+        return `battles:killmail:${idParam}:inbattle`;
+    }
 });
