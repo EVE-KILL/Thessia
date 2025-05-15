@@ -10,7 +10,7 @@
                     </div>
                 </div>
             </UCard>
-            <UTabs :items="tabItems" :default-index="getInitialTabIndex()" @change="handleTabChange" class="space-y-4">
+            <UTabs :items="tabItems" v-model="selectedTabIndex" class="space-y-4">
                 <template #overview>
                     <div class="tab-content">
                         <KillList killlistType="latest" :limit="100"
@@ -49,7 +49,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue';
+import { computed, onMounted } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useRoute, useRouter } from 'vue-router';
 import RegionBattles from '~/components/region/RegionBattles.vue';
@@ -70,13 +70,29 @@ const tabItems = [
     { id: "overview", label: t("overview"), icon: "i-lucide-home", slot: "overview" as const },
     { id: "battles", label: t("battles"), icon: "i-lucide-swords", slot: "battles" as const },
 ];
-const activeTab = ref(route.query.tab?.toString() || "overview");
-const getInitialTabIndex = () => {
-    const idx = tabItems.findIndex(item => item.id === activeTab.value);
-    return idx >= 0 ? idx : 0;
-};
-const handleTabChange = (tabId: string) => {
-    activeTab.value = tabId;
-    router.replace({ query: { ...route.query, tab: tabId } });
-};
+
+const selectedTabIndex = computed({
+    get() {
+        const hash = route.hash.slice(1);
+        const tabIndex = tabItems.findIndex(item => item.id === hash);
+        return tabIndex >= 0 ? String(tabIndex) : '0';
+    },
+    set(newIndex) {
+        const index = parseInt(newIndex, 10);
+        const tabId = tabItems[index]?.id || 'overview';
+        router.push({
+            path: `/region/${id}`,
+            hash: `#${tabId}`,
+        });
+    }
+});
+
+onMounted(() => {
+    if (!route.hash) {
+        router.replace({
+            path: route.path,
+            hash: '#overview'
+        }, { preserveState: true });
+    }
+});
 </script>

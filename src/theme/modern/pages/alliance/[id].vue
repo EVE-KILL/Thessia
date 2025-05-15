@@ -127,7 +127,7 @@
                                     </div>
                                     <div class="stat-row">
                                         <div class="stat-label text-gray-600 dark:text-gray-400">{{ $t('iskEfficiency')
-                                        }}</div>
+                                            }}</div>
                                         <div class="stat-value text-gray-900 dark:text-white">
                                             {{ calcIskEfficiency(validShortStats) }}%
                                         </div>
@@ -165,14 +165,14 @@
                                     </div>
                                     <div class="stat-row">
                                         <div class="stat-label text-gray-600 dark:text-gray-400">{{ $t('soloKillRatio')
-                                        }}</div>
+                                            }}</div>
                                         <div class="stat-value text-gray-900 dark:text-white">
                                             {{ calcSoloKillRatio(validShortStats) }}%
                                         </div>
                                     </div>
                                     <div class="stat-row">
                                         <div class="stat-label text-gray-600 dark:text-gray-400">{{ $t('soloEfficiency')
-                                        }}</div>
+                                            }}</div>
                                         <div class="stat-value text-gray-900 dark:text-white">
                                             {{ calcSoloEfficiency(validShortStats) }}%
                                         </div>
@@ -190,7 +190,7 @@
                                 <div class="stat-body">
                                     <div class="stat-row">
                                         <div class="stat-label text-gray-600 dark:text-gray-400">{{ $t('corporations')
-                                        }}</div>
+                                            }}</div>
                                         <div class="stat-value text-gray-900 dark:text-white">{{
                                             formatNumber(alliance.corporation_count || 0) }}</div>
                                     </div>
@@ -206,13 +206,11 @@
                                         <div class="stat-value text-gray-900 dark:text-white">{{
                                             formatNumber(validShortStats.npcLosses) }}</div>
                                     </div>
-                                    <div class="stat-row">
-                                        <div class="stat-label text-gray-600 dark:text-gray-400">{{ $t('lastActive') }}
-                                        </div>
-                                        <div class="stat-value text-gray-900 dark:text-white">
-                                            {{ validShortStats.lastActive ? formatDate(validShortStats.lastActive) :
-                                                $t('unknown') }}
-                                        </div>
+                                    <div class="stat-label text-gray-600 dark:text-gray-400">{{ $t('lastActive') }}
+                                    </div>
+                                    <div class="stat-value text-gray-900 dark:text-white">
+                                        {{ validShortStats.lastActive ? formatDate(validShortStats.lastActive) :
+                                            $t('unknown') }}
                                     </div>
                                 </div>
                             </div>
@@ -222,7 +220,7 @@
             </div>
 
             <!-- Tabs Navigation -->
-            <UTabs :items="tabItems" :default-index="getInitialTabIndex()" @change="handleTabChange" class="space-y-4">
+            <UTabs :items="tabItems" v-model="selectedTabIndex" class="space-y-4">
                 <template #kills>
                     <div class="tab-content">
                         <AllianceKills :alliance="alliance" />
@@ -387,6 +385,14 @@ onMounted(() => {
             shortStatsLoading.value = false
             shortStatsData.value = { error: 'Failed to fetch alliance stats' }
         })
+
+    // If no hash in URL, set to default tab
+    if (!route.hash) {
+        router.replace({
+            path: route.path,
+            hash: '#kills'
+        }, { preserveState: true });
+    }
 })
 
 const validShortStats = computed(() => {
@@ -441,23 +447,31 @@ const tabItems = [
     },
 ]
 
-const activeTab = ref(route.query.tab?.toString() || "kills")
+const selectedTabIndex = computed({
+    get() {
+        // Get the hash from the URL (without the # symbol)
+        const hash = route.hash.slice(1);
 
-const getInitialTabIndex = () => {
-    const tab = route.query.tab as string;
-    const index = tabItems.findIndex((item) => item.id === tab);
-    return index >= 0 ? index : 0;
-};
+        // Find the index of the tab matching the hash
+        const tabIndex = tabItems.findIndex(item => item.id === hash);
 
-const handleTabChange = (tabId: string) => {
-    activeTab.value = tabId;
-    router.replace({
-        query: {
-            ...route.query,
-            tab: tabId,
-        },
-    });
-};
+        // Return the index as a string or '0' if not found
+        return tabIndex >= 0 ? String(tabIndex) : '0';
+    },
+    set(newIndex) {
+        // Convert string index to number to safely access the tabItems array
+        const index = parseInt(newIndex, 10);
+
+        // Get the tab id from the tabItems array
+        const tabId = tabItems[index]?.id || 'kills';
+
+        // Update the URL with the hash
+        router.push({
+            path: `/alliance/${allianceId}`,
+            hash: `#${tabId}`,
+        });
+    }
+});
 
 const formatNumber = (value: number): string => {
     return value?.toLocaleString() || "0";

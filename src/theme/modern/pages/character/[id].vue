@@ -321,7 +321,7 @@
             </div>
 
             <!-- Tabs Navigation -->
-            <UTabs :items="tabItems" :default-index="getInitialTabIndex()" @change="handleTabChange" class="space-y-4">
+            <UTabs :items="tabItems" class="space-y-4" v-model="selectedTabIndex">
                 <template #dashboard>
                     <div class="tab-content">
                         <characterDashboard :character="character" />
@@ -409,7 +409,44 @@ const currentLocale = computed(() => locale.value);
 const route = useRoute();
 const router = useRouter();
 const { id } = route.params;
-const loading = ref(true);
+
+// Fixed selectedTabIndex to return a string ('0', '1', etc.) instead of hardcoded '0'
+const selectedTabIndex = computed({
+    get() {
+        // Get the hash from the URL
+        const hash = route.hash.slice(1); // Remove the # symbol
+
+        // Find the index of the tab matching the hash
+        const tabIndex = tabItems.findIndex(item => item.id === hash);
+
+        // Return the index as a string or '0' if not found
+        return tabIndex >= 0 ? String(tabIndex) : '0';
+    },
+    set(newIndex) {
+        // Convert string index to number to safely access the tabItems array
+        const index = parseInt(newIndex, 10);
+
+        // Get the tab id from the tabItems array
+        const tabId = tabItems[index]?.id || 'dashboard';
+
+        // Update the URL with the hash
+        router.push({
+            path: `/character/${id}`,
+            hash: `#${tabId}`,
+        });
+    }
+});
+
+// Add this to ensure correct tab is selected on page load
+onMounted(() => {
+    // If no hash in URL, set to default tab
+    if (!route.hash) {
+        router.replace({
+            path: route.path,
+            hash: '#dashboard'
+        }, { preserveState: true });
+    }
+});
 
 const dateLocales = {
     en: enUS,
@@ -617,24 +654,6 @@ const tabItems = [
         slot: "stats" as const,
     },
 ] satisfies TabsItem[];
-
-const activeTab = ref(route.query.tab?.toString() || "dashboard");
-
-const getInitialTabIndex = () => {
-    const tab = route.query.tab as string;
-    const index = tabItems.findIndex((item) => item.id === tab);
-    return index >= 0 ? index : 0;
-};
-
-const handleTabChange = (tabId: string) => {
-    activeTab.value = tabId;
-    router.replace({
-        query: {
-            ...route.query,
-            tab: tabId,
-        },
-    });
-};
 
 const formatNumber = (value: number): string => {
     return value?.toLocaleString() || "0";
