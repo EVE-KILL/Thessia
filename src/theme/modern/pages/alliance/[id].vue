@@ -290,6 +290,8 @@
 import { computed, onMounted, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useRoute, useRouter } from 'vue-router'
+import { formatDistanceToNow } from "date-fns"
+import { de, enUS, es, fr, ja, ko, ru, zhCN } from "date-fns/locale"
 import AllianceBattles from '~/components/alliance/AllianceBattles.vue'
 import AllianceCharacterMembers from '~/src/theme/modern/components/alliance/AllianceCharacterMembers.vue'
 import AllianceCombined from '~/src/theme/modern/components/alliance/AllianceCombined.vue'
@@ -302,6 +304,29 @@ const { t, locale } = useI18n()
 const route = useRoute()
 const router = useRouter()
 const allianceId = route.params.id
+
+const dateLocales = {
+    en: enUS,
+    de: de,
+    es: es,
+    fr: fr,
+    ja: ja,
+    ko: ko,
+    ru: ru,
+    zh: zhCN,
+};
+
+const currentLocale = computed(() => locale.value);
+
+// Updated formatDate function to match character page
+const formatDate = (dateString: string) => {
+    if (!dateString) return t('unknown');
+    const date = new Date(dateString);
+    return formatDistanceToNow(date, {
+        addSuffix: true,
+        locale: dateLocales[currentLocale.value] || enUS,
+    });
+};
 
 const { data: alliance, pending, error } = await useFetch(`/api/alliances/${allianceId}`, {
     timeout: 10000, // 10 second timeout
