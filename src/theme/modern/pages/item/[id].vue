@@ -195,9 +195,9 @@ function convertEveHtml(text: string): string {
     /<a href=showinfo:(\d+)(?:\/\/(\d+))?>(.*?)<\/a>/g,
     (match, typeId, itemId, text) => {
       if (itemId) {
-        return `<a href="/item/${itemId}" class="text-primary-400 hover:text-primary-300">${text}</a>`;
+        return `<NuxtLink to="/item/${itemId}" class="text-primary-400 hover:text-primary-300">${text}</NuxtLink>`;
       }
-      return `<a href="/item/${typeId}" class="text-primary-400 hover:text-primary-300">${text}</a>`;
+      return `<NuxtLink to="/item/${typeId}" class="text-primary-400 hover:text-primary-300">${text}</NuxtLink>`;
     },
   );
 }

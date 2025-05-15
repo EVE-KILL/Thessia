@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, ref, onMounted } from "vue"; // Add onMounted
+import { computed, onMounted, ref } from "vue"; // Add onMounted
 import { useResponsive } from "~/composables/useResponsive";
 
 /**
@@ -422,8 +422,8 @@ const getRowUrl = (item: any): string | null => {
 
                 <!-- Data Rows - Using native anchor elements for all link handling -->
                 <component v-else v-for="(item, index) in items" :key="item.id || `item-${index}`"
-                    :is="props.linkFn && props.linkFn(item) ? 'a' : 'div'"
-                    :href="props.linkFn && props.linkFn(item) ? props.linkFn(item) : null"
+                    :is="props.linkFn && props.linkFn(item) ? 'nuxtlink' : 'div'"
+                    :to="props.linkFn && props.linkFn(item) ? props.linkFn(item) : null"
                     :target="props.openInNewTab ? '_blank' : null" :rel="props.openInNewTab ? 'noopener' : null" :class="[
                         tableRowClasses,
                         getRowClasses(item, index),
@@ -491,11 +491,10 @@ const getRowUrl = (item: any): string | null => {
                 <!-- Horizontal Items Grid -->
                 <div v-else class="horizontal-grid" :class="[`grid-cols-${useMobileView ? 2 : horizontalItemsPerRow}`]">
                     <component v-for="(item, index) in items" :key="item.id || `item-${index}`"
-                        :is="props.linkFn && props.linkFn(item) ? 'a' : 'div'"
-                        :href="props.linkFn && props.linkFn(item) ? props.linkFn(item) : null"
-                        :target="props.openInNewTab ? '_blank' : null" :rel="props.openInNewTab ? 'noopener' : null"
-                        class="horizontal-item"
-                        :class="[getRowClasses(item, index), { 'has-link': props.linkFn && props.linkFn(item) }]"
+                        :is="getRowUrl(item) ? 'NuxtLink' : 'div'" :to="getRowUrl(item) || undefined"
+                        :target="getRowUrl(item) && props.openInNewTab ? '_blank' : undefined"
+                        :rel="getRowUrl(item) && props.openInNewTab ? 'noopener' : undefined" class="horizontal-item"
+                        :class="[getRowClasses(item, index), { 'has-link': !!getRowUrl(item) }]"
                         @click="(e) => handleRowClick(item, e)">
                         <slot name="horizontal-item" :item="item" :index="index">
                             <div class="horizontal-item-content">

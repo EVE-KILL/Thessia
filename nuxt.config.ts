@@ -40,12 +40,6 @@ export default defineNuxtConfig({
             include: ['vue', 'vue-router']
         },
     },
-    build: {
-        // Only include critical libraries that need transpilation
-        transpile: process.env.NODE_ENV === 'production'
-            ? ['@nuxt/ui']
-            : []
-    },
     nitro: {
         preset: "bun",
         srcDir: "server",

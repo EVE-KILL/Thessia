@@ -30,10 +30,10 @@
                         <div class="campaign-meta">
                             <span class="text-gray-400 text-sm">
                                 {{ t('campaign.created_by') }}:
-                                <a v-if="creatorName" :href="`/character/${stats.creator_id}`"
+                                <NuxtLink v-if="creatorName" :to="`/character/${stats.creator_id}`"
                                     class="text-blue-500 hover:underline">
                                     {{ creatorName }}
-                                </a>
+                                </NuxtLink>
                                 <span v-else>{{ t('campaign.unknown') }}</span>
                             </span>
                         </div>

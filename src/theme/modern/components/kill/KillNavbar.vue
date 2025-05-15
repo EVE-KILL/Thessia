@@ -291,7 +291,7 @@ const rightNavItems = computed<NavLink[]>(() => {
                     <!-- Dropdown items -->
                     <div class="py-1 min-w-[240px]">
                         <div class="py-1">
-                            <a v-for="(item, itemIndex) in link.children" :key="itemIndex" :href="item.to"
+                            <NuxtLink v-for="(item, itemIndex) in link.children" :key="itemIndex" :to="item.to"
                                 :target="item.target" rel="noopener noreferrer" :class="[
                                     'flex px-4 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors',
                                     item.disabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'
@@ -304,7 +304,7 @@ const rightNavItems = computed<NavLink[]>(() => {
                                         {{ item.description }}
                                     </span>
                                 </div>
-                            </a>
+                            </nuxtlink>
                         </div>
                     </div>
                 </Dropdown>
@@ -315,10 +315,10 @@ const rightNavItems = computed<NavLink[]>(() => {
         <div class="flex items-center space-x-2">
             <template v-for="(link, index) in rightNavItems" :key="index">
                 <!-- Direct link -->
-                <a v-if="link.to" :href="link.to" class="flex items-center py-1.5 px-2 rounded-md hover:bg-gray-100 dark:hover:bg-gray-800
+                <NuxtLink v-if="link.to" :to="link.to" class="flex items-center py-1.5 px-2 rounded-md hover:bg-gray-100 dark:hover:bg-gray-800
                     transition-colors cursor-pointer text-gray-700 dark:text-gray-200" :title="link.name">
                     <span class="text-sm font-medium">{{ link.name }}</span>
-                </a>
+                </NuxtLink>
                 <!-- Dropdown menus -->
                 <Dropdown v-if="link.children" v-model="dropdownStates[link.name]" position="bottom" align="end"
                     :max-height="60" width="auto" close-on-inner-click smart-position open-on-hover :hover-delay="100">
@@ -332,7 +332,7 @@ const rightNavItems = computed<NavLink[]>(() => {
                     <!-- Dropdown items -->
                     <div class="py-1 min-w-[240px]">
                         <div class="py-1">
-                            <a v-for="(item, itemIndex) in link.children" :key="itemIndex" :href="item.to"
+                            <NuxtLink v-for="(item, itemIndex) in link.children" :key="itemIndex" :to="item.to"
                                 :target="item.target" rel="noopener noreferrer" :class="[
                                     'flex px-4 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors',
                                     item.disabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'
@@ -345,7 +345,7 @@ const rightNavItems = computed<NavLink[]>(() => {
                                         {{ item.description }}
                                     </span>
                                 </div>
-                            </a>
+                            </NuxtLink>
                         </div>
                     </div>
                 </Dropdown>

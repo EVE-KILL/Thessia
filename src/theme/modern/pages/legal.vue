@@ -19,10 +19,10 @@
                             <p class="mb-3">{{ t('legal.license.p1') }}</p>
                             <p class="mb-3">{{ t('legal.license.p2') }}</p>
                             <p>
-                                <a href="https://github.com/EVE-KILL/Thessia/blob/main/LICENSE" target="_blank"
+                                <NuxtLink to="https://github.com/EVE-KILL/Thessia/blob/main/LICENSE" target="_blank"
                                     rel="noopener noreferrer" class="hover:underline">
                                     {{ t('legal.license.viewLicense') }}
-                                </a>
+                                </NuxtLink>
                             </p>
                         </div>
                     </section>
@@ -32,10 +32,10 @@
                         <div class="leading-relaxed">
                             <p class="mb-3">{{ t('legal.ownership.p1') }}</p>
                             <p>
-                                <a href="https://www.ccpgames.com" target="_blank" rel="noopener noreferrer"
+                                <NuxtLink to="https://www.ccpgames.com" target="_blank" rel="noopener noreferrer"
                                     class="hover:underline">
                                     {{ t('legal.ownership.ccpLink') }}
-                                </a>
+                                </NuxtLink>
                             </p>
                         </div>
                     </section>
@@ -53,10 +53,10 @@
                         <div class="leading-relaxed">
                             <p class="mb-3">{{ t('legal.contact.p1') }}</p>
                             <p>
-                                <a href="https://github.com/EVE-KILL/Thessia/issues" target="_blank"
+                                <NuxtLink to="https://github.com/EVE-KILL/Thessia/issues" target="_blank"
                                     rel="noopener noreferrer" class="hover:underline">
                                     {{ t('legal.contact.githubIssues') }}
-                                </a>
+                                </NuxtLink>
                             </p>
                         </div>
                     </section>
