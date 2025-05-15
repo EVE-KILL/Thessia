@@ -2,7 +2,7 @@
     <Table :columns="columns" :items="data" :loading="!killmail" :row-class="getRowClasses" :bordered="true"
         :striped="false" :hover="true" :density="'compact'" :show-header="true" :special-header="true"
         :empty-icon="'lucide:package'" :empty-text="t('noItems')" background="transparent" :link-fn="generateItemLink"
-        class="kill-items-table">
+        class="kill-items-table" @row-click="handleRowClick">
         <!-- Image cell with connector lines for container items -->
         <template #cell-image="{ item }">
             <div class="image-cell" :class="{ 'indented-image': item.isNested }">
@@ -23,7 +23,6 @@
                     v-if="(item.type === 'item' || item.type === 'container-item') && item.itemId && !isSkin(item.itemName || '')"
                     :type="isBlueprint(item.itemName || '') ? 'blueprint-copy' : 'item'" :id="item.itemId" size="24"
                     class="w-6 h-6 rounded-md" :alt="item.itemName || ''" />
-
             </div>
         </template>
 
@@ -37,7 +36,17 @@
                 </span>
             </div>
             <div v-else-if="item.type === 'item' || item.type === 'container-item'" class="font-medium">
-                {{ item.itemName }}
+                <!-- Add click handler directly to the name wrapper for containers -->
+                <div class="item-name-wrapper" :class="{ 'container-name': item.isContainer }"
+                    @click.stop="item.isContainer && item.containerId && toggleContainerCollapse(item.containerId)">
+                    <!-- Container name first, then the icon -->
+                    {{ item.itemName }}
+                    <!-- Add collapse/expand control for containers after name -->
+                    <Icon v-if="item.isContainer"
+                        :name="isContainerCollapsed(item.containerId) ? 'lucide:chevron-right' : 'lucide:chevron-down'"
+                        class="container-collapse-icon"
+                        @click.stop="toggleContainerCollapse(item.containerId, $event)" />
+                </div>
             </div>
             <div v-else-if="item.type === 'value'" class="font-medium">{{ item.itemName }}</div>
         </template>
@@ -45,12 +54,13 @@
         <!-- Quantity cell with badges -->
         <template #cell-quantity="{ item }">
             <template v-if="item.type === 'header' && sectionItemCounts[item.sectionName] > 1">
-                <div class="sort-column-header" @click.stop="handleHeaderClick('quantity', item.sectionName)">
-                    <span v-if="currentSortColumn === 'quantity' && currentSortSection === item.sectionName"
-                        class="sort-active">
-                        {{ currentSortDirection === 'asc' ? '↑' : '↓' }}
-                    </span>
-                    <span v-else class="sort-hint">{{ t('clickToSort', 'Sort') }}</span>
+                <div class="sort-column-header full-width-cell text-left"
+                    @click.stop="handleHeaderClick('quantity', item.sectionName)">
+                    {{ t('quantity') }}
+                    <Icon v-if="currentSortColumn === 'quantity' && currentSortSection === item.sectionName"
+                        :name="currentSortDirection === 'asc' ? 'lucide:arrow-up' : 'lucide:arrow-down'"
+                        class="sort-icon" />
+                    <Icon v-else name="lucide:arrow-up-down" class="sort-icon-inactive" />
                 </div>
             </template>
             <template v-else-if="item.type === 'item' || item.type === 'value' || item.type === 'container-item'">
@@ -71,12 +81,13 @@
         <!-- Value cell -->
         <template #cell-value="{ item }: { item: Item }">
             <template v-if="item.type === 'header' && sectionItemCounts[item.sectionName] > 1">
-                <div class="sort-column-header" @click.stop="handleHeaderClick('value', item.sectionName)">
-                    <span v-if="currentSortColumn === 'value' && currentSortSection === item.sectionName"
-                        class="sort-active">
-                        {{ currentSortDirection === 'asc' ? '↑' : '↓' }}
-                    </span>
-                    <span v-else class="sort-hint">{{ t('clickToSort', 'Sort') }}</span>
+                <div class="sort-column-header full-width-cell text-right"
+                    @click.stop="handleHeaderClick('value', item.sectionName)">
+                    {{ t('value') }}
+                    <Icon v-if="currentSortColumn === 'value' && currentSortSection === item.sectionName"
+                        :name="currentSortDirection === 'asc' ? 'lucide:arrow-up' : 'lucide:arrow-down'"
+                        class="sort-icon" />
+                    <Icon v-else name="lucide:arrow-up-down" class="sort-icon-inactive" />
                 </div>
             </template>
             <template v-else-if="item.type === 'item' || item.type === 'value' || item.type === 'container-item'">
@@ -122,6 +133,11 @@
                         <div v-else-if="item.type === 'item' || item.type === 'container-item'"
                             class="font-medium mobile-title">
                             {{ item.itemName }}
+                            <!-- Add container icon here too -->
+                            <Icon v-if="item.isContainer"
+                                :name="isContainerCollapsed(item.containerId) ? 'lucide:chevron-right' : 'lucide:chevron-down'"
+                                class="container-collapse-icon-mobile"
+                                @click.stop="toggleContainerCollapse(item.containerId, $event)" />
                         </div>
                         <div v-else-if="item.type === 'value'" class="font-medium mobile-title">{{ item.itemName }}
                         </div>
@@ -424,6 +440,7 @@ const slotTypeConfig = {
 
 // Track which sections are collapsed
 const collapsedSections = ref<Record<string, boolean>>({});
+const collapsedContainers = ref<Record<string, boolean>>({});
 const isInitialized = ref(false);
 
 // Store section item counts and values separately to show when collapsed
@@ -448,6 +465,7 @@ function initializeCollapsedState() {
 
     // Set the initial collapsed state
     collapsedSections.value = initialState;
+    collapsedContainers.value = {}; // Initialize empty container state
     isInitialized.value = true;
 }
 
@@ -468,6 +486,11 @@ function isSectionCollapsed(sectionName: string): boolean {
     return collapsedSections.value[sectionName] || false;
 }
 
+// Check if a container is currently collapsed
+function isContainerCollapsed(containerId: string): boolean {
+    return collapsedContainers.value[containerId] || false;
+}
+
 // Toggle collapsed state for a section with animation support
 function toggleSectionCollapse(sectionName: string) {
     if (isCollapsible(sectionName)) {
@@ -482,6 +505,34 @@ function toggleSectionCollapse(sectionName: string) {
     }
 }
 
+// Toggle collapsed state for a container
+function toggleContainerCollapse(containerId: string, event?: Event) {
+    if (!containerId) return;
+
+    if (event) {
+        event.stopPropagation(); // Prevent triggering item link/click
+    }
+
+    // Toggle the collapsed state
+    collapsedContainers.value[containerId] = !collapsedContainers.value[containerId];
+
+    // Unlike sections, we don't need to reprocess all data
+    // We need to reprocess the data to update visibility of container contents
+    if (props.killmail) {
+        processKillmailData(props.killmail);
+    }
+}
+
+/**
+ * Handle row clicks - used to toggle containers
+ */
+function handleRowClick(item: Item, event: Event) {
+    // If this is a container, toggle its collapsed state
+    if (item.isContainer && item.containerId) {
+        toggleContainerCollapse(item.containerId, event);
+    }
+}
+
 // Get CSS classes for each row
 function getRowClasses(item: Item) {
     const classes = [];
@@ -491,9 +542,14 @@ function getRowClasses(item: Item) {
         classes.push(item.type);
     }
 
-    // Add clickable class for items or container-items with itemId
-    if ((item.type === "item" || item.type === "container-item") && item.itemId) {
+    // Add clickable class for items with itemId or containers
+    if ((item.type === "item" && item.itemId && !item.isContainer) || item.type === "container-item") {
         classes.push("cursor-pointer");
+    }
+
+    // Add container class to make it visually clear it's collapsible
+    if (item.isContainer) {
+        classes.push("container-row", "cursor-pointer");
     }
 
     // Add header click indicator for collapsible headers
@@ -617,22 +673,17 @@ function sortSectionItems(items: any[], sectionName: string) {
 
         if (currentSortColumn.value === 'quantity') {
             // Sort by total quantity (dropped + destroyed)
-            valueA = (a.qty_dropped || 0) + (a.qty_destroyed || 0);
-            valueB = (b.qty_dropped || 0) + (b.qty_destroyed || 0);
+            valueA = (Number(a.qty_dropped) || 0) + (Number(a.qty_destroyed) || 0);
+            valueB = (Number(b.qty_dropped) || 0) + (Number(b.qty_destroyed) || 0);
         } else if (currentSortColumn.value === 'value') {
-            // Sort by total value, ensuring numerical inputs by parsing potentially human-readable ISK strings
-            const unitPriceA = parseHumanReadableIsk(a.value);
-            const unitPriceB = parseHumanReadableIsk(b.value);
+            // Calculate total value including container contents
+            // First calculate the base item value (price × quantity)
+            const totalValueA = (Number(a.value) || 0) * ((Number(a.qty_dropped) || 0) + (Number(a.qty_destroyed) || 0));
+            const totalValueB = (Number(b.value) || 0) * ((Number(b.qty_dropped) || 0) + (Number(b.qty_destroyed) || 0));
 
-            const quantityA = (Number(a.qty_dropped) || 0) + (Number(a.qty_destroyed) || 0);
-            const quantityB = (Number(b.qty_dropped) || 0) + (Number(b.qty_destroyed) || 0);
-
-            valueA = unitPriceA * quantityA;
-            valueB = unitPriceB * quantityB;
-
-            // Add container items value, also ensuring it's numerical by parsing
-            valueA += parseHumanReadableIsk(a.containerItemsValue);
-            valueB += parseHumanReadableIsk(b.containerItemsValue);
+            // Add container items value if any
+            valueA = totalValueA + (Number(a.containerItemsValue) || 0);
+            valueB = totalValueB + (Number(b.containerItemsValue) || 0);
         } else {
             return 0;
         }
@@ -642,6 +693,43 @@ function sortSectionItems(items: any[], sectionName: string) {
             ? valueA - valueB
             : valueB - valueA;
     });
+}
+
+/**
+ * Creates a stable ID for containers based on item properties
+ * @param item The container item
+ * @param sectionName The section name for additional uniqueness
+ * @param index The index of the container within its section
+ */
+function createStableContainerId(item: any, sectionName: string, index: number): string {
+    // Create a unique ID using multiple factors:
+    // 1. type_id - The item type
+    // 2. flag - The slot where it's located
+    // 3. index - Position in the list
+    // 4. item.id - The unique item ID if available
+    // 5. sectionName - The section it belongs to
+    const itemId = item.id || item.itemId || '';
+    return `container-${item.type_id}-${item.flag}-${index}-${itemId}-${sectionName}`;
+}
+
+/**
+ * Calculates the total quantities and values for container contents
+ * @param containerItems The items inside a container
+ */
+function calculateContainerTotals(containerItems: any[]) {
+    if (!containerItems || !containerItems.length) {
+        return { dropped: 0, destroyed: 0, value: 0 };
+    }
+
+    return containerItems.reduce(
+        (totals, item) => {
+            totals.dropped += Number(item.qty_dropped) || 0;
+            totals.destroyed += Number(item.qty_destroyed) || 0;
+            totals.value += (Number(item.value) || 0) * ((Number(item.qty_dropped) || 0) + (Number(item.qty_destroyed) || 0));
+            return totals;
+        },
+        { dropped: 0, destroyed: 0, value: 0 }
+    );
 }
 
 // Extract killmail data processing into a separate function for reusability
@@ -656,13 +744,15 @@ function processKillmailData(killmail: IKillmail) {
 
     // Process each item to identify containers and their contents
     killmail.items?.forEach((item) => {
+        // Calculate container items value properly
         const containerItemsValue = item.items
             ? item.items.reduce(
                 (sum, containerItem) =>
-                    sum + containerItem.value * (containerItem.qty_dropped + containerItem.qty_destroyed),
+                    sum + (containerItem.value || 0) * ((containerItem.qty_dropped || 0) + (containerItem.qty_destroyed || 0)),
                 0,
             )
             : 0;
+
         allItems.push({
             ...item,
             isContainer: !!item.items,
@@ -740,21 +830,65 @@ function processKillmailData(killmail: IKillmail) {
             // Sort items if needed
             const processedItems = sortSectionItems(items, sectionName);
 
-            processedItems.forEach((item) => {
+            processedItems.forEach((item, index) => {
+                // Generate a stable ID for this container using multiple factors including the index
+                const containerId = item.isContainer ? createStableContainerId(item, sectionName, index) : null;
+
+                // Calculate container totals if this is a container
+                let containerTotals = { dropped: 0, destroyed: 0, value: 0 };
+                if (item.isContainer && item.items && item.items.length > 0) {
+                    containerTotals = calculateContainerTotals(item.items);
+                }
+
                 // Add the main item
                 data.value?.push({
                     type: "item",
                     itemName: getLocalizedString(item.name, currentLocale.value),
-                    dropped: item.qty_dropped,
-                    destroyed: item.qty_destroyed,
-                    value: item.value * (item.qty_dropped + item.qty_destroyed),
+                    // For containers, show total quantities including contained items
+                    dropped: item.isContainer
+                        ? item.qty_dropped + containerTotals.dropped
+                        : item.qty_dropped,
+                    destroyed: item.isContainer
+                        ? item.qty_destroyed + containerTotals.destroyed
+                        : item.qty_destroyed,
+                    // For containers, add value of the container itself plus all contained items
+                    value: item.isContainer
+                        ? (item.value * (item.qty_dropped + item.qty_destroyed)) + containerTotals.value
+                        : item.value * (item.qty_dropped + item.qty_destroyed),
                     itemId: item.type_id,
                     sectionName: sectionName,
+                    isContainer: item.isContainer && item.items && item.items.length > 0,
+                    containerId: containerId,
+                    containerState: item.isContainer && item.items && item.items.length > 0 ?
+                        (isContainerCollapsed(containerId) ? 'collapsed' : 'expanded') : null
                 });
 
-                // If this is a container with items, add all contained items with indentation
-                if (item.isContainer && item.items && item.items.length > 0) {
-                    item.items.forEach((containerItem) => {
+                // If this is a container with items, sort and add all contained items with indentation
+                if (item.isContainer && item.items && item.items.length > 0 && !isContainerCollapsed(containerId)) {
+                    // Sort container items using the same criteria as parent items
+                    const sortedContainerItems = [...item.items].sort((a, b) => {
+                        let valueA, valueB;
+
+                        if (currentSortColumn.value === 'quantity') {
+                            // Sort by total quantity (dropped + destroyed)
+                            valueA = (Number(a.qty_dropped) || 0) + (Number(a.qty_destroyed) || 0);
+                            valueB = (Number(b.qty_dropped) || 0) + (Number(b.qty_destroyed) || 0);
+                        } else if (currentSortColumn.value === 'value') {
+                            // Sort by total value
+                            valueA = (Number(a.value) || 0) * ((Number(a.qty_dropped) || 0) + (Number(a.qty_destroyed) || 0));
+                            valueB = (Number(b.value) || 0) * ((Number(b.qty_dropped) || 0) + (Number(b.qty_destroyed) || 0));
+                        } else {
+                            return 0;
+                        }
+
+                        // Apply the same sort direction as parent items
+                        return currentSortDirection.value === 'asc'
+                            ? valueA - valueB
+                            : valueB - valueA;
+                    });
+
+                    // Add the sorted container items
+                    sortedContainerItems.forEach((containerItem) => {
                         const itemName = containerItem.type_name || containerItem.name || "";
                         data.value?.push({
                             type: "container-item",
@@ -770,7 +904,7 @@ function processKillmailData(killmail: IKillmail) {
                     });
                 }
 
-                // Calculate value including container items
+                // Calculate value including container items (should now be redundant but keeping for safety)
                 const itemValue = (item.value || 0) * ((item.qty_destroyed || 0) + (item.qty_dropped || 0));
                 const containerValue = item.containerItemsValue || 0;
                 innerValue += itemValue + containerValue;
@@ -835,6 +969,9 @@ type Item = {
     itemId?: number | null;
     isNested?: boolean;
     sectionName?: string;
+    isContainer?: boolean;
+    containerId?: string | null;
+    containerState?: 'collapsed' | 'expanded' | null;
 };
 
 /**
@@ -877,6 +1014,11 @@ function groupByQty(items: any[]) {
  * Generates a link URL for an item if it should be clickable
  */
 function generateItemLink(item: Item): string | null {
+    // Containers should not be clickable links (they toggle collapse instead)
+    if (item.isContainer) {
+        return null;
+    }
+
     // Only certain row types with itemId are clickable
     if ((item.type === "item" || item.type === "container-item") && item.itemId) {
         return `/item/${item.itemId}`;
@@ -1241,7 +1383,6 @@ function generateItemLink(item: Item): string | null {
     opacity: 0.6;
 }
 
-/* Only show sort hint on hover */
 /* Sort column header styling */
 .sort-column-header {
     display: flex;
@@ -1253,22 +1394,118 @@ function generateItemLink(item: Item): string | null {
     border-radius: 0.25rem;
 }
 
-.sort-column-header:hover {
+.full-width-cell {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    display: flex;
+    align-items: center;
+    width: 100%;
+    height: 100%;
+    background-color: transparent;
+    transition: background-color 0.2s ease;
+    padding: 0 0.5rem;
+}
+
+/* Text alignment classes */
+.text-left {
+    justify-content: flex-start;
+}
+
+.text-right {
+    justify-content: flex-end;
+}
+
+/* Sort icons */
+.sort-icon {
+    width: 16px;
+    height: 16px;
+    margin-left: 4px;
+    color: light-dark(#4b5563, #d1d5db);
+}
+
+.sort-icon-inactive {
+    width: 16px;
+    height: 16px;
+    margin-left: 4px;
+    color: light-dark(#9ca3af, #6b7280);
+    opacity: 0.6;
+}
+
+.sort-icon-inactive:hover {
+    opacity: 1;
+}
+
+.full-width-cell:hover {
     background-color: light-dark(rgba(229, 231, 235, 0.5), rgba(45, 45, 45, 0.5));
 }
 
-/* Sort hint is always visible but subtle */
-.sort-hint {
-    opacity: 0.6;
-    font-size: 0.75rem;
+/* Container collapsible items styling */
+.item-name-wrapper {
+    display: flex;
+    align-items: center;
 }
 
-.sort-active {
-    font-size: 0.875rem;
-    font-weight: bold;
+/* Style for container names to indicate they're clickable */
+.container-name {
+    cursor: pointer;
+    transition: color 0.2s ease;
 }
 
-.sort-column-header:hover .sort-hint {
-    opacity: 0.9;
+.container-name:hover {
+    color: light-dark(#4b5563, #e5e7eb);
+}
+
+.container-collapse-icon {
+    width: 14px;
+    height: 14px;
+    color: light-dark(#6b7280, #9ca3af);
+    margin-left: 4px;
+    transition: transform 0.2s ease;
+    cursor: pointer;
+}
+
+/* Add mobile version */
+.container-collapse-icon-mobile {
+    width: 12px;
+    height: 12px;
+    color: light-dark(#6b7280, #9ca3af);
+    margin-left: 4px;
+    transition: transform 0.2s ease;
+    cursor: pointer;
+}
+
+.container-collapse-icon-mobile:hover {
+    color: light-dark(#4b5563, #d1d5db);
+}
+
+/* Animation for container items */
+:deep(.container-item-row) {
+    animation: containerSlideDown 0.2s ease-in-out;
+}
+
+@keyframes containerSlideDown {
+    from {
+        opacity: 0;
+        transform: translateY(-2px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Container row styling */
+:deep(.container-row) {
+    background-color: light-dark(rgba(250, 250, 250, 0.15), rgba(45, 45, 45, 0.15));
+    transition: background-color 0.2s ease;
+    cursor: pointer;
+}
+
+:deep(.container-row:hover) {
+    background-color: light-dark(rgba(245, 245, 245, 0.25), rgba(50, 50, 50, 0.25));
 }
 </style>

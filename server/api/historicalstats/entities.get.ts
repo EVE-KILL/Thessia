@@ -1,3 +1,4 @@
+import url from 'url';
 import { Alliances } from '~/server/models/Alliances';
 import { Corporations } from '~/server/models/Corporations';
 import { HistoricalStats } from '~/server/models/HistoricalStats';
@@ -12,7 +13,7 @@ interface QueryParams {
 }
 
 export default defineCachedEventHandler(async (event) => {
-    const query = URL.parse(event.node.req.url, true).query as QueryParams;
+    const query = url.parse(event.node.req.url, true).query as QueryParams;
     const { entityType, listType, period, limit: limitStr, offset: offsetStr, sort } = query;
 
     // Parameter Validation
@@ -281,7 +282,7 @@ export default defineCachedEventHandler(async (event) => {
  * Calculates weighted security rankings that balance avg_sec_status with member count
  * @param entityType 'alliance' or 'corporation'
  * @param baseQuery The base MongoDB query
- * @param rankingType 'pirate' or 'carebear'
+ * @param rankingType 'pirate' | 'carebear'  // Fixed: changed "or" to "|" for union type
  * @param limit Number of results to return
  * @param offset Offset for pagination
  * @returns Formatted ranking results
@@ -289,7 +290,7 @@ export default defineCachedEventHandler(async (event) => {
 async function calculateWeightedSecurityRanking(
     entityType: string,
     baseQuery: any,
-    rankingType: 'pirate' | 'carebear',
+    rankingType: 'pirate' | 'carebear',  // Fixed: changed "or" to "|" for union type
     limit: number,
     offset: number
 ): Promise<any[]> {
