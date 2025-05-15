@@ -3,23 +3,24 @@
 
 /* Core structural styles */
 #__nuxt {
-  min-height: 100vh;
-  background-color: transparent !important;
+    min-height: 100vh;
+    background-color: transparent !important;
 }
 
-body, html {
-  min-height: 100vh;
-  margin: 0;
-  padding: 0;
+body,
+html {
+    min-height: 100vh;
+    margin: 0;
+    padding: 0;
 }
 
 /* Base background styles - declared here, but applied via JS for SSR support */
 html {
-  background-color: black !important;
-  background-repeat: no-repeat !important;
-  background-position: center !important;
-  background-attachment: fixed !important;
-  background-size: cover !important;
+    background-color: black !important;
+    background-repeat: no-repeat !important;
+    background-position: center !important;
+    background-attachment: fixed !important;
+    background-size: cover !important;
 }
 
 /* Transparent backgrounds */
@@ -29,30 +30,28 @@ html {
 .dark .bg-gray-900,
 .dark .bg-gray-950,
 .dark .bg-black {
-  background-color: transparent !important;
+    background-color: transparent !important;
 }
 
 /* Ensure content expands properly */
 .nuxt-page {
-  min-height: 100%;
+    min-height: 100%;
 }
 
 /* Prevent layout shift */
 html {
-  overflow-y: scroll !important;
 }
 
 /* Reset body overflow settings */
 body {
-  overflow-y: auto !important;
-  padding-right: 0 !important;
+    padding-right: 0 !important;
 }
 
 /* Fix UI framework behavior */
 body.u-overflow-hidden,
 body.overflow-hidden {
-  padding-right: 0 !important;
-  overflow-y: scroll !important;
+    padding-right: 0 !important;
+    overflow-y: scroll !important;
 }
 
 /* Ensure consistent cursor behavior */
@@ -71,7 +70,7 @@ input[type="reset"],
 input[type="file"],
 input[type="checkbox"],
 input[type="radio"] {
-  cursor: pointer;
+    cursor: pointer;
 }
 
 input:disabled,
@@ -79,100 +78,101 @@ button:disabled,
 select:disabled,
 textarea:disabled,
 .disabled {
-  cursor: not-allowed !important;
+    cursor: not-allowed !important;
 }
 
-input:not([type="submit"]):not([type="button"]):not([type="reset"]):not([type="checkbox"]):not([type="radio"]),
+input:not([type="submit"]):not([type="button"]):not([type="reset"]):not(
+        [type="checkbox"]
+    ):not([type="radio"]),
 textarea {
-  cursor: text;
+    cursor: text;
 }
 
 /* Theme variables */
 :root {
-  --text-color: #121212;
-  --bg-opacity-light: rgba(255, 255, 255, 0.6);
-  --bg-opacity-dark: rgba(21, 21, 21, 0.4);
-  --border-color: #e5e5e5;
-  --scrollbar-width: 10px;
-  --scrollbar-border-radius: 8px;
-  /* Use primary color from Nuxt/UI theme for scrollbar */
-  --scrollbar-thumb-color: var(--color-primary-500);
-  --scrollbar-track-color: transparent;
-  color-scheme: light;
+    --text-color: #121212;
+    --bg-opacity-light: rgba(255, 255, 255, 0.6);
+    --bg-opacity-dark: rgba(21, 21, 21, 0.4);
+    --border-color: #e5e5e5;
+    --scrollbar-width: 10px;
+    --scrollbar-border-radius: 8px;
+    /* Use primary color from Nuxt/UI theme for scrollbar */
+    --scrollbar-thumb-color: var(--color-primary-500);
+    --scrollbar-track-color: transparent;
+    color-scheme: light;
 }
 
 .dark {
-  --text-color: white;
-  --bg-opacity-light: rgba(255, 255, 255, 0.6);
-  --bg-opacity-dark: rgba(21, 21, 21, 0.4);
-  --border-color: #252525;
-  /* Use primary color from Nuxt/UI theme for scrollbar in dark mode */
-  --scrollbar-thumb-color: var(--color-primary-400);
-  color-scheme: dark;
+    --text-color: white;
+    --bg-opacity-light: rgba(255, 255, 255, 0.6);
+    --bg-opacity-dark: rgba(21, 21, 21, 0.4);
+    --border-color: #252525;
+    /* Use primary color from Nuxt/UI theme for scrollbar in dark mode */
+    --scrollbar-thumb-color: var(--color-primary-400);
+    color-scheme: dark;
 }
 
 /* Theme-aware styles */
 .text-mode-dynamic {
-  color: var(--text-color);
+    color: var(--text-color);
 }
 
 /* Define bg-mode-dynamic using CSS variables instead of Tailwind classes */
 .bg-mode-dynamic {
-  background-color: var(--bg-opacity-light);
-  backdrop-filter: blur(4px);
+    background-color: var(--bg-opacity-light);
+    backdrop-filter: blur(4px);
 }
 
 .dark .bg-mode-dynamic {
-  background-color: var(--bg-opacity-dark);
+    background-color: var(--bg-opacity-dark);
 }
 
 .border-mode-dynamic {
-  border-color: var(--border-color);
+    border-color: var(--border-color);
 }
 
 /* Fix for mobile - ensure no horizontal scrolling */
 @media (max-width: 767px) {
-  html,
-  body {
-    overflow-x: hidden;
-    max-width: 100vw;
-  }
+    html,
+    body {
+        max-width: 100vw;
+    }
 }
 
 /* Fix padding issues */
 html[style*="padding-right"],
 body[style*="padding-right"] {
-  padding-right: 0 !important;
+    padding-right: 0 !important;
 }
 
 /* Fix for fixed position elements */
 .fixed.inset-0,
 .fixed.inset-x-0,
 .fixed.inset-y-0 {
-  padding-right: 0 !important;
+    padding-right: 0 !important;
 }
 
 /* Custom opacity utility classes */
 .custom-bg-white-60 {
-  background-color: rgba(255, 255, 255, 0.6);
+    background-color: rgba(255, 255, 255, 0.6);
 }
 
 .custom-bg-black-40 {
-  background-color: rgba(0, 0, 0, 0.4);
+    background-color: rgba(0, 0, 0, 0.4);
 }
 
 .custom-bg-white-85 {
-  background-color: rgba(255, 255, 255, 0.85);
+    background-color: rgba(255, 255, 255, 0.85);
 }
 
 .custom-bg-black-85 {
-  background-color: rgba(0, 0, 0, 0.85);
+    background-color: rgba(0, 0, 0, 0.85);
 }
 
 /* Backdrop blur utility */
 .backdrop-blur-custom {
-  backdrop-filter: blur(4px);
-  -webkit-backdrop-filter: blur(4px);
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
 }
 
 /* Prevent iOS zoom on inputs */
@@ -184,185 +184,175 @@ input[type="number"],
 input[type="tel"],
 input[type="url"],
 textarea {
-  font-size: 16px !important; /* Minimum font size to prevent iOS zoom */
-  touch-action: auto; /* Allow proper text input handling */
+    font-size: 16px !important; /* Minimum font size to prevent iOS zoom */
+    touch-action: auto; /* Allow proper text input handling */
 }
 
 /* Form elements with proper touch handling */
-button, a, input, select, textarea {
-  touch-action: manipulation;
+button,
+a,
+input,
+select,
+textarea {
+    touch-action: manipulation;
 }
 
 /* Ensure consistent text sizing in different contexts */
-.text-base, .text-sm, .text-xs {
-  font-size: revert;
+.text-base,
+.text-sm,
+.text-xs {
+    font-size: revert;
 }
 
 /* Override UI framework input styles */
 .UInput input,
 .UInput textarea {
-  font-size: 16px !important;
+    font-size: 16px !important;
 }
 
 /* Fix for inputs in iOS */
 @supports (-webkit-touch-callout: none) {
-  input, textarea, select {
-    font-size: 16px !important;
-  }
+    input,
+    textarea,
+    select {
+        font-size: 16px !important;
+    }
 }
 
 /* Clean scrollbar styling */
 html {
-  scrollbar-width: thin;
+    scrollbar-width: thin;
 }
 
 /* WebKit scrollbars */
 ::-webkit-scrollbar {
-  width: var(--scrollbar-width);
+    width: var(--scrollbar-width);
 }
 
 ::-webkit-scrollbar-track {
-  background: transparent;
+    background: transparent;
 }
 
 ::-webkit-scrollbar-thumb {
-  background-color: var(--scrollbar-thumb-color) !important;
-  border-radius: var(--scrollbar-border-radius);
+    background-color: var(--scrollbar-thumb-color) !important;
+    border-radius: var(--scrollbar-border-radius);
 }
 
 /* Firefox scrollbars */
 * {
-  scrollbar-width: thin;
-  scrollbar-color: var(--scrollbar-thumb-color) transparent !important;
+    scrollbar-width: thin;
+    scrollbar-color: var(--scrollbar-thumb-color) transparent !important;
 }
 
 /* Remove any auto-added padding that creates space */
 html[style*="padding-right"],
 body[style*="padding-right"] {
-  padding-right: 0 !important;
-}
-
-/* Prevent unwanted overflow */
-html, body {
-  overflow-x: hidden;
-  width: 100%;
-}
-
-/* Ensure correct scrolling behavior */
-body {
-  overflow-y: auto;
+    padding-right: 0 !important;
 }
 
 /* Nuxt UI overrides */
 .u-scrollbar::-webkit-scrollbar-thumb {
-  background-color: var(--scrollbar-thumb-color) !important;
+    background-color: var(--scrollbar-thumb-color) !important;
 }
 
 .u-scrollbar {
-  scrollbar-color: var(--scrollbar-thumb-color) transparent !important;
+    scrollbar-color: var(--scrollbar-thumb-color) transparent !important;
 }
 
 /* FIX FOR THE GRAY AREA */
 /* Completely remove scrollbar-gutter behavior */
 @supports (scrollbar-gutter: auto) {
-  html, body {
-    scrollbar-gutter: auto;
-  }
+    html,
+    body {
+        scrollbar-gutter: auto;
+    }
 }
 
 /* Clean scrollbar styling with proper track background */
 html {
-  scrollbar-width: thin;
+    scrollbar-width: thin;
 }
 
 /* WebKit scrollbars with proper track background matching page background */
 ::-webkit-scrollbar {
-  width: var(--scrollbar-width);
+    width: var(--scrollbar-width);
 }
 
 ::-webkit-scrollbar-track {
-  background-color: transparent;
+    background-color: transparent;
 }
 
 ::-webkit-scrollbar-thumb {
-  background-color: var(--scrollbar-thumb-color) !important;
-  border-radius: var(--scrollbar-border-radius);
+    background-color: var(--scrollbar-thumb-color) !important;
+    border-radius: var(--scrollbar-border-radius);
 }
 
 /* Firefox scrollbars */
 * {
-  scrollbar-width: thin;
-  scrollbar-color: var(--scrollbar-thumb-color) transparent !important;
+    scrollbar-width: thin;
+    scrollbar-color: var(--scrollbar-thumb-color) transparent !important;
 }
 
 /* Remove any auto-added padding that creates space */
 html[style*="padding-right"],
 body[style*="padding-right"] {
-  padding-right: 0 !important;
-}
-
-/* Fix scrollbar rendering without gutter or black void */
-html, body {
-  width: 100%;
-  overflow-x: hidden;
-  background-color: black !important; /* Ensure background extends to scrollbar area */
+    padding-right: 0 !important;
 }
 
 /* Ensure HTML has background color all the way to edge */
 html {
-  overflow-y: auto !important;
-  scrollbar-gutter: stable !important;
-  background-color: black !important; /* Must match your main background */
+    scrollbar-gutter: stable !important;
+    background-color: black !important; /* Must match your main background */
 }
 
 /* Dark mode needs the same treatment */
 html.dark {
-  background-color: black !important;
+    background-color: black !important;
 }
 
 /* Force scrollbars to be visible without reservation */
 @supports (scrollbar-gutter: auto) {
-  html {
-    scrollbar-gutter: auto !important;
-  }
+    html {
+        scrollbar-gutter: auto !important;
+    }
 }
 
 /* Nuxt UI overrides */
 .u-scrollbar::-webkit-scrollbar-thumb {
-  background-color: var(--scrollbar-thumb-color) !important;
+    background-color: var(--scrollbar-thumb-color) !important;
 }
 
 .u-scrollbar {
-  scrollbar-color: var(--scrollbar-thumb-color) transparent !important;
+    scrollbar-color: var(--scrollbar-thumb-color) transparent !important;
 }
 
 /* Scrollbar styling with primary theme color */
 ::-webkit-scrollbar {
-  width: var(--scrollbar-width);
+    width: var(--scrollbar-width);
 }
 
 ::-webkit-scrollbar-track {
-  background-color: transparent;
+    background-color: transparent;
 }
 
 ::-webkit-scrollbar-thumb {
-  background-color: var(--scrollbar-thumb-color) !important;
-  border-radius: var(--scrollbar-border-radius);
+    background-color: var(--scrollbar-thumb-color) !important;
+    border-radius: var(--scrollbar-border-radius);
 }
 
 /* Firefox scrollbars */
 * {
-  scrollbar-width: thin;
-  scrollbar-color: var(--scrollbar-thumb-color) transparent !important;
+    scrollbar-width: thin;
+    scrollbar-color: var(--scrollbar-thumb-color) transparent !important;
 }
 
 /* Override any UI framework scrollbar colors */
 .u-scrollbar::-webkit-scrollbar-thumb,
 *::-webkit-scrollbar-thumb {
-  background-color: var(--scrollbar-thumb-color) !important;
+    background-color: var(--scrollbar-thumb-color) !important;
 }
 
 .u-scrollbar,
 * {
-  scrollbar-color: var(--scrollbar-thumb-color) transparent !important;
+    scrollbar-color: var(--scrollbar-thumb-color) transparent !important;
 }

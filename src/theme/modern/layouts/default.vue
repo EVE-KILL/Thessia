@@ -41,7 +41,7 @@ useHead({
 </script>
 
 <template>
-    <div :style="{
+    <div id="main-scroller" :style="{
         backgroundColor: 'black',
         backgroundImage: `url(${backgroundUrl})`,
         backgroundRepeat: 'no-repeat',
@@ -79,7 +79,6 @@ body {
     font-family: 'Shentox', sans-serif;
     font-size: 1.1em;
     color: black;
-    overflow-x: hidden;
 }
 
 html.dark,
@@ -127,8 +126,6 @@ body {
     z-index: 1;
     background-color: transparent;
     padding-right: 0 !important;
-    overflow-y: auto;
-    overflow-x: hidden;
 }
 
 .content {

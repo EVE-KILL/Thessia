@@ -92,6 +92,11 @@ export default defineNuxtConfig({
         },
     },
 
+    router: {
+        options: {
+            scrollBehaviorType: "smooth",
+        },
+    },
     experimental: {
         renderJsonPayloads: true,
         writeEarlyHints: true,

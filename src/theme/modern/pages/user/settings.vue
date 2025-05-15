@@ -1,13 +1,13 @@
 <script setup lang="ts">
 definePageMeta({
-  layout: "default",
-  requiresAuth: true,
+    layout: "default",
+    requiresAuth: true,
 });
 
 // Add SEO meta
 const { t } = useI18n();
 useSeoMeta({
-  title: t("settingsPageTitle"),
+    title: t("settingsPageTitle"),
 });
 
 // Add active tab tracking
@@ -21,60 +21,60 @@ const { data: profileData, pending, error, refresh } = await useFetch("/api/auth
 
 // Format expiration date
 const formattedExpirationDate = computed(() => {
-  if (!profileData.value?.user?.dateExpiration) return "";
+    if (!profileData.value?.user?.dateExpiration) return "";
 
-  const date = new Date(profileData.value.user.dateExpiration);
-  return `${new Intl.DateTimeFormat(undefined, {
-    dateStyle: "medium",
-    timeStyle: "short",
-    timeZone: "UTC",
-    hour12: false,
-  }).format(date)} UTC`;
+    const date = new Date(profileData.value.user.dateExpiration);
+    return `${new Intl.DateTimeFormat(undefined, {
+        dateStyle: "medium",
+        timeStyle: "short",
+        timeZone: "UTC",
+        hour12: false,
+    }).format(date)} UTC`;
 });
 
 // Handle logout
 const handleLogout = async () => {
-  await auth.logout();
-  navigateTo("/");
+    await auth.logout();
+    navigateTo("/");
 };
 
 // Permission descriptions
 const permissionDescriptions: Record<string, string> = {
-  publicData: t("permissions.publicData", "Access public character information"),
-  "esi-killmails.read_killmails.v1": t("permissions.readKillmails", "Access your killmails"),
-  "esi-killmails.read_corporation_killmails.v1": t(
-    "permissions.readCorporationKillmails",
-    "Access your corporation killmails",
-  ),
+    publicData: t("permissions.publicData", "Access public character information"),
+    "esi-killmails.read_killmails.v1": t("permissions.readKillmails", "Access your killmails"),
+    "esi-killmails.read_corporation_killmails.v1": t(
+        "permissions.readCorporationKillmails",
+        "Access your corporation killmails",
+    ),
 };
 
 // Get more user-friendly permission description
 const getPermissionDescription = (scope: string) => {
-  return permissionDescriptions[scope] || scope;
+    return permissionDescriptions[scope] || scope;
 };
 
 // Split permission into parts for better display
 const splitPermission = (permission: string) => {
-  return permission.split(".");
+    return permission.split(".");
 };
 
 // Handle re-authentication with current scopes
 const handleReauthenticate = async () => {
-  // Re-authenticate with existing scopes
-  const currentScopes = profileData.value?.user?.scopes || [];
-  auth.login("/user/settings", Array.isArray(currentScopes) ? currentScopes : [currentScopes]);
+    // Re-authenticate with existing scopes
+    const currentScopes = profileData.value?.user?.scopes || [];
+    auth.login("/user/settings", Array.isArray(currentScopes) ? currentScopes : [currentScopes]);
 };
 
 // Handle re-authentication with default scopes
 const handleDefaultScopes = async () => {
-  // Re-authenticate with default scopes (let the API handle defaults)
-  auth.login("/user/settings");
+    // Re-authenticate with default scopes (let the API handle defaults)
+    auth.login("/user/settings");
 };
 
 // Handle customized scope selection
 const handleCustomizeScopes = () => {
-  // Navigate to login page with customize=true parameter
-  navigateTo("/user/login?customize=true&redirect=/user/settings");
+    // Navigate to login page with customize=true parameter
+    navigateTo("/user/login?customize=true&redirect=/user/settings");
 };
 
 // State for delete confirmation modal
@@ -84,71 +84,71 @@ const deleteError = ref("");
 
 // Handle account deletion
 const handleDeleteAccount = async () => {
-  try {
-    isDeletingAccount.value = true;
-    deleteError.value = "";
+    try {
+        isDeletingAccount.value = true;
+        deleteError.value = "";
 
-    const { data, error } = await useFetch("/api/auth/logout", {
-      method: "POST",
-    });
+        const { data, error } = await useFetch("/api/auth/logout", {
+            method: "POST",
+        });
 
-    if (error.value) {
-      deleteError.value =
-        error.value.message || t("settings.deleteError", "Failed to delete account data");
-      return;
+        if (error.value) {
+            deleteError.value =
+                error.value.message || t("settings.deleteError", "Failed to delete account data");
+            return;
+        }
+
+        // Reset auth state
+        await auth.logout();
+
+        // Close modal first
+        isDeleteModalOpen.value = false;
+
+        // Redirect to home page with success message
+        router.push("/?deleted=true");
+    } catch (err) {
+        console.debug("Error deleting account:", err);
+        deleteError.value = t("settings.deleteError", "Failed to delete account data");
+    } finally {
+        isDeletingAccount.value = false;
     }
-
-    // Reset auth state
-    await auth.logout();
-
-    // Close modal first
-    isDeleteModalOpen.value = false;
-
-    // Redirect to home page with success message
-    router.push("/?deleted=true");
-  } catch (err) {
-    console.debug("Error deleting account:", err);
-    deleteError.value = t("settings.deleteError", "Failed to delete account data");
-  } finally {
-    isDeletingAccount.value = false;
-  }
 };
 
 // Check if we're on mobile
 const isMobile = ref(false);
 
 onMounted(() => {
-  checkIfMobile();
-  window.addEventListener("resize", checkIfMobile);
+    checkIfMobile();
+    window.addEventListener("resize", checkIfMobile);
 });
 
 onUnmounted(() => {
-  window.removeEventListener("resize", checkIfMobile);
+    window.removeEventListener("resize", checkIfMobile);
 });
 
 // Check if we're on mobile
 const checkIfMobile = () => {
-  isMobile.value = window.innerWidth < 768;
+    isMobile.value = window.innerWidth < 768;
 };
 
 // Define all possible permission scopes
 const allPermissionScopes = [
-  "publicData",
-  "esi-killmails.read_killmails.v1",
-  "esi-killmails.read_corporation_killmails.v1",
+    "publicData",
+    "esi-killmails.read_killmails.v1",
+    "esi-killmails.read_corporation_killmails.v1",
 ];
 
 // Check if user has a particular scope
 const hasScope = (scope: string) => {
-  if (!profileData.value?.user?.scopes) return false;
+    if (!profileData.value?.user?.scopes) return false;
 
-  // The scopes might be an array with a single string containing space-separated scopes
-  // or it might be a single string directly
-  const scopesArray = profileData.value.user.scopes;
-  const scopesString = Array.isArray(scopesArray) ? scopesArray[0] : String(scopesArray);
+    // The scopes might be an array with a single string containing space-separated scopes
+    // or it might be a single string directly
+    const scopesArray = profileData.value.user.scopes;
+    const scopesString = Array.isArray(scopesArray) ? scopesArray[0] : String(scopesArray);
 
-  // Check if the scope is in the space-separated string
-  return scopesString.includes(scope);
+    // Check if the scope is in the space-separated string
+    return scopesString.includes(scope);
 };
 </script>
 
@@ -161,18 +161,10 @@ const hasScope = (scope: string) => {
                 <!-- Character Avatar -->
                 <div class="relative">
                     <div class="w-20 h-20 sm:w-24 sm:h-24 rounded-lg overflow-hidden shadow-lg">
-                        <NuxtLink
-                            v-if="auth.user.value.characterId"
-                            :to="`/characters/${auth.user.value.characterId}`"
+                        <NuxtLink v-if="auth.user.value.characterId" :to="`/characters/${auth.user.value.characterId}`"
                             class="block w-full h-full">
-                            <Image
-                                type="character"
-                                :id="auth.user.value.characterId"
-                                :alt="auth.user.value.characterName"
-                                :size="128"
-                                class="w-full h-full"
-                                :quality="90"
-                            />
+                            <Image type="character" :id="auth.user.value.characterId"
+                                :alt="auth.user.value.characterName" :size="128" class="w-full h-full" :quality="90" />
                         </NuxtLink>
                     </div>
 
@@ -186,9 +178,7 @@ const hasScope = (scope: string) => {
                 <!-- Character Info -->
                 <div class="text-center sm:text-left flex-1">
                     <h1 class="text-2xl font-bold text-gray-900 dark:text-white">
-                        <NuxtLink
-                            :to="`/characters/${auth.user.value.characterId}`"
-                            class="hover:underline">
+                        <NuxtLink :to="`/characters/${auth.user.value.characterId}`" class="hover:underline">
                             {{ auth.user.value.characterName }}
                         </NuxtLink>
                     </h1>
@@ -198,13 +188,8 @@ const hasScope = (scope: string) => {
                         <NuxtLink v-if="auth.user.value.corporationName" class="flex items-center hover:underline"
                             :to="`/corporations/${auth.user.value.corporationId}`"
                             :class="auth.user.value.allianceName ? 'text-gray-700 dark:text-gray-300' : 'hidden'">
-                            <Image
-                                type="corporation"
-                                :id="auth.user.value.corporationId"
-                                :alt="auth.user.value.corporationName"
-                                :size="20"
-                                class="w-5 h-5 mr-1"
-                            />
+                            <Image type="corporation" :id="auth.user.value.corporationId"
+                                :alt="auth.user.value.corporationName" :size="20" class="w-5 h-5 mr-1" />
                             <span class="text-sm text-gray-700 dark:text-gray-300">
                                 {{ auth.user.value.corporationName }}
                             </span>
@@ -214,13 +199,8 @@ const hasScope = (scope: string) => {
                         <NuxtLink v-if="auth.user.value.allianceId" :to="`/alliances/${auth.user.value.allianceId}`"
                             class="flex items-center hover:underline"
                             :class="auth.user.value.allianceName ? 'text-gray-700 dark:text-gray-300' : 'hidden'">
-                            <Image
-                                type="alliance"
-                                :id="auth.user.value.allianceId"
-                                :alt="auth.user.value.allianceName"
-                                :size="20"
-                                class="w-5 h-5 mr-1"
-                            />
+                            <Image type="alliance" :id="auth.user.value.allianceId" :alt="auth.user.value.allianceName"
+                                :size="20" class="w-5 h-5 mr-1" />
                             <span class="text-sm text-gray-700 dark:text-gray-300">
                                 {{ auth.user.value.allianceName }}
                             </span>
@@ -237,7 +217,8 @@ const hasScope = (scope: string) => {
                     <!-- Delete Account Modal -->
                     <UModal v-model="isDeleteModalOpen">
                         <!-- Delete button that triggers modal -->
-                        <UButton color="warning" variant="soft" size="sm" icon="lucide:trash-2" @click="isDeleteModalOpen = true">
+                        <UButton color="warning" variant="soft" size="sm" icon="lucide:trash-2"
+                            @click="isDeleteModalOpen = true">
                             {{ $t('settings.deleteData') }}
                         </UButton>
 
@@ -326,19 +307,22 @@ const hasScope = (scope: string) => {
                             <!-- Token management buttons - Replace existing reauthenticate button with 3 options -->
                             <div class="flex flex-wrap gap-2 mt-4">
                                 <UTooltip text="Re-authenticate with current permissions">
-                                    <UButton color="primary" size="sm" icon="lucide:refresh-cw" @click="handleReauthenticate">
+                                    <UButton color="primary" size="sm" icon="lucide:refresh-cw"
+                                        @click="handleReauthenticate">
                                         {{ $t('settings.reauthenticate') }}
                                     </UButton>
                                 </UTooltip>
 
                                 <UTooltip text="Re-authenticate with all default permissions">
-                                    <UButton color="secondary" size="sm" icon="lucide:shield" @click="handleDefaultScopes">
+                                    <UButton color="secondary" size="sm" icon="lucide:shield"
+                                        @click="handleDefaultScopes">
                                         {{ $t('settings.defaultScopes', 'Default Scopes') }}
                                     </UButton>
                                 </UTooltip>
 
                                 <UTooltip text="Choose which permissions to grant">
-                                    <UButton color="neutral" size="sm" icon="lucide:settings" @click="handleCustomizeScopes">
+                                    <UButton color="neutral" size="sm" icon="lucide:settings"
+                                        @click="handleCustomizeScopes">
                                         {{ $t('settings.customizeScopes', 'Customize Scopes') }}
                                     </UButton>
                                 </UTooltip>
@@ -368,14 +352,16 @@ const hasScope = (scope: string) => {
                                         <div class="w-full">
                                             <!-- Display the permission name -->
                                             <div class="font-medium text-sm mb-1"
-                                                 :class="hasScope(scope) ? 'text-primary-600 dark:text-primary-400' : 'text-gray-500 dark:text-gray-400'">
-                                                <code class="bg-gray-100 dark:bg-gray-700 px-1.5 py-0.5 rounded text-sm">
-                                                    {{ scope }}
-                                                </code>
+                                                :class="hasScope(scope) ? 'text-primary-600 dark:text-primary-400' : 'text-gray-500 dark:text-gray-400'">
+                                                <code
+                                                    class="bg-gray-100 dark:bg-gray-700 px-1.5 py-0.5 rounded text-sm">
+                                    {{ scope }}
+                                </code>
                                             </div>
 
                                             <!-- Permission description -->
-                                            <div class="mt-2 text-sm text-gray-600 dark:text-gray-300 pl-2 border-l-2 border-gray-200 dark:border-gray-700">
+                                            <div
+                                                class="mt-2 text-sm text-gray-600 dark:text-gray-300 pl-2 border-l-2 border-gray-200 dark:border-gray-700">
                                                 {{ getPermissionDescription(scope) }}
                                             </div>
                                         </div>

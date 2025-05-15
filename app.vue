@@ -12,7 +12,7 @@ useHead({
                 spa: true,
             }),
         },
-    ],
+    ]
 });
 </script>
 
