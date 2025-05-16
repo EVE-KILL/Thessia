@@ -890,5 +890,8 @@
   "charactersShort": "Characters",
   "unknownSystem": "Unknown System",
   "battle.time": "Time",
-  "retrying": "Retrying Connection"
+  "retrying": "Retrying Connection",
+  "slots": {
+    "unflagged": "Unflagged"
+  }
 }

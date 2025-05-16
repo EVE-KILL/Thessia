@@ -436,6 +436,12 @@ const slotTypeConfig = {
         defaultCollapsed: true,
         label: () => t("slots.moonMaterialBay"),
     },
+    unflagged: {
+        flags: [0],
+        collapsible: true,
+        defaultCollapsed: false,
+        label: () => t('slots.unflagged')
+    }
 };
 
 // Track which sections are collapsed
