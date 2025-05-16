@@ -1,19 +1,22 @@
 import type { IFullStats, IStatsDocument, StatsType } from '~/server/interfaces/IStats';
 
-export function ensureData(data: Partial<IStatsDocument>): Partial<IStatsDocument> {
+export function ensureData(data: Partial<IStatsDocument> | null | undefined): Partial<IStatsDocument> {
+    // Handle the case where data might be null or undefined
+    const safeData = data || {};
+
     return {
-        type: data.type || 'character_id',
-        id: data.id || 0,
-        days: data.days || 0,
-        kills: data.kills || 0,
-        losses: data.losses || 0,
-        iskKilled: data.iskKilled || 0,
-        iskLost: data.iskLost || 0,
-        npcLosses: data.npcLosses || 0,
-        soloKills: data.soloKills || 0,
-        soloLosses: data.soloLosses || 0,
-        lastActive: data.lastActive || null,
-        full: data.full || {
+        type: safeData.type || 'character_id',
+        id: safeData.id || 0,
+        days: safeData.days || 0,
+        kills: safeData.kills || 0,
+        losses: safeData.losses || 0,
+        iskKilled: safeData.iskKilled || 0,
+        iskLost: safeData.iskLost || 0,
+        npcLosses: safeData.npcLosses || 0,
+        soloKills: safeData.soloKills || 0,
+        soloLosses: safeData.soloLosses || 0,
+        lastActive: safeData.lastActive || null,
+        full: safeData.full || {
             mostUsedShips: {},
             mostLostShips: {},
             diesToCorporations: {},
