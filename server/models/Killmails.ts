@@ -128,6 +128,19 @@ const indexes = [
     { fields: { "attackers.alliance_id": -1, kill_time: -1 }, options: { sparse: true } },
     { fields: { "attackers.ship_id": -1, kill_time: -1 }, options: { sparse: true } },
 
+    // Additional indexes for stats calculations
+    // Optimized index for sampling operations - single field to keep it light
+    { fields: { "attackers.ship_id": 1 }, options: { sparse: true } },
+    { fields: { "victim.ship_id": 1 }, options: { sparse: true } },
+
+    // Specialized indexes for the stats aggregation pipelines
+    { fields: { "attackers.character_id": 1, "attackers.ship_id": 1, kill_time: -1 }, options: { sparse: true } },
+    { fields: { "attackers.corporation_id": 1, "attackers.ship_id": 1, kill_time: -1 }, options: { sparse: true } },
+    { fields: { "attackers.alliance_id": 1, "attackers.ship_id": 1, kill_time: -1 }, options: { sparse: true } },
+
+    // Index to help with blob factor calculation (size of attackers array)
+    { fields: { "attackers": 1 }, options: { sparse: true } }, // This helps MongoDB know if attackers exists
+
     // Item/fitting related indexes
     { fields: { "items.type_id": -1, kill_time: -1 }, options: { sparse: true } },
 
