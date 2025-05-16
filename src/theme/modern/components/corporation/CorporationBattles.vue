@@ -43,7 +43,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref, watch } from 'vue';
+import { computed, ref, watch, onBeforeUnmount, onDeactivated } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useRoute, useRouter } from 'vue-router';
 import type { IBattlesDocument } from '~/server/models/Battles';
@@ -56,24 +56,28 @@ const router = useRouter();
 const currentPage = ref(1);
 const pageSize = ref(10);
 
-// Define columns for the battles table
-const tableColumns = [
-    { id: 'time', header: t('time'), width: '20%' },
-    { id: 'system', header: t('system'), width: '20%' },
-    { id: 'region', header: t('region'), width: '20%' },
-    { id: 'duration', header: t('duration'), width: '15%' },
-    { id: 'stats', header: t('stats'), width: '20%' },
-    { id: 'involved', header: t('involved'), width: '20%' },
-];
+// Ensure we properly reset state when entity changes
+const entityId = computed(() => route.params.id);
 
-// Generate skeleton rows matching pageSize
-const skeletonRows = computed(() =>
-    Array(pageSize.value).fill({ isLoading: true })
+// Reset page when entity changes
+watch(entityId, (newId, oldId) => {
+    if (newId !== oldId) {
+        currentPage.value = 1;
+    }
+});
+
+// Create a more specific cache key including route name and path
+const cacheKey = computed(() =>
+    `corp-battles-${entityId.value}-p${currentPage.value}-${route.path}`
 );
 
-// Row click link function
-const linkFn = (item: any) =>
-    item.isLoading ? null : `/battle/${item.battle_id}`;
+// Clear cache when component is unmounted or deactivated with KeepAlive
+const clearComponentCache = () => {
+    clearNuxtData(cacheKey.value);
+};
+
+onBeforeUnmount(clearComponentCache);
+onDeactivated(clearComponentCache);
 
 const { data, pending, refresh } = useFetch<{
     battles: IBattlesDocument[];
@@ -82,16 +86,23 @@ const { data, pending, refresh } = useFetch<{
     currentPage: number;
     itemsPerPage: number;
 }>(
-    `/api/corporations/${route.params.id}/battles`,
+    `/api/corporations/${entityId.value}/battles`,
     {
-        query: computed(() => ({ page: currentPage.value, limit: pageSize.value })),
-        key: computed(() => `corporation-battles-${route.params.id}-${currentPage.value}`),
+        query: {
+            page: currentPage.value,
+            limit: pageSize.value
+        },
+        key: cacheKey.value,
+        server: false, // Fetch on client to avoid SSR cache issues
+        immediate: true,
+        watch: [entityId]
     }
 );
 
 const battlesList = computed(() => data.value?.battles || []);
 const totalPages = computed(() => data.value?.totalPages || 1);
 
+// Watch page changes and refresh
 watch([currentPage], () => {
     refresh();
 });
@@ -120,9 +131,6 @@ function getLocalizedString(obj: any, localeKey: string) {
     if (!obj) return '';
     if (typeof obj === 'string') return obj;
     return obj[localeKey] || obj.en || '';
-}
-function goToSystem(systemId: number) {
-    router.push(`/system/${systemId}`);
 }
 function goToBattle(battleId: number) {
     router.push(`/battle/${battleId}`);

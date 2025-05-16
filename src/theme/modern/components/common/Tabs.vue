@@ -20,7 +20,7 @@ const props = defineProps({
     },
     keepAliveContent: {
         type: Boolean,
-        default: false,
+        default: true,
     },
     tabButtonClass: {
         type: String,

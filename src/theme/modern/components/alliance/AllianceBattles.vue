@@ -43,7 +43,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref, watch } from 'vue';
+import { computed, onBeforeUnmount, onDeactivated, ref, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useRoute, useRouter } from 'vue-router';
 import type { IBattlesDocument } from '~/server/models/Battles';
@@ -56,6 +56,29 @@ const router = useRouter();
 const currentPage = ref(1);
 const pageSize = ref(10);
 
+// Ensure we properly reset state when entity changes
+const entityId = computed(() => route.params.id);
+
+// Reset page when entity changes
+watch(entityId, (newId, oldId) => {
+    if (newId !== oldId) {
+        currentPage.value = 1;
+    }
+});
+
+// Create a more specific cache key including route name and path
+const cacheKey = computed(() =>
+    `alliance-battles-${entityId.value}-p${currentPage.value}-${route.path}`
+);
+
+// Clear cache when component is unmounted or deactivated with KeepAlive
+const clearComponentCache = () => {
+    clearNuxtData(cacheKey.value);
+};
+
+onBeforeUnmount(clearComponentCache);
+onDeactivated(clearComponentCache);
+
 const { data, pending, refresh } = useFetch<{
     battles: IBattlesDocument[];
     totalItems: number;
@@ -63,16 +86,23 @@ const { data, pending, refresh } = useFetch<{
     currentPage: number;
     itemsPerPage: number;
 }>(
-    `/api/alliances/${route.params.id}/battles`,
+    `/api/alliances/${entityId.value}/battles`,
     {
-        query: computed(() => ({ page: currentPage.value, limit: pageSize.value })),
-        key: computed(() => `alliance-battles-${route.params.id}-${currentPage.value}`),
+        query: {
+            page: currentPage.value,
+            limit: pageSize.value
+        },
+        key: cacheKey.value,
+        server: false, // Fetch on client to avoid SSR cache issues
+        immediate: true,
+        watch: [entityId]
     }
 );
 
 const battlesList = computed(() => data.value?.battles || []);
 const totalPages = computed(() => data.value?.totalPages || 1);
 
+// Watch page changes and refresh
 watch([currentPage], () => {
     refresh();
 });
@@ -104,9 +134,6 @@ function getLocalizedString(obj: any, localeKey: string) {
 }
 function goToBattle(battleId: number) {
     router.push(`/battle/${battleId}`);
-}
-function goToAlliance(allianceId: number) {
-    router.push(`/alliance/${allianceId}`);
 }
 </script>
 
