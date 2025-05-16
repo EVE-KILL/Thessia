@@ -1,4 +1,4 @@
-import { createEmptyStats } from "~/server/helpers/EmptyStats";
+import { createEmptyStats, ensureData } from "~/server/helpers/EmptyStats";
 import { Stats } from "~/server/models/Stats";
 
 export default defineCachedEventHandler(async (event) => {
@@ -11,22 +11,15 @@ export default defineCachedEventHandler(async (event) => {
     if (!corporationId) {
         return sendError(event, createError({ statusCode: 400, statusMessage: "Missing corporation id" }));
     }
+    // Try to fetch from Stats model first
+    const existingStats = await Stats.findOne({
+        type: "corporation_id",
+        id: corporationId,
+        days
+    }).lean();
 
-    try {
-        // Try to fetch from Stats model first
-        const existingStats = await Stats.findOne({
-            type: "corporation_id",
-            id: corporationId,
-            days
-        }).lean();
-
-        // Return existing stats if found, otherwise return empty stats
-        return existingStats || createEmptyStats("corporation_id", corporationId, days);
-    } catch (error: any) {
-        console.error(`Error fetching corporation shortstats for ${corporationId}: ${error.message}`);
-        // On error, still return empty stats instead of failing
-        return createEmptyStats("corporation_id", corporationId, days);
-    }
+    // Return existing stats if found, otherwise return empty stats
+    return ensureData(existingStats) || createEmptyStats("corporation_id", corporationId, days);
 }, {
     maxAge: 3600,
     staleMaxAge: -1,

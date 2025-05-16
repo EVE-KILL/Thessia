@@ -1,4 +1,4 @@
-import { createEmptyStats } from "~/server/helpers/EmptyStats";
+import { createEmptyStats, ensureData } from "~/server/helpers/EmptyStats";
 import { Stats } from "~/server/models/Stats";
 
 export default defineCachedEventHandler(async (event) => {
@@ -12,21 +12,15 @@ export default defineCachedEventHandler(async (event) => {
         return { error: "Character ID not provided" };
     }
 
-    try {
-        // Try to fetch from Stats model first
-        const existingStats = await Stats.findOne({
-            type: "character_id",
-            id: characterId,
-            days
-        }).lean();
+    // Try to fetch from Stats model first
+    const existingStats = await Stats.findOne({
+        type: "character_id",
+        id: characterId,
+        days
+    }).lean();
 
-        // Return existing stats if found, otherwise return empty stats
-        return existingStats || createEmptyStats("character_id", characterId, days);
-    } catch (error: any) {
-        console.error(`Error fetching character stats for ${characterId}: ${error.message}`);
-        // On error, still return empty stats instead of failing
-        return createEmptyStats("character_id", characterId, days);
-    }
+    // Return existing stats if found, otherwise return empty stats
+    return ensureData(existingStats) || createEmptyStats("character_id", characterId, days);
 }, {
     maxAge: 3600,
     staleMaxAge: -1,
