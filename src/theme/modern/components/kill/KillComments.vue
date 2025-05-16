@@ -271,7 +271,6 @@ import { useAuth } from "~/src/theme/modern/composables/useAuth";
 import { useWebSocket } from "~/src/theme/modern/composables/useWebsocket";
 
 const { t } = useI18n();
-const route = useRoute();
 const { isAuthenticated, currentUser, login, isAdministrator } = useAuth();
 
 // Props
@@ -300,6 +299,8 @@ const {
     connectionAttempts: wsReconnectAttempts,
     isPaused: wsIsPaused,
     sendMessage: wsSendMessage,
+    pause: pauseWs, // Destructure pause
+    resume: resumeWs, // Destructure resume
 } = useWebSocket({
     url: "/comments",
     autoConnect: true,
@@ -325,7 +326,6 @@ const reportTextarea = ref<HTMLTextAreaElement | null>(null);
 
 // Configure markdown with custom renderers
 const renderer = new marked.Renderer();
-const originalLink = renderer.link;
 
 // TypeScript interfaces for marked token handling
 interface MarkedToken {
@@ -683,75 +683,6 @@ renderer.link = (href: any, title: any, text: any): string => {
 // Apply the custom renderer to marked
 marked.use({ renderer });
 
-/**
- * Convert a regular Imgur URL to its JSON API endpoint
- */
-function convertImgurToJsonUrl(url: string): string {
-    // Remove query parameters and hash fragments
-    const cleanUrl = url.split(/[?#]/)[0].replace(/\/+$/, "");
-
-    // Handle direct i.imgur.com links
-    if (cleanUrl.includes("i.imgur.com/")) {
-        const hash = cleanUrl.split("/").pop()?.split(".")[0];
-        if (hash) {
-            return `https://imgur.com/gallery/${hash}.json`;
-        }
-    }
-
-    // Add .json if needed
-    if (!cleanUrl.endsWith(".json")) {
-        return `${cleanUrl}.json`;
-    }
-
-    return cleanUrl;
-}
-
-/**
- * Extract media information from Imgur JSON data
- */
-function extractImgurMedia(imageData: any): { url: string; type: string } | null {
-    try {
-        // For albums, get the first image
-        if (imageData.is_album && imageData.album_images?.images?.length > 0) {
-            const firstImage = imageData.album_images.images[0];
-            const hash = firstImage.hash;
-            const ext = firstImage.ext || ".jpg";
-
-            // Determine media type
-            let type = "image";
-            if (ext === ".mp4" || ext === ".webm" || firstImage.has_sound) {
-                type = "video";
-            } else if (firstImage.animated) {
-                type = firstImage.prefer_video ? "video" : "gif";
-            }
-
-            return {
-                url: `https://i.imgur.com/${hash}${ext}`,
-                type,
-            };
-        }
-        // For single images
-
-        const hash = imageData.album_cover || imageData.hash;
-        const ext = imageData.ext || ".jpg";
-
-        // Determine media type
-        let type = "image";
-        if (ext === ".mp4" || ext === ".webm" || imageData.has_sound) {
-            type = "video";
-        } else if (imageData.animated) {
-            type = imageData.prefer_video ? "video" : "gif";
-        }
-
-        return {
-            url: `https://i.imgur.com/${hash}${ext}`,
-            type,
-        };
-    } catch (error) {
-        return null;
-    }
-}
-
 // Create a reactive map to store resolved Imgur URLs with media type information
 const resolvedImgurMedia = ref(new Map<string, { url: string; type: string }>());
 
@@ -924,11 +855,9 @@ function insertTextAtCursor(text: string) {
 async function fetchComments() {
     try {
         if (!killIdentifier.value) {
-            console.error("Cannot fetch comments: missing killIdentifier");
             return;
         }
 
-        console.log(`Fetching comments for ${killIdentifier.value}...`);
         const { data, error } = await useFetch(`/api/comments/${killIdentifier.value}`);
 
         if (error.value) {
@@ -938,7 +867,6 @@ async function fetchComments() {
 
         comments.value = data.value || [];
         commentsLoaded.value = true;
-        console.log(`Loaded ${comments.value.length} comments for ${killIdentifier.value}`);
     } catch (err) {
         console.error("Error fetching comments:", err);
     }
@@ -1186,7 +1114,6 @@ onMounted(() => {
             // Re-fetch comments after a short delay to ensure hydration is complete
             setTimeout(() => {
                 if (comments.value.length === 0) {
-                    console.log('No comments loaded yet, trying again...');
                     fetchComments();
                 }
             }, 500);
@@ -1200,12 +1127,20 @@ onMounted(() => {
 // Watch for changes in killId and refetch comments if needed
 watch(() => props.killId, (newKillId, oldKillId) => {
     if (newKillId && newKillId !== oldKillId) {
-        console.log(`Kill ID changed from ${oldKillId} to ${newKillId}, refetching comments...`);
         comments.value = []; // Clear existing comments
         commentsLoaded.value = false;
         fetchComments();
     }
 }, { immediate: false });
+
+// Lifecycle hooks for WebSocket management during component activation/deactivation
+onActivated(() => {
+    resumeWs();
+});
+
+onDeactivated(() => {
+    pauseWs();
+});
 
 // Complete cleanup on unmount
 onBeforeUnmount(() => {

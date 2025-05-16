@@ -124,6 +124,32 @@ const pendingMessages = ref<IKillmail[]>([]);
 const manuallyPaused = ref(false);
 const mouseMoveTimer = ref<NodeJS.Timeout | null>(null);
 
+// Function to handle processing of pending messages, typically on WebSocket (re)connection
+const handleWebSocketReconnect = () => {
+    if (
+        props.wsDisabled ||
+        useExternalData.value ||
+        pagination.value.pageIndex > 0 || // Only on page 1
+        manuallyPaused.value // Not if manually paused
+    ) {
+        return;
+    }
+
+    // Process any pending messages
+    if (pendingMessages.value.length > 0) {
+        // Sort by kill time to maintain chronological order
+        pendingMessages.value.sort(
+            (a, b) => new Date(b.kill_time).getTime() - new Date(a.kill_time).getTime(),
+        );
+
+        pendingMessages.value.forEach((killmail) => {
+            processKillmail(killmail);
+        });
+
+        pendingMessages.value = []; // Clear pending messages after processing
+    }
+};
+
 // Initialize WebSocket using the composable - with debug disabled
 const {
     isConnected: wsConnected,
@@ -141,17 +167,20 @@ const {
     globalRefKey: "killList",
     debug: false, // Disable debug logging
     onMessage: handleWebSocketMessage,
+    onConnected: handleWebSocketReconnect, // Process pending messages on connection/reconnection
 });
 
 // Pause WebSocket processing with reason
 const pauseWebSocket = (reason = "hover") => {
     if (props.wsDisabled || useExternalData.value) return;
 
-    pauseWs();
+    pauseWs(); // Call the composable's pause function
 
     if (reason === "manual") {
         manuallyPaused.value = true;
     }
+    // For other reasons like "hover", "pagination", "component_deactivated",
+    // we pause the WebSocket but don't mark it as manually paused.
 };
 
 // Resume WebSocket processing
@@ -163,21 +192,7 @@ const resumeWebSocket = () => {
         return;
     }
 
-    resumeWs();
-
-    // Process any pending messages
-    if (pendingMessages.value.length > 0 && !useExternalData.value) {
-        // Sort by kill time to maintain chronological order
-        pendingMessages.value.sort(
-            (a, b) => new Date(b.kill_time).getTime() - new Date(a.kill_time).getTime(),
-        );
-
-        pendingMessages.value.forEach((killmail) => {
-            processKillmail(killmail);
-        });
-
-        pendingMessages.value = [];
-    }
+    resumeWs(); // This will trigger onConnected -> handleWebSocketReconnect if connection is successful
 };
 
 // Watch page changes to control WebSocket pausing
@@ -419,7 +434,7 @@ const isCombinedLoss = (kill: any): boolean => {
 };
 
 // Get row class based on whether it's a combined loss
-const getRowClass = (item) => {
+const getRowClass = (item: IKillList) => {
     return isCombinedLoss(item) ? "combined-loss-row bg-darkred" : "";
 };
 
@@ -526,7 +541,7 @@ const wsStatusMessage = computed(() => {
 });
 
 // Generate kill link
-const generateKillLink = (item: any): string | null => {
+const generateKillLink = (item: IKillList): string | null => {
     if (!item || !item.killmail_id) return null;
     return `/kill/${item.killmail_id}`;
 };
@@ -601,16 +616,22 @@ const setElementRef = (el: HTMLElement | null, id: number, refMap: Map<number, H
     }
 };
 
-// Lifecycle hooks for fade effect
+// Consolidated Lifecycle Hooks
 onMounted(() => {
     nextTick(() => {
         updateAllFades();
         window.addEventListener('resize', updateAllFades);
     });
-});
 
-onUpdated(() => {
-    nextTick(updateAllFades);
+    // Set up mouse handlers for the table container
+    if (!props.wsDisabled && !useExternalData.value) {
+        const tableContainer = document.querySelector(".kill-list-container");
+        if (tableContainer) {
+            tableContainer.addEventListener("mouseenter", handleMouseEnter);
+            tableContainer.addEventListener("mouseleave", handleMouseLeave);
+            tableContainer.addEventListener("mousemove", handleMouseMove);
+        }
+    }
 });
 
 onBeforeUnmount(() => {
@@ -631,26 +652,10 @@ onBeforeUnmount(() => {
             el.removeEventListener('mouseleave', () => { });
         }
     });
-});
 
-// Set up mouse event handlers for the table container on mounted
-onMounted(() => {
-    // Only set up mouse handlers if WebSocket is enabled and we're not using external data
-    if (!props.wsDisabled && !useExternalData.value) {
-        const tableContainer = document.querySelector(".kill-list-container");
-        if (tableContainer) {
-            tableContainer.addEventListener("mouseenter", handleMouseEnter);
-            tableContainer.addEventListener("mouseleave", handleMouseLeave);
-            tableContainer.addEventListener("mousemove", handleMouseMove);
-        }
-    }
-});
-
-// Clean up event listeners on unmount
-onBeforeUnmount(() => {
     clearMouseMoveTimer();
 
-    // Remove mouse event listeners
+    // Remove mouse event listeners from table container
     if (!props.wsDisabled && !useExternalData.value) {
         const tableContainer = document.querySelector(".kill-list-container");
         if (tableContainer) {
@@ -659,6 +664,19 @@ onBeforeUnmount(() => {
             tableContainer.removeEventListener("mousemove", handleMouseMove);
         }
     }
+});
+
+onActivated(() => {
+    resumeWebSocket();
+    handleWebSocketReconnect();
+});
+
+onDeactivated(() => {
+    pauseWebSocket("component_deactivated");
+});
+
+onUpdated(() => {
+    nextTick(updateAllFades);
 });
 </script>
 
@@ -894,7 +912,7 @@ onBeforeUnmount(() => {
                                 <span>{{ item.system_name }}</span>
                                 <span> (</span>
                                 <span :class="getSecurityColor(item.system_security)">{{ item.system_security.toFixed(1)
-                                    }}</span>
+                                }}</span>
                                 <span>)</span>
                             </div>
                         </div>
