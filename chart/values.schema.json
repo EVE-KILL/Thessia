@@ -246,6 +246,23 @@
                 }
             }
         },
+        "processStats": {
+            "type": "object",
+            "properties": {
+                "enabled": {
+                    "type": "boolean"
+                },
+                "replicas": {
+                    "type": "integer"
+                },
+                "resources": {
+                    "type": "object"
+                },
+                "securityContext": {
+                    "type": "object"
+                }
+            }
+        },
         "processWars": {
             "type": "object",
             "properties": {
