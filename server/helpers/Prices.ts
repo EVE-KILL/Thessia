@@ -1,7 +1,7 @@
 import type { IPrice } from "~/server/interfaces/IPrice";
+import { CustomPrices } from "~/server/models/CustomPrices";
 import { InvTypes } from "~/server/models/InvTypes";
 import { Prices } from "~/server/models/Prices";
-import { customPriceCache } from "./RuntimeCache";
 
 async function getPrice(typeId: number, date: Date, regionId = 10000002): Promise<number> {
     // Check if a custom price exists
@@ -27,14 +27,25 @@ async function getPrice(typeId: number, date: Date, regionId = 10000002): Promis
 }
 
 async function customPrices(typeId: number, date: Date): Promise<number> {
-    const cached = customPriceCache.get(typeId);
-    if (!cached) return 0;
-    // Assume cached has a 'date' property (string or Date) and a 'price' property
-    const recordDate = cached.date ? new Date(cached.date) : null;
-    if (!recordDate || recordDate <= date) {
-        return cached.price;
+    let customPrice = 0;
+
+    // Check if there is a price with a date that's greater than or equal to the provided date
+    const customPriceRecord = await CustomPrices.findOne({
+        type_id: typeId,
+        date: { $gte: date },
+    });
+
+    if (customPriceRecord) {
+        customPrice = customPriceRecord.price;
     }
-    return 0;
+
+    // Check the database for a custom price
+    const customPriceFromDb = await CustomPrices.findOne({ type_id: typeId });
+    if (customPriceFromDb) {
+        customPrice = customPriceFromDb.price;
+    }
+
+    return customPrice;
 }
 
 async function getPriceFromBlueprint(typeId: number, date: Date, regionId = 10000002): Promise<number> {

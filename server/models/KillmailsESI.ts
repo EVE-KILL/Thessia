@@ -1,84 +1,79 @@
 import { type Document, type Model, Schema, model } from "mongoose";
 import type {
-  IESIAttacker,
-  IESIKillmail,
-  IESIVictim,
-  IESIVictimItem,
+    IESIAttacker,
+    IESIKillmail,
+    IESIVictim,
+    IESIVictimItem,
 } from "~/server/interfaces/IESIKillmail";
 
 // Extend the IESIKillmail interface with Mongoose's Document interface
-export interface IESIKillmailDocument extends IESIKillmail, Document {}
+export interface IESIKillmailDocument extends IESIKillmail, Document { }
 
 // Subschema for Victim Items
 const victimItemSchema = new Schema<IESIVictimItem>(
-  {
-    item_type_id: { type: Number },
-    quantity_destroyed: { type: Number, default: 0 },
-    quantity_dropped: { type: Number, default: 0 },
-    flag: { type: Number },
-    singleton: { type: Number },
-  },
-  { _id: false }, // Prevents automatic creation of _id for subdocuments
+    {
+        item_type_id: { type: Number },
+        quantity_destroyed: { type: Number, default: 0 },
+        quantity_dropped: { type: Number, default: 0 },
+        flag: { type: Number },
+        singleton: { type: Number },
+    },
+    { _id: false }, // Prevents automatic creation of _id for subdocuments
 );
 victimItemSchema.add({
-  items: { type: [victimItemSchema], default: undefined, required: false },
+    items: { type: [victimItemSchema], default: undefined, required: false },
 });
 
 // Subschema for Victims
 const victimSchema = new Schema<IESIVictim>(
-  {
-    character_id: { type: Number },
-    corporation_id: { type: Number },
-    alliance_id: { type: Number },
-    faction_id: { type: Number },
-    damage_taken: { type: Number },
-    ship_type_id: { type: Number },
-    items: { type: [victimItemSchema], default: [] },
-    position: {
-      x: { type: Number },
-      y: { type: Number },
-      z: { type: Number },
+    {
+        character_id: { type: Number },
+        corporation_id: { type: Number },
+        alliance_id: { type: Number },
+        faction_id: { type: Number },
+        damage_taken: { type: Number },
+        ship_type_id: { type: Number },
+        items: { type: [victimItemSchema], default: [] },
+        position: {
+            x: { type: Number },
+            y: { type: Number },
+            z: { type: Number },
+        },
     },
-  },
-  { _id: false },
+    { _id: false },
 );
 
 // Subschema for Attackers
 const attackerSchema = new Schema<IESIAttacker>(
-  {
-    character_id: { type: Number },
-    corporation_id: { type: Number },
-    alliance_id: { type: Number },
-    faction_id: { type: Number },
-    damage_done: { type: Number },
-    final_blow: { type: Boolean },
-    security_status: { type: Number },
-    ship_type_id: { type: Number },
-    weapon_type_id: { type: Number },
-  },
-  { _id: false },
+    {
+        character_id: { type: Number },
+        corporation_id: { type: Number },
+        alliance_id: { type: Number },
+        faction_id: { type: Number },
+        damage_done: { type: Number },
+        final_blow: { type: Boolean },
+        security_status: { type: Number },
+        ship_type_id: { type: Number },
+        weapon_type_id: { type: Number },
+    },
+    { _id: false },
 );
 
 // Main KillmailsESI schema
 const killmailsESISchema = new Schema<IESIKillmailDocument>(
-  {
-    killmail_id: { type: Number },
-    killmail_hash: { type: String },
-    killmail_time: { type: Date },
-    solar_system_id: { type: Number },
-    attackers: { type: [attackerSchema] },
-    victim: { type: victimSchema },
-    processed: { type: Boolean, default: false },
-  },
-  {
-    timestamps: true, // Automatically adds createdAt and updatedAt fields
-    toJSON: {
-      transform: (_doc, ret) => {
-        delete ret._id; // Removes _id from the JSON output
-        delete ret.__v; // Removes __v (version key) from the JSON output
-      },
+    {
+        killmail_id: { type: Number },
+        killmail_hash: { type: String },
+        killmail_time: { type: Date },
+        solar_system_id: { type: Number },
+        attackers: { type: [attackerSchema] },
+        victim: { type: victimSchema },
+        processed: { type: Boolean, default: false },
     },
-  },
+    {
+        collection: "killmails_esi",
+        timestamps: true
+    },
 );
 
 // Define indexes for the schema
@@ -99,9 +94,9 @@ killmailsESISchema.index({ "victim.alliance_id": 1 }, { sparse: true });
 
 // Create and export the KillmailsESI model
 export const KillmailsESI: Model<IESIKillmailDocument> = model<IESIKillmailDocument>(
-  "killmails_esi",
-  killmailsESISchema,
-  "killmails_esi",
+    "killmails_esi",
+    killmailsESISchema,
+    "killmails_esi",
 );
 
 export type { IESIKillmailDocument as ESIKillmailDocument };

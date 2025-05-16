@@ -9,7 +9,7 @@ import type { ITranslation } from "~/server/interfaces/ITranslation";
 import { Celestials } from "~/server/models/Celestials";
 import { Characters } from "~/server/models/Characters";
 import { InvTypes } from "~/server/models/InvTypes";
-import { getPriceFromBlueprint } from "./Prices";
+import { customPrices, getPriceFromBlueprint } from "./Prices";
 import {
     getCachedAlliance,
     getCachedCharacter,
@@ -94,7 +94,11 @@ async function calculateKillValue(
     let shipValue = 0;
     // If the ship_group_id is 659 or 30 - we need to get the price from the blueprint (Supercarriers and Titans)
     if (shipGroupId?.group_id === 659 || shipGroupId?.group_id === 30) {
-        shipValue = await getPriceFromBlueprint(shipTypeId, new Date(killmail.killmail_time));
+        // Check custom pricing first
+        shipValue = await customPrices(shipTypeId, new Date(killmail.killmail_time));
+        if (shipValue === 0) {
+            shipValue = await getPriceFromBlueprint(shipTypeId, new Date(killmail.killmail_time));
+        }
     } else {
         shipValue = await getCachedPrice(shipTypeId, new Date(killmail.killmail_time));
     }
