@@ -508,7 +508,7 @@ async function getShipStats(type: StatsType, id: number, timeFilter?: { $gte: Da
                 name: { $first: "$attackers.ship_name" }
             }
         },
-        { $match: { _id: { $ne: null, $ne: 0 } } },
+        { $match: { _id: { $ne: 0 } } },
         { $sort: { count: -1 } },
         { $limit: SHIP_LIMIT }
     );
@@ -538,7 +538,7 @@ async function getShipStats(type: StatsType, id: number, timeFilter?: { $gte: Da
                 name: { $first: "$victim.ship_name" }
             }
         },
-        { $match: { _id: { $ne: null, $ne: 0 } } },
+        { $match: { _id: { $ne: 0 } } },
         { $sort: { count: -1 } },
         { $limit: SHIP_LIMIT }
     );

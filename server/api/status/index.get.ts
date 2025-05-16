@@ -14,6 +14,7 @@ export default defineCachedEventHandler(async () => {
     const corporationHistoryQueue = createQueue("corporationhistory");
     const killmailQueue = createQueue("killmail");
     const warQueue = createQueue("war");
+    const statsQueue = createQueue("stats");
 
     const [
         allianceQueueCount,
@@ -23,6 +24,7 @@ export default defineCachedEventHandler(async () => {
         corporationHistoryQueueCount,
         killmailQueueCount,
         warQueueCount,
+        statsQueueCount, // Added stats queue count
         allianceCount,
         celestialCount,
         characterCount,
@@ -50,6 +52,7 @@ export default defineCachedEventHandler(async () => {
         corporationHistoryQueue.count(),
         killmailQueue.count(),
         warQueue.count(),
+        statsQueue.count(), // Added stats queue count fetch
         Alliances.estimatedDocumentCount(),
         Celestials.estimatedDocumentCount(),
         Characters.estimatedDocumentCount(),
@@ -183,6 +186,7 @@ export default defineCachedEventHandler(async () => {
             corporationhistory: corporationHistoryQueueCount,
             killmail: killmailQueueCount,
             war: warQueueCount,
+            stats: statsQueueCount, // Added stats queue count to output
         },
         processedCounts: {
             killmails: {
@@ -509,6 +513,50 @@ export default defineCachedEventHandler(async () => {
                 ),
                 "1month": Number(
                     (await warQueue.getMetrics("completed", 0, MetricsTime.ONE_MONTH)).data
+                        .slice(1)
+                        .reduce((acc, cur) => Number(acc) + Number(cur), 0),
+                ),
+            },
+            stats: { // Add stats processing metrics
+                "1min":
+                    Number((await statsQueue.getMetrics("completed", 0, MetricsTime.ONE_MINUTE)).data[0]) || 0,
+                "5min": Number(
+                    (await statsQueue.getMetrics("completed", 0, MetricsTime.FIVE_MINUTES)).data
+                        .slice(1)
+                        .reduce((acc, cur) => Number(acc) + Number(cur), 0),
+                ),
+                "15min": Number(
+                    (await statsQueue.getMetrics("completed", 0, MetricsTime.FIFTEEN_MINUTES)).data
+                        .slice(1)
+                        .reduce((acc, cur) => Number(acc) + Number(cur), 0),
+                ),
+                "1hour": Number(
+                    (await statsQueue.getMetrics("completed", 0, MetricsTime.ONE_HOUR)).data
+                        .slice(1)
+                        .reduce((acc, cur) => Number(acc) + Number(cur), 0),
+                ),
+                "6hours": Number(
+                    (await statsQueue.getMetrics("completed", 0, MetricsTime.ONE_HOUR * 6)).data
+                        .slice(1)
+                        .reduce((acc, cur) => Number(acc) + Number(cur), 0),
+                ),
+                "12hours": Number(
+                    (await statsQueue.getMetrics("completed", 0, MetricsTime.ONE_HOUR * 12)).data
+                        .slice(1)
+                        .reduce((acc, cur) => Number(acc) + Number(cur), 0),
+                ),
+                "24hours": Number(
+                    (await statsQueue.getMetrics("completed", 0, MetricsTime.ONE_HOUR * 24)).data
+                        .slice(1)
+                        .reduce((acc, cur) => Number(acc) + Number(cur), 0),
+                ),
+                "1week": Number(
+                    (await statsQueue.getMetrics("completed", 0, MetricsTime.ONE_HOUR * 24 * 7)).data
+                        .slice(1)
+                        .reduce((acc, cur) => Number(acc) + Number(cur), 0),
+                ),
+                "1month": Number(
+                    (await statsQueue.getMetrics("completed", 0, MetricsTime.ONE_MONTH)).data
                         .slice(1)
                         .reduce((acc, cur) => Number(acc) + Number(cur), 0),
                 ),

@@ -49,6 +49,9 @@ const timePeriods = [
 // Default time period
 const selectedTimePeriod = ref("5min");
 
+// Variable to track the active tab
+const activeStatusTab = ref("overview");
+
 // Auto refresh settings
 const autoRefresh = ref(true);
 const autoRefreshInterval = ref(10); // seconds
@@ -407,14 +410,14 @@ const hasKeyspaceInfo = computed(() => {
             </div>
           </div>
 
-          <!-- Main Content Tabs - Using the correct default-selected prop -->
+          <!-- Main Content Tabs - Add v-model and fix item structure -->
           <Tabs :items="[
-            { label: isMobile ? '' : $t('overview'), icon: 'lucide:layout-dashboard', slot: 'overview', defaultSelected: true },
-            { label: isMobile ? '' : $t('processing'), icon: 'lucide:bar-chart-2', slot: 'processing' },
-            { label: isMobile ? '' : $t('database'), icon: 'lucide:database', slot: 'database' },
-            { label: isMobile ? '' : $t('cache'), icon: 'lucide:hard-drive', slot: 'cache' },
-            { label: isMobile ? '' : $t('redis'), icon: 'lucide:database', slot: 'redis' },
-          ]" class="mb-6" color="neutral">
+            { id: 'overview', label: isMobile ? '' : $t('overview'), icon: 'lucide:layout-dashboard', slot: 'overview' },
+            { id: 'processing', label: isMobile ? '' : $t('processing'), icon: 'lucide:bar-chart-2', slot: 'processing' },
+            { id: 'database', label: isMobile ? '' : $t('database'), icon: 'lucide:database', slot: 'database' },
+            { id: 'cache', label: isMobile ? '' : $t('cache'), icon: 'lucide:hard-drive', slot: 'cache' },
+            { id: 'redis', label: isMobile ? '' : $t('redis'), icon: 'lucide:database', slot: 'redis' },
+          ]" v-model="activeStatusTab" class="mb-6" color="neutral">
             <template #overview>
               <!-- Overview with refined 3-column layout -->
               <div class="space-y-4">
