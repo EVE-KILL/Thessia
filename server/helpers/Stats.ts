@@ -479,7 +479,7 @@ async function getShipStats(type: StatsType, id: number, timeFilter?: { $gte: Da
     const useSamplingForLosses = totalLossCount > SAMPLE_THRESHOLD;
 
     // Limit to top 200 ships (most common)
-    const SHIP_LIMIT = 200;
+    const SHIP_LIMIT = 20;
 
     // Ship usage statistics from kills pipeline
     const killsPipeline = [];
