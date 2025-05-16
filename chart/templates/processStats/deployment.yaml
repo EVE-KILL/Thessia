@@ -1,0 +1,45 @@
+{{- if .Values.processStats.enabled }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: process-stats
+  namespace: {{ .Values.namespace.name }}
+  labels:
+    {{- include "thessia.labels" . | nindent 4 }}
+spec:
+  replicas: {{ .Values.processStats.replicas }}
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
+  selector:
+    matchLabels:
+      app: process-stats
+      {{- include "thessia.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        app: process-stats
+        {{- include "thessia.selectorLabels" . | nindent 8 }}
+    spec:
+      serviceAccountName: {{ include "thessia.serviceAccountName" . }}
+      securityContext:
+        {{- toYaml .Values.processStats.securityContext | nindent 8 }}
+      containers:
+        - name: process-stats
+          image: "{{ .Values.global.image.repository }}:{{ .Values.global.image.tag }}"
+          imagePullPolicy: {{ .Values.global.image.pullPolicy }}
+          command:
+            - /bin/sh
+            - -c
+            - |
+              ./bin/queue processStats
+          resources:
+            {{- toYaml .Values.processStats.resources | nindent 12 }}
+          envFrom:
+            - configMapRef:
+                name: config
+            - secretRef:
+                name: secrets
+{{- end }}
