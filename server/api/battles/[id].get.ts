@@ -18,7 +18,7 @@ export default defineCachedEventHandler(async (event) => {
         const battle = await Battles.findOne({ battle_id: battleId }).lean();
 
         if (!battle) {
-            throw createError({ statusCode: 404, statusMessage: 'Custom battle not found' });
+            throw createError({ statusCode: 404, statusMessage: 'battle not found' });
         }
 
         // Transform any Date objects to ISO strings for JSON serialization
@@ -30,8 +30,8 @@ export default defineCachedEventHandler(async (event) => {
         if (error.statusCode === 404) {
             throw error;
         }
-        console.error(`Error fetching custom battle with ID ${battleId}:`, error);
-        throw createError({ statusCode: 500, statusMessage: 'Internal Server Error fetching custom battle' });
+        console.error(`Error fetching battle with ID ${battleId}:`, error);
+        throw createError({ statusCode: 500, statusMessage: 'Internal Server Error fetching battle' });
     }
 }, {
     maxAge: 300,

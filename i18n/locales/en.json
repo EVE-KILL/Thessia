@@ -611,11 +611,11 @@
             "sideDRequired": "Side D must have at least one entity when 4 sides are selected."
         }
     },
-    "customBattle.seo.titlePattern": "Custom Battle in {systemName} ({regionName}) | {start} - {end}",
-    "customBattle.seo.defaultTitle": "Custom Battle | EVE-KILL",
-    "customBattle.seo.descriptionPattern": "Custom Battle in {systemName} ({regionName}) from {start} to {end}. ISK Lost: {isk}, Ships Lost: {ships}.",
-    "customBattle.seo.defaultDescription": "EVE Online custom battle details",
-    "customBattle.seo.twitterImageAlt.default": "EVE System",
+    "battle.seo.titlePattern": "Battle in {systemName} ({regionName}) | {start} - {end}",
+    "battle.seo.defaultTitle": "Battle | EVE-KILL",
+    "battle.seo.descriptionPattern": "Battle in {systemName} ({regionName}) from {start} to {end}. ISK Lost: {isk}, Ships Lost: {ships}.",
+    "battle.seo.defaultDescription": "EVE Online battle details",
+    "battle.seo.twitterImageAlt.default": "EVE System",
     "tools.dscan.title": "D-Scan Analyzer",
     "tools.dscan.instruction": "Copy a D-Scan from EVE and click the button below",
     "tools.dscan.paste_button": "Paste D-Scan",

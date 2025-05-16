@@ -835,7 +835,7 @@ const saveBattle = async () => {
 
         const data = await response.json(); // Expects { battle_id: number, message: string }
 
-        // Redirect to the newly created custom battle
+        // Redirect to the newly created battle
         if (data.battle_id) {
             window.location.href = `/battle/${data.battle_id}`;
         } else {

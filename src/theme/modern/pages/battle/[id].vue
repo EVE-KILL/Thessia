@@ -539,8 +539,8 @@ const seoData = computed(() => {
     const isk = formatIsk(totalIskLost.value);
     const ships = totalShipsLost.value;
 
-    const title = t('customBattle.seo.titlePattern', { systemName, regionName, start, end });
-    const description = t('customBattle.seo.descriptionPattern', { systemName, regionName, start, end, isk, ships });
+    const title = t('battle.seo.titlePattern', { systemName, regionName, start, end });
+    const description = t('battle.seo.descriptionPattern', { systemName, regionName, start, end, isk, ships });
 
     return {
         title,
@@ -549,12 +549,12 @@ const seoData = computed(() => {
 });
 
 useSeoMeta({
-    title: () => seoData.value?.title || t('customBattle.seo.defaultTitle'),
-    ogTitle: () => seoData.value?.title || t('customBattle.seo.defaultTitle'),
-    twitterTitle: () => seoData.value?.title || t('customBattle.seo.defaultTitle'),
-    description: () => seoData.value?.description || t('customBattle.seo.defaultDescription'),
-    ogDescription: () => seoData.value?.description || t('customBattle.seo.defaultDescription'),
-    twitterDescription: () => seoData.value?.description || t('customBattle.seo.defaultDescription'),
+    title: () => seoData.value?.title || t('battle.seo.defaultTitle'),
+    ogTitle: () => seoData.value?.title || t('battle.seo.defaultTitle'),
+    twitterTitle: () => seoData.value?.title || t('battle.seo.defaultTitle'),
+    description: () => seoData.value?.description || t('battle.seo.defaultDescription'),
+    ogDescription: () => seoData.value?.description || t('battle.seo.defaultDescription'),
+    twitterDescription: () => seoData.value?.description || t('battle.seo.defaultDescription'),
     ogType: "website",
     ogSiteName: "EVE-KILL",
     ogUrl: () => {
@@ -568,7 +568,7 @@ useSeoMeta({
         if (battle.value?.systems && battle.value.systems.length > 0) {
             return battle.value.systems[0].system_name;
         }
-        return battle.value?.system_name || t('customBattle.seo.twitterImageAlt.default');
+        return battle.value?.system_name || t('battle.seo.twitterImageAlt.default');
     },
     twitterCreator: "@eve_kill",
 });

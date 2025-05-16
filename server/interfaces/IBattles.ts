@@ -73,7 +73,7 @@ export interface ITopEntity {
     count: number;
 }
 
-// Main interface for Custom Battles, reflecting the structure from compileFullBattleData
+// Main interface for Battles, reflecting the structure from compileFullBattleData
 export interface IBattles {
     battle_id: number;
     custom?: boolean; // Indicates if the battle was manually created/defined
