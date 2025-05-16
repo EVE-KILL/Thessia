@@ -224,7 +224,7 @@
                                     </div>
                                     <div class="stat-row">
                                         <div class="stat-label text-gray-600 dark:text-gray-400">{{ $t('iskEfficiency')
-                                        }}</div>
+                                            }}</div>
                                         <div class="stat-value text-gray-900 dark:text-white">
                                             {{ calcIskEfficiency(validShortStats) }}%
                                         </div>
@@ -262,13 +262,13 @@
                                     </div>
                                     <div class="stat-row">
                                         <div class="stat-label text-gray-600 dark:text-gray-400">{{ $t('soloKillRatio')
-                                        }}</div>
+                                            }}</div>
                                         <div class="stat-value text-gray-900 dark:text-white">{{
                                             calcSoloKillRatio(validShortStats) }}%</div>
                                     </div>
                                     <div class="stat-row">
                                         <div class="stat-label text-gray-600 dark:text-gray-400">{{ $t('soloEfficiency')
-                                        }}
+                                            }}
                                         </div>
                                         <div class="stat-value text-gray-900 dark:text-white">{{
                                             calcSoloEfficiency(validShortStats) }}%</div>
@@ -292,16 +292,16 @@
                                     </div>
                                     <div class="stat-row">
                                         <div class="stat-label text-gray-600 dark:text-gray-400">{{ $t('npcLossRatio')
-                                        }}</div>
+                                            }}</div>
                                         <div class="stat-value text-gray-900 dark:text-white">{{
                                             calcNpcLossRatio(validShortStats) }}</div>
                                     </div>
                                     <div class="stat-row">
                                         <div class="stat-label text-gray-600 dark:text-gray-400">{{ $t('avgKillsPerDay')
-                                        }}
+                                            }}
                                         </div>
                                         <div class="stat-value text-gray-900 dark:text-white">{{
-                                            calcAvgKillsPerDay(validShortStats) }}</div>
+                                            calcAvgKillsPerDay(validShortStats, character.birthday) }}</div>
                                     </div>
                                     <div class="stat-row">
                                         <div class="stat-label text-gray-600 dark:text-gray-400">{{ $t('activity') }}
@@ -706,10 +706,13 @@ const calcNpcLossRatio = (stats: IShortStats | null): string => {
     return ((npcLosses / losses) * 100).toFixed(1);
 };
 
-const calcAvgKillsPerDay = (stats: IShortStats | null): string => {
+const calcAvgKillsPerDay = (stats: IShortStats | null, birthday: Date): string => {
     if (!stats || !stats.lastActive) return "0";
-    const characterAge = new Date().getTime() - new Date(stats.lastActive).getTime();
+    const characterAge = new Date(birthday).getTime();
+    console.log(characterAge);
+    //const characterAge = new Date().getTime() - new Date(stats.lastActive).getTime();
     const daysActive = Math.max(1, Math.ceil(characterAge / (1000 * 60 * 60 * 24)));
+    console.log(daysActive);
     return (stats.kills / daysActive).toFixed(1);
 };
 
@@ -747,8 +750,8 @@ function calculateActivityDecay(lastActiveDate: string | null): number {
         // Linear decay from 10% to 5% between 180 and 365 days
         return 0.10 - (0.05 * (daysSinceActive - 180) / (365 - 180));
     } else {
-        // Bottom 5% for anything over a year
-        return 0.05;
+        // Bottom 1% for anything over a year
+        return 0.01;
     }
 }
 

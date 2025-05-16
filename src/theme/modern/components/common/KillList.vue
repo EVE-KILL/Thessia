@@ -709,7 +709,7 @@ onUpdated(() => {
 
                     <!-- Show reconnection status if applicable -->
                     <span v-if="!wsConnected && wsReconnectAttempts > 0" class="ml-1 text-xs text-orange-400">
-                        ({{ t('killList.retrying', { attempt: wsReconnectAttempts }) }})
+                        ({{ t('retrying', { attempt: wsReconnectAttempts }) }})
                     </span>
                 </div>
             </div>
@@ -912,7 +912,7 @@ onUpdated(() => {
                                 <span>{{ item.system_name }}</span>
                                 <span> (</span>
                                 <span :class="getSecurityColor(item.system_security)">{{ item.system_security.toFixed(1)
-                                }}</span>
+                                    }}</span>
                                 <span>)</span>
                             </div>
                         </div>
