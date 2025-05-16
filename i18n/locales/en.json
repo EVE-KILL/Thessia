@@ -854,5 +854,39 @@
     "tooltips": {
         "dangerRatio": "Danger ratio decreases over time if the character is inactive",
         "activityLevel": "Activity level factors in recent combat history and time since last activity"
-    }
+    },
+    "comment": {
+        "report_comment": "Report Comment",
+        "report_reason": "Report Reason",
+        "report_placeholder": "Please explain why you are reporting this comment",
+        "submit_report": "Submit Report",
+        "report_error": "Error reporting comment. Please try again.",
+        "report_success": "Comment reported successfully. Thank you.",
+        "delete_comment": "Delete Comment",
+        "confirm_delete_message": "Are you sure you want to delete this comment? This action cannot be undone.",
+        "confirm_delete": "Delete",
+        "delete_error": "Error deleting comment. Please try again."
+    },
+    "preview_empty": "Your preview will appear here",
+    "reconnecting_ws": "Reconnecting... (attempt {attempt} of {max})",
+    "markdown_editor": {
+        "image_url_prompt": "Enter image URL",
+        "youtube_url_prompt": "Enter YouTube video URL",
+        "imgur_url_prompt": "Enter Imgur image or album URL",
+        "giphy_url_prompt": "Enter Giphy URL",
+        "tenor_url_prompt": "Enter Tenor GIF URL"
+    },
+    "duplicate_comment_error": "You've already posted this exact comment",
+    "comment_post_error": "Error posting comment. Please try again.",
+    "errorFetchingData": "Error Fetching Data",
+    "showingResults": "Showing {start}-{end} of {total} battles",
+    "perPage": "Per Page:",
+    "noBattlesFound": "No battles found.",
+    "iskDestroyedShort": "ISK",
+    "kmsShort": "KMs",
+    "alliancesShort": "Alliances",
+    "corporationsShort": "Corps",
+    "charactersShort": "Characters",
+    "unknownSystem": "Unknown System",
+    "battle.time": "Time"
 }

@@ -135,29 +135,29 @@
             </div>
 
             <!-- Teams Table -->
-            <CustomBattleTeams :previewData="battle" :teamStats="teamStats" :teamAlliances="teamAlliances"
+            <BattleTeams :previewData="battle" :teamStats="teamStats" :teamAlliances="teamAlliances"
                 :teamCorporations="teamCorporations" :teamCharacters="teamCharacters" />
 
             <!-- Tabs -->
             <div class="mb-4">
                 <Tabs v-model="activeTabId" :items="tabItems" :ui="tabsUi" color="neutral">
                     <template #overview>
-                        <CustomBattleOverview v-if="battle" :battle="battle" />
+                        <BattleOverview v-if="battle" :battle="battle" />
                     </template>
                     <template #kills>
-                        <CustomBattleKills :teamKills="teamKills" :sideIds="battle.side_ids" />
+                        <BattleKills :teamKills="teamKills" :sideIds="battle.side_ids" />
                     </template>
                     <template #alliances>
-                        <CustomBattleAlliances :teamAlliances="teamAlliances" :sideIds="battle.side_ids" />
+                        <BattleAlliances :teamAlliances="teamAlliances" :sideIds="battle.side_ids" />
                     </template>
                     <template #corporations>
-                        <CustomBattleCorporations :teamCorporations="teamCorporations" :sideIds="battle.side_ids" />
+                        <BattleCorporations :teamCorporations="teamCorporations" :sideIds="battle.side_ids" />
                     </template>
                     <template #characters>
-                        <CustomBattleCharacters :teamCharacters="teamCharacters" :sideIds="battle.side_ids" />
+                        <BattleCharacters :teamCharacters="teamCharacters" :sideIds="battle.side_ids" />
                     </template>
                     <template #timeline>
-                        <CustomBattleTimeline v-if="battle" :killmails="killmails" :battle="battle" />
+                        <BattleTimeline v-if="battle" :killmails="killmails" :battle="battle" />
                     </template>
                 </Tabs>
             </div>

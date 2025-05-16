@@ -1,151 +1,100 @@
 <template>
-    <div class="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4">
-        <!-- Blue Team Ships -->
-        <div>
-            <div class="mb-2 text-lg font-bold text-black dark:text-white">Blue Team Ships</div>
-            <Table :columns="overviewColumns" :items="sortedBlueTeamManifest" :bordered="true" :striped="false"
-                :hover="true" density="normal" background="transparent" table-class="overview-table"
-                :link-fn="generateLink">
-                <template
-                    #cell-pilot="{ item: rawItem, column: rawColumn, index }: { item: unknown, column: any, index: number }">
-                    <div v-if="rawItem && (rawItem as ICharacterShipManifestEntry).character_id"
-                        class="flex items-center gap-3"
-                        :class="{ 'text-red-500 dark:text-red-400': (rawItem as ICharacterShipManifestEntry).was_lost }">
-                        <Image :type="'character'" :id="(rawItem as ICharacterShipManifestEntry).character_id!"
-                            :alt="`Pilot: ${(rawItem as ICharacterShipManifestEntry).character_name || 'Unknown'}`"
-                            :size="64" class="w-12 h-12" :rounded="true" />
-                        <div>
-                            <div class="font-semibold"
-                                :class="{ 'text-red-500 dark:text-red-400': (rawItem as ICharacterShipManifestEntry).was_lost, 'text-black dark:text-white': !(rawItem as ICharacterShipManifestEntry).was_lost }">
-                                {{ (rawItem as ICharacterShipManifestEntry).character_name || 'Unknown Pilot' }}
+    <div class="mt-4 grid grid-cols-1 gap-4" :class="gridColumnsClass" ref="containerRef">
+        <!-- Dynamic Team Ships -->
+        <div v-for="sideId in sideIds" :key="sideId" class="team-column">
+            <div class="mb-2 text-lg font-bold text-black dark:text-white">
+                {{ getSideName(sideId) }} Ships
+            </div>
+
+            <div class="attacker-list bg-background-800 shadow-lg rounded-lg border border-gray-700/30 overflow-hidden">
+                <div v-if="sortedTeamManifests[sideId] && sortedTeamManifests[sideId].length > 0">
+                    <!-- Individual Ship Row -->
+                    <component v-for="item in sortedTeamManifests[sideId]"
+                        :key="`${sideId}-${item.character_id}-${item.ship_type_id}`"
+                        :is="getItemUrl(item) ? 'a' : 'div'" :href="getItemUrl(item)"
+                        :class="['attacker-row', { 'lost-ship-row': item.was_lost }]"
+                        @click="(e) => handleRowClick(item, e)">
+                        <!-- Top section - images and names -->
+                        <div class="attacker-top">
+                            <!-- Character Portrait -->
+                            <div class="portrait-container">
+                                <Image v-if="item.character_id" :type="'character'" :id="item.character_id" :size="64"
+                                    class="portrait character-portrait" />
+                                <div v-else class="portrait character-portrait-placeholder"></div>
                             </div>
-                            <div class="text-xs text-background-400">{{ (rawItem as
-                                ICharacterShipManifestEntry).corporation_name || 'Unknown Corporation' }}</div>
-                            <div v-if="(rawItem as ICharacterShipManifestEntry).alliance_name"
-                                class="text-xs text-background-400">
-                                {{ (rawItem as ICharacterShipManifestEntry).alliance_name }}
+
+                            <!-- Corp/Alliance Stacked -->
+                            <div class="corp-alliance-container">
+                                <Image v-if="item.corporation_id" :type="'corporation'" :id="item.corporation_id"
+                                    :size="32" class="portrait corporation-portrait" />
+                                <Image v-if="item.alliance_id" :type="'alliance'" :id="item.alliance_id" :size="32"
+                                    class="portrait alliance-portrait" />
                             </div>
-                        </div>
-                    </div>
-                    <div v-else-if="rawItem" class="flex items-center gap-3"
-                        :class="{ 'text-red-500 dark:text-red-400': (rawItem as ICharacterShipManifestEntry).was_lost }">
-                        <!-- Fallback for missing character_id -->
-                        <div
-                            class="w-12 h-12 bg-background-700 rounded-md flex items-center justify-center text-background-400 text-xs">
-                            No ID</div>
-                        <div>
-                            <div class="font-semibold"
-                                :class="{ 'text-red-500 dark:text-red-400': (rawItem as ICharacterShipManifestEntry).was_lost, 'text-black dark:text-white': !(rawItem as ICharacterShipManifestEntry).was_lost }">
-                                {{ (rawItem as ICharacterShipManifestEntry).character_name || 'Unknown Pilot' }}
+
+                            <!-- Ship Image -->
+                            <div class="ship-container">
+                                <Image :type="'type-render'" :id="item.ship_type_id" :size="64" class="ship-image" />
                             </div>
-                            <div class="text-xs text-background-400">{{ (rawItem as
-                                ICharacterShipManifestEntry).corporation_name || 'Unknown Corporation' }}</div>
-                            <div v-if="(rawItem as ICharacterShipManifestEntry).alliance_name"
-                                class="text-xs text-background-400">
-                                {{ (rawItem as ICharacterShipManifestEntry).alliance_name }}
-                            </div>
-                        </div>
-                    </div>
-                </template>
-                <template
-                    #cell-ship="{ item: rawItem, column: rawColumn, index }: { item: unknown, column: any, index: number }">
-                    <div v-if="rawItem" class="flex items-center gap-3"
-                        :class="{ 'text-red-500 dark:text-red-400': (rawItem as ICharacterShipManifestEntry).was_lost }">
-                        <Image :type="'item'" :id="(rawItem as ICharacterShipManifestEntry).ship_type_id"
-                            :alt="`Ship: ${getLocalizedString((rawItem as ICharacterShipManifestEntry).ship_name, locale) || 'Unknown'}`"
-                            :size="64" class="w-12 h-12" :rounded="true" />
-                        <div>
-                            <div class="font-semibold"
-                                :class="{ 'text-red-500 dark:text-red-400': (rawItem as ICharacterShipManifestEntry).was_lost, 'text-black dark:text-white': !(rawItem as ICharacterShipManifestEntry).was_lost }">
-                                {{ truncateString(getLocalizedString((rawItem as ICharacterShipManifestEntry).ship_name,
-                                    locale) || 'Unknown Ship', 20) }}
-                            </div>
-                            <div class="text-xs text-background-400">
-                                {{ getLocalizedString((rawItem as ICharacterShipManifestEntry).ship_group_name, locale)
-                                    || 'Unknown Group' }}
+
+                            <!-- Name Information -->
+                            <div class="name-container">
+                                <!-- Character Name -->
+                                <div class="entity-name character-name"
+                                    :class="{ 'text-red-500 dark:text-red-400': item.was_lost }">
+                                    {{ item.character_name || 'Unknown Pilot' }}
+                                </div>
+
+                                <!-- Corporation Name -->
+                                <div class="entity-name corporation-name">
+                                    {{ item.corporation_name || 'Unknown Corporation' }}
+                                </div>
+
+                                <!-- Alliance Name -->
+                                <div v-if="item.alliance_name" class="entity-name alliance-name">
+                                    {{ item.alliance_name }}
+                                </div>
                             </div>
                         </div>
-                    </div>
-                </template>
-            </Table>
+
+                        <!-- Bottom section - ship name and damage -->
+                        <div class="attacker-bottom">
+                            <div class="ship-name-container" :class="{ 'text-red-500 dark:text-red-400': item.was_lost }">
+                                {{ getLocalizedString(item.ship_name, locale) || 'Unknown Ship' }}
+                                <span class="ship-group">
+                                    ({{ getLocalizedString(item.ship_group_name, locale) || 'Unknown Group' }})
+                                </span>
+                            </div>
+
+                            <div class="damage-container">
+                                <div class="damage-item damage-taken">
+                                    <span class="damage-label">Taken:</span>
+                                    {{ formatNumberWithLocale(item.damage_taken || 0) }}
+                                </div>
+                                <div class="damage-item damage-dealt">
+                                    <span class="damage-label">Dealt:</span>
+                                    {{ formatNumberWithLocale(item.damage_dealt || 0) }}
+                                </div>
+                            </div>
+                        </div>
+                    </component>
+                </div>
+                <div v-else class="empty-state">
+                    No ship data available for this team.
+                </div>
+            </div>
         </div>
-        <!-- Red Team Ships -->
-        <div>
-            <div class="mb-2 text-lg font-bold text-black dark:text-white">Red Team Ships</div>
-            <Table :columns="overviewColumns" :items="sortedRedTeamManifest" :bordered="true" :striped="false"
-                :hover="true" density="normal" background="transparent" table-class="overview-table"
-                :link-fn="generateLink">
-                <template
-                    #cell-pilot="{ item: rawItem, column: rawColumn, index }: { item: unknown, column: any, index: number }">
-                    <div v-if="rawItem && (rawItem as ICharacterShipManifestEntry).character_id"
-                        class="flex items-center gap-3"
-                        :class="{ 'text-red-500 dark:text-red-400': (rawItem as ICharacterShipManifestEntry).was_lost }">
-                        <Image :type="'character'" :id="(rawItem as ICharacterShipManifestEntry).character_id!"
-                            :alt="`Pilot: ${(rawItem as ICharacterShipManifestEntry).character_name || 'Unknown'}`"
-                            :size="64" class="w-12 h-12" :rounded="true" />
-                        <div>
-                            <div class="font-semibold"
-                                :class="{ 'text-red-500 dark:text-red-400': (rawItem as ICharacterShipManifestEntry).was_lost, 'text-black dark:text-white': !(rawItem as ICharacterShipManifestEntry).was_lost }">
-                                {{ (rawItem as ICharacterShipManifestEntry).character_name || 'Unknown Pilot' }}
-                            </div>
-                            <div class="text-xs text-background-400">{{ (rawItem as
-                                ICharacterShipManifestEntry).corporation_name || 'Unknown Corporation' }}</div>
-                            <div v-if="(rawItem as ICharacterShipManifestEntry).alliance_name"
-                                class="text-xs text-background-400">
-                                {{ (rawItem as ICharacterShipManifestEntry).alliance_name }}
-                            </div>
-                        </div>
-                    </div>
-                    <div v-else-if="rawItem" class="flex items-center gap-3"
-                        :class="{ 'text-red-500 dark:text-red-400': (rawItem as ICharacterShipManifestEntry).was_lost }">
-                        <!-- Fallback for missing character_id -->
-                        <div
-                            class="w-12 h-12 bg-background-700 rounded-md flex items-center justify-center text-background-400 text-xs">
-                            No ID</div>
-                        <div>
-                            <div class="font-semibold"
-                                :class="{ 'text-red-500 dark:text-red-400': (rawItem as ICharacterShipManifestEntry).was_lost, 'text-black dark:text-white': !(rawItem as ICharacterShipManifestEntry).was_lost }">
-                                {{ (rawItem as ICharacterShipManifestEntry).character_name || 'Unknown Pilot' }}
-                            </div>
-                            <div class="text-xs text-background-400">{{ (rawItem as
-                                ICharacterShipManifestEntry).corporation_name || 'Unknown Corporation' }}</div>
-                            <div v-if="(rawItem as ICharacterShipManifestEntry).alliance_name"
-                                class="text-xs text-background-400">
-                                {{ (rawItem as ICharacterShipManifestEntry).alliance_name }}
-                            </div>
-                        </div>
-                    </div>
-                </template>
-                <template
-                    #cell-ship="{ item: rawItem, column: rawColumn, index }: { item: unknown, column: any, index: number }">
-                    <div v-if="rawItem" class="flex items-center gap-3"
-                        :class="{ 'text-red-500 dark:text-red-400': (rawItem as ICharacterShipManifestEntry).was_lost }">
-                        <Image :type="'item'" :id="(rawItem as ICharacterShipManifestEntry).ship_type_id"
-                            :alt="`Ship: ${getLocalizedString((rawItem as ICharacterShipManifestEntry).ship_name, locale) || 'Unknown'}`"
-                            :size="64" class="w-12 h-12" :rounded="true" />
-                        <div>
-                            <div class="font-semibold"
-                                :class="{ 'text-red-500 dark:text-red-400': (rawItem as ICharacterShipManifestEntry).was_lost, 'text-black dark:text-white': !(rawItem as ICharacterShipManifestEntry).was_lost }">
-                                {{ truncateString(getLocalizedString((rawItem as ICharacterShipManifestEntry).ship_name,
-                                    locale) || 'Unknown Ship', 20) }}
-                            </div>
-                            <div class="text-xs text-background-400">
-                                {{ getLocalizedString((rawItem as ICharacterShipManifestEntry).ship_group_name, locale)
-                                    || 'Unknown Group' }}
-                            </div>
-                        </div>
-                    </div>
-                </template>
-            </Table>
+
+        <!-- No ships message if no manifests -->
+        <div v-if="!hasAnyManifests" class="col-span-full text-center py-8 text-gray-500">
+            No ship data available for this battle.
         </div>
     </div>
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue';
-import { useI18n } from 'vue-i18n';
+import { computed, ref, onMounted, onUnmounted, nextTick } from 'vue';
 
-// Define the structure for a ship manifest entry, aligning with server/interfaces/IBattles.ts
+// Define the structure for a ship manifest entry
 interface ICharacterShipManifestEntry {
     character_id?: number;
     character_name?: string;
@@ -153,19 +102,23 @@ interface ICharacterShipManifestEntry {
     corporation_name?: string;
     alliance_id?: number;
     alliance_name?: string;
-    ship_type_id: number; // Required for ship image
-    ship_name: any; // Localized object e.g. { en: 'Rifter', de: 'Rifter' } or string
+    ship_type_id: number;
+    ship_name: any;
     ship_group_id?: number;
-    ship_group_name?: any; // Localized object or string
+    ship_group_name?: any;
     was_lost: boolean;
     killmail_id_if_lost?: number;
+    damage_taken?: number;
+    damage_dealt?: number;
 }
 
-// Define the structure for the battle prop
+// Updated interface for dynamic team battle data
 interface IBattle {
-    blue_team_ship_manifest: ICharacterShipManifestEntry[];
-    red_team_ship_manifest: ICharacterShipManifestEntry[];
-    // Potentially other battle properties
+    side_ids: string[];
+    sides: Record<string, {
+        name: string;
+        ship_manifest?: ICharacterShipManifestEntry[];
+    }>;
 }
 
 const props = defineProps<{
@@ -173,6 +126,86 @@ const props = defineProps<{
 }>();
 
 const { locale } = useI18n();
+const router = useRouter();
+
+const containerRef = ref<HTMLElement | null>(null);
+const resizeObserver = ref<ResizeObserver | null>(null);
+
+// Extract side IDs from the battle data
+const sideIds = computed(() => props.battle?.side_ids || []);
+
+// Determine grid columns based on number of sides
+const gridColumnsClass = computed(() => {
+    const count = sideIds.value.length;
+    if (count === 0) return '';
+    if (count === 1) return 'md:grid-cols-1';
+    if (count === 2) return 'xl:grid-cols-2';
+    if (count === 3) return 'xl:grid-cols-3';
+    return 'xl:grid-cols-4'; // For 4 teams
+});
+
+// Function to observe size changes directly on the component's container
+const setupResizeObserver = () => {
+    if (!containerRef.value || typeof ResizeObserver === 'undefined') return;
+
+    // Clean up existing observer if any
+    if (resizeObserver.value) {
+        resizeObserver.value.disconnect();
+    }
+
+    // Create new observer
+    resizeObserver.value = new ResizeObserver(() => {
+        // Just keep the observer to ensure the component gets sized within container
+    });
+
+    // Start observing the container element
+    resizeObserver.value.observe(containerRef.value);
+};
+
+// Lifecycle hooks
+onMounted(() => {
+    // Setup ResizeObserver after a short delay to ensure DOM is ready
+    nextTick(() => {
+        setupResizeObserver();
+    });
+});
+
+// Clean up on unmount
+onUnmounted(() => {
+    if (resizeObserver.value) {
+        resizeObserver.value.disconnect();
+        resizeObserver.value = null;
+    }
+});
+
+// Get side name by ID
+const getSideName = (sideId: string): string => {
+    return props.battle?.sides?.[sideId]?.name || sideId;
+};
+
+// Process ship manifests for all teams, always sort by damage dealt descending
+const sortedTeamManifests = computed(() => {
+    const result: Record<string, ICharacterShipManifestEntry[]> = {};
+
+    for (const sideId of sideIds.value) {
+        const manifest = props.battle?.sides?.[sideId]?.ship_manifest || [];
+
+        // Always sort by damage dealt (descending)
+        result[sideId] = [...manifest].sort((a, b) => {
+            // First by damage dealt (highest first)
+            const damageA = a.damage_dealt || 0;
+            const damageB = b.damage_dealt || 0;
+            return damageB - damageA;
+        });
+    }
+
+    return result;
+});
+
+// Check if any team has manifests
+const hasAnyManifests = computed(() => {
+    return Object.values(sortedTeamManifests.value).some(manifest => manifest.length > 0);
+});
 
 const getLocalizedString = (obj: any, localeKey: string): string => {
     if (!obj) return "";
@@ -181,112 +214,289 @@ const getLocalizedString = (obj: any, localeKey: string): string => {
     return obj[lang] || obj.en || (typeof obj === 'string' ? obj : "");
 };
 
-function truncateString(str: any, num: number) {
-    if (str === null || str === undefined) return '';
-    if (typeof str !== 'string') str = String(str);
-    return str.length <= num ? str : str.slice(0, num) + '...';
+// Format numbers with locale
+function formatNumberWithLocale(n: number): string {
+    if (typeof n !== 'number') return '0';
+    return n.toLocaleString(locale.value, { maximumFractionDigits: 0 });
 }
 
-const sortManifest = (manifest: ICharacterShipManifestEntry[]): ICharacterShipManifestEntry[] => {
-    if (!manifest) return [];
-    return [...manifest].sort((a, b) => {
-        // Handle cases where a or b might be null/undefined
-        if (!a && !b) return 0;
-        if (!a) return 1; // a is null/undefined, b is not, so a comes after b
-        if (!b) return -1; // b is null/undefined, a is not, so a comes before b
-
-        // Sort by was_lost (true first)
-        if (a.was_lost && !b.was_lost) return -1;
-        if (!a.was_lost && b.was_lost) return 1;
-
-        // Then by character_name (ascending)
-        const nameA = a.character_name;
-        const nameB = b.character_name;
-
-        if (nameA && nameB) {
-            return nameA.localeCompare(nameB);
-        }
-        if (nameA) return -1; // a has name, b doesn't, so a comes first
-        if (nameB) return 1;  // b has name, a doesn't, so b comes first
-        return 0; // both names are missing or invalid, consider them equal for this criterion
-    });
-};
-
-const sortedBlueTeamManifest = computed(() => sortManifest(props.battle.blue_team_ship_manifest));
-const sortedRedTeamManifest = computed(() => sortManifest(props.battle.red_team_ship_manifest));
-
-const generateLink = (item: ICharacterShipManifestEntry): string => {
+// Get URL for an item - mirroring the Table component's pattern
+function getItemUrl(item: ICharacterShipManifestEntry): string | null {
     if (item.was_lost && item.killmail_id_if_lost) {
         return `/kill/${item.killmail_id_if_lost}`;
     }
-    return `/character/${item.character_id}`;
-};
+    if (item.character_id) {
+        return `/character/${item.character_id}`;
+    }
+    if (item.ship_type_id) {
+        return `/item/${item.ship_type_id}`;
+    }
+    return null;
+}
 
-const overviewColumns = [
-    { id: 'pilot', header: 'Pilot', width: '50%' },
-    { id: 'ship', header: 'Ship', width: '50%' },
-];
+// Handle click event similar to the Table component
+function handleRowClick(item: ICharacterShipManifestEntry, event: MouseEvent) {
+    // Skip native link handling for elements that are actual links themselves
+    if (
+        event.target instanceof HTMLAnchorElement ||
+        (event.target as Element).closest('a')
+    ) {
+        return;
+    }
+
+    const url = getItemUrl(item);
+    if (!url) return;
+
+    // Prevent default only for non-anchor elements to avoid conflicts
+    if (!(event.currentTarget instanceof HTMLAnchorElement)) {
+        event.preventDefault();
+    }
+
+    // Handle Ctrl/Cmd + click to open in new tab
+    if (event.ctrlKey || event.metaKey) {
+        window.open(url, '_blank');
+    } else {
+        router.push(url);
+    }
+}
 </script>
 
 <style scoped>
-.overview-table :deep(.table-header) {
-    background-color: rgba(26, 26, 26, 0.5);
-    /* From BattleKills.vue */
-    color: #9ca3af;
-    /* From BattleKills.vue */
-    text-transform: uppercase;
-    /* From BattleKills.vue */
-    font-size: 0.75rem;
-    /* From BattleKills.vue */
-    padding: 0.5rem;
-    /* From BattleKills.vue */
+/* Team column sizing */
+.team-column {
+    min-width: 0;
+    /* Allow columns to shrink */
 }
 
-.overview-table :deep(.header-cell) {
-    padding: 0 0.5rem;
-    /* From BattleKills.vue */
+/* Attacker List Styling */
+.attacker-list {
+    border: 1px solid rgba(75, 85, 99, 0.2);
+    background-color: light-dark(rgba(245, 245, 245, 0.1), rgba(26, 26, 26, 0.4));
 }
 
-.overview-table :deep(.table-row) {
-    border-bottom: 1px solid #282828;
-    /* From BattleKills.vue */
-    transition: background-color 0.3s ease;
-    /* From BattleKills.vue */
+/* Make attacker-row act like a link when it actually is a link */
+.attacker-row {
+    padding: 0.75rem;
+    border-bottom: 1px solid rgba(75, 85, 99, 0.2);
+    transition: background-color 0.15s ease;
+    color: inherit;
+    text-decoration: none;
+    display: block;
+}
+
+/* When the row is an anchor tag, add hover styles */
+a.attacker-row {
     cursor: pointer;
-    /* From BattleKills.vue */
 }
 
-.overview-table :deep(tbody tr):hover {
-    background: light-dark(rgba(229, 231, 235, 0.15), rgba(35, 35, 35, 0.5));
-    /* From BattleKills.vue */
+a.attacker-row:hover {
+    background-color: light-dark(rgba(243, 244, 246, 0.7), rgba(31, 41, 55, 0.7));
 }
 
-.overview-table :deep(.body-cell) {
-    padding: 0.5rem;
-    /* From BattleKills.vue */
+.lost-ship-row {
+    background-color: light-dark(rgba(254, 226, 226, 0.4), rgba(127, 29, 29, 0.1));
 }
 
-.w-12.h-12 {
-    width: 48px;
-    /* From BattleKills.vue */
-    height: 48px;
-    /* From BattleKills.vue */
-    border-radius: 0.375rem;
-    /* From BattleKills.vue */
-    object-fit: cover;
-    /* From BattleKills.vue */
-    background: #18181b;
-    /* From BattleKills.vue */
-    border: 1px solid #282828;
-    /* From BattleKills.vue */
+a.lost-ship-row:hover {
+    background-color: light-dark(rgba(254, 226, 226, 0.6), rgba(127, 29, 29, 0.2));
 }
 
-/* Styling for lost ships */
+/* Top section - images and names */
+.attacker-top {
+    display: flex;
+    gap: 0.5rem;
+    align-items: flex-start;
+}
+
+.portrait-container {
+    flex-shrink: 0;
+}
+
+.portrait {
+    border-radius: 50%;
+    background-color: rgba(0, 0, 0, 0.1);
+}
+
+.character-portrait {
+    width: 64px;
+    height: 64px;
+}
+
+.character-portrait-placeholder {
+    width: 64px;
+    height: 64px;
+    border-radius: 50%;
+    background-color: rgba(100, 100, 100, 0.1);
+    border: 1px dashed rgba(128, 128, 128, 0.3);
+}
+
+.corp-alliance-container {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    height: 64px;
+    flex-shrink: 0;
+}
+
+.corporation-portrait,
+.alliance-portrait {
+    width: 32px;
+    height: 32px;
+}
+
+.ship-container {
+    flex-shrink: 0;
+    margin-left: 0.25rem;
+    margin-right: 0.75rem;
+}
+
+.ship-image {
+    width: 64px;
+    height: 64px;
+    border-radius: 4px;
+    background-color: rgba(0, 0, 0, 0.2);
+    border: 1px solid rgba(75, 85, 99, 0.2);
+}
+
+.name-container {
+    min-width: 0;
+    /* Allow text to shrink */
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
+.entity-name {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    line-height: 1.3;
+}
+
+.character-name {
+    font-weight: 600;
+    font-size: 1rem;
+    color: light-dark(#111827, #f3f4f6);
+}
+
+.corporation-name {
+    font-size: 0.875rem;
+    color: light-dark(#4b5563, #d1d5db);
+}
+
+.alliance-name {
+    font-size: 0.75rem;
+    color: light-dark(#6b7280, #9ca3af);
+}
+
+/* Bottom section - ship name and damage */
+.attacker-bottom {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 0.5rem;
+    padding-top: 0.5rem;
+    border-top: 1px solid rgba(75, 85, 99, 0.1);
+}
+
+.ship-name-container {
+    font-size: 0.875rem;
+    font-weight: 500;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    color: light-dark(#374151, #e5e7eb);
+    flex-grow: 1;
+    min-width: 0;
+    /* Allow text to shrink */
+}
+
+.ship-group {
+    color: light-dark(#6b7280, #9ca3af);
+    font-weight: normal;
+    margin-left: 0.25rem;
+}
+
+.damage-container {
+    display: flex;
+    gap: 1rem;
+    font-size: 0.875rem;
+    white-space: nowrap;
+    flex-shrink: 0;
+}
+
+.damage-item {
+    display: flex;
+    gap: 0.25rem;
+}
+
+.damage-taken {
+    color: #f97316;
+    /* orange */
+}
+
+.damage-dealt {
+    color: #22c55e;
+    /* green */
+}
+
+.damage-label {
+    font-weight: 500;
+    color: light-dark(#6b7280, #9ca3af);
+}
+
+/* Empty state styling */
+.empty-state {
+    padding: 1.5rem;
+    text-align: center;
+    color: light-dark(#6b7280, #9ca3af);
+    font-style: italic;
+}
+
+/* Text color for lost ships */
 .text-red-500 {
-    color: #ef4444;
+    color: #ef4444 !important;
 }
 
 .dark .text-red-400 {
-    color: #f87171;
+    color: #f87171 !important;
+}
+
+/* Responsive adjustments for team columns */
+@media (max-width: 1200px) {
+
+    .xl\:grid-cols-4,
+    .xl\:grid-cols-3 {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .attacker-top {
+        flex-wrap: wrap;
+    }
+
+    .name-container {
+        flex-basis: 100%;
+        margin-top: 0.5rem;
+    }
+}
+
+@media (max-width: 768px) {
+
+    .xl\:grid-cols-2,
+    .xl\:grid-cols-3,
+    .xl\:grid-cols-4 {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    .attacker-bottom {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.5rem;
+    }
+
+    .damage-container {
+        align-self: flex-end;
+    }
 }
 </style>

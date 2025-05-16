@@ -1,277 +1,544 @@
 <template>
-    <div class="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4">
-        <!-- Blue Team Losses -->
-        <div>
-            <div class="mb-2 text-lg font-bold text-black dark:text-white">Blue Team Losses</div>
-            <Table :columns="killColumns" :items="blueTeamKills" :bordered="true" :striped="false" :hover="true"
-                density="normal" background="transparent" table-class="kill-table" :link-fn="generateKillmailLink">
-                <template #cell-ship="{ item: rawItem }">
-                    <div v-if="rawItem" class="flex items-center gap-3">
-                        <Image v-if="(rawItem as BattleKill).victim && (rawItem as BattleKill).victim.ship_id"
-                            type="type-render" :id="(rawItem as BattleKill).victim.ship_id!"
-                            :alt="`Ship: ${getLocalizedString((rawItem as BattleKill).victim.ship_name, locale) || 'Unknown Ship'}`"
-                            :size="64" class="w-12 h-12" />
-                        <div v-else
-                            class="w-12 h-12 bg-background-700 rounded-md flex items-center justify-center text-xs text-background-400">
-                            No Ship ID</div>
-                        <div>
-                            <div class="font-semibold text-black dark:text-white">
-                                {{ truncateString(getLocalizedString((rawItem as BattleKill).victim.ship_name, locale)
-                                    || 'Unknown Ship',
-                                    20) }}
+    <div class="mt-4 grid grid-cols-1 gap-4" :class="gridColumnsClass" ref="containerRef">
+        <!-- Dynamic Team Kills -->
+        <div v-for="sideId in sideIds" :key="sideId" class="team-kills-column">
+            <div class="mb-2 text-lg font-bold text-black dark:text-white">
+                {{ getSideName(sideId) }} Losses
+            </div>
+
+            <div class="attacker-list bg-background-800 shadow-lg rounded-lg border border-gray-700/30 overflow-hidden">
+                <div v-if="teamKills[sideId] && teamKills[sideId].length > 0">
+                    <!-- Individual Killmail Row -->
+                    <component v-for="item in teamKills[sideId]" :key="item.killmail_id" :is="'a'"
+                        :href="`/kill/${item.killmail_id}`" :class="['attacker-row']">
+                        <!-- Top row: Victim Information -->
+                        <div class="attacker-top">
+                            <!-- Section Label -->
+                            <div class="section-label victim-label">Victim</div>
+
+                            <!-- Victim Portrait -->
+                            <div class="portrait-container">
+                                <Image v-if="item.victim?.character_id" :type="'character'"
+                                    :id="item.victim.character_id" :size="48" class="portrait character-portrait" />
+                                <div v-else class="portrait character-portrait-placeholder"></div>
                             </div>
-                            <div class="text-xs text-background-400">
-                                {{ formatNumber((rawItem as BattleKill).total_value) }} ISK
+
+                            <!-- Corp/Alliance Stacked -->
+                            <div class="corp-alliance-container">
+                                <Image v-if="item.victim?.corporation_id" :type="'corporation'"
+                                    :id="item.victim.corporation_id" :size="24" class="portrait corporation-portrait" />
+                                <Image v-if="item.victim?.alliance_id" :type="'alliance'" :id="item.victim.alliance_id"
+                                    :size="24" class="portrait alliance-portrait" />
+                            </div>
+
+                            <!-- Name Information -->
+                            <div class="name-container">
+                                <!-- Character Name -->
+                                <div class="entity-name character-name text-red-500 dark:text-red-400">
+                                    {{ item.victim.character_name || 'Unknown Pilot' }}
+                                </div>
+
+                                <!-- Corporation Name -->
+                                <div class="entity-name corporation-name">
+                                    {{ item.victim.corporation_name || 'Unknown Corporation' }}
+                                </div>
+
+                                <!-- Alliance Name -->
+                                <div v-if="item.victim?.alliance_name" class="entity-name alliance-name">
+                                    {{ item.victim.alliance_name }}
+                                </div>
                             </div>
                         </div>
-                    </div>
-                </template>
-                <template #cell-victim="{ item: rawItem }">
-                    <div v-if="rawItem" class="flex items-center gap-3">
-                        <Image v-if="(rawItem as BattleKill).victim && (rawItem as BattleKill).victim.character_id"
-                            type="character" :id="(rawItem as BattleKill).victim.character_id!"
-                            :alt="`Character: ${(rawItem as BattleKill).victim.character_name || 'Unknown Pilot'}`"
-                            :size="64" class="w-12 h-12" />
-                        <div v-else
-                            class="w-12 h-12 bg-background-700 rounded-md flex items-center justify-center text-xs text-background-400">
-                            No Pilot ID</div>
-                        <div>
-                            <div class="font-semibold text-black dark:text-white">
-                                {{ (rawItem as BattleKill).victim.character_name || 'Unknown Pilot' }}
+
+                        <!-- Middle row: Attacker (Final Blow) Information -->
+                        <div class="attacker-middle">
+                            <!-- Section Label -->
+                            <div class="section-label finalblow-label">Final Blow</div>
+
+                            <!-- Final Blow Portrait -->
+                            <div class="portrait-container">
+                                <Image v-if="getFinalBlowAttacker(item)?.character_id" :type="'character'"
+                                    :id="getFinalBlowAttacker(item).character_id" :size="48"
+                                    class="portrait character-portrait" />
+                                <div v-else class="portrait character-portrait-placeholder"></div>
                             </div>
-                            <div class="text-xs text-background-400">
-                                {{ (rawItem as BattleKill).victim.corporation_name || 'Unknown Corporation' }}
+
+                            <!-- Corp/Alliance Stacked -->
+                            <div class="corp-alliance-container">
+                                <Image v-if="getFinalBlowAttacker(item)?.corporation_id" :type="'corporation'"
+                                    :id="getFinalBlowAttacker(item).corporation_id" :size="24"
+                                    class="portrait corporation-portrait" />
+                                <Image v-if="getFinalBlowAttacker(item)?.alliance_id" :type="'alliance'"
+                                    :id="getFinalBlowAttacker(item).alliance_id" :size="24"
+                                    class="portrait alliance-portrait" />
                             </div>
-                            <div v-if="(rawItem as BattleKill).victim.alliance_name"
-                                class="text-xs text-background-400">{{
-                                    (rawItem as BattleKill).victim.alliance_name }}</div>
+
+                            <!-- Name Information -->
+                            <div class="name-container">
+                                <!-- Character Name -->
+                                <div class="entity-name character-name">
+                                    {{ getFinalBlowAttacker(item)?.character_name || 'Unknown Pilot' }}
+                                </div>
+
+                                <!-- Corporation Name -->
+                                <div class="entity-name corporation-name">
+                                    {{ getFinalBlowAttacker(item)?.corporation_name || 'Unknown Corporation' }}
+                                </div>
+
+                                <!-- Alliance Name -->
+                                <div v-if="getFinalBlowAttacker(item)?.alliance_name" class="entity-name alliance-name">
+                                    {{ getFinalBlowAttacker(item).alliance_name }}
+                                </div>
+                            </div>
                         </div>
-                    </div>
-                </template>
-                <template #cell-finalBlow="{ item: rawItem }">
-                    <template v-if="rawItem && Array.isArray((rawItem as BattleKill).attackers)">
-                        <template v-for="attacker in (rawItem as BattleKill).attackers"
-                            :key="attacker.character_id || attacker.faction_id || attacker.ship_type_id">
-                            <template v-if="attacker.final_blow">
-                                <div class="flex items-center gap-3">
-                                    <Image v-if="!(rawItem as BattleKill).is_npc && attacker.character_id"
-                                        type="character" :id="attacker.character_id"
-                                        :alt="attacker.character_name || 'Unknown Pilot'" :size="64"
-                                        class="w-12 h-12" />
-                                    <Image v-else-if="(rawItem as BattleKill).is_npc && attacker.ship_type_id"
-                                        type="type-icon" :id="attacker.ship_type_id"
-                                        :alt="attacker.faction_name || 'NPC Entity'" :size="64" class="w-12 h-12" />
-                                    <div v-else
-                                        class="w-12 h-12 bg-background-700 rounded-md flex items-center justify-center text-xs text-background-400">
-                                        No ID</div>
-                                    <div>
-                                        <div class="font-semibold text-black dark:text-white">
-                                            {{ (rawItem as BattleKill).is_npc ? (attacker.faction_name || 'NPC Faction')
-                                                :
-                                                (attacker.character_name || 'Unknown Pilot') }}
-                                        </div>
-                                        <div class="text-xs text-background-400">
-                                            {{ (rawItem as BattleKill).is_npc ?
-                                                getLocalizedString(attacker.ship_group_name, locale) :
-                                                (attacker.corporation_name || "Unknown Corporation") }}
-                                        </div>
-                                        <div v-if="!(rawItem as BattleKill).is_npc && attacker.alliance_name"
-                                            class="text-xs text-background-400">
-                                            {{ attacker.alliance_name }}
-                                        </div>
+
+                        <!-- Bottom Row: Ship & Kill Details -->
+                        <div class="attacker-bottom">
+                            <!-- Ship Details -->
+                            <div class="ship-details">
+                                <div class="ship-image-container">
+                                    <Image :type="'type-render'" :id="item.victim.ship_id" :size="40"
+                                        class="ship-image" />
+                                </div>
+                                <div class="ship-info">
+                                    <div class="ship-name text-red-500 dark:text-red-400">
+                                        {{ getLocalizedString(item.victim.ship_name, locale) || 'Unknown Ship' }}
+                                    </div>
+                                    <div class="ship-group">
+                                        {{ getLocalizedString(item.victim.ship_group_name, locale) || 'Unknown Group' }}
                                     </div>
                                 </div>
-                            </template>
-                        </template>
-                    </template>
-                </template>
-            </Table>
-        </div>
-        <!-- Red Team Losses -->
-        <div>
-            <div class="mb-2 text-lg font-bold text-black dark:text-white">Red Team Losses</div>
-            <Table :columns="killColumns" :items="redTeamKills" :bordered="true" :striped="false" :hover="true"
-                density="normal" background="transparent" table-class="kill-table" :link-fn="generateKillmailLink">
-                <template #cell-ship="{ item: rawItem }">
-                    <div v-if="rawItem" class="flex items-center gap-3">
-                        <Image v-if="(rawItem as BattleKill).victim && (rawItem as BattleKill).victim.ship_id"
-                            type="type-render" :id="(rawItem as BattleKill).victim.ship_id!"
-                            :alt="`Ship: ${getLocalizedString((rawItem as BattleKill).victim.ship_name, locale) || 'Unknown Ship'}`"
-                            :size="64" class="w-12 h-12" />
-                        <div v-else
-                            class="w-12 h-12 bg-background-700 rounded-md flex items-center justify-center text-xs text-background-400">
-                            No Ship ID</div>
-                        <div>
-                            <div class="font-semibold text-black dark:text-white">
-                                {{ truncateString(getLocalizedString((rawItem as BattleKill).victim.ship_name, locale)
-                                    || 'Unknown Ship',
-                                    20) }}
                             </div>
-                            <div class="text-xs text-background-400">
-                                {{ formatNumber((rawItem as BattleKill).total_value) }} ISK
-                            </div>
-                        </div>
-                    </div>
-                </template>
-                <template #cell-victim="{ item: rawItem }">
-                    <div v-if="rawItem" class="flex items-center gap-3">
-                        <Image v-if="(rawItem as BattleKill).victim && (rawItem as BattleKill).victim.character_id"
-                            type="character" :id="(rawItem as BattleKill).victim.character_id!"
-                            :alt="`Character: ${(rawItem as BattleKill).victim.character_name || 'Unknown Pilot'}`"
-                            :size="64" class="w-12 h-12" />
-                        <div v-else
-                            class="w-12 h-12 bg-background-700 rounded-md flex items-center justify-center text-xs text-background-400">
-                            No Pilot ID</div>
-                        <div>
-                            <div class="font-semibold text-black dark:text-white">
-                                {{ (rawItem as BattleKill).victim.character_name || 'Unknown Pilot' }}
-                            </div>
-                            <div class="text-xs text-background-400">
-                                {{ (rawItem as BattleKill).victim.corporation_name || 'Unknown Corporation' }}
-                            </div>
-                            <div v-if="(rawItem as BattleKill).victim.alliance_name"
-                                class="text-xs text-background-400">{{
-                                    (rawItem as BattleKill).victim.alliance_name }}</div>
-                        </div>
-                    </div>
-                </template>
-                <template #cell-finalBlow="{ item: rawItem }">
-                    <template v-if="rawItem && Array.isArray((rawItem as BattleKill).attackers)">
-                        <template v-for="attacker in (rawItem as BattleKill).attackers"
-                            :key="attacker.character_id || attacker.faction_id || attacker.ship_type_id">
-                            <template v-if="attacker.final_blow">
-                                <div class="flex items-center gap-3">
-                                    <Image v-if="!(rawItem as BattleKill).is_npc && attacker.character_id"
-                                        type="character" :id="attacker.character_id"
-                                        :alt="attacker.character_name || 'Unknown Pilot'" :size="64"
-                                        class="w-12 h-12" />
-                                    <Image v-else-if="(rawItem as BattleKill).is_npc && attacker.ship_type_id"
-                                        type="type-icon" :id="attacker.ship_type_id"
-                                        :alt="attacker.faction_name || 'NPC Entity'" :size="64" class="w-12 h-12" />
-                                    <div v-else
-                                        class="w-12 h-12 bg-background-700 rounded-md flex items-center justify-center text-xs text-background-400">
-                                        No ID</div>
-                                    <div>
-                                        <div class="font-semibold text-black dark:text-white">
-                                            {{ (rawItem as BattleKill).is_npc ? (attacker.faction_name || 'NPC Faction')
-                                                :
-                                                (attacker.character_name || 'Unknown Pilot') }}
-                                        </div>
-                                        <div class="text-xs text-background-400">
-                                            {{ (rawItem as BattleKill).is_npc ?
-                                                getLocalizedString(attacker.ship_group_name, locale) :
-                                                (attacker.corporation_name || "Unknown Corporation") }}
-                                        </div>
-                                        <div v-if="!(rawItem as BattleKill).is_npc && attacker.alliance_name"
-                                            class="text-xs text-background-400">
-                                            {{ attacker.alliance_name }}
-                                        </div>
-                                    </div>
+
+                            <!-- Kill Details -->
+                            <div class="kill-info-container">
+                                <!-- Damage Taken -->
+                                <div class="killmail-damage">
+                                    <Icon name="lucide:zap" class="damage-icon" />
+                                    <span class="damage-value">{{ formatNumberWithLocale(item.victim.damage_taken || 0)
+                                    }}</span>
                                 </div>
-                            </template>
-                        </template>
-                    </template>
-                </template>
-            </Table>
+
+                                <!-- Value -->
+                                <div class="killmail-value">
+                                    <span class="value-label">{{ formatIsk(item.total_value || 0) }}</span>
+                                </div>
+
+                                <!-- Time -->
+                                <div class="killmail-time">
+                                    {{ formatTime(item.kill_time) }}
+                                </div>
+                            </div>
+                        </div>
+                    </component>
+                </div>
+                <div v-else class="empty-state">
+                    No kills found for this team.
+                </div>
+            </div>
         </div>
     </div>
 </template>
+
 <script setup lang="ts">
-import { useI18n } from 'vue-i18n';
+import { computed, ref } from 'vue';
+import moment from 'moment';
+
+// Define interfaces for props
+interface AttackerData {
+    character_id?: number;
+    character_name?: string;
+    corporation_id?: number;
+    corporation_name?: string;
+    alliance_id?: number;
+    alliance_name?: string;
+    faction_id?: number;
+    faction_name?: string;
+    ship_id?: number;
+    ship_name?: any;
+    ship_group_id?: number;
+    ship_group_name?: any;
+    final_blow?: boolean;
+    damage_done?: number;
+}
 
 interface BattleKill {
     killmail_id: number;
+    kill_time: string;
     total_value: number;
     is_npc: boolean;
     victim: {
-        ship_id?: number; // Made optional to handle potential missing data
+        ship_id: number;
         ship_name: any;
-        character_id?: number; // Made optional
-        character_name?: string; // Made optional
-        corporation_name?: string; // Made optional
-        alliance_name?: string;
-        // ship_image_url and character_image_url are not used with Image component
-    };
-    attackers: Array<{
-        character_id?: number;
-        faction_id?: number; // For NPCs that might not have a character_id but a faction_id
-        ship_type_id?: number; // For NPC ship icons
-        final_blow: boolean;
-        faction_name?: string;
+        ship_group_id?: number;
         ship_group_name?: any;
+        character_id?: number;
         character_name?: string;
+        corporation_id?: number;
         corporation_name?: string;
+        alliance_id?: number;
         alliance_name?: string;
-    }>;
+        damage_taken?: number;
+    };
+    attackers: AttackerData[];
 }
 
-defineProps<{
-    blueTeamKills: BattleKill[],
-    redTeamKills: BattleKill[]
+// Define props
+const props = defineProps<{
+    teamKills: Record<string, BattleKill[]>;
+    sideIds: string[];
 }>();
 
 const { locale } = useI18n();
+const containerRef = ref<HTMLElement | null>(null);
 
+// Determine grid columns based on number of sides
+const gridColumnsClass = computed(() => {
+    const count = props.sideIds.length;
+    if (count === 0) return '';
+    if (count === 1) return 'md:grid-cols-1';
+    if (count === 2) return 'xl:grid-cols-2';
+    if (count === 3) return 'xl:grid-cols-3';
+    return 'xl:grid-cols-4'; // For 4 teams
+});
+
+// Get team/side name
+const getSideName = (sideId: string): string => {
+    // This would ideally come from battle data, for now use the ID
+    const names: Record<string, string> = {
+        'blue': 'Team A',
+        'red': 'Team B',
+        'green': 'Team C',
+        'yellow': 'Team D'
+    };
+    return names[sideId] || sideId;
+};
+
+// Get the final blow attacker
+const getFinalBlowAttacker = (kill: BattleKill): AttackerData => {
+    if (!kill.attackers || kill.attackers.length === 0) {
+        return { character_name: 'Unknown', damage_done: 0 };
+    }
+    const finalBlowAttacker = kill.attackers.find(a => a.final_blow);
+    if (finalBlowAttacker) return finalBlowAttacker;
+
+    // If no final_blow flag, return the highest damage dealer
+    return [...kill.attackers].sort((a, b) => (b.damage_done || 0) - (a.damage_done || 0))[0];
+};
+
+// Format ISK values
+const formatIsk = (isk: number): string => {
+    if (isk >= 1000000000000) {
+        return `${(isk / 1000000000000).toFixed(2)}T`;
+    } else if (isk >= 1000000000) {
+        return `${(isk / 1000000000).toFixed(2)}B`;
+    } else if (isk >= 1000000) {
+        return `${(isk / 1000000).toFixed(2)}M`;
+    } else if (isk >= 1000) {
+        return `${(isk / 1000).toFixed(2)}K`;
+    }
+    return `${isk.toFixed(2)} ISK`;
+};
+
+// Format time
+const formatTime = (timeString: string): string => {
+    const date = moment.utc(timeString).local();
+    return date.format('YYYY-MM-DD HH:mm');
+};
+
+// Format numbers with locale
+function formatNumberWithLocale(n: number): string {
+    if (typeof n !== 'number') return '0';
+    return n.toLocaleString(locale.value, { maximumFractionDigits: 0 });
+}
+
+// Localization helper
 const getLocalizedString = (obj: any, localeKey: string): string => {
     if (!obj) return "";
-    return obj[localeKey] || obj.en || "";
+    // Convert localeKey from 'en-US' to 'en' if necessary
+    const lang = localeKey.split('-')[0];
+    return obj[lang] || obj.en || (typeof obj === 'string' ? obj : "");
 };
-
-function truncateString(str: any, num: number) {
-    if (str === null || str === undefined) return '';
-    if (typeof str !== 'string') str = String(str);
-    return str.length <= num ? str : str.slice(0, num) + '...';
-}
-
-function formatNumber(n: number) {
-    if (typeof n !== 'number') return '0';
-    return n.toLocaleString(undefined, { maximumFractionDigits: 2 });
-}
-
-const generateKillmailLink = (item: BattleKill): string => {
-    return `/kill/${item.killmail_id}`;
-};
-
-const killColumns = [
-    { id: 'ship', header: 'Ship', width: '30%' },
-    { id: 'victim', header: 'Victim', width: '30%' },
-    { id: 'finalBlow', header: 'Final Blow', width: '40%' },
-];
 </script>
 
 <style scoped>
-.kill-table :deep(.table-header) {
-    background-color: rgba(26, 26, 26, 0.5);
-    color: #9ca3af;
+/* Team column sizing */
+.team-kills-column {
+    min-width: 0;
+    /* Allow columns to shrink */
+}
+
+/* Attacker List Styling */
+.attacker-list {
+    border: 1px solid rgba(75, 85, 99, 0.2);
+    background-color: light-dark(rgba(245, 245, 245, 0.1), rgba(26, 26, 26, 0.4));
+}
+
+/* Make attacker-row act like a link */
+.attacker-row {
+    display: flex;
+    flex-direction: column;
+    padding: 0.75rem;
+    border-bottom: 1px solid rgba(75, 85, 99, 0.2);
+    transition: background-color 0.15s ease;
+    color: inherit;
+    text-decoration: none;
+    position: relative;
+}
+
+.attacker-row:hover {
+    background-color: light-dark(rgba(243, 244, 246, 0.7), rgba(31, 41, 55, 0.7));
+}
+
+/* Section label styling */
+.section-label {
+    position: absolute;
+    top: 4px;
+    right: 4px;
+    font-size: 0.6rem;
+    font-weight: 700;
+    padding: 1px 4px;
+    border-radius: 2px;
     text-transform: uppercase;
-    font-size: 0.75rem;
-    padding: 0.5rem;
 }
 
-.kill-table :deep(.header-cell) {
-    padding: 0 0.5rem;
+.victim-label {
+    background-color: rgba(239, 68, 68, 0.2);
+    color: #ef4444;
 }
 
-.kill-table :deep(.table-row) {
-    border-bottom: 1px solid #282828;
-    transition: background-color 0.3s ease;
-    cursor: pointer;
+.finalblow-label {
+    background-color: rgba(34, 197, 94, 0.2);
+    color: #22c55e;
 }
 
-.kill-table :deep(tbody tr):hover {
-    background: light-dark(rgba(229, 231, 235, 0.15), rgba(35, 35, 35, 0.5));
+/* Top section - victim information */
+.attacker-top {
+    display: flex;
+    gap: 0.5rem;
+    align-items: center;
+    margin-bottom: 0.5rem;
+    width: 100%;
+    padding: 4px;
+    position: relative;
+    background-color: rgba(239, 68, 68, 0.05);
+    border-radius: 4px;
 }
 
-.kill-table :deep(.body-cell) {
-    padding: 0.5rem;
+/* Middle section - attacker information */
+.attacker-middle {
+    display: flex;
+    gap: 0.5rem;
+    align-items: center;
+    margin-bottom: 0.5rem;
+    width: 100%;
+    padding: 4px;
+    position: relative;
+    background-color: rgba(34, 197, 94, 0.05);
+    border-radius: 4px;
 }
 
-.w-12.h-12 {
+.portrait-container {
+    flex-shrink: 0;
+}
+
+.portrait {
+    border-radius: 50%;
+    background-color: rgba(0, 0, 0, 0.1);
+}
+
+.character-portrait {
     width: 48px;
     height: 48px;
-    border-radius: 0.375rem;
-    object-fit: cover;
-    background: #18181b;
-    border: 1px solid #282828;
+}
+
+.character-portrait-placeholder {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    background-color: rgba(100, 100, 100, 0.1);
+    border: 1px dashed rgba(128, 128, 128, 0.3);
+}
+
+.corp-alliance-container {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    height: 48px;
+    flex-shrink: 0;
+}
+
+.corporation-portrait,
+.alliance-portrait {
+    width: 24px;
+    height: 24px;
+}
+
+.name-container {
+    min-width: 0;
+    /* Allow text to shrink */
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
+.entity-name {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    line-height: 1.2;
+}
+
+.character-name {
+    font-weight: 600;
+    font-size: 0.95rem;
+    color: light-dark(#111827, #f3f4f6);
+}
+
+.corporation-name {
+    font-size: 0.85rem;
+    color: light-dark(#4b5563, #d1d5db);
+}
+
+.alliance-name {
+    font-size: 0.75rem;
+    color: light-dark(#6b7280, #9ca3af);
+}
+
+/* Bottom section - ship and kill details */
+.attacker-bottom {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+    padding: 8px 4px 0;
+    border-top: 1px solid rgba(75, 85, 99, 0.1);
+}
+
+.ship-details {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-width: 0;
+    flex-grow: 1;
+}
+
+.ship-image-container {
+    flex-shrink: 0;
+}
+
+.ship-image {
+    width: 40px;
+    height: 40px;
+    border-radius: 4px;
+    background-color: rgba(0, 0, 0, 0.2);
+    border: 1px solid rgba(75, 85, 99, 0.2);
+}
+
+.ship-info {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+}
+
+.ship-name {
+    font-size: 0.85rem;
+    font-weight: 500;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.ship-group {
+    font-size: 0.7rem;
+    color: light-dark(#6b7280, #9ca3af);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.kill-info-container {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 0.15rem;
+    flex-shrink: 0;
+}
+
+.killmail-damage {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+    font-size: 0.75rem;
+    color: #ef4444;
+    /* Red for damage */
+}
+
+.damage-icon {
+    width: 12px;
+    height: 12px;
+}
+
+.damage-value {
+    font-weight: 500;
+}
+
+.killmail-value {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: #38bdf8;
+    /* Light blue for ISK */
+}
+
+.killmail-time {
+    font-size: 0.7rem;
+    color: light-dark(#6b7280, #9ca3af);
+}
+
+/* Empty state styling */
+.empty-state {
+    padding: 1.5rem;
+    text-align: center;
+    color: light-dark(#6b7280, #9ca3af);
+    font-style: italic;
+}
+
+/* Responsive adjustments for team columns */
+@media (max-width: 1200px) {
+
+    .xl\:grid-cols-4,
+    .xl\:grid-cols-3 {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+
+@media (max-width: 768px) {
+
+    .xl\:grid-cols-2,
+    .xl\:grid-cols-3,
+    .xl\:grid-cols-4 {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    .attacker-bottom {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.5rem;
+    }
+
+    .kill-info-container {
+        align-self: flex-end;
+        align-items: flex-start;
+    }
+}
+
+/* Red text for victims */
+.text-red-500 {
+    color: #ef4444 !important;
+}
+
+.dark .text-red-400 {
+    color: #f87171 !important;
 }
 </style>

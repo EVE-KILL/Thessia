@@ -3,7 +3,7 @@
         <!-- Loading indicator -->
         <div v-if="!commentsLoaded" class="loading-comments p-4 text-center">
             <UIcon name="i-heroicons-arrow-path" class="animate-spin inline-block mr-2" />
-            {{ $t('common.loading') }}...
+            {{ $t('loading') }}...
         </div>
 
         <!-- Display existing comments -->
@@ -139,7 +139,7 @@
         <!-- WebSocket connection status indicator -->
         <div v-if="!wsConnected" class="text-xs text-amber-500 mb-2 flex items-center justify-end gap-1">
             <div class="w-2 h-2 rounded-full bg-amber-500 animate-pulse"></div>
-            <span>{{ $t('reconnecting', { attempt: wsReconnectAttempts, max: 5 }) }}</span>
+            <span>{{ $t('reconnecting_ws', { attempt: wsReconnectAttempts, max: 5 }) }}</span>
         </div>
 
         <!-- Comment Input Box for authenticated users -->
