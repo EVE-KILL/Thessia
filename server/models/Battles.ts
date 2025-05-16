@@ -153,4 +153,6 @@ BattlesSchema.index({ alliancesInvolved: 1 }, { sparse: true });
 BattlesSchema.index({ "systems.system_id": 1 }, { sparse: true });
 BattlesSchema.index({ "systems.region_id": 1 }, { sparse: true });
 BattlesSchema.index({ start_time: 1 }, { sparse: true });
+BattlesSchema.index({ start_time: -1 }, { sparse: true }); // Add descending index for sorting
 BattlesSchema.index({ end_time: 1 }, { sparse: true });
+BattlesSchema.index({ end_time: -1 }, { sparse: true });

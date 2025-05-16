@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import moment from 'moment';
-import { computed, ref, watch } from 'vue';
+import { computed, onMounted, ref, watch } from 'vue';
 import type { IBattlesDocument } from '~/server/interfaces/IBattles';
 
 const { t, locale } = useI18n();
@@ -29,9 +29,74 @@ interface BattlesApiResponse {
     itemsPerPage: number;
 }
 
+// Add a separate loading state ref to track loading beyond what useFetch provides
+const isLoading = ref(true);
+// Track if this is the initial data load for UI treatment
+const isInitialLoad = ref(true);
+
+// Initialize with empty data structure for immediate rendering
+const initialData = ref<BattlesApiResponse>({
+    battles: [],
+    totalItems: 0,
+    totalPages: 0,
+    currentPage: 1,
+    itemsPerPage: selectedPageSize.value
+});
+
 const { data, pending, error, refresh } = useFetch<BattlesApiResponse>('/api/battles', {
     query: queryParams,
     key: 'battles-list',
+    // Use lazy to not block initial render
+    lazy: true,
+});
+
+// Use computed values that fall back to initial data when real data isn't loaded yet
+const battlesList = computed(() => data.value?.battles || initialData.value.battles);
+const totalItems = computed(() => data.value?.totalItems || initialData.value.totalItems);
+
+// Better loading state management with watch on pending
+watch(() => pending.value, (newPending) => {
+    isLoading.value = newPending;
+
+    // If we're no longer pending and it was the initial load, update that state
+    if (!newPending && isInitialLoad.value) {
+        isInitialLoad.value = false;
+    }
+}, { immediate: true });
+
+// Function to handle data refresh
+const loadData = async () => {
+    try {
+        isLoading.value = true;
+        await refresh();
+    } catch (err) {
+        console.error('Error refreshing battles data:', err);
+    } finally {
+        // Always update loading state regardless of success/failure
+        isLoading.value = pending.value;
+        isInitialLoad.value = false;
+    }
+};
+
+// On component mount, trigger the data fetch
+onMounted(() => {
+    loadData();
+
+    // Safeguard against stuck loading state
+    const timeout = setTimeout(() => {
+        if (isLoading.value) {
+            isLoading.value = false;
+            isInitialLoad.value = false;
+            console.warn('Loading timeout reached, forcing loading state to complete');
+        }
+        clearTimeout(timeout);
+    }, 10000); // 10 second safety timeout
+});
+
+// Watch for changes to pagination params and locale, and refresh the data
+watch([currentPage, selectedPageSize, currentLocale], () => {
+    moment.locale(currentLocale.value);
+    loadData();
 });
 
 const columns = [
@@ -40,9 +105,6 @@ const columns = [
     { id: 'stats', header: computed(() => t('stats', 'Stats')), width: '25%' },
     { id: 'involved', header: computed(() => t('involved', 'Involved')), width: '30%' },
 ];
-
-const battlesList = computed(() => data.value?.battles || []);
-const totalItems = computed(() => data.value?.totalItems || 0);
 
 moment.locale(currentLocale.value); // Set locale once
 
@@ -154,30 +216,6 @@ const getSystemsDisplay = (battle: IBattlesDocument) => {
     }
     return [];
 };
-
-// Refresh on page/size change
-watch([currentPage, selectedPageSize, currentLocale], () => {
-    moment.locale(currentLocale.value);
-    refresh();
-});
-
-// Track if the initial data load is pending
-const initialPending = ref(true);
-
-// When data is loaded the first time, set initialPending to false
-watch(
-    () => pending.value,
-    (isPending, wasPending) => {
-        if (wasPending && !isPending) {
-            initialPending.value = false;
-        }
-    }
-);
-
-// Ensure initialPending is false if data is already loaded (e.g. SSR/hydration)
-if (!pending.value) {
-    initialPending.value = false;
-}
 </script>
 
 <template>
@@ -187,19 +225,28 @@ if (!pending.value) {
         <UAlert v-if="error" icon="i-heroicons-exclamation-triangle" color="red" variant="soft"
             :title="t('errorFetchingData', 'Error Fetching Data')" :description="error.message" />
 
-        <div v-else class="space-y-4">
-            <div class="flex justify-between items-center">
-                <!-- Item Count (Left) -->
-                <span class="text-sm text-gray-500 dark:text-gray-400">
-                    {{ t('showingResults', {
-                        start: totalItems > 0 ? (currentPage - 1) * selectedPageSize + 1 : 0,
-                        end: Math.min(currentPage * selectedPageSize, totalItems),
-                        total: totalItems
-                    }, `Showing {start}-{end} of {total} battles`) }}
-                </span>
+        <!-- Show loading spinner when data is initially loading -->
+        <div v-if="isLoading && isInitialLoad" class="flex flex-col items-center justify-center py-12">
+            <UIcon name="lucide:loader" class="w-12 h-12 animate-spin text-primary mb-4" />
+            <span class="text-xl font-medium">{{ t('loading', 'Loading battles...') }}</span>
+        </div>
 
-                <!-- Pagination Controls (Right) -->
-                <div class="flex items-center space-x-4">
+        <div v-else class="space-y-4">
+            <!-- Fixed alignment: explicitly use flex with full width and justify-between -->
+            <div class="w-full flex justify-between items-center">
+                <!-- Item Count (Left) - explicit justify-start -->
+                <div class="flex justify-start">
+                    <span class="text-sm text-gray-500 dark:text-gray-400">
+                        {{ t('showingResults', {
+                            start: totalItems > 0 ? (currentPage - 1) * selectedPageSize + 1 : 0,
+                            end: Math.min(currentPage * selectedPageSize, totalItems),
+                            total: totalItems
+                        }, `Showing {start}-{end} of {total} battles`) }}
+                    </span>
+                </div>
+
+                <!-- Pagination Controls (Right) - explicit justify-end -->
+                <div class="flex justify-end items-center space-x-4">
                     <!-- Per Page Selector -->
                     <div class="flex items-center space-x-2">
                         <span class="text-sm">{{ t('perPage', 'Per Page:') }}</span>
@@ -208,15 +255,25 @@ if (!pending.value) {
                     </div>
                     <!-- Pagination Component -->
                     <UPagination v-model:page="currentPage" :total="totalItems" :items-per-page="selectedPageSize"
-                        :disabled="pending" size="sm" />
+                        :disabled="isLoading" size="sm" />
                 </div>
             </div>
 
-            <Table v-if="!pending && !initialPending" :key="'battles-table-data'" :columns="columns"
-                :items="battlesList" :loading="false" :skeleton-count="selectedPageSize" :link-fn="linkFn"
-                :bordered="true" :striped="false" :hover="true" density="normal" background="transparent"
-                table-class="battles-table" :empty-text="t('noBattlesFound', 'No battles found.')"
-                empty-icon="i-heroicons-circle-stack">
+            <!-- Loading overlay for subsequent data fetches (not initial) -->
+            <div v-if="isLoading && !isInitialLoad" class="relative">
+                <div class="absolute inset-0 bg-background-900/50 flex items-center justify-center z-10 rounded-lg">
+                    <div class="bg-background-800 p-4 rounded-lg shadow-lg flex items-center space-x-3">
+                        <UIcon name="lucide:loader" class="w-6 h-6 animate-spin text-primary" />
+                        <span>{{ t('refreshing', 'Refreshing data...') }}</span>
+                    </div>
+                </div>
+            </div>
+
+            <Table :key="`battles-table-${isLoading ? 'loading' : 'data'}`" :columns="columns"
+                :items="isLoading && !data.value ? skeletonRows : battlesList" :loading="isLoading"
+                :skeleton-count="selectedPageSize" :link-fn="linkFn" :bordered="true" :striped="false" :hover="true"
+                density="normal" background="transparent" table-class="battles-table"
+                :empty-text="t('noBattlesFound', 'No battles found.')" empty-icon="i-heroicons-circle-stack">
                 <!-- Custom Cell Rendering -->
                 <template #cell-time="{ item }">
                     <div class="text-sm space-y-0.5">
@@ -319,11 +376,7 @@ if (!pending.value) {
                         </div>
                     </div>
                 </template>
-            </Table>
-            <Table v-else :key="'battles-table-skeleton'" :columns="columns" :items="skeletonRows" :loading="true"
-                :skeleton-count="selectedPageSize" :link-fn="linkFn" :bordered="true" :striped="false" :hover="true"
-                density="normal" background="transparent" table-class="battles-table"
-                :empty-text="t('noBattlesFound', 'No battles found.')" empty-icon="i-heroicons-circle-stack">
+
                 <template #skeleton>
                     <div class="battles-skeleton-container">
                         <div v-for="i in selectedPageSize" :key="`skeleton-${i}`" class="battles-skeleton-row">
@@ -380,10 +433,11 @@ if (!pending.value) {
                     </div>
                 </template>
             </Table>
-            <!-- Bottom Pagination -->
-            <div class="flex justify-end mt-4">
+
+            <!-- Bottom Pagination - ensure it's at the far right -->
+            <div class="w-full flex justify-end mt-4">
                 <UPagination v-model:page="currentPage" :total="totalItems" :items-per-page="selectedPageSize"
-                    :disabled="pending" size="sm" />
+                    :disabled="isLoading" size="sm" />
             </div>
         </div>
     </div>

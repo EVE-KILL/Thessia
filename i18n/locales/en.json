@@ -262,6 +262,7 @@
     "keyspaceMisses": "Keyspace Misses",
     "refreshNow": "Refresh Now",
     "autoRefreshing": "Auto Refreshing",
+    "refreshing": "Refreshing...",
     "lastUpdated": "Last updated: {time}",
     "processingStatisticsTitle": "Processing Statistics",
     "marketPricesTitle": "Market Prices",
