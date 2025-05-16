@@ -1,10 +1,9 @@
 import { cliLogger } from "~/server/helpers/Logger";
-import { calculateAllStats } from "~/server/helpers/Stats";
-import type { IStatsDocument, StatsType } from "~/server/interfaces/IStats";
+import type { StatsType } from "~/server/interfaces/IStats";
 import { Alliances } from "~/server/models/Alliances";
 import { Characters } from "~/server/models/Characters";
 import { Corporations } from "~/server/models/Corporations";
-import { Stats } from "~/server/models/Stats";
+import { addStatsJob } from "~/server/queue/Stats";
 
 export default {
     name: "backfillStatsCalculations",
@@ -30,12 +29,13 @@ export default {
                 cliLogger.info(`🔄  Backfilling ${entity[nameField]}...`);
                 for (const days of TIME_PERIODS) {
                     try {
-                        const stats: IStatsDocument = await calculateAllStats(entityType, entityId, days);
-                        await Stats.findOneAndUpdate(
-                            { type: entityType, id: entityId, days: days },
-                            stats,
-                            { upsert: true, setDefaultsOnInsert: true }
-                        );
+                        await addStatsJob(entityType, entityId, days, 1);
+                        //const stats: IStatsDocument = await calculateAllStats(entityType, entityId, days);
+                        //await Stats.findOneAndUpdate(
+                        //    { type: entityType, id: entityId, days: days },
+                        //    stats,
+                        //    { upsert: true, setDefaultsOnInsert: true }
+                        //);
                         processedCount++;
                         const entityName = entity[nameField] || entityId;
                         cliLogger.info(`✔️  [${processedCount}/${totalJobs}] Backfilled ${entityType} ${entityName} (${entityId}) for ${days} days`);

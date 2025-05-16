@@ -160,6 +160,23 @@ processEntities:
         fsGroup: 1000
         runAsNonRoot: true
 
+# Process Stats
+processStats:
+    enabled: true
+    replicas: 1
+    resources:
+        requests:
+            cpu: 250m
+            memory: 256Mi
+        limits:
+            cpu: 4000m
+            memory: 1024Mi
+    securityContext:
+        runAsUser: 1000
+        runAsGroup: 1000
+        fsGroup: 1000
+        runAsNonRoot: true
+
 # Process Wars
 processWars:
     enabled: true
