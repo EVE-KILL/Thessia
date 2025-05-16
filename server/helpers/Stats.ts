@@ -420,11 +420,6 @@ async function getSampledCountWithCondition(baseCondition: any, field: string, v
         { $count: "count" }
     ];
 
-    const totalCountPipeline = [
-        { $match: baseCondition },
-        { $count: "count" }
-    ];
-
     const [sampleResult, totalResult] = await Promise.all([
         Killmails.aggregate(pipeline).allowDiskUse(true),
         Killmails.countDocuments(baseCondition)

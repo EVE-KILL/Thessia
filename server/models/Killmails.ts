@@ -138,9 +138,6 @@ const indexes = [
     { fields: { "attackers.corporation_id": 1, "attackers.ship_id": 1, kill_time: -1 }, options: { sparse: true } },
     { fields: { "attackers.alliance_id": 1, "attackers.ship_id": 1, kill_time: -1 }, options: { sparse: true } },
 
-    // Index to help with blob factor calculation (size of attackers array)
-    { fields: { "attackers": 1 }, options: { sparse: true } }, // This helps MongoDB know if attackers exists
-
     // Item/fitting related indexes
     { fields: { "items.type_id": -1, kill_time: -1 }, options: { sparse: true } },
 
@@ -165,9 +162,6 @@ const indexes = [
     { fields: { "attackers.ship_group_id": -1, "kill_time": -1 }, options: { sparse: true } },
     { fields: { "attackers.faction_id": -1, "kill_time": -1 }, options: { sparse: true } },
     { fields: { "attackers.weapon_type_id": -1, "kill_time": -1 }, options: { sparse: true } },
-
-    // For Query Builder - Item fields often filtered with kill_time sort
-    { fields: { "items.group_id": -1, "kill_time": -1 }, options: { sparse: true } },
 ];
 
 for (const { fields, options } of indexes) {
