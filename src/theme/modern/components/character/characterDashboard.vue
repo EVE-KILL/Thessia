@@ -57,9 +57,9 @@
                     <div class="heat-map-container">
                         <h3 class="section-title">{{ $t('heatMap') }}</h3>
                         <div class="heat-map-grid">
-                            <div v-for="(count, hour) in stats.heatMap" :key="hour" class="heat-map-hour">
+                            <div v-for="(count, hour) in stats.full.heatMap" :key="hour" class="heat-map-hour">
                                 <div class="heat-map-cell"
-                                    :class="getHeatMapColor(count, getMaxHeatMapValue(stats.heatMap))">
+                                    :class="getHeatMapColor(count, getMaxHeatMapValue(stats.full.heatMap))">
                                     <div class="hour-label">{{ hour.replace('h', '') }}:00</div>
                                     <div class="hour-value">{{ formatNumber(count) }}</div>
                                 </div>
@@ -68,10 +68,10 @@
                     </div>
 
                     <!-- Most Used Ships -->
-                    <div v-if="stats.mostUsedShips && Object.keys(stats.mostUsedShips).length > 0"
+                    <div v-if="stats.full.mostUsedShips && Object.keys(stats.full.mostUsedShips).length > 0"
                         class="stats-section">
                         <h3 class="section-title">{{ $t('mostUsedShips') }}</h3>
-                        <Table :columns="shipColumns" :items="sortByCountDesc(stats.mostUsedShips)"
+                        <Table :columns="shipColumns" :items="sortByCountDesc(stats.full.mostUsedShips)"
                             background="transparent" density="compact" :bordered="false" :special-header="true">
                             <template #cell-name="{ item }">
                                 <div class="text-white">{{ getLocalizedString(item.name, currentLocale) }}</div>
@@ -83,10 +83,10 @@
                     </div>
 
                     <!-- Most Lost Ships -->
-                    <div v-if="stats.mostLostShips && Object.keys(stats.mostLostShips).length > 0"
+                    <div v-if="stats.full.mostLostShips && Object.keys(stats.full.mostLostShips).length > 0"
                         class="stats-section">
                         <h3 class="section-title">{{ $t('mostLostShips') }}</h3>
-                        <Table :columns="shipColumns" :items="sortByCountDesc(stats.mostLostShips)"
+                        <Table :columns="shipColumns" :items="sortByCountDesc(stats.full.mostLostShips)"
                             background="transparent" density="compact" :bordered="false" :special-header="true">
                             <template #cell-name="{ item }">
                                 <div class="text-white">{{ getLocalizedString(item.name, currentLocale) }}</div>
@@ -98,10 +98,10 @@
                     </div>
 
                     <!-- Dies To Corporations -->
-                    <div v-if="stats.diesToCorporations && Object.keys(stats.diesToCorporations).length > 0"
+                    <div v-if="stats.full.diesToCorporations && Object.keys(stats.full.diesToCorporations).length > 0"
                         class="stats-section">
                         <h3 class="section-title">{{ $t('diesToCorporations') }}</h3>
-                        <Table :columns="corpColumns" :items="sortByCountDesc(stats.diesToCorporations)"
+                        <Table :columns="corpColumns" :items="sortByCountDesc(stats.full.diesToCorporations)"
                             background="transparent" density="compact" :bordered="false" :special-header="true">
                             <template #cell-name="{ item }">
                                 <div class="text-white">{{ item.name }}</div>
@@ -113,10 +113,10 @@
                     </div>
 
                     <!-- Dies To Alliances -->
-                    <div v-if="stats.diesToAlliances && Object.keys(stats.diesToAlliances).length > 0"
+                    <div v-if="stats.full.diesToAlliances && Object.keys(stats.full.diesToAlliances).length > 0"
                         class="stats-section">
                         <h3 class="section-title">{{ $t('diesToAlliances') }}</h3>
-                        <Table :columns="allianceColumns" :items="sortByCountDesc(stats.diesToAlliances)"
+                        <Table :columns="allianceColumns" :items="sortByCountDesc(stats.full.diesToAlliances)"
                             background="transparent" density="compact" :bordered="false" :special-header="true">
                             <template #cell-name="{ item }">
                                 <div class="text-white">{{ item.name }}</div>
@@ -128,10 +128,10 @@
                     </div>
 
                     <!-- Flies With Corporations -->
-                    <div v-if="stats.fliesWithCorporations && Object.keys(stats.fliesWithCorporations).length > 0"
+                    <div v-if="stats.full.fliesWithCorporations && Object.keys(stats.full.fliesWithCorporations).length > 0"
                         class="stats-section">
                         <h3 class="section-title">{{ $t('fliesWithCorporations') }}</h3>
-                        <Table :columns="corpColumns" :items="sortByCountDesc(stats.fliesWithCorporations)"
+                        <Table :columns="corpColumns" :items="sortByCountDesc(stats.full.fliesWithCorporations)"
                             background="transparent" density="compact" :bordered="false" :special-header="true">
                             <template #cell-name="{ item }">
                                 <div class="text-white">{{ item.name }}</div>
@@ -143,10 +143,10 @@
                     </div>
 
                     <!-- Flies With Alliances -->
-                    <div v-if="stats.fliesWithAlliances && Object.keys(stats.fliesWithAlliances).length > 0"
+                    <div v-if="stats.full.fliesWithAlliances && Object.keys(stats.full.fliesWithAlliances).length > 0"
                         class="stats-section">
                         <h3 class="section-title">{{ $t('fliesWithAlliances') }}</h3>
-                        <Table :columns="allianceColumns" :items="sortByCountDesc(stats.fliesWithAlliances)"
+                        <Table :columns="allianceColumns" :items="sortByCountDesc(stats.full.fliesWithAlliances)"
                             background="transparent" density="compact" :bordered="false" :special-header="true">
                             <template #cell-name="{ item }">
                                 <div class="text-white">{{ item.name }}</div>
@@ -292,12 +292,6 @@ const formatNumber = (value: number): string => {
     return new Intl.NumberFormat().format(value || 0);
 };
 
-// Format ISK values
-const formatIsk = (value: number): string => {
-    if (!value) return "0 ISK";
-    return `${new Intl.NumberFormat().format(value)} ISK`;
-};
-
 // Helper function to sort by count in descending order
 const sortByCountDesc = (items: Record<string, any>) => {
     if (!items) return [];
@@ -313,7 +307,7 @@ const changePeriod = (period: string) => {
 };
 
 // Function to determine the most active timezone based on the heatmap
-const determineActiveTimezone = (heatMap: Record<string, number>): string => {
+const determineActiveTimezone = (heatMap: Record<string, number> | undefined): string => {
     if (!heatMap) return "Unknown";
 
     const hours = Object.entries(heatMap).map(([hour, count]) => ({
@@ -387,7 +381,7 @@ const getMaxHeatMapValue = (heatMap: Record<string, number>): number => {
 const formattedStats = computed(() => {
     if (!stats.value) return [];
 
-    const activeTimezone = determineActiveTimezone(stats.value.heatMap);
+    const activeTimezone = determineActiveTimezone(stats.value.full.heatMap);
 
     return [
         { name: t("kills"), value: formatNumber(stats.value.kills) },
@@ -397,11 +391,11 @@ const formattedStats = computed(() => {
         { name: `${t("solo")} ${t("kills")}`, value: formatNumber(stats.value.soloKills) },
         { name: `${t("solo")} ${t("losses")}`, value: formatNumber(stats.value.soloLosses) },
         { name: `${t("npc")} ${t("losses")}`, value: formatNumber(stats.value.npcLosses) },
-        { name: t("blobFactor"), value: stats.value.blobFactor?.toFixed(2) || "0.00" },
+        { name: t("blobFactor"), value: stats.value.full.blobFactor?.toFixed(2) || "0.00" },
         { name: t("lastActive"), value: formatDate(stats.value.lastActive) },
         { name: t("activeTimezone"), value: activeTimezone },
-        { name: t("knownFC"), value: stats.value.possibleFC ? t("yes") : t("no") },
-        { name: t("knownCynoAlt"), value: stats.value.possibleCynoAlt ? t("yes") : t("no") },
+        { name: t("knownFC"), value: stats.value.full.possibleFC ? t("yes") : t("no") },
+        { name: t("knownCynoAlt"), value: stats.value.full.possibleCynoAlt ? t("yes") : t("no") },
     ];
 });
 

@@ -1,22 +1,22 @@
 <template>
-    <div class="corporation-dashboard">
+    <div class="alliance-dashboard">
         <div class="grid-container">
-            <!-- Corporation Description Section -->
+            <!-- Left Side - Blank for now -->
             <UCard class="bg-black bg-opacity-30 dark:bg-gray-900 dark:bg-opacity-30">
                 <template #header>
                     <div class="header-container">
-                        <h3 class="header-title">{{ $t('description') }}</h3>
+                        <h3 class="header-title">{{ $t('information') }}</h3>
                     </div>
                 </template>
 
-                <div v-if="corporationDescription" class="corporation-description" v-html="corporationDescription">
-                </div>
-                <div v-else class="empty-description">
-                    {{ $t('corporation.noDescription') }}
+                <div class="blank-section">
+                    <p class="text-center text-gray-500 dark:text-gray-400 italic py-8">
+                        {{ $t('alliance.comingSoon') }}
+                    </p>
                 </div>
             </UCard>
 
-            <!-- Corporation Stats Section -->
+            <!-- Alliance Stats Section -->
             <UCard class="bg-black bg-opacity-30 dark:bg-gray-900 dark:bg-opacity-30">
                 <template #header>
                     <div class="header-container">
@@ -117,17 +117,15 @@ import { formatDistanceToNow } from "date-fns";
 import { de, enUS, es, fr, ja, ko, ru, zhCN } from "date-fns/locale";
 import { computed, onMounted, onUnmounted, ref, watchEffect } from "vue";
 import { useI18n } from "vue-i18n";
-import { useEveHtmlParser } from "~/src/theme/modern/composables/useEveHtmlParser";
 
 const props = defineProps({
-    corporation: {
+    alliance: {
         type: Object,
         required: true,
     },
 });
 
 const { t, locale } = useI18n();
-const { convertEveHtml } = useEveHtmlParser();
 const currentLocale = computed(() => locale.value);
 
 // Period handling
@@ -142,12 +140,6 @@ const periods = [
 const activePeriodLabel = computed(() => {
     if (activePeriod.value === "all") return t("allTime");
     return `${activePeriod.value}d`;
-});
-
-// Corporation description
-const corporationDescription = computed(() => {
-    if (!props.corporation?.description) return "";
-    return convertEveHtml(props.corporation.description);
 });
 
 // Stats data
@@ -174,16 +166,6 @@ function getLocalizedString(obj: any, locale: string): string {
     return obj[locale] || obj.en || "";
 }
 
-// Format date with date-fns using current locale
-const formatDate = (dateString: string) => {
-    if (!dateString) return "";
-    const date = new Date(dateString);
-    return formatDistanceToNow(date, {
-        addSuffix: true,
-        locale: dateLocales[currentLocale.value] || enUS,
-    });
-};
-
 // Date locale mapping
 const dateLocales = {
     en: enUS,
@@ -194,6 +176,16 @@ const dateLocales = {
     ko: ko,
     ru: ru,
     zh: zhCN,
+};
+
+// Format date with date-fns using current locale
+const formatDate = (dateString: string) => {
+    if (!dateString) return "";
+    const date = new Date(dateString);
+    return formatDistanceToNow(date, {
+        addSuffix: true,
+        locale: dateLocales[currentLocale.value] || enUS,
+    });
 };
 
 // Format numbers with commas
@@ -264,26 +256,32 @@ const formattedStats = computed(() => {
         { name: t("losses"), value: formatNumber(stats.value.losses) },
         { name: `${t("isk")} ${t("killed")}`, value: formatIsk(stats.value.iskKilled) },
         { name: `${t("isk")} ${t("lost")}`, value: formatIsk(stats.value.iskLost) },
+        { name: `${t("solo")} ${t("kills")}`, value: formatNumber(stats.value.soloKills) },
+        { name: `${t("solo")} ${t("losses")}`, value: formatNumber(stats.value.soloLosses) },
+        { name: `${t("npc")} ${t("losses")}`, value: formatNumber(stats.value.npcLosses) },
+        { name: t("lastActive"), value: formatDate(stats.value.lastActive) },
+        { name: t("corporations"), value: formatNumber(props.alliance?.corporation_count || 0) },
+        { name: t("members"), value: formatNumber(props.alliance?.member_count || 0) },
     ];
 });
 
 // Fetch stats data
 const fetchStats = (period = "90") => {
-    if (!props.corporation?.corporation_id) {
+    if (!props.alliance?.alliance_id) {
         stats.value = null;
         statsLoading.value = false;
         statsError.value = false;
         return;
     }
 
-    const url = `/api/corporations/${props.corporation.corporation_id}/stats${period === "all" ? "" : `?days=${period}`}`;
+    const url = `/api/alliances/${props.alliance.alliance_id}/stats${period === "all" ? "" : `?days=${period}`}`;
 
     const {
         data: fetchedData,
         pending: fetchPending,
         error: fetchError
     } = useFetch(url, {
-        key: `corporation-dashboard-stats-${props.corporation.corporation_id}-${period}`,
+        key: `alliance-dashboard-stats-${props.alliance.alliance_id}-${period}`,
     });
 
     // React to changes in the fetch state
@@ -292,24 +290,24 @@ const fetchStats = (period = "90") => {
         stats.value = fetchedData.value || null;
         statsError.value = !!fetchError.value;
         if (fetchError.value) {
-            console.error(`Failed to fetch corporation stats for ${props.corporation.corporation_id} (period: ${period}):`, fetchError.value);
+            console.error(`Failed to fetch alliance stats for ${props.alliance.alliance_id} (period: ${period}):`, fetchError.value);
         }
     });
 };
 
 // Fetch data on component mount
 onMounted(() => {
-    console.log('[CorporationDashboard] Component Mounted. Initial activePeriod:', activePeriod.value);
+    console.log('[AllianceDashboard] Component Mounted. Initial activePeriod:', activePeriod.value);
     fetchStats(activePeriod.value);
 });
 
 onUnmounted(() => {
-    console.log('[CorporationDashboard] Component Unmounted');
+    console.log('[AllianceDashboard] Component Unmounted');
 });
 </script>
 
 <style scoped>
-.corporation-dashboard {
+.alliance-dashboard {
     width: 100%;
 }
 
@@ -341,30 +339,11 @@ onUnmounted(() => {
     gap: 0.5rem;
 }
 
-.corporation-description {
-    line-height: 1.6;
-    font-family: monospace;
-    word-break: break-word;
-    font-size: 1.4rem;
-    padding: 0.5rem;
-    overflow-y: auto;
-    max-height: 600px;
-}
-
-.corporation-description :deep(a) {
-    color: rgb(99, 102, 241);
-    text-decoration: none;
-}
-
-.corporation-description :deep(a:hover) {
-    text-decoration: underline;
-}
-
-.empty-description {
-    text-align: center;
-    padding: 1rem 0;
-    color: rgb(156, 163, 175);
-    font-size: 0.875rem;
+.blank-section {
+    min-height: 200px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
 .loading-container {

@@ -1,4 +1,5 @@
-import { calculateShortStats } from "~/server/helpers/Stats";
+import { createEmptyStats } from "~/server/helpers/EmptyStats";
+import { Stats } from "~/server/models/Stats";
 
 export default defineCachedEventHandler(async (event) => {
     const corporationId: number | null = event.context.params?.id
@@ -6,16 +7,25 @@ export default defineCachedEventHandler(async (event) => {
         : null;
     const query = getQuery(event);
     const days: number = query?.days ? Number.parseInt(query.days as string) : 0;
+
     if (!corporationId) {
         return sendError(event, createError({ statusCode: 400, statusMessage: "Missing corporation id" }));
     }
 
     try {
-        // Default to 90 days for short stats
-        const stats = await calculateShortStats("corporation_id", corporationId, days);
-        return stats;
-    } catch (error) {
-        return sendError(event, createError({ statusCode: 500, statusMessage: "Failed to fetch corporation short stats" }));
+        // Try to fetch from Stats model first
+        const existingStats = await Stats.findOne({
+            type: "corporation_id",
+            id: corporationId,
+            days
+        }).lean();
+
+        // Return existing stats if found, otherwise return empty stats
+        return existingStats || createEmptyStats("corporation_id", corporationId, days);
+    } catch (error: any) {
+        console.error(`Error fetching corporation shortstats for ${corporationId}: ${error.message}`);
+        // On error, still return empty stats instead of failing
+        return createEmptyStats("corporation_id", corporationId, days);
     }
 }, {
     maxAge: 3600,

@@ -127,7 +127,7 @@
                                     </div>
                                     <div class="stat-row">
                                         <div class="stat-label text-gray-600 dark:text-gray-400">{{ $t('iskEfficiency')
-                                        }}</div>
+                                            }}</div>
                                         <div class="stat-value text-gray-900 dark:text-white">
                                             {{ calcIskEfficiency(validShortStats) }}%
                                         </div>
@@ -165,14 +165,14 @@
                                     </div>
                                     <div class="stat-row">
                                         <div class="stat-label text-gray-600 dark:text-gray-400">{{ $t('soloKillRatio')
-                                        }}</div>
+                                            }}</div>
                                         <div class="stat-value text-gray-900 dark:text-white">
                                             {{ calcSoloKillRatio(validShortStats) }}%
                                         </div>
                                     </div>
                                     <div class="stat-row">
                                         <div class="stat-label text-gray-600 dark:text-gray-400">{{ $t('soloEfficiency')
-                                        }}</div>
+                                            }}</div>
                                         <div class="stat-value text-gray-900 dark:text-white">
                                             {{ calcSoloEfficiency(validShortStats) }}%
                                         </div>
@@ -190,7 +190,7 @@
                                 <div class="stat-body">
                                     <div class="stat-row">
                                         <div class="stat-label text-gray-600 dark:text-gray-400">{{ $t('corporations')
-                                        }}</div>
+                                            }}</div>
                                         <div class="stat-value text-gray-900 dark:text-white">{{
                                             formatNumber(alliance.corporation_count || 0) }}</div>
                                     </div>
@@ -256,6 +256,11 @@
                         <AllianceBattles />
                     </div>
                 </template>
+                <template #dashboard>
+                    <div class="tab-content">
+                        <AllianceDashboard :alliance="alliance" />
+                    </div>
+                </template>
             </Tabs>
         </div>
         <div v-else-if="pending" class="mx-auto p-4">
@@ -285,18 +290,19 @@
 </template>
 
 <script setup lang="ts">
-import { formatDistanceToNow } from "date-fns"
-import { de, enUS, es, fr, ja, ko, ru, zhCN } from "date-fns/locale"
+import { formatDistanceToNow } from "date-fns";
+import { de, enUS, es, fr, ja, ko, ru, zhCN } from "date-fns/locale";
 import { computed, onMounted, ref, watch } from 'vue'; // Added watch
-import { useI18n } from 'vue-i18n'
-import { useRoute, useRouter } from 'vue-router'
-import AllianceBattles from '~/components/alliance/AllianceBattles.vue'
-import AllianceCharacterMembers from '~/src/theme/modern/components/alliance/AllianceCharacterMembers.vue'
-import AllianceCombined from '~/src/theme/modern/components/alliance/AllianceCombined.vue'
-import AllianceCorporationMembers from '~/src/theme/modern/components/alliance/AllianceCorporationMembers.vue'
-import AllianceKills from '~/src/theme/modern/components/alliance/AllianceKills.vue'
-import AllianceLosses from '~/src/theme/modern/components/alliance/AllianceLosses.vue'
-import AllianceStats from '~/src/theme/modern/components/alliance/AllianceStats.vue'
+import { useI18n } from 'vue-i18n';
+import { useRoute, useRouter } from 'vue-router';
+import AllianceBattles from '~/components/alliance/AllianceBattles.vue';
+import AllianceCharacterMembers from '~/src/theme/modern/components/alliance/AllianceCharacterMembers.vue';
+import AllianceCombined from '~/src/theme/modern/components/alliance/AllianceCombined.vue';
+import AllianceCorporationMembers from '~/src/theme/modern/components/alliance/AllianceCorporationMembers.vue';
+import AllianceDashboard from '~/src/theme/modern/components/alliance/AllianceDashboard.vue';
+import AllianceKills from '~/src/theme/modern/components/alliance/AllianceKills.vue';
+import AllianceLosses from '~/src/theme/modern/components/alliance/AllianceLosses.vue';
+import AllianceStats from '~/src/theme/modern/components/alliance/AllianceStats.vue';
 import Tabs from '~/src/theme/modern/components/common/Tabs.vue'; // Added Tabs import
 
 const { t, locale } = useI18n()
@@ -406,6 +412,12 @@ const validShortStats = computed(() => {
 })
 
 const tabItems = computed(() => [
+    {
+        id: "dashboard",
+        label: t("dashboard"),
+        icon: "i-lucide-layout-dashboard",
+        slot: "dashboard" as const,
+    },
     {
         id: "kills",
         label: t("kills"),
@@ -526,12 +538,8 @@ function calculateActivityDecay(lastActiveDate: string | null): number {
     }
 }
 
-/**
- * Modified danger ratio calculation that includes time decay
- */
 const calcDangerRatio = (stats: IShortStats | null): string => {
     if (!stats) return "0";
-
     const { kills = 0, losses = 0 } = stats;
     if (kills === 0 && losses === 0) return "0";
 
@@ -623,8 +631,6 @@ const calcSoloEfficiency = (stats: IShortStats | null): string => {
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
 }
 
-/* Removed count-badges, corp-count, and member-count styles */
-
 /* Stat card styles */
 .stat-card {
     border-radius: 8px;
@@ -653,11 +659,6 @@ const calcSoloEfficiency = (stats: IShortStats | null): string => {
     }
 }
 
-.stat-icon {
-    width: 20px;
-    height: 20px;
-}
-
 .stat-title {
     font-weight: 600;
     font-size: 0.95rem;
@@ -665,6 +666,12 @@ const calcSoloEfficiency = (stats: IShortStats | null): string => {
 
 .stat-label {
     font-size: 0.85rem;
+}
+
+.stat-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
 }
 
 .stat-value {
@@ -676,12 +683,6 @@ const calcSoloEfficiency = (stats: IShortStats | null): string => {
     display: flex;
     flex-direction: column;
     gap: 8px;
-}
-
-.stat-row {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
 }
 
 /* Animation for loading spinner */

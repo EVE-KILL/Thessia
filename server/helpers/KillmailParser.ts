@@ -9,7 +9,6 @@ import type { ITranslation } from "~/server/interfaces/ITranslation";
 import { Celestials } from "~/server/models/Celestials";
 import { Characters } from "~/server/models/Characters";
 import { InvTypes } from "~/server/models/InvTypes";
-
 import { getPriceFromBlueprint } from "./Prices";
 import {
     getCachedAlliance,
@@ -23,10 +22,11 @@ import {
     getCachedRegion,
     getCachedSolarSystem,
 } from "./RuntimeCache";
+import { updateStatsOnKillmailProcessing } from "./Stats";
 
 async function parseKillmail(killmail: IESIKillmail, warId = 0): Promise<Partial<IKillmail>> {
     // Run independent tasks concurrently.
-    const [top, victim, attackers, items] = await Promise.all([
+    const [top, victim, attackers, itemsData] = await Promise.all([
         generateTop(killmail, warId),
         processVictim(killmail.victim),
         processAttackers(killmail.attackers),
@@ -34,12 +34,25 @@ async function parseKillmail(killmail: IESIKillmail, warId = 0): Promise<Partial
         updateLastActive(killmail),
     ]);
 
-    return {
+    const processedKillmail = {
         ...top,
         victim,
         attackers,
-        items,
+        items: itemsData,
     };
+
+    // After successfully parsing and constructing the killmail, update stats
+    if (
+        processedKillmail.killmail_id &&
+        processedKillmail.kill_time &&
+        processedKillmail.victim &&
+        processedKillmail.attackers &&
+        processedKillmail.total_value !== undefined
+    ) {
+        await updateStatsOnKillmailProcessing(processedKillmail as IKillmail);
+    }
+
+    return processedKillmail;
 }
 
 async function updateLastActive(killmail: IESIKillmail): Promise<void> {
