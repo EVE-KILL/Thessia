@@ -20,12 +20,7 @@ const props = defineProps({
     },
     keepAliveContent: {
         type: Boolean,
-        default: true,
-    },
-    pageKey: {
-        type: String,
-        default: 'default',
-        description: 'Unique identifier for the page, used to scope the KeepAlive cache'
+        default: false,
     },
     tabButtonClass: {
         type: String,
@@ -70,28 +65,6 @@ const getButtonClasses = (item: TabItem) => {
     }
     return classes.filter(c => c).join(' '); // Filter out empty strings and join
 }
-
-// Simple hash function for strings
-const hashString = (str: string): string => {
-    let hash = 0;
-    for (let i = 0; i < str.length; i++) {
-        const char = str.charCodeAt(i);
-        hash = ((hash << 5) - hash) + char;
-        hash = hash & hash; // Convert to 32bit integer
-    }
-    return Math.abs(hash).toString(36);
-};
-
-// Generate a unique key for KeepAlive based on pageKey, all tab IDs, and the specific tab
-const tabsHash = computed(() => {
-    const tabIds = props.items.map(item => item.id).join('_');
-    return hashString(`${props.pageKey}_${tabIds}`);
-});
-
-// Generate a combined key for KeepAlive to scope it to the specific page context
-const getCombinedKey = (itemId: string) => {
-    return `${tabsHash.value}_${itemId}`;
-}
 </script>
 
 <template>
@@ -107,7 +80,7 @@ const getCombinedKey = (itemId: string) => {
         <div :class="contentContainerClass">
             <template v-for="item in items" :key="item.id">
                 <KeepAlive v-if="keepAliveContent">
-                    <div v-show="modelValue === item.id" :key="getCombinedKey(item.id)">
+                    <div v-show="modelValue === item.id">
                         <slot :name="item.slot" :item="item"></slot>
                     </div>
                 </KeepAlive>
