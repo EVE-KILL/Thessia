@@ -19,16 +19,19 @@
                             <!-- Victim Portrait -->
                             <div class="portrait-container">
                                 <Image v-if="item.victim?.character_id" :type="'character'"
-                                    :id="item.victim.character_id" :size="48" class="portrait character-portrait" />
+                                    :id="item.victim.character_id" :size="48" class="portrait character-portrait"
+                                    :style="{ maxWidth: '48px', maxHeight: '48px' }" />
                                 <div v-else class="portrait character-portrait-placeholder"></div>
                             </div>
 
                             <!-- Corp/Alliance Stacked -->
                             <div class="corp-alliance-container">
                                 <Image v-if="item.victim?.corporation_id" :type="'corporation'"
-                                    :id="item.victim.corporation_id" :size="24" class="portrait corporation-portrait" />
+                                    :id="item.victim.corporation_id" :size="24" class="portrait corporation-portrait"
+                                    :style="{ maxWidth: '24px', maxHeight: '24px' }" />
                                 <Image v-if="item.victim?.alliance_id" :type="'alliance'" :id="item.victim.alliance_id"
-                                    :size="24" class="portrait alliance-portrait" />
+                                    :size="24" class="portrait alliance-portrait"
+                                    :style="{ maxWidth: '24px', maxHeight: '24px' }" />
                             </div>
 
                             <!-- Name Information -->
@@ -59,7 +62,8 @@
                             <div class="portrait-container">
                                 <Image v-if="getFinalBlowAttacker(item)?.character_id" :type="'character'"
                                     :id="getFinalBlowAttacker(item).character_id" :size="48"
-                                    class="portrait character-portrait" />
+                                    class="portrait character-portrait"
+                                    :style="{ maxWidth: '48px', maxHeight: '48px' }" />
                                 <div v-else class="portrait character-portrait-placeholder"></div>
                             </div>
 
@@ -67,10 +71,12 @@
                             <div class="corp-alliance-container">
                                 <Image v-if="getFinalBlowAttacker(item)?.corporation_id" :type="'corporation'"
                                     :id="getFinalBlowAttacker(item).corporation_id" :size="24"
-                                    class="portrait corporation-portrait" />
+                                    class="portrait corporation-portrait"
+                                    :style="{ maxWidth: '24px', maxHeight: '24px' }" />
                                 <Image v-if="getFinalBlowAttacker(item)?.alliance_id" :type="'alliance'"
                                     :id="getFinalBlowAttacker(item).alliance_id" :size="24"
-                                    class="portrait alliance-portrait" />
+                                    class="portrait alliance-portrait"
+                                    :style="{ maxWidth: '24px', maxHeight: '24px' }" />
                             </div>
 
                             <!-- Name Information -->
@@ -97,8 +103,8 @@
                             <!-- Ship Details -->
                             <div class="ship-details">
                                 <div class="ship-image-container">
-                                    <Image :type="'type-render'" :id="item.victim.ship_id" :size="40"
-                                        class="ship-image" />
+                                    <Image :type="'type-render'" :id="item.victim.ship_id" :size="40" class="ship-image"
+                                        :style="{ maxWidth: '40px', maxHeight: '40px' }" />
                                 </div>
                                 <div class="ship-info">
                                     <div class="ship-name text-red-500 dark:text-red-400">
@@ -116,7 +122,7 @@
                                 <div class="killmail-damage">
                                     <Icon name="lucide:zap" class="damage-icon" />
                                     <span class="damage-value">{{ formatNumberWithLocale(item.victim.damage_taken || 0)
-                                    }}</span>
+                                        }}</span>
                                 </div>
 
                                 <!-- Value -->
@@ -141,8 +147,8 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref } from 'vue';
 import moment from 'moment';
+import { computed, ref } from 'vue';
 
 // Define interfaces for props
 interface AttackerData {
@@ -340,16 +346,33 @@ const getLocalizedString = (obj: any, localeKey: string): string => {
 
 .portrait-container {
     flex-shrink: 0;
+    width: 48px;
+    /* Fixed width */
+    height: 48px;
+    /* Fixed height */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    /* Prevent any overflow */
 }
 
 .portrait {
     border-radius: 50%;
     background-color: rgba(0, 0, 0, 0.1);
+    object-fit: contain;
+    /* Ensure the image fits without stretching */
+    max-width: 100%;
+    max-height: 100%;
 }
 
 .character-portrait {
     width: 48px;
     height: 48px;
+    flex-shrink: 0;
+    /* Prevent flexbox from shrinking the image */
+    flex-grow: 0;
+    /* Prevent flexbox from growing the image */
 }
 
 .character-portrait-placeholder {
@@ -358,6 +381,8 @@ const getLocalizedString = (obj: any, localeKey: string): string => {
     border-radius: 50%;
     background-color: rgba(100, 100, 100, 0.1);
     border: 1px dashed rgba(128, 128, 128, 0.3);
+    flex-shrink: 0;
+    flex-grow: 0;
 }
 
 .corp-alliance-container {
@@ -366,44 +391,16 @@ const getLocalizedString = (obj: any, localeKey: string): string => {
     justify-content: space-between;
     height: 48px;
     flex-shrink: 0;
+    width: 24px;
+    /* Fixed width container */
 }
 
 .corporation-portrait,
 .alliance-portrait {
     width: 24px;
     height: 24px;
-}
-
-.name-container {
-    min-width: 0;
-    /* Allow text to shrink */
-    flex-grow: 1;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-}
-
-.entity-name {
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    line-height: 1.2;
-}
-
-.character-name {
-    font-weight: 600;
-    font-size: 0.95rem;
-    color: light-dark(#111827, #f3f4f6);
-}
-
-.corporation-name {
-    font-size: 0.85rem;
-    color: light-dark(#4b5563, #d1d5db);
-}
-
-.alliance-name {
-    font-size: 0.75rem;
-    color: light-dark(#6b7280, #9ca3af);
+    flex-shrink: 0;
+    flex-grow: 0;
 }
 
 /* Bottom section - ship and kill details */
@@ -426,6 +423,13 @@ const getLocalizedString = (obj: any, localeKey: string): string => {
 
 .ship-image-container {
     flex-shrink: 0;
+    width: 40px;
+    /* Fixed width */
+    height: 40px;
+    /* Fixed height */
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
 .ship-image {
@@ -434,6 +438,9 @@ const getLocalizedString = (obj: any, localeKey: string): string => {
     border-radius: 4px;
     background-color: rgba(0, 0, 0, 0.2);
     border: 1px solid rgba(75, 85, 99, 0.2);
+    object-fit: contain;
+    max-width: 100%;
+    max-height: 100%;
 }
 
 .ship-info {

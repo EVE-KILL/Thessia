@@ -1,15 +1,45 @@
 <template>
     <div class="p-4 bg-background-900 rounded-lg shadow-lg text-black dark:text-white">
-        <!-- Show loading state based on either pending or our custom isLoading flag -->
-        <div v-if="pending || isLoading">
-            <div class="flex flex-col items-center justify-center py-12">
-                <UIcon name="lucide:loader" class="w-12 h-12 animate-spin text-primary mb-4" />
-                <span class="text-xl font-medium">{{ t('battle.loading') }}</span>
+        <!-- Loading state - Show when data is being fetched OR processed -->
+        <div v-if="pending || isProcessing || !dataFullyLoaded" class="flex flex-col items-center justify-center py-12">
+            <UIcon name="lucide:loader" class="w-12 h-12 animate-spin text-primary mb-4" />
+            <span class="text-xl font-medium">{{ t('battle.loading') }}</span>
+        </div>
+
+        <!-- Error state -->
+        <div v-else-if="error || isInvalidId" class="flex flex-col items-center justify-center py-12">
+            <UIcon name="lucide:alert-circle" class="w-12 h-12 text-red-500 mb-4" />
+            <span class="text-xl font-medium mb-2">
+                {{ isInvalidId ? t('battle.invalid_id') : t('battle.error_loading') }}
+            </span>
+            <p class="text-gray-400 text-center max-w-md">
+                {{ isInvalidId
+                    ? t('battle.invalid_id_message', { id: battleId })
+                    : (error?.message || t('battle.unknown_error'))
+                }}
+            </p>
+            <div class="flex gap-4 mt-4">
+                <UButton to="/battles" icon="lucide:list">
+                    {{ t('battle.back_to_battles') }}
+                </UButton>
+                <UButton v-if="!isInvalidId" icon="lucide:refresh-cw" @click="refreshData">
+                    {{ t('refresh') }}
+                </UButton>
             </div>
         </div>
-        <!-- Then check if we have valid battle data -->
-        <div v-else-if="battle">
-            <!-- Top Info - Redesigned battle-topbox -->
+
+        <!-- Battle not found -->
+        <div v-else-if="!battle" class="flex flex-col items-center justify-center py-12">
+            <UIcon name="lucide:alert-circle" class="w-12 h-12 text-red-500 mb-4" />
+            <span class="text-xl font-medium">{{ t('battle.no_battle_found_custom') }}</span>
+            <UButton class="mt-4" to="/battles" icon="lucide:list">
+                {{ t('battle.back_to_battles') }}
+            </UButton>
+        </div>
+
+        <!-- Battle content -->
+        <div v-else>
+            <!-- Top Info Box -->
             <div class="battle-topbox">
                 <!-- System Information Header -->
                 <div class="battle-header">
@@ -70,7 +100,7 @@
                                 <UIcon name="lucide:timer" class="stat-icon" />
                                 {{ t('battle.duration') }}:
                             </div>
-                            <div class="stat-value">{{ duration(battle.start_time, battle.end_time) }}</div>
+                            <div class="stat-value">{{ formatDuration(battle.start_time, battle.end_time) }}</div>
                         </div>
                     </div>
 
@@ -135,8 +165,8 @@
             </div>
 
             <!-- Teams Table -->
-            <BattleTeams :previewData="battle" :teamStats="teamStats" :teamAlliances="teamAlliances"
-                :teamCorporations="teamCorporations" :teamCharacters="teamCharacters" />
+            <BattleTeams :previewData="battle" :teamStats="teamData.stats" :teamAlliances="teamData.alliances"
+                :teamCorporations="teamData.corporations" :teamCharacters="teamData.characters" />
 
             <!-- Tabs -->
             <div class="mb-4">
@@ -145,16 +175,16 @@
                         <BattleOverview v-if="battle" :battle="battle" />
                     </template>
                     <template #kills>
-                        <BattleKills :teamKills="teamKills" :sideIds="battle.side_ids" />
+                        <BattleKills :teamKills="teamData.kills" :sideIds="battle.side_ids" />
                     </template>
                     <template #alliances>
-                        <BattleAlliances :teamAlliances="teamAlliances" :sideIds="battle.side_ids" />
+                        <BattleAlliances :teamAlliances="teamData.alliances" :sideIds="battle.side_ids" />
                     </template>
                     <template #corporations>
-                        <BattleCorporations :teamCorporations="teamCorporations" :sideIds="battle.side_ids" />
+                        <BattleCorporations :teamCorporations="teamData.corporations" :sideIds="battle.side_ids" />
                     </template>
                     <template #characters>
-                        <BattleCharacters :teamCharacters="teamCharacters" :sideIds="battle.side_ids" />
+                        <BattleCharacters :teamCharacters="teamData.characters" :sideIds="battle.side_ids" />
                     </template>
                     <template #timeline>
                         <BattleTimeline v-if="battle" :killmails="killmails" :battle="battle" />
@@ -162,79 +192,205 @@
                 </Tabs>
             </div>
         </div>
-        <!-- Only show error if we're not loading and there's no battle data -->
-        <div v-else>
-            <div class="flex flex-col items-center justify-center py-12">
-                <UIcon name="lucide:alert-circle" class="w-12 h-12 text-red-500 mb-4" />
-                <span class="text-xl font-medium">{{ t('battle.no_battle_found_custom') }}</span>
-            </div>
-        </div>
     </div>
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, ref, watch, watchEffect } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useRoute, useRouter } from 'vue-router';
 
-const { locale, t } = useI18n()
-
+// Composables and basic setup
+const { locale, t } = useI18n();
 const route = useRoute();
 const router = useRouter();
+
+// State management
 const activeTabId = ref('');
+const isProcessing = ref(false);
+const isInvalidId = ref(false);
+const killmails = ref<any[]>([]);
+// Add a flag to track when data is fully loaded and processed
+const dataFullyLoaded = ref(false);
 
-// Get either the ID from the route or a killmail ID from query params
-const entityId = computed(() => {
-    // Check if we have a killmail parameter in the query
-    if (route.query.killmail) {
-        return String(route.query.killmail);
-    }
-    // Otherwise use the ID from the route
-    return route.params.id as string || null;
+// Team data structure
+const teamData = ref({
+    kills: {} as Record<string, any[]>,
+    stats: {} as Record<string, any>,
+    alliances: {} as Record<string, any[]>,
+    corporations: {} as Record<string, any[]>,
+    characters: {} as Record<string, any[]>
 });
 
-// Track if we're in killmail mode
+// Determine what we're fetching - battle ID or killmail
 const isKillmailMode = computed(() => Boolean(route.query.killmail));
+const battleId = computed(() => {
+    // First, check for invalid params
+    const paramId = isKillmailMode.value
+        ? route.query.killmail
+        : route.params.id;
 
-// Used to track the loading state separately from useFetch's pending
-const isLoading = ref(true);
+    if (
+        !paramId ||
+        paramId === 'null' ||
+        paramId === 'undefined'
+    ) {
+        isInvalidId.value = true;
+        return null;
+    }
 
-// Compute the API URL based on whether we're using a battle ID or a killmail ID
+    return String(paramId);
+});
+
+// Create API URL based on mode
 const apiUrl = computed(() => {
-    if (!entityId.value) return null;
+    if (!battleId.value) return null;
 
-    // If we're in killmail mode, use the killmail endpoint
-    if (isKillmailMode.value) {
-        return `/api/battles/killmail/${entityId.value}`;
-    }
-
-    // Otherwise use the regular battle endpoint
-    return `/api/battles/${entityId.value}`;
+    return isKillmailMode.value
+        ? `/api/battles/killmail/${battleId.value}`
+        : `/api/battles/${battleId.value}`;
 });
 
-// Set immediate to true and remove lazy to ensure it runs properly on page load
-const { data: battleData, pending, error, refresh } = useFetch(apiUrl, {
-    key: computed(() => entityId.value ? `battle-${isKillmailMode.value ? 'killmail-' : ''}${entityId.value}` : null),
-    immediate: true,
-    watch: [entityId, isKillmailMode],
-    onRequest({ request, options }) {
-        battle.value = null;
-        isLoading.value = true;
-    },
-    onResponse({ response }) {
-        isLoading.value = false;
-    },
-    onResponseError(context) {
-        isLoading.value = false;
+// Fetch battle data
+const { data: battle, pending, error, refresh } = useFetch(() => apiUrl.value, {
+    key: computed(() => battleId.value ? `battle-${isKillmailMode.value ? 'killmail-' : ''}${battleId.value}` : null),
+    enabled: computed(() => !!battleId.value && !isInvalidId.value),
+    onRequest() {
+        // Reset the fully loaded flag when starting a new request
+        dataFullyLoaded.value = false;
     }
 });
 
-// Add this to ensure the fetch runs if entityId is already available
+// Function to refresh data
+const refreshData = async () => {
+    isProcessing.value = true;
+    dataFullyLoaded.value = false;
+    await refresh();
+    isProcessing.value = false;
+};
+
+// Process battle data and fetch killmails
+watchEffect(async () => {
+    // Clear if no battle data or still loading
+    if (!battle.value || pending.value) {
+        dataFullyLoaded.value = false;
+        return;
+    }
+
+    try {
+        isProcessing.value = true;
+        dataFullyLoaded.value = false;
+
+        // Reset team data containers
+        teamData.value = {
+            kills: {},
+            stats: {},
+            alliances: {},
+            corporations: {},
+            characters: {}
+        };
+
+        // Get killmail IDs from battle data
+        const allKillmailIds = battle.value?.killmail_ids || [];
+        const uniqueKillmailIds = Array.from(new Set(allKillmailIds));
+
+        if (uniqueKillmailIds.length > 0) {
+            // Fetch killmails
+            const fetchedKillmails = await $fetch('/api/killmail/batch', {
+                method: 'POST',
+                body: { ids: uniqueKillmailIds },
+                timeout: 10000
+            });
+
+            if (fetchedKillmails && Array.isArray(fetchedKillmails)) {
+                // Create a map for quick lookups
+                const killmailMap = new Map(
+                    fetchedKillmails.map(km => [km.killmail_id, km])
+                );
+
+                // Populate killmails array sorted by time
+                killmails.value = uniqueKillmailIds
+                    .map(id => killmailMap.get(id))
+                    .filter(Boolean)
+                    .sort((a, b) => new Date(a.kill_time).getTime() - new Date(b.kill_time).getTime());
+
+                // Process team data
+                const sideIds = battle.value?.side_ids || [];
+
+                for (const sideId of sideIds) {
+                    if (battle.value?.sides?.[sideId]) {
+                        const side = battle.value.sides[sideId];
+
+                        // Populate team data
+                        teamData.value.stats[sideId] = side.stats || { iskLost: 0, shipsLost: 0, damageInflicted: 0 };
+                        teamData.value.alliances[sideId] = side.alliances_stats || [];
+                        teamData.value.corporations[sideId] = side.corporations_stats || [];
+                        teamData.value.characters[sideId] = side.characters_stats || [];
+
+                        // Populate team kills
+                        teamData.value.kills[sideId] = (side.kill_ids || [])
+                            .map(id => killmailMap.get(id))
+                            .filter(Boolean)
+                            .sort((a, b) => (b.total_value || 0) - (a.total_value || 0));
+                    }
+                }
+
+                // Set data fully loaded after all processing is complete
+                dataFullyLoaded.value = true;
+            } else {
+                console.error('Invalid killmail data received');
+                processTeamDataWithoutKillmails();
+                dataFullyLoaded.value = true;
+            }
+        } else {
+            processTeamDataWithoutKillmails();
+            dataFullyLoaded.value = true;
+        }
+    } catch (err) {
+        console.error('Error processing battle data:', err);
+        processTeamDataWithoutKillmails();
+        dataFullyLoaded.value = true;
+    } finally {
+        isProcessing.value = false;
+    }
+});
+
+// Process team data when killmails are unavailable
+function processTeamDataWithoutKillmails() {
+    killmails.value = [];
+
+    const sideIds = battle.value?.side_ids || [];
+    for (const sideId of sideIds) {
+        if (battle.value?.sides?.[sideId]) {
+            const side = battle.value.sides[sideId];
+            teamData.value.stats[sideId] = side.stats || { iskLost: 0, shipsLost: 0, damageInflicted: 0 };
+            teamData.value.alliances[sideId] = side.alliances_stats || [];
+            teamData.value.corporations[sideId] = side.corporations_stats || [];
+            teamData.value.characters[sideId] = side.characters_stats || [];
+            teamData.value.kills[sideId] = [];
+        }
+    }
+
+    // Important: mark data as fully loaded after processing is complete
+    dataFullyLoaded.value = true;
+}
+
+// Set up tab navigation
+const tabItems = computed(() => [
+    { id: 'overview', label: t('battleGenerator.tabs.overview'), slot: 'overview' },
+    { id: 'kills', label: t('battleGenerator.tabs.kills'), slot: 'kills' },
+    { id: 'alliances', label: t('battleGenerator.tabs.alliances'), slot: 'alliances' },
+    { id: 'corporations', label: t('battleGenerator.tabs.corporations'), slot: 'corporations' },
+    { id: 'characters', label: t('battleGenerator.tabs.characters'), slot: 'characters' },
+    { id: 'timeline', label: t('battleGenerator.tabs.timeline'), slot: 'timeline' }
+]);
+
+const tabsUi = {
+    list: "mb-0",
+    tab: "p-2 text-sm font-semibold text-white rounded-lg bg-background-700 hover:bg-background-600 ml-2"
+};
+
+// Handle tab navigation and URL hash synchronization
 onMounted(() => {
-    if (entityId.value) {
-        refresh();
-    }
-
     if (tabItems.value.length > 0) {
         const hash = route.hash.substring(1);
         const validTab = tabItems.value.find(item => item.id === hash);
@@ -251,17 +407,11 @@ watch(() => route.hash, (newHash) => {
     if (tabItems.value.some(item => item.id === tabIdFromHash)) {
         activeTabId.value = tabIdFromHash;
     } else if (!tabIdFromHash && tabItems.value.length > 0) {
-        // If hash is removed, select default tab without changing URL
         activeTabId.value = tabItems.value[0].id;
     }
 });
 
 watch(activeTabId, (newId, oldId) => {
-    // Only update the URL if:
-    // 1. This isn't the initial value (oldId exists)
-    // 2. There was an actual change (newId !== oldId)
-    // 3. The URL doesn't already have this hash
-    // 4. Either: there's already a hash in the URL, OR the new tab isn't the default
     if (oldId &&
         newId !== oldId &&
         route.hash !== `#${newId}` &&
@@ -270,17 +420,7 @@ watch(activeTabId, (newId, oldId) => {
     }
 });
 
-const battle = ref<any>(null);
-const killmails = ref<any[]>([]);
-
-// New structure for team-based data with dynamic sides
-const teamKills = ref<Record<string, any[]>>({});
-const teamStats = ref<Record<string, any>>({});
-const teamAlliances = ref<Record<string, any[]>>({});
-const teamCorporations = ref<Record<string, any[]>>({});
-const teamCharacters = ref<Record<string, any[]>>({});
-
-// Get the primary system info for simplified display
+// Primary system data computed properties
 const primarySystem = computed(() => {
     if (battle.value?.systems && battle.value.systems.length > 0) {
         return battle.value.systems[0];
@@ -288,239 +428,24 @@ const primarySystem = computed(() => {
     return null;
 });
 
-// Get the primary system region name for display
 const primarySystemRegionName = computed(() => {
     return primarySystem.value?.region_name || { en: t('battle.unknown_region') };
 });
 
-// Format system names for display (shows first system + count if multiple)
-function formatSystemNames(): string {
-    if (!battle.value?.systems || battle.value.systems.length === 0) {
-        return t('battle.unknown_system');
-    }
-
-    if (battle.value.systems.length === 1) {
-        return battle.value.systems[0].system_name;
-    }
-
-    // Show first system plus count
-    return `${battle.value.systems[0].system_name} +${battle.value.systems.length - 1}`;
-}
-
-/**
- * Groups all systems by their regions for display
- * @returns An array of objects with regionName and systems array
- */
-function groupSystemsByRegion() {
-    if (!battle.value?.systems || battle.value.systems.length === 0) {
-        return [{
-            regionName: { en: t('battle.unknown_region') },
-            systems: [t('battle.unknown_system')]
-        }];
-    }
-
-    // Group systems by region
-    const regionMap = new Map();
-
-    for (const system of battle.value.systems) {
-        const regionId = system.region_id;
-        const regionKey = regionId || 'unknown';
-
-        if (!regionMap.has(regionKey)) {
-            regionMap.set(regionKey, {
-                regionName: system.region_name || { en: t('battle.unknown_region') },
-                systems: []
-            });
-        }
-
-        regionMap.get(regionKey).systems.push(system.system_name);
-    }
-
-    // Convert map to array for template
-    return Array.from(regionMap.values());
-}
-
-// Computed properties for totals across all teams
+// Computed properties for battle statistics
 const totalIskLost = computed(() => {
-    return Object.values(teamStats.value).reduce((sum, stats) => sum + (stats?.iskLost || 0), 0);
+    return Object.values(teamData.value.stats).reduce((sum, stats) => sum + (stats?.iskLost || 0), 0);
 });
 
 const totalShipsLost = computed(() => {
-    return Object.values(teamStats.value).reduce((sum, stats) => sum + (stats?.shipsLost || 0), 0);
+    return Object.values(teamData.value.stats).reduce((sum, stats) => sum + (stats?.shipsLost || 0), 0);
 });
 
 const totalDamageInflicted = computed(() => {
-    return Object.values(teamStats.value).reduce((sum, stats) => sum + (stats?.damageInflicted || 0), 0);
+    return Object.values(teamData.value.stats).reduce((sum, stats) => sum + (stats?.damageInflicted || 0), 0);
 });
 
-const tabItems = computed(() => [
-    { id: 'overview', label: t('battleGenerator.tabs.overview'), slot: 'overview' },
-    { id: 'kills', label: t('battleGenerator.tabs.kills'), slot: 'kills' },
-    { id: 'alliances', label: t('battleGenerator.tabs.alliances'), slot: 'alliances' },
-    { id: 'corporations', label: t('battleGenerator.tabs.corporations'), slot: 'corporations' },
-    { id: 'characters', label: t('battleGenerator.tabs.characters'), slot: 'characters' },
-    { id: 'timeline', label: t('battleGenerator.tabs.timeline'), slot: 'timeline' }
-]);
-
-const tabsUi = {
-    list: "mb-0",
-    tab: "p-2 text-sm font-semibold text-white rounded-lg bg-background-700 hover:bg-background-600 ml-2"
-}
-
-const getLocalizedString = (obj: any, localeKey: string): string => {
-    if (!obj) return "";
-    return obj[localeKey] || obj.en || "";
-};
-
-function formatNumber(n: number) {
-    if (typeof n !== 'number') return '0'
-    return n.toLocaleString(undefined, { maximumFractionDigits: 2 })
-}
-
-function formatDate(dateInput: Date | number | string) {
-    if (dateInput instanceof Date) {
-        return dateInput.toLocaleString();
-    }
-    // Handle ISO string dates (from JSON serialization)
-    if (typeof dateInput === 'string') {
-        return new Date(dateInput).toLocaleString();
-    }
-    // Handle Unix timestamps
-    return new Date(dateInput * 1000).toLocaleString();
-}
-
-function formatIsk(isk: number): string {
-    if (!isk) return "0";
-    if (isk >= 1000000000000) {
-        return `${(isk / 1000000000000).toFixed(2)}T`;
-    } else if (isk >= 1000000000) {
-        return `${(isk / 1000000000).toFixed(2)}B`;
-    } else if (isk >= 1000000) {
-        return `${(isk / 1000000).toFixed(2)}M`;
-    } else if (isk >= 1000) {
-        return `${(isk / 1000).toFixed(2)}K`;
-    }
-    return isk.toFixed(2);
-}
-
-function truncateString(str: any, num: number) {
-    if (str === null || str === undefined) return '';
-    if (typeof str !== 'string') str = String(str);
-    return str.length <= num ? str : str.slice(0, num) + '...';
-}
-
-function duration(start: Date | number | string, end: Date | number | string) {
-    let startMs: number, endMs: number;
-
-    if (start instanceof Date) {
-        startMs = start.getTime();
-    } else if (typeof start === 'string') {
-        // Handle ISO string dates (from JSON serialization)
-        startMs = new Date(start).getTime();
-    } else {
-        startMs = start * 1000; // Convert seconds to milliseconds
-    }
-
-    if (end instanceof Date) {
-        endMs = end.getTime();
-    } else if (typeof end === 'string') {
-        // Handle ISO string dates (from JSON serialization)
-        endMs = new Date(end).getTime();
-    } else {
-        endMs = end * 1000; // Convert seconds to milliseconds
-    }
-
-    const dSeconds = Math.floor((endMs - startMs) / 1000);
-    const m = Math.floor(dSeconds / 60);
-    const s = dSeconds % 60;
-    return `${m}m ${s}s`;
-}
-
-watchEffect(async () => {
-    // Only process battle data if we have it and it has content
-    if (battleData.value && Object.keys(battleData.value).length > 0) {
-        // Explicitly assign the battle data
-        battle.value = battleData.value;
-
-        // Reset team data containers
-        teamKills.value = {};
-        teamStats.value = {};
-        teamAlliances.value = {};
-        teamCorporations.value = {};
-        teamCharacters.value = {};
-
-        // Get all killmail IDs from the battle data
-        const allKillmailIds = battle.value?.killmail_ids || [];
-
-        // Get unique IDs
-        const uniqueKillmailIds = Array.from(new Set(allKillmailIds));
-
-        if (uniqueKillmailIds.length > 0) {
-            try {
-                // Fetch full killmail objects using the batch endpoint
-                const fetchedKillmails: any[] = await $fetch('/api/killmail/batch', {
-                    method: 'POST',
-                    body: { ids: uniqueKillmailIds }
-                });
-
-                // Create a lookup map for easy access
-                const killmailMap = new Map(fetchedKillmails.map(km => [km.killmail_id, km]));
-
-                // Populate killmails for timeline (sorted by time)
-                killmails.value = uniqueKillmailIds
-                    .map((id: number) => killmailMap.get(id))
-                    .filter(km => km !== undefined)
-                    .sort((a: any, b: any) => new Date(a.kill_time).getTime() - new Date(b.kill_time).getTime());
-
-                // Process team data directly from sides object
-                const sideIds = battle.value?.side_ids || [];
-
-                // Fill data for each side
-                for (const sideId of sideIds) {
-                    if (battle.value?.sides?.[sideId]) {
-                        const side = battle.value.sides[sideId];
-
-                        // Populate team stats and entity lists directly
-                        teamStats.value[sideId] = side.stats || { iskLost: 0, shipsLost: 0, damageInflicted: 0 };
-                        teamAlliances.value[sideId] = side.alliances_stats || [];
-                        teamCorporations.value[sideId] = side.corporations_stats || [];
-                        teamCharacters.value[sideId] = side.characters_stats || [];
-
-                        // Populate team kills using kill_ids
-                        teamKills.value[sideId] = (side.kill_ids || [])
-                            .map((id: number) => killmailMap.get(id))
-                            .filter(km => km !== undefined)
-                            .sort((a: any, b: any) => (b.total_value || 0) - (a.total_value || 0));
-                    }
-                }
-            } catch (error) {
-                killmails.value = [];
-            }
-        } else {
-            // Initialize empty structures if no killmails
-            killmails.value = [];
-
-            // Extract data directly from sides
-            const sideIds = battle.value?.side_ids || [];
-            for (const sideId of sideIds) {
-                if (battle.value?.sides?.[sideId]) {
-                    const side = battle.value.sides[sideId];
-                    teamStats.value[sideId] = side.stats || { iskLost: 0, shipsLost: 0, damageInflicted: 0 };
-                    teamAlliances.value[sideId] = side.alliances_stats || [];
-                    teamCorporations.value[sideId] = side.corporations_stats || [];
-                    teamCharacters.value[sideId] = side.characters_stats || [];
-                    teamKills.value[sideId] = [];
-                }
-            }
-        }
-    } else {
-        // Only clear battle if we're not still loading
-        if (!pending.value) {
-            battle.value = null;
-        }
-    }
-});
-
+// SEO metadata
 const seoData = computed(() => {
     if (!battle.value) return null;
 
@@ -542,10 +467,7 @@ const seoData = computed(() => {
     const title = t('battle.seo.titlePattern', { systemName, regionName, start, end });
     const description = t('battle.seo.descriptionPattern', { systemName, regionName, start, end, isk, ships });
 
-    return {
-        title,
-        description,
-    };
+    return { title, description };
 });
 
 useSeoMeta({
@@ -558,7 +480,7 @@ useSeoMeta({
     ogType: "website",
     ogSiteName: "EVE-KILL",
     ogUrl: () => {
-        if (!battle.value || !route.fullPath) return "https://eve-kill.com/custombattle";
+        if (!battle.value || !route.fullPath) return "https://eve-kill.com/battles";
         return `https://eve-kill.com${route.fullPath}`;
     },
     ogLocale: "en_US",
@@ -571,6 +493,94 @@ useSeoMeta({
         return battle.value?.system_name || t('battle.seo.twitterImageAlt.default');
     },
     twitterCreator: "@eve_kill",
+});
+
+// Utility functions
+function formatNumber(n) {
+    if (typeof n !== 'number') return '0';
+    return n.toLocaleString(undefined, { maximumFractionDigits: 2 });
+}
+
+function formatDate(dateInput) {
+    if (dateInput instanceof Date) {
+        return dateInput.toLocaleString();
+    }
+    if (typeof dateInput === 'string') {
+        return new Date(dateInput).toLocaleString();
+    }
+    return new Date(dateInput * 1000).toLocaleString();
+}
+
+function formatIsk(isk) {
+    if (!isk) return "0";
+    if (isk >= 1000000000000) return `${(isk / 1000000000000).toFixed(2)}T`;
+    if (isk >= 1000000000) return `${(isk / 1000000000).toFixed(2)}B`;
+    if (isk >= 1000000) return `${(isk / 1000000).toFixed(2)}M`;
+    if (isk >= 1000) return `${(isk / 1000).toFixed(2)}K`;
+    return isk.toFixed(2);
+}
+
+function formatDuration(start, end) {
+    let startMs, endMs;
+
+    if (start instanceof Date) {
+        startMs = start.getTime();
+    } else if (typeof start === 'string') {
+        startMs = new Date(start).getTime();
+    } else {
+        startMs = start * 1000;
+    }
+
+    if (end instanceof Date) {
+        endMs = end.getTime();
+    } else if (typeof end === 'string') {
+        endMs = new Date(end).getTime();
+    } else {
+        endMs = end * 1000;
+    }
+
+    const dSeconds = Math.floor((endMs - startMs) / 1000);
+    const m = Math.floor(dSeconds / 60);
+    const s = dSeconds % 60;
+    return `${m}m ${s}s`;
+}
+
+function getLocalizedString(obj, localeKey) {
+    if (!obj) return "";
+    const lang = localeKey.split('-')[0];
+    return obj[lang] || obj.en || (typeof obj === 'string' ? obj : "");
+}
+
+function groupSystemsByRegion() {
+    if (!battle.value?.systems || battle.value.systems.length === 0) {
+        return [{
+            regionName: { en: t('battle.unknown_region') },
+            systems: [t('battle.unknown_system')]
+        }];
+    }
+
+    const regionMap = new Map();
+
+    for (const system of battle.value.systems) {
+        const regionId = system.region_id;
+        const regionKey = regionId || 'unknown';
+
+        if (!regionMap.has(regionKey)) {
+            regionMap.set(regionKey, {
+                regionName: system.region_name || { en: t('battle.unknown_region') },
+                systems: []
+            });
+        }
+
+        regionMap.get(regionKey).systems.push(system.system_name);
+    }
+
+    return Array.from(regionMap.values());
+}
+
+// When component is destroyed, reset the fully loaded flag
+onBeforeUnmount(() => {
+    dataFullyLoaded.value = false;
 });
 </script>
 

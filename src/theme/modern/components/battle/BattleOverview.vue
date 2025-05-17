@@ -19,21 +19,25 @@
                             <!-- Character Portrait -->
                             <div class="portrait-container">
                                 <Image v-if="item.character_id" :type="'character'" :id="item.character_id" :size="64"
-                                    class="portrait character-portrait" />
+                                    class="portrait character-portrait"
+                                    :style="{ maxWidth: '64px', maxHeight: '64px' }" />
                                 <div v-else class="portrait character-portrait-placeholder"></div>
                             </div>
 
                             <!-- Corp/Alliance Stacked -->
                             <div class="corp-alliance-container">
                                 <Image v-if="item.corporation_id" :type="'corporation'" :id="item.corporation_id"
-                                    :size="32" class="portrait corporation-portrait" />
+                                    :size="32" class="portrait corporation-portrait"
+                                    :style="{ maxWidth: '32px', maxHeight: '32px' }" />
                                 <Image v-if="item.alliance_id" :type="'alliance'" :id="item.alliance_id" :size="32"
-                                    class="portrait alliance-portrait" />
+                                    class="portrait alliance-portrait"
+                                    :style="{ maxWidth: '32px', maxHeight: '32px' }" />
                             </div>
 
                             <!-- Ship Image -->
                             <div class="ship-container">
-                                <Image :type="'type-render'" :id="item.ship_type_id" :size="64" class="ship-image" />
+                                <Image :type="'type-render'" :id="item.ship_type_id" :size="64" class="ship-image"
+                                    :style="{ maxWidth: '64px', maxHeight: '64px' }" />
                             </div>
 
                             <!-- Name Information -->
@@ -58,7 +62,8 @@
 
                         <!-- Bottom section - ship name and damage -->
                         <div class="attacker-bottom">
-                            <div class="ship-name-container" :class="{ 'text-red-500 dark:text-red-400': item.was_lost }">
+                            <div class="ship-name-container"
+                                :class="{ 'text-red-500 dark:text-red-400': item.was_lost }">
                                 {{ getLocalizedString(item.ship_name, locale) || 'Unknown Ship' }}
                                 <span class="ship-group">
                                     ({{ getLocalizedString(item.ship_group_name, locale) || 'Unknown Group' }})
@@ -92,7 +97,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref, onMounted, onUnmounted, nextTick } from 'vue';
+import { computed, nextTick, onMounted, onUnmounted, ref } from 'vue';
 
 // Define the structure for a ship manifest entry
 interface ICharacterShipManifestEntry {
@@ -310,16 +315,33 @@ a.lost-ship-row:hover {
 
 .portrait-container {
     flex-shrink: 0;
+    width: 64px;
+    /* Fixed width */
+    height: 64px;
+    /* Fixed height */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    /* Prevent any overflow */
 }
 
 .portrait {
     border-radius: 50%;
     background-color: rgba(0, 0, 0, 0.1);
+    object-fit: contain;
+    /* Ensure the image fits without stretching */
+    max-width: 100%;
+    max-height: 100%;
 }
 
 .character-portrait {
     width: 64px;
     height: 64px;
+    flex-shrink: 0;
+    /* Prevent flexbox from shrinking the image */
+    flex-grow: 0;
+    /* Prevent flexbox from growing the image */
 }
 
 .character-portrait-placeholder {
@@ -336,18 +358,29 @@ a.lost-ship-row:hover {
     justify-content: space-between;
     height: 64px;
     flex-shrink: 0;
+    width: 32px;
+    /* Fixed width container */
 }
 
 .corporation-portrait,
 .alliance-portrait {
     width: 32px;
     height: 32px;
+    flex-shrink: 0;
+    flex-grow: 0;
 }
 
 .ship-container {
     flex-shrink: 0;
     margin-left: 0.25rem;
     margin-right: 0.75rem;
+    width: 64px;
+    /* Fixed width */
+    height: 64px;
+    /* Fixed height */
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
 .ship-image {
@@ -356,6 +389,9 @@ a.lost-ship-row:hover {
     border-radius: 4px;
     background-color: rgba(0, 0, 0, 0.2);
     border: 1px solid rgba(75, 85, 99, 0.2);
+    object-fit: contain;
+    max-width: 100%;
+    max-height: 100%;
 }
 
 .name-container {

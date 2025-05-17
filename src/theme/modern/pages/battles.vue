@@ -160,8 +160,13 @@ const formatNumber = (n: number | undefined | null): string => {
     return n.toLocaleString(undefined, { maximumFractionDigits: 0 });
 };
 
-const linkFn = (item: IBattlesDocument) => `/battle/${item.battle_id}`;
-const goToBattle = (item: IBattlesDocument) => router.push(linkFn(item));
+const linkFn = (item: IBattlesDocument) => {
+    if (!item || item.battle_id === null || item.battle_id === undefined) {
+        console.error('Attempted to create link for battle with missing ID:', item);
+        return '/battles'; // Redirect to battles list as fallback
+    }
+    return `/battle/${item.battle_id}`;
+};
 
 const getLocalizedString = (obj: any, localeKey: string): string => {
     if (!obj) return "";
