@@ -1,5 +1,4 @@
-import { ref, watch, onMounted, readonly } from 'vue';
-import { ref, watch, onMounted, readonly } from 'vue';
+import { onMounted, readonly, ref, watch } from 'vue';
 
 export interface UseZoomOptions {
     defaultZoom?: number;
