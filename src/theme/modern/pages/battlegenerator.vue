@@ -747,7 +747,7 @@ watch(() => route.hash, (newHash) => {
 });
 
 watch(activeTabId, (newId, oldId) => {
-    if (previewData.value && newId && oldId && newId !== oldId && 
+    if (previewData.value && newId && oldId && newId !== oldId &&
         route.hash !== `#${newId}` &&
         (route.hash || newId !== tabs.value[0].id)) {
         router.push({ hash: `#${newId}` });

@@ -49,7 +49,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, watch } from 'vue';
+import { onMounted, ref, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useRoute, useRouter } from 'vue-router';
 import RegionBattles from '~/components/region/RegionBattles.vue';
@@ -92,8 +92,8 @@ watch(activeTabId, (newId, oldId) => {
     // 2. There was an actual change (newId !== oldId)
     // 3. The URL doesn't already have this hash
     // 4. Either: there's already a hash in the URL, OR the new tab isn't the default
-    if (oldId && 
-        newId !== oldId && 
+    if (oldId &&
+        newId !== oldId &&
         route.hash !== `#${newId}` &&
         (route.hash || newId !== tabItems[0].id)) {
         router.push({ hash: `#${newId}` });

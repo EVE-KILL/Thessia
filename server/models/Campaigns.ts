@@ -61,6 +61,7 @@ campaignsSchema.index({ creator_id: 1 }, { sparse: true });
 campaignsSchema.index({ public: 1 });
 campaignsSchema.index({ createdAt: 1 });
 campaignsSchema.index({ updatedAt: 1 });
+campaignsSchema.index({ name: 'text', description: 'text' });
 
 // Create and export the Campaigns model
 export const Campaigns: Model<ICampaignDocument> = model<ICampaignDocument>(
