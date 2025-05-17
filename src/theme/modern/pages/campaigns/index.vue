@@ -148,7 +148,7 @@
                                     <UIcon name="lucide:calendar" class="w-4 h-4 flex-shrink-0" />
                                     <span class="truncate">{{ formatDate(campaign.startTime) }}</span>
                                     <span v-if="campaign.endTime" class="truncate">- {{ formatDate(campaign.endTime)
-                                    }}</span>
+                                        }}</span>
                                     <span v-else class="truncate">- {{ t('campaign.ongoing') }}</span>
                                 </span>
                             </div>
@@ -162,21 +162,21 @@
                                     <div class="flex items-center gap-1 text-gray-300">
                                         <UIcon name="lucide:map-pin" class="w-4 h-4" />
                                         <span class="font-medium">{{ campaign.filterCounts.locations }}</span>
-                                        <span>{{ t('locations').toLowerCase() }}</span>
+                                        <span>{{ t('campaign.locations') }}</span>
                                     </div>
                                 </div>
                                 <div v-if="campaign.filterCounts.attackers" class="filter-badge blue">
                                     <div class="flex items-center gap-1 text-blue-300">
                                         <UIcon name="lucide:sword" class="w-4 h-4" />
                                         <span class="font-medium">{{ campaign.filterCounts.attackers }}</span>
-                                        <span>{{ t('campaign.attacker_side').toLowerCase() }}</span>
+                                        <span>{{ t('campaign.attacker_side') }}</span>
                                     </div>
                                 </div>
                                 <div v-if="campaign.filterCounts.victims" class="filter-badge red">
                                     <div class="flex items-center gap-1 text-red-300">
                                         <UIcon name="lucide:target" class="w-4 h-4" />
                                         <span class="font-medium">{{ campaign.filterCounts.victims }}</span>
-                                        <span>{{ t('campaign.victim_side').toLowerCase() }}</span>
+                                        <span>{{ t('campaign.victim_side') }}</span>
                                     </div>
                                 </div>
                             </div>
@@ -184,7 +184,7 @@
 
                         <!-- View Button -->
                         <div class="mt-auto">
-                            <UButton :to="`/campaign/${campaign.campaign_id}`" block color="primary" variant="solid">
+                            <UButton :to="`/campaigns/${campaign.campaign_id}`" block color="primary" variant="solid">
                                 {{ t('view') }}
                             </UButton>
                         </div>

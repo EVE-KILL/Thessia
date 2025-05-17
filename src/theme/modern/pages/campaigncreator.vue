@@ -401,7 +401,7 @@ async function loadCampaignForEditing() {
             });
 
             // Redirect back to the campaign view
-            router.push(`/campaign/${campaignId.value}`);
+            router.push(`/campaigns/${campaignId.value}`);
             return;
         }
 
@@ -717,7 +717,7 @@ const handleCreateCampaign = async () => {
             if (data.value.campaign && data.value.campaign.id) {
                 // Short timeout to allow the toast to be shown before redirect
                 setTimeout(() => {
-                    window.location.href = `/campaign/${data.value.campaign.id}`;
+                    window.location.href = `/campaigns/${data.value.campaign.id}`;
                 }, 1000);
             }
         }
@@ -788,7 +788,7 @@ const submitButtonText = computed(() => {
                     <UCard class="bg-yellow-50 dark:bg-yellow-900/20 border-0">
                         <template #header>
                             <h2 class="text-xl font-semibold text-gray-800 dark:text-gray-100">{{ $t('campaignDetails')
-                            }}</h2>
+                                }}</h2>
                         </template>
                         <div class="space-y-4">
                             <div>
@@ -842,7 +842,7 @@ const submitButtonText = computed(() => {
                                     </label>
                                     <div class="relative">
                                         <input type="text" class="custom-input w-full"
-                                            v-model="filterState.region.searchTerm" placeholder="Search for a region..."
+                                            v-model="filterState.region.searchTerm" :placeholder="t('search.region')"
                                             @input="debouncedSearch('region', filterState.region.searchTerm)"
                                             @keydown="(e) => handleKeyDown('region', e)"
                                             :disabled="isLimitReached('region')" />
@@ -865,7 +865,7 @@ const submitButtonText = computed(() => {
                                         <UBadge v-for="entity in filterState.region.multipleValues" :key="entity.id"
                                             color="primary" class="flex items-center gap-1 py-1 px-2">
                                             {{ entity.name }}
-                                            <UButton color="white" variant="ghost" icon="i-lucide-x" size="xs"
+                                            <UButton color="info" variant="ghost" icon="i-lucide-x" size="xs"
                                                 class="p-0" @click="removeSelectedEntity('region', entity.id)" />
                                         </UBadge>
                                     </div>
@@ -888,7 +888,7 @@ const submitButtonText = computed(() => {
                                     </label>
                                     <div class="relative">
                                         <input type="text" class="custom-input w-full"
-                                            v-model="filterState.system.searchTerm" placeholder="Search for a system..."
+                                            v-model="filterState.system.searchTerm" :placeholder="t('search.system')"
                                             @input="debouncedSearch('system', filterState.system.searchTerm)"
                                             @keydown="(e) => handleKeyDown('system', e)"
                                             :disabled="isLimitReached('system')" />
@@ -936,7 +936,7 @@ const submitButtonText = computed(() => {
                                     <div class="relative">
                                         <input type="text" class="custom-input w-full"
                                             v-model="filterState.constellation.searchTerm"
-                                            placeholder="Search for a constellation..."
+                                            :placeholder="t('search.constellation')"
                                             @input="debouncedSearch('constellation', filterState.constellation.searchTerm)"
                                             @keydown="(e) => handleKeyDown('constellation', e)"
                                             :disabled="isLimitReached('constellation')" />
@@ -984,7 +984,7 @@ const submitButtonText = computed(() => {
                                         class="block text-sm font-medium text-gray-700 dark:text-gray-300">
                                         {{ $t('endTime') }}
                                         <span class="text-xs text-gray-500 ml-1">({{ $t('campaignCreator.optional')
-                                        }})</span>
+                                            }})</span>
                                     </label>
                                     <input type="datetime-local" id="campaignEndTime" class="custom-input"
                                         v-model="campaignEndTime">
@@ -1021,7 +1021,7 @@ const submitButtonText = computed(() => {
                                     <div class="relative">
                                         <input type="text" class="custom-input w-full"
                                             v-model="filterState.attackerCharacter.searchTerm"
-                                            placeholder="Search for a character..."
+                                            :placeholder="t('search.character')"
                                             @input="debouncedSearch('attackerCharacter', filterState.attackerCharacter.searchTerm)"
                                             @keydown="(e) => handleKeyDown('attackerCharacter', e)"
                                             :disabled="isLimitReached('attackerCharacter')" />
@@ -1068,7 +1068,7 @@ const submitButtonText = computed(() => {
                                     <div class="relative">
                                         <input type="text" class="custom-input w-full"
                                             v-model="filterState.attackerCorporation.searchTerm"
-                                            placeholder="Search for a corporation..."
+                                            :placeholder="t('search.corporation')"
                                             @input="debouncedSearch('attackerCorporation', filterState.attackerCorporation.searchTerm)"
                                             @keydown="(e) => handleKeyDown('attackerCorporation', e)"
                                             :disabled="isLimitReached('attackerCorporation')" />
@@ -1114,7 +1114,7 @@ const submitButtonText = computed(() => {
                                     <div class="relative">
                                         <input type="text" class="custom-input w-full"
                                             v-model="filterState.attackerAlliance.searchTerm"
-                                            placeholder="Search for an alliance..."
+                                            :placeholder="t('search.alliance')"
                                             @input="debouncedSearch('attackerAlliance', filterState.attackerAlliance.searchTerm)"
                                             @keydown="(e) => handleKeyDown('attackerAlliance', e)"
                                             :disabled="isLimitReached('attackerAlliance')" />
@@ -1159,7 +1159,7 @@ const submitButtonText = computed(() => {
                                     <div class="relative">
                                         <input type="text" class="custom-input w-full"
                                             v-model="filterState.attackerFaction.searchTerm"
-                                            placeholder="Search for a faction..."
+                                            :placeholder="t('search.faction')"
                                             @input="debouncedSearch('attackerFaction', filterState.attackerFaction.searchTerm)"
                                             @keydown="(e) => handleKeyDown('attackerFaction', e)"
                                             :disabled="isLimitReached('attackerFaction')" />
@@ -1215,7 +1215,7 @@ const submitButtonText = computed(() => {
                                     <div class="relative">
                                         <input type="text" class="custom-input w-full"
                                             v-model="filterState.victimCharacter.searchTerm"
-                                            placeholder="Search for a character..."
+                                            :placeholder="t('search.character')"
                                             @input="debouncedSearch('victimCharacter', filterState.victimCharacter.searchTerm)"
                                             @keydown="(e) => handleKeyDown('victimCharacter', e)"
                                             :disabled="isLimitReached('victimCharacter')" />
@@ -1261,7 +1261,7 @@ const submitButtonText = computed(() => {
                                     <div class="relative">
                                         <input type="text" class="custom-input w-full"
                                             v-model="filterState.victimCorporation.searchTerm"
-                                            placeholder="Search for a corporation..."
+                                            :placeholder="t('search.corporation')"
                                             @input="debouncedSearch('victimCorporation', filterState.victimCorporation.searchTerm)"
                                             @keydown="(e) => handleKeyDown('victimCorporation', e)"
                                             :disabled="isLimitReached('victimCorporation')" />
@@ -1307,7 +1307,7 @@ const submitButtonText = computed(() => {
                                     <div class="relative">
                                         <input type="text" class="custom-input w-full"
                                             v-model="filterState.victimAlliance.searchTerm"
-                                            placeholder="Search for an alliance..."
+                                            :placeholder="t('search.alliance')"
                                             @input="debouncedSearch('victimAlliance', filterState.victimAlliance.searchTerm)"
                                             @keydown="(e) => handleKeyDown('victimAlliance', e)"
                                             :disabled="isLimitReached('victimAlliance')" />
@@ -1353,7 +1353,7 @@ const submitButtonText = computed(() => {
                                     <div class="relative">
                                         <input type="text" class="custom-input w-full"
                                             v-model="filterState.victimFaction.searchTerm"
-                                            placeholder="Search for a faction..."
+                                            :placeholder="t('search.faction')"
                                             @input="debouncedSearch('victimFaction', filterState.victimFaction.searchTerm)"
                                             @keydown="(e) => handleKeyDown('victimFaction', e)"
                                             :disabled="isLimitReached('victimFaction')" />

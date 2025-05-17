@@ -115,12 +115,6 @@ import { computed, ref } from 'vue';
 import { useRoute } from 'vue-router';
 import { type ICampaignOutput } from '~/server/interfaces/ICampaignOutput';
 
-// Import campaign components
-import CampaignEntities from '~/src/theme/modern/components/campaign/CampaignEntities.vue';
-import CampaignOverview from '~/src/theme/modern/components/campaign/CampaignOverview.vue';
-import CampaignShipStats from '~/src/theme/modern/components/campaign/CampaignShipStats.vue';
-import CampaignTopBox from '~/src/theme/modern/components/campaign/CampaignTopBox.vue';
-
 // Composables
 const { t } = useI18n();
 const toast = useToast();

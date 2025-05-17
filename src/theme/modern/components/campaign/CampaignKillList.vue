@@ -501,7 +501,7 @@ onUpdated(() => {
                         <div class="flex flex-col items-start min-w-0 flex-1">
                             <span class="text-sm text-black dark:text-white truncate max-w-full">
                                 {{ item.finalblow.faction_name || item.finalblow.character_name ||
-                                t('campaign.unknown_pilot') }}
+                                    t('campaign.unknown_pilot') }}
                             </span>
                             <span v-if="item.finalblow.corporation_name"
                                 class="text-xs text-gray-600 dark:text-gray-400 truncate max-w-full">
@@ -603,7 +603,7 @@ onUpdated(() => {
                             </ClientOnly>
                             <div class="attacker-count flex items-center gap-1">
                                 <span class="text-xs text-gray-600 dark:text-gray-400">{{ item.attackerCount
-                                }}</span>
+                                    }}</span>
                                 <NuxtImg src="/images/involved.png" format="webp" quality="80" width="16" height="16"
                                     :alt="`${item.attackerCount} Involved`" class="h-3" />
                             </div>

@@ -86,6 +86,13 @@ const leftNavItems = computed(() => [
         icon: "lucide:shield",
     },
     {
+        name: t("campaigns"),
+        label: t("campaigns"),
+        position: "left",
+        to: "/campaigns",
+        icon: "lucide:shield",
+    },
+    {
         name: t("tools"),
         label: t("tools"),
         position: "left",
