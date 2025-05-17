@@ -217,6 +217,32 @@ const tableColumns = [
                 </div>
             </template>
 
+            <!-- Mobile view template -->
+            <template #mobile-content="{ item }">
+                <div class="mobile-entity-container">
+                    <div class="mobile-entity-header">
+                        <!-- Entity image and name -->
+                        <div class="flex items-center">
+                            <Image v-if="!item.isLoading" :type="imageTypeMap[entityType]" :id="item.entityId"
+                                :alt="`${entityType}: ${item.displayName}`" class="w-7 h-7 flex-shrink-0 mr-2" size="32"
+                                format="webp" />
+                            <div v-else
+                                class="w-7 h-7 flex-shrink-0 mr-2 rounded bg-gray-200 dark:bg-gray-700 animate-pulse">
+                            </div>
+
+                            <div class="entity-name text-sm text-black dark:text-white truncate">
+                                {{ item.displayName }}
+                            </div>
+                        </div>
+
+                        <!-- Count value -->
+                        <div class="mobile-count-value">
+                            {{ item.displayCount }}
+                        </div>
+                    </div>
+                </div>
+            </template>
+
             <!-- Custom skeleton -->
             <template #skeleton>
                 <div v-for="i in limit" :key="`skeleton-${i}`"
@@ -364,5 +390,44 @@ const tableColumns = [
 :deep(.text-sm) {
     font-size: 0.9rem;
     line-height: 1rem;
+}
+
+/* Mobile view styling */
+.mobile-entity-container {
+    width: 100%;
+}
+
+.mobile-entity-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+}
+
+.entity-name {
+    font-weight: 500;
+    max-width: 75%;
+}
+
+.mobile-count-value {
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+    font-size: 0.9rem;
+    color: var(--background-200);
+    text-align: right;
+    white-space: nowrap;
+}
+
+/* Media query for very small screens */
+@media (max-width: 320px) {
+    .mobile-entity-header {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .mobile-count-value {
+        margin-top: 0.25rem;
+        margin-left: 2.25rem;
+        /* Align with the text (after the icon) */
+    }
 }
 </style>

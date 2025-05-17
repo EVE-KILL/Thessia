@@ -563,8 +563,6 @@ export async function generateCampaignStats(
         killmailBatches.push(relevantKillmails.slice(i, i + BATCH_SIZE));
     }
 
-    console.log(`Processing ${relevantKillmails.length} killmails in ${killmailBatches.length} batches`);
-
     // Process each batch
     let killmailIdIndex = 0;
 

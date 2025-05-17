@@ -216,7 +216,7 @@ const tableColumns = [
                 <div class="title-text">{{ displayTitle }}</div>
             </template>
 
-            <!-- Keep existing entity and count cell templates -->
+            <!-- Cell templates for desktop view -->
             <template #cell-entity="{ item }">
                 <div class="flex items-center py-1">
                     <Image v-if="!item.isLoading" :type="imageTypeMap[props.type]" :id="getEntityId(item)"
@@ -235,6 +235,31 @@ const tableColumns = [
             <template #cell-count="{ item }">
                 <div class="text-sm text-right text-background-200 pr-2 whitespace-nowrap">
                     {{ item.count }}
+                </div>
+            </template>
+
+            <!-- Add a custom mobile row template to ensure images show up on mobile -->
+            <template #mobile-row="{ item }">
+                <div class="flex items-center justify-between p-2 w-full">
+                    <!-- Entity with image - same layout as desktop -->
+                    <div class="flex items-center py-1 flex-1 min-w-0">
+                        <Image v-if="!item.isLoading" :type="imageTypeMap[props.type]" :id="getEntityId(item)"
+                            :alt="`${props.type}: ${getEntityDisplayName(item)}`" class="w-7 flex-shrink-0 mr-2"
+                            size="32" format="webp" />
+                        <div v-else
+                            class="w-7 h-7 flex-shrink-0 mr-2 rounded bg-gray-200 dark:bg-gray-700 animate-pulse">
+                        </div>
+
+                        <!-- Entity name with truncation -->
+                        <div class="text-sm text-left text-black dark:text-white truncate min-w-0 overflow-hidden">
+                            {{ getEntityDisplayName(item) }}
+                        </div>
+                    </div>
+
+                    <!-- Count - right aligned -->
+                    <div class="text-sm text-right text-background-200 whitespace-nowrap ml-4">
+                        {{ item.count }}
+                    </div>
                 </div>
             </template>
 

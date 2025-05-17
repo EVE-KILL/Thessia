@@ -109,9 +109,7 @@
                         </div>
                     </template>
 
-                    <Icon v-if="item.type === 'header' && isCollapsible(item.itemName)"
-                        :name="isSectionCollapsed(item.itemName) ? 'lucide:chevron-right' : 'lucide:chevron-down'"
-                        class="collapse-icon-mobile" @click.stop="toggleSectionCollapse(item.itemName)" />
+                    <Icon v-if="item.type === 'header'" name="lucide:chevron-right" class="collapse-icon-mobile" />
 
                     <!-- Show image only when not a skin -->
                     <Image
@@ -119,49 +117,45 @@
                         type="item" :id="item.itemId" size="24" class="w-6 h-6 rounded-md" :alt="item.itemName || ''" />
                 </div>
 
-                <!-- Mobile content -->
+                <!-- Mobile content - single row layout -->
                 <div class="mobile-content">
-                    <!-- Name -->
-                    <div class="mobile-header">
-                        <div v-if="item.type === 'header'" class="font-bold text-sm uppercase mobile-title"
-                            @click.stop="isCollapsible(item.itemName) && toggleSectionCollapse(item.itemName)">
-                            {{ item.itemName }}
-                            <span v-if="isCollapsible(item.itemName)" class="section-count">
-                                ({{ getSectionItemCount(item.itemName) }})
-                            </span>
-                        </div>
-                        <div v-else-if="item.type === 'item' || item.type === 'container-item'"
-                            class="font-medium mobile-title">
-                            {{ item.itemName }}
-                            <!-- Add container icon here too -->
-                            <Icon v-if="item.isContainer"
-                                :name="isContainerCollapsed(item.containerId) ? 'lucide:chevron-right' : 'lucide:chevron-down'"
-                                class="container-collapse-icon-mobile"
-                                @click.stop="toggleContainerCollapse(item.containerId, $event)" />
-                        </div>
-                        <div v-else-if="item.type === 'value'" class="font-medium mobile-title">{{ item.itemName }}
-                        </div>
+                    <!-- For header items -->
+                    <div v-if="item.type === 'header'" class="font-bold text-xs uppercase mobile-header w-full">
+                        {{ item.itemName }}
+                        <span v-if="isCollapsible(item.itemName)" class="section-count">
+                            ({{ getSectionItemCount(item.itemName) }})
+                        </span>
                     </div>
 
-                    <!-- Mobile details - badges and value -->
-                    <div v-if="item.type === 'item' || item.type === 'value' || item.type === 'container-item'"
-                        class="mobile-details">
-                        <div class="mobile-badges-wrapper">
-                            <!-- Dropped badge -->
-                            <UBadge v-if="item.dropped > 0" variant="solid" color="success"
-                                class="item-badge item-badge-mobile">
-                                <span class="badge-text">{{ item.dropped }}</span>
-                            </UBadge>
-
-                            <!-- Destroyed badge -->
-                            <UBadge v-if="item.destroyed > 0" variant="solid" color="error"
-                                class="item-badge item-badge-mobile">
-                                <span class="badge-text">{{ item.destroyed }}</span>
-                            </UBadge>
+                    <!-- For regular items - single row layout -->
+                    <div v-else class="mobile-item-row">
+                        <!-- Item name (truncated) -->
+                        <div class="mobile-item-name">
+                            {{ item.itemName }}
                         </div>
 
-                        <div v-if="item.value" class="mobile-value">
-                            {{ formatIsk(item.value) }}
+                        <!-- Right-side content: quantity badges and ISK value in one section -->
+                        <div class="mobile-meta">
+                            <!-- Quantity badges -->
+                            <div v-if="item.type === 'item' || item.type === 'value' || item.type === 'container-item'"
+                                class="mobile-badges-wrapper">
+                                <!-- Dropped badge -->
+                                <UBadge v-if="item.dropped > 0" variant="solid" color="success"
+                                    class="item-badge item-badge-mobile">
+                                    <span class="badge-text">{{ item.dropped }}</span>
+                                </UBadge>
+
+                                <!-- Destroyed badge -->
+                                <UBadge v-if="item.destroyed > 0" variant="solid" color="error"
+                                    class="item-badge item-badge-mobile">
+                                    <span class="badge-text">{{ item.destroyed }}</span>
+                                </UBadge>
+                            </div>
+
+                            <!-- Price -->
+                            <div v-if="item.value" class="mobile-value">
+                                {{ formatIsk(item.value) }}
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -1180,7 +1174,130 @@ function generateItemLink(item: Item): string | null {
     font-size: 0.7rem;
 }
 
-/* Mobile view styling */
+/* Mobile view styling - horizontal layout */
+.mobile-container {
+    display: flex;
+    width: 100%;
+    gap: 0.75rem;
+    align-items: center;
+    padding: 0.25rem 0;
+}
+
+.mobile-image-cell {
+    position: relative;
+    display: flex;
+    align-items: center;
+    width: 30px;
+    flex-shrink: 0;
+}
+
+.indented-mobile-image {
+    padding-left: 15px;
+}
+
+.mobile-connector-line {
+    position: absolute;
+    left: 2px;
+    display: flex;
+    align-items: center;
+}
+
+.connector-icon-mobile {
+    width: 10px;
+    height: 10px;
+    color: light-dark(#6b7280, #9ca3af);
+}
+
+.collapse-icon-mobile {
+    width: 14px;
+    height: 14px;
+    color: light-dark(#6b7280, #9ca3af);
+    margin-right: 2px;
+}
+
+.mobile-content {
+    flex: 1;
+    display: flex;
+    min-width: 0;
+    align-items: center;
+}
+
+.mobile-header {
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    color: light-dark(#111827, white);
+}
+
+/* Main item row layout - horizontal with space distribution */
+.mobile-item-row {
+    display: flex;
+    width: 100%;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.mobile-item-name {
+    max-width: 60%;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    font-weight: 500;
+    font-size: 0.875rem;
+    color: light-dark(#111827, white);
+    padding-right: 0.5rem;
+}
+
+.mobile-meta {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    flex-shrink: 0;
+}
+
+.mobile-badges-wrapper {
+    display: flex;
+    gap: 0.25rem;
+    white-space: nowrap;
+}
+
+.item-badge-mobile {
+    padding: 0.05rem 0.3rem;
+    font-size: 0.65rem;
+}
+
+.mobile-value {
+    font-size: 0.75rem;
+    font-weight: 500;
+    white-space: nowrap;
+    color: light-dark(#111827, white);
+    min-width: 60px;
+    text-align: right;
+}
+
+/* Adjust for smaller screens */
+@media (max-width: 380px) {
+    .mobile-item-name {
+        max-width: 50%;
+    }
+
+    .mobile-meta {
+        gap: 0.25rem;
+    }
+
+    .mobile-value {
+        min-width: 50px;
+    }
+}
+
+/* Adjust for very small screens */
+@media (max-width: 320px) {
+    .mobile-item-name {
+        max-width: 40%;
+    }
+}
+
+/* Mobile view styling - reverted to vertical layout with better spacing */
 .mobile-container {
     display: flex;
     width: 100%;
@@ -1190,8 +1307,10 @@ function generateItemLink(item: Item): string | null {
 .mobile-image-cell {
     position: relative;
     display: flex;
-    align-items: center;
+    align-items: flex-start;
+    padding-top: 2px;
     width: 30px;
+    flex-shrink: 0;
 }
 
 .indented-mobile-image {
@@ -1226,19 +1345,23 @@ function generateItemLink(item: Item): string | null {
 }
 
 .mobile-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 0.25rem;
-}
-
-.mobile-title {
-    font-weight: 500;
-    font-size: 0.875rem;
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
     color: light-dark(#111827, white);
+    padding-top: 2px;
 }
 
-.mobile-details {
+.mobile-item-name {
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: light-dark(#111827, white);
+    margin-bottom: 0.25rem;
+    display: flex;
+    align-items: center;
+}
+
+.mobile-item-details {
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -1255,8 +1378,19 @@ function generateItemLink(item: Item): string | null {
 }
 
 .mobile-value {
-    font-size: 0.8rem;
+    font-size: 0.75rem;
     font-weight: 500;
+    color: light-dark(#111827, white);
+    margin-left: 1rem;
+}
+
+.container-collapse-icon-mobile {
+    width: 12px;
+    height: 12px;
+    color: light-dark(#6b7280, #9ca3af);
+    margin-left: 4px;
+    transition: transform 0.2s ease;
+    cursor: pointer;
 }
 
 /* Add cursor pointer for clickable rows */

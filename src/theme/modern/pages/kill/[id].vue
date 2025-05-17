@@ -460,7 +460,7 @@
                     </div>
                 </div>
             </template>
-            <Tabs v-else :items="mobileTabs" :ui="tabsUi" :default-index="defaultMobileTabIndex" color="neutral">
+            <Tabs v-else v-model="activeTabId" :items="mobileTabs" :class="tabsUi">
                 <!-- Fitting Wheel Tab -->
                 <template #fitting="{ item }">
                     <div class="flex justify-center">
@@ -525,27 +525,26 @@ const tabsUi = {
     panel: "p-0 sm:p-0",
 };
 
-// No longer needed since we're not using tabs for desktop
-
 // Mobile tabs
 const mobileTabs = computed(() => [
     {
-        label: "Fitting",
+        id: "fitting",
         slot: "fitting",
         icon: "i-lucide-circle",
     },
     {
-        label: "Items",
+        id: "items",
         slot: "items",
         icon: "i-lucide-package",
     },
     {
-        label: "Info",
+        id: "info",
+
         slot: "info",
         icon: "i-lucide-info",
     },
     {
-        label: "Attackers",
+        id: "attackers",
         slot: "attackers",
         icon: "i-lucide-users",
         trailing: killmail.value?.attackers?.length
@@ -553,7 +552,7 @@ const mobileTabs = computed(() => [
             : undefined,
     },
     {
-        label: "Comments",
+        id: "comments",
         slot: "comments",
         icon: "i-lucide-message-square",
         trailing: commentCount.value ? `(${commentCount.value})` : undefined,
@@ -741,7 +740,7 @@ function getSkeletonSlotPosition(
 }
 
 // Default tab selection for mobile
-const defaultMobileTabIndex = ref("0"); // First tab (Fitting)
+const activeTabId = ref("fitting");
 
 // Handle comment fragment navigation
 function handleCommentFragment() {
@@ -750,15 +749,13 @@ function handleCommentFragment() {
         if (fragment?.startsWith("#comment-")) {
             // If we have a comment fragment, switch to the comments tab
             if (isMobile.value) {
-                // Comments is the 5th tab (index 4) on mobile
-                defaultMobileTabIndex.value = "4";
+                activeTabId.value = "comments";
             }
-            // No else needed since desktop doesn't use tabs anymore
         }
     }
 }
 
-// Update Tabs to use the defaultIndex
+// Update Tabs to use the activeTabId
 watch(
     () => killmail.value,
     () => {

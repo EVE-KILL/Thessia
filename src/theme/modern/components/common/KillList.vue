@@ -908,57 +908,91 @@ onUpdated(() => {
 
             <!-- Mobile view -->
             <template #mobile-row="{ item }">
-                <div class="mobile-container">
-                    <!-- Ship Image -->
-                    <Image type="type-render" :id="item.victim.ship_id" format="webp"
-                        :alt="`Ship: ${getLocalizedString(item.victim.ship_name, currentLocale)}`"
-                        class="rounded w-16 h-16" size="64" />
+                <div class="mobile-container p-2">
+                    <!-- Top Section: Ship Image and Details -->
+                    <div class="flex mb-2">
+                        <!-- Ship Image -->
+                        <Image type="type-render" :id="item.victim.ship_id" format="webp"
+                            :alt="`Ship: ${getLocalizedString(item.victim.ship_name, currentLocale)}`"
+                            class="rounded w-16 h-16" size="64" />
 
-                    <!-- Victim Info -->
-                    <div class="mobile-content">
-                        <!-- Top Line: Victim Name + ISK Value -->
-                        <div class="mobile-header">
-                            <span class="victim-name truncate">{{ item.victim.character_name }}</span>
-                            <span v-if="item.total_value > 50"
-                                class="isk-value text-xs text-gray-600 dark:text-gray-400">
+                        <!-- Ship Details -->
+                        <div class="ml-2 flex flex-col justify-center">
+                            <div class="text-sm font-medium text-black dark:text-white">
+                                {{ getLocalizedString(item.victim.ship_name, currentLocale) }}
+                                <span class="text-xs text-gray-500 dark:text-gray-400">
+                                    ({{ getLocalizedString(item.victim.ship_group_name || {}, currentLocale) }})
+                                </span>
+                            </div>
+                            <div v-if="item.total_value > 50" class="text-xs text-gray-600 dark:text-gray-400 mt-1">
                                 {{ formatIsk(item.total_value) }} ISK
-                            </span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Middle Section: Character, Corp, Alliance -->
+                    <div class="flex mb-2">
+                        <!-- Entity Images - With no gap between corp/alli images -->
+                        <div class="flex items-start">
+                            <!-- Character Image -->
+                            <div class="character-portrait">
+                                <Image v-if="item.victim.character_id > 0" type="character"
+                                    :id="item.victim.character_id" format="webp"
+                                    :alt="`Character: ${item.victim.character_name}`" class="rounded-full w-16 h-16"
+                                    size="64" />
+                                <Image v-else type="character" :id="1" alt="Placeholder" class="rounded-full w-16 h-16"
+                                    size="64" />
+                            </div>
+
+                            <!-- Stacked Corp/Alliance Images - Exact 32px height each with no gap -->
+                            <div class="flex flex-col h-16">
+                                <div v-if="item.victim.corporation_id" class="h-8">
+                                    <Image type="corporation" :id="item.victim.corporation_id" size="32"
+                                        class="rounded-full w-8 h-8" />
+                                </div>
+                                <div v-if="item.victim.alliance_id" class="h-8">
+                                    <Image type="alliance" :id="item.victim.alliance_id" size="32"
+                                        class="rounded-full w-8 h-8" />
+                                </div>
+                            </div>
                         </div>
 
-                        <!-- Corporation -->
-                        <div class="mobile-corporation truncate text-xs text-gray-600 dark:text-gray-400">
-                            {{ item.victim.corporation_name }}
+                        <!-- Entity Names -->
+                        <div class="ml-2 flex flex-col justify-center flex-1">
+                            <div class="text-sm font-medium text-black dark:text-white">
+                                {{ item.victim.character_name }}
+                            </div>
+                            <div class="text-xs text-gray-600 dark:text-gray-400">
+                                {{ item.victim.corporation_name }}
+                            </div>
+                            <div v-if="item.victim.alliance_name" class="text-xs text-gray-500 dark:text-gray-400">
+                                {{ item.victim.alliance_name }}
+                            </div>
                         </div>
+                    </div>
 
-                        <!-- Final Blow + Location -->
-                        <div class="mobile-meta flex justify-between text-xs text-gray-600 dark:text-gray-400">
-                            <span class="final-blow truncate max-w-[50%]">
-                                {{ item.is_npc ? item.finalblow.faction_name : item.finalblow.character_name }}
-                            </span>
-                            <div class="system-info flex whitespace-nowrap">
-                                <span>{{ item.system_name }}</span>
-                                <span> (</span>
-                                <span :class="getSecurityColor(item.system_security)">{{ item.system_security.toFixed(1)
+                    <!-- Bottom Section: System Info and Time -->
+                    <div class="flex justify-between items-center mt-1">
+                        <!-- System/Region Info -->
+                        <div class="text-xs">
+                            <span>{{ item.system_name }} / {{ getLocalizedString(item.region_name, currentLocale)
                                 }}</span>
-                                <span>)</span>
-                            </div>
+                            <span class="ml-1">(</span>
+                            <span :class="getSecurityColor(item.system_security)">
+                                {{ item.system_security.toFixed(1) }}
+                            </span>
+                            <span>)</span>
                         </div>
 
-                        <!-- Time + Attacker Count -->
-                        <div class="mobile-footer flex justify-between items-center mt-1">
-                            <ClientOnly>
-                                <span class="kill-time text-xs text-gray-600 dark:text-gray-400">{{
-                                    formatDate(item.kill_time) }}</span>
-                                <template #fallback>
-                                    <span class="kill-time text-xs text-gray-600 dark:text-gray-400">—</span>
-                                </template>
-                            </ClientOnly>
-                            <div class="attacker-count flex items-center gap-1">
-                                <span class="text-xs text-gray-600 dark:text-gray-400">{{ item.attackerCount }}</span>
-                                <NuxtImg src="/images/involved.png" format="webp" quality="80" width="16" height="16"
-                                    :alt="`${item.attackerCount} Involved`" class="h-3" />
-                            </div>
-                        </div>
+                        <!-- Time Info -->
+                        <ClientOnly>
+                            <span class="text-xs text-gray-600 dark:text-gray-400">
+                                {{ formatDate(item.kill_time) }}
+                            </span>
+                            <template #fallback>
+                                <span class="text-xs text-gray-600 dark:text-gray-400">—</span>
+                            </template>
+                        </ClientOnly>
                     </div>
                 </div>
             </template>
@@ -966,85 +1000,105 @@ onUpdated(() => {
             <!-- Loading skeleton customization -->
             <template #loading="{ mobile }">
                 <template v-if="mobile">
-                    <!-- Mobile loading skeleton -->
-                    <div class="mobile-container">
-                        <div class="rounded-md w-16 h-16 bg-gray-200 dark:bg-gray-700 animate-pulse"></div>
-                        <div class="flex-1 space-y-2">
-                            <div class="flex justify-between">
-                                <div class="h-4 bg-gray-200 dark:bg-gray-700 rounded w-32 animate-pulse"></div>
-                                <div class="h-3 bg-gray-200 dark:bg-gray-700 rounded w-16 animate-pulse"></div>
+                    <!-- Mobile loading skeleton - this works fine, no changes needed -->
+                    <div class="mobile-container p-2">
+                        <!-- Ship Section Skeleton -->
+                        <div class="flex mb-2">
+                            <div class="rounded w-16 h-16 bg-gray-200 dark:bg-gray-700 animate-pulse"></div>
+                            <div class="ml-2 flex flex-col justify-center space-y-2 flex-1">
+                                <div class="h-4 bg-gray-200 dark:bg-gray-700 rounded w-5/6 animate-pulse"></div>
+                                <div class="h-3 bg-gray-200 dark:bg-gray-700 rounded w-1/4 animate-pulse"></div>
                             </div>
-                            <div class="h-3 bg-gray-200 dark:bg-gray-700 rounded w-40 animate-pulse"></div>
-                            <div class="flex justify-between">
-                                <div class="h-3 bg-gray-200 dark:bg-gray-700 rounded w-24 animate-pulse"></div>
-                                <div class="h-3 bg-gray-200 dark:bg-gray-700 rounded w-20 animate-pulse"></div>
+                        </div>
+
+                        <!-- Character Section Skeleton -->
+                        <div class="flex mb-2">
+                            <div class="flex items-start">
+                                <div class="rounded-full w-16 h-16 bg-gray-200 dark:bg-gray-700 animate-pulse"></div>
+                                <div class="flex flex-col h-16">
+                                    <div class="h-8 w-8 rounded-full bg-gray-200 dark:bg-gray-700 animate-pulse"></div>
+                                    <div class="h-8 w-8 rounded-full bg-gray-200 dark:bg-gray-700 animate-pulse"></div>
+                                </div>
                             </div>
-                            <div class="h-3 bg-gray-200 dark:bg-gray-700 rounded w-16 animate-pulse"></div>
+                            <div class="ml-2 flex flex-col justify-center space-y-1 flex-1">
+                                <div class="h-4 bg-gray-200 dark:bg-gray-700 rounded w-3/4 animate-pulse"></div>
+                                <div class="h-3 bg-gray-200 dark:bg-gray-700 rounded w-2/3 animate-pulse"></div>
+                                <div class="h-3 bg-gray-200 dark:bg-gray-700 rounded w-1/2 animate-pulse"></div>
+                            </div>
+                        </div>
+
+                        <!-- Bottom Section Skeleton -->
+                        <div class="flex justify-between mt-1">
+                            <div class="h-3 bg-gray-200 dark:bg-gray-700 rounded w-2/4 animate-pulse"></div>
+                            <div class="h-3 bg-gray-200 dark:bg-gray-700 rounded w-1/4 animate-pulse"></div>
                         </div>
                     </div>
                 </template>
             </template>
 
-            <!-- Custom skeleton rendering for consistent layout -->
-            <template #skeleton>
-                <div class="skeleton-container">
-                    <div v-for="i in selectedPageSize" :key="`skeleton-${i}`" class="killlist-skeleton-row">
-                        <!-- Ship column -->
-                        <div class="killlist-skeleton-cell" style="width: 20%">
-                            <div class="flex items-center">
-                                <div class="killlist-skeleton-image"></div>
-                                <div class="flex flex-col">
-                                    <div class="killlist-skeleton-title"></div>
-                                    <div class="killlist-skeleton-subtitle"></div>
-                                </div>
-                            </div>
-                        </div>
+            <!-- Desktop column-specific loading templates -->
+            <template #loading-ship>
+                <div class="flex items-center py-1">
+                    <div class="rounded w-16 h-16 bg-gray-200 dark:bg-gray-700 animate-pulse mx-2"></div>
+                    <div class="flex flex-col items-start space-y-1">
+                        <div class="h-4 bg-gray-200 dark:bg-gray-700 rounded w-[150px] animate-pulse"></div>
+                        <div class="h-3 bg-gray-200 dark:bg-gray-700 rounded w-[120px] animate-pulse"></div>
+                        <div class="h-3 bg-gray-200 dark:bg-gray-700 rounded w-[80px] animate-pulse"></div>
+                    </div>
+                </div>
+            </template>
 
-                        <!-- Victim column -->
-                        <div class="killlist-skeleton-cell" style="width: 25%">
-                            <div class="flex items-center">
-                                <div class="killlist-skeleton-image"></div>
-                                <div class="flex flex-col">
-                                    <div class="killlist-skeleton-title"></div>
-                                    <div class="killlist-skeleton-subtitle"></div>
-                                </div>
-                            </div>
-                        </div>
+            <template #loading-victim>
+                <div class="flex items-center py-1">
+                    <div class="rounded-full w-16 h-16 bg-gray-200 dark:bg-gray-700 animate-pulse mx-2"></div>
+                    <div class="flex flex-col items-start space-y-1 min-w-0 flex-1">
+                        <div class="h-4 bg-gray-200 dark:bg-gray-700 rounded w-full max-w-[150px] animate-pulse"></div>
+                        <div class="h-3 bg-gray-200 dark:bg-gray-700 rounded w-full max-w-[130px] animate-pulse"></div>
+                        <div class="h-3 bg-gray-200 dark:bg-gray-700 rounded w-full max-w-[100px] animate-pulse"></div>
+                    </div>
+                    <div class="flex flex-col items-start space-y-1">
+                        <div class="h-4 bg-gray-200 dark:bg-gray-700 rounded w-[150px] animate-pulse"></div>
+                        <div class="h-3 bg-gray-200 dark:bg-gray-700 rounded w-[120px] animate-pulse"></div>
+                        <div class="h-3 bg-gray-200 dark:bg-gray-700 rounded w-[80px] animate-pulse"></div>
+                    </div>
+                </div>
+            </template>
 
-                        <!-- Final blow column -->
-                        <div class="killlist-skeleton-cell" style="width: 25%">
-                            <div class="flex items-center">
-                                <div class="killlist-skeleton-image"></div>
-                                <div class="flex flex-col">
-                                    <div class="killlist-skeleton-title"></div>
-                                    <div class="killlist-skeleton-subtitle"></div>
-                                </div>
-                            </div>
-                        </div>
+            <template #loading-finalBlow>
+                <div class="flex items-center py-1">
+                    <div class="rounded-full w-16 h-16 bg-gray-200 dark:bg-gray-700 animate-pulse mx-2"></div>
+                    <div class="flex flex-col items-start space-y-1 min-w-0 flex-1">
+                        <div class="h-4 bg-gray-200 dark:bg-gray-700 rounded w-full max-w-[150px] animate-pulse"></div>
+                        <div class="h-3 bg-gray-200 dark:bg-gray-700 rounded w-full max-w-[130px] animate-pulse"></div>
+                        <div class="h-3 bg-gray-200 dark:bg-gray-700 rounded w-full max-w-[100px] animate-pulse"></div>
+                    </div>
+                    <div class="flex flex-col items-start space-y-1">
+                        <div class="h-4 bg-gray-200 dark:bg-gray-700 rounded w-[150px] animate-pulse"></div>
+                        <div class="h-3 bg-gray-200 dark:bg-gray-700 rounded w-[120px] animate-pulse"></div>
+                        <div class="h-3 bg-gray-200 dark:bg-gray-700 rounded w-[80px] animate-pulse"></div>
+                    </div>
+                </div>
+            </template>
 
-                        <!-- Location column -->
-                        <div class="killlist-skeleton-cell" style="width: 15%">
-                            <div class="flex flex-col px-2">
-                                <div class="killlist-skeleton-title"></div>
-                                <div class="flex items-center gap-1 mt-1">
-                                    <div class="killlist-skeleton-system"></div>
-                                    <div class="killlist-skeleton-security"></div>
-                                </div>
-                            </div>
-                        </div>
+            <template #loading-location>
+                <div class="flex flex-col items-start py-1 text-sm px-2">
+                    <div class="h-4 bg-gray-200 dark:bg-gray-700 rounded w-full max-w-[100px] animate-pulse"></div>
+                    <div class="h-3 bg-gray-200 dark:bg-gray-700 rounded w-full max-w-[80px] animate-pulse mt-1"></div>
+                </div>
+                <div class="flex flex-col items-start space-y-1">
+                    <div class="h-4 bg-gray-200 dark:bg-gray-700 rounded w-[150px] animate-pulse"></div>
+                    <div class="h-3 bg-gray-200 dark:bg-gray-700 rounded w-[120px] animate-pulse"></div>
+                </div>
+            </template>
 
-                        <!-- Details column -->
-                        <div class="killlist-skeleton-cell" style="width: 15%; justify-content: flex-end;">
-                            <div class="flex flex-col items-end w-full">
-                                <div class="killlist-skeleton-title mb-1" style="width: 60px"></div>
-                                <div class="flex items-center gap-1">
-                                    <div class="killlist-skeleton-count"></div>
-                                    <div class="killlist-skeleton-icon"></div>
-                                    <div class="killlist-skeleton-count"></div>
-                                    <div class="killlist-skeleton-icon"></div>
-                                </div>
-                            </div>
-                        </div>
+            <template #loading-details>
+                <div class="flex flex-col items-end w-full">
+                    <div class="h-4 bg-gray-200 dark:bg-gray-700 rounded w-[60px] animate-pulse"></div>
+                    <div class="flex gap-1 items-center mt-1">
+                        <div class="h-3 w-4 bg-gray-200 dark:bg-gray-700 rounded animate-pulse"></div>
+                        <div class="h-4 w-4 bg-gray-200 dark:bg-gray-700 rounded animate-pulse"></div>
+                        <div class="h-3 w-4 bg-gray-200 dark:bg-gray-700 rounded animate-pulse"></div>
+                        <div class="h-4 w-4 bg-gray-200 dark:bg-gray-700 rounded animate-pulse"></div>
                     </div>
                 </div>
             </template>
@@ -1435,5 +1489,48 @@ onUpdated(() => {
     width: 64px;
     height: 64px;
     margin: 0 8px;
+}
+
+/* Enhanced mobile view styles */
+.mobile-container {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    border-bottom: 1px solid light-dark(rgba(229, 231, 235, 0.3), rgba(75, 85, 99, 0.2));
+    padding: 0.75rem 0.5rem;
+}
+
+/* Enhanced mobile view styles - Updated for vertically stacked corp/alliance images */
+.mobile-container {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    border-bottom: 1px solid light-dark(rgba(229, 231, 235, 0.3), rgba(75, 85, 99, 0.2));
+    padding: 0.75rem 0.5rem;
+}
+
+/* Make the container a flex row on wider mobile screens */
+@media (min-width: 480px) {
+    .mobile-container {
+        flex-direction: row;
+        align-items: flex-start;
+    }
+
+    .mobile-portraits-layout {
+        margin-bottom: 0;
+    }
+}
+
+/* Make the container a proper column on very small screens */
+@media (max-width: 360px) {
+    .mobile-portraits-layout {
+        align-items: center;
+        justify-content: center;
+    }
+
+    .mobile-content {
+        margin-top: 0.5rem;
+        margin-left: 0;
+    }
 }
 </style>

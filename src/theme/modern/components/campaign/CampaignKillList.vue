@@ -345,9 +345,9 @@ onUpdated(() => {
 <template>
     <div class="campaign-killlist w-full" @mousemove="(e) => { mouseX = e.clientX; mouseY = e.clientY; }">
         <!-- Header -->
-        <div class="mb-4">
-            <!-- Top controls - right aligned: dropdown + pagination -->
-            <div class="flex justify-between items-center gap-4 mb-3">
+        <div>
+            <!-- Top controls - stacked on mobile, side by side on desktop -->
+            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-3">
                 <!-- Left side: Limit selector -->
                 <div class="flex items-center w-full sm:w-auto">
                     <!-- Limit selector -->
@@ -366,23 +366,24 @@ onUpdated(() => {
                         </div>
                     </div>
                 </div>
+            </div>
 
-                <!-- Right side: UPagination -->
-                <UPagination v-if="pagination.total > pagination.pageSize" v-model:page="page" :page-count="totalPages"
-                    :total="pagination.total" :ui="{
-                        wrapper: 'flex items-center justify-center',
-                        rounded: 'rounded-md',
-                        default: {
-                            base: 'text-sm border-y border-r first:border-l border-gray-200 dark:border-gray-800 focus:z-10 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500',
-                            inactive: 'bg-background-800 hover:bg-background-700',
-                            padding: 'px-3 py-2',
-                            disabled: 'opacity-50 cursor-not-allowed'
-                        }
-                    }" :prev-button="{
-                        icon: 'i-lucide-chevron-left',
-                        label: '',
-                        disabled: page === 1
-                    }" :next-button="{
+            <!-- Top pagination - on its own line -->
+            <div v-if="pagination.total > pagination.pageSize" class="w-full flex justify-center mb-3">
+                <UPagination v-model:page="page" :page-count="totalPages" :total="pagination.total" :ui="{
+                    wrapper: 'flex items-center justify-center',
+                    rounded: 'rounded-md',
+                    default: {
+                        base: 'text-sm border-y border-r first:border-l border-gray-200 dark:border-gray-800 focus:z-10 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500',
+                        inactive: 'bg-background-800 hover:bg-background-700',
+                        padding: 'px-3 py-2',
+                        disabled: 'opacity-50 cursor-not-allowed'
+                    }
+                }" :prev-button="{
+                    icon: 'i-lucide-chevron-left',
+                    label: '',
+                    disabled: page === 1
+                }" :next-button="{
                         icon: 'i-lucide-chevron-right',
                         label: ''
                     }">
@@ -697,29 +698,30 @@ onUpdated(() => {
             </template>
         </Table>
 
-        <!-- Bottom controls - right aligned stats, pagination -->
-        <div class="flex justify-between items-center gap-4 mt-4">
+        <!-- Bottom controls - stacked on mobile, side by side on desktop -->
+        <div class="flex flex-col sm:flex-row justify-between items-center gap-4 mt-4">
             <!-- Result count -->
             <div class="text-xs text-gray-500">
                 {{ t('resultCount', { count: pagination.total }) }}
             </div>
+        </div>
 
-            <!-- Bottom pagination - Fixed to use v-model:page -->
-            <UPagination v-if="pagination.total > pagination.pageSize" v-model:page="page" :page-count="totalPages"
-                :total="pagination.total" :ui="{
-                    wrapper: 'flex items-center justify-center',
-                    rounded: 'rounded-md',
-                    default: {
-                        base: 'text-sm border-y border-r first:border-l border-gray-200 dark:border-gray-800 focus:z-10 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500',
-                        inactive: 'bg-background-800 hover:bg-background-700',
-                        padding: 'px-3 py-2',
-                        disabled: 'opacity-50 cursor-not-allowed'
-                    }
-                }" :prev-button="{
-                    icon: 'i-lucide-chevron-left',
-                    label: '',
-                    disabled: page === 1
-                }" :next-button="{
+        <!-- Bottom pagination - on its own line -->
+        <div v-if="pagination.total > pagination.pageSize" class="w-full flex justify-center mt-4">
+            <UPagination v-model:page="page" :page-count="totalPages" :total="pagination.total" :ui="{
+                wrapper: 'flex items-center justify-center',
+                rounded: 'rounded-md',
+                default: {
+                    base: 'text-sm border-y border-r first:border-l border-gray-200 dark:border-gray-800 focus:z-10 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500',
+                    inactive: 'bg-background-800 hover:bg-background-700',
+                    padding: 'px-3 py-2',
+                    disabled: 'opacity-50 cursor-not-allowed'
+                }
+            }" :prev-button="{
+                icon: 'i-lucide-chevron-left',
+                label: '',
+                disabled: page === 1
+            }" :next-button="{
                     icon: 'i-lucide-chevron-right',
                     label: ''
                 }">
@@ -752,6 +754,13 @@ onUpdated(() => {
 .campaign-killlist {
     background-color: var(--background-800);
     box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+    width: 100%;
+    /* Ensure full width */
+}
+
+/* Make sure table components use full width on mobile */
+:deep(.ek-table-container) {
+    width: 100%;
 }
 
 /* Additional mobile-specific styles */
@@ -982,6 +991,16 @@ onUpdated(() => {
 
 /* Fix responsive image sizes */
 @media (max-width: 640px) {
+
+    /* Ensure full width on mobile */
+    .campaign-killlist,
+    :deep(.ek-table-container),
+    :deep(.table-body) {
+        width: 100%;
+        max-width: 100%;
+        overflow-x: hidden;
+    }
+
     .w-16 {
         width: 48px !important;
     }

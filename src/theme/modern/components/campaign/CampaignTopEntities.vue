@@ -9,10 +9,13 @@
                     <div class="entity-avatar">
                         <Image type="character" :id="character.character_id" :size="32" class="avatar" />
                     </div>
-                    <div class="entity-name">
-                        {{ character.character_name }}
+                    <div class="entity-info">
+                        <div class="entity-name truncate">
+                            {{ character.character_name }}
+                        </div>
                         <div class="entity-value">
                             {{ showKills ? character.kills : formatNumber(character.damageDone) }}
+                            {{ showKills ? t('kills') : t('damage') }}
                         </div>
                     </div>
                 </div>
@@ -75,6 +78,7 @@ const formatNumber = (value: number): string => {
     border-radius: 0.375rem;
     display: flex;
     align-items: center;
+    width: 100%;
 }
 
 .rank {
@@ -95,20 +99,36 @@ const formatNumber = (value: number): string => {
     display: flex;
     align-items: center;
     flex: 1;
+    min-width: 0;
+    /* Important for text truncation */
 }
 
 .entity-avatar {
     margin-right: 0.5rem;
+    flex-shrink: 0;
 }
 
 .avatar {
     border-radius: 9999px;
+    width: 32px;
+    height: 32px;
+}
+
+.entity-info {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    /* Important for text truncation */
+    flex: 1;
 }
 
 .entity-name {
     font-size: 0.875rem;
-    display: flex;
-    flex-direction: column;
+    font-weight: 500;
+    color: light-dark(#111827, white);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 .entity-value {
@@ -121,5 +141,27 @@ const formatNumber = (value: number): string => {
     color: #9ca3af;
     padding-top: 1rem;
     padding-bottom: 1rem;
+}
+
+/* Ensure truncation works */
+.truncate {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* Mobile-specific adjustments */
+@media (max-width: 640px) {
+    .top-entity-card {
+        padding: 0.75rem 0.5rem;
+    }
+
+    .entity-name {
+        max-width: 100%;
+    }
+
+    .entity-value {
+        white-space: nowrap;
+    }
 }
 </style>

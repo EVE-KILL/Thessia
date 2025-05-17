@@ -170,7 +170,8 @@
 
             <!-- Tabs -->
             <div class="mb-4">
-                <Tabs v-model="activeTabId" :items="tabItems" :ui="tabsUi" color="neutral">
+                <Tabs v-model="activeTabId" :items="tabItems" :ui="tabsUi" color="neutral"
+                    mobile-display-mode="icon-only">
                     <template #overview>
                         <BattleOverview v-if="battle" :battle="battle" />
                     </template>
@@ -374,14 +375,14 @@ function processTeamDataWithoutKillmails() {
     dataFullyLoaded.value = true;
 }
 
-// Set up tab navigation
+// Set up tab navigation with icons
 const tabItems = computed(() => [
-    { id: 'overview', label: t('battleGenerator.tabs.overview'), slot: 'overview' },
-    { id: 'kills', label: t('battleGenerator.tabs.kills'), slot: 'kills' },
-    { id: 'alliances', label: t('battleGenerator.tabs.alliances'), slot: 'alliances' },
-    { id: 'corporations', label: t('battleGenerator.tabs.corporations'), slot: 'corporations' },
-    { id: 'characters', label: t('battleGenerator.tabs.characters'), slot: 'characters' },
-    { id: 'timeline', label: t('battleGenerator.tabs.timeline'), slot: 'timeline' }
+    { id: 'overview', label: t('battleGenerator.tabs.overview'), icon: 'lucide:info', slot: 'overview' },
+    { id: 'kills', label: t('battleGenerator.tabs.kills'), icon: 'lucide:target', slot: 'kills' },
+    { id: 'alliances', label: t('battleGenerator.tabs.alliances'), icon: 'lucide:flag', slot: 'alliances' },
+    { id: 'corporations', label: t('battleGenerator.tabs.corporations'), icon: 'lucide:building', slot: 'corporations' },
+    { id: 'characters', label: t('battleGenerator.tabs.characters'), icon: 'lucide:users', slot: 'characters' },
+    { id: 'timeline', label: t('battleGenerator.tabs.timeline'), icon: 'lucide:clock', slot: 'timeline' }
 ]);
 
 const tabsUi = {
@@ -628,7 +629,6 @@ onBeforeUnmount(() => {
     border: 1.5px solid var(--color-background-700, #282828);
     box-shadow: 0 4px 12px 0 rgba(0, 0, 0, 0.1);
     padding: 1.5rem;
-    margin-bottom: 2rem;
 }
 
 /* System header styling */
@@ -711,8 +711,14 @@ onBeforeUnmount(() => {
 
 .stat-item {
     display: flex;
-    flex-direction: column;
-    gap: 0.25rem;
+    flex-direction: row;
+    /* Changed from column to row */
+    align-items: center;
+    /* Center items vertically */
+    justify-content: space-between;
+    /* Push label and value to opposite ends */
+    gap: 0.5rem;
+    /* Space between label and value */
 }
 
 .stat-label {
@@ -722,23 +728,46 @@ onBeforeUnmount(() => {
     font-size: 0.875rem;
     color: light-dark(#6b7280, #9ca3af);
     font-weight: 500;
+    flex-shrink: 0;
+    /* Prevent label from shrinking */
 }
 
 .stat-icon {
     width: 1rem;
     height: 1rem;
+    flex-shrink: 0;
+    /* Prevent icon from shrinking */
 }
 
 .stat-value {
     font-size: 1rem;
     font-weight: 600;
     color: light-dark(#111827, #f9fafb);
+    text-align: right;
+    /* Align text to the right */
 }
 
 /* Responsive adjustments */
 @media (max-width: 640px) {
     .battle-stats-grid {
         grid-template-columns: 1fr;
+    }
+
+    /* Ensure labels and values stay on one line on mobile */
+    .stat-item {
+        flex-wrap: nowrap;
+        overflow: hidden;
+    }
+
+    .stat-label {
+        flex-shrink: 0;
+        min-width: auto;
+    }
+
+    .stat-value {
+        flex-shrink: 1;
+        overflow: hidden;
+        text-overflow: ellipsis;
     }
 }
 

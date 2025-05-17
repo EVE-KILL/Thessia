@@ -24,7 +24,7 @@
                     <div class="stat-item">
                         <span class="stat-label">Damage Inflicted:</span>
                         <span class="stat-value">{{ formatNumberWithLocale(teamStats[sideId]?.damageInflicted || 0)
-                        }}</span>
+                            }}</span>
                     </div>
                     <div class="stat-item">
                         <span class="stat-label">Alliances:</span>
@@ -41,10 +41,17 @@
                 </div>
 
                 <div class="organizations-section">
-                    <h3 class="section-title text-black dark:text-white mb-2">
+                    <!-- Make the title clickable to toggle the organizations content -->
+                    <h3 class="section-title text-black dark:text-white mb-2 cursor-pointer flex justify-between items-center"
+                        @click="toggleOrganizationsSection(sideId)">
                         Organizations
+                        <Icon
+                            :name="isOrganizationsSectionCollapsed(sideId) ? 'lucide:chevron-down' : 'lucide:chevron-up'"
+                            class="toggle-icon text-black dark:text-white" />
                     </h3>
-                    <div class="organizations-content">
+
+                    <!-- Only show the organizations content when the section is expanded -->
+                    <div v-if="!isOrganizationsSectionCollapsed(sideId)" class="organizations-content">
                         <!-- Alliances with corporations -->
                         <div v-for="alliance in teamAlliances[sideId] || []" :key="`${sideId}-alliance-${alliance.id}`"
                             class="alliance-group">
@@ -140,10 +147,17 @@ function getSideName(sideId: string): string {
 // Alliance collapse state with team prefixing to avoid conflicts between teams
 const allianceCollapsedState = ref<Record<string, boolean>>({});
 const standaloneCorpsCollapsedState = ref<Record<string, boolean>>({});
+// New state for organizations section collapse
+const organizationsSectionCollapsedState = ref<Record<string, boolean>>({});
 
 // Initialize collapsed states
 watch(() => props.teamAlliances, (alliances) => {
     for (const [sideId, allianceArray] of Object.entries(alliances)) {
+        // Initialize organizations section state - default to collapsed (true)
+        if (!(sideId in organizationsSectionCollapsedState.value)) {
+            organizationsSectionCollapsedState.value[sideId] = true;
+        }
+
         for (const alliance of allianceArray) {
             const key = `${sideId}-${alliance.id}`;
             if (!(key in allianceCollapsedState.value)) {
@@ -158,6 +172,7 @@ watch(() => props.teamAlliances, (alliances) => {
     }
 }, { immediate: true, deep: true });
 
+// Toggle functions
 function toggleAlliance(key: string) {
     allianceCollapsedState.value[key] = !allianceCollapsedState.value[key];
 }
@@ -166,12 +181,23 @@ function toggleStandaloneCorps(sideId: string) {
     standaloneCorpsCollapsedState.value[sideId] = !standaloneCorpsCollapsedState.value[sideId];
 }
 
+// New function to toggle the organizations section
+function toggleOrganizationsSection(sideId: string) {
+    organizationsSectionCollapsedState.value[sideId] = !organizationsSectionCollapsedState.value[sideId];
+}
+
+// Computed state checkers
 const isAllianceCollapsed = computed(() => (key: string) => {
     return allianceCollapsedState.value[key] ?? true;
 });
 
 const isStandaloneCorpsCollapsed = computed(() => (sideId: string) => {
     return standaloneCorpsCollapsedState.value[sideId] ?? true;
+});
+
+// New computed function to check if organizations section is collapsed
+const isOrganizationsSectionCollapsed = computed(() => (sideId: string) => {
+    return organizationsSectionCollapsedState.value[sideId] ?? true;
 });
 
 // Helper functions for handling corporations
@@ -277,7 +303,12 @@ function formatIsk(isk: number): string {
 
 .stat-item {
     display: flex;
-    flex-direction: column;
+    flex-direction: row;
+    /* Changed from column to row */
+    justify-content: space-between;
+    /* Push label and value to opposite ends */
+    align-items: center;
+    /* Center vertically */
     padding: 0.25rem;
 }
 
@@ -285,12 +316,16 @@ function formatIsk(isk: number): string {
     font-size: 0.75rem;
     color: light-dark(#6b7280, #9ca3af);
     font-weight: 500;
+    flex-shrink: 0;
+    /* Prevent label from shrinking */
 }
 
 .stat-value {
     font-size: 0.9rem;
     font-weight: 600;
     color: light-dark(#1f2937, #f3f4f6);
+    text-align: right;
+    /* Align text to the right */
 }
 
 .organizations-section {
@@ -308,6 +343,15 @@ function formatIsk(isk: number): string {
     margin-bottom: 0.75rem;
     padding-bottom: 0.5rem;
     border-bottom: 1px solid light-dark(rgba(229, 231, 235, 0.3), rgba(75, 85, 99, 0.2));
+    cursor: pointer;
+    user-select: none;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.section-title:hover {
+    color: light-dark(#3b82f6, #60a5fa);
 }
 
 /* Alliance styling */

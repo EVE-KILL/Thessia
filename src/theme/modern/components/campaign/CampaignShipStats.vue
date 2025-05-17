@@ -20,6 +20,34 @@
                             </div>
                         </div>
                     </template>
+                    <!-- Mobile view template -->
+                    <template #mobile-content="{ item }">
+                        <div class="mobile-content">
+                            <div class="mobile-header">
+                                <span class="mobile-title">{{ getLocalizedString(item.ship_group_name, locale) }}</span>
+                            </div>
+                            <div class="mobile-stats">
+                                <div class="mobile-stat">
+                                    <span class="stat-label">{{ t('killed') }}:</span>
+                                    <span class="killed">{{ item.killed }}</span>
+                                </div>
+                                <div class="mobile-stat">
+                                    <span class="stat-label">{{ t('lost') }}:</span>
+                                    <span class="lost">{{ item.lost }}</span>
+                                </div>
+                                <div class="mobile-stat">
+                                    <span class="stat-label">{{ t('total') }}:</span>
+                                    <span class="total">{{ item.killed + item.lost }}</span>
+                                </div>
+                                <div class="mobile-stat">
+                                    <span class="stat-label">{{ t('efficiency') }}:</span>
+                                    <span class="efficiency" :style="{ color: getEfficiencyColor(item) }">
+                                        {{ Math.round(calculateEfficiencyPercentage(item)) }}%
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                    </template>
                 </Table>
             </div>
 
@@ -42,6 +70,34 @@
                             </div>
                         </div>
                     </template>
+                    <!-- Mobile view template -->
+                    <template #mobile-content="{ item }">
+                        <div class="mobile-content">
+                            <div class="mobile-header">
+                                <span class="mobile-title">{{ getLocalizedString(item.ship_group_name, locale) }}</span>
+                            </div>
+                            <div class="mobile-stats">
+                                <div class="mobile-stat">
+                                    <span class="stat-label">{{ t('killed') }}:</span>
+                                    <span class="killed">{{ item.killed }}</span>
+                                </div>
+                                <div class="mobile-stat">
+                                    <span class="stat-label">{{ t('lost') }}:</span>
+                                    <span class="lost">{{ item.lost }}</span>
+                                </div>
+                                <div class="mobile-stat">
+                                    <span class="stat-label">{{ t('total') }}:</span>
+                                    <span class="total">{{ item.killed + item.lost }}</span>
+                                </div>
+                                <div class="mobile-stat">
+                                    <span class="stat-label">{{ t('efficiency') }}:</span>
+                                    <span class="efficiency" :style="{ color: getEfficiencyColor(item) }">
+                                        {{ Math.round(calculateEfficiencyPercentage(item)) }}%
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                    </template>
                 </Table>
             </div>
 
@@ -61,6 +117,34 @@
                             <div class="total text-right">{{ item.killed + item.lost }}</div>
                             <div class="efficiency text-right" :style="{ color: getEfficiencyColor(item) }">
                                 {{ Math.round(calculateEfficiencyPercentage(item)) }}%
+                            </div>
+                        </div>
+                    </template>
+                    <!-- Mobile view template -->
+                    <template #mobile-content="{ item }">
+                        <div class="mobile-content">
+                            <div class="mobile-header">
+                                <span class="mobile-title">{{ getLocalizedString(item.ship_group_name, locale) }}</span>
+                            </div>
+                            <div class="mobile-stats">
+                                <div class="mobile-stat">
+                                    <span class="stat-label">{{ t('killed') }}:</span>
+                                    <span class="killed">{{ item.killed }}</span>
+                                </div>
+                                <div class="mobile-stat">
+                                    <span class="stat-label">{{ t('lost') }}:</span>
+                                    <span class="lost">{{ item.lost }}</span>
+                                </div>
+                                <div class="mobile-stat">
+                                    <span class="stat-label">{{ t('total') }}:</span>
+                                    <span class="total">{{ item.killed + item.lost }}</span>
+                                </div>
+                                <div class="mobile-stat">
+                                    <span class="stat-label">{{ t('efficiency') }}:</span>
+                                    <span class="efficiency" :style="{ color: getEfficiencyColor(item) }">
+                                        {{ Math.round(calculateEfficiencyPercentage(item)) }}%
+                                    </span>
+                                </div>
                             </div>
                         </div>
                     </template>
@@ -195,14 +279,6 @@ const getEfficiencyColor = (shipGroup: { killed: number, lost: number }): string
     }
 }
 
-/* Style for header title in each table */
-.title-text {
-    width: 100%;
-    text-align: center;
-    font-size: 0.75rem;
-    font-weight: 600;
-}
-
 /* Common table styles */
 :deep(.topbox-header) {
     background-color: light-dark(rgba(245, 245, 245, 0.05), rgba(26, 26, 26, 0.5));
@@ -271,23 +347,55 @@ const getEfficiencyColor = (shipGroup: { killed: number, lost: number }): string
     padding: 1rem 0;
 }
 
+/* Mobile view styling */
+.mobile-content {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+}
+
+.mobile-header {
+    margin-bottom: 0.5rem;
+}
+
+.mobile-title {
+    font-weight: 600;
+    font-size: 0.95rem;
+}
+
+.mobile-stats {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.5rem;
+}
+
+.mobile-stat {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 0.85rem;
+}
+
+.stat-label {
+    color: #9ca3af;
+    margin-right: 0.5rem;
+}
+
+/* Adjustments for very small screens */
+@media (max-width: 375px) {
+    .mobile-stats {
+        grid-template-columns: 1fr;
+    }
+}
+
 /* Fix caption styling if needed */
 :deep(caption) {
     display: none;
 }
 
-/* Add header for stats section */
-:deep(thead tr) {
-    color: light-dark(#111827, white);
-    font-weight: 600;
-}
-
-/* Ship column subtitle headers */
-.ship-column-header {
-    font-size: 0.75rem;
-    font-weight: 600;
-    background-color: var(--background-700);
-    padding: 0.25rem 0;
-    text-align: center;
+/* Make sure table column widths are maintained on mobile */
+:deep(table) {
+    table-layout: fixed;
+    width: 100%;
 }
 </style>

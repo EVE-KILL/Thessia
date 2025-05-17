@@ -52,11 +52,6 @@ html {
         </NuxtLayout>
 
         <!-- Add ZoomControls with vertical button layout above other UI components -->
-        <ZoomControls 
-            :bottom-offset="140" 
-            :right-offset="20" 
-            :button-spacing="15" 
-            size="sm" 
-        />
+        <ZoomControls :bottom-offset="140" :right-offset="20" :button-spacing="15" size="sm" />
     </UApp>
 </template>

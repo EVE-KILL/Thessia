@@ -1,5 +1,5 @@
 <template>
-    <div class="p-4">
+    <div>
         <!-- Loading state -->
         <div v-if="pending || isLoading" class="flex flex-col items-center justify-center py-12">
             <UIcon name="lucide:loader" class="w-12 h-12 animate-spin text-primary mb-4" />
@@ -52,8 +52,8 @@
                 <CampaignOverview :stats="stats" />
             </div>
 
-            <!-- Main Content - 80/20 Split -->
-            <div class="flex flex-col lg:flex-row gap-6">
+            <!-- Desktop Layout (hidden on mobile) -->
+            <div class="hidden lg:flex lg:flex-row gap-6">
                 <!-- Left Column - 80% -->
                 <div class="lg:w-4/5">
                     <!-- Ship Stats -->
@@ -106,19 +106,81 @@
                     </div>
                 </div>
             </div>
+
+            <!-- Mobile Layout with Tabs (visible only on mobile) -->
+            <div class="lg:hidden mb-4">
+                <Tabs v-model="activeTabId" :items="tabItems" :ui="tabsUi" color="neutral"
+                    mobile-display-mode="icon-only">
+                    <!-- Ship Stats Tab -->
+                    <template #ships>
+                        <CampaignShipStats :stats="stats" class="mt-4" />
+                    </template>
+
+                    <!-- Organizations Tab -->
+                    <template #organizations>
+                        <div class="mt-4 space-y-6">
+                            <div v-if="entities.alliances.length" class="mb-6">
+                                <CampaignEntities :title="t('campaign.alliances')" :entities="entities.alliances"
+                                    entityType="alliance" />
+                            </div>
+                            <div v-if="entities.corporations.length" class="mb-6">
+                                <CampaignEntities :title="t('campaign.corporations')" :entities="entities.corporations"
+                                    entityType="corporation" />
+                            </div>
+                            <div v-if="!entities.alliances.length && !entities.corporations.length"
+                                class="text-center py-8 text-gray-500">
+                                {{ t('campaign.no_organizations_found') }}
+                            </div>
+                        </div>
+                    </template>
+
+                    <!-- Characters Tab -->
+                    <template #characters>
+                        <div class="mt-4 space-y-6">
+                            <!-- Top Killers Box -->
+                            <div class="mb-6 campaign-sidebar-box">
+                                <CampaignTopBox :title="t('campaign.top_killers')"
+                                    :entities="stats.topKillersByCharacter || []" :countField="'kills'"
+                                    :countTitle="t('kills')" entityType="character" :loading="pending" :limit="10" />
+                            </div>
+
+                            <!-- Top Damage Dealers Box -->
+                            <div class="mb-6 campaign-sidebar-box">
+                                <CampaignTopBox :title="t('campaign.top_damage_dealers')"
+                                    :entities="stats.topDamageDealersByCharacter || []" :countField="'damageDone'"
+                                    :countTitle="t('damage')" entityType="character" :loading="pending" :limit="10" />
+                            </div>
+
+                            <!-- Characters Box -->
+                            <div class="mb-6 campaign-sidebar-box">
+                                <CampaignTopBox :title="t('campaign.characters')" :entities="entities.characters"
+                                    :countField="'kills'" :countTitle="t('kills')" entityType="character"
+                                    :loading="pending" :limit="10" />
+                            </div>
+                        </div>
+                    </template>
+
+                    <!-- Kills Tab -->
+                    <template #kills>
+                        <CampaignKillList :campaignId="campaignId" :campaignQuery="stats?.campaignQuery" :limit="25"
+                            class="mt-4" />
+                    </template>
+                </Tabs>
+            </div>
         </div>
     </div>
 </template>
 
 <script setup lang="ts">
 import { computed, ref } from 'vue';
-import { useRoute } from 'vue-router';
+import { useRoute, useRouter } from 'vue-router';
 import { type ICampaignOutput } from '~/server/interfaces/ICampaignOutput';
 
 // Composables
 const { t } = useI18n();
 const toast = useToast();
 const route = useRoute();
+const router = useRouter();
 const { isAuthenticated, currentUser } = useAuth();
 
 // Get campaign ID from route
@@ -131,6 +193,54 @@ const entities = ref({
     alliances: [],
     corporations: [],
     characters: []
+});
+
+// For mobile tabs
+const activeTabId = ref('ships');
+
+// Set up tab navigation with icons
+const tabItems = computed(() => [
+    { id: 'ships', label: t('campaign.tabs.ships'), icon: 'lucide:ship', slot: 'ships' },
+    { id: 'characters', label: t('campaign.tabs.characters'), icon: 'lucide:users', slot: 'characters' },
+    { id: 'kills', label: t('campaign.tabs.kills'), icon: 'lucide:target', slot: 'kills' },
+    { id: 'organizations', label: t('campaign.tabs.organizations'), icon: 'lucide:flag', slot: 'organizations' }
+]);
+
+const tabsUi = {
+    list: "mb-0",
+    tab: "p-2 text-sm font-semibold text-white rounded-lg bg-background-700 hover:bg-background-600 ml-2"
+};
+
+// Handle tab navigation and URL hash synchronization
+onMounted(() => {
+    if (tabItems.value.length > 0) {
+        const hash = route.hash.substring(1);
+        const validTab = tabItems.value.find(item => item.id === hash);
+        if (validTab) {
+            activeTabId.value = hash;
+        } else if (hash) {
+            // If there's a hash but it's not a valid tab, use the first tab
+            router.replace({ hash: `#${tabItems.value[0].id}` });
+            activeTabId.value = tabItems.value[0].id;
+        }
+    }
+});
+
+watch(() => route.hash, (newHash) => {
+    const tabIdFromHash = newHash.substring(1);
+    if (tabItems.value.some(item => item.id === tabIdFromHash)) {
+        activeTabId.value = tabIdFromHash;
+    } else if (!tabIdFromHash && tabItems.value.length > 0) {
+        activeTabId.value = tabItems.value[0].id;
+    }
+});
+
+watch(activeTabId, (newId, oldId) => {
+    if (oldId &&
+        newId !== oldId &&
+        route.hash !== `#${newId}`) {
+        router.push({ hash: `#${newId}` });
+    }
 });
 
 // Check if current user is the creator

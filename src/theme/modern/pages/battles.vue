@@ -176,11 +176,6 @@ const getLocalizedString = (obj: any, localeKey: string): string => {
     return obj[localeKey] || obj.en || "";
 };
 
-const goToSystem = (systemId: number) => router.push(`/system/${systemId}`);
-const goToAlliance = (allianceId: number) => router.push(`/alliance/${allianceId}`);
-const goToCorporation = (corporationId: number) => router.push(`/corporation/${corporationId}`);
-const goToItem = (itemId: number) => router.push(`/item/${itemId}`);
-
 const generateSkeletonRows = (count: number) => {
     return Array(count)
         .fill(0)
@@ -237,9 +232,9 @@ const getSystemsDisplay = (battle: IBattlesDocument) => {
         </div>
 
         <div v-else class="space-y-4">
-            <!-- Fixed alignment: explicitly use flex with full width and justify-between -->
+            <!-- Item count and per page selector -->
             <div class="w-full flex justify-between items-center">
-                <!-- Item Count (Left) - explicit justify-start -->
+                <!-- Item Count (Left) -->
                 <div class="flex justify-start">
                     <span class="text-sm text-gray-500 dark:text-gray-400">
                         {{ t('showingResults', {
@@ -250,18 +245,20 @@ const getSystemsDisplay = (battle: IBattlesDocument) => {
                     </span>
                 </div>
 
-                <!-- Pagination Controls (Right) - explicit justify-end -->
-                <div class="flex justify-end items-center space-x-4">
-                    <!-- Per Page Selector -->
+                <!-- Per Page Selector (Right) -->
+                <div class="flex justify-end items-center">
                     <div class="flex items-center space-x-2">
                         <span class="text-sm">{{ t('perPage', 'Per Page:') }}</span>
                         <USelect v-model="selectedPageSize" :items="pageSizeItems" value-attribute="value"
                             option-attribute="label" size="xs" />
                     </div>
-                    <!-- Pagination Component -->
-                    <UPagination v-model:page="currentPage" :total="totalItems" :items-per-page="selectedPageSize"
-                        :disabled="isLoading" size="sm" />
                 </div>
+            </div>
+
+            <!-- Pagination on its own line - aligned to the right -->
+            <div class="w-full flex justify-end">
+                <UPagination v-model:page="currentPage" :total="totalItems" :items-per-page="selectedPageSize"
+                    :disabled="isLoading" size="sm" />
             </div>
 
             <!-- Loading overlay for subsequent data fetches (not initial) -->
@@ -282,9 +279,6 @@ const getSystemsDisplay = (battle: IBattlesDocument) => {
                 <!-- Custom Cell Rendering -->
                 <template #cell-time="{ item }">
                     <div class="text-sm space-y-0.5">
-                        <NuxtLink :to="linkFn(item)" class="text-primary-500 hover:underline font-semibold block">
-                            #{{ item.battle_id }}
-                        </NuxtLink>
                         <UTooltip :text="moment.utc(item.start_time).format('YYYY-MM-DD HH:mm:ss UTC')">
                             <div>{{ formatTimeAgo(item.start_time) }}</div>
                         </UTooltip>
@@ -298,7 +292,7 @@ const getSystemsDisplay = (battle: IBattlesDocument) => {
                     <div class="flex flex-col space-y-1">
                         <template v-for="(system, index) in getSystemsDisplay(item)"
                             :key="`system-${system.id}-${index}`">
-                            <div class="flex items-center gap-2 cursor-pointer" @click.stop="goToSystem(system.id)">
+                            <div class="flex items-center gap-2 cursor-pointer">
                                 <Image :id="system.id" type="system" size="24" format="webp"
                                     class="w-6 h-6 rounded flex-shrink-0" />
                                 <div class="text-sm">
@@ -341,7 +335,7 @@ const getSystemsDisplay = (battle: IBattlesDocument) => {
                                     :key="`alliance-${alliance.id}`">
                                     <UTooltip
                                         :text="`${getLocalizedString(alliance.name, currentLocale)} (${alliance.count} pilots)`">
-                                        <div class="cursor-pointer" @click.stop="goToAlliance(alliance.id)">
+                                        <div class="cursor-pointer">
                                             <Image :id="alliance.id" type="alliance"
                                                 :alt="getLocalizedString(alliance.name, currentLocale)" size="32"
                                                 format="webp" class="w-8 h-8" :showCount="true" :count="alliance.count"
@@ -355,7 +349,7 @@ const getSystemsDisplay = (battle: IBattlesDocument) => {
                                     :key="`corp-${corp.id}`">
                                     <UTooltip
                                         :text="`${getLocalizedString(corp.name, currentLocale)} (${corp.count} pilots)`">
-                                        <div class="cursor-pointer" @click.stop="goToCorporation(corp.id)">
+                                        <div class="cursor-pointer">
                                             <Image :id="corp.id" type="corporation"
                                                 :alt="getLocalizedString(corp.name, currentLocale)" size="32"
                                                 format="webp" class="w-8 h-8" :showCount="true" :count="corp.count"
@@ -369,7 +363,7 @@ const getSystemsDisplay = (battle: IBattlesDocument) => {
                         <div class="flex flex-wrap gap-1">
                             <template v-for="ship in item.top_ship_types?.slice(0, 10) || []" :key="`ship-${ship.id}`">
                                 <UTooltip :text="`${getLocalizedString(ship.name, currentLocale)} (${ship.count})`">
-                                    <div class="cursor-pointer" @click.stop="goToItem(ship.id)">
+                                    <div class="cursor-pointer">
                                         <Image :id="ship.id" type="item"
                                             :name="getLocalizedString(ship.name, currentLocale)"
                                             :alt="getLocalizedString(ship.name, currentLocale)" size="32" format="webp"
@@ -378,6 +372,110 @@ const getSystemsDisplay = (battle: IBattlesDocument) => {
                                     </div>
                                 </UTooltip>
                             </template>
+                        </div>
+                    </div>
+                </template>
+
+                <!-- Custom mobile row template for battles -->
+                <template #mobile-row="{ item }">
+                    <div class="flex flex-col w-full p-2 gap-2">
+                        <!-- Battle ID, Time, and System - Top Row -->
+                        <div class="flex items-start justify-between">
+                            <!-- Left side: Battle ID & Time -->
+                            <div class="flex-1">
+                                <div class="flex items-center gap-2">
+                                    <span class="text-xs text-gray-500">{{ formatTimeAgo(item.start_time) }}</span>
+                                </div>
+                                <div class="text-xs text-gray-500">
+                                    {{ formatDateDisplay(item.start_time) }} ·
+                                    {{ formatTimeRange(item.start_time, item.end_time) }} ·
+                                    {{ formatDuration(item.duration_ms) }}
+                                </div>
+                            </div>
+
+                            <!-- Right side: ISK destroyed - key stat -->
+                            <div class="flex-none text-right">
+                                <div class="font-semibold text-sm">{{ formatIsk(item.iskDestroyed) }}</div>
+                                <div class="text-xs text-gray-500">{{ t('iskDestroyedShort', 'ISK') }}</div>
+                            </div>
+                        </div>
+
+                        <!-- Systems section -->
+                        <div class="flex flex-col space-y-1 text-sm">
+                            <template v-for="(system, index) in getSystemsDisplay(item)"
+                                :key="`system-${system.id}-${index}`">
+                                <div class="flex items-center gap-2 cursor-pointer">
+                                    <Image :id="system.id" type="system" size="24" format="webp"
+                                        class="w-5 h-5 rounded flex-shrink-0" />
+                                    <div class="text-xs">
+                                        <span class="hover:underline">{{ system.name }}</span>
+                                        <span class="text-gray-500">({{ system.security }})</span>
+                                        <span class="text-gray-400 hidden sm:inline">({{ system.region }})</span>
+                                    </div>
+                                </div>
+                            </template>
+                        </div>
+
+                        <!-- Stats (Compact) -->
+                        <div class="grid grid-cols-3 gap-2 text-xs bg-background-700 bg-opacity-20 p-1 rounded">
+                            <div>
+                                <div class="font-semibold">{{ formatNumber(item.killmailsCount) }}</div>
+                                <div class="text-gray-500">{{ t('kmsShort', 'KMs') }}</div>
+                            </div>
+                            <div>
+                                <div class="font-semibold">{{ getInvolvedCounts(item).alliances ||
+                                    getInvolvedCounts(item).corps }}</div>
+                                <div class="text-gray-500">
+                                    {{ item.alliancesInvolved && item.alliancesInvolved.length > 0
+                                        ? t('alliancesShort', 'Alliances')
+                                        : t('corporationsShort', 'Corps') }}
+                                </div>
+                            </div>
+                            <div>
+                                <div class="font-semibold">{{ getInvolvedCounts(item).chars }}</div>
+                                <div class="text-gray-500">{{ t('charactersShort', 'Characters') }}</div>
+                            </div>
+                        </div>
+
+                        <!-- Involved entities (compact) -->
+                        <div class="flex flex-col space-y-1">
+                            <!-- Entities (reduced count for mobile) -->
+                            <div class="flex flex-wrap gap-1">
+                                <template v-if="item.alliancesInvolved && item.alliancesInvolved.length > 0">
+                                    <template v-for="alliance in item.top_alliances?.slice(0, 5) || []"
+                                        :key="`m-alliance-${alliance.id}`">
+                                        <div class="cursor-pointer">
+                                            <Image :id="alliance.id" type="alliance"
+                                                :alt="getLocalizedString(alliance.name, currentLocale)" size="32"
+                                                format="webp" class="w-6 h-6" :showCount="true" :count="alliance.count"
+                                                countPosition="bottom-right" />
+                                        </div>
+                                    </template>
+                                </template>
+                                <template v-else>
+                                    <template v-for="corp in item.top_corporations?.slice(0, 5) || []"
+                                        :key="`m-corp-${corp.id}`">
+                                        <div class="cursor-pointer">
+                                            <Image :id="corp.id" type="corporation"
+                                                :alt="getLocalizedString(corp.name, currentLocale)" size="32"
+                                                format="webp" class="w-6 h-6" :showCount="true" :count="corp.count"
+                                                countPosition="bottom-right" />
+                                        </div>
+                                    </template>
+                                </template>
+
+                                <!-- Ships (reduced count for mobile) -->
+                                <template v-for="ship in item.top_ship_types?.slice(0, 5) || []"
+                                    :key="`m-ship-${ship.id}`">
+                                    <div class="cursor-pointer">
+                                        <Image :id="ship.id" type="item"
+                                            :name="getLocalizedString(ship.name, currentLocale)"
+                                            :alt="getLocalizedString(ship.name, currentLocale)" size="32" format="webp"
+                                            class="w-6 h-6" :showCount="true" :count="ship.count"
+                                            countPosition="bottom-right" />
+                                    </div>
+                                </template>
+                            </div>
                         </div>
                     </div>
                 </template>
@@ -439,7 +537,7 @@ const getSystemsDisplay = (battle: IBattlesDocument) => {
                 </template>
             </Table>
 
-            <!-- Bottom Pagination - ensure it's at the far right -->
+            <!-- Bottom Pagination - keep as is for consistency -->
             <div class="w-full flex justify-end mt-4">
                 <UPagination v-model:page="currentPage" :total="totalItems" :items-per-page="selectedPageSize"
                     :disabled="isLoading" size="sm" />
@@ -536,5 +634,19 @@ const getSystemsDisplay = (battle: IBattlesDocument) => {
 .fade-enter-from,
 .fade-leave-to {
     opacity: 0;
+}
+
+/* Mobile-specific enhancements for battles list */
+@media (max-width: 768px) {
+    :deep(.table-row) {
+        padding: 0.5rem !important;
+    }
+
+    /* Add a subtle divider between mobile battle card sections */
+    .battle-card-divider {
+        height: 1px;
+        background-color: light-dark(rgba(229, 231, 235, 0.3), rgba(75, 85, 99, 0.2));
+        margin: 0.35rem 0;
+    }
 }
 </style>

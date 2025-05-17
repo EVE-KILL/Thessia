@@ -107,9 +107,9 @@
                         </div>
                     </div>
 
-                    <!-- Damage info - Right side -->
-                    <div class="damage-info flex items-center">
-                        <Icon name="lucide:zap" class="inline-icon damage-icon mr-0.5 w-4 h-4 text-red-500" />
+                    <!-- Damage info - Absolutely positioned at bottom right -->
+                    <div class="damage-info">
+                        <Icon name="lucide:zap" class="inline-icon damage-icon w-4 h-4 text-red-500" />
                         <span class="damage-value font-semibold text-red-500 text-sm">
                             {{ formatNumber(finalBlowAttacker.damage_done || 0) }}
                             <span class="damage-percent text-xs text-gray-500 dark:text-gray-400 ml-0.5">({{
@@ -227,9 +227,9 @@
                         </div>
                     </div>
 
-                    <!-- Damage info - Right side -->
-                    <div class="damage-info flex items-center">
-                        <Icon name="lucide:zap" class="inline-icon damage-icon mr-0.5 w-4 h-4 text-red-500" />
+                    <!-- Damage info - Absolutely positioned at bottom right -->
+                    <div class="damage-info">
+                        <Icon name="lucide:zap" class="inline-icon damage-icon w-4 h-4 text-red-500" />
                         <span class="damage-value font-semibold text-red-500 text-sm">
                             {{ formatNumber(topDamageAttacker.damage_done || 0) }}
                             <span class="damage-percent text-xs text-gray-500 dark:text-gray-400 ml-0.5">({{
@@ -433,9 +433,9 @@
                             </div>
                         </div>
 
-                        <!-- Damage info - Right side -->
-                        <div class="damage-info flex items-center">
-                            <Icon name="lucide:zap" class="inline-icon damage-icon mr-0.5 w-4 h-4 text-red-500" />
+                        <!-- Damage info - Absolutely positioned at bottom right -->
+                        <div class="damage-info">
+                            <Icon name="lucide:zap" class="inline-icon damage-icon w-4 h-4 text-red-500" />
                             <span class="damage-value font-semibold text-red-500 text-sm">
                                 {{ formatNumber(attacker.damage_done || 0) }}
                                 <span class="damage-percent text-xs text-gray-500 dark:text-gray-400 ml-0.5">({{
@@ -649,7 +649,11 @@ const organizationsTree = computed<OrganizationTree>(() => {
 
 // Compute total entities in organizations tree to determine if we should auto-expand
 const totalOrgsCount = computed(() => {
-    return organizationsTree.value.alliances.length + organizationsTree.value.noAllianceCorporations.length;
+    // Count all alliances plus all corporations (including those within alliances)
+    const alliancesCount = organizationsTree.value.alliances.length;
+    const totalCorpsCount = getTotalCorporationsCount();
+
+    return alliancesCount + totalCorpsCount;
 });
 
 // State for collapsible sections - open by default for small groups
@@ -769,20 +773,37 @@ onBeforeUnmount(() => {
     border-radius: 50%;
 }
 
+.portrait-image[type="character"],
+.portrait-image[type="item"] {
+    width: 64px;
+    height: 64px;
+    flex-shrink: 0;
+}
+
+.portrait-image[type="corporation"],
+.portrait-image[type="alliance"] {
+    width: 32px;
+    height: 32px;
+    flex-shrink: 0;
+}
+
 .stacked-icons-container {
     display: flex;
     flex-direction: column;
     justify-content: flex-start;
-    width: 32px;
+    width: 32px !important;
+    /* Force exact width */
     height: 64px;
     gap: 0;
     overflow: hidden;
-    /* Prevent any overflow */
 }
 
 .ship-image {
     border-radius: 0.25rem;
     margin-left: 0.5rem;
+    width: 64px;
+    height: 64px;
+    flex-shrink: 0;
 }
 
 .attacker-details {
@@ -837,6 +858,43 @@ onBeforeUnmount(() => {
     align-items: center;
     justify-content: space-between;
     width: 100%;
+    position: relative;
+    /* Ensure the absolute positioned damage info is contained */
+}
+
+/* Position damage info at bottom-right corner */
+.damage-info {
+    display: flex;
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    position: absolute;
+    right: -10px;
+    bottom: 5px;
+    /* Position slightly above the bottom edge */
+}
+
+.damage-value {
+    font-weight: 600;
+    color: #ef4444;
+    font-size: 0.9rem;
+    line-height: 1.2;
+    display: flex;
+    align-items: center;
+    text-align: right;
+}
+
+.damage-percent {
+    color: light-dark(#9ca3af, #9ca3af);
+    font-size: 0.75rem;
+    font-weight: normal;
+    white-space: nowrap;
+}
+
+.damage-icon {
+    color: #ef4444;
+    flex-shrink: 0;
+    /* Removed margin-right */
 }
 
 .ship-weapon-group {
@@ -864,39 +922,6 @@ onBeforeUnmount(() => {
     line-height: 1.4;
     color: light-dark(#525252, #d1d5db);
     min-width: 0;
-}
-
-.damage-info {
-    display: flex;
-    align-items: center;
-    justify-content: flex-end;
-    min-width: 90px;
-    /* Ensure consistent space for damage values */
-    margin-left: auto;
-}
-
-.damage-value {
-    font-weight: 600;
-    color: #ef4444;
-    font-size: 0.9rem;
-    line-height: 1.2;
-    display: flex;
-    align-items: center;
-    text-align: right;
-}
-
-.damage-percent {
-    color: light-dark(#9ca3af, #9ca3af);
-    font-size: 0.75rem;
-    font-weight: normal;
-    white-space: nowrap;
-}
-
-.damage-icon {
-    color: #ef4444;
-    flex-shrink: 0;
-    margin-right: 0.15rem;
-    /* Tighter spacing */
 }
 
 .separator {
@@ -987,67 +1012,86 @@ onBeforeUnmount(() => {
 }
 
 @media (max-width: 600px) {
-
-    .ship-name,
-    .weapon-name {
-        max-width: 100%;
-        white-space: normal;
-    }
-
-    .combined-meta-info {
-        flex-direction: column;
-        align-items: flex-start;
-        gap: 8px;
-    }
-
-    .separator {
-        display: none;
-    }
-
-    .ship-weapon-group {
-        flex-direction: column;
-        align-items: flex-start;
-        gap: 4px;
-        max-width: 100%;
-    }
-
-    .ship-info,
-    .weapon-info,
-    .damage-info {
-        width: 100%;
-    }
-}
-
-@media (max-width: 600px) {
     .key-attacker-info {
-        flex-direction: column;
+        flex-direction: row;
+        /* Keep horizontal layout on mobile */
         gap: 0.5rem;
+        align-items: flex-start;
+        /* Align items to the top */
     }
 
     .attacker-portraits-layout {
-        flex-direction: row;
-        gap: 0.25rem;
-        width: 100%;
-        justify-content: space-between;
+        display: grid;
+        grid-template-columns: 64px 32px 64px;
+        /* Exact sizing for each column */
+        width: auto;
+        /* Let it take natural width */
+        max-width: 170px;
+        /* Allow space for all images */
+        gap: 4px;
+        justify-content: start;
+        /* Ensure left alignment */
+        flex-shrink: 0;
+        /* Prevent shrinking */
+    }
+
+    /* Remove existing margin on ship image that could cause misalignment */
+    .ship-image {
+        margin-left: 0 !important;
+        width: 64px !important;
+        height: 64px !important;
+    }
+
+    /* Enforce fixed dimensions for character image */
+    .portrait-image[type="character"] {
+        width: 64px !important;
+        height: 64px !important;
+    }
+
+    /* Make stacked icons container a fixed width */
+    .stacked-icons-container {
+        width: 32px !important;
+        height: 64px !important;
+    }
+
+    /* Ensure corp and alliance images maintain size */
+    .portrait-image[type="corporation"],
+    .portrait-image[type="alliance"] {
+        width: 32px !important;
+        height: 32px !important;
     }
 
     .attacker-details {
         padding-left: 0;
-        margin-top: 0.5rem;
+        margin-top: 0;
+        /* Remove top margin since we're now side-by-side */
+        flex: 1;
+        /* Allow text to take remaining space */
+        min-width: 0;
+        /* Enable text truncation */
+    }
+}
+
+@media (max-width: 380px) {
+    .attacker-portraits-layout {
+        gap: 2px;
+        max-width: 170px;
+        /* Still allow full width for images */
+        grid-template-columns: 64px 32px 64px;
+        /* Maintain exact column widths */
     }
 
-    .combined-meta-info {
-        row-gap: 0.5rem;
+    /* Force image sizes on very small screens */
+    .portrait-image[type="character"],
+    .ship-image {
+        width: 64px !important;
+        height: 64px !important;
     }
 
-    /* Make sure separators don't break oddly */
-    .separator {
-        display: none;
-    }
-
-    /* Stack items on small screens */
-    .combined-meta-info>div {
-        margin-right: 0.5rem;
+    .portrait-image[type="corporation"],
+    .portrait-image[type="alliance"] {
+        width: 32px !important;
+        height: 32px !important;
     }
 }
 
