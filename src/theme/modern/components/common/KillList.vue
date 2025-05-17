@@ -29,14 +29,28 @@ const pagination = ref({
     pageSize: 10,
 });
 
+// Define page size options
 const pageSizeItems = [
     { label: "10", id: 10 },
+    { label: "25", id: 25 },
     { label: "50", id: 50 },
-    { label: "100", id: 100 },
-    { label: "250", id: 250 },
-    { label: "500", id: 500 },
-    { label: "1000", id: 1000 },
+    { label: "100", id: 100 }
 ];
+
+// Format the page size items for a standard HTML select
+const pageSizeItemsFormatted = computed(() => {
+    return pageSizeItems.map(item => ({
+        value: item.id,
+        label: item.label
+    }));
+});
+
+// Handle manual change in the select element
+const handlePageSizeChange = (event) => {
+    const newSize = parseInt(event.target.value, 10);
+    selectedPageSize.value = newSize;
+};
+
 // Use the limit prop as the default page size
 const selectedPageSize = ref(props.limit);
 const currentPage = computed(() => pagination.value.pageIndex + 1);
@@ -687,7 +701,20 @@ onUpdated(() => {
             <!-- Left side: Limit selector and WebSocket status -->
             <div class="flex items-center w-full sm:w-auto mb-3 sm:mb-0">
                 <!-- Limit selector -->
-                <USelect v-model="selectedPageSize" value-key="id" :items="pageSizeItems" size="sm" class="w-24" />
+                <div class="relative w-24">
+                    <select :value="selectedPageSize" @change="handlePageSizeChange"
+                        class="custom-select w-full appearance-none rounded-md border border-gray-300 dark:border-gray-700 pl-3 pr-8 py-1.5 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 text-sm font-medium shadow-sm">
+                        <option v-for="item in pageSizeItemsFormatted" :key="item.value" :value="item.value">
+                            {{ item.label }}
+                        </option>
+                    </select>
+                    <div
+                        class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700 dark:text-gray-300">
+                        <svg class="h-4 w-4 fill-current" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">
+                            <path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z" />
+                        </svg>
+                    </div>
+                </div>
 
                 <!-- WebSocket status indicator with clearer state indication -->
                 <div v-if="!wsDisabled && !useExternalData" class="flex items-center ml-4">
@@ -912,7 +939,7 @@ onUpdated(() => {
                                 <span>{{ item.system_name }}</span>
                                 <span> (</span>
                                 <span :class="getSecurityColor(item.system_security)">{{ item.system_security.toFixed(1)
-                                    }}</span>
+                                }}</span>
                                 <span>)</span>
                             </div>
                         </div>

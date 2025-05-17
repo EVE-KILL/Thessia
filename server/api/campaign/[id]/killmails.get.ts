@@ -69,7 +69,7 @@ export default defineCachedEventHandler(async (event) => {
                 system_name: killmail.system_name,
                 system_security: killmail.system_security,
                 region_id: killmail.region_id,
-                region_name: killmail.region_name.en,
+                region_name: killmail.region_name || {},
                 kill_time: killmail.kill_time.toISOString(),
                 attackerCount: killmail.attackers.length,
                 commentCount: 0, // Default to 0 for now
@@ -77,7 +77,7 @@ export default defineCachedEventHandler(async (event) => {
                 is_solo: killmail.is_solo,
                 victim: {
                     ship_id: killmail.victim.ship_id,
-                    ship_name: killmail.victim.ship_name.en,
+                    ship_name: killmail.victim.ship_name || {},
                     character_id: killmail.victim.character_id,
                     character_name: killmail.victim.character_name,
                     corporation_id: killmail.victim.corporation_id,
@@ -96,6 +96,7 @@ export default defineCachedEventHandler(async (event) => {
                     alliance_name: finalBlowAttacker.alliance_name || "",
                     faction_id: finalBlowAttacker.faction_id || 0,
                     faction_name: finalBlowAttacker.faction_name || "",
+                    ship_name: finalBlowAttacker.ship_name || {},
                     ship_group_name: finalBlowAttacker.ship_group_name || {},
                 },
             };

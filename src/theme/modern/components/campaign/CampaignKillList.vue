@@ -24,12 +24,27 @@ const pagination = ref({
     total: 0
 });
 
+// Define page size options
 const pageSizeItems = [
     { label: "10", id: 10 },
     { label: "25", id: 25 },
     { label: "50", id: 50 },
     { label: "100", id: 100 }
 ];
+
+// Format the page size items for a standard HTML select
+const pageSizeItemsFormatted = computed(() => {
+    return pageSizeItems.map(item => ({
+        value: item.id,
+        label: item.label
+    }));
+});
+
+// Handle manual change in the select element
+const handlePageSizeChange = (event) => {
+    const newSize = parseInt(event.target.value, 10);
+    pageSize.value = newSize;
+};
 
 // For tracking loading state when loading more
 const loadingMore = ref(false);
@@ -132,8 +147,7 @@ watch(
 watch(page, async (newPage) => {
     if (pending.value) return;
 
-    pagination.value.page = newPage; // Keep our pagination object in sync
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    pagination.value.page = newPage;
 
     try {
         await refresh();
@@ -224,24 +238,158 @@ const tableColumns = [
         width: "15%",
     },
 ];
+
+// Add refs for detecting text overflow
+const shipNameRefs = ref<Map<number, HTMLElement>>(new Map());
+const characterNameRefs = ref<Map<number, HTMLElement>>(new Map());
+const corporationNameRefs = ref<Map<number, HTMLElement>>(new Map());
+const allianceNameRefs = ref<Map<number, HTMLElement>>(new Map());
+const finalBlowNameRefs = ref<Map<number, HTMLElement>>(new Map());
+const finalBlowCorpRefs = ref<Map<number, HTMLElement>>(new Map());
+const finalBlowAllianceRefs = ref<Map<number, HTMLElement>>(new Map());
+
+// Add mouse position tracking
+const mouseX = ref(0);
+const mouseY = ref(0);
+const tooltipText = ref('');
+const showTooltip = ref(false);
+
+/**
+ * Updates fade effect on elements that overflow
+ */
+const updateTextFade = (refMap: Map<number, HTMLElement>) => {
+    refMap.forEach((el) => {
+        if (el && el.scrollWidth > el.clientWidth) {
+            el.classList.add('fade-text');
+            // Store the full text in a data attribute for the hover effect
+            el.setAttribute('data-full-text', el.textContent || '');
+
+            // Add event listeners for custom tooltip
+            el.addEventListener('mouseenter', (e) => {
+                tooltipText.value = el.textContent || '';
+                mouseX.value = e.clientX;
+                mouseY.value = e.clientY;
+                showTooltip.value = true;
+            });
+
+            el.addEventListener('mouseleave', () => {
+                showTooltip.value = false;
+            });
+
+        } else if (el) {
+            el.classList.remove('fade-text');
+            el.removeAttribute('data-full-text');
+
+            // Remove event listeners
+            el.removeEventListener('mouseenter', () => { });
+            el.removeEventListener('mouseleave', () => { });
+        }
+    });
+};
+
+/**
+ * Update all text fade effects
+ */
+const updateAllFades = () => {
+    updateTextFade(shipNameRefs.value);
+    updateTextFade(characterNameRefs.value);
+    updateTextFade(corporationNameRefs.value);
+    updateTextFade(allianceNameRefs.value);
+    updateTextFade(finalBlowNameRefs.value);
+    updateTextFade(finalBlowCorpRefs.value);
+    updateTextFade(finalBlowAllianceRefs.value);
+};
+
+/**
+ * Set reference for an element by killmail ID
+ */
+const setElementRef = (el: HTMLElement | null, id: number, refMap: Map<number, HTMLElement>) => {
+    if (el) {
+        refMap.set(id, el);
+    }
+};
+
+// Lifecycle hooks
+onMounted(() => {
+    nextTick(() => {
+        updateAllFades();
+        window.addEventListener('resize', updateAllFades);
+    });
+});
+
+onBeforeUnmount(() => {
+    window.removeEventListener('resize', updateAllFades);
+
+    // Clean up tooltip event listeners
+    [
+        ...shipNameRefs.value.values(),
+        ...characterNameRefs.value.values(),
+        ...corporationNameRefs.value.values(),
+        ...allianceNameRefs.value.values(),
+        ...finalBlowNameRefs.value.values(),
+        ...finalBlowCorpRefs.value.values(),
+        ...finalBlowAllianceRefs.value.values()
+    ].forEach(el => {
+        if (el) {
+            el.removeEventListener('mouseenter', () => { });
+            el.removeEventListener('mouseleave', () => { });
+        }
+    });
+});
+
+onUpdated(() => {
+    nextTick(updateAllFades);
+});
 </script>
 
 <template>
-    <div class="campaign-killlist w-full">
+    <div class="campaign-killlist w-full" @mousemove="(e) => { mouseX = e.clientX; mouseY = e.clientY; }">
         <!-- Header -->
         <div class="mb-4">
             <!-- Top controls - right aligned: dropdown + pagination -->
-            <div class="flex justify-end items-center gap-4 mb-3">
-                <!-- Page size selector -->
-                <USelect v-model="pageSize" value-key="id" :items="pageSizeItems" size="sm" class="w-24" />
+            <div class="flex justify-between items-center gap-4 mb-3">
+                <!-- Left side: Limit selector -->
+                <div class="flex items-center w-full sm:w-auto">
+                    <!-- Limit selector -->
+                    <div class="relative w-24">
+                        <select :value="pageSize" @change="handlePageSizeChange"
+                            class="custom-select w-full appearance-none rounded-md border border-gray-300 dark:border-gray-700 pl-3 pr-8 py-1.5 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 text-sm font-medium shadow-sm">
+                            <option v-for="item in pageSizeItemsFormatted" :key="item.value" :value="item.value">
+                                {{ item.label }}
+                            </option>
+                        </select>
+                        <div
+                            class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700 dark:text-gray-300">
+                            <svg class="h-4 w-4 fill-current" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">
+                                <path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z" />
+                            </svg>
+                        </div>
+                    </div>
+                </div>
 
-                <!-- Top pagination - Fixed to use v-model:page -->
+                <!-- Right side: UPagination -->
                 <UPagination v-if="pagination.total > pagination.pageSize" v-model:page="page" :page-count="totalPages"
                     :total="pagination.total" :ui="{
                         wrapper: 'flex items-center justify-center',
-                        rounded: 'rounded-full min-w-8 min-h-8 flex items-center justify-center',
-                        container: 'flex items-center gap-1'
-                    }" />
+                        rounded: 'rounded-md',
+                        default: {
+                            base: 'text-sm border-y border-r first:border-l border-gray-200 dark:border-gray-800 focus:z-10 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500',
+                            inactive: 'bg-background-800 hover:bg-background-700',
+                            padding: 'px-3 py-2',
+                            disabled: 'opacity-50 cursor-not-allowed'
+                        }
+                    }" :prev-button="{
+                        icon: 'i-lucide-chevron-left',
+                        label: '',
+                        disabled: page === 1
+                    }" :next-button="{
+                        icon: 'i-lucide-chevron-right',
+                        label: ''
+                    }">
+                    <template #default>
+                        <span class="mx-2">{{ $t('common.page') }} {{ page }}</span>
+                    </template>
+                </UPagination>
             </div>
         </div>
 
@@ -252,14 +400,14 @@ const tableColumns = [
         </div>
 
         <!-- Error state -->
-        <div v-else-if="error" class="bg-red-50 dark:bg-red-900/20 rounded-lg text-center">
+        <div v-else-if="error" class="bg-red-50 dark:bg-red-900/20 rounded-lg text-center p-6">
             <UIcon name="lucide:alert-circle" class="w-12 h-12 text-red-500 mb-4 mx-auto" />
             <p class="text-red-600 dark:text-red-400">{{ error.message || t('common.errorLoadingData') }}</p>
             <UButton class="mt-4" icon="i-lucide-refresh-cw" @click="refresh">{{ t('retry') }}</UButton>
         </div>
 
         <!-- No data state -->
-        <div v-else-if="!killmails.length" class="bg-gray-50 dark:bg-gray-800 rounded-lg text-center">
+        <div v-else-if="!killmails.length" class="bg-gray-50 dark:bg-gray-800 rounded-lg text-center p-6">
             <UIcon name="lucide:search" class="w-12 h-12 text-gray-400 mb-4 mx-auto" />
             <p class="text-gray-600 dark:text-gray-400">{{ t('campaign.no_killmails_found') }}</p>
         </div>
@@ -273,10 +421,14 @@ const tableColumns = [
                 <div class="flex items-center py-1">
                     <Image type="type-render" :id="item.victim.ship_id" format="webp"
                         :alt="`Ship: ${getLocalizedString(item.victim.ship_name, currentLocale)}`"
-                        class="rounded w-10 mx-2" size="64" />
+                        class="rounded w-16 h-16 mx-2" size="64" />
                     <div class="flex flex-col items-start">
-                        <span class="text-sm text-black dark:text-white">
-                            {{ truncateString(getLocalizedString(item.victim.ship_name, currentLocale), 20) }}
+                        <span class="text-sm text-black dark:text-white truncate max-w-[150px]"
+                            :ref="(el) => setElementRef(el, item.killmail_id, shipNameRefs)">
+                            {{ getLocalizedString(item.victim.ship_name, currentLocale) }}
+                        </span>
+                        <span class="text-xs text-gray-500 dark:text-gray-400 truncate max-w-[150px]">
+                            {{ getLocalizedString(item.victim.ship_group_name || {}, currentLocale) }}
                         </span>
                         <span v-if="item.total_value > 50" class="text-xs text-gray-600 dark:text-gray-400">
                             {{ formatIsk(item.total_value) }} ISK
@@ -290,15 +442,27 @@ const tableColumns = [
                 <div class="flex items-center py-1">
                     <template v-if="item.victim.character_id > 0">
                         <Image type="character" :id="item.victim.character_id" format="webp"
-                            :alt="`Character: ${item.victim.character_name}`" class="rounded w-10 mx-2" size="44" />
+                            :alt="`Character: ${item.victim.character_name}`" class="rounded-full w-16 h-16 mx-2"
+                            size="64" />
                     </template>
-                    <Image v-else type="character" :id="1" alt="Placeholder" class="rounded w-10 mx-2" size="44" />
-                    <div class="flex flex-col items-start">
-                        <span class="text-sm text-black dark:text-white">
+                    <Image v-else type="character" :id="1" alt="Placeholder" class="rounded-full w-16 h-16 mx-2"
+                        size="64" />
+                    <div class="flex flex-col items-start min-w-0 flex-1">
+                        <!-- Character Name -->
+                        <span class="text-sm text-black dark:text-white truncate max-w-full"
+                            :ref="(el) => setElementRef(el, item.killmail_id, characterNameRefs)">
                             {{ item.victim.character_name || t('campaign.unknown_pilot') }}
                         </span>
-                        <span class="text-xs text-gray-600 dark:text-gray-400 whitespace-nowrap">
-                            {{ truncateString(item.victim.corporation_name, 22) }}
+                        <!-- Corporation Name (without ticker) -->
+                        <span class="text-xs text-gray-600 dark:text-gray-400 truncate max-w-full"
+                            :ref="(el) => setElementRef(el, item.killmail_id, corporationNameRefs)">
+                            {{ item.victim.corporation_name }}
+                        </span>
+                        <!-- Alliance Name (without ticker) -->
+                        <span v-if="item.victim.alliance_name"
+                            class="text-xs text-gray-500 dark:text-gray-500 truncate max-w-full"
+                            :ref="(el) => setElementRef(el, item.killmail_id, allianceNameRefs)">
+                            {{ item.victim.alliance_name }}
                         </span>
                     </div>
                 </div>
@@ -306,31 +470,46 @@ const tableColumns = [
 
             <!-- Final Blow column -->
             <template #cell-finalBlow="{ item }">
-                <div class="flex items-center py-1 whitespace-nowrap">
+                <div class="flex items-center py-1">
                     <!-- Character or placeholder when finalblow.character_id missing -->
                     <template v-if="item.finalblow.character_id > 0">
                         <Image type="character" :id="item.finalblow.character_id" format="webp"
-                            :alt="`Character: ${item.finalblow.character_name}`" class="rounded w-10 mx-2" size="44" />
-                        <div class="flex flex-col items-start">
-                            <span class="text-sm text-black dark:text-white">
+                            :alt="`Character: ${item.finalblow.character_name}`" class="rounded-full w-16 h-16 mx-2"
+                            size="64" />
+                        <div class="flex flex-col items-start min-w-0 flex-1">
+                            <!-- Character Name -->
+                            <span class="text-sm text-black dark:text-white truncate max-w-full"
+                                :ref="(el) => setElementRef(el, `fb-${item.killmail_id}`, finalBlowNameRefs)">
                                 {{ item.finalblow.character_name }}
                             </span>
-                            <span class="text-xs text-gray-600 dark:text-gray-400">
-                                {{ truncateString(
-                                    getLocalizedString(item.finalblow.ship_group_name, currentLocale)
-                                    , 22) }}
+                            <!-- Corporation Name (without ticker) -->
+                            <span class="text-xs text-gray-600 dark:text-gray-400 truncate max-w-full"
+                                :ref="(el) => setElementRef(el, `fb-${item.killmail_id}`, finalBlowCorpRefs)">
+                                {{ item.finalblow.corporation_name }}
+                            </span>
+                            <!-- Alliance Name (without ticker) -->
+                            <span v-if="item.finalblow.alliance_name"
+                                class="text-xs text-gray-500 dark:text-gray-500 truncate max-w-full"
+                                :ref="(el) => setElementRef(el, `fb-${item.killmail_id}`, finalBlowAllianceRefs)">
+                                {{ item.finalblow.alliance_name }}
                             </span>
                         </div>
                     </template>
                     <template v-else>
-                        <Image type="character" :id="1" size="44" alt="NPC/Structure" class="rounded w-10 mx-2" />
-                        <div class="flex flex-col items-start">
-                            <span class="text-sm text-black dark:text-white">{{ item.finalblow.faction_name ||
-                                item.finalblow.character_name || t('campaign.unknown_pilot') }}</span>
-                            <span class="text-xs text-gray-600 dark:text-gray-400">
-                                {{ truncateString(
-                                    getLocalizedString(item.finalblow.ship_group_name, currentLocale)
-                                    , 22) }}
+                        <Image type="character" :id="1" size="64" alt="NPC/Structure"
+                            class="rounded-full w-16 h-16 mx-2" />
+                        <div class="flex flex-col items-start min-w-0 flex-1">
+                            <span class="text-sm text-black dark:text-white truncate max-w-full">
+                                {{ item.finalblow.faction_name || item.finalblow.character_name ||
+                                t('campaign.unknown_pilot') }}
+                            </span>
+                            <span v-if="item.finalblow.corporation_name"
+                                class="text-xs text-gray-600 dark:text-gray-400 truncate max-w-full">
+                                {{ item.finalblow.corporation_name }}
+                            </span>
+                            <span v-if="item.finalblow.ship_group_name"
+                                class="text-xs text-gray-500 dark:text-gray-500 truncate max-w-full">
+                                {{ getLocalizedString(item.finalblow.ship_group_name, currentLocale) }}
                             </span>
                         </div>
                     </template>
@@ -424,7 +603,7 @@ const tableColumns = [
                             </ClientOnly>
                             <div class="attacker-count flex items-center gap-1">
                                 <span class="text-xs text-gray-600 dark:text-gray-400">{{ item.attackerCount
-                                    }}</span>
+                                }}</span>
                                 <NuxtImg src="/images/involved.png" format="webp" quality="80" width="16" height="16"
                                     :alt="`${item.attackerCount} Involved`" class="h-3" />
                             </div>
@@ -454,10 +633,72 @@ const tableColumns = [
                     </div>
                 </template>
             </template>
+
+            <!-- Custom skeleton rendering for consistent layout -->
+            <template #skeleton>
+                <div class="skeleton-container">
+                    <div v-for="i in pagination.pageSize" :key="`skeleton-${i}`" class="killlist-skeleton-row">
+                        <!-- Ship column -->
+                        <div class="killlist-skeleton-cell" style="width: 20%">
+                            <div class="flex items-center">
+                                <div class="killlist-skeleton-image"></div>
+                                <div class="flex flex-col">
+                                    <div class="killlist-skeleton-title"></div>
+                                    <div class="killlist-skeleton-subtitle"></div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Victim column -->
+                        <div class="killlist-skeleton-cell" style="width: 25%">
+                            <div class="flex items-center">
+                                <div class="killlist-skeleton-image"></div>
+                                <div class="flex flex-col">
+                                    <div class="killlist-skeleton-title"></div>
+                                    <div class="killlist-skeleton-subtitle"></div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Final blow column -->
+                        <div class="killlist-skeleton-cell" style="width: 25%">
+                            <div class="flex items-center">
+                                <div class="killlist-skeleton-image"></div>
+                                <div class="flex flex-col">
+                                    <div class="killlist-skeleton-title"></div>
+                                    <div class="killlist-skeleton-subtitle"></div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Location column -->
+                        <div class="killlist-skeleton-cell" style="width: 15%">
+                            <div class="flex flex-col px-2">
+                                <div class="killlist-skeleton-title"></div>
+                                <div class="flex items-center gap-1 mt-1">
+                                    <div class="killlist-skeleton-system"></div>
+                                    <div class="killlist-skeleton-security"></div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Details column -->
+                        <div class="killlist-skeleton-cell" style="width: 15%; justify-content: flex-end;">
+                            <div class="flex flex-col items-end w-full">
+                                <div class="killlist-skeleton-title mb-1" style="width: 60px"></div>
+                                <div class="flex items-center gap-1">
+                                    <div class="killlist-skeleton-count"></div>
+                                    <div class="killlist-skeleton-icon"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </template>
         </Table>
 
         <!-- Bottom controls - right aligned stats, pagination -->
-        <div class="flex justify-end items-center gap-4 mt-4">
+        <div class="flex justify-between items-center gap-4 mt-4">
             <!-- Result count -->
             <div class="text-xs text-gray-500">
                 {{ t('resultCount', { count: pagination.total }) }}
@@ -467,9 +708,25 @@ const tableColumns = [
             <UPagination v-if="pagination.total > pagination.pageSize" v-model:page="page" :page-count="totalPages"
                 :total="pagination.total" :ui="{
                     wrapper: 'flex items-center justify-center',
-                    rounded: 'rounded-full min-w-8 min-h-8 flex items-center justify-center',
-                    container: 'flex items-center gap-1'
-                }" />
+                    rounded: 'rounded-md',
+                    default: {
+                        base: 'text-sm border-y border-r first:border-l border-gray-200 dark:border-gray-800 focus:z-10 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500',
+                        inactive: 'bg-background-800 hover:bg-background-700',
+                        padding: 'px-3 py-2',
+                        disabled: 'opacity-50 cursor-not-allowed'
+                    }
+                }" :prev-button="{
+                    icon: 'i-lucide-chevron-left',
+                    label: '',
+                    disabled: page === 1
+                }" :next-button="{
+                    icon: 'i-lucide-chevron-right',
+                    label: ''
+                }">
+                <template #default>
+                    <span class="mx-2">{{ $t('common.page') }} {{ page }}</span>
+                </template>
+            </UPagination>
         </div>
 
         <!-- No more killmails notification if there are killmails but no more pages -->
@@ -477,6 +734,16 @@ const tableColumns = [
             class="mt-4 text-center text-gray-500">
             {{ t('campaign.no_more_killmails') }}
         </div>
+
+        <!-- Global tooltip that follows mouse cursor -->
+        <Teleport to="body">
+            <div v-if="showTooltip" class="global-tooltip" :style="{
+                left: `${mouseX + 15}px`,
+                top: `${mouseY + 10}px`
+            }">
+                {{ tooltipText }}
+            </div>
+        </Teleport>
     </div>
 </template>
 
@@ -553,7 +820,6 @@ const tableColumns = [
 .combined-loss-row {
     background-color: rgba(139, 0, 0, 0.4) !important;
     border-left: 3px solid rgb(220, 38, 38) !important;
-    /* Add a left border for extra visibility */
 }
 
 /* Make sure our class overrides table row styles */
@@ -590,8 +856,138 @@ const tableColumns = [
     left: 0;
     right: 0;
     bottom: 0;
-    background-color: rgba(139, 0, 0, 0.4);
-    pointer-events: none;
+    background-color: rgba(80, 0, 0, 0.6);
+    opacity: 0.7;
     z-index: 0;
+    pointer-events: none;
+}
+
+/* Add truncation with fade effect */
+.fade-text {
+    position: relative;
+    mask-image: linear-gradient(to right, black 85%, transparent);
+    -webkit-mask-image: linear-gradient(to right, black 85%, transparent);
+}
+
+/* Global tooltip that follows cursor */
+.global-tooltip {
+    position: fixed;
+    z-index: 10000;
+    background-color: light-dark(rgba(255, 255, 255, 0.98), rgba(30, 30, 30, 0.98));
+    padding: 4px 10px;
+    border-radius: 4px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+    border: 1px solid light-dark(rgba(229, 231, 235, 0.5), rgba(75, 85, 99, 0.5));
+    font-size: 0.875rem;
+    max-width: 300px;
+    white-space: normal;
+    word-break: break-word;
+    pointer-events: none;
+    animation: tooltip-fade-in 0.15s ease-out;
+}
+
+@keyframes tooltip-fade-in {
+    from {
+        opacity: 0;
+        transform: translateY(5px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Custom skeleton styles for KillList */
+.skeleton-container {
+    width: 100%;
+}
+
+.killlist-skeleton-row {
+    display: flex;
+    width: 100%;
+    min-height: 60px;
+    padding: 8px 12px;
+    margin-bottom: 4px;
+    border-radius: 6px;
+    background-color: light-dark(rgba(255, 255, 255, 0.4), rgba(26, 26, 26, 0.3));
+    border-bottom: 1px solid light-dark(rgba(229, 231, 235, 0.3), rgba(75, 85, 99, 0.2));
+}
+
+.killlist-skeleton-cell {
+    display: flex;
+    align-items: center;
+    flex-shrink: 0;
+    flex-grow: 0;
+}
+
+.killlist-skeleton-image {
+    width: 64px;
+    height: 64px;
+    flex-shrink: 0;
+    margin: 0 8px;
+    border-radius: 6px;
+    background-color: light-dark(#e5e7eb, #374151);
+    animation: pulse 1.5s ease-in-out infinite;
+}
+
+.killlist-skeleton-title {
+    height: 16px;
+    width: 100px;
+    border-radius: 4px;
+    background-color: light-dark(#e5e7eb, #374151);
+    animation: pulse 1.5s ease-in-out infinite;
+}
+
+.killlist-skeleton-subtitle {
+    height: 12px;
+    width: 80px;
+    margin-top: 4px;
+    border-radius: 4px;
+    background-color: light-dark(#e5e7eb, #374151);
+    animation: pulse 1.5s ease-in-out infinite;
+}
+
+.killlist-skeleton-system {
+    height: 12px;
+    width: 70px;
+    border-radius: 4px;
+    background-color: light-dark(#e5e7eb, #374151);
+    animation: pulse 1.5s ease-in-out infinite;
+}
+
+.killlist-skeleton-security {
+    height: 12px;
+    width: 24px;
+    border-radius: 4px;
+    background-color: light-dark(#e5e7eb, #374151);
+    animation: pulse 1.5s ease-in-out infinite;
+}
+
+.killlist-skeleton-count {
+    height: 12px;
+    width: 20px;
+    border-radius: 4px;
+    background-color: light-dark(#e5e7eb, #374151);
+    animation: pulse 1.5s ease-in-out infinite;
+}
+
+.killlist-skeleton-icon {
+    height: 16px;
+    width: 16px;
+    border-radius: 4px;
+    background-color: light-dark(#e5e7eb, #374151);
+    animation: pulse 1.5s ease-in-out infinite;
+}
+
+/* Fix responsive image sizes */
+@media (max-width: 640px) {
+    .w-16 {
+        width: 48px !important;
+    }
+
+    .h-16 {
+        height: 48px !important;
+    }
 }
 </style>

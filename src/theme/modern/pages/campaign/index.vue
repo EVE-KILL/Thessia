@@ -148,7 +148,7 @@
                                     <UIcon name="lucide:calendar" class="w-4 h-4 flex-shrink-0" />
                                     <span class="truncate">{{ formatDate(campaign.startTime) }}</span>
                                     <span v-if="campaign.endTime" class="truncate">- {{ formatDate(campaign.endTime)
-                                        }}</span>
+                                    }}</span>
                                     <span v-else class="truncate">- {{ t('campaign.ongoing') }}</span>
                                 </span>
                             </div>

@@ -123,64 +123,169 @@ function isVictimSide(
  */
 export function buildExpandedQuery(campaignQuery: ICampaign['query']): Record<string, any> {
     const expandedQuery: Record<string, any> = {};
-    const conditions: any[] = [];
 
-    // Extract entity IDs for potential cross-referencing
-    const attackerEntities: Record<string, any> = {};
-    const victimEntities: Record<string, any> = {};
+    // Extract location and time filters
+    const locationTimeFilters: Record<string, any> = {};
 
-    // Process each key in the original query
+    // Process location and time filters
+    ['region_id', 'system_id', 'constellation_id', 'kill_time'].forEach(key => {
+        if (campaignQuery[key]) {
+            locationTimeFilters[key] = campaignQuery[key];
+        }
+    });
+
+    // Apply location and time filters directly to the main query
+    Object.assign(expandedQuery, locationTimeFilters);
+
+    // Separate attacker and victim entity specifications
+    const attackerSpecs: Record<string, any> = {};
+    const victimSpecs: Record<string, any> = {};
+
+    // Collect attacker and victim specifications
     Object.entries(campaignQuery).forEach(([key, value]) => {
-        // Handle time range and region directly - these don't need expansion
-        if (key === 'kill_time' || key === 'region_id' || key === 'system_id' || key === 'constellation_id') {
-            expandedQuery[key] = value;
-            return;
-        }
-
-        // Process attacker entities
         if (key.startsWith('attackers.')) {
-            const entityType = key.replace('attackers.', '');
-            attackerEntities[entityType] = value;
-        }
-
-        // Process victim entities
-        else if (key.startsWith('victim.')) {
-            const entityType = key.replace('victim.', '');
-            victimEntities[entityType] = value;
+            attackerSpecs[key] = value;
+        } else if (key.startsWith('victim.')) {
+            victimSpecs[key] = value;
         }
     });
 
-    // Build OR conditions for attackers
-    Object.entries(attackerEntities).forEach(([entityType, entityValue]) => {
-        // Create conditions for both attacker and victim roles
-        if (typeof entityValue === 'object' && entityValue !== null && '$in' in entityValue) {
-            // Handle $in operator
-            conditions.push({ [`attackers.${entityType}`]: entityValue });
-            // No need to add victim condition for $in as we'll handle this separately
-        } else {
-            // Direct equality
-            conditions.push({ [`attackers.${entityType}`]: entityValue });
-        }
-    });
+    const hasAttackerSpecs = Object.keys(attackerSpecs).length > 0;
+    const hasVictimSpecs = Object.keys(victimSpecs).length > 0;
 
-    // Build OR conditions for victims
-    Object.entries(victimEntities).forEach(([entityType, entityValue]) => {
-        // Create conditions for both attacker and victim roles
-        if (typeof entityValue === 'object' && entityValue !== null && '$in' in entityValue) {
-            // Handle $in operator
-            conditions.push({ [`victim.${entityType}`]: entityValue });
-        } else {
-            // Direct equality
-            conditions.push({ [`victim.${entityType}`]: entityValue });
-        }
-    });
-
-    // Add the OR conditions to the query if we have any
-    if (conditions.length > 0) {
-        expandedQuery.$or = conditions;
+    // Handle different filter scenarios
+    if (hasAttackerSpecs && hasVictimSpecs) {
+        // Both attacker and victim specs are present - build a bidirectional engagement query
+        const bidirectionalQuery = buildBidirectionalQuery(attackerSpecs, victimSpecs);
+        Object.assign(expandedQuery, bidirectionalQuery);
+    } else if (hasAttackerSpecs) {
+        // Only attacker specs - build a flexible matching for attacker entities
+        const attackerQuery = buildFlexibleEntityQuery(attackerSpecs);
+        Object.assign(expandedQuery, attackerQuery);
+    } else if (hasVictimSpecs) {
+        // Only victim specs - build a flexible matching for victim entities
+        const victimQuery = buildFlexibleEntityQuery(victimSpecs);
+        Object.assign(expandedQuery, victimQuery);
     }
 
     return expandedQuery;
+}
+
+/**
+ * Build a bidirectional engagement query that captures both directions of combat
+ * between attacker and victim sides
+ * @param attackerSpecs - Specifications for the attacker side
+ * @param victimSpecs - Specifications for the victim side
+ * @returns Query object that matches bidirectional engagement
+ */
+function buildBidirectionalQuery(
+    attackerSpecs: Record<string, any>,
+    victimSpecs: Record<string, any>
+): Record<string, any> {
+    // Build query components for each direction
+    const attackerSideAttacks = buildDirectionalMatchQuery(attackerSpecs, 'attackers.');
+    const victimSideAsVictim = buildDirectionalMatchQuery(victimSpecs, 'victim.');
+    const victimSideAttacks = buildDirectionalMatchQuery(victimSpecs, 'attackers.');
+    const attackerSideAsVictim = buildDirectionalMatchQuery(attackerSpecs, 'victim.');
+
+    // Direction 1: Attacker side attacks victim side
+    const direction1 = {
+        $and: [attackerSideAttacks, victimSideAsVictim]
+    };
+
+    // Direction 2: Victim side attacks attacker side
+    const direction2 = {
+        $and: [victimSideAttacks, attackerSideAsVictim]
+    };
+
+    // Combine both directions with OR
+    return { $or: [direction1, direction2] };
+}
+
+/**
+ * Build a query component that matches entities from specs in the given field prefix
+ * @param specs - Entity specifications (attacker or victim)
+ * @param fieldPrefix - Field prefix to match against ('attackers.' or 'victim.')
+ * @returns Query object that matches entities in the specified fields
+ */
+function buildDirectionalMatchQuery(
+    specs: Record<string, any>,
+    fieldPrefix: 'attackers.' | 'victim.'
+): Record<string, any> {
+    const conditions: Record<string, any>[] = [];
+
+    // Group specs by entity type for more efficient queries
+    const entityTypeGroups: Record<string, any[]> = {};
+
+    Object.entries(specs).forEach(([key, value]) => {
+        // Extract entity type (e.g., 'character_id', 'corporation_id')
+        const entityType = key.replace('attackers.', '').replace('victim.', '');
+
+        if (!entityTypeGroups[entityType]) {
+            entityTypeGroups[entityType] = [];
+        }
+
+        // Determine the field to match against based on prefix and entity type
+        const matchField = `${fieldPrefix}${entityType}`;
+
+        // Handle different value types ($in arrays or direct values)
+        if (typeof value === 'object' && value !== null && '$in' in value) {
+            conditions.push({ [matchField]: { $in: value.$in } });
+        } else {
+            conditions.push({ [matchField]: value });
+        }
+    });
+
+    // For single condition, return it directly
+    if (conditions.length === 1) {
+        return conditions[0];
+    }
+
+    // For multiple conditions, use $or to match any of them
+    return { $or: conditions };
+}
+
+/**
+ * Build a flexible entity query that matches entities in either attacker or victim roles
+ * @param specs - Entity specifications (attacker or victim)
+ * @returns Query object with flexible entity matching
+ */
+function buildFlexibleEntityQuery(specs: Record<string, any>): Record<string, any> {
+    const conditions: Record<string, any>[] = [];
+
+    Object.entries(specs).forEach(([key, value]) => {
+        // Extract the entity type (e.g., 'character_id', 'corporation_id')
+        const entityType = key.replace('attackers.', '').replace('victim.', '');
+
+        // Define both possible field locations for this entity type
+        const attackerField = `attackers.${entityType}`;
+        const victimField = `victim.${entityType}`;
+
+        // Handle different value types ($in arrays or direct values)
+        if (typeof value === 'object' && value !== null && '$in' in value) {
+            conditions.push({
+                $or: [
+                    { [attackerField]: { $in: value.$in } },
+                    { [victimField]: { $in: value.$in } }
+                ]
+            });
+        } else {
+            conditions.push({
+                $or: [
+                    { [attackerField]: value },
+                    { [victimField]: value }
+                ]
+            });
+        }
+    });
+
+    // For single condition, return it directly
+    if (conditions.length === 1) {
+        return conditions[0];
+    }
+
+    // For multiple conditions, use $and to match all of them
+    return { $and: conditions };
 }
 
 /**
