@@ -224,7 +224,7 @@
                                     </div>
                                     <div class="stat-row">
                                         <div class="stat-label text-gray-600 dark:text-gray-400">{{ $t('iskEfficiency')
-                                            }}</div>
+                                        }}</div>
                                         <div class="stat-value text-gray-900 dark:text-white">
                                             {{ calcIskEfficiency(validShortStats) }}%
                                         </div>
@@ -262,13 +262,13 @@
                                     </div>
                                     <div class="stat-row">
                                         <div class="stat-label text-gray-600 dark:text-gray-400">{{ $t('soloKillRatio')
-                                            }}</div>
+                                        }}</div>
                                         <div class="stat-value text-gray-900 dark:text-white">{{
                                             calcSoloKillRatio(validShortStats) }}%</div>
                                     </div>
                                     <div class="stat-row">
                                         <div class="stat-label text-gray-600 dark:text-gray-400">{{ $t('soloEfficiency')
-                                            }}
+                                        }}
                                         </div>
                                         <div class="stat-value text-gray-900 dark:text-white">{{
                                             calcSoloEfficiency(validShortStats) }}%</div>
@@ -292,13 +292,13 @@
                                     </div>
                                     <div class="stat-row">
                                         <div class="stat-label text-gray-600 dark:text-gray-400">{{ $t('npcLossRatio')
-                                            }}</div>
+                                        }}</div>
                                         <div class="stat-value text-gray-900 dark:text-white">{{
                                             calcNpcLossRatio(validShortStats) }}</div>
                                     </div>
                                     <div class="stat-row">
                                         <div class="stat-label text-gray-600 dark:text-gray-400">{{ $t('avgKillsPerDay')
-                                            }}
+                                        }}
                                         </div>
                                         <div class="stat-value text-gray-900 dark:text-white">{{
                                             calcAvgKillsPerDay(validShortStats, character.birthday) }}</div>
@@ -403,7 +403,6 @@ import { de, enUS, es, fr, ja, ko, ru, zhCN } from "date-fns/locale";
 import { computed, onMounted, ref, watch } from 'vue';
 import { useI18n } from "vue-i18n";
 import type { ICharacter } from '~/server/interfaces/ICharacter';
-import Tabs from '~/src/theme/modern/components/common/Tabs.vue';
 
 const { t, locale } = useI18n();
 const currentLocale = computed(() => locale.value);
@@ -458,27 +457,33 @@ const tabItems = [
 
 const activeTabId = ref(tabItems[0].id); // Default to the first tab's ID
 
-// Sync activeTabId with URL hash
+// Watch for changes in route.hash to update activeTabId
 watch(() => route.hash, (newHash) => {
     const hashValue = newHash.slice(1);
     if (hashValue && tabItems.some(item => item.id === hashValue)) {
         activeTabId.value = hashValue;
     } else if (!hashValue && tabItems.length > 0) {
-        // If hash is empty or invalid, and we have tabs, default to the first tab
+        // If hash is empty or invalid, just set the active tab without updating URL
         activeTabId.value = tabItems[0].id;
-        // Optionally, update the URL to reflect this default
-        // router.replace({ hash: `#${tabItems[0].id}` });
     }
-}, { immediate: true }); // immediate: true to run on component mount
+}, { immediate: true });
 
-// Sync URL hash with activeTabId
-watch(activeTabId, (newTabId) => {
-    if (route.hash !== `#${newTabId}`) {
+// Update URL only when activeTabId changes due to user interaction
+watch(activeTabId, (newTabId, oldTabId) => {
+    // Only update the URL if:
+    // 1. This isn't the initial value (oldTabId exists)
+    // 2. There was an actual change (newTabId !== oldTabId)
+    // 3. The URL doesn't already have this hash
+    // 4. Either: there's already a hash in the URL, OR the new tab isn't the default
+    if (oldTabId &&
+        newTabId !== oldTabId &&
+        route.hash !== `#${newTabId}` &&
+        (route.hash || newTabId !== tabItems[0].id)) {
         router.push({ hash: `#${newTabId}` });
     }
 });
 
-// Ensure correct tab is selected on page load and default hash is set
+// Ensure correct tab is selected on page load without changing URL
 onMounted(() => {
     const currentHash = route.hash.slice(1);
     const isValidHash = tabItems.some(item => item.id === currentHash);
@@ -487,9 +492,6 @@ onMounted(() => {
         activeTabId.value = currentHash;
     } else if (tabItems.length > 0) {
         activeTabId.value = tabItems[0].id;
-        if (route.hash !== `#${tabItems[0].id}`) {
-            router.replace({ hash: `#${tabItems[0].id}` });
-        }
     }
 });
 

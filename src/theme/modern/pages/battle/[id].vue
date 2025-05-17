@@ -176,7 +176,6 @@
 import { computed, onMounted, ref, watch, watchEffect } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useRoute, useRouter } from 'vue-router';
-import Tabs from '~/src/theme/modern/components/common/Tabs.vue';
 
 const { locale, t } = useI18n()
 
@@ -233,6 +232,40 @@ const { data: battleData, pending, error, refresh } = useFetch(apiUrl, {
 onMounted(() => {
     if (entityId.value) {
         refresh();
+    }
+
+    if (tabItems.value.length > 0) {
+        const hash = route.hash.substring(1);
+        const validTab = tabItems.value.find(item => item.id === hash);
+        if (validTab) {
+            activeTabId.value = hash;
+        } else {
+            activeTabId.value = tabItems.value[0].id;
+        }
+    }
+});
+
+watch(() => route.hash, (newHash) => {
+    const tabIdFromHash = newHash.substring(1);
+    if (tabItems.value.some(item => item.id === tabIdFromHash)) {
+        activeTabId.value = tabIdFromHash;
+    } else if (!tabIdFromHash && tabItems.value.length > 0) {
+        // If hash is removed, select default tab without changing URL
+        activeTabId.value = tabItems.value[0].id;
+    }
+});
+
+watch(activeTabId, (newId, oldId) => {
+    // Only update the URL if:
+    // 1. This isn't the initial value (oldId exists)
+    // 2. There was an actual change (newId !== oldId)
+    // 3. The URL doesn't already have this hash
+    // 4. Either: there's already a hash in the URL, OR the new tab isn't the default
+    if (oldId &&
+        newId !== oldId &&
+        route.hash !== `#${newId}` &&
+        (route.hash || newId !== tabItems.value[0].id)) {
+        router.push({ hash: `#${newId}` });
     }
 });
 
@@ -485,38 +518,6 @@ watchEffect(async () => {
         // Only clear battle if we're not still loading
         if (!pending.value) {
             battle.value = null;
-        }
-    }
-});
-
-onMounted(() => {
-    if (tabItems.value.length > 0) {
-        const hash = route.hash.substring(1);
-        const validTab = tabItems.value.find(item => item.id === hash);
-        if (validTab) {
-            activeTabId.value = hash;
-        } else {
-            activeTabId.value = tabItems.value[0].id;
-            // Update URL if we defaulted, but only if not on server
-            if (typeof window !== 'undefined') {
-                router.replace({ query: route.query, hash: `#${activeTabId.value}` });
-            }
-        }
-    }
-});
-
-watch(() => route.hash, (newHash) => {
-    const tabIdFromHash = newHash.substring(1);
-    if (tabItems.value.some(item => item.id === tabIdFromHash) && activeTabId.value !== tabIdFromHash) {
-        activeTabId.value = tabIdFromHash;
-    }
-});
-
-watch(activeTabId, (newId) => {
-    if (newId && `#${newId}` !== route.hash) {
-        // Use push to allow back button navigation for tabs
-        if (typeof window !== 'undefined') {
-            router.push({ query: route.query, hash: `#${newId}` });
         }
     }
 });

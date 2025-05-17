@@ -13,7 +13,7 @@
                     </div>
                 </div>
             </UCard>
-            <Tabs :items="tabItems" v-model="selectedTabIndex" class="space-y-4">
+            <Tabs :items="tabItems" v-model="activeTabId" class="space-y-4">
                 <template #overview>
                     <div class="tab-content">
                         <KillList killlistType="latest" :limit="100"
@@ -52,7 +52,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted } from 'vue';
+import { ref, onMounted, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useRoute, useRouter } from 'vue-router';
 import SystemBattles from '~/components/system/SystemBattles.vue';
@@ -81,28 +81,43 @@ const tabItems = [
     { id: "battles", label: t("battles"), icon: "i-lucide-swords", slot: "battles" as const },
 ];
 
-const selectedTabIndex = computed({
-    get() {
-        const hash = route.hash.slice(1);
-        const tabIndex = tabItems.findIndex(item => item.id === hash);
-        return tabIndex >= 0 ? String(tabIndex) : '0';
-    },
-    set(newIndex) {
-        const index = parseInt(newIndex, 10);
-        const tabId = tabItems[index]?.id || 'overview';
-        router.push({
-            path: `/system/${id}`,
-            hash: `#${tabId}`,
-        });
+// Use a simple ref instead of a computed property for the active tab
+const activeTabId = ref('');
+
+// Watch for changes in route.hash to update activeTabId
+watch(() => route.hash, (newHash) => {
+    const tabId = newHash.slice(1);
+    if (tabItems.some(item => item.id === tabId)) {
+        activeTabId.value = tabId;
+    } else if (!tabId && tabItems.length > 0) {
+        // If hash is empty or invalid, just set the active tab without updating URL
+        activeTabId.value = tabItems[0].id;
     }
 });
 
+// Watch for changes in activeTabId to update URL hash, but only for user interactions
+watch(activeTabId, (newId, oldId) => {
+    // Only update the URL if:
+    // 1. This isn't the initial value (oldId exists)
+    // 2. There was an actual change (newId !== oldId)
+    // 3. The URL doesn't already have this hash
+    // 4. Either: there's already a hash in the URL, OR the new tab isn't the default
+    if (oldId && 
+        newId !== oldId && 
+        route.hash !== `#${newId}` &&
+        (route.hash || newId !== tabItems[0].id)) {
+        router.push({ hash: `#${newId}` });
+    }
+});
+
+// Initialize activeTabId from hash or default without affecting URL
 onMounted(() => {
-    if (!route.hash) {
-        router.replace({
-            path: route.path,
-            hash: '#overview'
-        }, { preserveState: true });
+    const hash = route.hash.slice(1);
+    const validTab = tabItems.find(item => item.id === hash);
+    if (validTab) {
+        activeTabId.value = hash;
+    } else if (tabItems.length > 0) {
+        activeTabId.value = tabItems[0].id;
     }
 });
 </script>

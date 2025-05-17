@@ -730,10 +730,6 @@ onMounted(() => {
             activeTabId.value = hash;
         } else if (tabs.value[0]?.id) {
             activeTabId.value = tabs.value[0].id;
-            // Update URL if we defaulted, but only if not on server and preview is visible
-            if (typeof window !== 'undefined' && previewData.value) {
-                router.replace({ hash: `#${activeTabId.value}` });
-            }
         }
     }
 });
@@ -741,17 +737,20 @@ onMounted(() => {
 watch(() => route.hash, (newHash) => {
     if (previewData.value) { // Only update from hash if preview is visible
         const tabIdFromHash = newHash.substring(1);
-        if (tabs.value.some(item => item.id === tabIdFromHash) && activeTabId.value !== tabIdFromHash) {
+        if (tabs.value.some(item => item.id === tabIdFromHash)) {
             activeTabId.value = tabIdFromHash;
+        } else if (!tabIdFromHash && tabs.value.length > 0) {
+            // If hash is removed, select default tab without changing URL
+            activeTabId.value = tabs.value[0].id;
         }
     }
 });
 
-watch(activeTabId, (newId) => {
-    if (previewData.value && newId && `#${newId}` !== route.hash) { // Only update hash if preview is visible
-        if (typeof window !== 'undefined') {
-            router.push({ hash: `#${newId}` });
-        }
+watch(activeTabId, (newId, oldId) => {
+    if (previewData.value && newId && oldId && newId !== oldId && 
+        route.hash !== `#${newId}` &&
+        (route.hash || newId !== tabs.value[0].id)) {
+        router.push({ hash: `#${newId}` });
     }
 });
 
@@ -764,16 +763,7 @@ watch(previewData, (newPreviewData) => {
             activeTabId.value = hash;
         } else if (tabs.value[0]?.id) {
             activeTabId.value = tabs.value[0].id;
-            if (typeof window !== 'undefined') {
-                router.replace({ hash: `#${activeTabId.value}` });
-            }
         }
-    } else if (!newPreviewData) {
-        // Optionally clear hash when preview is hidden or reset activeTabId
-        // if (typeof window !== 'undefined' && route.hash) {
-        //     router.replace({ hash: '' });
-        // }
-        // activeTabId.value = tabs.value[0]?.id || ''; // Reset to first tab or empty
     }
 });
 

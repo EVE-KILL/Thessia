@@ -127,7 +127,7 @@
                                     </div>
                                     <div class="stat-row">
                                         <div class="stat-label text-gray-600 dark:text-gray-400">{{ $t('iskEfficiency')
-                                            }}</div>
+                                        }}</div>
                                         <div class="stat-value text-gray-900 dark:text-white">
                                             {{ calcIskEfficiency(validShortStats) }}%
                                         </div>
@@ -165,14 +165,14 @@
                                     </div>
                                     <div class="stat-row">
                                         <div class="stat-label text-gray-600 dark:text-gray-400">{{ $t('soloKillRatio')
-                                            }}</div>
+                                        }}</div>
                                         <div class="stat-value text-gray-900 dark:text-white">
                                             {{ calcSoloKillRatio(validShortStats) }}%
                                         </div>
                                     </div>
                                     <div class="stat-row">
                                         <div class="stat-label text-gray-600 dark:text-gray-400">{{ $t('soloEfficiency')
-                                            }}</div>
+                                        }}</div>
                                         <div class="stat-value text-gray-900 dark:text-white">
                                             {{ calcSoloEfficiency(validShortStats) }}%
                                         </div>
@@ -190,7 +190,7 @@
                                 <div class="stat-body">
                                     <div class="stat-row">
                                         <div class="stat-label text-gray-600 dark:text-gray-400">{{ $t('corporations')
-                                            }}</div>
+                                        }}</div>
                                         <div class="stat-value text-gray-900 dark:text-white">{{
                                             formatNumber(alliance.corporation_count || 0) }}</div>
                                     </div>
@@ -295,15 +295,6 @@ import { de, enUS, es, fr, ja, ko, ru, zhCN } from "date-fns/locale";
 import { computed, onMounted, ref, watch } from 'vue'; // Added watch
 import { useI18n } from 'vue-i18n';
 import { useRoute, useRouter } from 'vue-router';
-import AllianceBattles from '~/components/alliance/AllianceBattles.vue';
-import AllianceCharacterMembers from '~/src/theme/modern/components/alliance/AllianceCharacterMembers.vue';
-import AllianceCombined from '~/src/theme/modern/components/alliance/AllianceCombined.vue';
-import AllianceCorporationMembers from '~/src/theme/modern/components/alliance/AllianceCorporationMembers.vue';
-import AllianceDashboard from '~/src/theme/modern/components/alliance/AllianceDashboard.vue';
-import AllianceKills from '~/src/theme/modern/components/alliance/AllianceKills.vue';
-import AllianceLosses from '~/src/theme/modern/components/alliance/AllianceLosses.vue';
-import AllianceStats from '~/src/theme/modern/components/alliance/AllianceStats.vue';
-import Tabs from '~/src/theme/modern/components/common/Tabs.vue'; // Added Tabs import
 
 const { t, locale } = useI18n()
 const route = useRoute()
@@ -393,14 +384,13 @@ onMounted(() => {
             shortStatsData.value = { error: 'Failed to fetch alliance stats' }
         })
 
-    // Initialize activeTabId from hash or default
+    // Initialize activeTabId from hash or default without affecting URL
     const hash = route.hash.slice(1);
     const initialTab = tabItems.value.find(item => item.id === hash);
     if (initialTab) {
         activeTabId.value = initialTab.id;
     } else if (tabItems.value.length > 0) {
         activeTabId.value = tabItems.value[0].id;
-        router.replace({ hash: `#${activeTabId.value}` });
     }
 })
 
@@ -469,17 +459,23 @@ watch(() => route.hash, (newHash) => {
     const tabId = newHash.slice(1);
     if (tabItems.value.some(item => item.id === tabId)) {
         activeTabId.value = tabId;
-    } else if (tabItems.value.length > 0 && activeTabId.value !== tabItems.value[0].id) {
-        // If hash is invalid, and current activeTabId is not the default, reset to default
-        // This handles cases where user manually enters an invalid hash
+    } else if (tabItems.value.length > 0 && !tabId) {
+        // If hash is empty or invalid, just set the active tab without updating URL
         activeTabId.value = tabItems.value[0].id;
-        router.replace({ hash: `#${activeTabId.value}` });
     }
 });
 
-// Watch for changes in activeTabId to update URL hash
-watch(activeTabId, (newId) => {
-    if (newId && route.hash !== `#${newId}`) {
+// Watch for changes in activeTabId to update URL hash, but only for user interactions
+watch(activeTabId, (newId, oldId) => {
+    // Only update the URL if:
+    // 1. This isn't the initial value (oldId exists)
+    // 2. There was an actual change (newId !== oldId)
+    // 3. The URL doesn't already have this hash
+    // 4. Either: there's already a hash in the URL, OR the new tab isn't the default
+    if (oldId &&
+        newId !== oldId &&
+        route.hash !== `#${newId}` &&
+        (route.hash || newId !== tabItems.value[0].id)) {
         router.push({ hash: `#${newId}` });
     }
 });

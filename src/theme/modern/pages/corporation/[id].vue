@@ -294,22 +294,15 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, ref } from 'vue'
+import { computed, onMounted, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useRoute, useRouter } from 'vue-router'
-import CorporationBattles from '~/components/corporation/CorporationBattles.vue'
-import Tabs from '~/src/theme/modern/components/common/Tabs.vue'
-import CorporationCombined from '~/src/theme/modern/components/corporation/CorporationCombined.vue'
-import CorporationDashboard from '~/src/theme/modern/components/corporation/CorporationDashboard.vue'
-import CorporationKills from '~/src/theme/modern/components/corporation/CorporationKills.vue'
-import CorporationLosses from '~/src/theme/modern/components/corporation/CorporationLosses.vue'
-import CorporationMembers from '~/src/theme/modern/components/corporation/CorporationMembers.vue'
-import CorporationStats from '~/src/theme/modern/components/corporation/CorporationStats.vue'
 
 const { t, locale } = useI18n()
 const route = useRoute()
 const router = useRouter()
 const corporationId = route.params.id
+const activeTabId = ref('');
 
 const { data: corporation, pending, error } = await useFetch(`/api/corporations/${corporationId}`)
 
@@ -364,16 +357,35 @@ onMounted(() => {
         });
 
     const currentHash = route.hash.slice(1);
-    if (tabItems.value.length > 0) { // Ensure tabItems is populated
-        const isValidHash = tabItems.value.some(tab => tab.id === currentHash);
-        if (currentHash && isValidHash) {
-            activeTabId.value = currentHash;
-        } else {
-            activeTabId.value = tabItems.value[0].id;
-            router.replace({ hash: `#${activeTabId.value}` });
-        }
+    if (currentHash && tabItems.value.some(tab => tab.id === currentHash)) {
+        activeTabId.value = currentHash;
+    } else if (tabItems.value.length > 0) {
+        activeTabId.value = tabItems.value[0].id;
     }
 })
+
+watch(() => route.hash, (newHash) => {
+    const newId = newHash.slice(1);
+    if (tabItems.value.some(tab => tab.id === newId)) {
+        activeTabId.value = newId;
+    } else if (tabItems.value.length > 0 && !newId) { // Handle case where hash is removed
+        activeTabId.value = tabItems.value[0].id;
+    }
+});
+
+watch(activeTabId, (newId, oldId) => {
+    // Only update the URL if:
+    // 1. This isn't the initial value (oldId exists)
+    // 2. There was an actual change (newId !== oldId)
+    // 3. The URL doesn't already have this hash
+    // 4. Either: there's already a hash in the URL, OR the new tab isn't the default
+    if (oldId &&
+        newId !== oldId &&
+        route.hash !== `#${newId}` &&
+        (route.hash || newId !== tabItems.value[0].id)) {
+        router.push({ hash: `#${newId}` });
+    }
+});
 
 const validShortStats = computed(() => {
     if (shortStatsData.value && !('error' in shortStatsData.value)) {
@@ -381,8 +393,6 @@ const validShortStats = computed(() => {
     }
     return null;
 })
-
-const activeTabId = ref('');
 
 const tabItems = computed(() => [
     {
@@ -428,22 +438,6 @@ const tabItems = computed(() => [
         slot: "battles" as const,
     },
 ]);
-
-watch(() => route.hash, (newHash) => {
-    const newId = newHash.slice(1);
-    if (tabItems.value.some(tab => tab.id === newId)) {
-        activeTabId.value = newId;
-    } else if (tabItems.value.length > 0 && !newId) { // Handle case where hash is removed
-        activeTabId.value = tabItems.value[0].id;
-        // Optionally, you might want to router.replace({ hash: `#${activeTabId.value}` }); here too
-    }
-});
-
-watch(activeTabId, (newId) => {
-    if (newId && route.hash !== `#${newId}`) {
-        router.push({ hash: `#${newId}` });
-    }
-});
 
 const formatNumber = (value: number): string => {
     return value?.toLocaleString() || "0";

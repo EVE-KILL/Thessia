@@ -53,8 +53,6 @@ const selectTab = (tabId: string) => {
     }
 }
 
-const activeItem = computed(() => props.items.find(item => item.id === props.modelValue))
-
 // Helper to get button classes dynamically
 const getButtonClasses = (item: TabItem) => {
     const classes = [props.tabButtonClass];
