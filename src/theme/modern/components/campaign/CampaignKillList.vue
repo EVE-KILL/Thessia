@@ -603,7 +603,7 @@ onUpdated(() => {
                             </ClientOnly>
                             <div class="attacker-count flex items-center gap-1">
                                 <span class="text-xs text-gray-600 dark:text-gray-400">{{ item.attackerCount
-                                    }}</span>
+                                }}</span>
                                 <NuxtImg src="/images/involved.png" format="webp" quality="80" width="16" height="16"
                                     :alt="`${item.attackerCount} Involved`" class="h-3" />
                             </div>

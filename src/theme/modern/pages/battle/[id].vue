@@ -181,6 +181,7 @@ const { locale, t } = useI18n()
 
 const route = useRoute();
 const router = useRouter();
+const activeTabId = ref('');
 
 // Get either the ID from the route or a killmail ID from query params
 const entityId = computed(() => {
@@ -360,8 +361,6 @@ const tabItems = computed(() => [
     { id: 'characters', label: t('battleGenerator.tabs.characters'), slot: 'characters' },
     { id: 'timeline', label: t('battleGenerator.tabs.timeline'), slot: 'timeline' }
 ]);
-
-const activeTabId = ref('');
 
 const tabsUi = {
     list: "mb-0",
