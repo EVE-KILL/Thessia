@@ -89,7 +89,7 @@ const topEntitySchema = new Schema<ITopEntity>({
 const BattlesSchema = new Schema<IBattlesDocument>(
     {
         battle_id: { type: Number, unique: true },
-        custom: { type: Boolean, default: true },
+        custom: { type: Boolean, default: false },
         start_time: { type: Date, required: true },
         end_time: { type: Date, required: true },
         duration_ms: { type: Number },

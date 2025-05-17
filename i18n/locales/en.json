@@ -924,5 +924,8 @@
     },
     "campaigns": "Campaigns",
     "view": "View",
-    "loginToCreateCampaigns": "Login to create Campaign"
+    "loginToCreateCampaigns": "Login to create Campaign",
+    "zoomIn": "Zoom In",
+    "zoomOut": "Zoom Out",
+    "resetZoom": "Reset Zoom"
 }

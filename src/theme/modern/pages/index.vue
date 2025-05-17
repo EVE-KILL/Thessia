@@ -26,29 +26,32 @@
 
         <!-- Mobile View with Tabs - Only shown on mobile -->
         <div v-else class="mobile-layout">
-            <Tabs :items="tabItems" class="w-full" default-selected="kills" default-value="1" color="neutral">
-                <template #content="{ item }">
+            <Tabs v-model="selectedTab" :items="tabItems" class="w-full mobile-tabs" tabButtonClass="mobile-tab-button">
+                <template #kills="{ item }">
                     <div class="tab-content">
-                        <!-- Top Lists tab content -->
-                        <template v-if="item.key === 'topLists'">
-                            <TopBox type="character" :limit="10" :days="7" :title="t('top.characters')" />
-                            <TopBox type="corporation" :limit="10" :days="7" :title="t('top.corporations')" />
-                            <TopBox type="alliance" :limit="10" :days="7" :title="t('top.alliances')" />
-                            <TopBox type="ship" :limit="10" :days="7" :title="t('top.ships')" />
-                            <TopBox type="solarsystem" :limit="10" :days="7" :title="t('top.systems')" />
-                            <TopBox type="constellation" :limit="10" :days="7" :title="t('top.constellations')" />
-                            <TopBox type="region" :limit="10" :days="7" :title="t('top.regions')" />
-                        </template>
+                        <KillList :killlistType="'latest'" />
+                    </div>
+                </template>
 
-                        <!-- Kills tab content -->
-                        <template v-else-if="item.key === 'kills'">
-                            <KillList :killlistType="'latest'" />
-                        </template>
+                <template #topLists="{ item }">
+                    <div class="tab-content">
+                        <div class="mobile-top-lists space-y-4">
+                            <TopBox type="character" :limit="10" :days="7" :title="t('top') + ' ' + t('characters')" />
+                            <TopBox type="corporation" :limit="10" :days="7"
+                                :title="t('top') + ' ' + t('corporations')" />
+                            <TopBox type="alliance" :limit="10" :days="7" :title="t('top') + ' ' + t('alliances')" />
+                            <TopBox type="ship" :limit="10" :days="7" :title="t('top') + ' ' + t('ships')" />
+                            <TopBox type="solarsystem" :limit="10" :days="7" :title="t('top') + ' ' + t('systems')" />
+                            <TopBox type="constellation" :limit="10" :days="7"
+                                :title="t('top') + ' ' + t('constellations')" />
+                            <TopBox type="region" :limit="10" :days="7" :title="t('top') + ' ' + t('regions')" />
+                        </div>
+                    </div>
+                </template>
 
-                        <!-- Overview tab content -->
-                        <template v-else-if="item.key === 'most-valuable'">
-                            <MostValuable />
-                        </template>
+                <template #mostValuable="{ item }">
+                    <div class="tab-content">
+                        <MostValuable />
                     </div>
                 </template>
             </Tabs>
@@ -60,23 +63,29 @@
 const { t } = useI18n();
 const { isMobile } = useResponsive();
 
-// Create the tabs configuration for mobile view
+// Initialize with a valid ID from our tabs
+const selectedTab = ref("kills");
+
+// Updated to match the expected TabItem interface
 const tabItems = ref([
     {
-        key: "topLists",
-        label: t("topLists"),
-        icon: "i-lucide-list-ordered",
-    },
-    {
-        key: "kills",
+        id: "kills",
         label: t("kills"),
-        icon: "i-lucide-swords",
+        icon: "i-lucide-swords text-xl",
+        slot: "kills"
     },
     {
-        key: "most-valuable",
-        label: t("mostValuable"),
-        icon: "i-lucide-layout-dashboard",
+        id: "topLists",
+        label: t("topLists"),
+        icon: "i-lucide-list-ordered text-xl",
+        slot: "topLists"
     },
+    {
+        id: "mostValuable",
+        label: t("mostValuable"),
+        icon: "i-lucide-layout-dashboard text-xl",
+        slot: "mostValuable"
+    }
 ]);
 
 useSeoMeta({
@@ -116,10 +125,26 @@ useSeoMeta({
 /* Tab content spacing */
 .tab-content {
     padding-top: 1rem;
+    padding-bottom: 2rem;
 }
 
 /* Mobile-specific styling */
 .mobile-layout {
     width: 100%;
+}
+
+.mobile-top-lists {
+    padding: 0 0.5rem;
+}
+
+/* Hide text labels in mobile tabs */
+.mobile-tabs :deep(.mobile-tab-button) span {
+    display: none;
+}
+
+/* Increase icon visibility */
+.mobile-tabs :deep(.mobile-tab-button .u-icon) {
+    margin-right: 0;
+    font-size: 1.25rem;
 }
 </style>
