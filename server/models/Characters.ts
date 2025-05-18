@@ -51,13 +51,13 @@ const charactersSchema = new Schema<ICharacterDocument>(
 );
 
 // Define indexes for the schema
-charactersSchema.index({ name: 1 }, { sparse: true }); // Sparse index on name
 charactersSchema.index({ corporation_id: 1 }, { sparse: true }); // Sparse index on corporation_id
 charactersSchema.index({ alliance_id: 1 }, { sparse: true }); // Sparse index on alliance_id
 charactersSchema.index({ faction_id: 1 }, { sparse: true }); // Sparse index on faction_id
 charactersSchema.index({ last_active: 1 }, { sparse: true }); // Sparse index on last_active
-charactersSchema.index({ createdAt: 1 }, { sparse: true }); // Sparse index on createdAt
 charactersSchema.index({ updatedAt: 1 }, { sparse: true }); // Sparse index on updatedAt
+charactersSchema.index({ deleted: 1, last_active: 1, updatedAt: 1 }, { sparse: true });
+charactersSchema.index({ deleted: 1, updatedAt: 1, last_active: 1 }, { sparse: true });
 
 // Hook to update Meilisearch on new document save
 charactersSchema.post<ICharacterDocument>('save', async function (doc) {
