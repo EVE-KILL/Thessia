@@ -1031,3 +1031,110 @@ export async function getBattleData(killmail_id: number): Promise<IBattlesDocume
 
     return fullBattleObject;
 }
+
+/**
+ * Processes battle data to include all necessary derived information for frontend display.
+ * This moves heavy computation from client to server.
+ *
+ * @param battle The raw battle document from the database
+ * @param includeKillmails Whether to include full killmail data in the response
+ * @returns Enhanced battle data ready for frontend consumption
+ */
+export async function processBattleDataForFrontend(battle: IBattlesDocument, includeKillmails: boolean = true): Promise<any> {
+    if (!battle) return null;
+
+    // Create a processed version of the battle with all computed properties
+    const processedBattle = JSON.parse(JSON.stringify(battle)); // Deep clone to avoid modifying original
+
+    const sideIds = battle.side_ids || [];
+
+    // Initialize team data structure similar to frontend's teamData
+    const teamData = {
+        kills: {} as Record<string, any[]>,
+        stats: {} as Record<string, any>,
+        alliances: {} as Record<string, any[]>,
+        corporations: {} as Record<string, any[]>,
+        characters: {} as Record<string, any[]>
+    };
+
+    // Extract all killmail IDs for batch fetching
+    const allKillmailIds = battle.killmail_ids || [];
+    const uniqueKillmailIds = Array.from(new Set(allKillmailIds));
+
+    // Fetch all killmails if needed (for detailed views)
+    let killmailMap = new Map();
+    let killmailArray: any[] = [];
+
+    if (uniqueKillmailIds.length > 0 && includeKillmails) {
+        try {
+            // Fetch killmails from database in batches
+            const killmails = await Killmails.find(
+                { killmail_id: { $in: uniqueKillmailIds } },
+                { _id: 0 }
+            ).lean();
+
+            // Create a map for quick lookups
+            killmailMap = new Map(
+                killmails.map(km => [km.killmail_id, km])
+            );
+
+            // Populate killmails array sorted by time
+            killmailArray = uniqueKillmailIds
+                .map(id => killmailMap.get(id))
+                .filter(Boolean)
+                .sort((a, b) => new Date(a.kill_time).getTime() - new Date(b.kill_time).getTime());
+        } catch (error) {
+            console.error("Error fetching killmails for battle:", error);
+            // Continue with empty killmail data
+        }
+    }
+
+    // Process team data for each side
+    for (const sideId of sideIds) {
+        if (battle.sides?.[sideId]) {
+            const side = battle.sides[sideId];
+
+            // Populate team data structures
+            teamData.stats[sideId] = side.stats || { iskLost: 0, shipsLost: 0, damageInflicted: 0 };
+            teamData.alliances[sideId] = side.alliances_stats || [];
+            teamData.corporations[sideId] = side.corporations_stats || [];
+            teamData.characters[sideId] = side.characters_stats || [];
+
+            // Populate team kills if killmails were fetched
+            if (includeKillmails && killmailMap.size > 0) {
+                teamData.kills[sideId] = (side.kill_ids || [])
+                    .map(id => killmailMap.get(id))
+                    .filter(Boolean)
+                    .sort((a, b) => (b.total_value || 0) - (a.total_value || 0));
+            } else {
+                // Even if we don't have killmails, initialize the array
+                teamData.kills[sideId] = [];
+            }
+        }
+    }
+
+    // Calculate total battle stats
+    const totalIskLost = Object.values(teamData.stats).reduce(
+        (sum, stats) => sum + (stats?.iskLost || 0), 0
+    );
+
+    const totalShipsLost = Object.values(teamData.stats).reduce(
+        (sum, stats) => sum + (stats?.shipsLost || 0), 0
+    );
+
+    const totalDamageInflicted = Object.values(teamData.stats).reduce(
+        (sum, stats) => sum + (stats?.damageInflicted || 0), 0
+    );
+
+    // Return enhanced battle data with all computed values
+    return {
+        ...processedBattle,
+        teamData,
+        killmails: includeKillmails ? killmailArray : [],
+        battleSummary: {
+            totalIskLost,
+            totalShipsLost,
+            totalDamageInflicted
+        }
+    };
+}

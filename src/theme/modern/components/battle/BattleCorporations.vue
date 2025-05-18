@@ -3,7 +3,7 @@
         <!-- Dynamic Team Corporations -->
         <div v-for="sideId in sideIds" :key="sideId" class="team-column">
             <div class="mb-2 text-lg font-bold text-black dark:text-white">
-                {{ getSideName(sideId) }} Corporations
+                {{ getSideName(sideId) }} {{ t('corporations') }}
             </div>
 
             <Table :columns="corporationColumns" :items="teamCorporations[sideId] || []" :bordered="true"
@@ -31,6 +31,9 @@
 
 <script setup lang="ts">
 import { computed } from 'vue';
+import { useI18n } from 'vue-i18n';
+
+const { t } = useI18n();
 
 interface BattleCorporation {
     id: number;
@@ -79,11 +82,11 @@ function formatBillions(n: number) {
 }
 
 const corporationColumns = [
-    { id: 'name', header: 'Corporation', width: '40%' },
-    { id: 'kills', header: 'Kills', width: '15%' },
-    { id: 'losses', header: 'Losses', width: '15%' },
-    { id: 'valueInflicted', header: 'Value Inflicted', width: '15%' },
-    { id: 'valueSuffered', header: 'Value Suffered', width: '15%' },
+    { id: 'name', header: t('corporation'), width: '40%' },
+    { id: 'kills', header: t('kills'), width: '15%' },
+    { id: 'losses', header: t('losses'), width: '15%' },
+    { id: 'valueInflicted', header: t('valueInflicted'), width: '15%' },
+    { id: 'valueSuffered', header: t('valueSuffered'), width: '15%' },
 ];
 </script>
 

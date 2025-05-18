@@ -3,7 +3,7 @@
         <!-- Dynamic Team Alliances -->
         <div v-for="sideId in sideIds" :key="sideId" class="team-column">
             <div class="mb-2 text-lg font-bold text-black dark:text-white">
-                {{ getSideName(sideId) }} Alliances
+                {{ getSideName(sideId) }} {{ t('alliances') }}
             </div>
 
             <Table :columns="allianceColumns" :items="teamAlliances[sideId] || []" :bordered="true" :striped="false"
@@ -29,6 +29,10 @@
 </template>
 
 <script setup lang="ts">
+import { useI18n } from 'vue-i18n';
+
+const { t } = useI18n();
+
 interface BattleAlliance {
     id: number;
     name: string;
@@ -80,11 +84,11 @@ function formatIsk(isk: number): string {
 }
 
 const allianceColumns = [
-    { id: 'name', header: 'Alliance', width: '40%' },
-    { id: 'kills', header: 'Kills', width: '15%' },
-    { id: 'losses', header: 'Losses', width: '15%' },
-    { id: 'valueInflicted', header: 'Value Inflicted', width: '15%' },
-    { id: 'valueSuffered', header: 'Value Suffered', width: '15%' },
+    { id: 'name', header: t('alliance'), width: '40%' },
+    { id: 'kills', header: t('kills'), width: '15%' },
+    { id: 'losses', header: t('losses'), width: '15%' },
+    { id: 'valueInflicted', header: t('valueInflicted'), width: '15%' },
+    { id: 'valueSuffered', header: t('valueSuffered'), width: '15%' },
 ];
 </script>
 

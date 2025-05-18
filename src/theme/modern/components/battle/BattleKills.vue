@@ -3,7 +3,7 @@
         <!-- Dynamic Team Kills -->
         <div v-for="sideId in sideIds" :key="sideId" class="team-kills-column">
             <div class="mb-2 text-lg font-bold text-black dark:text-white">
-                {{ getSideName(sideId) }} Losses
+                {{ getSideName(sideId) }} {{ t('kills') }}
             </div>
 
             <div class="attacker-list bg-background-800 shadow-lg rounded-lg border border-gray-700/30 overflow-hidden">
@@ -139,7 +139,7 @@
                     </component>
                 </div>
                 <div v-else class="empty-state">
-                    No kills found for this team.
+                    {{ t('noKillsFoundForThisTeam') }}
                 </div>
             </div>
         </div>
@@ -149,6 +149,9 @@
 <script setup lang="ts">
 import moment from 'moment';
 import { computed, ref } from 'vue';
+import { useI18n } from 'vue-i18n';
+
+const { t } = useI18n();
 
 // Define interfaces for props
 interface AttackerData {

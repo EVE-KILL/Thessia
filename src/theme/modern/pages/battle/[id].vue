@@ -1,7 +1,7 @@
 <template>
     <div class="p-4 bg-background-900 rounded-lg shadow-lg text-black dark:text-white">
         <!-- Loading state - Show when data is being fetched OR processed -->
-        <div v-if="pending || isProcessing || !dataFullyLoaded" class="flex flex-col items-center justify-center py-12">
+        <div v-if="pending" class="flex flex-col items-center justify-center py-12">
             <UIcon name="lucide:loader" class="w-12 h-12 animate-spin text-primary mb-4" />
             <span class="text-xl font-medium">{{ t('battle.loading') }}</span>
         </div>
@@ -112,21 +112,21 @@
                                 <UIcon name="lucide:coins" class="stat-icon text-yellow-500" />
                                 {{ t('battle.isk_lost') }}:
                             </div>
-                            <div class="stat-value">{{ formatIsk(totalIskLost) }} ISK</div>
+                            <div class="stat-value">{{ formatIsk(battle.battleSummary.totalIskLost) }} ISK</div>
                         </div>
                         <div class="stat-item">
                             <div class="stat-label">
                                 <UIcon name="lucide:ship" class="stat-icon" />
                                 {{ t('battle.ships_lost') }}:
                             </div>
-                            <div class="stat-value">{{ totalShipsLost }}</div>
+                            <div class="stat-value">{{ battle.battleSummary.totalShipsLost }}</div>
                         </div>
                         <div class="stat-item">
                             <div class="stat-label">
                                 <UIcon name="lucide:flame" class="stat-icon text-red-500" />
                                 {{ t('battle.damage_inflicted') }}:
                             </div>
-                            <div class="stat-value">{{ formatNumber(totalDamageInflicted) }}</div>
+                            <div class="stat-value">{{ formatNumber(battle.battleSummary.totalDamageInflicted) }}</div>
                         </div>
                     </div>
 
@@ -165,8 +165,9 @@
             </div>
 
             <!-- Teams Table -->
-            <BattleTeams :previewData="battle" :teamStats="teamData.stats" :teamAlliances="teamData.alliances"
-                :teamCorporations="teamData.corporations" :teamCharacters="teamData.characters" />
+            <BattleTeams :previewData="battle" :teamStats="battle.teamData.stats"
+                :teamAlliances="battle.teamData.alliances" :teamCorporations="battle.teamData.corporations"
+                :teamCharacters="battle.teamData.characters" />
 
             <!-- Tabs -->
             <div class="mb-4">
@@ -176,19 +177,20 @@
                         <BattleOverview v-if="battle" :battle="battle" />
                     </template>
                     <template #kills>
-                        <BattleKills :teamKills="teamData.kills" :sideIds="battle.side_ids" />
+                        <BattleKills :teamKills="battle.teamData.kills" :sideIds="battle.side_ids" />
                     </template>
                     <template #alliances>
-                        <BattleAlliances :teamAlliances="teamData.alliances" :sideIds="battle.side_ids" />
+                        <BattleAlliances :teamAlliances="battle.teamData.alliances" :sideIds="battle.side_ids" />
                     </template>
                     <template #corporations>
-                        <BattleCorporations :teamCorporations="teamData.corporations" :sideIds="battle.side_ids" />
+                        <BattleCorporations :teamCorporations="battle.teamData.corporations"
+                            :sideIds="battle.side_ids" />
                     </template>
                     <template #characters>
-                        <BattleCharacters :teamCharacters="teamData.characters" :sideIds="battle.side_ids" />
+                        <BattleCharacters :teamCharacters="battle.teamData.characters" :sideIds="battle.side_ids" />
                     </template>
                     <template #timeline>
-                        <BattleTimeline v-if="battle" :killmails="killmails" :battle="battle" />
+                        <BattleTimeline v-if="battle" :killmails="battle.killmails" :battle="battle" />
                     </template>
                 </Tabs>
             </div>
@@ -207,20 +209,7 @@ const router = useRouter();
 
 // State management
 const activeTabId = ref('');
-const isProcessing = ref(false);
 const isInvalidId = ref(false);
-const killmails = ref<any[]>([]);
-// Add a flag to track when data is fully loaded and processed
-const dataFullyLoaded = ref(false);
-
-// Team data structure
-const teamData = ref({
-    kills: {} as Record<string, any[]>,
-    stats: {} as Record<string, any>,
-    alliances: {} as Record<string, any[]>,
-    corporations: {} as Record<string, any[]>,
-    characters: {} as Record<string, any[]>
-});
 
 // Determine what we're fetching - battle ID or killmail
 const isKillmailMode = computed(() => Boolean(route.query.killmail));
@@ -242,138 +231,30 @@ const battleId = computed(() => {
     return String(paramId);
 });
 
-// Create API URL based on mode
+// Create API URL based on mode - always include killmails to avoid tab navigation issues
 const apiUrl = computed(() => {
     if (!battleId.value) return null;
 
+    // Always include killmails to ensure they're available for all tabs
+    const includeKillmailsParam = '?includeKillmails=true';
+
     return isKillmailMode.value
-        ? `/api/battles/killmail/${battleId.value}`
-        : `/api/battles/${battleId.value}`;
+        ? `/api/battles/killmail/${battleId.value}${includeKillmailsParam}`
+        : `/api/battles/${battleId.value}${includeKillmailsParam}`;
 });
 
-// Fetch battle data
+// Fetch battle data with killmails for all tabs
 const { data: battle, pending, error, refresh } = useFetch(() => apiUrl.value, {
-    key: computed(() => battleId.value ? `battle-${isKillmailMode.value ? 'killmail-' : ''}${battleId.value}` : null),
+    key: computed(() => battleId.value
+        ? `battle-${isKillmailMode.value ? 'killmail-' : ''}${battleId.value}`
+        : null),
     enabled: computed(() => !!battleId.value && !isInvalidId.value),
-    onRequest() {
-        // Reset the fully loaded flag when starting a new request
-        dataFullyLoaded.value = false;
-    }
 });
 
 // Function to refresh data
 const refreshData = async () => {
-    isProcessing.value = true;
-    dataFullyLoaded.value = false;
     await refresh();
-    isProcessing.value = false;
 };
-
-// Process battle data and fetch killmails
-watchEffect(async () => {
-    // Clear if no battle data or still loading
-    if (!battle.value || pending.value) {
-        dataFullyLoaded.value = false;
-        return;
-    }
-
-    try {
-        isProcessing.value = true;
-        dataFullyLoaded.value = false;
-
-        // Reset team data containers
-        teamData.value = {
-            kills: {},
-            stats: {},
-            alliances: {},
-            corporations: {},
-            characters: {}
-        };
-
-        // Get killmail IDs from battle data
-        const allKillmailIds = battle.value?.killmail_ids || [];
-        const uniqueKillmailIds = Array.from(new Set(allKillmailIds));
-
-        if (uniqueKillmailIds.length > 0) {
-            // Fetch killmails
-            const fetchedKillmails = await $fetch('/api/killmail/batch', {
-                method: 'POST',
-                body: { ids: uniqueKillmailIds },
-                timeout: 10000
-            });
-
-            if (fetchedKillmails && Array.isArray(fetchedKillmails)) {
-                // Create a map for quick lookups
-                const killmailMap = new Map(
-                    fetchedKillmails.map(km => [km.killmail_id, km])
-                );
-
-                // Populate killmails array sorted by time
-                killmails.value = uniqueKillmailIds
-                    .map(id => killmailMap.get(id))
-                    .filter(Boolean)
-                    .sort((a, b) => new Date(a.kill_time).getTime() - new Date(b.kill_time).getTime());
-
-                // Process team data
-                const sideIds = battle.value?.side_ids || [];
-
-                for (const sideId of sideIds) {
-                    if (battle.value?.sides?.[sideId]) {
-                        const side = battle.value.sides[sideId];
-
-                        // Populate team data
-                        teamData.value.stats[sideId] = side.stats || { iskLost: 0, shipsLost: 0, damageInflicted: 0 };
-                        teamData.value.alliances[sideId] = side.alliances_stats || [];
-                        teamData.value.corporations[sideId] = side.corporations_stats || [];
-                        teamData.value.characters[sideId] = side.characters_stats || [];
-
-                        // Populate team kills
-                        teamData.value.kills[sideId] = (side.kill_ids || [])
-                            .map(id => killmailMap.get(id))
-                            .filter(Boolean)
-                            .sort((a, b) => (b.total_value || 0) - (a.total_value || 0));
-                    }
-                }
-
-                // Set data fully loaded after all processing is complete
-                dataFullyLoaded.value = true;
-            } else {
-                console.error('Invalid killmail data received');
-                processTeamDataWithoutKillmails();
-                dataFullyLoaded.value = true;
-            }
-        } else {
-            processTeamDataWithoutKillmails();
-            dataFullyLoaded.value = true;
-        }
-    } catch (err) {
-        console.error('Error processing battle data:', err);
-        processTeamDataWithoutKillmails();
-        dataFullyLoaded.value = true;
-    } finally {
-        isProcessing.value = false;
-    }
-});
-
-// Process team data when killmails are unavailable
-function processTeamDataWithoutKillmails() {
-    killmails.value = [];
-
-    const sideIds = battle.value?.side_ids || [];
-    for (const sideId of sideIds) {
-        if (battle.value?.sides?.[sideId]) {
-            const side = battle.value.sides[sideId];
-            teamData.value.stats[sideId] = side.stats || { iskLost: 0, shipsLost: 0, damageInflicted: 0 };
-            teamData.value.alliances[sideId] = side.alliances_stats || [];
-            teamData.value.corporations[sideId] = side.corporations_stats || [];
-            teamData.value.characters[sideId] = side.characters_stats || [];
-            teamData.value.kills[sideId] = [];
-        }
-    }
-
-    // Important: mark data as fully loaded after processing is complete
-    dataFullyLoaded.value = true;
-}
 
 // Set up tab navigation with icons
 const tabItems = computed(() => [
@@ -390,7 +271,7 @@ const tabsUi = {
     tab: "p-2 text-sm font-semibold text-white rounded-lg bg-background-700 hover:bg-background-600 ml-2"
 };
 
-// Handle tab navigation and URL hash synchronization
+// Handle tab navigation and URL hash synchronization while preserving query parameters
 onMounted(() => {
     if (tabItems.value.length > 0) {
         const hash = route.hash.substring(1);
@@ -413,11 +294,12 @@ watch(() => route.hash, (newHash) => {
 });
 
 watch(activeTabId, (newId, oldId) => {
-    if (oldId &&
-        newId !== oldId &&
-        route.hash !== `#${newId}` &&
-        (route.hash || newId !== tabItems.value[0].id)) {
-        router.push({ hash: `#${newId}` });
+    if (oldId && newId !== oldId && route.hash !== `#${newId}`) {
+        // Preserve all query parameters when changing tabs
+        router.push({
+            hash: `#${newId}`,
+            query: route.query // Keep all query parameters including killmail
+        });
     }
 });
 
@@ -431,19 +313,6 @@ const primarySystem = computed(() => {
 
 const primarySystemRegionName = computed(() => {
     return primarySystem.value?.region_name || { en: t('battle.unknown_region') };
-});
-
-// Computed properties for battle statistics
-const totalIskLost = computed(() => {
-    return Object.values(teamData.value.stats).reduce((sum, stats) => sum + (stats?.iskLost || 0), 0);
-});
-
-const totalShipsLost = computed(() => {
-    return Object.values(teamData.value.stats).reduce((sum, stats) => sum + (stats?.shipsLost || 0), 0);
-});
-
-const totalDamageInflicted = computed(() => {
-    return Object.values(teamData.value.stats).reduce((sum, stats) => sum + (stats?.damageInflicted || 0), 0);
 });
 
 // SEO metadata
@@ -462,8 +331,8 @@ const seoData = computed(() => {
     const regionName = getLocalizedString(primarySystemRegionName.value, locale.value);
     const start = battle.value.start_time ? formatDate(battle.value.start_time) : '';
     const end = battle.value.end_time ? formatDate(battle.value.end_time) : '';
-    const isk = formatIsk(totalIskLost.value);
-    const ships = totalShipsLost.value;
+    const isk = formatIsk(battle.value.battleSummary?.totalIskLost || 0);
+    const ships = battle.value.battleSummary?.totalShipsLost || 0;
 
     const title = t('battle.seo.titlePattern', { systemName, regionName, start, end });
     const description = t('battle.seo.descriptionPattern', { systemName, regionName, start, end, isk, ships });
@@ -578,11 +447,6 @@ function groupSystemsByRegion() {
 
     return Array.from(regionMap.values());
 }
-
-// When component is destroyed, reset the fully loaded flag
-onBeforeUnmount(() => {
-    dataFullyLoaded.value = false;
-});
 </script>
 
 <style scoped>

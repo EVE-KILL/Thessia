@@ -3,7 +3,7 @@
         <!-- Dynamic Team Ships -->
         <div v-for="sideId in sideIds" :key="sideId" class="team-column">
             <div class="mb-2 text-lg font-bold text-black dark:text-white">
-                {{ getSideName(sideId) }} Ships
+                {{ getSideName(sideId) }} {{ t('ships') }}
             </div>
 
             <div class="attacker-list bg-background-800 shadow-lg rounded-lg border border-gray-700/30 overflow-hidden">
@@ -72,11 +72,11 @@
 
                             <div class="damage-container">
                                 <div class="damage-item damage-taken">
-                                    <span class="damage-label">Taken:</span>
+                                    <span class="damage-label">{{ t('damageTaken') }}:</span>
                                     {{ formatNumberWithLocale(item.damage_taken || 0) }}
                                 </div>
                                 <div class="damage-item damage-dealt">
-                                    <span class="damage-label">Dealt:</span>
+                                    <span class="damage-label">{{ t('damageDealt') }}:</span>
                                     {{ formatNumberWithLocale(item.damage_dealt || 0) }}
                                 </div>
                             </div>
@@ -98,6 +98,9 @@
 
 <script setup lang="ts">
 import { computed, nextTick, onMounted, onUnmounted, ref } from 'vue';
+import { useI18n } from 'vue-i18n';
+
+const { t } = useI18n();
 
 // Define the structure for a ship manifest entry
 interface ICharacterShipManifestEntry {

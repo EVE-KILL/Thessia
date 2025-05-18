@@ -1,7 +1,9 @@
-import { getBattleData } from "~/server/helpers/Battles";
+import { getBattleData, processBattleDataForFrontend } from "~/server/helpers/Battles";
 
 export default defineCachedEventHandler(async (event) => {
     const killmail_id = event.context.params?.id;
+    // Default to true unless explicitly set to false
+    const includeKillmails = event.context.query?.includeKillmails !== 'false';
 
     if (!killmail_id) {
         throw createError({
@@ -11,9 +13,16 @@ export default defineCachedEventHandler(async (event) => {
     }
 
     const killmailId = parseInt(killmail_id as string, 10);
-    const battleData = await getBattleData(killmailId);
+    const rawBattleData = await getBattleData(killmailId);
 
-    return battleData;
+    if (!rawBattleData) {
+        return null;
+    }
+
+    // Process the battle data for frontend consumption
+    const processedBattle = await processBattleDataForFrontend(rawBattleData, includeKillmails);
+
+    return processedBattle;
 }, {
     maxAge: 300,
     staleMaxAge: -1,
@@ -21,7 +30,8 @@ export default defineCachedEventHandler(async (event) => {
     base: "redis",
     getKey: (event) => {
         const idParam = event.context.params?.id;
-        return `battles:killmail:${idParam}:index`;
+        const includeKillmails = event.context.query?.includeKillmails !== 'false';
+        return `battles:killmail:${idParam}:${includeKillmails ? 'with-killmails' : 'index'}`;
     },
     shouldBypassCache: (event) => {
         return process.env.NODE_ENV !== "production";
