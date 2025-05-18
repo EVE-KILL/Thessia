@@ -1009,6 +1009,7 @@ export async function getBattleData(killmail_id: number): Promise<IBattlesDocume
         matchCriteria.battle_id = battle_id;
     }
 
+    // Use projection to only fetch the fields we need
     const killmails: IKillmail[] = await Killmails.find(
         matchCriteria,
         {
@@ -1017,8 +1018,8 @@ export async function getBattleData(killmail_id: number): Promise<IBattlesDocume
             kill_time: 1,
             system_id: 1,
             total_value: 1,
-            victim: 1,
-            attackers: 1,
+            victim: 1,  // Need full victim for team detection
+            attackers: 1 // Need full attackers for team detection
         }
     ).lean();
 
@@ -1032,6 +1033,34 @@ export async function getBattleData(killmail_id: number): Promise<IBattlesDocume
     return fullBattleObject;
 }
 
+// Define projection for needed killmail fields
+const KILLMAIL_PROJECTION = {
+    _id: 0,
+    killmail_id: 1,
+    kill_time: 1,
+    system_id: 1,
+    total_value: 1,
+    'victim.ship_id': 1,
+    'victim.ship_name': 1,
+    'victim.character_id': 1,
+    'victim.character_name': 1,
+    'victim.corporation_id': 1,
+    'victim.corporation_name': 1,
+    'victim.alliance_id': 1,
+    'victim.alliance_name': 1,
+    'victim.damage_taken': 1,
+    'attackers.character_id': 1,
+    'attackers.character_name': 1,
+    'attackers.corporation_id': 1,
+    'attackers.corporation_name': 1,
+    'attackers.alliance_id': 1,
+    'attackers.alliance_name': 1,
+    'attackers.ship_id': 1,
+    'attackers.ship_name': 1,
+    'attackers.damage_done': 1,
+    'attackers.final_blow': 1
+};
+
 /**
  * Processes battle data to include all necessary derived information for frontend display.
  * This moves heavy computation from client to server.
@@ -1043,11 +1072,6 @@ export async function getBattleData(killmail_id: number): Promise<IBattlesDocume
 export async function processBattleDataForFrontend(battle: IBattlesDocument, includeKillmails: boolean = true): Promise<any> {
     if (!battle) return null;
 
-    // Create a processed version of the battle with all computed properties
-    const processedBattle = JSON.parse(JSON.stringify(battle)); // Deep clone to avoid modifying original
-
-    const sideIds = battle.side_ids || [];
-
     // Initialize team data structure similar to frontend's teamData
     const teamData = {
         kills: {} as Record<string, any[]>,
@@ -1057,37 +1081,8 @@ export async function processBattleDataForFrontend(battle: IBattlesDocument, inc
         characters: {} as Record<string, any[]>
     };
 
-    // Extract all killmail IDs for batch fetching
-    const allKillmailIds = battle.killmail_ids || [];
-    const uniqueKillmailIds = Array.from(new Set(allKillmailIds));
-
-    // Fetch all killmails if needed (for detailed views)
-    let killmailMap = new Map();
+    const sideIds = battle.side_ids || [];
     let killmailArray: any[] = [];
-
-    if (uniqueKillmailIds.length > 0 && includeKillmails) {
-        try {
-            // Fetch killmails from database in batches
-            const killmails = await Killmails.find(
-                { killmail_id: { $in: uniqueKillmailIds } },
-                { _id: 0 }
-            ).lean();
-
-            // Create a map for quick lookups
-            killmailMap = new Map(
-                killmails.map(km => [km.killmail_id, km])
-            );
-
-            // Populate killmails array sorted by time
-            killmailArray = uniqueKillmailIds
-                .map(id => killmailMap.get(id))
-                .filter(Boolean)
-                .sort((a, b) => new Date(a.kill_time).getTime() - new Date(b.kill_time).getTime());
-        } catch (error) {
-            console.error("Error fetching killmails for battle:", error);
-            // Continue with empty killmail data
-        }
-    }
 
     // Process team data for each side
     for (const sideId of sideIds) {
@@ -1100,15 +1095,47 @@ export async function processBattleDataForFrontend(battle: IBattlesDocument, inc
             teamData.corporations[sideId] = side.corporations_stats || [];
             teamData.characters[sideId] = side.characters_stats || [];
 
-            // Populate team kills if killmails were fetched
-            if (includeKillmails && killmailMap.size > 0) {
-                teamData.kills[sideId] = (side.kill_ids || [])
+            // Initialize kills array for this side
+            teamData.kills[sideId] = [];
+        }
+    }
+
+    // Fetch all killmails with projection to reduce payload size
+    if (includeKillmails) {
+        const allKillmailIds = battle.killmail_ids || [];
+        const uniqueKillmailIds = Array.from(new Set(allKillmailIds));
+
+        if (uniqueKillmailIds.length > 0) {
+            try {
+                // Use projection to only fetch the fields we need
+                const killmails = await Killmails.find(
+                    { killmail_id: { $in: uniqueKillmailIds } },
+                    KILLMAIL_PROJECTION
+                ).lean();
+
+                // Create a map for quick lookups
+                const killmailMap = new Map(
+                    killmails.map(km => [km.killmail_id, km])
+                );
+
+                // Populate killmails array sorted by time
+                killmailArray = uniqueKillmailIds
                     .map(id => killmailMap.get(id))
                     .filter(Boolean)
-                    .sort((a, b) => (b.total_value || 0) - (a.total_value || 0));
-            } else {
-                // Even if we don't have killmails, initialize the array
-                teamData.kills[sideId] = [];
+                    .sort((a, b) => new Date(a.kill_time).getTime() - new Date(b.kill_time).getTime());
+
+                // Populate team kills
+                for (const sideId of sideIds) {
+                    if (battle.sides?.[sideId]) {
+                        teamData.kills[sideId] = (battle.sides[sideId].kill_ids || [])
+                            .map(id => killmailMap.get(id))
+                            .filter(Boolean)
+                            .sort((a, b) => (b.total_value || 0) - (a.total_value || 0));
+                    }
+                }
+            } catch (error) {
+                console.error("Error fetching killmails for battle:", error);
+                // Continue with empty killmail data
             }
         }
     }
@@ -1128,7 +1155,21 @@ export async function processBattleDataForFrontend(battle: IBattlesDocument, inc
 
     // Return enhanced battle data with all computed values
     return {
-        ...processedBattle,
+        battle_id: battle.battle_id,
+        start_time: battle.start_time,
+        end_time: battle.end_time,
+        duration_ms: battle.duration_ms,
+        systems: battle.systems,
+        killmailsCount: battle.killmailsCount,
+        iskDestroyed: battle.iskDestroyed,
+        involved_alliances_count: battle.involved_alliances_count,
+        involved_corporations_count: battle.involved_corporations_count,
+        involved_characters_count: battle.involved_characters_count,
+        side_ids: battle.side_ids,
+        sides: battle.sides,
+        top_alliances: battle.top_alliances,
+        top_corporations: battle.top_corporations,
+        top_ship_types: battle.top_ship_types,
         teamData,
         killmails: includeKillmails ? killmailArray : [],
         battleSummary: {

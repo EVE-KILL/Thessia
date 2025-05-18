@@ -138,18 +138,18 @@ export async function calculateAllStats(type: StatsType, id: number, days: numbe
     // Early check: Determine if there are any killmails at all for this entity
     const killMatchCondition: any = { [`attackers.${type}`]: id };
     const lossMatchCondition: any = { [`victim.${type}`]: id };
-    
+
     if (timeFilter) {
         killMatchCondition.kill_time = timeFilter;
         lossMatchCondition.kill_time = timeFilter;
     }
-    
+
     // Check if there are any kills or losses for this entity
     const [killsExist, lossesExist] = await Promise.all([
         Killmails.countDocuments(killMatchCondition).limit(1).lean(),
         Killmails.countDocuments(lossMatchCondition).limit(1).lean()
     ]);
-    
+
     // If there are no kills and no losses, return zero stats immediately
     if (killsExist === 0 && lossesExist === 0) {
         return {

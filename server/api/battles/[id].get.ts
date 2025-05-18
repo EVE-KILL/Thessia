@@ -1,10 +1,10 @@
 import { createError } from 'h3';
-import { processBattleDataForFrontend } from '~/server/helpers/Battles';
 import { Battles } from '~/server/models/Battles';
+import { processBattleDataForFrontend } from '~/server/helpers/Battles';
 
 export default defineCachedEventHandler(async (event) => {
     const idParam = event.context.params?.id;
-    // Default to true unless explicitly set to false
+    // Default to true to ensure data is available for all tabs
     const includeKillmails = event.context.query?.includeKillmails !== 'false';
 
     if (!idParam) {
@@ -18,15 +18,16 @@ export default defineCachedEventHandler(async (event) => {
     }
 
     try {
+        // Get battle data with lean() to get a plain JS object
         const rawBattle = await Battles.findOne({ battle_id: battleId }).lean();
 
         if (!rawBattle) {
             throw createError({ statusCode: 404, statusMessage: 'battle not found' });
         }
 
-        // Process the battle data for frontend consumption
+        // Process the battle data using the helper function
         const processedBattle = await processBattleDataForFrontend(rawBattle, includeKillmails);
-
+        
         return processedBattle;
     } catch (error: any) {
         if (error.name === 'CastError') {

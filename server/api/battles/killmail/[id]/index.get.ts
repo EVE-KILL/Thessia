@@ -2,7 +2,7 @@ import { getBattleData, processBattleDataForFrontend } from "~/server/helpers/Ba
 
 export default defineCachedEventHandler(async (event) => {
     const killmail_id = event.context.params?.id;
-    // Default to true unless explicitly set to false
+    // Default to true to ensure data is available for all tabs
     const includeKillmails = event.context.query?.includeKillmails !== 'false';
 
     if (!killmail_id) {
@@ -14,14 +14,14 @@ export default defineCachedEventHandler(async (event) => {
 
     const killmailId = parseInt(killmail_id as string, 10);
     const rawBattleData = await getBattleData(killmailId);
-
+    
     if (!rawBattleData) {
         return null;
     }
-
-    // Process the battle data for frontend consumption
+    
+    // Process the battle data using the helper function
     const processedBattle = await processBattleDataForFrontend(rawBattleData, includeKillmails);
-
+    
     return processedBattle;
 }, {
     maxAge: 300,
