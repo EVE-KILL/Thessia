@@ -135,6 +135,40 @@ export async function calculateAllStats(type: StatsType, id: number, days: numbe
         ? { $gte: new Date(Date.now() - days * 24 * 60 * 60 * 1000) }
         : undefined;
 
+    // Early check: Determine if there are any killmails at all for this entity
+    const killMatchCondition: any = { [`attackers.${type}`]: id };
+    const lossMatchCondition: any = { [`victim.${type}`]: id };
+    
+    if (timeFilter) {
+        killMatchCondition.kill_time = timeFilter;
+        lossMatchCondition.kill_time = timeFilter;
+    }
+    
+    // Check if there are any kills or losses for this entity
+    const [killsExist, lossesExist] = await Promise.all([
+        Killmails.countDocuments(killMatchCondition).limit(1).lean(),
+        Killmails.countDocuments(lossMatchCondition).limit(1).lean()
+    ]);
+    
+    // If there are no kills and no losses, return zero stats immediately
+    if (killsExist === 0 && lossesExist === 0) {
+        return {
+            type,
+            id,
+            days,
+            kills: 0,
+            losses: 0,
+            iskKilled: 0,
+            iskLost: 0,
+            npcLosses: 0,
+            soloKills: 0,
+            soloLosses: 0,
+            lastActive: null,
+            full,
+            updatedAt: new Date(),
+        };
+    }
+
     // Run base stats calculations in parallel for better performance
     const [
         basicStats,
