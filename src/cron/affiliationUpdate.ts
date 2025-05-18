@@ -32,24 +32,29 @@ export default {
          * 5. Beyond that the character is updated monthly
          */
 
+        // Try an alternative approach: restructure the query to avoid $ne which can be problematic for indexes
         const queries = [
             {
-                last_active: { $gt: new Date(Date.now() - 1000 * 60 * 60 * 24 * 30) }, // Active in last 30 days
-                updatedAt: { $lt: new Date(Date.now() - 1000 * 60 * 60 * 24 * 1) }, // Updated more than 1 day ago
+                query: {
+                    deleted: false, // Use exact match instead of $ne
+                    last_active: { $gt: new Date(Date.now() - 1000 * 60 * 60 * 24 * 30) }, // Active in last 30 days
+                    updatedAt: { $lt: new Date(Date.now() - 1000 * 60 * 60 * 24 * 1) }, // Updated more than 1 day ago
+                }
             },
             {
-                last_active: { $lte: new Date(Date.now() - 1000 * 60 * 60 * 24 * 30) }, // Not active in last 30 days
-                updatedAt: { $lt: new Date(Date.now() - 1000 * 60 * 60 * 24 * 14) }, // Updated more than 14 days ago
+                query: {
+                    deleted: false, // Use exact match instead of $ne
+                    last_active: { $lte: new Date(Date.now() - 1000 * 60 * 60 * 24 * 30) }, // Not active in last 30 days
+                    updatedAt: { $lt: new Date(Date.now() - 1000 * 60 * 60 * 24 * 14) }, // Updated more than 14 days ago
+                }
             },
         ];
 
         const characters = [];
-        for (const query of queries) {
+        for (const { query } of queries) {
+            const startTime = Date.now();
             const chunk = await Characters.find(
-                {
-                    deleted: { $ne: true },
-                    ...query,
-                },
+                query,
                 {
                     _id: 0,
                     character_id: 1,
@@ -58,8 +63,11 @@ export default {
                 },
                 {
                     limit: limit,
-                },
-            );
+                }
+            ); // Let MongoDB choose the best index
+
+            const queryTime = Date.now() - startTime;
+            cliLogger.info(`Query executed in ${queryTime}ms, found ${chunk.length} characters`);
 
             for (const character of chunk) {
                 characters.push(character);

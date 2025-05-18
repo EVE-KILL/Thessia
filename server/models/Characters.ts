@@ -56,8 +56,6 @@ charactersSchema.index({ alliance_id: 1 }, { sparse: true }); // Sparse index on
 charactersSchema.index({ faction_id: 1 }, { sparse: true }); // Sparse index on faction_id
 charactersSchema.index({ last_active: 1 }, { sparse: true }); // Sparse index on last_active
 charactersSchema.index({ updatedAt: 1 }, { sparse: true }); // Sparse index on updatedAt
-charactersSchema.index({ deleted: 1, last_active: 1, updatedAt: 1 }, { sparse: true });
-charactersSchema.index({ deleted: 1, updatedAt: 1, last_active: 1 }, { sparse: true });
 
 // Hook to update Meilisearch on new document save
 charactersSchema.post<ICharacterDocument>('save', async function (doc) {
