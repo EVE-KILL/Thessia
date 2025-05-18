@@ -1,8 +1,8 @@
+import { cliLogger } from "~/server/helpers/Logger";
 import { createQueue } from '~/server/helpers/Queue';
 import { calculateAllStats } from '~/server/helpers/Stats';
 import { IStatsDocument, StatsType } from '~/server/interfaces/IStats';
 import { Stats } from '~/server/models/Stats';
-import { cliLogger } from "~/server/helpers/Logger";
 
 const statsQueue = createQueue('stats');
 
@@ -11,19 +11,19 @@ const statsQueue = createQueue('stats');
  */
 function validateStatsEntity(entityType: StatsType | undefined, entityId: number | undefined): boolean {
     const validTypes = ['character_id', 'corporation_id', 'alliance_id'];
-    
+
     // Check type validity
     if (!entityType || !validTypes.includes(entityType)) {
         cliLogger.warn(`Stats queue: Skipping invalid entity type: ${entityType}`);
         return false;
     }
-    
+
     // Check ID validity
     if (entityId === undefined || entityId === null || isNaN(entityId) || entityId <= 0) {
         cliLogger.warn(`Stats queue: Skipping invalid entity ID: ${entityId} for type ${entityType}`);
         return false;
     }
-    
+
     return true;
 }
 

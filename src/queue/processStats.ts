@@ -9,19 +9,19 @@ import { processStats } from "~/server/queue/Stats";
 function validateJobData(job: Job): boolean {
     const validTypes = ['character_id', 'corporation_id', 'alliance_id'];
     const { entityType, entityId } = job.data;
-    
+
     // Check type validity
     if (!entityType || !validTypes.includes(entityType)) {
         cliLogger.warn(`Invalid stats job: Missing or invalid entity type: ${entityType}`);
         return false;
     }
-    
+
     // Check ID validity
     if (entityId === undefined || entityId === null || isNaN(entityId) || entityId <= 0) {
         cliLogger.warn(`Invalid stats job: Missing or invalid entity ID: ${entityId} for type ${entityType}`);
         return false;
     }
-    
+
     return true;
 }
 
@@ -39,7 +39,7 @@ export default {
                     cliLogger.info(`Stats worker: Discarding invalid job #${job.id}`);
                     return null; // Return null to mark job as completed, removing it from queue
                 }
-                
+
                 // Process valid job
                 return await processStats(
                     job.data.entityType,

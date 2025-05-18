@@ -8,26 +8,26 @@ import { IKillmail } from '../interfaces/IKillmail';
  * Validates that the entity type is a valid StatsType and entity ID is valid
  * to prevent problematic database queries
  */
-function validateEntity(type: StatsType | undefined, id: number | undefined): { 
-  valid: boolean; 
-  type: StatsType; 
-  id: number;
+function validateEntity(type: StatsType | undefined, id: number | undefined): {
+    valid: boolean;
+    type: StatsType;
+    id: number;
 } {
     const validTypes = ['character_id', 'corporation_id', 'alliance_id'];
     const defaultType: StatsType = 'character_id';
-    
+
     // Check type validity
     if (!type || !validTypes.includes(type)) {
         console.error(`Invalid entity type: ${type}. Skipping entity processing.`);
         return { valid: false, type: defaultType, id: 0 };
     }
-    
+
     // Check ID validity
     if (id === undefined || id === null || isNaN(id) || id <= 0) {
         console.error(`Invalid entity ID: ${id} for type ${type}. Skipping entity processing.`);
         return { valid: false, type, id: 0 };
     }
-    
+
     return { valid: true, type, id };
 }
 
@@ -66,7 +66,7 @@ export async function updateStatsOnKillmailProcessing(killmail: IKillmail): Prom
     );
 
     // Filter out any entities with undefined type or id (additional safeguard)
-    const validEntities = uniqueEntities.filter(entity => 
+    const validEntities = uniqueEntities.filter(entity =>
         entity.type && entity.id && typeof entity.id === 'number' && entity.id > 0
     );
 
@@ -88,10 +88,10 @@ export async function updateStatsOnKillmailProcessing(killmail: IKillmail): Prom
         if (!validation.valid) {
             continue; // Skip this entity if validation failed
         }
-        
+
         const validType = validation.type;
         const validId = validation.id;
-        
+
         for (const days of timePeriodsToUpdate) {
             const update: any = { $set: { needsUpdate: true, updatedAt: new Date() }, $inc: {} };
 
@@ -150,14 +150,14 @@ export async function calculateAllStats(type: StatsType, id: number, days: numbe
     if (!validation.valid) {
         // Return empty stats with valid: false indicator when validation fails
         console.log(`Skipping stats calculation for invalid entity: type=${type}, id=${id}`);
-        
+
         // Initialize heat map for empty result
         const heatMap: Record<string, number> = {};
         for (let i = 0; i < 24; i++) {
             const hourString = `h${i.toString().padStart(2, "0")}`;
             heatMap[hourString] = 0;
         }
-        
+
         // Return empty stats document
         return {
             type: validation.type,
@@ -187,11 +187,11 @@ export async function calculateAllStats(type: StatsType, id: number, days: numbe
             updatedAt: new Date(),
         };
     }
-    
+
     // Use validated values
     type = validation.type;
     id = validation.id;
-    
+
     if (days < 0) {
         days = 90;
     }
@@ -354,7 +354,7 @@ async function getCharacterSpecificStats(id: number, timeFilter?: { $gte: Date }
         console.error(`Invalid character ID: ${id}. Skipping character-specific stats.`);
         return { possibleFC: false, possibleCynoAlt: false };
     }
-    
+
     // Prepare match condition for losses
     const lossMatchCondition: any = { "victim.character_id": id };
     if (timeFilter) {
@@ -412,11 +412,11 @@ async function getBasicStats(type: StatsType, id: number, timeFilter?: { $gte: D
             lastActive: null
         };
     }
-    
+
     // Use validated values
     type = validation.type;
     id = validation.id;
-    
+
     // Prepare match conditions
     const killMatchCondition: any = { [`attackers.${type}`]: id };
     const lossMatchCondition: any = { [`victim.${type}`]: id };
@@ -600,11 +600,11 @@ async function getShipStats(type: StatsType, id: number, timeFilter?: { $gte: Da
         console.error(`Invalid entity for ship stats: type=${type}, id=${id}`);
         return { mostUsedShips: {}, mostLostShips: {} };
     }
-    
+
     // Use validated values
     type = validation.type;
     id = validation.id;
-    
+
     // Prepare match conditions
     const killMatchCondition: any = { [`attackers.${type}`]: id };
     const lossMatchCondition: any = { [`victim.${type}`]: id };
@@ -738,11 +738,11 @@ async function getHeatMapData(type: StatsType, id: number, timeFilter?: { $gte: 
         console.error(`Invalid entity for heat map: type=${type}, id=${id}`);
         return [];
     }
-    
+
     // Use validated values
     type = validation.type;
     id = validation.id;
-    
+
     const matchCondition: any = { [`attackers.${type}`]: id };
 
     if (timeFilter) {
@@ -787,11 +787,11 @@ async function getBlobFactorData(type: StatsType, id: number, timeFilter?: { $gt
         console.error(`Invalid entity for blob factor: type=${type}, id=${id}`);
         return { blobCount: 0 };
     }
-    
+
     // Use validated values
     type = validation.type;
     id = validation.id;
-    
+
     const matchCondition: any = { [`attackers.${type}`]: id };
 
     if (timeFilter) {
