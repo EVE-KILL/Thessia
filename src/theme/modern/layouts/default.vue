@@ -1,12 +1,20 @@
 <script setup lang="ts">
+import { computed, onMounted } from "vue";
+import { useI18n } from "vue-i18n";
+import { useZoom } from "~/src/theme/modern/composables/useZoom";
+
 const { getOptimizedImageUrl, getSiteBackground } = siteBackground();
 const backgroundRef = getSiteBackground();
 const backgroundUrl = computed(() => {
     return getOptimizedImageUrl(backgroundRef.value);
 });
+const { t } = useI18n();
 
 useHead({
-    link: [{ rel: "preload", as: "image", href: backgroundUrl.value }],
+    link: [
+        { rel: "preload", as: "image", href: backgroundUrl.value },
+        { rel: "icon", type: "image/png", href: "/favicon.png" }
+    ],
 });
 
 useSeoMeta({
@@ -29,14 +37,18 @@ useSeoMeta({
     ogLocale: "en_US",
 });
 
-useHead({
-    link: [
-        {
-            rel: "icon",
-            type: "image/png",
-            href: "/favicon.png",
-        },
-    ],
+// Initialize zoom composable for application-wide use
+const { applyZoom } = useZoom({
+    defaultZoom: 100,
+    minZoom: 70,
+    maxZoom: 150
+});
+
+// Apply zoom on client-side mount
+onMounted(() => {
+    if (import.meta.client) {
+        applyZoom();
+    }
 });
 </script>
 
@@ -67,6 +79,9 @@ useHead({
         <BackgroundViewer />
         <!-- Global scroll-to-top button -->
         <ScrollTo targetSelector="#content" icon="lucide:arrow-up" title="Scroll to top" />
+
+        <!-- Add ZoomControls with vertical button layout above other UI components -->
+        <ZoomControls :bottom-offset="140" :right-offset="20" :button-spacing="15" size="sm" />
 
         <!-- Self-contained Spooderman Easter Egg -->
         <SpoodermanEasterEgg />

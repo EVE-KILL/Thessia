@@ -14,20 +14,6 @@ useHead({
         },
     ]
 });
-
-// Initialize zoom composable for application-wide use
-const { applyZoom } = useZoom({
-    defaultZoom: 100,
-    minZoom: 70,
-    maxZoom: 150
-});
-
-// Apply zoom on client-side mount
-onMounted(() => {
-    if (import.meta.client) {
-        applyZoom();
-    }
-});
 </script>
 
 <style global>
@@ -50,8 +36,5 @@ html {
         <NuxtLayout>
             <NuxtPage />
         </NuxtLayout>
-
-        <!-- Add ZoomControls with vertical button layout above other UI components -->
-        <ZoomControls :bottom-offset="140" :right-offset="20" :button-spacing="15" size="sm" />
     </UApp>
 </template>

@@ -4,6 +4,33 @@ import { Killmails } from "~/server/models/Killmails";
 import { Stats } from "~/server/models/Stats";
 import { IKillmail } from '../interfaces/IKillmail';
 
+/**
+ * Validates that the entity type is a valid StatsType and entity ID is valid
+ * to prevent problematic database queries
+ */
+function validateEntity(type: StatsType | undefined, id: number | undefined): { 
+  valid: boolean; 
+  type: StatsType; 
+  id: number;
+} {
+    const validTypes = ['character_id', 'corporation_id', 'alliance_id'];
+    const defaultType: StatsType = 'character_id';
+    
+    // Check type validity
+    if (!type || !validTypes.includes(type)) {
+        console.error(`Invalid entity type: ${type}. Skipping entity processing.`);
+        return { valid: false, type: defaultType, id: 0 };
+    }
+    
+    // Check ID validity
+    if (id === undefined || id === null || isNaN(id) || id <= 0) {
+        console.error(`Invalid entity ID: ${id} for type ${type}. Skipping entity processing.`);
+        return { valid: false, type, id: 0 };
+    }
+    
+    return { valid: true, type, id };
+}
+
 export async function updateStatsOnKillmailProcessing(killmail: IKillmail): Promise<void> {
     const involvedEntities: { type: StatsType; id: number }[] = [];
     const killTime = new Date(killmail.kill_time);
@@ -38,6 +65,11 @@ export async function updateStatsOnKillmailProcessing(killmail: IKillmail): Prom
             index === self.findIndex((e) => e.type === entity.type && e.id === entity.id)
     );
 
+    // Filter out any entities with undefined type or id (additional safeguard)
+    const validEntities = uniqueEntities.filter(entity => 
+        entity.type && entity.id && typeof entity.id === 'number' && entity.id > 0
+    );
+
     const timePeriodsToUpdate = [0]; // Always update all-time stats
     const now = Date.now();
     if (now - killTime.getTime() < 14 * 24 * 60 * 60 * 1000) {
@@ -50,14 +82,23 @@ export async function updateStatsOnKillmailProcessing(killmail: IKillmail): Prom
         timePeriodsToUpdate.push(90);
     }
 
-    for (const entity of uniqueEntities) {
+    for (const entity of validEntities) {
+        // Validate entity to prevent attackers.undefined queries
+        const validation = validateEntity(entity.type, entity.id);
+        if (!validation.valid) {
+            continue; // Skip this entity if validation failed
+        }
+        
+        const validType = validation.type;
+        const validId = validation.id;
+        
         for (const days of timePeriodsToUpdate) {
             const update: any = { $set: { needsUpdate: true, updatedAt: new Date() }, $inc: {} };
 
             // Determine if this entity was a victim or an attacker in this specific killmail
-            const isVictim = killmail.victim.character_id === entity.id && entity.type === "character_id" ||
-                killmail.victim.corporation_id === entity.id && entity.type === "corporation_id" ||
-                killmail.victim.alliance_id === entity.id && entity.type === "alliance_id";
+            const isVictim = killmail.victim.character_id === validId && validType === "character_id" ||
+                killmail.victim.corporation_id === validId && validType === "corporation_id" ||
+                killmail.victim.alliance_id === validId && validType === "alliance_id";
 
             if (isVictim) {
                 update.$inc.losses = 1;
@@ -71,9 +112,9 @@ export async function updateStatsOnKillmailProcessing(killmail: IKillmail): Prom
             } else {
                 // Check if this entity is among the attackers
                 const attackerInfo = killmail.attackers.find(a =>
-                    (a.character_id === entity.id && entity.type === "character_id") ||
-                    (a.corporation_id === entity.id && entity.type === "corporation_id") ||
-                    (a.alliance_id === entity.id && entity.type === "alliance_id")
+                    (a.character_id === validId && validType === "character_id") ||
+                    (a.corporation_id === validId && validType === "corporation_id") ||
+                    (a.alliance_id === validId && validType === "alliance_id")
                 );
                 if (attackerInfo) {
                     update.$inc.kills = 1;
@@ -85,12 +126,12 @@ export async function updateStatsOnKillmailProcessing(killmail: IKillmail): Prom
             }
 
             // Update lastActive, ensuring it's only set if the killTime is more recent
-            update.$set.lastActive = killTime > (await Stats.findOne({ type: entity.type, id: entity.id, days: days }, { lastActive: 1 })?.lean()?.then(s => s?.lastActive) || new Date(0)) ? killTime : undefined;
+            update.$set.lastActive = killTime > (await Stats.findOne({ type: validType, id: validId, days: days }, { lastActive: 1 })?.lean()?.then(s => s?.lastActive) || new Date(0)) ? killTime : undefined;
             if (update.$set.lastActive === undefined) delete update.$set.lastActive; // don't set if not newer
 
             if (Object.keys(update.$inc).length > 0) { // Only update if there are increments
                 await Stats.findOneAndUpdate(
-                    { type: entity.type, id: entity.id, days: days },
+                    { type: validType, id: validId, days: days },
                     update,
                     { upsert: true, setDefaultsOnInsert: true }
                 );
@@ -104,6 +145,53 @@ export async function updateStatsOnKillmailProcessing(killmail: IKillmail): Prom
  * Optimized version for entities with large numbers of killmails.
  */
 export async function calculateAllStats(type: StatsType, id: number, days: number): Promise<IStatsDocument> {
+    // Validate entity parameters to prevent attackers.undefined queries
+    const validation = validateEntity(type, id);
+    if (!validation.valid) {
+        // Return empty stats with valid: false indicator when validation fails
+        console.log(`Skipping stats calculation for invalid entity: type=${type}, id=${id}`);
+        
+        // Initialize heat map for empty result
+        const heatMap: Record<string, number> = {};
+        for (let i = 0; i < 24; i++) {
+            const hourString = `h${i.toString().padStart(2, "0")}`;
+            heatMap[hourString] = 0;
+        }
+        
+        // Return empty stats document
+        return {
+            type: validation.type,
+            id: validation.id,
+            days,
+            kills: 0,
+            losses: 0,
+            iskKilled: 0,
+            iskLost: 0,
+            npcLosses: 0,
+            soloKills: 0,
+            soloLosses: 0,
+            lastActive: null,
+            full: {
+                mostUsedShips: {},
+                mostLostShips: {},
+                diesToCorporations: {},
+                diesToAlliances: {},
+                blobFactor: 0,
+                heatMap,
+                fliesWithCorporations: {},
+                fliesWithAlliances: {},
+                sameShipAsOtherAttackers: 0,
+                possibleFC: false,
+                possibleCynoAlt: false,
+            },
+            updatedAt: new Date(),
+        };
+    }
+    
+    // Use validated values
+    type = validation.type;
+    id = validation.id;
+    
     if (days < 0) {
         days = 90;
     }
@@ -261,6 +349,12 @@ export async function calculateAllStats(type: StatsType, id: number, days: numbe
  * Get character-specific stats like possibleFC and possibleCynoAlt
  */
 async function getCharacterSpecificStats(id: number, timeFilter?: { $gte: Date }, kills: number = 0): Promise<{ possibleFC: boolean, possibleCynoAlt: boolean }> {
+    // Validate ID before proceeding
+    if (!id || isNaN(id) || id <= 0) {
+        console.error(`Invalid character ID: ${id}. Skipping character-specific stats.`);
+        return { possibleFC: false, possibleCynoAlt: false };
+    }
+    
     // Prepare match condition for losses
     const lossMatchCondition: any = { "victim.character_id": id };
     if (timeFilter) {
@@ -303,6 +397,26 @@ async function getCharacterSpecificStats(id: number, timeFilter?: { $gte: Date }
  * Get basic kill and loss statistics using individual optimized queries
  */
 async function getBasicStats(type: StatsType, id: number, timeFilter?: { $gte: Date }) {
+    // Validate entity parameters to prevent attackers.undefined queries
+    const validation = validateEntity(type, id);
+    if (!validation.valid) {
+        console.error(`Invalid entity for basic stats: type=${type}, id=${id}`);
+        return {
+            kills: 0,
+            losses: 0,
+            iskKilled: 0,
+            iskLost: 0,
+            soloKills: 0,
+            soloLosses: 0,
+            npcLosses: 0,
+            lastActive: null
+        };
+    }
+    
+    // Use validated values
+    type = validation.type;
+    id = validation.id;
+    
     // Prepare match conditions
     const killMatchCondition: any = { [`attackers.${type}`]: id };
     const lossMatchCondition: any = { [`victim.${type}`]: id };
@@ -480,6 +594,17 @@ async function getSampledCountWithCondition(baseCondition: any, field: string, v
  * Optimized with sampling for extremely large datasets and early ship filtering
  */
 async function getShipStats(type: StatsType, id: number, timeFilter?: { $gte: Date }) {
+    // Validate entity parameters to prevent attackers.undefined queries
+    const validation = validateEntity(type, id);
+    if (!validation.valid) {
+        console.error(`Invalid entity for ship stats: type=${type}, id=${id}`);
+        return { mostUsedShips: {}, mostLostShips: {} };
+    }
+    
+    // Use validated values
+    type = validation.type;
+    id = validation.id;
+    
     // Prepare match conditions
     const killMatchCondition: any = { [`attackers.${type}`]: id };
     const lossMatchCondition: any = { [`victim.${type}`]: id };
@@ -607,6 +732,17 @@ async function getShipStats(type: StatsType, id: number, timeFilter?: { $gte: Da
  * Get heat map data (kills by hour) with sampling for large datasets
  */
 async function getHeatMapData(type: StatsType, id: number, timeFilter?: { $gte: Date }) {
+    // Validate entity parameters to prevent attackers.undefined queries
+    const validation = validateEntity(type, id);
+    if (!validation.valid) {
+        console.error(`Invalid entity for heat map: type=${type}, id=${id}`);
+        return [];
+    }
+    
+    // Use validated values
+    type = validation.type;
+    id = validation.id;
+    
     const matchCondition: any = { [`attackers.${type}`]: id };
 
     if (timeFilter) {
@@ -645,6 +781,17 @@ async function getHeatMapData(type: StatsType, id: number, timeFilter?: { $gte: 
  * Get blob factor data with sampling for large datasets
  */
 async function getBlobFactorData(type: StatsType, id: number, timeFilter?: { $gte: Date }) {
+    // Validate entity parameters to prevent attackers.undefined queries
+    const validation = validateEntity(type, id);
+    if (!validation.valid) {
+        console.error(`Invalid entity for blob factor: type=${type}, id=${id}`);
+        return { blobCount: 0 };
+    }
+    
+    // Use validated values
+    type = validation.type;
+    id = validation.id;
+    
     const matchCondition: any = { [`attackers.${type}`]: id };
 
     if (timeFilter) {
