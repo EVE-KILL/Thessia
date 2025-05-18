@@ -1,6 +1,6 @@
 import { createError } from 'h3';
-import { Battles } from '~/server/models/Battles';
 import { processBattleDataForFrontend } from '~/server/helpers/Battles';
+import { Battles } from '~/server/models/Battles';
 
 export default defineCachedEventHandler(async (event) => {
     const idParam = event.context.params?.id;
@@ -27,7 +27,7 @@ export default defineCachedEventHandler(async (event) => {
 
         // Process the battle data using the helper function
         const processedBattle = await processBattleDataForFrontend(rawBattle, includeKillmails);
-        
+
         return processedBattle;
     } catch (error: any) {
         if (error.name === 'CastError') {

@@ -14,14 +14,14 @@ export default defineCachedEventHandler(async (event) => {
 
     const killmailId = parseInt(killmail_id as string, 10);
     const rawBattleData = await getBattleData(killmailId);
-    
+
     if (!rawBattleData) {
         return null;
     }
-    
+
     // Process the battle data using the helper function
     const processedBattle = await processBattleDataForFrontend(rawBattleData, includeKillmails);
-    
+
     return processedBattle;
 }, {
     maxAge: 300,
