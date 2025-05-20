@@ -6,7 +6,7 @@ import { CACHE_NAMESPACES, getCacheHitCount, getCacheSize } from "~/server/helpe
 import { RedisStorage } from "~/server/helpers/Storage";
 
 const startTime = new Date();
-export default defineCachedEventHandler(async () => {
+export default defineEventHandler(async () => {
     const allianceQueue = createQueue("alliance");
     const corporationQueue = createQueue("corporation");
     const characterQueue = createQueue("character");
@@ -601,19 +601,4 @@ export default defineCachedEventHandler(async () => {
         cacheHits,
         redis: redisStats,
     };
-}, {
-    maxAge: 60, // Using a maxAge of 60 seconds for status information
-    staleMaxAge: -1,
-    swr: true,
-    base: "redis", // Assuming redis is the default cache base
-    shouldBypassCache: (event) => {
-        return process.env.NODE_ENV !== "production";
-    },
-    getKey: (event) => {
-        // Construct a unique key for this endpoint.
-        // For `server/api/status/index.get.ts`, if it takes no parameters,
-        // a static key like "status:index" would be appropriate.
-        // If it takes query parameters, include them in the key.
-        return "status:index"; // Adjust if parameters are used
-    }
 });
