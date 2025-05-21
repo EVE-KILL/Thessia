@@ -40,13 +40,22 @@ export default defineCachedEventHandler(async (event: H3Event) => {
     shouldBypassCache: (event) => {
         return process.env.NODE_ENV !== "production";
     },
-    getKey: (event) => {
+    getKey: async (event) => {
         // Access the parameter directly and add a check for robustness
         const campaignId = event.context.params?.id;
+        const campaignData = await Campaigns.findOne({
+            campaign_id: campaignId,
+        }, {
+            query: 1
+        });
+
+        const query = JSON.stringify(campaignData.query);
+
         if (!campaignId) {
             console.error('Campaign ID is missing in getKey for stats endpoint');
             return 'campaign:missing-id:stats';
         }
-        return `campaign:${campaignId}:stats`;
+
+        return `campaign:${campaignId}:stats:${query}`;
     }
 });
