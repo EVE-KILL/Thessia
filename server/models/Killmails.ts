@@ -115,6 +115,9 @@ const indexes = [
     { fields: { createdAt: -1 }, options: { sparse: true } },
     { fields: { updatedAt: -1 }, options: { sparse: true } },
 
+    // Shard key index - must keep this or sharding breaks!
+    { fields: { killmail_id: "hashed" }, options: {} },
+
     // Victim entity indexes - highly used in queries
     { fields: { "victim.character_id": -1, kill_time: -1 }, options: { sparse: true } },
     { fields: { "victim.corporation_id": -1, kill_time: -1 }, options: { sparse: true } },
@@ -302,29 +305,67 @@ killmailsSchema.on("index", (error) => {
 });
 
 // After creating the model, compute allowed index names from our definitions.
-// The auto-generated name is computed by concatenating each key and its value in order.
-const computeIndexName = (fields: Record<string, number>) =>
-    Object.entries(fields)
-        .map(([key, val]) => `${key}_${val}`)
-        .join("_");
+// This improved version accounts for custom index names
+const allowedIndexNames = new Set();
 
-const allowedIndexNames = new Set(indexes.map((idx) => computeIndexName(idx.fields)));
+// Add all auto-generated names
+indexes.forEach(({ fields, options }) => {
+    // If there's a custom name, use that
+    if (options && options.name) {
+        allowedIndexNames.add(options.name);
+    } else {
+        // Otherwise compute the auto-generated name
+        const indexName = Object.entries(fields)
+            .map(([key, val]) => `${key}_${val}`)
+            .join("_");
+        allowedIndexNames.add(indexName);
+    }
+});
 
-// Drop any index on the collection that doesn't match the allowed names (except _id)
+// Add names of core indexes that must be preserved
+allowedIndexNames.add("_id_");
+allowedIndexNames.add("killmail_id_hashed");
+allowedIndexNames.add("killmail_id_-1_killmail_hash_-1");
+
+// Drop any index on the collection that doesn't match the allowed names
 Killmails.collection
     .indexes()
     .then(async (currentIndexes) => {
         for (const idx of currentIndexes) {
-            if (idx.name !== "_id_" && !allowedIndexNames.has(idx.name)) {
-                try {
-                    await Killmails.collection.dropIndex(idx.name);
-                    cliLogger.info(`Dropped index ${idx.name}`);
-                } catch (err) {
-                    console.error(`Error dropping index ${idx.name}:`, err);
-                }
+            // Skip if this is one of our allowed indexes
+            if (allowedIndexNames.has(idx.name)) {
+                continue;
+            }
+
+            try {
+                await Killmails.collection.dropIndex(idx.name);
+                cliLogger.info(`Dropped index ${idx.name}`);
+            } catch (err) {
+                console.error(`Error dropping index ${idx.name}:`, err);
             }
         }
     })
     .catch((err) => {
         console.error("Error fetching indexes:", err);
     });
+
+// Add the sharding configuration after model initialization
+// This should be run when your application starts
+export const setupKillmailsSharding = async () => {
+    try {
+        const { enableSharding } = await import("~/server/helpers/Mongoose");
+        const dbName = Killmails.db.name;
+
+        // Best option for write distribution
+        const shardKey = { killmail_id: "hashed" } as any;
+
+        // Ensure the shard key has an index (MongoDB requires this)
+        await Killmails.collection.createIndex(shardKey);
+
+        // Enable sharding
+        return await enableSharding(dbName, "killmails", shardKey);
+    } catch (error) {
+        cliLogger.error(`Error setting up Killmails sharding: ${error}`);
+        return false;
+    }
+};

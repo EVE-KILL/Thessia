@@ -1,5 +1,6 @@
 import { Schema, model, type Document } from 'mongoose';
 import type { IFullStats, StatsType } from '~/server/interfaces/IStats';
+import { cliLogger } from '../helpers/Logger';
 
 export interface IStatsDocument extends Document {
     type: StatsType;
@@ -59,6 +60,30 @@ const StatsSchema = new Schema<IStatsDocument>({
 });
 
 StatsSchema.index({ type: 1, id: 1, days: 1 }, { unique: true });
+// Use a prefix of the unique index instead of just hashed id
+StatsSchema.index({ type: 1, id: 1 });
 
 const StatsModel = model<IStatsDocument>('stats', StatsSchema, 'stats');
 export { StatsModel as Stats };
+
+// Add the sharding configuration for Stats collection
+export const setupStatsSharding = async () => {
+    try {
+        const { enableSharding } = await import("~/server/helpers/Mongoose");
+        const dbName = StatsModel.db.name;
+
+        // When a collection has a unique index, the shard key must be a prefix of that index
+        // Original unique index is { type: 1, id: 1, days: 1 }
+        const shardKey = { type: 1, id: 1 } as any;
+
+        // Ensure the shard key has an index
+        await StatsModel.collection.createIndex(shardKey);
+
+        // Enable sharding
+        return await enableSharding(dbName, "stats", shardKey);
+    } catch (error) {
+        cliLogger.error(`Error setting up Stats sharding: ${error}`);
+        return false;
+    }
+};
+

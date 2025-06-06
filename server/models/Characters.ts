@@ -56,6 +56,7 @@ charactersSchema.index({ alliance_id: 1 }, { sparse: true }); // Sparse index on
 charactersSchema.index({ faction_id: 1 }, { sparse: true }); // Sparse index on faction_id
 charactersSchema.index({ last_active: 1 }, { sparse: true }); // Sparse index on last_active
 charactersSchema.index({ updatedAt: 1 }, { sparse: true }); // Sparse index on updatedAt
+charactersSchema.index({ character_id: "hashed" }); // Add shard key index to indexes
 
 // Hook to update Meilisearch on new document save
 charactersSchema.post<ICharacterDocument>('save', async function (doc) {
@@ -83,3 +84,23 @@ export const Characters: Model<ICharacterDocument> = model<ICharacterDocument>(
     charactersSchema,
     "characters", // Explicitly specifying the collection name
 );
+
+// Add the sharding configuration for Characters collection
+export const setupCharactersSharding = async () => {
+    try {
+        const { enableSharding } = await import("~/server/helpers/Mongoose");
+        const dbName = Characters.db.name;
+
+        // Use hashed character_id as shard key
+        const shardKey = { character_id: "hashed" } as any;
+
+        // Ensure the shard key has an index
+        await Characters.collection.createIndex(shardKey);
+
+        // Enable sharding
+        return await enableSharding(dbName, "characters", shardKey);
+    } catch (error) {
+        cliLogger.error(`Error setting up Characters sharding: ${error}`);
+        return false;
+    }
+};

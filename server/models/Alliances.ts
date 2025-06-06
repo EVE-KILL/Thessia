@@ -40,6 +40,7 @@ alliancesSchema.index({ creator_corporation_id: 1 }, { sparse: true }); // Spars
 alliancesSchema.index({ executor_corporation_id: 1 }, { sparse: true }); // Sparse index on executor_corporation_id
 alliancesSchema.index({ createdAt: 1 }, { sparse: true }); // Sparse index on createdAt
 alliancesSchema.index({ updatedAt: 1 }, { sparse: true }); // Sparse index on updatedAt
+alliancesSchema.index({ alliance_id: "hashed" }); // Add shard key index to indexes
 
 // Hook to update Meilisearch on new document save
 alliancesSchema.post<IAllianceDocument>('save', async function (doc) {
@@ -68,3 +69,23 @@ export const Alliances: Model<IAllianceDocument> = model<IAllianceDocument>(
     alliancesSchema,
     "alliances", // Explicitly specifying the collection name
 );
+
+// Add the sharding configuration for Alliances collection
+export const setupAlliancesSharding = async () => {
+    try {
+        const { enableSharding } = await import("~/server/helpers/Mongoose");
+        const dbName = Alliances.db.name;
+
+        // Use hashed alliance_id as shard key
+        const shardKey = { alliance_id: "hashed" } as any;
+
+        // Ensure the shard key has an index
+        await Alliances.collection.createIndex(shardKey);
+
+        // Enable sharding
+        return await enableSharding(dbName, "alliances", shardKey);
+    } catch (error) {
+        cliLogger.error(`Error setting up Alliances sharding: ${error}`);
+        return false;
+    }
+};

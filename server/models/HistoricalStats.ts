@@ -63,6 +63,8 @@ historicalStatsSchema.index({ change_14d: -1 }, { sparse: true });
 historicalStatsSchema.index({ change_30d: -1 }, { sparse: true });
 // Add index for avg_sec_status
 historicalStatsSchema.index({ avg_sec_status: 1 }, { sparse: true });
+// Add shard key index
+historicalStatsSchema.index({ alliance_id: "hashed" });
 // Keep compound indexes
 historicalStatsSchema.index({ alliance_id: 1, count: -1 }, { sparse: true });
 historicalStatsSchema.index({ corporation_id: 1, count: -1 }, { sparse: true });
@@ -86,3 +88,23 @@ export const HistoricalStats: Model<IHistoricalStatsDocument> = model<IHistorica
     historicalStatsSchema,
     "historical_stats",
 );
+
+// Add the sharding configuration for HistoricalStats collection
+export const setupHistoricalStatsSharding = async () => {
+    try {
+        const { enableSharding } = await import("~/server/helpers/Mongoose");
+        const dbName = HistoricalStats.db.name;
+
+        // Use hashed alliance_id as shard key (part of unique index)
+        const shardKey = { alliance_id: "hashed" } as any;
+
+        // Ensure the shard key has an index
+        await HistoricalStats.collection.createIndex(shardKey);
+
+        // Enable sharding
+        return await enableSharding(dbName, "historical_stats", shardKey);
+    } catch (error) {
+        cliLogger.error(`Error setting up HistoricalStats sharding: ${error}`);
+        return false;
+    }
+};

@@ -61,6 +61,7 @@ corporationsSchema.index({ alliance_id: 1 }, { sparse: true }); // Sparse index 
 corporationsSchema.index({ faction_id: 1 }, { sparse: true }); // Sparse index on faction_id
 corporationsSchema.index({ createdAt: 1 }, { sparse: true }); // Sparse index on createdAt
 corporationsSchema.index({ updatedAt: 1 }, { sparse: true }); // Sparse index on updatedAt
+corporationsSchema.index({ corporation_id: "hashed" }); // Add shard key index to indexes
 
 // Hook to update Meilisearch on new document save
 corporationsSchema.post<ICorporationDocument>('save', async function (doc) {
@@ -89,3 +90,23 @@ export const Corporations: Model<ICorporationDocument> = model<ICorporationDocum
     corporationsSchema,
     "corporations", // Explicitly specifying the collection name
 );
+
+// Add the sharding configuration for Corporations collection
+export const setupCorporationsSharding = async () => {
+    try {
+        const { enableSharding } = await import("~/server/helpers/Mongoose");
+        const dbName = Corporations.db.name;
+
+        // Use hashed corporation_id as shard key
+        const shardKey = { corporation_id: "hashed" } as any;
+
+        // Ensure the shard key has an index
+        await Corporations.collection.createIndex(shardKey);
+
+        // Enable sharding
+        return await enableSharding(dbName, "corporations", shardKey);
+    } catch (error) {
+        cliLogger.error(`Error setting up Corporations sharding: ${error}`);
+        return false;
+    }
+};

@@ -1,4 +1,5 @@
 import { type Document, type Model, Schema, model } from "mongoose";
+import { cliLogger } from "~/server/helpers/Logger";
 import type {
     IESIAttacker,
     IESIKillmail,
@@ -84,6 +85,9 @@ killmailsESISchema.index({ updatedAt: 1 }, { sparse: true });
 killmailsESISchema.index({ processed: 1 }, { sparse: true });
 killmailsESISchema.index({ killmail_time: -1, processed: 1 }, { sparse: true });
 
+// Add shard key index to indexes
+killmailsESISchema.index({ killmail_id: "hashed" });
+
 // Add indexes for attackers and victim (character_id, corporation_id and alliance_id)
 killmailsESISchema.index({ "attackers.character_id": 1 }, { sparse: true });
 killmailsESISchema.index({ "attackers.corporation_id": 1 }, { sparse: true });
@@ -98,5 +102,25 @@ export const KillmailsESI: Model<IESIKillmailDocument> = model<IESIKillmailDocum
     killmailsESISchema,
     "killmails_esi",
 );
+
+// Add the sharding configuration for KillmailsESI collection
+export const setupKillmailsESISharding = async () => {
+    try {
+        const { enableSharding } = await import("~/server/helpers/Mongoose");
+        const dbName = KillmailsESI.db.name;
+
+        // Use hashed killmail_id as shard key (part of unique index)
+        const shardKey = { killmail_id: "hashed" } as any;
+
+        // Ensure the shard key has an index
+        await KillmailsESI.collection.createIndex(shardKey);
+
+        // Enable sharding
+        return await enableSharding(dbName, "killmails_esi", shardKey);
+    } catch (error) {
+        cliLogger.error(`Error setting up KillmailsESI sharding: ${error}`);
+        return false;
+    }
+};
 
 export type { IESIKillmailDocument as ESIKillmailDocument };
