@@ -122,6 +122,125 @@ const indexes = [
     { fields: { "victim.ship_id": -1, kill_time: -1 }, options: { sparse: true } },
     { fields: { "victim.ship_group_id": -1, kill_time: -1 }, options: { sparse: true } },
 
+    // Optimized index for T1 ships
+    {
+        fields: { "victim.ship_group_id": 1, kill_time: -1 }, options: {
+            partialFilterExpression: { "victim.ship_group_id": { $in: [419, 27, 29, 547, 26, 420, 25, 28, 941, 463, 237, 31] } },
+            name: "victim.ship_group_id_t1_kill_time_-1"
+        }
+    },
+    // Optimized index for T2 ships
+    {
+        fields: { "victim.ship_group_id": 1, kill_time: -1 }, options: {
+            partialFilterExpression: { "victim.ship_group_id": { $in: [324, 898, 906, 540, 830, 893, 543, 541, 833, 358, 894, 831, 902, 832, 900, 834, 380] } },
+            name: "victim.ship_group_id_t2_kill_time_-1"
+        }
+    },
+    // Optimized index for T3 ships
+    {
+        fields: { "victim.ship_group_id": 1, kill_time: -1 }, options: {
+            partialFilterExpression: { "victim.ship_group_id": { $in: [963, 1305] } },
+            name: "victim.ship_group_id_t3_kill_time_-1"
+        }
+    },
+    // Optimized index for frigates
+    {
+        fields: { "victim.ship_group_id": 1, kill_time: -1 }, options: {
+            partialFilterExpression: { "victim.ship_group_id": { $in: [324, 893, 25, 831, 237] } },
+            name: "victim.ship_group_id_frigate_kill_time_-1"
+        }
+    },
+    // Optimized index for cruisers
+    {
+        fields: { "victim.ship_group_id": 1, kill_time: -1 }, options: {
+            partialFilterExpression: { "victim.ship_group_id": { $in: [906, 26, 833, 358, 894, 832, 963] } },
+            name: "victim.ship_group_id_cruiser_kill_time_-1"
+        }
+    },
+    // Optimized index for destroyers
+    {
+        fields: { "victim.ship_group_id": 1, kill_time: -1 }, options: {
+            partialFilterExpression: { "victim.ship_group_id": { $in: [420, 541] } },
+            name: "victim.ship_group_id_destroyer_kill_time_-1"
+        }
+    },
+    // Optimized index for battlecruisers
+    {
+        fields: { "victim.ship_group_id": 1, kill_time: -1 }, options: {
+            partialFilterExpression: { "victim.ship_group_id": { $in: [419, 540] } },
+            name: "victim.ship_group_id_battlecruiser_kill_time_-1"
+        }
+    },
+    // Optimized index for battleships
+    {
+        fields: { "victim.ship_group_id": 1, kill_time: -1 }, options: {
+            partialFilterExpression: { "victim.ship_group_id": { $in: [27, 898, 900] } },
+            name: "victim.ship_group_id_battleship_kill_time_-1"
+        }
+    },
+    // Optimized index for capitals
+    {
+        fields: { "victim.ship_group_id": 1, kill_time: -1 }, options: {
+            partialFilterExpression: { "victim.ship_group_id": { $in: [547, 485] } },
+            name: "victim.ship_group_id_capital_kill_time_-1"
+        }
+    },
+    // Optimized index for freighters
+    {
+        fields: { "victim.ship_group_id": 1, kill_time: -1 }, options: {
+            partialFilterExpression: { "victim.ship_group_id": { $in: [513, 902] } },
+            name: "victim.ship_group_id_freighter_kill_time_-1"
+        }
+    },
+    // Optimized index for supercarriers
+    {
+        fields: { "victim.ship_group_id": 1, kill_time: -1 }, options: {
+            partialFilterExpression: { "victim.ship_group_id": { $in: [659] } },
+            name: "victim.ship_group_id_supercarrier_kill_time_-1"
+        }
+    },
+    // Optimized index for titans
+    {
+        fields: { "victim.ship_group_id": 1, kill_time: -1 }, options: {
+            partialFilterExpression: { "victim.ship_group_id": { $in: [30] } },
+            name: "victim.ship_group_id_titan_kill_time_-1"
+        }
+    },
+    // Optimized index for citadels
+    {
+        fields: { "victim.ship_group_id": 1, kill_time: -1 }, options: {
+            partialFilterExpression: { "victim.ship_group_id": { $in: [1657, 1406, 1404, 1408, 2017, 2016] } },
+            name: "victim.ship_group_id_citadel_kill_time_-1"
+        }
+    },
+    // Optimized index for "big" ships (combined capitals, supercarriers, titans)
+    {
+        fields: { "victim.ship_group_id": 1, kill_time: -1 }, options: {
+            partialFilterExpression: { "victim.ship_group_id": { $in: [547, 485, 513, 902, 941, 30, 659] } },
+            name: "victim.ship_group_id_big_kill_time_-1"
+        }
+    },
+
+    // Optimized security level indexes
+    {
+        fields: { system_security: 1, kill_time: -1 }, options: {
+            partialFilterExpression: { system_security: { $gte: 0.45 } },
+            name: "system_security_highsec_kill_time_-1"
+        }
+    },
+    {
+        fields: { system_security: 1, kill_time: -1 }, options: {
+            partialFilterExpression: { system_security: { $lte: 0.45, $gte: 0 } },
+            name: "system_security_lowsec_kill_time_-1"
+        }
+    },
+    {
+        fields: { system_security: 1, kill_time: -1 }, options: {
+            partialFilterExpression: { system_security: { $lte: 0 } },
+            name: "system_security_nullsec_kill_time_-1"
+        }
+    },
+
     // Attacker entity indexes - highly used in queries
     { fields: { "attackers.character_id": -1, kill_time: -1 }, options: { sparse: true } },
     { fields: { "attackers.corporation_id": -1, kill_time: -1 }, options: { sparse: true } },
@@ -142,6 +261,7 @@ const indexes = [
     { fields: { "items.type_id": -1, kill_time: -1 }, options: { sparse: true } },
 
     // Location indexes
+    { fields: { system_security: -1 }, options: { sparse: true } },
     { fields: { system_id: -1, kill_time: -1 }, options: { sparse: true } },
     { fields: { region_id: -1, kill_time: -1 }, options: { sparse: true } },
     { fields: { constellation_id: -1, kill_time: -1 }, options: { sparse: true } },

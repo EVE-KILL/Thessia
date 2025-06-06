@@ -1,6 +1,7 @@
 // models/HistoricalStats.ts
 
 import { type Document, type Model, Schema, model } from "mongoose";
+import { cliLogger } from "~/server/helpers/Logger";
 import type { IHistoricalStats } from "~/server/interfaces/IHistoricalStats"; // Adjust the path as necessary
 
 // Extend the IHistoricalStats interface with Mongoose's Document interface

@@ -36,7 +36,7 @@ const invTypesSchema = new Schema<IInvTypeDocument>(
     type_variations: { type: Object },
     produced_by_blueprints: { type: Object },
     used_in_blueprints: { type: Object },
-    engineering_rig_source_type_ids: { type: [Number] },
+    engineering_rig_source_type_ids: { type: Object },
     variation_parent_type_id: { type: Number }, // new field added
     updatedAt: { type: Date },
     createdAt: { type: Date },
