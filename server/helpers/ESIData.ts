@@ -103,6 +103,16 @@ async function getCharacter(
     const existingCharacter = await Characters.findOne({ character_id: character_id });
     data.history = data.history || existingCharacter?.history || [];
 
+    // Ensure ESI takes precedence for alliance and faction fields
+    if (!data.alliance_id || data.alliance_id === 0) {
+        data.alliance_id = 0;
+        data.alliance_name = "";
+    }
+    if (!data.faction_id || data.faction_id === 0) {
+        data.faction_id = 0;
+        data.faction_name = "";
+    }
+
     // Only queue history update if:
     // 1. Character isn't deleted
     // 2. Current corporation_id doesn't match latest history entry
@@ -208,6 +218,16 @@ async function getCorporation(corporation_id: number, force_update = false): Pro
     const existingCorporation = await Corporations.findOne({ corporation_id: corporation_id });
     data.history = data.history || existingCorporation?.history || [];
 
+    // Ensure ESI takes precedence for alliance and faction fields
+    if (!data.alliance_id || data.alliance_id === 0) {
+        data.alliance_id = 0;
+        data.alliance_name = "";
+    }
+    if (!data.faction_id || data.faction_id === 0) {
+        data.faction_id = 0;
+        data.faction_name = "";
+    }
+
     // Only queue history update if:
     // 1. Current alliance_id doesn't match latest history entry
     // 2. We have no history entries
@@ -271,6 +291,12 @@ async function getAlliance(alliance_id: number, force_update = false): Promise<I
 
     // Add alliance_id to data
     data.alliance_id = alliance_id;
+
+    // Ensure ESI takes precedence for faction fields
+    if (!data.faction_id || data.faction_id === 0) {
+        data.faction_id = 0;
+        data.faction_name = "";
+    }
 
     // Save alliance to database
     const allianceModel = new Alliances(data);
