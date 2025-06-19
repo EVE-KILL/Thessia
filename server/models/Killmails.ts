@@ -317,10 +317,10 @@ Killmails.collection
         for (const idx of currentIndexes) {
             if (idx.name !== "_id_" && !allowedIndexNames.has(idx.name)) {
                 try {
-                    await Killmails.collection.dropIndex(idx.name);
-                    cliLogger.info(`Dropped index ${idx.name}`);
+                    //await Killmails.collection.dropIndex(idx.name);
+                    //cliLogger.info(`Dropped index ${idx.name}`);
                 } catch (err) {
-                    console.error(`Error dropping index ${idx.name}:`, err);
+                    //console.error(`Error dropping index ${idx.name}:`, err);
                 }
             }
         }
