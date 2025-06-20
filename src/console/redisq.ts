@@ -5,7 +5,7 @@ export default {
   description: "Listen to zKillboards redisQ and import killmails from it",
   longRunning: true,
   run: async () => {
-    const queueUrl = `https://redisq.zkillboard.com/listen.php?queueID=${process.env.REDISQ_ID}`;
+    const queueUrl = `https://zkillredisq.stream/listen.php?queueID=${process.env.REDISQ_ID}`;
     const pollRedisQ = async () => {
       try {
         const response = await fetch(queueUrl, {
