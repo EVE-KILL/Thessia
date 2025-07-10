@@ -61,7 +61,7 @@
         "vue-echarts": "^7.0.3",
         "vue-router": "^4.5.1",
         "yaml": "^2.8.0",
-        "zod": "^3.25.67"
+        "zod": "^4.0.2"
     },
     "devDependencies": {
         "@biomejs/biome": "^2.0.0",
