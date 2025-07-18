@@ -11,7 +11,7 @@ spec:
   successfulJobsHistoryLimit: {{ .Values.cron.successfulJobsHistoryLimit }}
   failedJobsHistoryLimit: {{ .Values.cron.failedJobsHistoryLimit }}
   startingDeadlineSeconds: {{ .Values.cron.startingDeadlineSeconds }}
-  concurrencyPolicy: Allow
+  concurrencyPolicy: Forbid
   jobTemplate:
     spec:
       activeDeadlineSeconds: {{ .Values.cron.activeDeadlineSeconds }}
