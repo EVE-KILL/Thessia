@@ -1089,7 +1089,7 @@ if (facets.value.length === 0) {
 
             <!-- Filters Section -->
             <div class="mb-6">
-                <UCard class="filter-card bg-blue-50 dark:bg-blue-900/20 border-0 overflow-visible">
+                <UCard class="filter-card bg-blue-50 dark:bg-blue-900/20 border-0 !overflow-visible">
                     <template #header>
                         <div class="flex justify-between items-center">
                             <h2 class="text-lg font-bold">{{ $t('filters') }}</h2>
@@ -1303,7 +1303,7 @@ if (facets.value.length === 0) {
 
             <!-- Sort and limit controls -->
             <div class="mb-6">
-                <UCard class="options-card bg-green-50 dark:bg-green-900/20 border-0 overflow-visible">
+                <UCard class="options-card bg-green-50 dark:bg-green-900/20 border-0 !overflow-visible">
                     <template #header>
                         <h2 class="text-lg font-bold">{{ $t('options') }}</h2>
                     </template>
