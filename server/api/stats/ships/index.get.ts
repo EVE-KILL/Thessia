@@ -84,7 +84,7 @@ async function topLostShips(
 
 export default defineCachedEventHandler(async (event) => {
     const query = getQuery(event);
-    
+
     // Parse dates if provided
     const dateFrom = query.from ? new Date(query.from as string) : null;
     const dateTo = query.to ? new Date(query.to as string) : null;
@@ -115,7 +115,7 @@ export default defineCachedEventHandler(async (event) => {
 
     try {
         const results = await topLostShips(dateFrom, dateTo, limit);
-        
+
         return {
             success: true,
             data: results,
