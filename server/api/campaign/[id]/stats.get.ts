@@ -18,7 +18,7 @@ export default defineCachedEventHandler(async (event: H3Event) => {
     try {
         // First, get the campaign to check processing status
         const campaign = await Campaigns.findOne({ campaign_id: campaignId }).lean();
-        
+
         if (!campaign) {
             throw createError({
                 statusCode: 404,
@@ -34,7 +34,7 @@ export default defineCachedEventHandler(async (event: H3Event) => {
 
         // Get processing status
         const processingStatus = await getCampaignProcessingStatus(campaignId);
-        
+
         // If not processing and no processed data, queue it
         if (!processingStatus || processingStatus.status === 'pending') {
             await queueCampaignProcessing(campaignId, 5);
@@ -52,6 +52,7 @@ export default defineCachedEventHandler(async (event: H3Event) => {
             description: campaign.description,
             startTime: campaign.startTime,
             endTime: campaign.endTime,
+            public: campaign.public,
             campaignQuery: campaign.query
         };
     } catch (error: any) {

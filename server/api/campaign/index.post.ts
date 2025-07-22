@@ -33,7 +33,7 @@ export default defineEventHandler(async (event) => {
         const user = session.user;
 
         // Validate required fields
-        const { name, description, startTime, endTime, query, campaign_id } = await readBody(event);
+        const { name, description, startTime, endTime, query, campaign_id, public: isPublic } = await readBody(event);
         const isUpdate = !!campaign_id;
 
         if (!name || typeof name !== 'string' || !name.trim()) {
@@ -79,7 +79,7 @@ export default defineEventHandler(async (event) => {
         // Validate entity limits in query
         validateEntityLimits(query);
 
-        // Create campaign document with creator ID from authenticated user
+                // Create campaign document with creator ID from authenticated user
         const campaignData = {
             name: name.trim(),
             description: description?.trim(),
@@ -87,7 +87,7 @@ export default defineEventHandler(async (event) => {
             endTime: endTimeDate,
             query,
             creator_id: user.characterId, // Add creator ID from authenticated user
-            public: true // Default to public for now
+            public: isPublic !== undefined ? Boolean(isPublic) : true // Use provided value or default to true
         };
 
         // If we're updating an existing campaign

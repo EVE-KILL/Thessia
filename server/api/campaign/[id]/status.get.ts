@@ -13,7 +13,7 @@ export default defineEventHandler(async (event) => {
 
     try {
         const status = await getCampaignProcessingStatus(campaignId);
-        
+
         if (!status) {
             throw createError({
                 statusCode: 404,

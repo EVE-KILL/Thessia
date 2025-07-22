@@ -21,6 +21,7 @@ const campaignName = ref("");
 const campaignDescription = ref("");
 const campaignStartTime = ref(""); // ISO string format from datetime-local
 const campaignEndTime = ref("");   // ISO string format from datetime-local
+const campaignPublic = ref(true);  // Public by default
 
 // --- Fixed Filter Structure ---
 // Define the entity limits
@@ -464,6 +465,7 @@ function populateFormFields(campaignData: any) {
     // Basic fields
     campaignName.value = campaignData.name || '';
     campaignDescription.value = campaignData.description || '';
+    campaignPublic.value = campaignData.public !== undefined ? campaignData.public : true;
 
     // Format dates for datetime-local inputs
     if (campaignData.startTime) {
@@ -711,7 +713,8 @@ const handleCreateCampaign = async () => {
         description: campaignDescription.value?.trim(),
         startTime: campaignStartTime.value,
         endTime: campaignEndTime.value || null,
-        query: campaignQuery.value
+        query: campaignQuery.value,
+        public: campaignPublic.value
     };
 
     // If in edit mode, add campaign_id to the data
@@ -840,6 +843,18 @@ const submitButtonText = computed(() => {
                                 </label>
                                 <textarea id="campaignDescription" class="custom-input" v-model="campaignDescription"
                                     :placeholder="$t('enterCampaignDescription')" rows="3"></textarea>
+                            </div>
+                            <div>
+                                <div class="flex items-center space-x-3">
+                                    <input type="checkbox" id="campaignPublic" v-model="campaignPublic" 
+                                        class="h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded">
+                                    <label for="campaignPublic" class="text-sm font-medium text-gray-700 dark:text-gray-300">
+                                        {{ $t('campaignCreator.public') }}
+                                    </label>
+                                </div>
+                                <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                                    {{ $t('campaignCreator.publicDescription') }}
+                                </p>
                             </div>
                         </div>
                     </UCard>

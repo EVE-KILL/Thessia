@@ -13,7 +13,7 @@ export default {
         try {
             // Get all campaigns that need updating
             const campaignsToUpdate = await getCampaignsNeedingUpdate(now);
-            
+
             if (campaignsToUpdate.length === 0) {
                 cliLogger.info("ℹ️  No campaigns need updating at this time");
                 return;

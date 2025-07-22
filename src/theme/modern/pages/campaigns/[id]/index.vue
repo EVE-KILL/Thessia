@@ -36,7 +36,14 @@
             <!-- Campaign Header - Full Width -->
             <div class="campaign-header mb-6">
                 <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-4">
-                    <h1 class="text-2xl font-bold">{{ stats.name }}</h1>
+                    <div class="flex items-center gap-3">
+                        <h1 class="text-2xl font-bold">{{ stats.name }}</h1>
+                        <!-- Privacy indicator - only show if private and user is creator -->
+                        <UBadge v-if="!stats.public && isCreator" color="orange" variant="soft" size="sm">
+                            <UIcon name="lucide:lock" class="w-3 h-3 mr-1" />
+                            {{ t('campaign.private') }}
+                        </UBadge>
+                    </div>
                     <div class="flex flex-col md:flex-row gap-2 items-end md:items-center">
                         <!-- Edit button - only show for campaign creator -->
                         <UButton v-if="isCreator" :to="`/campaigncreator?campaignId=${campaignId}`" size="sm"
@@ -322,12 +329,12 @@ const { data: stats, pending, error, refresh } = await useFetch<ICampaignOutput>
 // Start polling if campaign is processing
 const startPolling = () => {
     if (isPolling.value) return;
-    
+
     isPolling.value = true;
     pollingInterval.value = setInterval(async () => {
         try {
             await refresh();
-            
+
             // Stop polling if processing is complete or failed
             if (stats.value && (!stats.value.processing || stats.value.status === 'completed' || stats.value.status === 'failed')) {
                 stopPolling();
@@ -367,14 +374,14 @@ const retryProcessing = async () => {
         await $fetch(`/api/campaign/${campaignId.value}/reprocess`, {
             method: 'POST'
         });
-        
+
         toast.add({
             title: t('success'),
             description: t('campaign.reprocess_queued'),
             color: 'green',
             timeout: 3000
         });
-        
+
         // Refresh the stats and start polling
         await refresh();
         startPolling();

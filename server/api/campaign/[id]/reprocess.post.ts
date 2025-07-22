@@ -15,7 +15,7 @@ export default defineEventHandler(async (event) => {
     try {
         // Check if campaign exists
         const campaign = await Campaigns.findOne({ campaign_id: campaignId }).lean();
-        
+
         if (!campaign) {
             throw createError({
                 statusCode: 404,
