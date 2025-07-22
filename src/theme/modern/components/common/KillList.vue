@@ -67,7 +67,7 @@ const fetchKey = computed(() => {
     // props.apiEndpoint is crucial.
     // queryParams.value.page and queryParams.value.limit are also important for pagination.
     // Add any other props or reactive values that alter the fetch request.
-    return `killlist-${props.apiEndpoint}-${queryParams.value.page}-${queryParams.value.limit}`;
+    return `killlist-${props.apiEndpoint}-${props.killlistType}-${queryParams.value.page}-${queryParams.value.limit}`;
 });
 
 // Determine if we should use external data

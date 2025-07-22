@@ -21,12 +21,12 @@ export default defineCachedEventHandler(async (event) => {
     try {
         // Build the query object
         const mongoQuery: any = {};
-        
+
         // Apply filter for custom battles
         if (filter === 'custom') {
             mongoQuery.custom = true;
         }
-        
+
         // Apply search for systems/regions
         if (search && search.length >= 2) {
             const searchRegex = new RegExp(search, 'i');
