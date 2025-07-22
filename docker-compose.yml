@@ -4,7 +4,7 @@ networks:
 
 services:
   app:
-    image: ghcr.io/eve-kill/thessia:latest
+    # image: ghcr.io/eve-kill/thessia:latest
     container_name: app
     build:
       context: .
@@ -22,7 +22,7 @@ services:
 
 
   meilisearch:
-    image: getmeili/meilisearch:1.13
+    image: getmeili/meilisearch:v1.5
     container_name: meilisearch
     volumes:
       - ./.data/meilisearch:/meili_data
