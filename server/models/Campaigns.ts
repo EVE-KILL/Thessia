@@ -39,6 +39,28 @@ const campaignsSchema = new Schema<ICampaignDocument>(
         public: {
             type: Boolean,
             default: true
+        },
+        // Processing status for queue-based campaign generation
+        processing_status: {
+            type: String,
+            enum: ['pending', 'processing', 'completed', 'failed'],
+            default: 'pending'
+        },
+        processing_started_at: {
+            type: Date
+        },
+        processing_completed_at: {
+            type: Date
+        },
+        processing_error: {
+            type: String
+        },
+        last_processed_at: {
+            type: Date
+        },
+        // Store the processed campaign data to avoid regenerating
+        processed_data: {
+            type: Schema.Types.Mixed
         }
     },
     {

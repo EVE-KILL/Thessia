@@ -1,5 +1,7 @@
 import { createError, getRouterParam } from 'h3';
 import { generateCampaignStats } from '~/server/helpers/CampaignsHelper';
+import { getCampaignProcessingStatus, queueCampaignProcessing } from '~/server/queue/Campaign';
+import { Campaigns } from '~/server/models/Campaigns';
 
 import { H3Event } from 'h3';
 
@@ -14,11 +16,46 @@ export default defineCachedEventHandler(async (event: H3Event) => {
     }
 
     try {
-        // Pass only the campaign ID to the helper function which will fetch the campaign data
-        const stats = await generateCampaignStats(campaignId);
-        return stats;
+        // First, get the campaign to check processing status
+        const campaign = await Campaigns.findOne({ campaign_id: campaignId }).lean();
+        
+        if (!campaign) {
+            throw createError({
+                statusCode: 404,
+                statusMessage: 'Campaign not found',
+            });
+        }
+
+        // Check if we have processed data available
+        if (campaign.processing_status === 'completed' && campaign.processed_data) {
+            // Return the cached processed data
+            return campaign.processed_data;
+        }
+
+        // Get processing status
+        const processingStatus = await getCampaignProcessingStatus(campaignId);
+        
+        // If not processing and no processed data, queue it
+        if (!processingStatus || processingStatus.status === 'pending') {
+            await queueCampaignProcessing(campaignId, 5);
+        }
+
+        // Return processing status instead of generating stats synchronously
+        return {
+            processing: true,
+            status: processingStatus?.status || 'pending',
+            started_at: processingStatus?.started_at,
+            completed_at: processingStatus?.completed_at,
+            error: processingStatus?.error,
+            campaign_id: campaignId,
+            name: campaign.name,
+            description: campaign.description,
+            startTime: campaign.startTime,
+            endTime: campaign.endTime,
+            campaignQuery: campaign.query
+        };
     } catch (error: any) {
-        console.error(`Error generating stats for campaign ${campaignId}:`, error);
+        console.error(`Error getting stats for campaign ${campaignId}:`, error);
 
         // Forward HTTP errors from the helper function
         if (error.statusCode) {
@@ -28,8 +65,8 @@ export default defineCachedEventHandler(async (event: H3Event) => {
         // Otherwise, create a generic error
         throw createError({
             statusCode: 500,
-            statusMessage: 'Error generating campaign statistics',
-            message: error.message || 'Error generating campaign statistics',
+            statusMessage: 'Error getting campaign statistics',
+            message: error.message || 'Error getting campaign statistics',
         });
     }
 }, {

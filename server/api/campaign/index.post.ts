@@ -1,5 +1,6 @@
 import { createError, defineEventHandler, parseCookies, readBody } from 'h3';
 import { Campaigns } from '~/server/models/Campaigns';
+import { queueCampaignProcessing, reprocessCampaign } from '~/server/queue/Campaign';
 
 // Define constants for entity limits
 const LOCATION_MAX_ENTITIES = 5;
@@ -112,9 +113,19 @@ export default defineEventHandler(async (event) => {
             await Campaigns.updateOne(
                 { campaign_id },
                 {
-                    $set: campaignData
+                    $set: {
+                        ...campaignData,
+                        processing_status: 'pending', // Reset processing status
+                        processing_error: null,
+                        processing_started_at: null,
+                        processing_completed_at: null,
+                        processed_data: null // Clear old processed data
+                    }
                 }
             );
+
+            // Queue the campaign for reprocessing
+            await reprocessCampaign(campaign_id, 10); // Higher priority for updates
 
             return {
                 success: true,
@@ -130,6 +141,9 @@ export default defineEventHandler(async (event) => {
             // Save to database
             const campaign = new Campaigns(campaignData);
             await campaign.save();
+
+            // Queue the campaign for processing
+            await queueCampaignProcessing(campaign.campaign_id, 5); // Normal priority for new campaigns
 
             // Return campaign data with ID
             return {

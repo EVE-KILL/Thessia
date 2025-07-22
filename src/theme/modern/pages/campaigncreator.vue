@@ -250,23 +250,23 @@ const debouncedSearch = useDebounceFn(searchEntities, 300);
 // Helper function to format search result display name
 const formatSearchResultDisplayName = (result: any, allResults: any[] = []) => {
     let displayName = result.name;
-    
+
     // Add ticker for alliances and corporations
     if (result.ticker && (result.type === 'alliance' || result.type === 'corporation')) {
         displayName = `${result.name} [${result.ticker}]`;
     }
-    
+
     // Check if there are duplicate names in the results
     const duplicateNames = allResults.filter(r => r.name === result.name);
     const hasDuplicates = duplicateNames.length > 1;
-    
+
     // Add founded date if there are duplicates or if it's available for context
     if (result.date_founded && (hasDuplicates || result.type === 'alliance' || result.type === 'corporation')) {
         const foundedDate = new Date(result.date_founded);
         const year = foundedDate.getFullYear();
         displayName += ` (${year})`;
     }
-    
+
     return displayName;
 };
 

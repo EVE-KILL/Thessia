@@ -1,9 +1,26 @@
 <template>
     <div>
-        <!-- Loading state -->
-        <div v-if="pending || isLoading" class="flex flex-col items-center justify-center py-12">
+        <!-- Loading/Processing state -->
+        <div v-if="pending || isLoading || (stats && stats.processing)" class="flex flex-col items-center justify-center py-12">
             <UIcon name="lucide:loader" class="w-12 h-12 animate-spin text-primary mb-4" />
-            <span class="text-xl font-medium">{{ t('campaign.loading') }}</span>
+            <span class="text-xl font-medium">
+                {{ stats?.processing ? t('campaign.processing') : t('campaign.loading') }}
+            </span>
+            <p v-if="stats?.processing" class="text-gray-500 mt-2">
+                {{ t('campaign.processing_desc') }}
+            </p>
+            <p v-if="stats?.status" class="text-sm text-gray-400 mt-1">
+                {{ t('campaign.status') }}: {{ stats.status }}
+            </p>
+        </div>
+
+        <!-- Campaign processing failed -->
+        <div v-else-if="stats?.processing && stats?.status === 'failed'" class="flex flex-col items-center justify-center py-12">
+            <UIcon name="lucide:alert-triangle" class="w-12 h-12 text-red-500 mb-4" />
+            <span class="text-xl font-medium">{{ t('campaign.processing_failed') }}</span>
+            <p class="text-gray-500 mt-2">{{ t('campaign.processing_failed_desc') }}</p>
+            <p v-if="stats.error" class="text-sm text-red-400 mt-2">{{ stats.error }}</p>
+            <UButton class="mt-4" @click="retryProcessing">{{ t('campaign.retry_processing') }}</UButton>
         </div>
 
         <!-- Campaign not found -->
@@ -15,7 +32,7 @@
         </div>
 
         <!-- Campaign content -->
-        <div v-else class="max-w-7xl mx-auto">
+        <div v-else-if="stats && !stats.processing" class="max-w-7xl mx-auto">
             <!-- Campaign Header - Full Width -->
             <div class="campaign-header mb-6">
                 <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-4">
@@ -216,6 +233,10 @@ const entities = ref({
     characters: []
 });
 
+// Polling for processing status
+const isPolling = ref(false);
+const pollingInterval = ref<NodeJS.Timeout | null>(null);
+
 // For mobile tabs
 const activeTabId = ref('ships');
 
@@ -291,12 +312,82 @@ const showAdvancedStats = computed(() => {
 });
 
 // Fetch campaign data
-const { data: stats, pending, error } = await useFetch<ICampaignOutput>(
+const { data: stats, pending, error, refresh } = await useFetch<ICampaignOutput>(
     () => `/api/campaign/${campaignId.value}/stats`,
     {
         key: `campaign-${campaignId.value}`,
     }
 );
+
+// Start polling if campaign is processing
+const startPolling = () => {
+    if (isPolling.value) return;
+    
+    isPolling.value = true;
+    pollingInterval.value = setInterval(async () => {
+        try {
+            await refresh();
+            
+            // Stop polling if processing is complete or failed
+            if (stats.value && (!stats.value.processing || stats.value.status === 'completed' || stats.value.status === 'failed')) {
+                stopPolling();
+            }
+        } catch (error) {
+            console.error('Polling error:', error);
+            stopPolling();
+        }
+    }, 5000); // Poll every 5 seconds
+};
+
+const stopPolling = () => {
+    if (pollingInterval.value) {
+        clearInterval(pollingInterval.value);
+        pollingInterval.value = null;
+    }
+    isPolling.value = false;
+};
+
+// Start polling if we detect processing state
+watch(stats, (newStats) => {
+    if (newStats?.processing && (newStats.status === 'pending' || newStats.status === 'processing')) {
+        startPolling();
+    } else {
+        stopPolling();
+    }
+}, { immediate: true });
+
+// Clean up polling on unmount
+onUnmounted(() => {
+    stopPolling();
+});
+
+// Retry processing function
+const retryProcessing = async () => {
+    try {
+        await $fetch(`/api/campaign/${campaignId.value}/reprocess`, {
+            method: 'POST'
+        });
+        
+        toast.add({
+            title: t('success'),
+            description: t('campaign.reprocess_queued'),
+            color: 'green',
+            timeout: 3000
+        });
+        
+        // Refresh the stats and start polling
+        await refresh();
+        startPolling();
+    } catch (error: any) {
+        console.error('Retry processing error:', error);
+        toast.add({
+            title: t('error'),
+            description: t('campaign.reprocess_failed'),
+            color: 'red',
+            timeout: 5000
+        });
+    }
+};
 
 // SEO
 useSeoMeta({
