@@ -16,8 +16,10 @@ export default {
             { type_id: 36902, price: 0.01 },
             { type_id: 34557, price: 0.01 },
             { type_id: 44264, price: 0.01 },
-            { type_id: 3628, price: 100000000000 }, // Nation (100b)
+            { type_id: 88001, price: 10000000000 },
             { type_id: 45645, price: 35000000000 }, // Loggerhead
+            { type_id: 87381, price: 45000000000 }, // Sarathiel
+            { type_id: 42124, price: 45000000000 },
             { type_id: 42243, price: 70000000000 }, // Chemosh
             { type_id: 2834, price: 80000000000 }, // Utu
             { type_id: 3516, price: 80000000000 }, // Malice
@@ -44,15 +46,18 @@ export default {
             { type_id: 78414, price: 150000000000 }, // Shapash
             { type_id: 33397, price: 200000000000 }, // Chremoas
             { type_id: 42245, price: 200000000000 }, // Rabisu
-            { type_id: 45649, price: 200000000000 }, // Komodo
+            { type_id: 85062, price: 200000000000 }, // Sidewinder
+            { type_id: 45649, price: 550000000000 }, // Komodo
             { type_id: 45531, price: 230000000000 }, // Victor
             { type_id: 48635, price: 230000000000 }, // Tiamat
             { type_id: 60764, price: 230000000000 }, // Laelaps
             { type_id: 77726, price: 230000000000 }, // Cybele
+            { type_id: 85229, price: 250000000000 }, // Cobra
             { type_id: 47512, price: 60000000000 }, // 'Moreau' Fortizar
             { type_id: 45647, price: 60000000000 }, // Caiman
             { type_id: 9860, price: 1000000000000 }, // Polaris
             { type_id: 11019, price: 1000000000000 }, // Cockroach
+            { type_id: 85236, price: 1250000000000 }, // Python
             { type_id: 42126, price: 650000000000 }, // Vanquisher
             { type_id: 42241, price: 350000000000, date: new Date("2019-07-01") }, // Molok (conditional)
             { type_id: 42241, price: 650000000000 }, // Molok (default)
@@ -66,8 +71,10 @@ export default {
             { type_id: 11936, price: 750000000000 }, // Apocalypse Imperial Issue
             { type_id: 11938, price: 750000000000 }, // Armageddon Imperial Issue
             { type_id: 26842, price: 750000000000 }, // Tempest Tribal Issue
+            { type_id: 78576, price: 750000000000 }, // Azariel (Angel Titan)
             { type_id: 26840, price: 2500000000000 }, // Raven State Issue
             { type_id: 47514, price: 60000000000 }, // 'Horizon' Fortizar
+            { type_id: 42242, price: 60000000000 }, // Dagon
         ];
 
         await CustomPrices.deleteMany({});
