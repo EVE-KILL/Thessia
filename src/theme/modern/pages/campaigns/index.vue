@@ -14,46 +14,53 @@
 
             <!-- Filters Section -->
             <div class="mt-5 pt-4 border-t border-gray-700/30">
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <!-- Status Filter -->
-                    <div class="filter-group">
+                <div class="grid grid-cols-1 lg:grid-cols-5 gap-4">
+                    <!-- Status Filter - Make it wider (3 columns out of 5) -->
+                    <div class="filter-group lg:col-span-3">
                         <label class="text-sm font-medium text-gray-300 mb-1 block">{{ t('status') }}</label>
-                        <div class="flex space-x-2 flex-wrap status-buttons">
+                        <div class="flex gap-2 flex-wrap status-buttons">
                             <UButton :color="statusFilter === 'all' ? 'primary' : 'gray'"
                                 :variant="statusFilter === 'all' ? 'solid' : 'outline'" @click="setStatusFilter('all')"
-                                class="flex-1 min-w-[80px]">
+                                class="flex-1 min-w-[90px] transition-all duration-200 hover:scale-105 hover:shadow-md cursor-pointer">
                                 {{ t('all') }}
                             </UButton>
                             <UButton :color="statusFilter === 'active' ? 'primary' : 'gray'"
                                 :variant="statusFilter === 'active' ? 'solid' : 'outline'"
-                                @click="setStatusFilter('active')" class="flex-1 min-w-[80px]">
+                                @click="setStatusFilter('active')" class="flex-1 min-w-[90px] transition-all duration-200 hover:scale-105 hover:shadow-md cursor-pointer">
                                 {{ t('campaign.active') }}
                             </UButton>
                             <UButton :color="statusFilter === 'upcoming' ? 'primary' : 'gray'"
                                 :variant="statusFilter === 'upcoming' ? 'solid' : 'outline'"
-                                @click="setStatusFilter('upcoming')" class="flex-1 min-w-[80px]">
+                                @click="setStatusFilter('upcoming')" class="flex-1 min-w-[90px] transition-all duration-200 hover:scale-105 hover:shadow-md cursor-pointer">
                                 {{ t('campaign.upcoming') }}
                             </UButton>
                             <UButton :color="statusFilter === 'completed' ? 'primary' : 'gray'"
                                 :variant="statusFilter === 'completed' ? 'solid' : 'outline'"
-                                @click="setStatusFilter('completed')" class="flex-1 min-w-[80px]">
+                                @click="setStatusFilter('completed')" class="flex-1 min-w-[90px] transition-all duration-200 hover:scale-105 hover:shadow-md cursor-pointer">
                                 {{ t('campaign.completed') }}
+                            </UButton>
+                            <UButton v-if="isAuthenticated" :color="statusFilter === 'private' ? 'primary' : 'gray'"
+                                :variant="statusFilter === 'private' ? 'solid' : 'outline'"
+                                @click="setStatusFilter('private')" class="flex-1 min-w-[90px] transition-all duration-200 hover:scale-105 hover:shadow-md cursor-pointer"
+                                :title="t('campaign.private_tooltip')">
+                                {{ t('campaign.private') }}
                             </UButton>
                         </div>
                     </div>
 
-                    <!-- Search Field -->
-                    <div class="filter-group md:col-span-2">
+                    <!-- Search Field - Narrower (2 columns out of 5) -->
+                    <div class="filter-group lg:col-span-2">
                         <label class="text-sm font-medium text-gray-300 mb-1 block">{{ t('search') }}</label>
                         <div class="flex">
                             <UInput v-model="searchQuery" :placeholder="t('campaign.search_placeholder')"
-                                class="flex-grow mr-2" @keyup.enter="refreshData()" />
+                                class="flex-grow mr-2" />
                             <div class="flex-shrink-0">
-                                <UButton v-if="searchQuery" color="gray" @click="searchQuery = ''; refreshData()"
-                                    class="mr-2">
+                                <UButton v-if="searchQuery" color="gray" @click="searchQuery = ''"
+                                    class="mr-2 hover:scale-105 transition-transform duration-200 cursor-pointer">
                                     <UIcon name="lucide:x" class="w-4 h-4" />
                                 </UButton>
-                                <UButton color="primary" icon="lucide:search" @click="refreshData()">
+                                <UButton color="primary" icon="lucide:search" @click="currentPage = 1"
+                                    class="hover:scale-105 transition-transform duration-200 cursor-pointer">
                                     {{ t('search') }}
                                 </UButton>
                             </div>
@@ -193,15 +200,15 @@
             </div>
 
             <!-- Pagination -->
-            <div v-if="data" class="mt-8 flex flex-col items-center">
+            <div v-if="data && data.totalPages > 1" class="mt-8 flex flex-col items-center">
                 <div class="bg-background-800 p-3 rounded-lg shadow-lg border border-gray-700/30">
-                    <UPagination v-model="currentPage" :page-count="data.totalPages" :total="data.totalItems"
-                        :ui="{ wrapper: 'flex items-center gap-2' }" @change="onPageChange" />
+                    <UPagination v-model:page="currentPage" :items-per-page="itemsPerPage" :total="data.totalItems"
+                        :ui="{ wrapper: 'flex items-center gap-2' }" />
                 </div>
                 <p class="text-sm text-gray-400 mt-3" v-if="data.totalItems">
                     {{ t('showingResults', {
-                        start: ((currentPage.value - 1) * itemsPerPage.value) + 1, end:
-                            Math.min(currentPage.value * itemsPerPage.value, data.totalItems), total: data.totalItems
+                        start: ((currentPage - 1) * itemsPerPage) + 1, end:
+                            Math.min(currentPage * itemsPerPage, data.totalItems), total: data.totalItems
                     }) }}
                 </p>
             </div>
@@ -214,6 +221,9 @@ import { computed, ref, watch } from 'vue';
 
 // i18n setup
 const { t } = useI18n();
+
+// Auth setup
+const { isAuthenticated, currentUser } = useAuth();
 
 // SEO setup
 useSeoMeta({
@@ -228,7 +238,7 @@ const currentPage = ref(1);
 const itemsPerPage = ref(20);
 
 // Filter state
-const statusFilter = ref('all'); // 'all', 'active', 'upcoming', or 'completed'
+const statusFilter = ref('all'); // 'all', 'active', 'upcoming', 'completed', or 'private'
 const searchQuery = ref('');
 
 // Computed property to determine if any filter is active
@@ -236,16 +246,57 @@ const hasActiveFilters = computed(() => {
     return statusFilter.value !== 'all' || searchQuery.value !== '';
 });
 
-// Create the API request with the right query parameters
-const { data, pending, error, refresh } = useFetch('/api/campaign', {
-    query: computed(() => ({
-        page: currentPage.value,
-        limit: itemsPerPage.value,
-        status: statusFilter.value !== 'all' ? statusFilter.value : undefined,
-        search: searchQuery.value || undefined
-    })),
-    watch: false // Disable auto-refresh on param changes, we'll handle it ourselves
+// Create query params for API
+const queryParams = computed(() => ({
+    page: currentPage.value,
+    limit: itemsPerPage.value,
+    status: statusFilter.value !== 'all' ? statusFilter.value : undefined,
+    search: searchQuery.value || undefined,
+    // Add user info for private campaigns filter
+    userId: statusFilter.value === 'private' && currentUser.value ? currentUser.value.characterId : undefined,
+    userCorpId: statusFilter.value === 'private' && currentUser.value ? currentUser.value.corporationId : undefined,
+    userAllianceId: statusFilter.value === 'private' && currentUser.value ? currentUser.value.allianceId : undefined
+}));
+
+const fetchKey = computed(() => {
+    return `campaigns-${queryParams.value.page}-${queryParams.value.limit}-${statusFilter.value}-${searchQuery.value}`;
 });
+
+// Manual fetch approach
+const data = ref(null);
+const pending = ref(true);
+const error = ref(null);
+
+const fetchCampaigns = async () => {
+    try {
+        pending.value = true;
+        error.value = null;
+
+        const response = await $fetch('/api/campaign', {
+            query: queryParams.value
+        });
+
+        data.value = response;
+    } catch (err) {
+        error.value = err;
+        console.error('Error fetching campaigns:', err);
+    } finally {
+        pending.value = false;
+    }
+};
+
+// Initial fetch
+fetchCampaigns();
+
+// Watch for changes and refetch
+watch(queryParams, () => {
+    console.log('Query params changed, fetching...', queryParams.value);
+    fetchCampaigns();
+}, { deep: true });
+
+const refresh = () => {
+    fetchCampaigns();
+};
 
 // Extract campaigns from data
 const campaigns = computed(() => data.value?.campaigns || []);
@@ -254,13 +305,12 @@ const campaigns = computed(() => data.value?.campaigns || []);
 const setStatusFilter = (status) => {
     statusFilter.value = status;
     currentPage.value = 1;
-    refreshData();
 };
 
 const clearAllFilters = () => {
     statusFilter.value = 'all';
     searchQuery.value = '';
-    refreshData();
+    currentPage.value = 1;
 };
 
 // Date formatting
@@ -292,17 +342,8 @@ const isUpcoming = (campaign: any) => {
     return start > now;
 };
 
-// Page change handler
-const onPageChange = (page: number) => {
-    currentPage.value = page;
-    scrollToTop();
-};
-
 // Refresh data function
 const refreshData = () => {
-    if (currentPage.value !== 1) {
-        currentPage.value = 1;
-    }
     refresh();
     scrollToTop();
 };
@@ -315,8 +356,24 @@ const scrollToTop = () => {
     });
 };
 
-// Watch for page changes to scroll to top
-watch(currentPage, scrollToTop);
+// Watch for page changes to scroll to top (but don't interfere with useFetch watching)
+watch(currentPage, (newPage, oldPage) => {
+    // Only scroll if page actually changed and it's not the initial load
+    if (oldPage !== undefined && newPage !== oldPage) {
+        console.log(`Page changed from ${oldPage} to ${newPage}`);
+        scrollToTop();
+    }
+});
+
+// Debug watch for data changes
+watch(data, (newData) => {
+    console.log('Data changed:', newData);
+}, { deep: true });
+
+// Debug watch for queryParams changes
+watch(queryParams, (newParams) => {
+    console.log('Query params changed:', newParams);
+}, { deep: true });
 </script>
 
 <style scoped>

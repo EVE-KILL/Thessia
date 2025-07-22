@@ -23,6 +23,11 @@ export default defineCachedEventHandler(async (event) => {
     const status = query.status?.toString();
     const search = query.search?.toString();
 
+    // Private campaigns filter parameters
+    const userId = query.userId ? parseInt(query.userId.toString()) : null;
+    const userCorpId = query.userCorpId ? parseInt(query.userCorpId.toString()) : null;
+    const userAllianceId = query.userAllianceId ? parseInt(query.userAllianceId.toString()) : null;
+
     // Validate pagination parameters
     if (isNaN(page) || page < 1) {
         throw createError({ statusCode: 400, statusMessage: 'Invalid page number' });
@@ -49,8 +54,33 @@ export default defineCachedEventHandler(async (event) => {
             query: 1 // Include the query for processing filter information
         };
 
-        // Base query - only show public campaigns
-        const findQuery: any = { public: true };
+        // Base query - handle public vs private campaigns
+        const findQuery: any = {};
+
+        if (status === 'private') {
+            // For private campaigns, show non-public campaigns created by user, corp members, or alliance members
+            findQuery.public = false;
+
+            if (userId || userCorpId || userAllianceId) {
+                // Note: For now, we only show campaigns created by the user themselves
+                // TODO: Enhance to include campaigns from corp/alliance members
+                const creatorConditions = [];
+
+                if (userId) {
+                    creatorConditions.push({ creator_id: userId });
+                }
+
+                if (creatorConditions.length > 0) {
+                    findQuery.$or = creatorConditions;
+                }
+            } else {
+                // If no user info provided, return empty result
+                findQuery.creator_id = -1; // This will return no results
+            }
+        } else {
+            // For all other filters, only show public campaigns
+            findQuery.public = true;
+        }
 
         // Apply status filter if provided
         if (status) {
@@ -71,11 +101,29 @@ export default defineCachedEventHandler(async (event) => {
         // Apply search filter if provided - search in both name and description
         if (search && search.trim() !== '') {
             const searchTerm = search.trim();
-            // Use $or to search in both fields
-            findQuery.$or = [
-                { name: new RegExp(searchTerm, 'i') },
-                { description: new RegExp(searchTerm, 'i') }
-            ];
+            const searchCondition = {
+                $or: [
+                    { name: new RegExp(searchTerm, 'i') },
+                    { description: new RegExp(searchTerm, 'i') }
+                ]
+            };
+
+            // If we already have conditions in $and, add to it
+            if (findQuery.$and) {
+                findQuery.$and.push(searchCondition);
+            } else {
+                // If we have $or for private campaigns, we need to combine with $and
+                if (findQuery.$or) {
+                    const existingOr = findQuery.$or;
+                    delete findQuery.$or;
+                    findQuery.$and = [
+                        { $or: existingOr },
+                        searchCondition
+                    ];
+                } else {
+                    findQuery.$and = [searchCondition];
+                }
+            }
         }
 
         // Execute query and count in parallel for efficiency

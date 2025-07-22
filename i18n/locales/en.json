@@ -779,6 +779,7 @@
     "not_found_desc": "The campaign you're looking for doesn't exist or has been removed.",
     "created_by": "Created by",
     "private": "Private",
+    "private_tooltip": "Shows private campaigns created by you",
     "default_description": "View kill and loss statistics for this campaign",
     "save_campaign": "Save Campaign",
     "preview_error": "Error Loading Preview",

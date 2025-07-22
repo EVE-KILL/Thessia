@@ -846,7 +846,7 @@ const submitButtonText = computed(() => {
                             </div>
                             <div>
                                 <div class="flex items-center space-x-3">
-                                    <input type="checkbox" id="campaignPublic" v-model="campaignPublic" 
+                                    <input type="checkbox" id="campaignPublic" v-model="campaignPublic"
                                         class="h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded">
                                     <label for="campaignPublic" class="text-sm font-medium text-gray-700 dark:text-gray-300">
                                         {{ $t('campaignCreator.public') }}
