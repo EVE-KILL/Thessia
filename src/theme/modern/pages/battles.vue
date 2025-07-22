@@ -16,9 +16,20 @@ const pageSizeItems = [
 ];
 const selectedPageSize = ref(pageSizeItems[0].value);
 
+// Filter and search state
+const searchQuery = ref('');
+const filter = ref('all'); // 'all' or 'custom'
+
+// Computed property to determine if any filter is active
+const hasActiveFilters = computed(() => {
+    return filter.value !== 'all' || searchQuery.value !== '';
+});
+
 const queryParams = computed(() => ({
     page: currentPage.value,
     limit: selectedPageSize.value,
+    search: searchQuery.value || undefined,
+    filter: filter.value !== 'all' ? filter.value : undefined,
 }));
 
 interface BattlesApiResponse {
@@ -93,8 +104,8 @@ onMounted(() => {
     }, 10000); // 10 second safety timeout
 });
 
-// Watch for changes to pagination params and locale, and refresh the data
-watch([currentPage, selectedPageSize, currentLocale], () => {
+// Watch for changes to pagination params, search, filter, and locale, and refresh the data
+watch([currentPage, selectedPageSize, searchQuery, filter, currentLocale], () => {
     moment.locale(currentLocale.value);
     loadData();
 });
@@ -180,11 +191,22 @@ const generateSkeletonRows = (count: number) => {
     return Array(count)
         .fill(0)
         .map((_, index) => ({
-            id: `skeleton-${index}`,
             isLoading: true,
         }));
 };
 const skeletonRows = computed(() => generateSkeletonRows(selectedPageSize.value));
+
+// Filter functions
+const setFilter = (newFilter: string) => {
+    filter.value = newFilter;
+    currentPage.value = 1; // Reset to first page when filter changes
+};
+
+const clearAllFilters = () => {
+    searchQuery.value = '';
+    filter.value = 'all';
+    currentPage.value = 1; // Reset to first page when clearing filters
+};
 
 // Add this new helper function to format systems from battles
 const getSystemsDisplay = (battle: IBattlesDocument) => {
@@ -221,6 +243,86 @@ const getSystemsDisplay = (battle: IBattlesDocument) => {
 <template>
     <div class="space-y-4">
         <h1 class="text-2xl font-bold">{{ t('battles', 'Battles') }}</h1>
+
+        <!-- Search and Filters Section -->
+        <div class="bg-background-800 p-4 rounded-lg shadow-lg border border-gray-700/30">
+            <!-- Search Input -->
+            <div class="mb-4">
+                <UInput
+                    v-model="searchQuery"
+                    :placeholder="t('battle.search.placeholder')"
+                    icon="lucide:search"
+                    size="lg"
+                    :ui="{
+                        icon: {
+                            trailing: {
+                                pointer: '',
+                            },
+                        },
+                    }"
+                >
+                    <template #trailing>
+                        <UButton
+                            v-show="searchQuery !== ''"
+                            color="gray"
+                            variant="link"
+                            icon="lucide:x"
+                            :padded="false"
+                            @click="searchQuery = ''"
+                        />
+                    </template>
+                </UInput>
+            </div>
+
+            <!-- Filter Buttons -->
+            <div class="flex flex-col sm:flex-row gap-2">
+                <div class="flex gap-2 flex-wrap">
+                    <UButton
+                        :variant="filter === 'all' ? 'solid' : 'outline'"
+                        :color="filter === 'all' ? 'primary' : 'gray'"
+                        @click="setFilter('all')"
+                        size="sm"
+                    >
+                        {{ t('battle.filter.all') }}
+                    </UButton>
+                    <UButton
+                        :variant="filter === 'custom' ? 'solid' : 'outline'"
+                        :color="filter === 'custom' ? 'primary' : 'gray'"
+                        @click="setFilter('custom')"
+                        size="sm"
+                    >
+                        {{ t('battle.filter.custom') }}
+                    </UButton>
+                </div>
+
+                <!-- Clear Filters Button -->
+                <div class="flex justify-end sm:ml-auto">
+                    <UButton
+                        v-if="hasActiveFilters"
+                        variant="outline"
+                        color="red"
+                        size="sm"
+                        icon="lucide:x"
+                        @click="clearAllFilters"
+                    >
+                        {{ t('battle.filter.clear') }}
+                    </UButton>
+                </div>
+            </div>
+
+            <!-- Active Filters Display -->
+            <div v-if="hasActiveFilters" class="mt-3 pt-3 border-t border-gray-700/30">
+                <div class="flex flex-wrap gap-2 items-center">
+                    <span class="text-sm text-gray-300">{{ t('active_filters') }}:</span>
+                    <UBadge v-if="filter !== 'all'" color="blue" variant="soft" size="sm">
+                        {{ t(`battle.filter.${filter}`) }}
+                    </UBadge>
+                    <UBadge v-if="searchQuery" color="green" variant="soft" size="sm">
+                        {{ t('search') }}: "{{ searchQuery }}"
+                    </UBadge>
+                </div>
+            </div>
+        </div>
 
         <UAlert v-if="error" icon="i-heroicons-exclamation-triangle" color="red" variant="soft"
             :title="t('errorFetchingData', 'Error Fetching Data')" :description="error.message" />

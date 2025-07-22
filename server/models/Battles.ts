@@ -147,6 +147,8 @@ export const Battles: Model<IBattlesDocument> = model<IBattlesDocument>(
 );
 
 // Apply indexes
+BattlesSchema.index({ custom: 1 }, { sparse: true });
+BattlesSchema.index({ custom: 1, start_time: -1 }, { sparse: true }); // Compound index for filtering custom battles by time
 BattlesSchema.index({ charactersInvolved: 1 }, { sparse: true });
 BattlesSchema.index({ corporationsInvolved: 1 }, { sparse: true });
 BattlesSchema.index({ alliancesInvolved: 1 }, { sparse: true });

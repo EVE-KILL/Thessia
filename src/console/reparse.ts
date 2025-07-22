@@ -10,8 +10,9 @@ export default {
         const killmails = await Killmails.find(
             {
                 $or: [
-                    { "victim.ship_group_id": 30 },
-                    { "victim.ship_group_id": 659 },
+                    //{ "victim.ship_group_id": 30 },
+                    //{ "victim.ship_group_id": 659 },
+                    { "victim.ship_id": 87381 }, // Sarathiel
                 ],
             },
             { _id: 0, killmail_id: 1, killmail_hash: 1 },

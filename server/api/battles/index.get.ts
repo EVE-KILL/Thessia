@@ -6,6 +6,8 @@ export default defineCachedEventHandler(async (event) => {
     const query = getQuery(event as any);
     const page = parseInt(query.page?.toString() || '1', 10);
     const limit = parseInt(query.limit?.toString() || '20', 10);
+    const search = query.search?.toString() || '';
+    const filter = query.filter?.toString() || 'all'; // 'all' or 'custom'
 
     if (isNaN(page) || page < 1) {
         throw createError({ statusCode: 400, statusMessage: 'Invalid page number' });
@@ -17,11 +19,35 @@ export default defineCachedEventHandler(async (event) => {
     const skip = (page - 1) * limit;
 
     try {
+        // Build the query object
+        const mongoQuery: any = {};
+        
+        // Apply filter for custom battles
+        if (filter === 'custom') {
+            mongoQuery.custom = true;
+        }
+        
+        // Apply search for systems/regions
+        if (search && search.length >= 2) {
+            const searchRegex = new RegExp(search, 'i');
+            mongoQuery.$or = [
+                // Search in systems array (new structure)
+                { 'systems.system_name': searchRegex },
+                { 'systems.region_name.en': searchRegex },
+                { 'systems.region_name': searchRegex },
+                // Search in legacy fields for backward compatibility
+                { 'system_name': searchRegex },
+                { 'region_name.en': searchRegex },
+                { 'region_name': searchRegex }
+            ];
+        }
+
         // Define fields we actually need to display in the battles list
         // This significantly reduces the payload size
         const projection = {
             _id: 0,
             battle_id: 1,
+            custom: 1,
             start_time: 1,
             end_time: 1,
             duration_ms: 1,
@@ -53,7 +79,7 @@ export default defineCachedEventHandler(async (event) => {
         const [battles, totalItems] = await Promise.all([
             // Use a regular find query with sort, skip, limit and projection
             // This is much faster than an aggregation pipeline for simple pagination
-            Battles.find({})
+            Battles.find(mongoQuery)
                 .sort({ start_time: -1 })
                 .skip(skip)
                 .limit(limit)
@@ -61,7 +87,7 @@ export default defineCachedEventHandler(async (event) => {
                 .hint({ start_time: -1 })
                 .lean(),
 
-            Battles.estimatedDocumentCount()
+            Battles.countDocuments(mongoQuery)
         ]);
 
         const totalPages = Math.ceil(totalItems / limit);
@@ -79,7 +105,7 @@ export default defineCachedEventHandler(async (event) => {
     }
 }, {
     maxAge: 300,
-    staleMaxAge: -1,
+    staleMaxAge: 0,
     swr: true,
     base: "redis",
     shouldBypassCache: (event) => {
@@ -91,6 +117,8 @@ export default defineCachedEventHandler(async (event) => {
         const query = parsedUrl.query;
         const page = query?.page ? query.page.toString() : '1';
         const limit = query?.limit ? query.limit.toString() : '20';
-        return `battles:index:page:${page}:limit:${limit}`;
+        const search = query?.search ? query.search.toString() : '';
+        const filter = query?.filter ? query.filter.toString() : 'all';
+        return `battles:index:page:${page}:limit:${limit}:search:${search}:filter:${filter}`;
     }
 });
