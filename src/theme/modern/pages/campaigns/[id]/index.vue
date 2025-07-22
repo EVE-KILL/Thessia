@@ -49,7 +49,7 @@
 
             <!-- Campaign Overview - Full Width -->
             <div class="mb-6">
-                <CampaignOverview :stats="stats" />
+                <CampaignOverview :stats="stats" :showAdvancedStats="showAdvancedStats" />
             </div>
 
             <!-- Desktop Layout (hidden on mobile) -->
@@ -84,15 +84,20 @@
 
                 <!-- Right Column - 20% -->
                 <div class="lg:w-1/5">
-                    <!-- Top Killers Box -->
+                    <!-- Top Characters Box - Dynamic title based on campaign type -->
                     <div class="mb-6 campaign-sidebar-box">
-                        <CampaignTopBox :title="t('campaign.top_killers')" :entities="stats.topKillersByCharacter || []"
-                            :countField="'kills'" :countTitle="t('kills')" entityType="character" :loading="pending"
+                        <CampaignTopBox
+                            :title="campaignType === 'victim-only' ? t('campaign.top_victims') : t('campaign.top_killers')"
+                            :entities="stats.topKillersByCharacter || []"
+                            :countField="'kills'"
+                            :countTitle="campaignType === 'victim-only' ? t('losses') : t('kills')"
+                            entityType="character"
+                            :loading="pending"
                             :limit="10" />
                     </div>
 
-                    <!-- Top Damage Dealers Box -->
-                    <div class="mb-6 campaign-sidebar-box">
+                    <!-- Top Damage Dealers Box - Only show for mixed campaigns -->
+                    <div v-if="showAdvancedStats" class="mb-6 campaign-sidebar-box">
                         <CampaignTopBox :title="t('campaign.top_damage_dealers')"
                             :entities="stats.topDamageDealersByCharacter || []" :countField="'damageDone'"
                             :countTitle="t('damage')" entityType="character" :loading="pending" :limit="10" />
@@ -100,8 +105,13 @@
 
                     <!-- Characters Box -->
                     <div class="mb-6 campaign-sidebar-box">
-                        <CampaignTopBox :title="t('campaign.characters')" :entities="entities.characters"
-                            :countField="'kills'" :countTitle="t('kills')" entityType="character" :loading="pending"
+                        <CampaignTopBox
+                            :title="t('campaign.characters')"
+                            :entities="entities.characters"
+                            :countField="'kills'"
+                            :countTitle="campaignType === 'victim-only' ? t('losses') : t('kills')"
+                            entityType="character"
+                            :loading="pending"
                             :limit="10" />
                     </div>
                 </div>
@@ -137,15 +147,20 @@
                     <!-- Characters Tab -->
                     <template #characters>
                         <div class="mt-4 space-y-6">
-                            <!-- Top Killers Box -->
+                            <!-- Top Characters Box - Dynamic title based on campaign type -->
                             <div class="mb-6 campaign-sidebar-box">
-                                <CampaignTopBox :title="t('campaign.top_killers')"
-                                    :entities="stats.topKillersByCharacter || []" :countField="'kills'"
-                                    :countTitle="t('kills')" entityType="character" :loading="pending" :limit="10" />
+                                <CampaignTopBox
+                                    :title="campaignType === 'victim-only' ? t('campaign.top_victims') : t('campaign.top_killers')"
+                                    :entities="stats.topKillersByCharacter || []"
+                                    :countField="'kills'"
+                                    :countTitle="campaignType === 'victim-only' ? t('losses') : t('kills')"
+                                    entityType="character"
+                                    :loading="pending"
+                                    :limit="10" />
                             </div>
 
-                            <!-- Top Damage Dealers Box -->
-                            <div class="mb-6 campaign-sidebar-box">
+                            <!-- Top Damage Dealers Box - Only show for mixed campaigns -->
+                            <div v-if="showAdvancedStats" class="mb-6 campaign-sidebar-box">
                                 <CampaignTopBox :title="t('campaign.top_damage_dealers')"
                                     :entities="stats.topDamageDealersByCharacter || []" :countField="'damageDone'"
                                     :countTitle="t('damage')" entityType="character" :loading="pending" :limit="10" />
@@ -153,17 +168,23 @@
 
                             <!-- Characters Box -->
                             <div class="mb-6 campaign-sidebar-box">
-                                <CampaignTopBox :title="t('campaign.characters')" :entities="entities.characters"
-                                    :countField="'kills'" :countTitle="t('kills')" entityType="character"
-                                    :loading="pending" :limit="10" />
+                                <CampaignTopBox
+                                    :title="t('campaign.characters')"
+                                    :entities="entities.characters"
+                                    :countField="'kills'"
+                                    :countTitle="campaignType === 'victim-only' ? t('losses') : t('kills')"
+                                    entityType="character"
+                                    :loading="pending"
+                                    :limit="10" />
                             </div>
                         </div>
                     </template>
 
                     <!-- Kills Tab -->
                     <template #kills>
-                        <CampaignKillList :campaignId="campaignId" :campaignQuery="stats?.campaignQuery" :limit="25"
-                            class="mt-4" />
+                        <div class="w-full">
+                            <CampaignKillList :campaignId="campaignId" :campaignQuery="stats?.campaignQuery" :limit="25" />
+                        </div>
                     </template>
                 </Tabs>
             </div>
@@ -249,6 +270,24 @@ const isCreator = computed(() => {
         return false;
     }
     return currentUser.value.characterId === stats.value.creator_id;
+});
+
+// Determine campaign type based on query
+const campaignType = computed(() => {
+    if (!stats.value?.campaignQuery) return 'mixed';
+
+    const hasAttackers = Object.keys(stats.value.campaignQuery).some(key => key.startsWith('attackers.'));
+    const hasVictims = Object.keys(stats.value.campaignQuery).some(key => key.startsWith('victim.'));
+
+    if (hasAttackers && hasVictims) return 'mixed'; // Both attackers and victims
+    if (hasAttackers) return 'attacker-only'; // Only attackers
+    if (hasVictims) return 'victim-only'; // Only victims
+    return 'general'; // No specific targeting (location/time only)
+});
+
+// Determine if we should show efficiency and ISK damage stats
+const showAdvancedStats = computed(() => {
+    return campaignType.value === 'mixed'; // Only show for mixed campaigns
 });
 
 // Fetch campaign data

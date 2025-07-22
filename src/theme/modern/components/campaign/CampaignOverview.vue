@@ -1,9 +1,9 @@
 <template>
     <div class="overview-container">
         <!-- Overview Cards -->
-        <div class="stats-grid">
-            <!-- Efficiency Card -->
-            <div class="stat-card">
+        <div class="stats-grid" :class="{ 'single-type-grid': !showAdvancedStats }">
+            <!-- Efficiency Card - Only show for mixed campaigns -->
+            <div v-if="showAdvancedStats" class="stat-card">
                 <div class="stat-header">
                     <UIcon name="lucide:percent" class="stat-icon" :class="getEfficiencyIconClass(stats.efficiency)" />
                     <div class="stat-title">{{ t('campaign.efficiency') }}</div>
@@ -15,7 +15,7 @@
                 </div>
             </div>
 
-            <!-- Kills/Losses Card - Horizontal layout -->
+            <!-- Kills/Losses Card - Always show -->
             <div class="stat-card">
                 <div class="stat-header">
                     <UIcon name="lucide:skull" class="stat-icon text-primary" />
@@ -36,8 +36,8 @@
                 </div>
             </div>
 
-            <!-- ISK Damage Card - Horizontal layout -->
-            <div class="stat-card">
+            <!-- ISK Damage Card - Only show for mixed campaigns -->
+            <div v-if="showAdvancedStats" class="stat-card">
                 <div class="stat-header">
                     <UIcon name="lucide:wallet" class="stat-icon text-amber-500" />
                     <div class="stat-title">{{ t('campaign.isk_damage') }}</div>
@@ -57,7 +57,7 @@
                 </div>
             </div>
 
-            <!-- Total ISK Destroyed -->
+            <!-- Total ISK Destroyed - Always show -->
             <div class="stat-card">
                 <div class="stat-header">
                     <UIcon name="lucide:banknote" class="stat-icon text-purple-500" />
@@ -79,7 +79,11 @@ import { type ICampaignOutput } from '~/server/interfaces/ICampaignOutput';
 // Props
 const props = defineProps<{
     stats: ICampaignOutput;
+    showAdvancedStats?: boolean;
 }>();
+
+// Default values
+const showAdvancedStats = computed(() => props.showAdvancedStats ?? true);
 
 // Composables
 const { t } = useI18n();
@@ -146,6 +150,10 @@ const getEfficiencyIconClass = (efficiency: number): string => {
 @media (min-width: 1024px) {
     .stats-grid {
         grid-template-columns: repeat(4, 1fr);
+    }
+
+    .single-type-grid {
+        grid-template-columns: repeat(2, 1fr);
     }
 }
 

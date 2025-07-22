@@ -14,7 +14,7 @@ const props = defineProps({
 
 // Create a separate page ref for direct v-model binding
 const page = ref(1);
-const pageSize = ref(props.limit);
+const pageSize = ref<number>(props.limit);
 
 // Pagination settings - keep for data structure organization
 const pagination = ref({
@@ -39,12 +39,6 @@ const pageSizeItemsFormatted = computed(() => {
         label: item.label
     }));
 });
-
-// Handle manual change in the select element
-const handlePageSizeChange = (event) => {
-    const newSize = parseInt(event.target.value, 10);
-    pageSize.value = newSize;
-};
 
 // For tracking loading state when loading more
 const loadingMore = ref(false);
@@ -352,7 +346,7 @@ onUpdated(() => {
                 <div class="flex items-center w-full sm:w-auto">
                     <!-- Limit selector -->
                     <div class="relative w-24">
-                        <select :value="pageSize" @change="handlePageSizeChange"
+                        <select v-model="pageSize"
                             class="custom-select w-full appearance-none rounded-md border border-gray-300 dark:border-gray-700 pl-3 pr-8 py-1.5 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 text-sm font-medium shadow-sm">
                             <option v-for="item in pageSizeItemsFormatted" :key="item.value" :value="item.value">
                                 {{ item.label }}
@@ -401,14 +395,14 @@ onUpdated(() => {
         </div>
 
         <!-- Error state -->
-        <div v-else-if="error" class="bg-red-50 dark:bg-red-900/20 rounded-lg text-center p-6">
+        <div v-else-if="error" class="bg-red-50 dark:bg-red-900/20 rounded-lg text-center">
             <UIcon name="lucide:alert-circle" class="w-12 h-12 text-red-500 mb-4 mx-auto" />
             <p class="text-red-600 dark:text-red-400">{{ error.message || t('common.errorLoadingData') }}</p>
             <UButton class="mt-4" icon="i-lucide-refresh-cw" @click="refresh">{{ t('retry') }}</UButton>
         </div>
 
         <!-- No data state -->
-        <div v-else-if="!killmails.length" class="bg-gray-50 dark:bg-gray-800 rounded-lg text-center p-6">
+        <div v-else-if="!killmails.length" class="bg-gray-50 dark:bg-gray-800 rounded-lg text-center">
             <UIcon name="lucide:search" class="w-12 h-12 text-gray-400 mb-4 mx-auto" />
             <p class="text-gray-600 dark:text-gray-400">{{ t('campaign.no_killmails_found') }}</p>
         </div>
@@ -754,13 +748,37 @@ onUpdated(() => {
 .campaign-killlist {
     background-color: var(--background-800);
     box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
-    width: 100%;
+    width: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    border-radius: 0.5rem;
+    max-width: 100%;
+    overflow-x: auto;
     /* Ensure full width */
+}
+
+.campaign-killlist > * {
+    width: 100% !important;
+    max-width: 100% !important;
+    margin: 0 !important;
 }
 
 /* Make sure table components use full width on mobile */
 :deep(.ek-table-container) {
-    width: 100%;
+    width: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    max-width: 100% !important;
+}
+
+/* Force full width on any nested containers */
+:deep(.table-container),
+:deep(.table-wrapper),
+:deep(.overflow-x-auto) {
+    width: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    max-width: 100% !important;
 }
 
 /* Additional mobile-specific styles */
