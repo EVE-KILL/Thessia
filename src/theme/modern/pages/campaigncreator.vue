@@ -83,7 +83,8 @@ const selectSearchResult = (filterId: string, result: any) => {
     const filter = filterState.value[filterId];
     if (!filter) return;
 
-    const displayName = result.ticker ? `${result.name} (${result.ticker})` : result.name;
+    // Create a clean display name for storage using the new function
+    const cleanDisplayName = formatSearchResultDisplayName(result, filter.searchResults);
 
     // Check if this is already in multipleValues
     if (filter.multipleValues.some(item => item.id === result.id)) {
@@ -102,13 +103,13 @@ const selectSearchResult = (filterId: string, result: any) => {
     // Add to multipleValues array
     filter.multipleValues.push({
         id: result.id,
-        name: displayName
+        name: cleanDisplayName
     });
 
     // If it's the first value, also set it as single value
     if (filter.multipleValues.length === 1) {
         filter.value = result.id;
-        filter.valueLabel = displayName;
+        filter.valueLabel = cleanDisplayName;
     } else {
         // If we already have a value and add a second, clear single value
         filter.value = "";
@@ -216,9 +217,19 @@ const searchEntities = async (filterId: string, searchTerm: string) => {
         const { data } = await useFetch(`/api/search/${encoded}`);
 
         if (data.value && data.value.hits) {
-            filter.searchResults = data.value.hits
-                .filter((hit) => hit.type === filter.entityType)
-                .slice(0, 10);
+            let results = data.value.hits
+                .filter((hit) => hit.type === filter.entityType);
+
+            // Sort results by date_founded (newest first) to help with duplicate names
+            if (results.length > 0 && results[0].date_founded) {
+                results.sort((a, b) => {
+                    const dateA = new Date(a.date_founded || '1900-01-01');
+                    const dateB = new Date(b.date_founded || '1900-01-01');
+                    return dateB.getTime() - dateA.getTime(); // Newest first
+                });
+            }
+
+            filter.searchResults = results.slice(0, 10);
         } else {
             console.log(`Searching for ${filter.entityType}: ${searchTerm}`);
             const mockResults = [
@@ -235,6 +246,29 @@ const searchEntities = async (filterId: string, searchTerm: string) => {
 
 // Create the debounced search function
 const debouncedSearch = useDebounceFn(searchEntities, 300);
+
+// Helper function to format search result display name
+const formatSearchResultDisplayName = (result: any, allResults: any[] = []) => {
+    let displayName = result.name;
+    
+    // Add ticker for alliances and corporations
+    if (result.ticker && (result.type === 'alliance' || result.type === 'corporation')) {
+        displayName = `${result.name} [${result.ticker}]`;
+    }
+    
+    // Check if there are duplicate names in the results
+    const duplicateNames = allResults.filter(r => r.name === result.name);
+    const hasDuplicates = duplicateNames.length > 1;
+    
+    // Add founded date if there are duplicates or if it's available for context
+    if (result.date_founded && (hasDuplicates || result.type === 'alliance' || result.type === 'corporation')) {
+        const foundedDate = new Date(result.date_founded);
+        const year = foundedDate.getFullYear();
+        displayName += ` (${year})`;
+    }
+    
+    return displayName;
+};
 
 // Build the campaign query object from filter state
 const buildCampaignQueryObject = (): Record<string, any> | null => {
@@ -852,9 +886,16 @@ const submitButtonText = computed(() => {
                                             class="absolute z-10 mt-1 w-full system-search-dropdown rounded-md shadow-lg max-h-48 overflow-y-auto">
                                             <a v-for="(result, index) in filterState.region.searchResults"
                                                 :key="result.id" @click="selectSearchResult('region', result)"
-                                                class="search-result-item block px-4 py-2 text-sm cursor-pointer"
+                                                class="search-result-item flex items-center px-4 py-2 text-sm cursor-pointer"
                                                 :class="{ 'search-result-selected': index === selectedResultIndex['region'] }">
-                                                {{ result.name }}
+                                                <div class="flex-shrink-0 mr-3">
+                                                    <Image :type="result.type" :id="result.id" :size="24" />
+                                                </div>
+                                                <div class="flex-1 min-w-0">
+                                                    <div class="font-medium text-gray-800 dark:text-gray-200 truncate">
+                                                        {{ result.name }}
+                                                    </div>
+                                                </div>
                                             </a>
                                         </div>
                                     </div>
@@ -898,9 +939,16 @@ const submitButtonText = computed(() => {
                                             class="absolute z-10 mt-1 w-full system-search-dropdown rounded-md shadow-lg max-h-48 overflow-y-auto">
                                             <a v-for="(result, index) in filterState.system.searchResults"
                                                 :key="result.id" @click="selectSearchResult('system', result)"
-                                                class="search-result-item block px-4 py-2 text-sm cursor-pointer"
+                                                class="search-result-item flex items-center px-4 py-2 text-sm cursor-pointer"
                                                 :class="{ 'search-result-selected': index === selectedResultIndex['system'] }">
-                                                {{ result.name }}
+                                                <div class="flex-shrink-0 mr-3">
+                                                    <Image :type="result.type" :id="result.id" :size="24" />
+                                                </div>
+                                                <div class="flex-1 min-w-0">
+                                                    <div class="font-medium text-gray-800 dark:text-gray-200 truncate">
+                                                        {{ result.name }}
+                                                    </div>
+                                                </div>
                                             </a>
                                         </div>
                                     </div>
@@ -946,9 +994,16 @@ const submitButtonText = computed(() => {
                                             class="absolute z-10 mt-1 w-full system-search-dropdown rounded-md shadow-lg max-h-48 overflow-y-auto">
                                             <a v-for="(result, index) in filterState.constellation.searchResults"
                                                 :key="result.id" @click="selectSearchResult('constellation', result)"
-                                                class="search-result-item block px-4 py-2 text-sm cursor-pointer"
+                                                class="search-result-item flex items-center px-4 py-2 text-sm cursor-pointer"
                                                 :class="{ 'search-result-selected': index === selectedResultIndex['constellation'] }">
-                                                {{ result.name }}
+                                                <div class="flex-shrink-0 mr-3">
+                                                    <Image :type="result.type" :id="result.id" :size="24" />
+                                                </div>
+                                                <div class="flex-1 min-w-0">
+                                                    <div class="font-medium text-gray-800 dark:text-gray-200 truncate">
+                                                        {{ result.name }}
+                                                    </div>
+                                                </div>
                                             </a>
                                         </div>
                                     </div>
@@ -1032,9 +1087,16 @@ const submitButtonText = computed(() => {
                                             <a v-for="(result, index) in filterState.attackerCharacter.searchResults"
                                                 :key="result.id"
                                                 @click="selectSearchResult('attackerCharacter', result)"
-                                                class="search-result-item block px-4 py-2 text-sm cursor-pointer"
+                                                class="search-result-item flex items-center px-4 py-2 text-sm cursor-pointer"
                                                 :class="{ 'search-result-selected': index === selectedResultIndex['attackerCharacter'] }">
-                                                {{ result.name }}
+                                                <div class="flex-shrink-0 mr-3">
+                                                    <Image :type="result.type" :id="result.id" :size="24" />
+                                                </div>
+                                                <div class="flex-1 min-w-0">
+                                                    <div class="font-medium text-gray-800 dark:text-gray-200 truncate">
+                                                        {{ result.name }}
+                                                    </div>
+                                                </div>
                                             </a>
                                         </div>
                                     </div>
@@ -1079,9 +1141,16 @@ const submitButtonText = computed(() => {
                                             <a v-for="(result, index) in filterState.attackerCorporation.searchResults"
                                                 :key="result.id"
                                                 @click="selectSearchResult('attackerCorporation', result)"
-                                                class="search-result-item block px-4 py-2 text-sm cursor-pointer"
+                                                class="search-result-item flex items-center px-4 py-2 text-sm cursor-pointer"
                                                 :class="{ 'search-result-selected': index === selectedResultIndex['attackerCorporation'] }">
-                                                {{ result.ticker ? `${result.name} [${result.ticker}]` : result.name }}
+                                                <div class="flex-shrink-0 mr-3">
+                                                    <Image :type="result.type" :id="result.id" :size="24" />
+                                                </div>
+                                                <div class="flex-1 min-w-0">
+                                                    <div class="font-medium text-gray-800 dark:text-gray-200 truncate">
+                                                        {{ formatSearchResultDisplayName(result, filterState.attackerCorporation.searchResults) }}
+                                                    </div>
+                                                </div>
                                             </a>
                                         </div>
                                     </div>
@@ -1124,9 +1193,16 @@ const submitButtonText = computed(() => {
                                             class="absolute z-10 mt-1 w-full system-search-dropdown rounded-md shadow-lg max-h-48 overflow-y-auto">
                                             <a v-for="(result, index) in filterState.attackerAlliance.searchResults"
                                                 :key="result.id" @click="selectSearchResult('attackerAlliance', result)"
-                                                class="search-result-item block px-4 py-2 text-sm cursor-pointer"
+                                                class="search-result-item flex items-center px-4 py-2 text-sm cursor-pointer"
                                                 :class="{ 'search-result-selected': index === selectedResultIndex['attackerAlliance'] }">
-                                                {{ result.ticker ? `${result.name} [${result.ticker}]` : result.name }}
+                                                <div class="flex-shrink-0 mr-3">
+                                                    <Image :type="result.type" :id="result.id" :size="24" />
+                                                </div>
+                                                <div class="flex-1 min-w-0">
+                                                    <div class="font-medium text-gray-800 dark:text-gray-200 truncate">
+                                                        {{ formatSearchResultDisplayName(result, filterState.attackerAlliance.searchResults) }}
+                                                    </div>
+                                                </div>
                                             </a>
                                         </div>
                                     </div>
@@ -1169,9 +1245,16 @@ const submitButtonText = computed(() => {
                                             class="absolute z-10 mt-1 w-full system-search-dropdown rounded-md shadow-lg max-h-48 overflow-y-auto">
                                             <a v-for="(result, index) in filterState.attackerFaction.searchResults"
                                                 :key="result.id" @click="selectSearchResult('attackerFaction', result)"
-                                                class="search-result-item block px-4 py-2 text-sm cursor-pointer"
+                                                class="search-result-item flex items-center px-4 py-2 text-sm cursor-pointer"
                                                 :class="{ 'search-result-selected': index === selectedResultIndex['attackerFaction'] }">
-                                                {{ result.name }}
+                                                <div class="flex-shrink-0 mr-3">
+                                                    <Image :type="result.type" :id="result.id" :size="24" />
+                                                </div>
+                                                <div class="flex-1 min-w-0">
+                                                    <div class="font-medium text-gray-800 dark:text-gray-200 truncate">
+                                                        {{ result.name }}
+                                                    </div>
+                                                </div>
                                             </a>
                                         </div>
                                     </div>
@@ -1225,9 +1308,16 @@ const submitButtonText = computed(() => {
                                             class="absolute z-10 mt-1 w-full system-search-dropdown rounded-md shadow-lg max-h-48 overflow-y-auto">
                                             <a v-for="(result, index) in filterState.victimCharacter.searchResults"
                                                 :key="result.id" @click="selectSearchResult('victimCharacter', result)"
-                                                class="search-result-item block px-4 py-2 text-sm cursor-pointer"
+                                                class="search-result-item flex items-center px-4 py-2 text-sm cursor-pointer"
                                                 :class="{ 'search-result-selected': index === selectedResultIndex['victimCharacter'] }">
-                                                {{ result.name }}
+                                                <div class="flex-shrink-0 mr-3">
+                                                    <Image :type="result.type" :id="result.id" :size="24" />
+                                                </div>
+                                                <div class="flex-1 min-w-0">
+                                                    <div class="font-medium text-gray-800 dark:text-gray-200 truncate">
+                                                        {{ result.name }}
+                                                    </div>
+                                                </div>
                                             </a>
                                         </div>
                                     </div>
@@ -1272,9 +1362,16 @@ const submitButtonText = computed(() => {
                                             <a v-for="(result, index) in filterState.victimCorporation.searchResults"
                                                 :key="result.id"
                                                 @click="selectSearchResult('victimCorporation', result)"
-                                                class="search-result-item block px-4 py-2 text-sm cursor-pointer"
+                                                class="search-result-item flex items-center px-4 py-2 text-sm cursor-pointer"
                                                 :class="{ 'search-result-selected': index === selectedResultIndex['victimCorporation'] }">
-                                                {{ result.ticker ? `${result.name} [${result.ticker}]` : result.name }}
+                                                <div class="flex-shrink-0 mr-3">
+                                                    <Image :type="result.type" :id="result.id" :size="24" />
+                                                </div>
+                                                <div class="flex-1 min-w-0">
+                                                    <div class="font-medium text-gray-800 dark:text-gray-200 truncate">
+                                                        {{ formatSearchResultDisplayName(result, filterState.victimCorporation.searchResults) }}
+                                                    </div>
+                                                </div>
                                             </a>
                                         </div>
                                     </div>
@@ -1317,9 +1414,16 @@ const submitButtonText = computed(() => {
                                             class="absolute z-10 mt-1 w-full system-search-dropdown rounded-md shadow-lg max-h-48 overflow-y-auto">
                                             <a v-for="(result, index) in filterState.victimAlliance.searchResults"
                                                 :key="result.id" @click="selectSearchResult('victimAlliance', result)"
-                                                class="search-result-item block px-4 py-2 text-sm cursor-pointer"
+                                                class="search-result-item flex items-center px-4 py-2 text-sm cursor-pointer"
                                                 :class="{ 'search-result-selected': index === selectedResultIndex['victimAlliance'] }">
-                                                {{ result.ticker ? `${result.name} [${result.ticker}]` : result.name }}
+                                                <div class="flex-shrink-0 mr-3">
+                                                    <Image :type="result.type" :id="result.id" :size="24" />
+                                                </div>
+                                                <div class="flex-1 min-w-0">
+                                                    <div class="font-medium text-gray-800 dark:text-gray-200 truncate">
+                                                        {{ formatSearchResultDisplayName(result, filterState.victimAlliance.searchResults) }}
+                                                    </div>
+                                                </div>
                                             </a>
                                         </div>
                                     </div>
@@ -1363,9 +1467,16 @@ const submitButtonText = computed(() => {
                                             class="absolute z-10 mt-1 w-full system-search-dropdown rounded-md shadow-lg max-h-48 overflow-y-auto">
                                             <a v-for="(result, index) in filterState.victimFaction.searchResults"
                                                 :key="result.id" @click="selectSearchResult('victimFaction', result)"
-                                                class="search-result-item block px-4 py-2 text-sm cursor-pointer"
+                                                class="search-result-item flex items-center px-4 py-2 text-sm cursor-pointer"
                                                 :class="{ 'search-result-selected': index === selectedResultIndex['victimFaction'] }">
-                                                {{ result.name }}
+                                                <div class="flex-shrink-0 mr-3">
+                                                    <Image :type="result.type" :id="result.id" :size="24" />
+                                                </div>
+                                                <div class="flex-1 min-w-0">
+                                                    <div class="font-medium text-gray-800 dark:text-gray-200 truncate">
+                                                        {{ result.name }}
+                                                    </div>
+                                                </div>
                                             </a>
                                         </div>
                                     </div>
@@ -1551,11 +1662,25 @@ input[type="datetime-local"].custom-input {
 
 .search-result-item {
     color: #111827;
+    transition: all 0.15s ease;
 }
 
 .search-result-item:hover {
     background-color: #f3f4f6 !important;
     /* Force hover color */
+    transform: translateX(2px);
+}
+
+/* Better spacing for search results with images */
+.search-result-item.flex {
+    align-items: center;
+    min-height: 40px; /* Ensure consistent height for image results */
+}
+
+.search-result-item .flex-shrink-0 {
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
 .dark .search-result-item {
