@@ -7,9 +7,9 @@ export interface ICharacterAchievement {
     achievement_id: string;
     name: string;
     description: string;
-    type: 'pvp' | 'pve' | 'exploration' | 'industry' | 'special';
+    type: "pvp" | "pve" | "exploration" | "industry" | "special";
     points: number;
-    rarity: 'common' | 'uncommon' | 'rare' | 'epic' | 'legendary';
+    rarity: "common" | "uncommon" | "rare" | "epic" | "legendary";
     category: string;
     threshold: number;
     current_count: number;
@@ -29,6 +29,7 @@ export interface ICharacterAchievements {
     total_achievements: number;
     achievements: ICharacterAchievement[];
     last_calculated: Date;
+    needs_processing: boolean;
     createdAt?: Date;
     updatedAt?: Date;
 }

@@ -28,6 +28,50 @@ async function queueAchievementProcessing(characterId: number, priority = 1) {
 }
 
 /**
+ * Queue multiple achievement processing jobs in bulk for better performance
+ * @param characterIds - Array of character IDs to process achievements for
+ * @param priority - Job priority (default: 1, higher numbers = higher priority)
+ * @param batchSize - Number of jobs to add per batch (default: 1000)
+ */
+async function queueAchievementProcessingBulk(
+    characterIds: number[],
+    priority = 1,
+    batchSize = 1000
+) {
+    const jobs = characterIds.map((characterId) => ({
+        name: "achievement",
+        data: { characterId },
+        opts: {
+            priority: priority,
+            attempts: 3,
+            backoff: {
+                type: "exponential",
+                delay: 5000, // 5 seconds
+            },
+            removeOnComplete: 10,
+            removeOnFail: 25,
+        },
+    }));
+
+    // Process in batches to avoid overwhelming Redis
+    for (let i = 0; i < jobs.length; i += batchSize) {
+        const batch = jobs.slice(i, i + batchSize);
+        await achievementQueue.addBulk(batch);
+
+        // Log progress for large batches
+        if (jobs.length > batchSize) {
+            cliLogger.info(
+                `📋 Queued batch ${Math.floor(i / batchSize) + 1}/${Math.ceil(
+                    jobs.length / batchSize
+                )} (${Math.min(i + batchSize, jobs.length)}/${
+                    jobs.length
+                } total jobs)`
+            );
+        }
+    }
+}
+
+/**
  * Process achievements for a single character
  * @param characterId - The character ID to process achievements for
  */
@@ -88,4 +132,9 @@ async function reprocessAchievement(characterId: number, priority = 10) {
     await queueAchievementProcessing(characterId, priority);
 }
 
-export { queueAchievementProcessing, processAchievement, reprocessAchievement };
+export {
+    queueAchievementProcessing,
+    queueAchievementProcessingBulk,
+    processAchievement,
+    reprocessAchievement,
+};

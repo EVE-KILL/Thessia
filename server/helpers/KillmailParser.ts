@@ -4,7 +4,12 @@ import type {
     IESIVictim,
     IESIVictimItem,
 } from "~/server/interfaces/IESIKillmail";
-import type { IAttacker, IItem, IKillmail, IVictim } from "~/server/interfaces/IKillmail";
+import type {
+    IAttacker,
+    IItem,
+    IKillmail,
+    IVictim,
+} from "~/server/interfaces/IKillmail";
 import type { ITranslation } from "~/server/interfaces/ITranslation";
 import { Celestials } from "~/server/models/Celestials";
 import { Characters } from "~/server/models/Characters";
@@ -23,8 +28,13 @@ import {
     getCachedSolarSystem,
 } from "./RuntimeCache";
 import { updateStatsOnKillmailProcessing } from "./Stats";
+import { CharacterAchievements } from "../models/CharacterAchievements";
+import { queueAchievementProcessing } from "../queue/Achievement";
 
-async function parseKillmail(killmail: IESIKillmail, warId = 0): Promise<Partial<IKillmail>> {
+async function parseKillmail(
+    killmail: IESIKillmail,
+    warId = 0
+): Promise<Partial<IKillmail>> {
     // Run independent tasks concurrently.
     const [top, victim, attackers, itemsData] = await Promise.all([
         generateTop(killmail, warId),
@@ -50,6 +60,14 @@ async function parseKillmail(killmail: IESIKillmail, warId = 0): Promise<Partial
         processedKillmail.total_value !== undefined
     ) {
         await updateStatsOnKillmailProcessing(processedKillmail as IKillmail);
+
+        // Handle achievement updates for all characters involved
+        await handleKillmailAchievementUpdates(
+            processedKillmail.victim.character_id,
+            processedKillmail.attackers
+                .map((a: any) => a.character_id)
+                .filter((id: any) => id > 0)
+        );
     }
 
     return processedKillmail;
@@ -61,12 +79,15 @@ async function updateLastActive(killmail: IESIKillmail): Promise<void> {
         .map(async (attacker) => {
             const existing = await Characters.findOne(
                 { character_id: attacker.character_id },
-                { last_active: 1 },
+                { last_active: 1 }
             );
-            if (existing && existing.last_active < new Date(killmail.killmail_time)) {
+            if (
+                existing &&
+                existing.last_active < new Date(killmail.killmail_time)
+            ) {
                 return Characters.updateOne(
                     { character_id: attacker.character_id },
-                    { last_active: killmail.killmail_time },
+                    { last_active: killmail.killmail_time }
                 );
             }
         });
@@ -74,12 +95,15 @@ async function updateLastActive(killmail: IESIKillmail): Promise<void> {
     const victimTask = (async () => {
         const existing = await Characters.findOne(
             { character_id: killmail.victim.character_id },
-            { last_active: 1 },
+            { last_active: 1 }
         );
-        if (existing && existing.last_active < new Date(killmail.killmail_time)) {
+        if (
+            existing &&
+            existing.last_active < new Date(killmail.killmail_time)
+        ) {
             return Characters.updateOne(
                 { character_id: killmail.victim.character_id },
-                { last_active: killmail.killmail_time },
+                { last_active: killmail.killmail_time }
             );
         }
     })();
@@ -87,27 +111,43 @@ async function updateLastActive(killmail: IESIKillmail): Promise<void> {
 }
 
 async function calculateKillValue(
-    killmail: IESIKillmail,
+    killmail: IESIKillmail
 ): Promise<{ item_value: number; ship_value: number; total_value: number }> {
     const shipTypeId = Number(killmail.victim.ship_type_id);
-    const shipGroupId = await InvTypes.findOne({ type_id: shipTypeId }, { group_id: 1 });
+    const shipGroupId = await InvTypes.findOne(
+        { type_id: shipTypeId },
+        { group_id: 1 }
+    );
     let shipValue = 0;
     // If the ship_group_id is 659 or 30 - we need to get the price from the blueprint (Supercarriers and Titans)
     if (shipGroupId?.group_id === 659 || shipGroupId?.group_id === 30) {
         // Check custom pricing first
-        shipValue = await customPrices(shipTypeId, new Date(killmail.killmail_time));
+        shipValue = await customPrices(
+            shipTypeId,
+            new Date(killmail.killmail_time)
+        );
         if (shipValue === 0) {
-            shipValue = await getPriceFromBlueprint(shipTypeId, new Date(killmail.killmail_time));
+            shipValue = await getPriceFromBlueprint(
+                shipTypeId,
+                new Date(killmail.killmail_time)
+            );
         }
     } else {
-        shipValue = await getCachedPrice(shipTypeId, new Date(killmail.killmail_time));
+        shipValue = await getCachedPrice(
+            shipTypeId,
+            new Date(killmail.killmail_time)
+        );
     }
     let itemValue = 0;
 
     for (const item of killmail.victim.items) {
         if (item.items) {
             for (const cargoItem of item.items) {
-                itemValue += await getItemValue(cargoItem, new Date(killmail.killmail_time), true);
+                itemValue += await getItemValue(
+                    cargoItem,
+                    new Date(killmail.killmail_time),
+                    true
+                );
             }
         }
         itemValue += await getItemValue(item, new Date(killmail.killmail_time));
@@ -123,7 +163,7 @@ async function calculateKillValue(
 async function getItemValue(
     item: IESIVictimItem,
     killTime: Date,
-    isCargo = false,
+    isCargo = false
 ): Promise<number> {
     const typeId = Number(item.item_type_id);
     const flag = item.flag;
@@ -153,7 +193,10 @@ async function getItemValue(
     return price * (dropped + destroyed);
 }
 
-async function generateTop(killmail: IESIKillmail, warId = 0): Promise<Partial<IKillmail>> {
+async function generateTop(
+    killmail: IESIKillmail,
+    warId = 0
+): Promise<Partial<IKillmail>> {
     const [solarSystem, killValue] = await Promise.all([
         getCachedSolarSystem(killmail.solar_system_id),
         calculateKillValue(killmail),
@@ -181,7 +224,12 @@ async function generateTop(killmail: IESIKillmail, warId = 0): Promise<Partial<I
         constellation_name: constellation?.constellation_name || "",
         region_id: solarSystem?.region_id || 0,
         region_name: region?.name || { en: "" },
-        near: await getNear(Number(x), Number(y), Number(z), Number(killmail.solar_system_id)),
+        near: await getNear(
+            Number(x),
+            Number(y),
+            Number(z),
+            Number(killmail.solar_system_id)
+        ),
         x,
         y,
         z,
@@ -196,13 +244,21 @@ async function generateTop(killmail: IESIKillmail, warId = 0): Promise<Partial<I
 
 async function processVictim(victim: IESIVictim): Promise<IVictim> {
     const ship = (await getCachedItem(Number(victim.ship_type_id))) || null;
-    const shipGroup = ship?.group_id ? await getCachedInvGroup(ship.group_id) : null;
+    const shipGroup = ship?.group_id
+        ? await getCachedInvGroup(ship.group_id)
+        : null;
 
     // Use cached character, corporation, alliance and faction lookups
-    const character = victim.character_id ? await getCachedCharacter(victim.character_id) : null;
+    const character = victim.character_id
+        ? await getCachedCharacter(victim.character_id)
+        : null;
     const corporation = await getCachedCorporation(victim.corporation_id);
-    const alliance = victim.alliance_id ? await getCachedAlliance(Number(victim.alliance_id)) : null;
-    const faction = victim.faction_id ? await getCachedFaction(Number(victim.faction_id)) : null;
+    const alliance = victim.alliance_id
+        ? await getCachedAlliance(Number(victim.alliance_id))
+        : null;
+    const faction = victim.faction_id
+        ? await getCachedFaction(Number(victim.faction_id))
+        : null;
 
     return {
         ship_id: victim.ship_type_id || 0,
@@ -221,7 +277,12 @@ async function processVictim(victim: IESIVictim): Promise<IVictim> {
     };
 }
 
-async function getNear(x: number, y: number, z: number, solarSystemId: number): Promise<string> {
+async function getNear(
+    x: number,
+    y: number,
+    z: number,
+    solarSystemId: number
+): Promise<string> {
     if (x === 0 && y === 0 && z === 0) {
         return "";
     }
@@ -274,7 +335,7 @@ async function isNPC(killmail: IESIKillmail): Promise<boolean> {
             // Use updated helper instead of direct DB call
             const shipGroup = await getCachedInvGroup(ship.group_id);
             return shipGroup?.category_id === 11;
-        }),
+        })
     );
 
     // Count NPC attackers based on resolved statuses
@@ -291,25 +352,29 @@ async function isSolo(killmail: IESIKillmail): Promise<boolean> {
         (attacker) =>
             attacker.character_id === 0 &&
             Number(attacker.corporation_id) < 1999999 &&
-            attacker.corporation_id !== 1000125,
+            attacker.corporation_id !== 1000125
     ).length;
 
     return npcCount > 0 && 2 / npcCount === 2;
 }
 
-async function processAttackers(attackers: IESIAttacker[]): Promise<IAttacker[]> {
+async function processAttackers(
+    attackers: IESIAttacker[]
+): Promise<IAttacker[]> {
     return await Promise.all(
         attackers.map(async (attacker) => {
             const ship = attacker.ship_type_id
                 ? await getCachedItem(attacker.ship_type_id)
                 : attacker.weapon_type_id
-                    ? await getCachedItem(attacker.weapon_type_id)
-                    : null;
+                ? await getCachedItem(attacker.weapon_type_id)
+                : null;
             const weapon = attacker.weapon_type_id
                 ? await getCachedItem(attacker.weapon_type_id)
                 : await getCachedItem(attacker.ship_type_id);
 
-            const shipGroup = ship?.group_id ? await getCachedInvGroup(ship.group_id) : null;
+            const shipGroup = ship?.group_id
+                ? await getCachedInvGroup(ship.group_id)
+                : null;
             const character = attacker.character_id
                 ? await getCachedCharacter(attacker.character_id)
                 : null;
@@ -328,7 +393,8 @@ async function processAttackers(attackers: IESIAttacker[]): Promise<IAttacker[]>
                 ship_group_id: shipGroup?.group_id || 0,
                 ship_group_name: shipGroup?.name || { en: "" },
                 character_id: attacker.character_id || 0,
-                character_name: character?.name || ship?.name.en || weapon?.name.en || "",
+                character_name:
+                    character?.name || ship?.name.en || weapon?.name.en || "",
                 corporation_id: attacker.corporation_id || 0,
                 corporation_name: corporation?.name || "",
                 alliance_id: attacker.alliance_id || 0,
@@ -341,17 +407,28 @@ async function processAttackers(attackers: IESIAttacker[]): Promise<IAttacker[]>
                 weapon_type_id: attacker.weapon_type_id || 0,
                 weapon_type_name: weapon?.name || { en: "" },
             };
-        }),
+        })
     );
 }
 
-async function processItems(items: IESIVictimItem[], killmail_date: Date): Promise<IItem[]> {
+async function processItems(
+    items: IESIVictimItem[],
+    killmail_date: Date
+): Promise<IItem[]> {
     return await Promise.all(
         items.map(async (item) => {
-            const type = (await getCachedItem(Number(item.item_type_id))) || null;
-            const group = type?.group_id ? await getCachedInvGroup(type.group_id) : null;
-            const nestedItems = item.items ? await processItems(item.items, killmail_date) : [];
-            const value = await getCachedPrice(Number(item.item_type_id), killmail_date);
+            const type =
+                (await getCachedItem(Number(item.item_type_id))) || null;
+            const group = type?.group_id
+                ? await getCachedInvGroup(type.group_id)
+                : null;
+            const nestedItems = item.items
+                ? await processItems(item.items, killmail_date)
+                : [];
+            const value = await getCachedPrice(
+                Number(item.item_type_id),
+                killmail_date
+            );
             return {
                 type_id: item.item_type_id || 0,
                 name: type?.name || { en: "" },
@@ -365,7 +442,76 @@ async function processItems(items: IESIVictimItem[], killmail_date: Date): Promi
                 value: value || 0,
                 ...(nestedItems.length > 0 && { items: nestedItems }),
             };
-        }),
+        })
+    );
+}
+
+/**
+ * Handle achievement processing for a character involved in a killmail
+ * - If character doesn't exist in CharacterAchievements: Queue immediately
+ * - If character exists: Set needs_processing = true
+ */
+async function handleCharacterAchievementUpdate(
+    characterId: number
+): Promise<void> {
+    if (!characterId || characterId <= 0) {
+        return; // Skip invalid character IDs
+    }
+
+    try {
+        // Check if character already has achievement record
+        const existingRecord = await CharacterAchievements.exists({
+            character_id: characterId,
+        });
+
+        if (!existingRecord) {
+            // Character doesn't exist - queue for immediate processing
+            await queueAchievementProcessing(characterId, 3); // Higher priority for new characters
+        } else {
+            // Character exists - just mark as needing processing
+            await CharacterAchievements.updateOne(
+                { character_id: characterId },
+                { needs_processing: true }
+            );
+        }
+    } catch (error) {
+        console.error(
+            `Failed to handle achievement update for character ${characterId}:`,
+            error
+        );
+        // Don't throw - we don't want achievement processing to break killmail processing
+    }
+}
+
+/**
+ * Handle achievement processing for all characters involved in a killmail
+ */
+async function handleKillmailAchievementUpdates(
+    victimCharacterId: number | undefined,
+    attackerCharacterIds: number[]
+): Promise<void> {
+    const characterIds: number[] = [];
+
+    // Add victim if it's a valid character ID
+    if (victimCharacterId && victimCharacterId > 0) {
+        characterIds.push(victimCharacterId);
+    }
+
+    // Add attackers with valid character IDs
+    for (const attackerId of attackerCharacterIds) {
+        if (attackerId && attackerId > 0) {
+            characterIds.push(attackerId);
+        }
+    }
+
+    // Remove duplicates (in case same character appears multiple times)
+    const uniqueCharacterIds = [...new Set(characterIds)];
+
+    // Process all characters concurrently
+    await Promise.all(
+        uniqueCharacterIds.map((characterId) =>
+            handleCharacterAchievementUpdate(characterId)
+        )
     );
 }
 

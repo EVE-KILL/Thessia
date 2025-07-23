@@ -48,6 +48,7 @@ const characterAchievementsSchema = new Schema<ICharacterAchievementsDocument>(
         total_achievements: { type: Number, required: true, default: 0 },
         achievements: { type: [characterAchievementSchema], default: [] },
         last_calculated: { type: Date, required: true, default: Date.now },
+        needs_processing: { type: Boolean, required: true, default: false },
         updatedAt: { type: Date },
         createdAt: { type: Date },
     },
@@ -72,6 +73,7 @@ characterAchievementsSchema.index(
     { sparse: true }
 );
 characterAchievementsSchema.index({ last_calculated: 1 }, { sparse: true });
+characterAchievementsSchema.index({ needs_processing: 1 }, { sparse: true });
 characterAchievementsSchema.index({ createdAt: 1 }, { sparse: true });
 characterAchievementsSchema.index({ updatedAt: 1 }, { sparse: true });
 

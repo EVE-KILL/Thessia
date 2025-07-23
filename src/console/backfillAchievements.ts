@@ -1,4 +1,4 @@
-import { queueAchievementProcessing } from "~/server/queue/Achievement";
+import { queueAchievementProcessingBulk } from "~/server/queue/Achievement";
 import { cliLogger } from "~/server/helpers/Logger";
 import { Stats } from "~/server/models/Stats";
 
@@ -22,7 +22,7 @@ export default {
             const characterStats = await Stats.find(
                 { type: "character_id", days: 0, id: { $gte: 3_999_999 } },
                 { id: 1 }, // Only select the id field (which is the character_id)
-                { sort: { id: 1 }, limit: 500 } // Sort by character ID for consistent ordering
+                { sort: { id: 1 } } // Sort by character ID for consistent ordering
             );
 
             const characterIds = characterStats.map((stat) => stat.id);
@@ -43,18 +43,9 @@ export default {
                 `Starting to queue ${validCharacterIds.length} characters for achievement processing...`
             );
 
-            for (const characterId of validCharacterIds) {
-                // Queue the character for achievement processing
-                await queueAchievementProcessing(characterId, 1);
-                queued++;
-
-                // Log progress every 1000 characters
-                if (queued % 1000 === 0) {
-                    cliLogger.info(
-                        `📋 Queued ${queued}/${validCharacterIds.length} characters`
-                    );
-                }
-            }
+            // Queue all characters in bulk for much better performance
+            await queueAchievementProcessingBulk(validCharacterIds, 1, 1000);
+            queued = validCharacterIds.length;
 
             cliLogger.info(`🎉 Achievement backfill queueing completed!`);
             cliLogger.info(`📊 Final Results:`);
