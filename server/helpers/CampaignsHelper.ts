@@ -217,16 +217,18 @@ export function buildExpandedQuery(
 }
 
 /**
- * Build a strict directional query that only matches when attackers are attackers and victims are victims
+ * Build a bidirectional query that matches when either:
+ * - Attackers are attackers and victims are victims, OR
+ * - Victims are attackers and attackers are victims (reverse direction)
  * @param attackerSpecs - Specifications for the attacker side
  * @param victimSpecs - Specifications for the victim side
- * @returns Query object that matches strict directional engagement
+ * @returns Query object that matches bidirectional engagement
  */
 function buildStrictDirectionalQuery(
     attackerSpecs: Record<string, any>,
     victimSpecs: Record<string, any>
 ): Record<string, any> {
-    // Build query components for strict direction only
+    // Build query components for both directions
     const attackerSideAttacks = buildDirectionalMatchQuery(
         attackerSpecs,
         "attackers."
@@ -236,9 +238,28 @@ function buildStrictDirectionalQuery(
         "victim."
     );
 
-    // Only one direction: Attacker side attacks victim side
+    // Build reverse direction components
+    const victimSideAttacks = buildDirectionalMatchQuery(
+        victimSpecs,
+        "attackers."
+    );
+    const attackerSideAsVictim = buildDirectionalMatchQuery(
+        attackerSpecs,
+        "victim."
+    );
+
+    // Match either direction: (Attackers attack Victims) OR (Victims attack Attackers)
     return {
-        $and: [attackerSideAttacks, victimSideAsVictim],
+        $or: [
+            // Direction 1: Attacker side attacks victim side
+            {
+                $and: [attackerSideAttacks, victimSideAsVictim],
+            },
+            // Direction 2: Victim side attacks attacker side
+            {
+                $and: [victimSideAttacks, attackerSideAsVictim],
+            },
+        ],
     };
 }
 
@@ -556,6 +577,17 @@ async function processFactionIds(
 
 /**
  * Generates aggregated statistics for a campaign based on its ID or direct campaign data.
+ *
+ * For mixed campaigns (both attackers and victims defined), the calculations are split into separate steps:
+ * 1. Calculate kills done by attackers vs victims
+ * 2. Calculate kills done by victims vs attackers
+ * 3. Calculate ISK damage inflicted by attackers vs victims
+ * 4. Calculate ISK damage inflicted by victims vs attackers
+ * 5. Calculate ships killed by attackers vs victims
+ * 6. Calculate ships killed by victims vs attackers
+ *
+ * The killmail list only includes attackers vs victims kills (not the reverse direction).
+ *
  * @param campaignIdOrData - Either the unique identifier of the campaign or complete campaign data object.
  * @returns An object containing the campaign statistics.
  */
@@ -832,10 +864,21 @@ export async function generateCampaignStats(
         }));
     }
 
-    // Calculate efficiency
-    if (stats.attackerVsVictim && stats.iskDamageReceivedAttacker > 0) {
-        stats.efficiency =
-            stats.iskDamageDoneAttacker / stats.iskDamageReceivedAttacker;
+    // Calculate efficiency for attacker vs victim campaigns
+    if (stats.attackerVsVictim) {
+        // Efficiency = ISK damage done by attackers / ISK damage done by victims
+        const iskDamageDoneAttacker = stats.iskDamageDoneAttacker || 0;
+        const iskDamageDoneVictim = stats.iskDamageDoneVictim || 0;
+
+        if (iskDamageDoneVictim > 0) {
+            stats.efficiency = iskDamageDoneAttacker / iskDamageDoneVictim;
+        } else if (iskDamageDoneAttacker > 0) {
+            // If attackers did damage but victims did none, efficiency is infinite (represented as a large number)
+            stats.efficiency = 999999;
+        } else {
+            // If neither side did damage, efficiency is 0
+            stats.efficiency = 0;
+        }
     } else {
         stats.efficiency = 0;
     }
@@ -854,6 +897,8 @@ export async function generateCampaignStats(
     stats.topKillersByAlliance = topKillersAlliances;
     stats.topVictimsByAlliance = topVictimsAlliances;
     stats.mostValuableKills = mostValuableKills;
+
+    // Debug logging for final campaign statistics
 
     return stats;
 }
@@ -939,11 +984,6 @@ async function processKillmailBatch(
     for (const km of batch) {
         if (!km.victim || !km.attackers || km.attackers.length === 0) continue;
 
-        // Store the killmail ID directly in array at the calculated position
-        if (km.killmail_id) {
-            killmailIds[localIndex++] = km.killmail_id;
-        }
-
         // Process attacker and victim side determination in parallel
         const [
             victimOnAttackerSide,
@@ -963,8 +1003,10 @@ async function processKillmailBatch(
                 ))(),
         ]);
 
+        // Determine if this killmail should be included in the main killmail list
+        let shouldIncludeInKillmailList = false;
+
         if (stats.attackerVsVictim) {
-            // Check if campaign defines any attackers
             const hasAttackerDefinitions = Object.keys(campaignQuery).some(
                 (key) => key.startsWith("attackers.")
             );
@@ -972,69 +1014,84 @@ async function processKillmailBatch(
                 (key) => key.startsWith("victim.")
             );
 
-            // Attribution logic for kills, losses and ISK damage
-            if (
-                hasAttackerDefinitions &&
-                attackersOnAttackerSide &&
-                !victimOnAttackerSide
-            ) {
-                // Campaign-defined attackers killed a non-campaign entity
-                stats.totalKills++;
-                stats.iskDamageDoneAttacker += km.total_value || 0;
-
-                // Add to tracked killmails for stats consistency
-                if (!trackedForStats.has(km.killmail_id)) {
-                    trackedForStats.add(km.killmail_id);
+            if (hasAttackerDefinitions && hasVictimDefinitions) {
+                // Mixed Campaign: Only include attackers vs victims kills in the killmail list
+                if (attackersOnAttackerSide && victimOnVictimSide) {
+                    shouldIncludeInKillmailList = true;
+                }
+            } else {
+                // Single-side campaigns: include all relevant kills
+                if (hasAttackerDefinitions && attackersOnAttackerSide) {
+                    shouldIncludeInKillmailList = true;
+                } else if (hasVictimDefinitions && victimOnVictimSide) {
+                    shouldIncludeInKillmailList = true;
                 }
             }
+        } else {
+            // General campaigns: include all killmails
+            shouldIncludeInKillmailList = true;
+        }
 
-            if (hasAttackerDefinitions && victimOnAttackerSide) {
-                // A campaign-defined attacker entity was killed
-                stats.totalLosses++;
-                stats.iskDamageReceivedAttacker += km.total_value || 0;
+        // Store the killmail ID only if it should be included in the list
+        if (km.killmail_id && shouldIncludeInKillmailList) {
+            killmailIds[localIndex++] = km.killmail_id;
+        }
 
-                // Add to tracked killmails for stats consistency
-                if (!trackedForStats.has(km.killmail_id)) {
-                    trackedForStats.add(km.killmail_id);
+        if (stats.attackerVsVictim) {
+            // Check if campaign defines any attackers or victims
+            const hasAttackerDefinitions = Object.keys(campaignQuery).some(
+                (key) => key.startsWith("attackers.")
+            );
+            const hasVictimDefinitions = Object.keys(campaignQuery).some(
+                (key) => key.startsWith("victim.")
+            );
+
+            if (hasAttackerDefinitions && hasVictimDefinitions) {
+                // Mixed Campaign: Calculate both directions separately for complete statistics
+
+                // Step 1: Calculate kills done by attackers vs victims
+                if (attackersOnAttackerSide && victimOnVictimSide) {
+                    stats.totalKills++;
+
+                    // Step 3: Calculate ISK damage inflicted by attackers vs victims
+                    stats.iskDamageDoneAttacker += km.total_value || 0;
+                    stats.iskDamageReceivedVictim += km.total_value || 0;
+
+                    // Only include attackers vs victims kills in the killmail list
+                    if (!trackedForStats.has(km.killmail_id)) {
+                        trackedForStats.add(km.killmail_id);
+                    }
                 }
-            }
 
-            if (hasVictimDefinitions && victimOnVictimSide) {
-                // A campaign-defined victim entity was killed (loss)
-                stats.totalLosses++;
-                stats.iskDamageReceivedVictim += km.total_value || 0;
+                // Step 2: Calculate kills done by victims vs attackers (for complete stats)
+                if (attackersOnVictimSide && victimOnAttackerSide) {
+                    stats.totalLosses++;
 
-                // Add to tracked killmails for stats consistency
-                if (!trackedForStats.has(km.killmail_id)) {
-                    trackedForStats.add(km.killmail_id);
+                    // Step 4: Calculate ISK damage inflicted by victims vs attackers
+                    stats.iskDamageDoneVictim += km.total_value || 0;
+                    stats.iskDamageReceivedAttacker += km.total_value || 0;
+
+                    // Note: We don't add these to trackedForStats as they shouldn't be in the main killmail list
                 }
-            }
+            } else if (hasAttackerDefinitions && !hasVictimDefinitions) {
+                // Attacker-only Campaign: Track only kills by attackers
+                if (attackersOnAttackerSide) {
+                    stats.totalKills++;
+                    stats.iskDamageDoneAttacker += km.total_value || 0;
 
-            // For victim-only campaigns, we don't count kills when victims attack others
-            // The campaign is tracking losses of the victim entities, not their kills
-            if (
-                hasVictimDefinitions &&
-                !hasAttackerDefinitions &&
-                attackersOnVictimSide &&
-                !victimOnVictimSide
-            ) {
-                // This is a victim-only campaign, but victim entities killed someone else
-                // We don't count this as a kill because we're only tracking their losses
-                // Just track the ISK damage for completeness
-                stats.iskDamageDoneVictim += km.total_value || 0;
-            } else if (
-                hasVictimDefinitions &&
-                hasAttackerDefinitions &&
-                attackersOnVictimSide &&
-                !victimOnVictimSide
-            ) {
-                // This is an attacker vs victim campaign, and victim entities killed a non-campaign entity
-                stats.totalKills++;
-                stats.iskDamageDoneVictim += km.total_value || 0;
+                    if (!trackedForStats.has(km.killmail_id)) {
+                        trackedForStats.add(km.killmail_id);
+                    }
+                }
+            } else if (hasVictimDefinitions && !hasAttackerDefinitions) {
+                // Victim-only Campaign: Track only losses of victims
+                if (victimOnVictimSide) {
+                    stats.totalLosses++;
+                    stats.iskDamageReceivedVictim += km.total_value || 0;
 
-                // Add to tracked killmails for stats consistency
-                if (!trackedForStats.has(km.killmail_id)) {
-                    trackedForStats.add(km.killmail_id);
+                    if (!trackedForStats.has(km.killmail_id)) {
+                        trackedForStats.add(km.killmail_id);
+                    }
                 }
             }
         } else {
@@ -1128,33 +1185,30 @@ async function processShipGroupStat(
             (key) => key.startsWith("victim.")
         );
 
-        if (hasAttackerDefinitions && victimOnAttackerSide) {
-            // Campaign-defined attacker lost a ship
-            shipStat.lost++;
-        } else if (hasAttackerDefinitions && attackersOnAttackerSide) {
-            // Campaign-defined attackers killed a ship
-            shipStat.killed++;
-        }
+        if (hasAttackerDefinitions && hasVictimDefinitions) {
+            // Mixed Campaign: Track both directions separately
 
-        if (hasVictimDefinitions && victimOnVictimSide) {
-            // Campaign-defined victim lost a ship
-            shipStat.lost++;
-        } else if (
-            hasVictimDefinitions &&
-            !hasAttackerDefinitions &&
-            attackersOnVictimSide
-        ) {
-            // This is a victim-only campaign and victim entities killed someone else
-            // For victim-only campaigns, we don't count this as a "kill" because we're tracking their losses
-            // We only track the ship that was killed (by the victim entities), not as a kill for the campaign
-            // Do nothing - don't increment killed count for victim-only campaigns
-        } else if (
-            hasVictimDefinitions &&
-            hasAttackerDefinitions &&
-            attackersOnVictimSide
-        ) {
-            // This is an attacker vs victim campaign and victim entities killed someone
-            shipStat.killed++;
+            // Step 5: Calculate ships killed by attackers vs victims
+            if (attackersOnAttackerSide && victimOnVictimSide) {
+                shipStat.killed++;
+            }
+
+            // Step 6: Calculate ships killed by victims vs attackers
+            if (attackersOnVictimSide && victimOnAttackerSide) {
+                shipStat.lost++;
+            }
+        } else if (hasAttackerDefinitions && !hasVictimDefinitions) {
+            // Attacker-only Campaign: Only track kills by attackers
+            if (attackersOnAttackerSide) {
+                shipStat.killed++;
+            }
+            // Don't track losses for attacker-only campaigns
+        } else if (hasVictimDefinitions && !hasAttackerDefinitions) {
+            // Victim-only Campaign: Only track losses of victims
+            if (victimOnVictimSide) {
+                shipStat.lost++;
+            }
+            // Don't track kills for victim-only campaigns
         }
     } else {
         // General Tracking
@@ -1296,53 +1350,81 @@ async function processKillerAttribution(
     );
 
     if (stats.attackerVsVictim) {
-        // For mixed campaigns (both attackers and victims defined), we track kills differently
+        // For mixed campaigns (both attackers and victims defined), we track kills from both directions
         if (hasAttackerDefinitions && hasVictimDefinitions) {
-            // Mixed campaign: track kills by campaign-defined entities (both sides)
-            let finalBlowAttacker = km.attackers.find(
-                (a: any) =>
-                    a.is_final_blow &&
-                    (isAttackerSide(a, campaignQuery) ||
-                        isVictimSide(a, campaignQuery))
-            );
+            // Mixed campaign: track kills by both campaign-defined sides
 
-            // If no final blow from campaign entities, find top damage dealer from campaign entities
-            if (!finalBlowAttacker) {
-                finalBlowAttacker = km.attackers
-                    .filter(
-                        (a: any) =>
-                            isAttackerSide(a, campaignQuery) ||
-                            isVictimSide(a, campaignQuery)
-                    )
-                    .sort(
-                        (a: any, b: any) =>
-                            (b.damage_done || 0) - (a.damage_done || 0)
-                    )[0];
-            }
-
-            // If we have a valid campaign entity to attribute the kill to
-            if (finalBlowAttacker && finalBlowAttacker.character_id) {
-                let killerStat = characterKillsMap.get(
-                    finalBlowAttacker.character_id
+            // Track kills when attackers kill victims
+            if (attackersOnAttackerSide && victimOnVictimSide) {
+                let finalBlowAttacker = km.attackers.find(
+                    (a: any) =>
+                        a.is_final_blow && isAttackerSide(a, campaignQuery)
                 );
-                if (!killerStat) {
-                    killerStat = {
-                        character_id: finalBlowAttacker.character_id,
-                        character_name:
-                            finalBlowAttacker.character_name ||
-                            "Unknown Character",
-                        kills: 0,
-                    };
-                    characterKillsMap.set(
-                        finalBlowAttacker.character_id,
-                        killerStat
-                    );
+
+                if (!finalBlowAttacker) {
+                    finalBlowAttacker = km.attackers
+                        .filter((a: any) => isAttackerSide(a, campaignQuery))
+                        .sort(
+                            (a: any, b: any) =>
+                                (b.damage_done || 0) - (a.damage_done || 0)
+                        )[0];
                 }
 
-                // Only increment if we haven't counted this killmail for this character
-                if (!trackedKillmails.has(km.killmail_id)) {
+                if (finalBlowAttacker && finalBlowAttacker.character_id) {
+                    let killerStat = characterKillsMap.get(
+                        finalBlowAttacker.character_id
+                    );
+                    if (!killerStat) {
+                        killerStat = {
+                            character_id: finalBlowAttacker.character_id,
+                            character_name:
+                                finalBlowAttacker.character_name ||
+                                "Unknown Character",
+                            kills: 0,
+                        };
+                        characterKillsMap.set(
+                            finalBlowAttacker.character_id,
+                            killerStat
+                        );
+                    }
                     killerStat.kills++;
-                    trackedKillmails.add(km.killmail_id);
+                }
+            }
+
+            // Track kills when victims kill attackers (for complete statistics)
+            if (attackersOnVictimSide && victimOnAttackerSide) {
+                let finalBlowAttacker = km.attackers.find(
+                    (a: any) =>
+                        a.is_final_blow && isVictimSide(a, campaignQuery)
+                );
+
+                if (!finalBlowAttacker) {
+                    finalBlowAttacker = km.attackers
+                        .filter((a: any) => isVictimSide(a, campaignQuery))
+                        .sort(
+                            (a: any, b: any) =>
+                                (b.damage_done || 0) - (a.damage_done || 0)
+                        )[0];
+                }
+
+                if (finalBlowAttacker && finalBlowAttacker.character_id) {
+                    let killerStat = characterKillsMap.get(
+                        finalBlowAttacker.character_id
+                    );
+                    if (!killerStat) {
+                        killerStat = {
+                            character_id: finalBlowAttacker.character_id,
+                            character_name:
+                                finalBlowAttacker.character_name ||
+                                "Unknown Character",
+                            kills: 0,
+                        };
+                        characterKillsMap.set(
+                            finalBlowAttacker.character_id,
+                            killerStat
+                        );
+                    }
+                    killerStat.kills++;
                 }
             }
         } else if (
@@ -1508,7 +1590,19 @@ async function processVictimAttribution(
 
         if (stats.attackerVsVictim) {
             // For attacker vs victim campaigns, track based on campaign definitions
-            if (hasVictimDefinitions && victimOnVictimSide) {
+            if (hasAttackerDefinitions && hasVictimDefinitions) {
+                // Mixed campaign: track victims from both directions
+
+                // 1. Track when campaign-defined victims are killed
+                if (hasVictimDefinitions && victimOnVictimSide) {
+                    shouldTrackVictim = true;
+                }
+
+                // 2. Track when campaign-defined attackers are killed (cross-pollination)
+                if (hasAttackerDefinitions && victimOnAttackerSide) {
+                    shouldTrackVictim = true;
+                }
+            } else if (hasVictimDefinitions && victimOnVictimSide) {
                 // Campaign-defined victim was killed
                 shouldTrackVictim = true;
             } else if (hasAttackerDefinitions && victimOnAttackerSide) {
@@ -1521,9 +1615,6 @@ async function processVictimAttribution(
             ) {
                 // Attacker-only campaign: track victims who are NOT part of the defined attackers
                 shouldTrackVictim = true;
-            } else if (hasVictimDefinitions && !hasAttackerDefinitions) {
-                // Victim-only campaign: only track the defined victims when they die
-                // (already covered by the victimOnVictimSide check above)
             }
         } else {
             // For general campaigns (location/time based), track all victims

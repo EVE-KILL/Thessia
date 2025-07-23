@@ -46,12 +46,12 @@
                     <div class="horizontal-stat">
                         <div class="hl-item">
                             <span class="hl-label text-green-500">{{ t('campaign.inflicted') }}: </span>
-                            <span class="hl-value text-green-500">{{ formatIsk(stats.iskDamageDoneAttacker) }}</span>
+                            <span class="hl-value text-green-500">{{ formatIsk(iskInflicted) }}</span>
                         </div>
                         <UIcon name="lucide:arrow-right" class="hl-arrow" />
                         <div class="hl-item">
                             <span class="hl-label text-red-500">{{ t('campaign.received') }}: </span>
-                            <span class="hl-value text-red-500">{{ formatIsk(stats.iskDamageReceivedAttacker) }}</span>
+                            <span class="hl-value text-red-500">{{ formatIsk(iskReceived) }}</span>
                         </div>
                     </div>
                 </div>
@@ -100,20 +100,68 @@ const totalIskDestroyed = computed(() => {
         const hasVictimDefinitions = Object.keys(props.stats.campaignQuery).some((key) =>
             key.startsWith("victim.")
         );
-        
+
         if (hasVictimDefinitions && !hasAttackerDefinitions) {
             // Victim-only campaign: "destroyed" ISK is what the victims lost
-            return props.stats.iskDamageReceivedVictim;
+            return props.stats.iskDamageReceivedVictim || 0;
         } else if (hasAttackerDefinitions && !hasVictimDefinitions) {
-            // Attacker-only campaign: "destroyed" ISK is what the attackers dealt + what they lost
-            return props.stats.iskDamageDoneAttacker + props.stats.iskDamageReceivedAttacker;
+            // Attacker-only campaign: "destroyed" ISK is what the attackers dealt
+            return props.stats.iskDamageDoneAttacker || 0;
         } else {
             // Mixed campaign: sum all damage done by both sides
-            return props.stats.iskDamageDoneAttacker + props.stats.iskDamageDoneVictim;
+            return (props.stats.iskDamageDoneAttacker || 0) + (props.stats.iskDamageDoneVictim || 0);
         }
     }
     // For general campaigns, use attacker field (which contains all ISK damage)
-    return props.stats.iskDamageDoneAttacker;
+    return props.stats.iskDamageDoneAttacker || 0;
+});
+
+const iskInflicted = computed(() => {
+    // For mixed campaigns, show total ISK inflicted by both sides
+    if (props.stats.attackerVsVictim) {
+        const hasAttackerDefinitions = Object.keys(props.stats.campaignQuery).some((key) =>
+            key.startsWith("attackers.")
+        );
+        const hasVictimDefinitions = Object.keys(props.stats.campaignQuery).some((key) =>
+            key.startsWith("victim.")
+        );
+
+        if (hasAttackerDefinitions && hasVictimDefinitions) {
+            // Mixed campaign: show total damage done by attackers
+            return props.stats.iskDamageDoneAttacker || 0;
+        } else if (hasAttackerDefinitions && !hasVictimDefinitions) {
+            // Attacker-only: show damage done by attackers
+            return props.stats.iskDamageDoneAttacker || 0;
+        } else {
+            // Victim-only: show damage done by victims (cross-pollination)
+            return props.stats.iskDamageDoneVictim || 0;
+        }
+    }
+    return props.stats.iskDamageDoneAttacker || 0;
+});
+
+const iskReceived = computed(() => {
+    // For mixed campaigns, show total ISK received by both sides
+    if (props.stats.attackerVsVictim) {
+        const hasAttackerDefinitions = Object.keys(props.stats.campaignQuery).some((key) =>
+            key.startsWith("attackers.")
+        );
+        const hasVictimDefinitions = Object.keys(props.stats.campaignQuery).some((key) =>
+            key.startsWith("victim.")
+        );
+
+        if (hasAttackerDefinitions && hasVictimDefinitions) {
+            // Mixed campaign: show damage received by attackers
+            return props.stats.iskDamageReceivedAttacker || 0;
+        } else if (hasAttackerDefinitions && !hasVictimDefinitions) {
+            // Attacker-only: no received damage to show
+            return 0;
+        } else {
+            // Victim-only: show damage received by victims
+            return props.stats.iskDamageReceivedVictim || 0;
+        }
+    }
+    return 0;
 });
 
 // Helpers
