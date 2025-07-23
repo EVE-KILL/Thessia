@@ -58,6 +58,7 @@ const leftNavItems = computed(() => [
             { name: t("highsec"), label: t("highsec"), to: "/kills/highsec" },
             { name: t("lowsec"), label: t("lowsec"), to: "/kills/lowsec" },
             { name: t("nullsec"), label: t("nullsec"), to: "/kills/nullsec" },
+            { name: t("pochven"), label: t("pochven"), to: "/kills/pochven" },
             { name: t("big"), label: t("big"), to: "/kills/big" },
             { name: t("solo"), label: t("solo"), to: "/kills/solo" },
             { name: t("npc"), label: t("npc"), to: "/kills/npc" },

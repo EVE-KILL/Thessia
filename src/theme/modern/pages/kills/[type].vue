@@ -19,7 +19,7 @@ import { useI18n } from 'vue-i18n'
 import KillList from '~/src/theme/modern/components/common/KillList.vue'
 
 const allowedTypes = [
-    'latest', 'abyssal', 'wspace', 'highsec', 'lowsec', 'nullsec', 'big', 'solo', 'npc',
+    'latest', 'abyssal', 'wspace', 'highsec', 'lowsec', 'nullsec', 'pochven', 'big', 'solo', 'npc',
     '5b', '10b', 'citadels', 't1', 't2', 't3', 'frigates', 'destroyers', 'cruisers',
     'battlecruisers', 'battleships', 'capitals', 'freighters', 'supercarriers', 'titans'
 ]
