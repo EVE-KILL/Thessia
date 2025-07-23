@@ -187,7 +187,7 @@ processCampaigns:
             memory: 256Mi
         limits:
             cpu: 4000m
-            memory: 1024Mi
+            memory: 8096Mi
     securityContext:
         runAsUser: 1000
         runAsGroup: 1000
@@ -204,7 +204,7 @@ processAchievements:
             memory: 256Mi
         limits:
             cpu: 4000m
-            memory: 1024Mi
+            memory: 8096Mi
     securityContext:
         runAsUser: 1000
         runAsGroup: 1000
