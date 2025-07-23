@@ -1930,6 +1930,7 @@ export class AchievementService {
             threshold: achievement.threshold || 1,
             current_count: 0,
             is_completed: false,
+            completion_tiers: 0,
             last_updated: new Date(),
         }));
 
@@ -1973,6 +1974,7 @@ export class AchievementService {
             threshold: achievement.threshold || 1,
             current_count: 0,
             is_completed: false,
+            completion_tiers: 0,
             last_updated: new Date(),
         }));
 
@@ -2055,11 +2057,16 @@ export class AchievementService {
                         characterRecord.achievements[existingAchievementIndex];
                     const wasCompleted = existingAchievement.is_completed;
                     const isCompleted = count >= (achievement.threshold || 1);
+                    
+                    // Calculate completion tiers (how many times they've earned this achievement)
+                    const newCompletionTiers = Math.floor(count / (achievement.threshold || 1));
+                    const oldCompletionTiers = existingAchievement.completion_tiers || 0;
 
                     // Update if count changed or completion status changed
                     if (
                         existingAchievement.current_count !== count ||
-                        wasCompleted !== isCompleted
+                        wasCompleted !== isCompleted ||
+                        oldCompletionTiers !== newCompletionTiers
                     ) {
                         updates[
                             `achievements.${existingAchievementIndex}.current_count`
@@ -2067,6 +2074,9 @@ export class AchievementService {
                         updates[
                             `achievements.${existingAchievementIndex}.is_completed`
                         ] = isCompleted;
+                        updates[
+                            `achievements.${existingAchievementIndex}.completion_tiers`
+                        ] = newCompletionTiers;
                         updates[
                             `achievements.${existingAchievementIndex}.last_updated`
                         ] = new Date();
@@ -2108,8 +2118,9 @@ export class AchievementService {
                 const completedAchievements = updatedRecord.achievements.filter(
                     (a) => a.is_completed
                 );
-                const totalPoints = completedAchievements.reduce(
-                    (sum, achievement) => sum + achievement.points,
+                // Calculate total points based on completion tiers (each tier = full points)
+                const totalPoints = updatedRecord.achievements.reduce(
+                    (sum, achievement) => sum + (achievement.points * (achievement.completion_tiers || 0)),
                     0
                 );
 
@@ -2130,8 +2141,9 @@ export class AchievementService {
             const completedAchievements = characterRecord.achievements.filter(
                 (a) => a.is_completed
             );
-            const totalPoints = completedAchievements.reduce(
-                (sum, achievement) => sum + achievement.points,
+            // Calculate total points based on completion tiers (each tier = full points)
+            const totalPoints = characterRecord.achievements.reduce(
+                (sum, achievement) => sum + (achievement.points * (achievement.completion_tiers || 0)),
                 0
             );
 

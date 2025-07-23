@@ -32,6 +32,7 @@ const characterAchievementSchema = new Schema<ICharacterAchievement>(
         threshold: { type: Number, required: true },
         current_count: { type: Number, required: true, default: 0 },
         is_completed: { type: Boolean, required: true, default: false },
+        completion_tiers: { type: Number, required: true, default: 0 },
         completed_at: { type: Date },
         last_updated: { type: Date, required: true, default: Date.now },
     },

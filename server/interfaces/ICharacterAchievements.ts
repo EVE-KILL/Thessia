@@ -14,6 +14,7 @@ export interface ICharacterAchievement {
     threshold: number;
     current_count: number;
     is_completed: boolean;
+    completion_tiers: number; // How many times they've earned this achievement (e.g., 10 for someone with 500 kills when threshold is 50)
     completed_at?: Date;
     last_updated: Date;
 }
