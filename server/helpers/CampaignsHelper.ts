@@ -116,8 +116,8 @@ function isVictimSide(
 }
 
 /**
- * Transforms the campaign query into an expanded MongoDB query that properly handles
- * attackers and victims being on either side of the engagement.
+ * Transforms the campaign query into an expanded MongoDB query that respects
+ * role separation - attackers remain attackers, victims remain victims.
  * @param campaignQuery - The original campaign query
  * @returns The expanded MongoDB query
  */
@@ -155,16 +155,16 @@ export function buildExpandedQuery(campaignQuery: ICampaign['query']): Record<st
 
     // Handle different filter scenarios
     if (hasAttackerSpecs && hasVictimSpecs) {
-        // Both attacker and victim specs are present - build a bidirectional engagement query
-        const bidirectionalQuery = buildBidirectionalQuery(attackerSpecs, victimSpecs);
-        Object.assign(expandedQuery, bidirectionalQuery);
+        // Both attacker and victim specs are present - build a strict directional query
+        const strictDirectionalQuery = buildStrictDirectionalQuery(attackerSpecs, victimSpecs);
+        Object.assign(expandedQuery, strictDirectionalQuery);
     } else if (hasAttackerSpecs) {
-        // Only attacker specs - build a flexible matching for attacker entities
-        const attackerQuery = buildFlexibleEntityQuery(attackerSpecs);
+        // Only attacker specs - build a query that only matches attackers
+        const attackerQuery = buildAttackerOnlyQuery(attackerSpecs);
         Object.assign(expandedQuery, attackerQuery);
     } else if (hasVictimSpecs) {
-        // Only victim specs - build a flexible matching for victim entities
-        const victimQuery = buildFlexibleEntityQuery(victimSpecs);
+        // Only victim specs - build a query that only matches victims
+        const victimQuery = buildVictimOnlyQuery(victimSpecs);
         Object.assign(expandedQuery, victimQuery);
     }
 
@@ -172,34 +172,23 @@ export function buildExpandedQuery(campaignQuery: ICampaign['query']): Record<st
 }
 
 /**
- * Build a bidirectional engagement query that captures both directions of combat
- * between attacker and victim sides
+ * Build a strict directional query that only matches when attackers are attackers and victims are victims
  * @param attackerSpecs - Specifications for the attacker side
  * @param victimSpecs - Specifications for the victim side
- * @returns Query object that matches bidirectional engagement
+ * @returns Query object that matches strict directional engagement
  */
-function buildBidirectionalQuery(
+function buildStrictDirectionalQuery(
     attackerSpecs: Record<string, any>,
     victimSpecs: Record<string, any>
 ): Record<string, any> {
-    // Build query components for each direction
+    // Build query components for strict direction only
     const attackerSideAttacks = buildDirectionalMatchQuery(attackerSpecs, 'attackers.');
     const victimSideAsVictim = buildDirectionalMatchQuery(victimSpecs, 'victim.');
-    const victimSideAttacks = buildDirectionalMatchQuery(victimSpecs, 'attackers.');
-    const attackerSideAsVictim = buildDirectionalMatchQuery(attackerSpecs, 'victim.');
 
-    // Direction 1: Attacker side attacks victim side
-    const direction1 = {
+    // Only one direction: Attacker side attacks victim side
+    return {
         $and: [attackerSideAttacks, victimSideAsVictim]
     };
-
-    // Direction 2: Victim side attacks attacker side
-    const direction2 = {
-        $and: [victimSideAttacks, attackerSideAsVictim]
-    };
-
-    // Combine both directions with OR
-    return { $or: [direction1, direction2] };
 }
 
 /**
@@ -246,46 +235,21 @@ function buildDirectionalMatchQuery(
 }
 
 /**
- * Build a flexible entity query that matches entities in either attacker or victim roles
- * @param specs - Entity specifications (attacker or victim)
- * @returns Query object with flexible entity matching
+ * Build a query that only matches entities as attackers
+ * @param specs - Entity specifications for attackers
+ * @returns Query object that matches entities only in attacker role
  */
-function buildFlexibleEntityQuery(specs: Record<string, any>): Record<string, any> {
-    const conditions: Record<string, any>[] = [];
+function buildAttackerOnlyQuery(specs: Record<string, any>): Record<string, any> {
+    return buildDirectionalMatchQuery(specs, 'attackers.');
+}
 
-    Object.entries(specs).forEach(([key, value]) => {
-        // Extract the entity type (e.g., 'character_id', 'corporation_id')
-        const entityType = key.replace('attackers.', '').replace('victim.', '');
-
-        // Define both possible field locations for this entity type
-        const attackerField = `attackers.${entityType}`;
-        const victimField = `victim.${entityType}`;
-
-        // Handle different value types ($in arrays or direct values)
-        if (typeof value === 'object' && value !== null && '$in' in value) {
-            conditions.push({
-                $or: [
-                    { [attackerField]: { $in: value.$in } },
-                    { [victimField]: { $in: value.$in } }
-                ]
-            });
-        } else {
-            conditions.push({
-                $or: [
-                    { [attackerField]: value },
-                    { [victimField]: value }
-                ]
-            });
-        }
-    });
-
-    // For single condition, return it directly
-    if (conditions.length === 1) {
-        return conditions[0];
-    }
-
-    // For multiple conditions, use $and to match all of them
-    return { $and: conditions };
+/**
+ * Build a query that only matches entities as victims
+ * @param specs - Entity specifications for victims
+ * @returns Query object that matches entities only in victim role
+ */
+function buildVictimOnlyQuery(specs: Record<string, any>): Record<string, any> {
+    return buildDirectionalMatchQuery(specs, 'victim.');
 }
 
 /**
