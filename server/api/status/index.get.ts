@@ -15,6 +15,8 @@ export default defineEventHandler(async () => {
     const killmailQueue = createQueue("killmail");
     const warQueue = createQueue("war");
     const statsQueue = createQueue("stats");
+    const achievementQueue = createQueue("achievement");
+    const campaignQueue = createQueue("campaign");
 
     const [
         allianceQueueCount,
@@ -24,7 +26,9 @@ export default defineEventHandler(async () => {
         corporationHistoryQueueCount,
         killmailQueueCount,
         warQueueCount,
-        statsQueueCount, // Added stats queue count
+        statsQueueCount,
+        achievementQueueCount,
+        campaignQueueCount,
         allianceCount,
         celestialCount,
         characterCount,
@@ -52,7 +56,9 @@ export default defineEventHandler(async () => {
         corporationHistoryQueue.count(),
         killmailQueue.count(),
         warQueue.count(),
-        statsQueue.count(), // Added stats queue count fetch
+        statsQueue.count(),
+        achievementQueue.count(),
+        campaignQueue.count(),
         Alliances.estimatedDocumentCount(),
         Celestials.estimatedDocumentCount(),
         Characters.estimatedDocumentCount(),
@@ -186,7 +192,9 @@ export default defineEventHandler(async () => {
             corporationhistory: corporationHistoryQueueCount,
             killmail: killmailQueueCount,
             war: warQueueCount,
-            stats: statsQueueCount, // Added stats queue count to output
+            stats: statsQueueCount,
+            achievement: achievementQueueCount,
+            campaign: campaignQueueCount,
         },
         processedCounts: {
             killmails: {
@@ -559,6 +567,94 @@ export default defineEventHandler(async () => {
                     (await statsQueue.getMetrics("completed", 0, MetricsTime.ONE_MONTH)).data
                         .slice(1)
                         .reduce((acc, cur) => Number(acc) + Number(cur), 0),
+                ),
+            },
+            achievements: {
+                "1min":
+                    Number((await achievementQueue.getMetrics("completed", 0, MetricsTime.ONE_MINUTE)).data[0]) || 0,
+                "5min": Number(
+                    (await achievementQueue.getMetrics("completed", 0, MetricsTime.FIVE_MINUTES)).data
+                        .slice(1)
+                        .reduce((acc: any, cur: any) => Number(acc) + Number(cur), 0),
+                ),
+                "15min": Number(
+                    (await achievementQueue.getMetrics("completed", 0, MetricsTime.FIFTEEN_MINUTES)).data
+                        .slice(1)
+                        .reduce((acc: any, cur: any) => Number(acc) + Number(cur), 0),
+                ),
+                "1hour": Number(
+                    (await achievementQueue.getMetrics("completed", 0, MetricsTime.ONE_HOUR)).data
+                        .slice(1)
+                        .reduce((acc: any, cur: any) => Number(acc) + Number(cur), 0),
+                ),
+                "6hours": Number(
+                    (await achievementQueue.getMetrics("completed", 0, MetricsTime.ONE_HOUR * 6)).data
+                        .slice(1)
+                        .reduce((acc: any, cur: any) => Number(acc) + Number(cur), 0),
+                ),
+                "12hours": Number(
+                    (await achievementQueue.getMetrics("completed", 0, MetricsTime.ONE_HOUR * 12)).data
+                        .slice(1)
+                        .reduce((acc: any, cur: any) => Number(acc) + Number(cur), 0),
+                ),
+                "24hours": Number(
+                    (await achievementQueue.getMetrics("completed", 0, MetricsTime.ONE_HOUR * 24)).data
+                        .slice(1)
+                        .reduce((acc: any, cur: any) => Number(acc) + Number(cur), 0),
+                ),
+                "1week": Number(
+                    (await achievementQueue.getMetrics("completed", 0, MetricsTime.ONE_HOUR * 24 * 7)).data
+                        .slice(1)
+                        .reduce((acc: any, cur: any) => Number(acc) + Number(cur), 0),
+                ),
+                "1month": Number(
+                    (await achievementQueue.getMetrics("completed", 0, MetricsTime.ONE_MONTH)).data
+                        .slice(1)
+                        .reduce((acc: any, cur: any) => Number(acc) + Number(cur), 0),
+                ),
+            },
+            campaigns: {
+                "1min":
+                    Number((await campaignQueue.getMetrics("completed", 0, MetricsTime.ONE_MINUTE)).data[0]) || 0,
+                "5min": Number(
+                    (await campaignQueue.getMetrics("completed", 0, MetricsTime.FIVE_MINUTES)).data
+                        .slice(1)
+                        .reduce((acc: any, cur: any) => Number(acc) + Number(cur), 0),
+                ),
+                "15min": Number(
+                    (await campaignQueue.getMetrics("completed", 0, MetricsTime.FIFTEEN_MINUTES)).data
+                        .slice(1)
+                        .reduce((acc: any, cur: any) => Number(acc) + Number(cur), 0),
+                ),
+                "1hour": Number(
+                    (await campaignQueue.getMetrics("completed", 0, MetricsTime.ONE_HOUR)).data
+                        .slice(1)
+                        .reduce((acc: any, cur: any) => Number(acc) + Number(cur), 0),
+                ),
+                "6hours": Number(
+                    (await campaignQueue.getMetrics("completed", 0, MetricsTime.ONE_HOUR * 6)).data
+                        .slice(1)
+                        .reduce((acc: any, cur: any) => Number(acc) + Number(cur), 0),
+                ),
+                "12hours": Number(
+                    (await campaignQueue.getMetrics("completed", 0, MetricsTime.ONE_HOUR * 12)).data
+                        .slice(1)
+                        .reduce((acc: any, cur: any) => Number(acc) + Number(cur), 0),
+                ),
+                "24hours": Number(
+                    (await campaignQueue.getMetrics("completed", 0, MetricsTime.ONE_HOUR * 24)).data
+                        .slice(1)
+                        .reduce((acc: any, cur: any) => Number(acc) + Number(cur), 0),
+                ),
+                "1week": Number(
+                    (await campaignQueue.getMetrics("completed", 0, MetricsTime.ONE_HOUR * 24 * 7)).data
+                        .slice(1)
+                        .reduce((acc: any, cur: any) => Number(acc) + Number(cur), 0),
+                ),
+                "1month": Number(
+                    (await campaignQueue.getMetrics("completed", 0, MetricsTime.ONE_MONTH)).data
+                        .slice(1)
+                        .reduce((acc: any, cur: any) => Number(acc) + Number(cur), 0),
                 ),
             },
         },
