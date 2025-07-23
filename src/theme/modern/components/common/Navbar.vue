@@ -160,7 +160,7 @@ const centerNavItems = computed(() => [
  */
 const rightNavItems = computed(() => [
     {
-        icon: "lucide:mail",
+        icon: "lucide:upload",
         position: "right",
         mobile: false,
         to: "/killmail"
