@@ -83,23 +83,10 @@
                     <!-- Ship Stats -->
                     <CampaignShipStats :stats="stats" class="mb-6" />
 
-                    <!-- Add Alliance/Corp layouts if needed -->
-                    <div v-if="entities.alliances.length && entities.corporations.length"
-                        class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-                        <CampaignEntities :title="t('campaign.alliances')" :entities="entities.alliances"
-                            entityType="alliance" />
-
-                        <CampaignEntities :title="t('campaign.corporations')" :entities="entities.corporations"
-                            entityType="corporation" />
-                    </div>
-                    <!-- If only one of them exists, show it full width -->
-                    <div v-else-if="entities.alliances.length" class="mb-6">
-                        <CampaignEntities :title="t('campaign.alliances')" :entities="entities.alliances"
-                            entityType="alliance" />
-                    </div>
-                    <div v-else-if="entities.corporations.length" class="mb-6">
-                        <CampaignEntities :title="t('campaign.corporations')" :entities="entities.corporations"
-                            entityType="corporation" />
+                    <!-- Most Valuable Kills -->
+                    <div v-if="stats.mostValuableKills && stats.mostValuableKills.length > 0" class="mb-6">
+                        <CampaignMostValuable :title="t('campaign.most_valuable_kills')" :items="stats.mostValuableKills"
+                            :limit="7" :loading="pending" />
                     </div>
 
                     <!-- Campaign-specific KillList component - Pass campaign query -->
@@ -108,33 +95,84 @@
 
                 <!-- Right Column - 20% -->
                 <div class="lg:w-1/5">
-                    <!-- Top Characters Box - Dynamic title based on campaign type -->
-                    <div class="mb-6 campaign-sidebar-box">
+                    <!-- Top Killers Box - Show if we have attacker definitions -->
+                    <div v-if="hasAttackerDefinitions && stats.topKillersByCharacter?.length" class="mb-6 campaign-sidebar-box">
                         <CampaignTopBox
-                            :title="campaignType === 'victim-only' ? t('campaign.top_victims') : t('campaign.top_killers')"
-                            :entities="stats.topKillersByCharacter || []"
+                            :title="t('campaign.top_killers')"
+                            :entities="stats.topKillersByCharacter"
                             :countField="'kills'"
-                            :countTitle="campaignType === 'victim-only' ? t('losses') : t('kills')"
+                            :countTitle="t('kills')"
                             entityType="character"
                             :loading="pending"
                             :limit="10" />
                     </div>
 
-                    <!-- Top Damage Dealers Box - Only show for mixed campaigns -->
-                    <div v-if="showAdvancedStats" class="mb-6 campaign-sidebar-box">
+                    <!-- Top Victims Box - Show if we have victim definitions -->
+                    <div v-if="hasVictimDefinitions && stats.topVictimsByCharacter?.length" class="mb-6 campaign-sidebar-box">
+                        <CampaignTopBox
+                            :title="t('campaign.top_victims')"
+                            :entities="stats.topVictimsByCharacter"
+                            :countField="'losses'"
+                            :countTitle="t('losses')"
+                            entityType="character"
+                            :loading="pending"
+                            :limit="10" />
+                    </div>
+
+                    <!-- Top Damage Dealers Box - Show if we have attackers -->
+                    <div v-if="hasAttackerDefinitions && stats.topDamageDealersByCharacter?.length" class="mb-6 campaign-sidebar-box">
                         <CampaignTopBox :title="t('campaign.top_damage_dealers')"
-                            :entities="stats.topDamageDealersByCharacter || []" :countField="'damageDone'"
+                            :entities="stats.topDamageDealersByCharacter" :countField="'damageDone'"
                             :countTitle="t('damage')" entityType="character" :loading="pending" :limit="10" />
                     </div>
 
-                    <!-- Characters Box -->
-                    <div class="mb-6 campaign-sidebar-box">
-                        <CampaignTopBox
-                            :title="t('campaign.characters')"
-                            :entities="entities.characters"
+                    <!-- Top Damage Takers Box - Show if we have victims -->
+                    <div v-if="hasVictimDefinitions && stats.topDamageTakersByCharacter?.length" class="mb-6 campaign-sidebar-box">
+                        <CampaignTopBox :title="t('campaign.top_damage_takers')"
+                            :entities="stats.topDamageTakersByCharacter" :countField="'damageTaken'"
+                            :countTitle="t('damage')" entityType="character" :loading="pending" :limit="10" />
+                    </div>
+
+                    <!-- Top Killer Alliances Box -->
+                    <div v-if="stats.topKillersByAlliance?.length" class="mb-6 campaign-sidebar-box">
+                        <CampaignTopBox :title="t('campaign.top_killer_alliances')"
+                            :entities="stats.topKillersByAlliance"
                             :countField="'kills'"
-                            :countTitle="campaignType === 'victim-only' ? t('losses') : t('kills')"
-                            entityType="character"
+                            :countTitle="t('kills')"
+                            entityType="alliance"
+                            :loading="pending"
+                            :limit="10" />
+                    </div>
+
+                    <!-- Top Victim Alliances Box -->
+                    <div v-if="stats.topVictimsByAlliance?.length" class="mb-6 campaign-sidebar-box">
+                        <CampaignTopBox :title="t('campaign.top_victim_alliances')"
+                            :entities="stats.topVictimsByAlliance"
+                            :countField="'losses'"
+                            :countTitle="t('losses')"
+                            entityType="alliance"
+                            :loading="pending"
+                            :limit="10" />
+                    </div>
+
+                    <!-- Top Killer Corporations Box -->
+                    <div v-if="stats.topKillersByCorporation?.length" class="mb-6 campaign-sidebar-box">
+                        <CampaignTopBox :title="t('campaign.top_killer_corporations')"
+                            :entities="stats.topKillersByCorporation"
+                            :countField="'kills'"
+                            :countTitle="t('kills')"
+                            entityType="corporation"
+                            :loading="pending"
+                            :limit="10" />
+                    </div>
+
+                    <!-- Top Victim Corporations Box -->
+                    <div v-if="stats.topVictimsByCorporation?.length" class="mb-6 campaign-sidebar-box">
+                        <CampaignTopBox :title="t('campaign.top_victim_corporations')"
+                            :entities="stats.topVictimsByCorporation"
+                            :countField="'losses'"
+                            :countTitle="t('losses')"
+                            entityType="corporation"
                             :loading="pending"
                             :limit="10" />
                     </div>
@@ -147,21 +185,68 @@
                     mobile-display-mode="icon-only">
                     <!-- Ship Stats Tab -->
                     <template #ships>
-                        <CampaignShipStats :stats="stats" class="mt-4" />
+                        <div class="mt-4 space-y-6">
+                            <CampaignShipStats :stats="stats" />
+
+                            <!-- Most Valuable Kills on mobile -->
+                            <div v-if="stats.mostValuableKills && stats.mostValuableKills.length > 0">
+                                <CampaignMostValuable :title="t('campaign.most_valuable_kills')" :items="stats.mostValuableKills"
+                                    :limit="4" :loading="pending" />
+                            </div>
+                        </div>
                     </template>
 
                     <!-- Organizations Tab -->
                     <template #organizations>
                         <div class="mt-4 space-y-6">
-                            <div v-if="entities.alliances.length" class="mb-6">
-                                <CampaignEntities :title="t('campaign.alliances')" :entities="entities.alliances"
-                                    entityType="alliance" />
+                            <!-- Alliance Statistics -->
+                            <div v-if="stats.topKillersByAlliance?.length || stats.topVictimsByAlliance?.length">
+                                <div class="space-y-4">
+                                    <CampaignTopBox v-if="stats.topKillersByAlliance?.length"
+                                        :title="t('campaign.top_killer_alliances')"
+                                        :entities="stats.topKillersByAlliance"
+                                        :countField="'kills'"
+                                        :countTitle="t('kills')"
+                                        entityType="alliance"
+                                        :loading="pending"
+                                        :limit="10" />
+
+                                    <CampaignTopBox v-if="stats.topVictimsByAlliance?.length"
+                                        :title="t('campaign.top_victim_alliances')"
+                                        :entities="stats.topVictimsByAlliance"
+                                        :countField="'losses'"
+                                        :countTitle="t('losses')"
+                                        entityType="alliance"
+                                        :loading="pending"
+                                        :limit="10" />
+                                </div>
                             </div>
-                            <div v-if="entities.corporations.length" class="mb-6">
-                                <CampaignEntities :title="t('campaign.corporations')" :entities="entities.corporations"
-                                    entityType="corporation" />
+
+                            <!-- Corporation Statistics -->
+                            <div v-if="stats.topKillersByCorporation?.length || stats.topVictimsByCorporation?.length">
+                                <div class="space-y-4">
+                                    <CampaignTopBox v-if="stats.topKillersByCorporation?.length"
+                                        :title="t('campaign.top_killer_corporations')"
+                                        :entities="stats.topKillersByCorporation"
+                                        :countField="'kills'"
+                                        :countTitle="t('kills')"
+                                        entityType="corporation"
+                                        :loading="pending"
+                                        :limit="10" />
+
+                                    <CampaignTopBox v-if="stats.topVictimsByCorporation?.length"
+                                        :title="t('campaign.top_victim_corporations')"
+                                        :entities="stats.topVictimsByCorporation"
+                                        :countField="'losses'"
+                                        :countTitle="t('losses')"
+                                        entityType="corporation"
+                                        :loading="pending"
+                                        :limit="10" />
+                                </div>
                             </div>
-                            <div v-if="!entities.alliances.length && !entities.corporations.length"
+
+                            <div v-if="!stats.topKillersByAlliance?.length && !stats.topVictimsByAlliance?.length &&
+                                     !stats.topKillersByCorporation?.length && !stats.topVictimsByCorporation?.length"
                                 class="text-center py-8 text-gray-500">
                                 {{ t('campaign.no_organizations_found') }}
                             </div>
@@ -171,35 +256,42 @@
                     <!-- Characters Tab -->
                     <template #characters>
                         <div class="mt-4 space-y-6">
-                            <!-- Top Characters Box - Dynamic title based on campaign type -->
-                            <div class="mb-6 campaign-sidebar-box">
+                            <!-- Top Killers Box - Show if we have attacker definitions -->
+                            <div v-if="hasAttackerDefinitions && stats.topKillersByCharacter?.length" class="mb-6 campaign-sidebar-box">
                                 <CampaignTopBox
-                                    :title="campaignType === 'victim-only' ? t('campaign.top_victims') : t('campaign.top_killers')"
-                                    :entities="stats.topKillersByCharacter || []"
+                                    :title="t('campaign.top_killers')"
+                                    :entities="stats.topKillersByCharacter"
                                     :countField="'kills'"
-                                    :countTitle="campaignType === 'victim-only' ? t('losses') : t('kills')"
+                                    :countTitle="t('kills')"
                                     entityType="character"
                                     :loading="pending"
                                     :limit="10" />
                             </div>
 
-                            <!-- Top Damage Dealers Box - Only show for mixed campaigns -->
-                            <div v-if="showAdvancedStats" class="mb-6 campaign-sidebar-box">
+                            <!-- Top Victims Box - Show if we have victim definitions -->
+                            <div v-if="hasVictimDefinitions && stats.topVictimsByCharacter?.length" class="mb-6 campaign-sidebar-box">
+                                <CampaignTopBox
+                                    :title="t('campaign.top_victims')"
+                                    :entities="stats.topVictimsByCharacter"
+                                    :countField="'losses'"
+                                    :countTitle="t('losses')"
+                                    entityType="character"
+                                    :loading="pending"
+                                    :limit="10" />
+                            </div>
+
+                            <!-- Top Damage Dealers Box - Show if we have attackers -->
+                            <div v-if="hasAttackerDefinitions && stats.topDamageDealersByCharacter?.length" class="mb-6 campaign-sidebar-box">
                                 <CampaignTopBox :title="t('campaign.top_damage_dealers')"
-                                    :entities="stats.topDamageDealersByCharacter || []" :countField="'damageDone'"
+                                    :entities="stats.topDamageDealersByCharacter" :countField="'damageDone'"
                                     :countTitle="t('damage')" entityType="character" :loading="pending" :limit="10" />
                             </div>
 
-                            <!-- Characters Box -->
-                            <div class="mb-6 campaign-sidebar-box">
-                                <CampaignTopBox
-                                    :title="t('campaign.characters')"
-                                    :entities="entities.characters"
-                                    :countField="'kills'"
-                                    :countTitle="campaignType === 'victim-only' ? t('losses') : t('kills')"
-                                    entityType="character"
-                                    :loading="pending"
-                                    :limit="10" />
+                            <!-- Top Damage Takers Box - Show if we have victims -->
+                            <div v-if="hasVictimDefinitions && stats.topDamageTakersByCharacter?.length" class="mb-6 campaign-sidebar-box">
+                                <CampaignTopBox :title="t('campaign.top_damage_takers')"
+                                    :entities="stats.topDamageTakersByCharacter" :countField="'damageTaken'"
+                                    :countTitle="t('damage')" entityType="character" :loading="pending" :limit="10" />
                             </div>
                         </div>
                     </template>
@@ -234,11 +326,6 @@ const campaignId = computed(() => route.params.id as string);
 // State
 const isLoading = ref(false);
 const creatorName = ref<string | null>(null);
-const entities = ref({
-    alliances: [],
-    corporations: [],
-    characters: []
-});
 
 // Polling for processing status
 const isPolling = ref(false);
@@ -311,6 +398,17 @@ const campaignType = computed(() => {
     if (hasAttackers) return 'attacker-only'; // Only attackers
     if (hasVictims) return 'victim-only'; // Only victims
     return 'general'; // No specific targeting (location/time only)
+});
+
+// Check if we have attacker/victim definitions
+const hasAttackerDefinitions = computed(() => {
+    if (!stats.value?.campaignQuery) return false;
+    return Object.keys(stats.value.campaignQuery).some(key => key.startsWith('attackers.'));
+});
+
+const hasVictimDefinitions = computed(() => {
+    if (!stats.value?.campaignQuery) return false;
+    return Object.keys(stats.value.campaignQuery).some(key => key.startsWith('victim.'));
 });
 
 // Determine if we should show efficiency and ISK damage stats
@@ -422,31 +520,6 @@ const fetchCreatorName = async () => {
 watch(stats, (newStats) => {
     if (newStats) {
         fetchCreatorName();
-
-        // Extract entities from top killers and damage dealers for the entities components
-        const allianceMap = new Map();
-        const corpMap = new Map();
-        const charMap = new Map();
-
-        // Process top killers
-        if (newStats.topKillersByCharacter) {
-            newStats.topKillersByCharacter.forEach(char => {
-                if (!charMap.has(char.character_id)) {
-                    charMap.set(char.character_id, {
-                        id: char.character_id,
-                        name: char.character_name,
-                        kills: char.kills,
-                        losses: 0
-                    });
-                }
-            });
-        }
-
-        entities.value = {
-            alliances: Array.from(allianceMap.values()),
-            corporations: Array.from(corpMap.values()),
-            characters: Array.from(charMap.values())
-        };
     }
 }, { immediate: true });
 

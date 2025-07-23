@@ -179,7 +179,7 @@ const tableColumns = [
 </script>
 
 <template>
-    <div class="min-h-[240px]">
+    <div>
         <Table :columns="tableColumns" :items="tableItems" :loading="loading" :skeleton-count="limit"
             :empty-text="t('noData')" :empty-icon="'i-lucide-file-text'" :density="'compact'" :striped="false"
             :bordered="true" :special-header="true" background="transparent" :link-fn="generateEntityLink"

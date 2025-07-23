@@ -1,5 +1,5 @@
-import { type ITranslation } from '~/server/interfaces/ITranslation';
-import { ICampaign } from './ICampaign';
+import { type ITranslation } from "~/server/interfaces/ITranslation";
+import { ICampaign } from "./ICampaign";
 
 /**
  * Interface representing processed filter entities for the campaign UI
@@ -28,7 +28,7 @@ export interface ICampaignOutput {
     startTime: Date;
     endTime?: Date;
     creator_id?: number;
-    campaignQuery: ICampaign['query'];
+    campaignQuery: ICampaign["query"];
 
     // Pre-processed filter data for UI display
     filterEntities: ICampaignFilterEntities;
@@ -49,15 +49,74 @@ export interface ICampaignOutput {
         killed: number;
         lost: number;
     }>;
+
+    // Character statistics - now separated by role
     topKillersByCharacter: Array<{
         character_id: number;
         character_name: string;
         kills: number;
+    }>;
+    topVictimsByCharacter: Array<{
+        character_id: number;
+        character_name: string;
+        losses: number;
     }>;
     topDamageDealersByCharacter: Array<{
         character_id: number;
         character_name: string;
         damageDone: number;
     }>;
+    topDamageTakersByCharacter: Array<{
+        character_id: number;
+        character_name: string;
+        damageTaken: number;
+    }>;
+
+    // Corporation statistics
+    topKillersByCorporation: Array<{
+        corporation_id: number;
+        corporation_name: string;
+        kills: number;
+    }>;
+    topVictimsByCorporation: Array<{
+        corporation_id: number;
+        corporation_name: string;
+        losses: number;
+    }>;
+
+    // Alliance statistics
+    topKillersByAlliance: Array<{
+        alliance_id: number;
+        alliance_name: string;
+        kills: number;
+    }>;
+    topVictimsByAlliance: Array<{
+        alliance_id: number;
+        alliance_name: string;
+        losses: number;
+    }>;
+
+    // Most valuable kills/losses
+    mostValuableKills: Array<{
+        killmail_id: number;
+        total_value: number;
+        victim: {
+            ship_id: number;
+            ship_name: string | ITranslation;
+            character_id?: number;
+            character_name?: string;
+            corporation_id?: number;
+            corporation_name?: string;
+            alliance_id?: number;
+            alliance_name?: string;
+        };
+        final_blow?: {
+            character_id?: number;
+            character_name?: string;
+            ship_id: number;
+            ship_name: string | ITranslation;
+        };
+    }>;
+
     killmailIds: number[];
 }

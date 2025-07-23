@@ -65,7 +65,7 @@
                 </div>
                 <div class="stat-content">
                     <div class="stat-value">
-                        {{ formatIsk(stats.iskDamageDoneAttacker + stats.iskDamageDoneVictim) }}
+                        {{ formatIsk(totalIskDestroyed) }}
                     </div>
                 </div>
             </div>
@@ -88,6 +88,33 @@ const showAdvancedStats = computed(() => props.showAdvancedStats ?? true);
 // Composables
 const { t } = useI18n();
 const { locale } = useI18n();
+
+// Computed properties
+const totalIskDestroyed = computed(() => {
+    // For attacker vs victim campaigns, we need to determine what "destroyed" means
+    if (props.stats.attackerVsVictim) {
+        // Check if this is a victim-only campaign
+        const hasAttackerDefinitions = Object.keys(props.stats.campaignQuery).some((key) =>
+            key.startsWith("attackers.")
+        );
+        const hasVictimDefinitions = Object.keys(props.stats.campaignQuery).some((key) =>
+            key.startsWith("victim.")
+        );
+        
+        if (hasVictimDefinitions && !hasAttackerDefinitions) {
+            // Victim-only campaign: "destroyed" ISK is what the victims lost
+            return props.stats.iskDamageReceivedVictim;
+        } else if (hasAttackerDefinitions && !hasVictimDefinitions) {
+            // Attacker-only campaign: "destroyed" ISK is what the attackers dealt + what they lost
+            return props.stats.iskDamageDoneAttacker + props.stats.iskDamageReceivedAttacker;
+        } else {
+            // Mixed campaign: sum all damage done by both sides
+            return props.stats.iskDamageDoneAttacker + props.stats.iskDamageDoneVictim;
+        }
+    }
+    // For general campaigns, use attacker field (which contains all ISK damage)
+    return props.stats.iskDamageDoneAttacker;
+});
 
 // Helpers
 const formatIsk = (value: number): string => {

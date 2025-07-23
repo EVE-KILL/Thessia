@@ -1,3 +1,5 @@
+import type { ICampaignOutput } from "./ICampaignOutput";
+
 export interface ICampaign {
     campaign_id: string; // Unique identifier for the campaign
     name: string; // Name of the campaign
@@ -11,12 +13,12 @@ export interface ICampaign {
     updatedAt?: Date; // Last update timestamp
 
     // Processing status for queue-based campaign generation
-    processing_status?: 'pending' | 'processing' | 'completed' | 'failed';
+    processing_status?: "pending" | "processing" | "completed" | "failed";
     processing_started_at?: Date;
     processing_completed_at?: Date;
     processing_error?: string;
     last_processed_at?: Date;
 
-    // Store the processed campaign data to avoid regenerating
-    processed_data?: any;
+    // Store the processed campaign data with proper typing
+    processed_data?: ICampaignOutput;
 }
