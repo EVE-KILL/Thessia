@@ -1,0 +1,45 @@
+{{- if .Values.processAchievements.enabled }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: process-achievements
+  namespace: {{ .Values.namespace.name }}
+  labels:
+    {{- include "thessia.labels" . | nindent 4 }}
+spec:
+  replicas: {{ .Values.processAchievements.replicas }}
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
+  selector:
+    matchLabels:
+      app: process-achievements
+      {{- include "thessia.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        app: process-achievements
+        {{- include "thessia.selectorLabels" . | nindent 8 }}
+    spec:
+      serviceAccountName: {{ include "thessia.serviceAccountName" . }}
+      securityContext:
+        {{- toYaml .Values.processAchievements.securityContext | nindent 8 }}
+      containers:
+        - name: process-achievements
+          image: "{{ .Values.global.image.repository }}:{{ .Values.global.image.tag }}"
+          imagePullPolicy: {{ .Values.global.image.pullPolicy }}
+          command:
+            - /bin/sh
+            - -c
+            - |
+              ./bin/queue processAchievements
+          resources:
+            {{- toYaml .Values.processAchievements.resources | nindent 12 }}
+          envFrom:
+            - configMapRef:
+                name: config
+            - secretRef:
+                name: secrets
+{{- end }}
