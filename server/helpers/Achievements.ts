@@ -2057,10 +2057,13 @@ export class AchievementService {
                         characterRecord.achievements[existingAchievementIndex];
                     const wasCompleted = existingAchievement.is_completed;
                     const isCompleted = count >= (achievement.threshold || 1);
-                    
+
                     // Calculate completion tiers (how many times they've earned this achievement)
-                    const newCompletionTiers = Math.floor(count / (achievement.threshold || 1));
-                    const oldCompletionTiers = existingAchievement.completion_tiers || 0;
+                    const newCompletionTiers = Math.floor(
+                        count / (achievement.threshold || 1)
+                    );
+                    const oldCompletionTiers =
+                        existingAchievement.completion_tiers || 0;
 
                     // Update if count changed or completion status changed
                     if (
@@ -2120,7 +2123,10 @@ export class AchievementService {
                 );
                 // Calculate total points based on completion tiers (each tier = full points)
                 const totalPoints = updatedRecord.achievements.reduce(
-                    (sum, achievement) => sum + (achievement.points * (achievement.completion_tiers || 0)),
+                    (sum, achievement) =>
+                        sum +
+                        achievement.points *
+                            (achievement.completion_tiers || 0),
                     0
                 );
 
@@ -2143,7 +2149,9 @@ export class AchievementService {
             );
             // Calculate total points based on completion tiers (each tier = full points)
             const totalPoints = characterRecord.achievements.reduce(
-                (sum, achievement) => sum + (achievement.points * (achievement.completion_tiers || 0)),
+                (sum, achievement) =>
+                    sum +
+                    achievement.points * (achievement.completion_tiers || 0),
                 0
             );
 
