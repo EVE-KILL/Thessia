@@ -26,13 +26,16 @@ export default defineCachedEventHandler(async (event: H3Event) => {
             });
         }
 
-        // Check if we have processed data available
-        if (campaign.processing_status === 'completed' && campaign.processed_data) {
-            // Return the cached processed data
+        // Check if we have processed data available - prioritize existing data
+        // This change ensures the frontend doesn't get stuck waiting for processing
+        // when the campaign already has usable data. Background processing can
+        // continue via queue/cron without affecting user experience.
+        if (campaign.processed_data && Object.keys(campaign.processed_data).length > 0) {
+            // Return the cached processed data immediately, regardless of processing status
             return campaign.processed_data;
         }
 
-        // Get processing status
+        // No processed data available, check processing status
         const processingStatus = await getCampaignProcessingStatus(campaignId);
 
         // If not processing and no processed data, queue it
@@ -40,7 +43,7 @@ export default defineCachedEventHandler(async (event: H3Event) => {
             await queueCampaignProcessing(campaignId, 5);
         }
 
-        // Return processing status instead of generating stats synchronously
+        // Return processing status only when there's no processed data
         return {
             processing: true,
             status: processingStatus?.status || 'pending',
