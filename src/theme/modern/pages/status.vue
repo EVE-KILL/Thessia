@@ -145,9 +145,19 @@ const formatDate = (dateString) => {
     return new Date(dateString);
 };
 
-// Format numbers using locale
+// Format numbers using the numberFormat function for display
 const formatNumber = (value: number): string => {
-    return value;
+    return numberFormat(value);
+};
+
+// Helper function to parse formatted numbers back to numbers
+const parseFormattedNumber = (value: string | number): number => {
+    if (typeof value === "number") return value;
+    if (typeof value === "string") {
+        // Remove any formatting (commas, periods, etc.) and parse as number
+        return Number(value.replace(/[^\d.-]/g, '')) || 0;
+    }
+    return 0;
 };
 
 // Function to update chart options
@@ -275,7 +285,7 @@ const summaryStats = computed(() => {
             0,
         ),
         totalProcessed: Object.values(statusData.value.processedCounts).reduce(
-            (sum, val) => sum + (val["5min"] || 0),
+            (sum, val) => sum + parseFormattedNumber(val["5min"]),
             0,
         ),
         unprocessedItems: statusData.value.databaseCounts.unprocessedCount || 0,

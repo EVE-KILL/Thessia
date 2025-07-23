@@ -8,8 +8,10 @@ import {
     getCacheSize,
 } from "~/server/helpers/RuntimeCache";
 import { RedisStorage } from "~/server/helpers/Storage";
+import { numberFormat } from "~/src/core/utils/numberFormat";
 
 const startTime = new Date();
+
 export default defineEventHandler(async () => {
     const allianceQueue = createQueue("alliance");
     const corporationQueue = createQueue("corporation");
@@ -147,8 +149,8 @@ export default defineEventHandler(async () => {
         getCacheHitCount(CACHE_NAMESPACES.ALLIANCE),
     ]);
 
-    // No more formatting here - return raw numbers
-    const cacheHits = {
+    // Format cache hits
+    const formattedCacheHits = {
         invGroups: cacheStats[12],
         invTypes: cacheStats[13],
         invFlags: cacheStats[14],
@@ -231,7 +233,7 @@ export default defineEventHandler(async () => {
         },
         processedCounts: {
             killmails: {
-                "1min":
+                "1min": numberFormat(
                     Number(
                         (
                             await killmailQueue.getMetrics(
@@ -240,98 +242,115 @@ export default defineEventHandler(async () => {
                                 MetricsTime.ONE_MINUTE
                             )
                         ).data[0]
-                    ) || 0,
-                "5min": Number(
-                    (
-                        await killmailQueue.getMetrics(
-                            "completed",
-                            0,
-                            MetricsTime.FIVE_MINUTES
-                        )
-                    ).data
-                        .slice(1)
-                        .reduce((acc, cur) => Number(acc) + Number(cur), 0)
+                    ) || 0
                 ),
-                "15min": Number(
-                    (
-                        await killmailQueue.getMetrics(
-                            "completed",
-                            0,
-                            MetricsTime.FIFTEEN_MINUTES
-                        )
-                    ).data
-                        .slice(1)
-                        .reduce((acc, cur) => Number(acc) + Number(cur), 0)
+                "5min": numberFormat(
+                    Number(
+                        (
+                            await killmailQueue.getMetrics(
+                                "completed",
+                                0,
+                                MetricsTime.FIVE_MINUTES
+                            )
+                        ).data
+                            .slice(1)
+                            .reduce((acc, cur) => Number(acc) + Number(cur), 0)
+                    )
                 ),
-                "1hour": Number(
-                    (
-                        await killmailQueue.getMetrics(
-                            "completed",
-                            0,
-                            MetricsTime.ONE_HOUR
-                        )
-                    ).data
-                        .slice(1)
-                        .reduce((acc, cur) => Number(acc) + Number(cur), 0)
+                "15min": numberFormat(
+                    Number(
+                        (
+                            await killmailQueue.getMetrics(
+                                "completed",
+                                0,
+                                MetricsTime.FIFTEEN_MINUTES
+                            )
+                        ).data
+                            .slice(1)
+                            .reduce((acc, cur) => Number(acc) + Number(cur), 0)
+                    )
                 ),
-                "6hours": Number(
-                    (
-                        await killmailQueue.getMetrics(
-                            "completed",
-                            0,
-                            MetricsTime.ONE_HOUR * 6
-                        )
-                    ).data
-                        .slice(1)
-                        .reduce((acc, cur) => Number(acc) + Number(cur), 0)
+                "1hour": numberFormat(
+                    Number(
+                        (
+                            await killmailQueue.getMetrics(
+                                "completed",
+                                0,
+                                MetricsTime.ONE_HOUR
+                            )
+                        ).data
+                            .slice(1)
+                            .reduce((acc, cur) => Number(acc) + Number(cur), 0)
+                    )
                 ),
-                "12hours": Number(
-                    (
-                        await killmailQueue.getMetrics(
-                            "completed",
-                            0,
-                            MetricsTime.ONE_HOUR * 12
-                        )
-                    ).data
-                        .slice(1)
-                        .reduce((acc, cur) => Number(acc) + Number(cur), 0)
+                "6hours": numberFormat(
+                    Number(
+                        (
+                            await killmailQueue.getMetrics(
+                                "completed",
+                                0,
+                                MetricsTime.ONE_HOUR * 6
+                            )
+                        ).data
+                            .slice(1)
+                            .reduce((acc, cur) => Number(acc) + Number(cur), 0)
+                    )
                 ),
-                "24hours": Number(
-                    (
-                        await killmailQueue.getMetrics(
-                            "completed",
-                            0,
-                            MetricsTime.ONE_HOUR * 24
-                        )
-                    ).data
-                        .slice(1)
-                        .reduce((acc, cur) => Number(acc) + Number(cur), 0)
+                "12hours": numberFormat(
+                    Number(
+                        (
+                            await killmailQueue.getMetrics(
+                                "completed",
+                                0,
+                                MetricsTime.ONE_HOUR * 12
+                            )
+                        ).data
+                            .slice(1)
+                            .reduce((acc, cur) => Number(acc) + Number(cur), 0)
+                    )
                 ),
-                "1week": Number(
-                    (
-                        await killmailQueue.getMetrics(
-                            "completed",
-                            0,
-                            MetricsTime.ONE_HOUR * 24 * 7
-                        )
-                    ).data
-                        .slice(1)
-                        .reduce((acc, cur) => Number(acc) + Number(cur), 0)
+                "24hours": numberFormat(
+                    Number(
+                        (
+                            await killmailQueue.getMetrics(
+                                "completed",
+                                0,
+                                MetricsTime.ONE_HOUR * 24
+                            )
+                        ).data
+                            .slice(1)
+                            .reduce((acc, cur) => Number(acc) + Number(cur), 0)
+                    )
                 ),
-                "1month": Number(
-                    (
-                        await killmailQueue.getMetrics(
-                            "completed",
-                            0,
-                            MetricsTime.ONE_MONTH
-                        )
-                    ).data
-                        .slice(1)
-                        .reduce((acc, cur) => Number(acc) + Number(cur), 0)
+                "1week": numberFormat(
+                    Number(
+                        (
+                            await killmailQueue.getMetrics(
+                                "completed",
+                                0,
+                                MetricsTime.ONE_HOUR * 24 * 7
+                            )
+                        ).data
+                            .slice(1)
+                            .reduce((acc, cur) => Number(acc) + Number(cur), 0)
+                    )
+                ),
+                "1month": numberFormat(
+                    Number(
+                        (
+                            await killmailQueue.getMetrics(
+                                "completed",
+                                0,
+                                MetricsTime.ONE_MONTH
+                            )
+                        ).data
+                            .slice(1)
+                            .reduce((acc, cur) => Number(acc) + Number(cur), 0)
+                    )
                 ),
             },
             alliances: {
-                "1min":
+                "1min": numberFormat(
                     Number(
                         (
                             await allianceQueue.getMetrics(
@@ -340,98 +359,115 @@ export default defineEventHandler(async () => {
                                 MetricsTime.ONE_MINUTE
                             )
                         ).data[0]
-                    ) || 0,
-                "5min": Number(
-                    (
-                        await allianceQueue.getMetrics(
-                            "completed",
-                            0,
-                            MetricsTime.FIVE_MINUTES
-                        )
-                    ).data
-                        .slice(1)
-                        .reduce((acc, cur) => Number(acc) + Number(cur), 0)
+                    ) || 0
                 ),
-                "15min": Number(
-                    (
-                        await allianceQueue.getMetrics(
-                            "completed",
-                            0,
-                            MetricsTime.FIFTEEN_MINUTES
-                        )
-                    ).data
-                        .slice(1)
-                        .reduce((acc, cur) => Number(acc) + Number(cur), 0)
+                "5min": numberFormat(
+                    Number(
+                        (
+                            await allianceQueue.getMetrics(
+                                "completed",
+                                0,
+                                MetricsTime.FIVE_MINUTES
+                            )
+                        ).data
+                            .slice(1)
+                            .reduce((acc, cur) => Number(acc) + Number(cur), 0)
+                    )
                 ),
-                "1hour": Number(
-                    (
-                        await allianceQueue.getMetrics(
-                            "completed",
-                            0,
-                            MetricsTime.ONE_HOUR
-                        )
-                    ).data
-                        .slice(1)
-                        .reduce((acc, cur) => Number(acc) + Number(cur), 0)
+                "15min": numberFormat(
+                    Number(
+                        (
+                            await allianceQueue.getMetrics(
+                                "completed",
+                                0,
+                                MetricsTime.FIFTEEN_MINUTES
+                            )
+                        ).data
+                            .slice(1)
+                            .reduce((acc, cur) => Number(acc) + Number(cur), 0)
+                    )
                 ),
-                "6hours": Number(
-                    (
-                        await allianceQueue.getMetrics(
-                            "completed",
-                            0,
-                            MetricsTime.ONE_HOUR * 6
-                        )
-                    ).data
-                        .slice(1)
-                        .reduce((acc, cur) => Number(acc) + Number(cur), 0)
+                "1hour": numberFormat(
+                    Number(
+                        (
+                            await allianceQueue.getMetrics(
+                                "completed",
+                                0,
+                                MetricsTime.ONE_HOUR
+                            )
+                        ).data
+                            .slice(1)
+                            .reduce((acc, cur) => Number(acc) + Number(cur), 0)
+                    )
                 ),
-                "12hours": Number(
-                    (
-                        await allianceQueue.getMetrics(
-                            "completed",
-                            0,
-                            MetricsTime.ONE_HOUR * 12
-                        )
-                    ).data
-                        .slice(1)
-                        .reduce((acc, cur) => Number(acc) + Number(cur), 0)
+                "6hours": numberFormat(
+                    Number(
+                        (
+                            await allianceQueue.getMetrics(
+                                "completed",
+                                0,
+                                MetricsTime.ONE_HOUR * 6
+                            )
+                        ).data
+                            .slice(1)
+                            .reduce((acc, cur) => Number(acc) + Number(cur), 0)
+                    )
                 ),
-                "24hours": Number(
-                    (
-                        await allianceQueue.getMetrics(
-                            "completed",
-                            0,
-                            MetricsTime.ONE_HOUR * 24
-                        )
-                    ).data
-                        .slice(1)
-                        .reduce((acc, cur) => Number(acc) + Number(cur), 0)
+                "12hours": numberFormat(
+                    Number(
+                        (
+                            await allianceQueue.getMetrics(
+                                "completed",
+                                0,
+                                MetricsTime.ONE_HOUR * 12
+                            )
+                        ).data
+                            .slice(1)
+                            .reduce((acc, cur) => Number(acc) + Number(cur), 0)
+                    )
                 ),
-                "1week": Number(
-                    (
-                        await allianceQueue.getMetrics(
-                            "completed",
-                            0,
-                            MetricsTime.ONE_HOUR * 24 * 7
-                        )
-                    ).data
-                        .slice(1)
-                        .reduce((acc, cur) => Number(acc) + Number(cur), 0)
+                "24hours": numberFormat(
+                    Number(
+                        (
+                            await allianceQueue.getMetrics(
+                                "completed",
+                                0,
+                                MetricsTime.ONE_HOUR * 24
+                            )
+                        ).data
+                            .slice(1)
+                            .reduce((acc, cur) => Number(acc) + Number(cur), 0)
+                    )
                 ),
-                "1month": Number(
-                    (
-                        await allianceQueue.getMetrics(
-                            "completed",
-                            0,
-                            MetricsTime.ONE_MONTH
-                        )
-                    ).data
-                        .slice(1)
-                        .reduce((acc, cur) => Number(acc) + Number(cur), 0)
+                "1week": numberFormat(
+                    Number(
+                        (
+                            await allianceQueue.getMetrics(
+                                "completed",
+                                0,
+                                MetricsTime.ONE_HOUR * 24 * 7
+                            )
+                        ).data
+                            .slice(1)
+                            .reduce((acc, cur) => Number(acc) + Number(cur), 0)
+                    )
+                ),
+                "1month": numberFormat(
+                    Number(
+                        (
+                            await allianceQueue.getMetrics(
+                                "completed",
+                                0,
+                                MetricsTime.ONE_MONTH
+                            )
+                        ).data
+                            .slice(1)
+                            .reduce((acc, cur) => Number(acc) + Number(cur), 0)
+                    )
                 ),
             },
             corporations: {
-                "1min":
+                "1min": numberFormat(
                     Number(
                         (
                             await corporationQueue.getMetrics(
@@ -440,98 +476,115 @@ export default defineEventHandler(async () => {
                                 MetricsTime.ONE_MINUTE
                             )
                         ).data[0]
-                    ) || 0,
-                "5min": Number(
-                    (
-                        await corporationQueue.getMetrics(
-                            "completed",
-                            0,
-                            MetricsTime.FIVE_MINUTES
-                        )
-                    ).data
-                        .slice(1)
-                        .reduce((acc, cur) => Number(acc) + Number(cur), 0)
+                    ) || 0
                 ),
-                "15min": Number(
-                    (
-                        await corporationQueue.getMetrics(
-                            "completed",
-                            0,
-                            MetricsTime.FIFTEEN_MINUTES
-                        )
-                    ).data
-                        .slice(1)
-                        .reduce((acc, cur) => Number(acc) + Number(cur), 0)
+                "5min": numberFormat(
+                    Number(
+                        (
+                            await corporationQueue.getMetrics(
+                                "completed",
+                                0,
+                                MetricsTime.FIVE_MINUTES
+                            )
+                        ).data
+                            .slice(1)
+                            .reduce((acc, cur) => Number(acc) + Number(cur), 0)
+                    )
                 ),
-                "1hour": Number(
-                    (
-                        await corporationQueue.getMetrics(
-                            "completed",
-                            0,
-                            MetricsTime.ONE_HOUR
-                        )
-                    ).data
-                        .slice(1)
-                        .reduce((acc, cur) => Number(acc) + Number(cur), 0)
+                "15min": numberFormat(
+                    Number(
+                        (
+                            await corporationQueue.getMetrics(
+                                "completed",
+                                0,
+                                MetricsTime.FIFTEEN_MINUTES
+                            )
+                        ).data
+                            .slice(1)
+                            .reduce((acc, cur) => Number(acc) + Number(cur), 0)
+                    )
                 ),
-                "6hours": Number(
-                    (
-                        await corporationQueue.getMetrics(
-                            "completed",
-                            0,
-                            MetricsTime.ONE_HOUR * 6
-                        )
-                    ).data
-                        .slice(1)
-                        .reduce((acc, cur) => Number(acc) + Number(cur), 0)
+                "1hour": numberFormat(
+                    Number(
+                        (
+                            await corporationQueue.getMetrics(
+                                "completed",
+                                0,
+                                MetricsTime.ONE_HOUR
+                            )
+                        ).data
+                            .slice(1)
+                            .reduce((acc, cur) => Number(acc) + Number(cur), 0)
+                    )
                 ),
-                "12hours": Number(
-                    (
-                        await corporationQueue.getMetrics(
-                            "completed",
-                            0,
-                            MetricsTime.ONE_HOUR * 12
-                        )
-                    ).data
-                        .slice(1)
-                        .reduce((acc, cur) => Number(acc) + Number(cur), 0)
+                "6hours": numberFormat(
+                    Number(
+                        (
+                            await corporationQueue.getMetrics(
+                                "completed",
+                                0,
+                                MetricsTime.ONE_HOUR * 6
+                            )
+                        ).data
+                            .slice(1)
+                            .reduce((acc, cur) => Number(acc) + Number(cur), 0)
+                    )
                 ),
-                "24hours": Number(
-                    (
-                        await corporationQueue.getMetrics(
-                            "completed",
-                            0,
-                            MetricsTime.ONE_HOUR * 24
-                        )
-                    ).data
-                        .slice(1)
-                        .reduce((acc, cur) => Number(acc) + Number(cur), 0)
+                "12hours": numberFormat(
+                    Number(
+                        (
+                            await corporationQueue.getMetrics(
+                                "completed",
+                                0,
+                                MetricsTime.ONE_HOUR * 12
+                            )
+                        ).data
+                            .slice(1)
+                            .reduce((acc, cur) => Number(acc) + Number(cur), 0)
+                    )
                 ),
-                "1week": Number(
-                    (
-                        await corporationQueue.getMetrics(
-                            "completed",
-                            0,
-                            MetricsTime.ONE_HOUR * 24 * 7
-                        )
-                    ).data
-                        .slice(1)
-                        .reduce((acc, cur) => Number(acc) + Number(cur), 0)
+                "24hours": numberFormat(
+                    Number(
+                        (
+                            await corporationQueue.getMetrics(
+                                "completed",
+                                0,
+                                MetricsTime.ONE_HOUR * 24
+                            )
+                        ).data
+                            .slice(1)
+                            .reduce((acc, cur) => Number(acc) + Number(cur), 0)
+                    )
                 ),
-                "1month": Number(
-                    (
-                        await corporationQueue.getMetrics(
-                            "completed",
-                            0,
-                            MetricsTime.ONE_MONTH
-                        )
-                    ).data
-                        .slice(1)
-                        .reduce((acc, cur) => Number(acc) + Number(cur), 0)
+                "1week": numberFormat(
+                    Number(
+                        (
+                            await corporationQueue.getMetrics(
+                                "completed",
+                                0,
+                                MetricsTime.ONE_HOUR * 24 * 7
+                            )
+                        ).data
+                            .slice(1)
+                            .reduce((acc, cur) => Number(acc) + Number(cur), 0)
+                    )
+                ),
+                "1month": numberFormat(
+                    Number(
+                        (
+                            await corporationQueue.getMetrics(
+                                "completed",
+                                0,
+                                MetricsTime.ONE_MONTH
+                            )
+                        ).data
+                            .slice(1)
+                            .reduce((acc, cur) => Number(acc) + Number(cur), 0)
+                    )
                 ),
             },
             characters: {
-                "1min":
+                "1min": numberFormat(
                     Number(
                         (
                             await characterQueue.getMetrics(
@@ -540,98 +593,115 @@ export default defineEventHandler(async () => {
                                 MetricsTime.ONE_MINUTE
                             )
                         ).data[0]
-                    ) || 0,
-                "5min": Number(
-                    (
-                        await characterQueue.getMetrics(
-                            "completed",
-                            0,
-                            MetricsTime.FIVE_MINUTES
-                        )
-                    ).data
-                        .slice(1)
-                        .reduce((acc, cur) => Number(acc) + Number(cur), 0)
+                    ) || 0
                 ),
-                "15min": Number(
-                    (
-                        await characterQueue.getMetrics(
-                            "completed",
-                            0,
-                            MetricsTime.FIFTEEN_MINUTES
-                        )
-                    ).data
-                        .slice(1)
-                        .reduce((acc, cur) => Number(acc) + Number(cur), 0)
+                "5min": numberFormat(
+                    Number(
+                        (
+                            await characterQueue.getMetrics(
+                                "completed",
+                                0,
+                                MetricsTime.FIVE_MINUTES
+                            )
+                        ).data
+                            .slice(1)
+                            .reduce((acc, cur) => Number(acc) + Number(cur), 0)
+                    )
                 ),
-                "1hour": Number(
-                    (
-                        await characterQueue.getMetrics(
-                            "completed",
-                            0,
-                            MetricsTime.ONE_HOUR
-                        )
-                    ).data
-                        .slice(1)
-                        .reduce((acc, cur) => Number(acc) + Number(cur), 0)
+                "15min": numberFormat(
+                    Number(
+                        (
+                            await characterQueue.getMetrics(
+                                "completed",
+                                0,
+                                MetricsTime.FIFTEEN_MINUTES
+                            )
+                        ).data
+                            .slice(1)
+                            .reduce((acc, cur) => Number(acc) + Number(cur), 0)
+                    )
                 ),
-                "6hours": Number(
-                    (
-                        await characterQueue.getMetrics(
-                            "completed",
-                            0,
-                            MetricsTime.ONE_HOUR * 6
-                        )
-                    ).data
-                        .slice(1)
-                        .reduce((acc, cur) => Number(acc) + Number(cur), 0)
+                "1hour": numberFormat(
+                    Number(
+                        (
+                            await characterQueue.getMetrics(
+                                "completed",
+                                0,
+                                MetricsTime.ONE_HOUR
+                            )
+                        ).data
+                            .slice(1)
+                            .reduce((acc, cur) => Number(acc) + Number(cur), 0)
+                    )
                 ),
-                "12hours": Number(
-                    (
-                        await characterQueue.getMetrics(
-                            "completed",
-                            0,
-                            MetricsTime.ONE_HOUR * 12
-                        )
-                    ).data
-                        .slice(1)
-                        .reduce((acc, cur) => Number(acc) + Number(cur), 0)
+                "6hours": numberFormat(
+                    Number(
+                        (
+                            await characterQueue.getMetrics(
+                                "completed",
+                                0,
+                                MetricsTime.ONE_HOUR * 6
+                            )
+                        ).data
+                            .slice(1)
+                            .reduce((acc, cur) => Number(acc) + Number(cur), 0)
+                    )
                 ),
-                "24hours": Number(
-                    (
-                        await characterQueue.getMetrics(
-                            "completed",
-                            0,
-                            MetricsTime.ONE_HOUR * 24
-                        )
-                    ).data
-                        .slice(1)
-                        .reduce((acc, cur) => Number(acc) + Number(cur), 0)
+                "12hours": numberFormat(
+                    Number(
+                        (
+                            await characterQueue.getMetrics(
+                                "completed",
+                                0,
+                                MetricsTime.ONE_HOUR * 12
+                            )
+                        ).data
+                            .slice(1)
+                            .reduce((acc, cur) => Number(acc) + Number(cur), 0)
+                    )
                 ),
-                "1week": Number(
-                    (
-                        await characterQueue.getMetrics(
-                            "completed",
-                            0,
-                            MetricsTime.ONE_HOUR * 24 * 7
-                        )
-                    ).data
-                        .slice(1)
-                        .reduce((acc, cur) => Number(acc) + Number(cur), 0)
+                "24hours": numberFormat(
+                    Number(
+                        (
+                            await characterQueue.getMetrics(
+                                "completed",
+                                0,
+                                MetricsTime.ONE_HOUR * 24
+                            )
+                        ).data
+                            .slice(1)
+                            .reduce((acc, cur) => Number(acc) + Number(cur), 0)
+                    )
                 ),
-                "1month": Number(
-                    (
-                        await characterQueue.getMetrics(
-                            "completed",
-                            0,
-                            MetricsTime.ONE_MONTH
-                        )
-                    ).data
-                        .slice(1)
-                        .reduce((acc, cur) => Number(acc) + Number(cur), 0)
+                "1week": numberFormat(
+                    Number(
+                        (
+                            await characterQueue.getMetrics(
+                                "completed",
+                                0,
+                                MetricsTime.ONE_HOUR * 24 * 7
+                            )
+                        ).data
+                            .slice(1)
+                            .reduce((acc, cur) => Number(acc) + Number(cur), 0)
+                    )
+                ),
+                "1month": numberFormat(
+                    Number(
+                        (
+                            await characterQueue.getMetrics(
+                                "completed",
+                                0,
+                                MetricsTime.ONE_MONTH
+                            )
+                        ).data
+                            .slice(1)
+                            .reduce((acc, cur) => Number(acc) + Number(cur), 0)
+                    )
                 ),
             },
             characterhistory: {
-                "1min":
+                "1min": numberFormat(
                     Number(
                         (
                             await characterHistoryQueue.getMetrics(
@@ -640,98 +710,115 @@ export default defineEventHandler(async () => {
                                 MetricsTime.ONE_MINUTE
                             )
                         ).data[0]
-                    ) || 0,
-                "5min": Number(
-                    (
-                        await characterHistoryQueue.getMetrics(
-                            "completed",
-                            0,
-                            MetricsTime.FIVE_MINUTES
-                        )
-                    ).data
-                        .slice(1)
-                        .reduce((acc, cur) => Number(acc) + Number(cur), 0)
+                    ) || 0
                 ),
-                "15min": Number(
-                    (
-                        await characterHistoryQueue.getMetrics(
-                            "completed",
-                            0,
-                            MetricsTime.FIFTEEN_MINUTES
-                        )
-                    ).data
-                        .slice(1)
-                        .reduce((acc, cur) => Number(acc) + Number(cur), 0)
+                "5min": numberFormat(
+                    Number(
+                        (
+                            await characterHistoryQueue.getMetrics(
+                                "completed",
+                                0,
+                                MetricsTime.FIVE_MINUTES
+                            )
+                        ).data
+                            .slice(1)
+                            .reduce((acc, cur) => Number(acc) + Number(cur), 0)
+                    )
                 ),
-                "1hour": Number(
-                    (
-                        await characterHistoryQueue.getMetrics(
-                            "completed",
-                            0,
-                            MetricsTime.ONE_HOUR
-                        )
-                    ).data
-                        .slice(1)
-                        .reduce((acc, cur) => Number(acc) + Number(cur), 0)
+                "15min": numberFormat(
+                    Number(
+                        (
+                            await characterHistoryQueue.getMetrics(
+                                "completed",
+                                0,
+                                MetricsTime.FIFTEEN_MINUTES
+                            )
+                        ).data
+                            .slice(1)
+                            .reduce((acc, cur) => Number(acc) + Number(cur), 0)
+                    )
                 ),
-                "6hours": Number(
-                    (
-                        await characterHistoryQueue.getMetrics(
-                            "completed",
-                            0,
-                            MetricsTime.ONE_HOUR * 6
-                        )
-                    ).data
-                        .slice(1)
-                        .reduce((acc, cur) => Number(acc) + Number(cur), 0)
+                "1hour": numberFormat(
+                    Number(
+                        (
+                            await characterHistoryQueue.getMetrics(
+                                "completed",
+                                0,
+                                MetricsTime.ONE_HOUR
+                            )
+                        ).data
+                            .slice(1)
+                            .reduce((acc, cur) => Number(acc) + Number(cur), 0)
+                    )
                 ),
-                "12hours": Number(
-                    (
-                        await characterHistoryQueue.getMetrics(
-                            "completed",
-                            0,
-                            MetricsTime.ONE_HOUR * 12
-                        )
-                    ).data
-                        .slice(1)
-                        .reduce((acc, cur) => Number(acc) + Number(cur), 0)
+                "6hours": numberFormat(
+                    Number(
+                        (
+                            await characterHistoryQueue.getMetrics(
+                                "completed",
+                                0,
+                                MetricsTime.ONE_HOUR * 6
+                            )
+                        ).data
+                            .slice(1)
+                            .reduce((acc, cur) => Number(acc) + Number(cur), 0)
+                    )
                 ),
-                "24hours": Number(
-                    (
-                        await characterHistoryQueue.getMetrics(
-                            "completed",
-                            0,
-                            MetricsTime.ONE_HOUR * 24
-                        )
-                    ).data
-                        .slice(1)
-                        .reduce((acc, cur) => Number(acc) + Number(cur), 0)
+                "12hours": numberFormat(
+                    Number(
+                        (
+                            await characterHistoryQueue.getMetrics(
+                                "completed",
+                                0,
+                                MetricsTime.ONE_HOUR * 12
+                            )
+                        ).data
+                            .slice(1)
+                            .reduce((acc, cur) => Number(acc) + Number(cur), 0)
+                    )
                 ),
-                "1week": Number(
-                    (
-                        await characterHistoryQueue.getMetrics(
-                            "completed",
-                            0,
-                            MetricsTime.ONE_HOUR * 24 * 7
-                        )
-                    ).data
-                        .slice(1)
-                        .reduce((acc, cur) => Number(acc) + Number(cur), 0)
+                "24hours": numberFormat(
+                    Number(
+                        (
+                            await characterHistoryQueue.getMetrics(
+                                "completed",
+                                0,
+                                MetricsTime.ONE_HOUR * 24
+                            )
+                        ).data
+                            .slice(1)
+                            .reduce((acc, cur) => Number(acc) + Number(cur), 0)
+                    )
                 ),
-                "1month": Number(
-                    (
-                        await characterHistoryQueue.getMetrics(
-                            "completed",
-                            0,
-                            MetricsTime.ONE_MONTH
-                        )
-                    ).data
-                        .slice(1)
-                        .reduce((acc, cur) => Number(acc) + Number(cur), 0)
+                "1week": numberFormat(
+                    Number(
+                        (
+                            await characterHistoryQueue.getMetrics(
+                                "completed",
+                                0,
+                                MetricsTime.ONE_HOUR * 24 * 7
+                            )
+                        ).data
+                            .slice(1)
+                            .reduce((acc, cur) => Number(acc) + Number(cur), 0)
+                    )
+                ),
+                "1month": numberFormat(
+                    Number(
+                        (
+                            await characterHistoryQueue.getMetrics(
+                                "completed",
+                                0,
+                                MetricsTime.ONE_MONTH
+                            )
+                        ).data
+                            .slice(1)
+                            .reduce((acc, cur) => Number(acc) + Number(cur), 0)
+                    )
                 ),
             },
             corporationhistory: {
-                "1min":
+                "1min": numberFormat(
                     Number(
                         (
                             await corporationHistoryQueue.getMetrics(
@@ -740,98 +827,115 @@ export default defineEventHandler(async () => {
                                 MetricsTime.ONE_MINUTE
                             )
                         ).data[0]
-                    ) || 0,
-                "5min": Number(
-                    (
-                        await corporationHistoryQueue.getMetrics(
-                            "completed",
-                            0,
-                            MetricsTime.FIVE_MINUTES
-                        )
-                    ).data
-                        .slice(1)
-                        .reduce((acc, cur) => Number(acc) + Number(cur), 0)
+                    ) || 0
                 ),
-                "15min": Number(
-                    (
-                        await corporationHistoryQueue.getMetrics(
-                            "completed",
-                            0,
-                            MetricsTime.FIFTEEN_MINUTES
-                        )
-                    ).data
-                        .slice(1)
-                        .reduce((acc, cur) => Number(acc) + Number(cur), 0)
+                "5min": numberFormat(
+                    Number(
+                        (
+                            await corporationHistoryQueue.getMetrics(
+                                "completed",
+                                0,
+                                MetricsTime.FIVE_MINUTES
+                            )
+                        ).data
+                            .slice(1)
+                            .reduce((acc, cur) => Number(acc) + Number(cur), 0)
+                    )
                 ),
-                "1hour": Number(
-                    (
-                        await corporationHistoryQueue.getMetrics(
-                            "completed",
-                            0,
-                            MetricsTime.ONE_HOUR
-                        )
-                    ).data
-                        .slice(1)
-                        .reduce((acc, cur) => Number(acc) + Number(cur), 0)
+                "15min": numberFormat(
+                    Number(
+                        (
+                            await corporationHistoryQueue.getMetrics(
+                                "completed",
+                                0,
+                                MetricsTime.FIFTEEN_MINUTES
+                            )
+                        ).data
+                            .slice(1)
+                            .reduce((acc, cur) => Number(acc) + Number(cur), 0)
+                    )
                 ),
-                "6hours": Number(
-                    (
-                        await corporationHistoryQueue.getMetrics(
-                            "completed",
-                            0,
-                            MetricsTime.ONE_HOUR * 6
-                        )
-                    ).data
-                        .slice(1)
-                        .reduce((acc, cur) => Number(acc) + Number(cur), 0)
+                "1hour": numberFormat(
+                    Number(
+                        (
+                            await corporationHistoryQueue.getMetrics(
+                                "completed",
+                                0,
+                                MetricsTime.ONE_HOUR
+                            )
+                        ).data
+                            .slice(1)
+                            .reduce((acc, cur) => Number(acc) + Number(cur), 0)
+                    )
                 ),
-                "12hours": Number(
-                    (
-                        await corporationHistoryQueue.getMetrics(
-                            "completed",
-                            0,
-                            MetricsTime.ONE_HOUR * 12
-                        )
-                    ).data
-                        .slice(1)
-                        .reduce((acc, cur) => Number(acc) + Number(cur), 0)
+                "6hours": numberFormat(
+                    Number(
+                        (
+                            await corporationHistoryQueue.getMetrics(
+                                "completed",
+                                0,
+                                MetricsTime.ONE_HOUR * 6
+                            )
+                        ).data
+                            .slice(1)
+                            .reduce((acc, cur) => Number(acc) + Number(cur), 0)
+                    )
                 ),
-                "24hours": Number(
-                    (
-                        await corporationHistoryQueue.getMetrics(
-                            "completed",
-                            0,
-                            MetricsTime.ONE_HOUR * 24
-                        )
-                    ).data
-                        .slice(1)
-                        .reduce((acc, cur) => Number(acc) + Number(cur), 0)
+                "12hours": numberFormat(
+                    Number(
+                        (
+                            await corporationHistoryQueue.getMetrics(
+                                "completed",
+                                0,
+                                MetricsTime.ONE_HOUR * 12
+                            )
+                        ).data
+                            .slice(1)
+                            .reduce((acc, cur) => Number(acc) + Number(cur), 0)
+                    )
                 ),
-                "1week": Number(
-                    (
-                        await corporationHistoryQueue.getMetrics(
-                            "completed",
-                            0,
-                            MetricsTime.ONE_HOUR * 24 * 7
-                        )
-                    ).data
-                        .slice(1)
-                        .reduce((acc, cur) => Number(acc) + Number(cur), 0)
+                "24hours": numberFormat(
+                    Number(
+                        (
+                            await corporationHistoryQueue.getMetrics(
+                                "completed",
+                                0,
+                                MetricsTime.ONE_HOUR * 24
+                            )
+                        ).data
+                            .slice(1)
+                            .reduce((acc, cur) => Number(acc) + Number(cur), 0)
+                    )
                 ),
-                "1month": Number(
-                    (
-                        await corporationHistoryQueue.getMetrics(
-                            "completed",
-                            0,
-                            MetricsTime.ONE_MONTH
-                        )
-                    ).data
-                        .slice(1)
-                        .reduce((acc, cur) => Number(acc) + Number(cur), 0)
+                "1week": numberFormat(
+                    Number(
+                        (
+                            await corporationHistoryQueue.getMetrics(
+                                "completed",
+                                0,
+                                MetricsTime.ONE_HOUR * 24 * 7
+                            )
+                        ).data
+                            .slice(1)
+                            .reduce((acc, cur) => Number(acc) + Number(cur), 0)
+                    )
+                ),
+                "1month": numberFormat(
+                    Number(
+                        (
+                            await corporationHistoryQueue.getMetrics(
+                                "completed",
+                                0,
+                                MetricsTime.ONE_MONTH
+                            )
+                        ).data
+                            .slice(1)
+                            .reduce((acc, cur) => Number(acc) + Number(cur), 0)
+                    )
                 ),
             },
             wars: {
-                "1min":
+                "1min": numberFormat(
                     Number(
                         (
                             await warQueue.getMetrics(
@@ -840,99 +944,116 @@ export default defineEventHandler(async () => {
                                 MetricsTime.ONE_MINUTE
                             )
                         ).data[0]
-                    ) || 0,
-                "5min": Number(
-                    (
-                        await warQueue.getMetrics(
-                            "completed",
-                            0,
-                            MetricsTime.FIVE_MINUTES
-                        )
-                    ).data
-                        .slice(1)
-                        .reduce((acc, cur) => Number(acc) + Number(cur), 0)
+                    ) || 0
                 ),
-                "15min": Number(
-                    (
-                        await warQueue.getMetrics(
-                            "completed",
-                            0,
-                            MetricsTime.FIFTEEN_MINUTES
-                        )
-                    ).data
-                        .slice(1)
-                        .reduce((acc, cur) => Number(acc) + Number(cur), 0)
+                "5min": numberFormat(
+                    Number(
+                        (
+                            await warQueue.getMetrics(
+                                "completed",
+                                0,
+                                MetricsTime.FIVE_MINUTES
+                            )
+                        ).data
+                            .slice(1)
+                            .reduce((acc, cur) => Number(acc) + Number(cur), 0)
+                    )
                 ),
-                "1hour": Number(
-                    (
-                        await warQueue.getMetrics(
-                            "completed",
-                            0,
-                            MetricsTime.ONE_HOUR
-                        )
-                    ).data
-                        .slice(1)
-                        .reduce((acc, cur) => Number(acc) + Number(cur), 0)
+                "15min": numberFormat(
+                    Number(
+                        (
+                            await warQueue.getMetrics(
+                                "completed",
+                                0,
+                                MetricsTime.FIFTEEN_MINUTES
+                            )
+                        ).data
+                            .slice(1)
+                            .reduce((acc, cur) => Number(acc) + Number(cur), 0)
+                    )
                 ),
-                "6hours": Number(
-                    (
-                        await warQueue.getMetrics(
-                            "completed",
-                            0,
-                            MetricsTime.ONE_HOUR * 6
-                        )
-                    ).data
-                        .slice(1)
-                        .reduce((acc, cur) => Number(acc) + Number(cur), 0)
+                "1hour": numberFormat(
+                    Number(
+                        (
+                            await warQueue.getMetrics(
+                                "completed",
+                                0,
+                                MetricsTime.ONE_HOUR
+                            )
+                        ).data
+                            .slice(1)
+                            .reduce((acc, cur) => Number(acc) + Number(cur), 0)
+                    )
                 ),
-                "12hours": Number(
-                    (
-                        await warQueue.getMetrics(
-                            "completed",
-                            0,
-                            MetricsTime.ONE_HOUR * 12
-                        )
-                    ).data
-                        .slice(1)
-                        .reduce((acc, cur) => Number(acc) + Number(cur), 0)
+                "6hours": numberFormat(
+                    Number(
+                        (
+                            await warQueue.getMetrics(
+                                "completed",
+                                0,
+                                MetricsTime.ONE_HOUR * 6
+                            )
+                        ).data
+                            .slice(1)
+                            .reduce((acc, cur) => Number(acc) + Number(cur), 0)
+                    )
                 ),
-                "24hours": Number(
-                    (
-                        await warQueue.getMetrics(
-                            "completed",
-                            0,
-                            MetricsTime.ONE_HOUR * 24
-                        )
-                    ).data
-                        .slice(1)
-                        .reduce((acc, cur) => Number(acc) + Number(cur), 0)
+                "12hours": numberFormat(
+                    Number(
+                        (
+                            await warQueue.getMetrics(
+                                "completed",
+                                0,
+                                MetricsTime.ONE_HOUR * 12
+                            )
+                        ).data
+                            .slice(1)
+                            .reduce((acc, cur) => Number(acc) + Number(cur), 0)
+                    )
                 ),
-                "1week": Number(
-                    (
-                        await warQueue.getMetrics(
-                            "completed",
-                            0,
-                            MetricsTime.ONE_HOUR * 24 * 7
-                        )
-                    ).data
-                        .slice(1)
-                        .reduce((acc, cur) => Number(acc) + Number(cur), 0)
+                "24hours": numberFormat(
+                    Number(
+                        (
+                            await warQueue.getMetrics(
+                                "completed",
+                                0,
+                                MetricsTime.ONE_HOUR * 24
+                            )
+                        ).data
+                            .slice(1)
+                            .reduce((acc, cur) => Number(acc) + Number(cur), 0)
+                    )
                 ),
-                "1month": Number(
-                    (
-                        await warQueue.getMetrics(
-                            "completed",
-                            0,
-                            MetricsTime.ONE_MONTH
-                        )
-                    ).data
-                        .slice(1)
-                        .reduce((acc, cur) => Number(acc) + Number(cur), 0)
+                "1week": numberFormat(
+                    Number(
+                        (
+                            await warQueue.getMetrics(
+                                "completed",
+                                0,
+                                MetricsTime.ONE_HOUR * 24 * 7
+                            )
+                        ).data
+                            .slice(1)
+                            .reduce((acc, cur) => Number(acc) + Number(cur), 0)
+                    )
+                ),
+                "1month": numberFormat(
+                    Number(
+                        (
+                            await warQueue.getMetrics(
+                                "completed",
+                                0,
+                                MetricsTime.ONE_MONTH
+                            )
+                        ).data
+                            .slice(1)
+                            .reduce((acc, cur) => Number(acc) + Number(cur), 0)
+                    )
                 ),
             },
             stats: {
                 // Add stats processing metrics
-                "1min":
+                "1min": numberFormat(
                     Number(
                         (
                             await statsQueue.getMetrics(
@@ -941,94 +1062,111 @@ export default defineEventHandler(async () => {
                                 MetricsTime.ONE_MINUTE
                             )
                         ).data[0]
-                    ) || 0,
-                "5min": Number(
-                    (
-                        await statsQueue.getMetrics(
-                            "completed",
-                            0,
-                            MetricsTime.FIVE_MINUTES
-                        )
-                    ).data
-                        .slice(1)
-                        .reduce((acc, cur) => Number(acc) + Number(cur), 0)
+                    ) || 0
                 ),
-                "15min": Number(
-                    (
-                        await statsQueue.getMetrics(
-                            "completed",
-                            0,
-                            MetricsTime.FIFTEEN_MINUTES
-                        )
-                    ).data
-                        .slice(1)
-                        .reduce((acc, cur) => Number(acc) + Number(cur), 0)
+                "5min": numberFormat(
+                    Number(
+                        (
+                            await statsQueue.getMetrics(
+                                "completed",
+                                0,
+                                MetricsTime.FIVE_MINUTES
+                            )
+                        ).data
+                            .slice(1)
+                            .reduce((acc, cur) => Number(acc) + Number(cur), 0)
+                    )
                 ),
-                "1hour": Number(
-                    (
-                        await statsQueue.getMetrics(
-                            "completed",
-                            0,
-                            MetricsTime.ONE_HOUR
-                        )
-                    ).data
-                        .slice(1)
-                        .reduce((acc, cur) => Number(acc) + Number(cur), 0)
+                "15min": numberFormat(
+                    Number(
+                        (
+                            await statsQueue.getMetrics(
+                                "completed",
+                                0,
+                                MetricsTime.FIFTEEN_MINUTES
+                            )
+                        ).data
+                            .slice(1)
+                            .reduce((acc, cur) => Number(acc) + Number(cur), 0)
+                    )
                 ),
-                "6hours": Number(
-                    (
-                        await statsQueue.getMetrics(
-                            "completed",
-                            0,
-                            MetricsTime.ONE_HOUR * 6
-                        )
-                    ).data
-                        .slice(1)
-                        .reduce((acc, cur) => Number(acc) + Number(cur), 0)
+                "1hour": numberFormat(
+                    Number(
+                        (
+                            await statsQueue.getMetrics(
+                                "completed",
+                                0,
+                                MetricsTime.ONE_HOUR
+                            )
+                        ).data
+                            .slice(1)
+                            .reduce((acc, cur) => Number(acc) + Number(cur), 0)
+                    )
                 ),
-                "12hours": Number(
-                    (
-                        await statsQueue.getMetrics(
-                            "completed",
-                            0,
-                            MetricsTime.ONE_HOUR * 12
-                        )
-                    ).data
-                        .slice(1)
-                        .reduce((acc, cur) => Number(acc) + Number(cur), 0)
+                "6hours": numberFormat(
+                    Number(
+                        (
+                            await statsQueue.getMetrics(
+                                "completed",
+                                0,
+                                MetricsTime.ONE_HOUR * 6
+                            )
+                        ).data
+                            .slice(1)
+                            .reduce((acc, cur) => Number(acc) + Number(cur), 0)
+                    )
                 ),
-                "24hours": Number(
-                    (
-                        await statsQueue.getMetrics(
-                            "completed",
-                            0,
-                            MetricsTime.ONE_HOUR * 24
-                        )
-                    ).data
-                        .slice(1)
-                        .reduce((acc, cur) => Number(acc) + Number(cur), 0)
+                "12hours": numberFormat(
+                    Number(
+                        (
+                            await statsQueue.getMetrics(
+                                "completed",
+                                0,
+                                MetricsTime.ONE_HOUR * 12
+                            )
+                        ).data
+                            .slice(1)
+                            .reduce((acc, cur) => Number(acc) + Number(cur), 0)
+                    )
                 ),
-                "1week": Number(
-                    (
-                        await statsQueue.getMetrics(
-                            "completed",
-                            0,
-                            MetricsTime.ONE_HOUR * 24 * 7
-                        )
-                    ).data
-                        .slice(1)
-                        .reduce((acc, cur) => Number(acc) + Number(cur), 0)
+                "24hours": numberFormat(
+                    Number(
+                        (
+                            await statsQueue.getMetrics(
+                                "completed",
+                                0,
+                                MetricsTime.ONE_HOUR * 24
+                            )
+                        ).data
+                            .slice(1)
+                            .reduce((acc, cur) => Number(acc) + Number(cur), 0)
+                    )
                 ),
-                "1month": Number(
-                    (
-                        await statsQueue.getMetrics(
-                            "completed",
-                            0,
-                            MetricsTime.ONE_MONTH
-                        )
-                    ).data
-                        .slice(1)
-                        .reduce((acc, cur) => Number(acc) + Number(cur), 0)
+                "1week": numberFormat(
+                    Number(
+                        (
+                            await statsQueue.getMetrics(
+                                "completed",
+                                0,
+                                MetricsTime.ONE_HOUR * 24 * 7
+                            )
+                        ).data
+                            .slice(1)
+                            .reduce((acc, cur) => Number(acc) + Number(cur), 0)
+                    )
+                ),
+                "1month": numberFormat(
+                    Number(
+                        (
+                            await statsQueue.getMetrics(
+                                "completed",
+                                0,
+                                MetricsTime.ONE_MONTH
+                            )
+                        ).data
+                            .slice(1)
+                            .reduce((acc, cur) => Number(acc) + Number(cur), 0)
+                    )
                 ),
             },
             achievements: {
@@ -1327,7 +1465,7 @@ export default defineEventHandler(async () => {
             allianceCache: cacheStats[11],
             ipxImageCache: ipxCacheCount,
         },
-        cacheHits,
+        cacheHits: formattedCacheHits,
         redis: redisStats,
     };
 });
