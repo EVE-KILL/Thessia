@@ -658,20 +658,20 @@ watch(
     async (newData) => {
         if (newData) {
             killmail.value = newData as IKillmail;
-            
+
             // Generate and add dataset structured data
             try {
                 const killmailWithUrl = {
                     ...killmail.value,
                     url: `https://eve-kill.com/kill/${killmail.value.killmail_id}`
                 };
-                
+
                 const datasetStructuredData = generateKillmailDatasetStructuredData(killmailWithUrl);
                 addStructuredDataToHead(datasetStructuredData);
             } catch (error) {
                 console.error("Error generating killmail structured data:", error);
             }
-            
+
             try {
                 // Fetch all sibling killmails
                 const siblingResponse = await $fetch<Array<{ killmail_id: number; victim: { ship_id: number; ship_name: any } }>>(

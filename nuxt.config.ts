@@ -128,7 +128,7 @@ export default defineNuxtConfig({
         "@nuxtjs/color-mode",
         "@nuxtjs/device",
         "@nuxtjs/partytown",
-        "@vueuse/nuxt"
+        "@vueuse/nuxt",
     ],
 
     colorMode: {
@@ -136,7 +136,7 @@ export default defineNuxtConfig({
         storage: "localStorage",
         storageKey: "theme",
         preference: "dark",
-        fallback: "dark"
+        fallback: "dark",
     },
     imports: {
         dirs: ["src/core/utils/**"],
@@ -219,7 +219,12 @@ export default defineNuxtConfig({
             "2xl": 1536,
         },
         // Updated providers configuration
-        domains: ["i.redd.it", "i.imgur.com", "preview.redd.it", "images.evetech.net"],
+        domains: [
+            "i.redd.it",
+            "i.imgur.com",
+            "preview.redd.it",
+            "images.evetech.net",
+        ],
         // Use ipx as default provider - it handles both local and remote images
         provider: "ipx",
         providers: {
@@ -262,8 +267,8 @@ export default defineNuxtConfig({
         },
         keepalive: true,
         // Extract critical CSS for above-the-fold content
-        rootId: 'app',
-        buildAssetsDir: '/_nuxt/',
+        rootId: "app",
+        buildAssetsDir: "/_nuxt/",
     },
 
     hooks: {

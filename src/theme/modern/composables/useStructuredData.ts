@@ -127,35 +127,52 @@ export const useStructuredData = () => {
         total_value?: number;
         url: string;
     }) => {
-        const finalBlowAttacker = killmail.attackers.find(a => a.final_blow);
+        const finalBlowAttacker = killmail.attackers.find((a) => a.final_blow);
         const attackerCount = killmail.attackers.length;
-        const killTime = typeof killmail.kill_time === 'string' ? killmail.kill_time : killmail.kill_time.toISOString();
-        
+        const killTime =
+            typeof killmail.kill_time === "string"
+                ? killmail.kill_time
+                : killmail.kill_time.toISOString();
+
         // Helper function to get English text from translation objects
-        const getEnglishText = (text: { en: string } | string | undefined): string => {
-            if (!text) return 'Unknown';
-            return typeof text === 'string' ? text : text.en;
+        const getEnglishText = (
+            text: { en: string } | string | undefined
+        ): string => {
+            if (!text) return "Unknown";
+            return typeof text === "string" ? text : text.en;
         };
-        
+
         const victimShipName = getEnglishText(killmail.victim.ship_name);
         const regionName = getEnglishText(killmail.region_name);
-        
+
         return {
             "@context": "https://schema.org",
             "@type": "Dataset",
             name: `EVE Online Killmail ${killmail.killmail_id} - ${victimShipName} destroyed in ${killmail.system_name}`,
-            description: `Combat data from EVE Online showing the destruction of ${killmail.victim.character_name ? `${killmail.victim.character_name}'s` : 'a'} ${victimShipName} in ${killmail.system_name}, ${regionName}. ${attackerCount} attacker${attackerCount > 1 ? 's' : ''} involved${finalBlowAttacker?.character_name ? `, final blow by ${finalBlowAttacker.character_name}` : ''}.`,
+            description: `Combat data from EVE Online showing the destruction of ${
+                killmail.victim.character_name
+                    ? `${killmail.victim.character_name}'s`
+                    : "a"
+            } ${victimShipName} in ${
+                killmail.system_name
+            }, ${regionName}. ${attackerCount} attacker${
+                attackerCount > 1 ? "s" : ""
+            } involved${
+                finalBlowAttacker?.character_name
+                    ? `, final blow by ${finalBlowAttacker.character_name}`
+                    : ""
+            }.`,
             url: killmail.url,
             identifier: killmail.killmail_id.toString(),
             creator: {
                 "@type": "Organization",
                 name: "EVE-KILL",
-                url: "https://eve-kill.com"
+                url: "https://eve-kill.com",
             },
             publisher: {
                 "@type": "Organization",
                 name: "EVE-KILL",
-                url: "https://eve-kill.com"
+                url: "https://eve-kill.com",
             },
             dateCreated: killTime,
             datePublished: killTime,
@@ -168,10 +185,18 @@ export const useStructuredData = () => {
                 victimShipName,
                 killmail.system_name,
                 regionName,
-                ...(killmail.victim.corporation_name ? [killmail.victim.corporation_name] : []),
-                ...(killmail.victim.alliance_name ? [killmail.victim.alliance_name] : []),
-                ...(finalBlowAttacker?.corporation_name ? [finalBlowAttacker.corporation_name] : []),
-                ...(finalBlowAttacker?.alliance_name ? [finalBlowAttacker.alliance_name] : [])
+                ...(killmail.victim.corporation_name
+                    ? [killmail.victim.corporation_name]
+                    : []),
+                ...(killmail.victim.alliance_name
+                    ? [killmail.victim.alliance_name]
+                    : []),
+                ...(finalBlowAttacker?.corporation_name
+                    ? [finalBlowAttacker.corporation_name]
+                    : []),
+                ...(finalBlowAttacker?.alliance_name
+                    ? [finalBlowAttacker.alliance_name]
+                    : []),
             ].filter(Boolean),
             spatialCoverage: {
                 "@type": "Place",
@@ -180,70 +205,365 @@ export const useStructuredData = () => {
                     {
                         "@type": "PropertyValue",
                         name: "Solar System",
-                        value: killmail.system_name
+                        value: killmail.system_name,
                     },
                     {
-                        "@type": "PropertyValue", 
+                        "@type": "PropertyValue",
                         name: "Region",
-                        value: regionName
-                    }
-                ]
+                        value: regionName,
+                    },
+                ],
             },
             temporalCoverage: killTime,
             variableMeasured: [
                 {
                     "@type": "PropertyValue",
                     name: "Victim Ship Type",
-                    value: victimShipName
+                    value: victimShipName,
                 },
                 {
                     "@type": "PropertyValue",
                     name: "Attacker Count",
-                    value: attackerCount.toString()
+                    value: attackerCount.toString(),
                 },
-                ...(killmail.total_value ? [{
-                    "@type": "PropertyValue",
-                    name: "Total Value (ISK)",
-                    value: killmail.total_value.toString(),
-                    unitText: "ISK"
-                }] : []),
-                ...(killmail.victim.character_name ? [{
-                    "@type": "PropertyValue",
-                    name: "Victim Character",
-                    value: killmail.victim.character_name
-                }] : []),
-                ...(killmail.victim.corporation_name ? [{
-                    "@type": "PropertyValue",
-                    name: "Victim Corporation", 
-                    value: killmail.victim.corporation_name
-                }] : []),
-                ...(finalBlowAttacker?.character_name ? [{
-                    "@type": "PropertyValue",
-                    name: "Final Blow Character",
-                    value: finalBlowAttacker.character_name
-                }] : []),
-                ...(finalBlowAttacker?.ship_name ? [{
-                    "@type": "PropertyValue",
-                    name: "Final Blow Ship",
-                    value: getEnglishText(finalBlowAttacker.ship_name)
-                }] : [])
+                ...(killmail.total_value
+                    ? [
+                          {
+                              "@type": "PropertyValue",
+                              name: "Total Value (ISK)",
+                              value: killmail.total_value.toString(),
+                              unitText: "ISK",
+                          },
+                      ]
+                    : []),
+                ...(killmail.victim.character_name
+                    ? [
+                          {
+                              "@type": "PropertyValue",
+                              name: "Victim Character",
+                              value: killmail.victim.character_name,
+                          },
+                      ]
+                    : []),
+                ...(killmail.victim.corporation_name
+                    ? [
+                          {
+                              "@type": "PropertyValue",
+                              name: "Victim Corporation",
+                              value: killmail.victim.corporation_name,
+                          },
+                      ]
+                    : []),
+                ...(finalBlowAttacker?.character_name
+                    ? [
+                          {
+                              "@type": "PropertyValue",
+                              name: "Final Blow Character",
+                              value: finalBlowAttacker.character_name,
+                          },
+                      ]
+                    : []),
+                ...(finalBlowAttacker?.ship_name
+                    ? [
+                          {
+                              "@type": "PropertyValue",
+                              name: "Final Blow Ship",
+                              value: getEnglishText(
+                                  finalBlowAttacker.ship_name
+                              ),
+                          },
+                      ]
+                    : []),
             ],
             distribution: {
                 "@type": "DataDownload",
                 contentUrl: killmail.url,
-                encodingFormat: "text/html"
+                encodingFormat: "text/html",
             },
             isBasedOn: {
                 "@type": "SoftwareApplication",
                 name: "EVE Online",
                 publisher: {
-                    "@type": "Organization", 
-                    name: "CCP Games"
-                }
-            }
+                    "@type": "Organization",
+                    name: "CCP Games",
+                },
+            },
         };
     };
 
+    /**
+     * Generate Dataset structured data for a battle page
+     * @param battle - The battle data
+     * @param battleUrl - URL of the battle page
+     */
+    function generateBattleDatasetStructuredData(
+        battle: IBattles,
+        battleUrl: string
+    ) {
+        const { t } = useI18n();
+
+        // Calculate battle duration
+        const startTime = new Date(battle.start_time);
+        const endTime = new Date(battle.end_time);
+        const durationMs = endTime.getTime() - startTime.getTime();
+        const durationHours =
+            Math.round((durationMs / (1000 * 60 * 60)) * 10) / 10;
+
+        // Get primary system info
+        const primarySystem = battle.systems?.[0];
+        const systemCount = battle.systems?.length || 0;
+
+        // Calculate total participants and ISK destroyed
+        const totalParticipants = battle.total_involved || 0;
+        const totalIskDestroyed = (
+            (battle.isk_destroyed || 0) / 1000000
+        ).toFixed(0); // Convert to millions
+
+        const structuredData = {
+            "@context": "https://schema.org",
+            "@type": "Dataset",
+            name: `EVE Online Battle in ${
+                primarySystem?.system_name || "Unknown System"
+            }${systemCount > 1 ? ` +${systemCount - 1} more` : ""}`,
+            description: `Battle data from ${startTime.toLocaleDateString()} lasting ${durationHours} hours with ${totalParticipants} participants and ${totalIskDestroyed}M ISK destroyed`,
+            url: battleUrl,
+            keywords: [
+                "EVE Online",
+                "Battle",
+                "Combat Data",
+                "Space Battle",
+                primarySystem?.system_name,
+                primarySystem?.region_name,
+            ].filter(Boolean),
+            creator: {
+                "@type": "Organization",
+                name: "EVE-KILL",
+                url: "https://eve-kill.com",
+            },
+            publisher: {
+                "@type": "Organization",
+                name: "EVE-KILL",
+                url: "https://eve-kill.com",
+            },
+            dateCreated: battle.start_time,
+            dateModified: battle.end_time,
+            temporalCoverage: `${battle.start_time}/${battle.end_time}`,
+            spatialCoverage:
+                battle.systems?.map((system) => ({
+                    "@type": "Place",
+                    name: `${system.system_name}, ${system.region_name}`,
+                    additionalProperty: [
+                        {
+                            "@type": "PropertyValue",
+                            name: "Security Status",
+                            value:
+                                system.security_status?.toFixed(1) || "Unknown",
+                        },
+                        {
+                            "@type": "PropertyValue",
+                            name: "System ID",
+                            value: system.system_id?.toString() || "Unknown",
+                        },
+                    ],
+                })) || [],
+            variableMeasured: [
+                {
+                    "@type": "PropertyValue",
+                    name: "Total Participants",
+                    value: totalParticipants,
+                    description: "Number of characters involved in the battle",
+                },
+                {
+                    "@type": "PropertyValue",
+                    name: "ISK Destroyed",
+                    value: battle.isk_destroyed || 0,
+                    unitText: "ISK",
+                    description:
+                        "Total ISK value of ships and modules destroyed",
+                },
+                {
+                    "@type": "PropertyValue",
+                    name: "Ships Destroyed",
+                    value: battle.total_kills || 0,
+                    description:
+                        "Total number of ships destroyed in the battle",
+                },
+                {
+                    "@type": "PropertyValue",
+                    name: "Battle Duration",
+                    value: durationMs,
+                    unitText: "milliseconds",
+                    description:
+                        "Duration of the battle from first to last kill",
+                },
+            ],
+            distribution: [
+                {
+                    "@type": "DataDownload",
+                    encodingFormat: "application/json",
+                    contentUrl: `${battleUrl}?format=json`,
+                    description: "Battle data in JSON format",
+                },
+            ],
+        };
+
+        addStructuredDataToHead(structuredData);
+    }
+
+    /**
+     * Generate Dataset structured data for a campaign page
+     * @param campaign - The campaign data
+     * @param campaignUrl - URL of the campaign page
+     */
+    function generateCampaignDatasetStructuredData(
+        campaign: any,
+        campaignUrl: string
+    ) {
+        const { t } = useI18n();
+
+        // Calculate campaign duration
+        const startTime = new Date(campaign.startTime);
+        const endTime = campaign.endTime
+            ? new Date(campaign.endTime)
+            : new Date();
+        const durationMs = endTime.getTime() - startTime.getTime();
+        const durationDays = Math.round(durationMs / (1000 * 60 * 60 * 24));
+
+        // Calculate total ISK destroyed in billions for readability
+        const totalIskDestroyed = (
+            (campaign.totalISKDestroyed || 0) / 1000000000
+        ).toFixed(1); // Convert to billions
+
+        // Determine campaign type and scope
+        const hasAttackers = Object.keys(campaign.campaignQuery || {}).some(
+            (key) => key.startsWith("attackers.")
+        );
+        const hasVictims = Object.keys(campaign.campaignQuery || {}).some(
+            (key) => key.startsWith("victim.")
+        );
+        const campaignType =
+            hasAttackers && hasVictims
+                ? "Conflict Analysis"
+                : hasAttackers
+                ? "Attacker Analysis"
+                : hasVictims
+                ? "Victim Analysis"
+                : "General Combat Analysis";
+
+        const structuredData = {
+            "@context": "https://schema.org",
+            "@type": "Dataset",
+            name: `${campaign.name} - EVE Online Campaign`,
+            description:
+                campaign.description ||
+                `${campaignType} campaign spanning ${durationDays} days with ${
+                    campaign.totalKills || 0
+                } kills and ${totalIskDestroyed}B ISK destroyed`,
+            url: campaignUrl,
+            keywords: [
+                "EVE Online",
+                "Campaign",
+                "Combat Analytics",
+                "Military Campaign",
+                "PvP Data",
+                campaignType,
+            ].filter(Boolean),
+            creator: {
+                "@type": "Organization",
+                name: "EVE-KILL",
+                url: "https://eve-kill.com",
+            },
+            publisher: {
+                "@type": "Organization",
+                name: "EVE-KILL",
+                url: "https://eve-kill.com",
+            },
+            dateCreated: campaign.startTime,
+            dateModified: campaign.endTime || new Date().toISOString(),
+            temporalCoverage: campaign.endTime
+                ? `${campaign.startTime}/${campaign.endTime}`
+                : `${campaign.startTime}/..`,
+            spatialCoverage:
+                campaign.filterEntities?.regions?.map((region: any) => ({
+                    "@type": "Place",
+                    name: region.name,
+                    additionalProperty: {
+                        "@type": "PropertyValue",
+                        name: "Region ID",
+                        value: region.region_id?.toString(),
+                    },
+                })) || [],
+            variableMeasured: [
+                {
+                    "@type": "PropertyValue",
+                    name: "Total Kills",
+                    value: campaign.totalKills || 0,
+                    description: "Number of killmails in this campaign",
+                },
+                {
+                    "@type": "PropertyValue",
+                    name: "ISK Destroyed",
+                    value: campaign.totalISKDestroyed || 0,
+                    unitText: "ISK",
+                    description:
+                        "Total ISK value of ships and modules destroyed",
+                },
+                {
+                    "@type": "PropertyValue",
+                    name: "Ships Destroyed",
+                    value: campaign.shipsDestroyed || 0,
+                    description:
+                        "Total number of ships destroyed in the campaign",
+                },
+                {
+                    "@type": "PropertyValue",
+                    name: "Campaign Duration",
+                    value: durationMs,
+                    unitText: "milliseconds",
+                    description: "Duration of the campaign period",
+                },
+                {
+                    "@type": "PropertyValue",
+                    name: "Average ISK per Kill",
+                    value: campaign.totalKills
+                        ? Math.round(
+                              (campaign.totalISKDestroyed || 0) /
+                                  campaign.totalKills
+                          )
+                        : 0,
+                    unitText: "ISK",
+                    description: "Average ISK value per killmail",
+                },
+            ],
+            distribution: [
+                {
+                    "@type": "DataDownload",
+                    encodingFormat: "application/json",
+                    contentUrl: `${campaignUrl}?format=json`,
+                    description: "Campaign data in JSON format",
+                },
+            ],
+            additionalProperty: [
+                {
+                    "@type": "PropertyValue",
+                    name: "Campaign Type",
+                    value: campaignType,
+                },
+                {
+                    "@type": "PropertyValue",
+                    name: "Privacy Status",
+                    value: campaign.public ? "Public" : "Private",
+                },
+                {
+                    "@type": "PropertyValue",
+                    name: "Processing Status",
+                    value: campaign.processing ? "Processing" : "Completed",
+                },
+            ],
+        };
+
+        addStructuredDataToHead(structuredData);
+    }
     /**
      * Generate breadcrumb structured data
      * @param breadcrumbs Array of breadcrumb items
@@ -332,6 +652,8 @@ export const useStructuredData = () => {
         generateBreadcrumbStructuredData,
         generateArticleStructuredData,
         generateKillmailDatasetStructuredData,
+        generateBattleDatasetStructuredData,
+        generateCampaignDatasetStructuredData,
         addStructuredDataToHead,
     };
 };

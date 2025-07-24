@@ -206,6 +206,7 @@ import { useRoute, useRouter } from 'vue-router';
 const { locale, t } = useI18n();
 const route = useRoute();
 const router = useRouter();
+const { generateBattleDatasetStructuredData, addStructuredDataToHead } = useStructuredData();
 
 // State management
 const activeTabId = ref('');
@@ -255,6 +256,23 @@ const { data: battle, pending, error, refresh } = useFetch(() => apiUrl.value, {
 const refreshData = async () => {
     await refresh();
 };
+
+// Watch for battle data changes and generate structured data
+watch(battle, (newBattle) => {
+    if (newBattle) {
+        try {
+            const battleWithUrl = {
+                ...newBattle,
+                url: `https://eve-kill.com/battle/${newBattle.battle_id}`
+            };
+
+            const datasetStructuredData = generateBattleDatasetStructuredData(battleWithUrl);
+            addStructuredDataToHead(datasetStructuredData);
+        } catch (error) {
+            console.error("Error generating battle structured data:", error);
+        }
+    }
+}, { immediate: true });
 
 // Set up tab navigation with icons
 const tabItems = computed(() => [

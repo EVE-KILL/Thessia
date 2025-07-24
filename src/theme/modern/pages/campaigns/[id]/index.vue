@@ -119,7 +119,7 @@
                             :limit="10" />
                     </div>
 
-                    <!-- Top Damage Dealers Box - Show if we have attackers -->
+                    <!-- Top Damage Dealers Box - Show if we have attackers  -->
                     <div v-if="hasAttackerDefinitions && stats.topDamageDealersByCharacter?.length" class="mb-6 campaign-sidebar-box">
                         <CampaignTopBox :title="t('campaign.top_damage_dealers')"
                             :entities="stats.topDamageDealersByCharacter" :countField="'damageDone'"
@@ -319,6 +319,7 @@ const toast = useToast();
 const route = useRoute();
 const router = useRouter();
 const { isAuthenticated, currentUser } = useAuth();
+const { generateCampaignDatasetStructuredData } = useStructuredData();
 
 // Get campaign ID from route
 const campaignId = computed(() => route.params.id as string);
@@ -520,6 +521,12 @@ const fetchCreatorName = async () => {
 watch(stats, (newStats) => {
     if (newStats) {
         fetchCreatorName();
+
+        // Generate structured data for the campaign
+        if (newStats && !newStats.processing) {
+            const campaignUrl = `https://eve-kill.com${route.fullPath}`;
+            generateCampaignDatasetStructuredData(newStats, campaignUrl);
+        }
     }
 }, { immediate: true });
 
