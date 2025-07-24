@@ -889,12 +889,7 @@ onUpdated(() => {
             <!-- Details column -->
             <template #cell-details="{ item }">
                 <div class="flex flex-col items-end w-full">
-                    <ClientOnly>
-                        <div class="text-sm text-black dark:text-white">{{ formatDate(item.kill_time) }}</div>
-                        <template #fallback>
-                            <div class="text-black dark:text-white">—</div>
-                        </template>
-                    </ClientOnly>
+                    <div class="text-sm text-black dark:text-white">{{ formatDate(item.kill_time) }}</div>
                     <div class="flex gap-1 items-center">
                         <span class="text-xs text-gray-600 dark:text-gray-400">{{ item.attackerCount }}</span>
                         <NuxtImg src="/images/involved.png" format="webp" quality="80" width="16" height="16"
@@ -985,14 +980,9 @@ onUpdated(() => {
                         </div>
 
                         <!-- Time Info -->
-                        <ClientOnly>
-                            <span class="text-xs text-gray-600 dark:text-gray-400">
-                                {{ formatDate(item.kill_time) }}
-                            </span>
-                            <template #fallback>
-                                <span class="text-xs text-gray-600 dark:text-gray-400">—</span>
-                            </template>
-                        </ClientOnly>
+                        <span class="text-xs text-gray-600 dark:text-gray-400">
+                            {{ formatDate(item.kill_time) }}
+                        </span>
                     </div>
                 </div>
             </template>

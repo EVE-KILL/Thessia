@@ -119,12 +119,10 @@
         <!-- 5. Time Info - Simplified -->
         <div class="section simple-info-row">
             <span class="info-label">{{ $t('killInfo.time') }}:</span>
-            <ClientOnly>
-                <span class="time-full truncate">{{ formatDateTime(killmail?.kill_time ? new
-                    Date(killmail.kill_time).toISOString() : undefined) }}</span>
-                <span class="time-ago truncate">({{ formatTimeAgo(killmail?.kill_time ? new
-                    Date(killmail.kill_time).toISOString() : undefined) }})</span>
-            </ClientOnly>
+            <span class="time-full truncate">{{ formatDateTime(killmail?.kill_time ? new
+                Date(killmail.kill_time).toISOString() : undefined) }}</span>
+            <span class="time-ago truncate">({{ formatTimeAgo(killmail?.kill_time ? new
+                Date(killmail.kill_time).toISOString() : undefined) }})</span>
         </div>
 
         <!-- 6. Damage Done - Simplified -->

@@ -389,7 +389,7 @@ const hasKeyspaceInfo = computed(() => {
                 <UButton class="mt-4" @click="refresh">{{ $t('retry') }}</UButton>
             </div>
 
-            <ClientOnly fallback-tag="div" :fallback="$t('loading')">
+
                 <div v-if="statusData">
                     <!-- Summary Cards -->
                     <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-6">
@@ -913,7 +913,6 @@ const hasKeyspaceInfo = computed(() => {
                         <span v-if="autoRefresh"> · {{ $t('autoRefreshing', { seconds: autoRefreshInterval }) }}</span>
                     </div>
                 </div>
-            </ClientOnly>
         </div>
     </div>
 </template>

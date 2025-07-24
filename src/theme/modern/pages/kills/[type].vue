@@ -2,14 +2,12 @@
     <h1 class="text-2xl font-bold mb-6 capitalize">
         {{ typeLabel }}
     </h1>
-    <ClientOnly>
-        <KillList v-if="isValidType" :killlistType="currentType" :limit="100" :key="componentKey"
-            :wsFilter="currentType" />
-        <div v-else class="text-center text-gray-400 py-16">
-            <h2 class="text-3xl font-bold mb-4">404</h2>
-            <p>{{ t('notFound') }}</p>
-        </div>
-    </ClientOnly>
+    <KillList v-if="isValidType" :killlistType="currentType" :limit="100" :key="componentKey"
+        :wsFilter="currentType" />
+    <div v-else class="text-center text-gray-400 py-16">
+        <h2 class="text-3xl font-bold mb-4">404</h2>
+        <p>{{ t('notFound') }}</p>
+    </div>
 </template>
 
 <script setup lang="ts">

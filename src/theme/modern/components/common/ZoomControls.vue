@@ -77,7 +77,6 @@ const isDefaultZoom = computed(() => zoom.value === 100);
 
 <template>
     <!-- Only render on desktop (non-mobile) devices -->
-    <ClientOnly>
         <template v-if="!isMobile">
             <!-- Zoom Level Display - Now styled like a button -->
             <div v-if="showZoomLevel" class="floating-button zoom-level-button" :style="zoomLevelPosition">
@@ -109,7 +108,6 @@ const isDefaultZoom = computed(() => zoom.value === 100);
                     @click="zoomOut" :aria-label="t('zoomOut')" :title="t('zoomOut')" />
             </div>
         </template>
-    </ClientOnly>
 </template>
 
 <style scoped>

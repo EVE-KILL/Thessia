@@ -3,6 +3,8 @@
  * Following Schema.org specifications
  */
 
+import type { IBattles } from '~/server/interfaces/IBattles';
+
 export const useStructuredData = () => {
     const { t } = useI18n();
 
@@ -314,9 +316,9 @@ export const useStructuredData = () => {
         const systemCount = battle.systems?.length || 0;
 
         // Calculate total participants and ISK destroyed
-        const totalParticipants = battle.total_involved || 0;
+        const totalParticipants = battle.involved_characters_count || 0;
         const totalIskDestroyed = (
-            (battle.isk_destroyed || 0) / 1000000
+            (battle.iskDestroyed || 0) / 1000000
         ).toFixed(0); // Convert to millions
 
         const structuredData = {
@@ -357,7 +359,7 @@ export const useStructuredData = () => {
                             "@type": "PropertyValue",
                             name: "Security Status",
                             value:
-                                system.security_status?.toFixed(1) || "Unknown",
+                                system.system_security?.toFixed(1) || "Unknown",
                         },
                         {
                             "@type": "PropertyValue",
@@ -376,7 +378,7 @@ export const useStructuredData = () => {
                 {
                     "@type": "PropertyValue",
                     name: "ISK Destroyed",
-                    value: battle.isk_destroyed || 0,
+                    value: battle.iskDestroyed || 0,
                     unitText: "ISK",
                     description:
                         "Total ISK value of ships and modules destroyed",
@@ -384,7 +386,7 @@ export const useStructuredData = () => {
                 {
                     "@type": "PropertyValue",
                     name: "Ships Destroyed",
-                    value: battle.total_kills || 0,
+                    value: battle.killmailsCount || 0,
                     description:
                         "Total number of ships destroyed in the battle",
                 },
@@ -418,10 +420,10 @@ export const useStructuredData = () => {
    */
   function generateCharacterStructuredData(character: any, characterUrl: string, stats?: any) {
     const { t } = useI18n();
-    
+
     // Calculate character age if birthday is available
-    const characterAge = character.birthday ? 
-      Math.floor((new Date().getTime() - new Date(character.birthday).getTime()) / (1000 * 60 * 60 * 24 * 365.25)) : 
+    const characterAge = character.birthday ?
+      Math.floor((new Date().getTime() - new Date(character.birthday).getTime()) / (1000 * 60 * 60 * 24 * 365.25)) :
       null;
 
     const structuredData = {
@@ -445,7 +447,7 @@ export const useStructuredData = () => {
         url: `https://eve-kill.com/corporation/${character.corporation_id}`
       } : undefined,
       affiliation: character.alliance_id ? {
-        "@type": "Organization", 
+        "@type": "Organization",
         name: character.alliance_name || "Unknown Alliance",
         identifier: character.alliance_id.toString(),
         url: `https://eve-kill.com/alliance/${character.alliance_id}`
@@ -463,7 +465,7 @@ export const useStructuredData = () => {
         },
         {
           "@type": "PropertyValue",
-          name: "Bloodline", 
+          name: "Bloodline",
           value: character.bloodline_name || "Unknown"
         },
         characterAge ? {
@@ -479,7 +481,7 @@ export const useStructuredData = () => {
         } : null,
         stats ? {
           "@type": "PropertyValue",
-          name: "Total Losses", 
+          name: "Total Losses",
           value: stats.losses || 0
         } : null,
         stats ? {
@@ -519,8 +521,8 @@ export const useStructuredData = () => {
     const { t } = useI18n();
 
     const foundingDate = corporation.date_founded ? new Date(corporation.date_founded) : null;
-    const corporationAge = foundingDate ? 
-      Math.floor((new Date().getTime() - foundingDate.getTime()) / (1000 * 60 * 60 * 24 * 365.25)) : 
+    const corporationAge = foundingDate ?
+      Math.floor((new Date().getTime() - foundingDate.getTime()) / (1000 * 60 * 60 * 24 * 365.25)) :
       null;
 
     const structuredData = {
@@ -571,7 +573,7 @@ export const useStructuredData = () => {
           value: corporation.member_count || 0
         },
         corporationAge ? {
-          "@type": "PropertyValue", 
+          "@type": "PropertyValue",
           name: "Corporation Age",
           value: `${corporationAge} years`,
           unitText: "years"
@@ -616,8 +618,8 @@ export const useStructuredData = () => {
     const { t } = useI18n();
 
     const foundingDate = alliance.date_founded ? new Date(alliance.date_founded) : null;
-    const allianceAge = foundingDate ? 
-      Math.floor((new Date().getTime() - foundingDate.getTime()) / (1000 * 60 * 60 * 24 * 365.25)) : 
+    const allianceAge = foundingDate ?
+      Math.floor((new Date().getTime() - foundingDate.getTime()) / (1000 * 60 * 60 * 24 * 365.25)) :
       null;
 
     const structuredData = {
@@ -652,7 +654,7 @@ export const useStructuredData = () => {
       additionalProperty: [
         allianceAge ? {
           "@type": "PropertyValue",
-          name: "Alliance Age", 
+          name: "Alliance Age",
           value: `${allianceAge} years`,
           unitText: "years"
         } : null,
@@ -687,15 +689,12 @@ export const useStructuredData = () => {
     addStructuredDataToHead(structuredData);
   }
 
-  return {    /**
-     * Generate Dataset structured data for a campaign page
-     * @param campaign - The campaign data
-     * @param campaignUrl - URL of the campaign page
-     */
-    function generateCampaignDatasetStructuredData(
-        campaign: any,
-        campaignUrl: string
-    ) {
+  /**
+   * Generate Dataset structured data for a campaign page
+   * @param campaign - The campaign data
+   * @param campaignUrl - URL of the campaign page
+   */
+  function generateCampaignDatasetStructuredData(campaign: any, campaignUrl: string) {
         const { t } = useI18n();
 
         // Calculate campaign duration
@@ -841,6 +840,7 @@ export const useStructuredData = () => {
 
         addStructuredDataToHead(structuredData);
     }
+
     /**
      * Generate breadcrumb structured data
      * @param breadcrumbs Array of breadcrumb items
