@@ -33,8 +33,11 @@ function isAttackerSide(
     entity: IKillmail["attackers"][0] | IKillmail["victim"],
     campaignQuery: ICampaign["query"]
 ): boolean {
+    // Ensure entity exists and has required properties
+    if (!entity) return false;
+    
     // Check direct attacker conditions
-    if ("character_id" in entity && campaignQuery["attackers.character_id"]) {
+    if ("character_id" in entity && entity.character_id && campaignQuery["attackers.character_id"]) {
         const queryVal = campaignQuery["attackers.character_id"];
         if (
             typeof queryVal === "object" &&
@@ -48,6 +51,7 @@ function isAttackerSide(
     }
     if (
         "corporation_id" in entity &&
+        entity.corporation_id &&
         campaignQuery["attackers.corporation_id"]
     ) {
         const queryVal = campaignQuery["attackers.corporation_id"];
@@ -61,7 +65,7 @@ function isAttackerSide(
             return true;
         }
     }
-    if ("alliance_id" in entity && campaignQuery["attackers.alliance_id"]) {
+    if ("alliance_id" in entity && entity.alliance_id && campaignQuery["attackers.alliance_id"]) {
         const queryVal = campaignQuery["attackers.alliance_id"];
         if (
             typeof queryVal === "object" &&
@@ -73,7 +77,7 @@ function isAttackerSide(
             return true;
         }
     }
-    if ("faction_id" in entity && campaignQuery["attackers.faction_id"]) {
+    if ("faction_id" in entity && entity.faction_id && campaignQuery["attackers.faction_id"]) {
         const queryVal = campaignQuery["attackers.faction_id"];
         if (
             typeof queryVal === "object" &&
@@ -100,8 +104,11 @@ function isVictimSide(
     entity: IKillmail["attackers"][0] | IKillmail["victim"],
     campaignQuery: ICampaign["query"]
 ): boolean {
+    // Ensure entity exists and has required properties
+    if (!entity) return false;
+    
     // Check direct victim conditions
-    if ("character_id" in entity && campaignQuery["victim.character_id"]) {
+    if ("character_id" in entity && entity.character_id && campaignQuery["victim.character_id"]) {
         const queryVal = campaignQuery["victim.character_id"];
         if (
             typeof queryVal === "object" &&
@@ -113,7 +120,7 @@ function isVictimSide(
             return true;
         }
     }
-    if ("corporation_id" in entity && campaignQuery["victim.corporation_id"]) {
+    if ("corporation_id" in entity && entity.corporation_id && campaignQuery["victim.corporation_id"]) {
         const queryVal = campaignQuery["victim.corporation_id"];
         if (
             typeof queryVal === "object" &&
@@ -125,7 +132,7 @@ function isVictimSide(
             return true;
         }
     }
-    if ("alliance_id" in entity && campaignQuery["victim.alliance_id"]) {
+    if ("alliance_id" in entity && entity.alliance_id && campaignQuery["victim.alliance_id"]) {
         const queryVal = campaignQuery["victim.alliance_id"];
         if (
             typeof queryVal === "object" &&
@@ -137,7 +144,7 @@ function isVictimSide(
             return true;
         }
     }
-    if ("faction_id" in entity && campaignQuery["victim.faction_id"]) {
+    if ("faction_id" in entity && entity.faction_id && campaignQuery["victim.faction_id"]) {
         const queryVal = campaignQuery["victim.faction_id"];
         if (
             typeof queryVal === "object" &&
@@ -643,7 +650,23 @@ export async function generateCampaignStats(
     })();
 
     // Fetch all killmails using the expanded query
-    const killmailsPromise = Killmails.find(expandedQuery).lean();
+    const killmailsPromise = (async () => {
+        // Force a fresh query execution by cloning the query and using a new cursor
+        const queryClone = JSON.parse(JSON.stringify(expandedQuery));
+        const results = await Killmails.find(queryClone).lean().exec();
+        
+        // Additional validation - check for null/undefined values that might cause issues
+        const validResults = results.filter(km => 
+            km && 
+            km.killmail_id && 
+            km.victim && 
+            km.attackers && 
+            Array.isArray(km.attackers) && 
+            km.attackers.length > 0
+        );
+        
+        return validResults;
+    })();
 
     // Wait for both operations to complete in parallel
     const [runtimeDays, relevantKillmails] = await Promise.all([
@@ -765,7 +788,11 @@ export async function generateCampaignStats(
     // Process batches sequentially to avoid race conditions on shared state
     // The stats object and various Maps/Sets are shared mutable state that cannot be safely
     // modified concurrently by multiple batches
-    for (let batchIndex = 0; batchIndex < killmailBatches.length; batchIndex++) {
+    for (
+        let batchIndex = 0;
+        batchIndex < killmailBatches.length;
+        batchIndex++
+    ) {
         const batch = killmailBatches[batchIndex];
         await processKillmailBatch(
             batch,
@@ -898,8 +925,6 @@ export async function generateCampaignStats(
     stats.topKillersByAlliance = topKillersAlliances;
     stats.topVictimsByAlliance = topVictimsAlliances;
     stats.mostValuableKills = mostValuableKills;
-
-    // Debug logging for final campaign statistics
 
     return stats;
 }
