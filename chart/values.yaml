@@ -186,8 +186,8 @@ processCampaigns:
             cpu: 250m
             memory: 256Mi
         limits:
-            cpu: 8000m
-            memory: 16Gi
+            cpu: 4000m
+            memory: 8096Mi
     securityContext:
         runAsUser: 1000
         runAsGroup: 1000
