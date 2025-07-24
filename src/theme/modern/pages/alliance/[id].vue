@@ -300,6 +300,7 @@ const { t, locale } = useI18n()
 const route = useRoute()
 const router = useRouter()
 const allianceId = route.params.id
+const { generateAllianceStructuredData } = useStructuredData();
 
 const dateLocales = {
     en: enUS,
@@ -400,6 +401,14 @@ const validShortStats = computed(() => {
     }
     return null;
 })
+
+// Generate structured data when alliance is loaded
+watch(alliance, (newAlliance) => {
+    if (newAlliance) {
+        const allianceUrl = `https://eve-kill.com${route.fullPath}`;
+        generateAllianceStructuredData(newAlliance, allianceUrl, validShortStats.value);
+    }
+}, { immediate: true });
 
 const tabItems = computed(() => [
     {

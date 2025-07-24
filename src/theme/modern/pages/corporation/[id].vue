@@ -303,6 +303,7 @@ const route = useRoute()
 const router = useRouter()
 const corporationId = route.params.id
 const activeTabId = ref('');
+const { generateCorporationStructuredData } = useStructuredData();
 
 const { data: corporation, pending, error } = await useFetch(`/api/corporations/${corporationId}`)
 
@@ -393,6 +394,14 @@ const validShortStats = computed(() => {
     }
     return null;
 })
+
+// Generate structured data when corporation is loaded
+watch(corporation, (newCorporation) => {
+    if (newCorporation) {
+        const corporationUrl = `https://eve-kill.com${route.fullPath}`;
+        generateCorporationStructuredData(newCorporation, corporationUrl, validShortStats.value);
+    }
+}, { immediate: true });
 
 const tabItems = computed(() => [
     {

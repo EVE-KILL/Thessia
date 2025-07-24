@@ -409,6 +409,7 @@ const currentLocale = computed(() => locale.value);
 const route = useRoute();
 const router = useRouter();
 const { id } = route.params;
+const { generateCharacterStructuredData } = useStructuredData();
 
 const tabItems = [
     {
@@ -633,6 +634,14 @@ const validShortStats = computed(() => {
     }
     return null;
 });
+
+// Generate structured data when character is loaded
+watch(character, (newCharacter) => {
+    if (newCharacter) {
+        const characterUrl = `https://eve-kill.com${route.fullPath}`;
+        generateCharacterStructuredData(newCharacter, characterUrl, validShortStats.value);
+    }
+}, { immediate: true });
 
 useSeoMeta({
     title: computed(() => {
