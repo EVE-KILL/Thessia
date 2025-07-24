@@ -35,9 +35,13 @@ function isAttackerSide(
 ): boolean {
     // Ensure entity exists and has required properties
     if (!entity) return false;
-    
+
     // Check direct attacker conditions
-    if ("character_id" in entity && entity.character_id && campaignQuery["attackers.character_id"]) {
+    if (
+        "character_id" in entity &&
+        entity.character_id &&
+        campaignQuery["attackers.character_id"]
+    ) {
         const queryVal = campaignQuery["attackers.character_id"];
         if (
             typeof queryVal === "object" &&
@@ -65,7 +69,11 @@ function isAttackerSide(
             return true;
         }
     }
-    if ("alliance_id" in entity && entity.alliance_id && campaignQuery["attackers.alliance_id"]) {
+    if (
+        "alliance_id" in entity &&
+        entity.alliance_id &&
+        campaignQuery["attackers.alliance_id"]
+    ) {
         const queryVal = campaignQuery["attackers.alliance_id"];
         if (
             typeof queryVal === "object" &&
@@ -77,7 +85,11 @@ function isAttackerSide(
             return true;
         }
     }
-    if ("faction_id" in entity && entity.faction_id && campaignQuery["attackers.faction_id"]) {
+    if (
+        "faction_id" in entity &&
+        entity.faction_id &&
+        campaignQuery["attackers.faction_id"]
+    ) {
         const queryVal = campaignQuery["attackers.faction_id"];
         if (
             typeof queryVal === "object" &&
@@ -106,9 +118,13 @@ function isVictimSide(
 ): boolean {
     // Ensure entity exists and has required properties
     if (!entity) return false;
-    
+
     // Check direct victim conditions
-    if ("character_id" in entity && entity.character_id && campaignQuery["victim.character_id"]) {
+    if (
+        "character_id" in entity &&
+        entity.character_id &&
+        campaignQuery["victim.character_id"]
+    ) {
         const queryVal = campaignQuery["victim.character_id"];
         if (
             typeof queryVal === "object" &&
@@ -120,7 +136,11 @@ function isVictimSide(
             return true;
         }
     }
-    if ("corporation_id" in entity && entity.corporation_id && campaignQuery["victim.corporation_id"]) {
+    if (
+        "corporation_id" in entity &&
+        entity.corporation_id &&
+        campaignQuery["victim.corporation_id"]
+    ) {
         const queryVal = campaignQuery["victim.corporation_id"];
         if (
             typeof queryVal === "object" &&
@@ -132,7 +152,11 @@ function isVictimSide(
             return true;
         }
     }
-    if ("alliance_id" in entity && entity.alliance_id && campaignQuery["victim.alliance_id"]) {
+    if (
+        "alliance_id" in entity &&
+        entity.alliance_id &&
+        campaignQuery["victim.alliance_id"]
+    ) {
         const queryVal = campaignQuery["victim.alliance_id"];
         if (
             typeof queryVal === "object" &&
@@ -144,7 +168,11 @@ function isVictimSide(
             return true;
         }
     }
-    if ("faction_id" in entity && entity.faction_id && campaignQuery["victim.faction_id"]) {
+    if (
+        "faction_id" in entity &&
+        entity.faction_id &&
+        campaignQuery["victim.faction_id"]
+    ) {
         const queryVal = campaignQuery["victim.faction_id"];
         if (
             typeof queryVal === "object" &&
@@ -654,17 +682,18 @@ export async function generateCampaignStats(
         // Force a fresh query execution by cloning the query and using a new cursor
         const queryClone = JSON.parse(JSON.stringify(expandedQuery));
         const results = await Killmails.find(queryClone).lean().exec();
-        
+
         // Additional validation - check for null/undefined values that might cause issues
-        const validResults = results.filter(km => 
-            km && 
-            km.killmail_id && 
-            km.victim && 
-            km.attackers && 
-            Array.isArray(km.attackers) && 
-            km.attackers.length > 0
+        const validResults = results.filter(
+            (km) =>
+                km &&
+                km.killmail_id &&
+                km.victim &&
+                km.attackers &&
+                Array.isArray(km.attackers) &&
+                km.attackers.length > 0
         );
-        
+
         return validResults;
     })();
 
