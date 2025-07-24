@@ -762,30 +762,31 @@ export async function generateCampaignStats(
     // Process each batch
     let killmailIdIndex = 0;
 
-    // Using Promise.all to process batches in parallel, with internal sequential processing
-    await Promise.all(
-        killmailBatches.map(async (batch, batchIndex) => {
-            return processKillmailBatch(
-                batch,
-                stats,
-                campaignQuery,
-                shipGroupMap,
-                characterKillsMap,
-                characterLossesMap,
-                characterDamageMap,
-                characterDamageTakenMap,
-                corporationKillsMap,
-                corporationLossesMap,
-                allianceKillsMap,
-                allianceLossesMap,
-                mostValuableKillsArray,
-                trackedKillmails,
-                trackedForStats,
-                killmailIds,
-                killmailIdIndex + batchIndex * BATCH_SIZE
-            );
-        })
-    );
+    // Process batches sequentially to avoid race conditions on shared state
+    // The stats object and various Maps/Sets are shared mutable state that cannot be safely
+    // modified concurrently by multiple batches
+    for (let batchIndex = 0; batchIndex < killmailBatches.length; batchIndex++) {
+        const batch = killmailBatches[batchIndex];
+        await processKillmailBatch(
+            batch,
+            stats,
+            campaignQuery,
+            shipGroupMap,
+            characterKillsMap,
+            characterLossesMap,
+            characterDamageMap,
+            characterDamageTakenMap,
+            corporationKillsMap,
+            corporationLossesMap,
+            allianceKillsMap,
+            allianceLossesMap,
+            mostValuableKillsArray,
+            trackedKillmails,
+            trackedForStats,
+            killmailIds,
+            killmailIdIndex + batchIndex * BATCH_SIZE
+        );
+    }
 
     // Perform final calculations in parallel
     const [
