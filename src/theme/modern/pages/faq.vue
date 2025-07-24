@@ -4,10 +4,57 @@ definePageMeta({
 });
 
 const { t, locale } = useI18n();
+const { generateFAQStructuredData, addStructuredDataToHead } = useStructuredData();
 
 useSeoMeta({
     title: t("faq.pageTitle"),
+    description: t("faq.description"),
+    ogTitle: t("faq.pageTitle"),
+    ogDescription: t("faq.description"),
+    ogType: "website",
+    twitterCard: "summary",
+    twitterTitle: t("faq.pageTitle"),
+    twitterDescription: t("faq.description")
 });
+
+// Generate FAQ structured data using the composable
+const faqItems = [
+    {
+        label: t('faq.items.killmail.label'),
+        content: t('faq.items.killmail.content')
+    },
+    {
+        label: t('faq.items.killmails.label'),
+        content: t('faq.items.killmails.content')
+    },
+    {
+        label: t('faq.items.api.label'),
+        content: t('faq.items.api.content', { swaggerLink: '/swagger', scalarLink: '/scalar' })
+    },
+    {
+        label: t('faq.items.donations.label'),
+        content: t('faq.items.donations.content', { donateLink: '/donate' })
+    },
+    {
+        label: t('faq.items.ads.label'),
+        content: t('faq.items.ads.content')
+    },
+    {
+        label: t('faq.items.account.label'),
+        content: t('faq.items.account.content')
+    },
+    {
+        label: t('faq.items.contact.label'),
+        content: t('faq.items.contact.content', {
+            discordLink: 'https://discord.gg/R9gZRc4Jtn',
+            githubLink: 'https://github.com/eve-kill/Thessia'
+        })
+    }
+];
+
+// Add FAQ structured data to the page
+const faqStructuredData = generateFAQStructuredData(faqItems);
+addStructuredDataToHead(faqStructuredData);
 
 // Create reactive items for our custom accordion with updated questions
 const items = computed(() => [

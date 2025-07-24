@@ -62,6 +62,7 @@
 <script setup lang="ts">
 const { t } = useI18n();
 const { isMobile } = useResponsive();
+const { generateWebsiteStructuredData, generateOrganizationStructuredData, addStructuredDataToHead } = useStructuredData();
 
 // Initialize with a valid ID from our tabs
 const selectedTab = ref("kills");
@@ -90,7 +91,65 @@ const tabItems = ref([
 
 useSeoMeta({
     title: t("homePageTitle"),
+    description: "The premier EVE Online killboard providing real-time combat data, killmail tracking, and battle reports for the EVE Online community",
+    ogTitle: t("homePageTitle") + " - EVE-KILL",
+    ogDescription: "Track EVE Online killmails, analyze combat data, and explore battle reports on the premier EVE killboard",
+    ogType: "website",
+    twitterCard: "summary_large_image",
+    twitterTitle: t("homePageTitle") + " - EVE-KILL",
+    twitterDescription: "The premier EVE Online killboard for combat data and killmail tracking"
 });
+
+// Generate structured data using the composable
+const navigationItems = [
+    {
+        name: t("home"),
+        url: "https://eve-kill.com/"
+    },
+    {
+        name: t("kills"),
+        url: "https://eve-kill.com/kills/latest",
+        children: [
+            { name: t("latest"), url: "https://eve-kill.com/kills/latest" },
+            { name: t("highsec"), url: "https://eve-kill.com/kills/highsec" },
+            { name: t("lowsec"), url: "https://eve-kill.com/kills/lowsec" },
+            { name: t("nullsec"), url: "https://eve-kill.com/kills/nullsec" },
+            { name: t("wspace"), url: "https://eve-kill.com/kills/wspace" },
+            { name: t("capitals"), url: "https://eve-kill.com/kills/capitals" },
+            { name: t("big"), url: "https://eve-kill.com/kills/big" }
+        ]
+    },
+    {
+        name: t("battles"),
+        url: "https://eve-kill.com/battles"
+    },
+    {
+        name: t("campaigns"),
+        url: "https://eve-kill.com/campaigns"
+    },
+    {
+        name: t("stats"),
+        url: "https://eve-kill.com/stats"
+    },
+    {
+        name: t("tools"),
+        url: "https://eve-kill.com/query",
+        children: [
+            { name: t("Query"), url: "https://eve-kill.com/query" },
+            { name: t("battlegenerator"), url: "https://eve-kill.com/battlegenerator" },
+            { name: t("campaigncreator"), url: "https://eve-kill.com/campaigncreator" }
+        ]
+    },
+    {
+        name: t("faq"),
+        url: "https://eve-kill.com/faq"
+    }
+];
+
+// Generate and add structured data
+const websiteStructuredData = generateWebsiteStructuredData(navigationItems);
+const organizationStructuredData = generateOrganizationStructuredData();
+addStructuredDataToHead([websiteStructuredData, organizationStructuredData]);
 </script>
 
 <style scoped>

@@ -101,7 +101,7 @@ const { t } = useI18n();
 const route = useRoute();
 const { search, isLoading, error, currentLocale } = useSearch();
 const results = ref<SearchResponse | null>(null);
-const searchQuery = ref((route.query.q as string) || "");
+const searchQuery = ref((route.query.q as string) ? decodeURIComponent(route.query.q as string) : "");
 const searchInputRef = ref<HTMLInputElement | null>(null);
 
 // Initialize auto search functionality
@@ -141,9 +141,6 @@ const initAutoSearch = () => {
             performSearch();
         }
     });
-
-    // Mark auto-search as ready after initial setup
-    autoSearchEnabled.value = true;
 };
 
 // Update the URL with the search query without triggering a route change
@@ -337,14 +334,33 @@ const performSearch = async () => {
 
 // Setup auto search - when mounted if there's a query
 onMounted(async () => {
-    // First perform initial search if query exists in URL
-    if (route.query.q) {
-        searchQuery.value = route.query.q as string;
-        results.value = await search(searchQuery.value);
+    // Initialize auto-search functionality first
+    initAutoSearch();
+
+    // Then perform initial search if query exists in URL (only on client side)
+    if (import.meta.client && route.query.q) {
+        const decodedQuery = decodeURIComponent(route.query.q as string);
+        searchQuery.value = decodedQuery;
+
+        // Use direct $fetch instead of the composable for initial load
+        try {
+            const apiUrl = `/api/search/${encodeURIComponent(decodedQuery)}`;
+
+            const response = await $fetch<any>(apiUrl, {
+                query: {
+                    lang: 'en', // Use current locale here
+                },
+            });
+
+            results.value = response;
+        } catch (err) {
+            console.error('Error in search:', err);
+            results.value = null;
+        }
     }
 
-    // Initialize auto-search functionality
-    initAutoSearch();
+    // Mark auto-search as ready after initial setup
+    autoSearchEnabled.value = true;
 
     // Add focus and select the search input after the component is mounted
     nextTick(() => {
@@ -359,7 +375,26 @@ onMounted(async () => {
     });
 });
 
-// Define page metadata using useSeoMeta instead of useHead
+// Watch for route changes to handle direct navigation to search URLs
+watch(() => route.query.q, async (newQuery, oldQuery) => {
+    if (newQuery && typeof newQuery === 'string') {
+        const decodedQuery = decodeURIComponent(newQuery);
+
+        // Only update if the query actually changed
+        if (decodedQuery !== searchQuery.value) {
+            searchQuery.value = decodedQuery;
+
+            // Perform search immediately on route change
+            if (decodedQuery.trim().length >= 3) {
+                results.value = await search(decodedQuery);
+            }
+        }
+    } else if (!newQuery) {
+        // Clear search if no query parameter
+        searchQuery.value = "";
+        results.value = null;
+    }
+}, { immediate: false }); // Don't run immediately as onMounted handles initial load// Define page metadata using useSeoMeta instead of useHead
 useSeoMeta({
     title: computed(() => (searchQuery.value ? `${searchQuery.value} - searchResults` : "Search")),
 });
