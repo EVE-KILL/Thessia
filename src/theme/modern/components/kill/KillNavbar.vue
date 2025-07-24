@@ -73,7 +73,7 @@ const leftNavItems = computed(() => {
                 {
                     name: "System",
                     description: props.killmail.system_name,
-                    to: `https://evemissioneer.com/s/${encodeURIComponent(props.killmail.system_name || "")}`,
+                    to: `https://evemissioneer.com/c/${encodeURIComponent(props.killmail.system_id || "")}`,
                     target: '_blank',
                     disabled: false,
                 },
