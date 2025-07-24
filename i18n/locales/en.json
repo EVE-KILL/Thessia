@@ -947,16 +947,18 @@
         "loading": "Loading Metenox locations...",
         "noMoonsFound": "No Metenox moons found.",
         "noGooData": "No goo data",
+        "showingResults": "Showing {start}-{end} of {total} Metenox locations",
         "search": {
             "placeholder": "Search by moon, system, or region name...",
-            "systemPlaceholder": "Enter system name or ID...",
-            "regionPlaceholder": "Enter region name or ID..."
+            "systemPlaceholder": "Enter system name...",
+            "regionPlaceholder": "Enter region name..."
         },
         "filter": {
             "all": "All Moons",
             "system": "By System",
             "region": "By Region",
-            "clear": "Clear Filters"
+            "clear": "Clear Filters",
+            "moonGooTypes": "Filter by Moon Goo Quality"
         }
     },
     "iskDestroyedShort": "ISK",
