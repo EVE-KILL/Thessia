@@ -783,13 +783,20 @@ export async function generateCampaignStats(
     // Process killmails using cursor-based streaming for optimal memory usage
     // This approach processes documents one at a time instead of loading everything into memory
     const cursor = Killmails.find(expandedQuery).lean().cursor();
-    
+
     let processedCount = 0;
-    
+
     // Process each killmail document individually using the cursor
     for (let km = await cursor.next(); km != null; km = await cursor.next()) {
         // Validate the killmail document
-        if (!km || !km.killmail_id || !km.victim || !km.attackers || !Array.isArray(km.attackers) || km.attackers.length === 0) {
+        if (
+            !km ||
+            !km.killmail_id ||
+            !km.victim ||
+            !km.attackers ||
+            !Array.isArray(km.attackers) ||
+            km.attackers.length === 0
+        ) {
             continue;
         }
 
@@ -1160,7 +1167,7 @@ async function processKillmailBatch(
             victimOnVictimSide,
             attackersOnVictimSide
         );
-        
+
         await processCharacterStats(
             km,
             stats,

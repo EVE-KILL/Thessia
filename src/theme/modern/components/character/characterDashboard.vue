@@ -162,7 +162,7 @@
                 <div v-else-if="statsError" class="error-container">
                     <UIcon name="i-lucide-alert-triangle" class="error-icon" size="lg" />
                     <p class="error-message">{{ $t('common.errorLoadingData') }}</p>
-                    <UButton size="sm" variant="ghost" class="retry-button" @click="fetchStats(activePeriod)">
+                    <UButton size="sm" variant="ghost" class="retry-button" @click="() => fetchStats(activePeriod)">
                         {{ $t('common.retry') }}
                     </UButton>
                 </div>
@@ -174,7 +174,7 @@
 <script setup lang="ts">
 import { formatDistanceToNow } from "date-fns";
 import { de, enUS, es, fr, ja, ko, ru, zhCN } from "date-fns/locale";
-import { computed, onMounted, onUnmounted, ref, watchEffect } from "vue";
+import { computed, onMounted, onUnmounted, ref } from "vue";
 import { useI18n } from "vue-i18n";
 import { useEveHtmlParser } from "~/src/theme/modern/composables/useEveHtmlParser";
 
@@ -301,9 +301,9 @@ const sortByCountDesc = (items: Record<string, any>) => {
 };
 
 // Function to handle period change
-const changePeriod = (period: string) => {
+const changePeriod = async (period: string) => {
     activePeriod.value = period;
-    fetchStats(period);
+    await fetchStats(period);
 };
 
 // Function to determine the most active timezone based on the heatmap
@@ -400,54 +400,39 @@ const formattedStats = computed(() => {
 });
 
 // Fetch stats data
-const fetchStats = (period = "90") => {
+const fetchStats = async (period = "90") => {
     if (!props.character?.character_id) {
-        stats.value = null; // Clear previous stats if any
-        statsLoading.value = false; // Ensure loading stops
-        statsError.value = false; // Clear error state
+        stats.value = null;
+        statsLoading.value = false;
+        statsError.value = false;
         return;
     }
 
-    // Intentionally not setting statsLoading.value = true here.
-    // It will be driven by fetchPending.value from useFetch.
-    // statsError.value will also be driven by fetchError.value.
+    // Set loading state
+    statsLoading.value = true;
+    statsError.value = false;
 
-    const url = `/api/characters/${props.character.character_id}/stats${period === "all" ? "" : `?days=${period}`}`;
+    try {
+        const url = `/api/characters/${props.character.character_id}/stats${period === "all" ? "" : `?days=${period}`}`;
 
-    const {
-        data: fetchedData,
-        pending: fetchPending,
-        error: fetchError
-    } = useFetch(url, {
-        // Add a stable key. This is important for useFetch's caching and reactivity.
-        // If the key changes, useFetch re-fetches.
-        key: `character-dashboard-stats-${props.character.character_id}-${period}`,
-        // watch: false, // If we don't want useFetch to re-fetch if props.character.character_id or period (if it were a ref) changes outside this call.
-        // For this pattern, a new useFetch is invoked on each fetchStats call, so this is less relevant here.
-    });
+        const data = await $fetch(url);
 
-    // This watchEffect will react to changes in the refs returned by *this specific* useFetch call.
-    watchEffect(() => {
-        statsLoading.value = fetchPending.value;
-        stats.value = fetchedData.value;
-        statsError.value = !!fetchError.value; // Ensure it's a boolean
-        if (fetchError.value) {
-            // Avoid logging if it's just a pending state without actual data yet or a controlled abort.
-            // useFetch might set error for various reasons, check if it's a "real" error.
-            // For now, basic logging is fine as per original example.
-            console.error(`Failed to fetch character stats for ${props.character.character_id} (period: ${period}):`, fetchError.value);
-        }
-    });
-};
-
-// Fetch data on component mount
-onMounted(() => {
-    console.log('[characterDashboard] Component Mounted. Initial activePeriod:', activePeriod.value);
-    fetchStats(activePeriod.value);
+        stats.value = data;
+        statsError.value = false;
+    } catch (error) {
+        console.error(`Failed to fetch character stats for ${props.character.character_id} (period: ${period}):`, error);
+        statsError.value = true;
+        stats.value = null;
+    } finally {
+        statsLoading.value = false;
+    }
+};// Fetch data on component mount
+onMounted(async () => {
+    await fetchStats(activePeriod.value);
 });
 
 onUnmounted(() => {
-    console.log('[characterDashboard] Component Unmounted. activePeriod before unmount:', activePeriod.value);
+    // Component cleanup if needed
 });
 </script>
 
