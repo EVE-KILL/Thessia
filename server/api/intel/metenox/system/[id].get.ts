@@ -10,7 +10,7 @@ export default defineCachedEventHandler(
         try {
             // @ts-ignore - Type compatibility issue with nitro/h3 versions
             const systemId = parseInt(getRouterParam(event, "id") as string);
-            
+
             if (!systemId || isNaN(systemId)) {
                 throw createError({
                     statusCode: 400,

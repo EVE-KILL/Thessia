@@ -139,6 +139,13 @@ const leftNavItems = computed(() => [
                 position: "left",
                 to: "/tools/dscan",
                 icon: "lucide:search",
+            },
+            {
+                name: t("metenox", "Metenox"),
+                label: t("metenox", "Metenox"),
+                position: "left",
+                to: "/metenox",
+                icon: "lucide:mountain",
             }
         ]
     },

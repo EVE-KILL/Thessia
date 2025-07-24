@@ -932,6 +932,33 @@
     "battle.filter.custom": "Created by Users",
     "battle.filter.clear": "Clear Filters",
     "active_filters": "Active filters",
+    "metenox": "Metenox",
+    "metenoxMoons": {
+        "title": "Metenox Moon Locations",
+        "pageTitle": "Metenox Moon Locations - EVE Kill",
+        "pageDescription": "Discover Metenox moon mining structures and their valuable moon goo materials across New Eden. Find the best moon mining opportunities.",
+        "moon": "Moon",
+        "location": "Location",
+        "moonType": "Moon Goo",
+        "moonGoo": "Moon Goo",
+        "lastSeen": "Last Seen",
+        "system": "System",
+        "region": "Region",
+        "loading": "Loading Metenox locations...",
+        "noMoonsFound": "No Metenox moons found.",
+        "noGooData": "No goo data",
+        "search": {
+            "placeholder": "Search by moon, system, or region name...",
+            "systemPlaceholder": "Enter system name or ID...",
+            "regionPlaceholder": "Enter region name or ID..."
+        },
+        "filter": {
+            "all": "All Moons",
+            "system": "By System",
+            "region": "By Region",
+            "clear": "Clear Filters"
+        }
+    },
     "iskDestroyedShort": "ISK",
     "kmsShort": "KMs",
     "alliancesShort": "Alliances",
