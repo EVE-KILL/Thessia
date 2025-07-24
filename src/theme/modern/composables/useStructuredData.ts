@@ -3,7 +3,7 @@
  * Following Schema.org specifications
  */
 
-import type { IBattles } from '~/server/interfaces/IBattles';
+import type { IBattles } from "~/server/interfaces/IBattles";
 
 export const useStructuredData = () => {
     const { t } = useI18n();
@@ -409,292 +409,380 @@ export const useStructuredData = () => {
             ],
         };
 
-    addStructuredDataToHead(structuredData);
-  }
+        addStructuredDataToHead(structuredData);
+    }
 
-  /**
-   * Generate Person structured data for a character page
-   * @param character - The character data
-   * @param characterUrl - URL of the character page
-   * @param stats - Optional character statistics
-   */
-  function generateCharacterStructuredData(character: any, characterUrl: string, stats?: any) {
-    const { t } = useI18n();
+    /**
+     * Generate Person structured data for a character page
+     * @param character - The character data
+     * @param characterUrl - URL of the character page
+     * @param stats - Optional character statistics
+     */
+    function generateCharacterStructuredData(
+        character: any,
+        characterUrl: string,
+        stats?: any
+    ) {
+        const { t } = useI18n();
 
-    // Calculate character age if birthday is available
-    const characterAge = character.birthday ?
-      Math.floor((new Date().getTime() - new Date(character.birthday).getTime()) / (1000 * 60 * 60 * 24 * 365.25)) :
-      null;
+        // Calculate character age if birthday is available
+        const characterAge = character.birthday
+            ? Math.floor(
+                  (new Date().getTime() -
+                      new Date(character.birthday).getTime()) /
+                      (1000 * 60 * 60 * 24 * 365.25)
+              )
+            : null;
 
-    const structuredData = {
-      "@context": "https://schema.org",
-      "@type": "Person",
-      name: character.name,
-      description: character.description || `EVE Online character ${character.name}`,
-      url: characterUrl,
-      identifier: {
-        "@type": "PropertyValue",
-        name: "Character ID",
-        value: character.character_id?.toString()
-      },
-      birthDate: character.birthday,
-      gender: character.gender,
-      image: `https://images.evetech.net/characters/${character.character_id}/portrait?size=512`,
-      memberOf: character.corporation_id ? {
-        "@type": "Organization",
-        name: character.corporation_name || "Unknown Corporation",
-        identifier: character.corporation_id.toString(),
-        url: `https://eve-kill.com/corporation/${character.corporation_id}`
-      } : undefined,
-      affiliation: character.alliance_id ? {
-        "@type": "Organization",
-        name: character.alliance_name || "Unknown Alliance",
-        identifier: character.alliance_id.toString(),
-        url: `https://eve-kill.com/alliance/${character.alliance_id}`
-      } : undefined,
-      additionalProperty: [
-        {
-          "@type": "PropertyValue",
-          name: "Security Status",
-          value: character.security_status?.toFixed(2) || "Unknown"
-        },
-        {
-          "@type": "PropertyValue",
-          name: "Race",
-          value: character.race_name || "Unknown"
-        },
-        {
-          "@type": "PropertyValue",
-          name: "Bloodline",
-          value: character.bloodline_name || "Unknown"
-        },
-        characterAge ? {
-          "@type": "PropertyValue",
-          name: "Character Age",
-          value: `${characterAge} years`,
-          unitText: "years"
-        } : null,
-        stats ? {
-          "@type": "PropertyValue",
-          name: "Total Kills",
-          value: stats.kills || 0
-        } : null,
-        stats ? {
-          "@type": "PropertyValue",
-          name: "Total Losses",
-          value: stats.losses || 0
-        } : null,
-        stats ? {
-          "@type": "PropertyValue",
-          name: "ISK Destroyed",
-          value: stats.iskKilled || 0,
-          unitText: "ISK"
-        } : null
-      ].filter(Boolean),
-      knowsAbout: "EVE Online, Space Combat, Starship Piloting",
-      worksFor: character.corporation_id ? {
-        "@type": "Organization",
-        name: character.corporation_name || "Unknown Corporation"
-      } : undefined,
-      homeLocation: {
-        "@type": "Place",
-        name: "New Eden",
-        description: "The EVE Online universe"
-      },
-      hasCredential: character.security_status >= 0 ? {
-        "@type": "EducationalOccupationalCredential",
-        name: "CONCORD Security Status",
-        description: "Positive security status indicating law-abiding behavior"
-      } : undefined
-    };
+        const structuredData = {
+            "@context": "https://schema.org",
+            "@type": "Person",
+            name: character.name,
+            description:
+                character.description ||
+                `EVE Online character ${character.name}`,
+            url: characterUrl,
+            identifier: {
+                "@type": "PropertyValue",
+                name: "Character ID",
+                value: character.character_id?.toString(),
+            },
+            birthDate: character.birthday,
+            gender: character.gender,
+            image: `https://images.evetech.net/characters/${character.character_id}/portrait?size=512`,
+            memberOf: character.corporation_id
+                ? {
+                      "@type": "Organization",
+                      name: character.corporation_name || "Unknown Corporation",
+                      identifier: character.corporation_id.toString(),
+                      url: `https://eve-kill.com/corporation/${character.corporation_id}`,
+                  }
+                : undefined,
+            affiliation: character.alliance_id
+                ? {
+                      "@type": "Organization",
+                      name: character.alliance_name || "Unknown Alliance",
+                      identifier: character.alliance_id.toString(),
+                      url: `https://eve-kill.com/alliance/${character.alliance_id}`,
+                  }
+                : undefined,
+            additionalProperty: [
+                {
+                    "@type": "PropertyValue",
+                    name: "Security Status",
+                    value: character.security_status?.toFixed(2) || "Unknown",
+                },
+                {
+                    "@type": "PropertyValue",
+                    name: "Race",
+                    value: character.race_name || "Unknown",
+                },
+                {
+                    "@type": "PropertyValue",
+                    name: "Bloodline",
+                    value: character.bloodline_name || "Unknown",
+                },
+                characterAge
+                    ? {
+                          "@type": "PropertyValue",
+                          name: "Character Age",
+                          value: `${characterAge} years`,
+                          unitText: "years",
+                      }
+                    : null,
+                stats
+                    ? {
+                          "@type": "PropertyValue",
+                          name: "Total Kills",
+                          value: stats.kills || 0,
+                      }
+                    : null,
+                stats
+                    ? {
+                          "@type": "PropertyValue",
+                          name: "Total Losses",
+                          value: stats.losses || 0,
+                      }
+                    : null,
+                stats
+                    ? {
+                          "@type": "PropertyValue",
+                          name: "ISK Destroyed",
+                          value: stats.iskKilled || 0,
+                          unitText: "ISK",
+                      }
+                    : null,
+            ].filter(Boolean),
+            knowsAbout: "EVE Online, Space Combat, Starship Piloting",
+            worksFor: character.corporation_id
+                ? {
+                      "@type": "Organization",
+                      name: character.corporation_name || "Unknown Corporation",
+                  }
+                : undefined,
+            homeLocation: {
+                "@type": "Place",
+                name: "New Eden",
+                description: "The EVE Online universe",
+            },
+            hasCredential:
+                character.security_status >= 0
+                    ? {
+                          "@type": "EducationalOccupationalCredential",
+                          name: "CONCORD Security Status",
+                          description:
+                              "Positive security status indicating law-abiding behavior",
+                      }
+                    : undefined,
+        };
 
-    addStructuredDataToHead(structuredData);
-  }
+        addStructuredDataToHead(structuredData);
+    }
 
-  /**
-   * Generate Organization structured data for a corporation page
-   * @param corporation - The corporation data
-   * @param corporationUrl - URL of the corporation page
-   * @param stats - Optional corporation statistics
-   */
-  function generateCorporationStructuredData(corporation: any, corporationUrl: string, stats?: any) {
-    const { t } = useI18n();
+    /**
+     * Generate Organization structured data for a corporation page
+     * @param corporation - The corporation data
+     * @param corporationUrl - URL of the corporation page
+     * @param stats - Optional corporation statistics
+     */
+    function generateCorporationStructuredData(
+        corporation: any,
+        corporationUrl: string,
+        stats?: any
+    ) {
+        const { t } = useI18n();
 
-    const foundingDate = corporation.date_founded ? new Date(corporation.date_founded) : null;
-    const corporationAge = foundingDate ?
-      Math.floor((new Date().getTime() - foundingDate.getTime()) / (1000 * 60 * 60 * 24 * 365.25)) :
-      null;
+        const foundingDate = corporation.date_founded
+            ? new Date(corporation.date_founded)
+            : null;
+        const corporationAge = foundingDate
+            ? Math.floor(
+                  (new Date().getTime() - foundingDate.getTime()) /
+                      (1000 * 60 * 60 * 24 * 365.25)
+              )
+            : null;
 
-    const structuredData = {
-      "@context": "https://schema.org",
-      "@type": "Organization",
-      "@id": corporationUrl,
-      name: corporation.name,
-      alternateName: corporation.ticker,
-      description: corporation.description || `EVE Online corporation ${corporation.name} [${corporation.ticker}]`,
-      url: corporationUrl,
-      logo: `https://images.evetech.net/corporations/${corporation.corporation_id}/logo?size=512`,
-      image: `https://images.evetech.net/corporations/${corporation.corporation_id}/logo?size=512`,
-      identifier: {
-        "@type": "PropertyValue",
-        name: "Corporation ID",
-        value: corporation.corporation_id?.toString()
-      },
-      foundingDate: corporation.date_founded,
-      numberOfEmployees: corporation.member_count,
-      taxID: corporation.tax_rate ? `${(corporation.tax_rate * 100).toFixed(1)}%` : undefined,
-      parentOrganization: corporation.alliance_id ? {
-        "@type": "Organization",
-        name: corporation.alliance_name || "Unknown Alliance",
-        identifier: corporation.alliance_id.toString(),
-        url: `https://eve-kill.com/alliance/${corporation.alliance_id}`
-      } : undefined,
-      leader: corporation.ceo_id ? {
-        "@type": "Person",
-        name: corporation.ceo_name || "Unknown CEO",
-        identifier: corporation.ceo_id.toString(),
-        url: `https://eve-kill.com/character/${corporation.ceo_id}`,
-        jobTitle: "Chief Executive Officer"
-      } : undefined,
-      location: corporation.home_station_id ? {
-        "@type": "Place",
-        name: corporation.home_station_name || "Unknown Station",
-        identifier: corporation.home_station_id.toString()
-      } : undefined,
-      additionalProperty: [
-        {
-          "@type": "PropertyValue",
-          name: "Tax Rate",
-          value: corporation.tax_rate ? `${(corporation.tax_rate * 100).toFixed(1)}%` : "Unknown"
-        },
-        {
-          "@type": "PropertyValue",
-          name: "Member Count",
-          value: corporation.member_count || 0
-        },
-        corporationAge ? {
-          "@type": "PropertyValue",
-          name: "Corporation Age",
-          value: `${corporationAge} years`,
-          unitText: "years"
-        } : null,
-        stats ? {
-          "@type": "PropertyValue",
-          name: "Total Kills",
-          value: stats.kills || 0
-        } : null,
-        stats ? {
-          "@type": "PropertyValue",
-          name: "Total Losses",
-          value: stats.losses || 0
-        } : null,
-        stats ? {
-          "@type": "PropertyValue",
-          name: "ISK Destroyed",
-          value: stats.iskKilled || 0,
-          unitText: "ISK"
-        } : null,
-        corporation.shares ? {
-          "@type": "PropertyValue",
-          name: "Shares",
-          value: corporation.shares
-        } : null
-      ].filter(Boolean),
-      knowsAbout: "EVE Online, Space Commerce, Corporate Management",
-      industry: "Space Transportation and Combat",
-      organizationType: "Corporation"
-    };
+        const structuredData = {
+            "@context": "https://schema.org",
+            "@type": "Organization",
+            "@id": corporationUrl,
+            name: corporation.name,
+            alternateName: corporation.ticker,
+            description:
+                corporation.description ||
+                `EVE Online corporation ${corporation.name} [${corporation.ticker}]`,
+            url: corporationUrl,
+            logo: `https://images.evetech.net/corporations/${corporation.corporation_id}/logo?size=512`,
+            image: `https://images.evetech.net/corporations/${corporation.corporation_id}/logo?size=512`,
+            identifier: {
+                "@type": "PropertyValue",
+                name: "Corporation ID",
+                value: corporation.corporation_id?.toString(),
+            },
+            foundingDate: corporation.date_founded,
+            numberOfEmployees: corporation.member_count,
+            taxID: corporation.tax_rate
+                ? `${(corporation.tax_rate * 100).toFixed(1)}%`
+                : undefined,
+            parentOrganization: corporation.alliance_id
+                ? {
+                      "@type": "Organization",
+                      name: corporation.alliance_name || "Unknown Alliance",
+                      identifier: corporation.alliance_id.toString(),
+                      url: `https://eve-kill.com/alliance/${corporation.alliance_id}`,
+                  }
+                : undefined,
+            leader: corporation.ceo_id
+                ? {
+                      "@type": "Person",
+                      name: corporation.ceo_name || "Unknown CEO",
+                      identifier: corporation.ceo_id.toString(),
+                      url: `https://eve-kill.com/character/${corporation.ceo_id}`,
+                      jobTitle: "Chief Executive Officer",
+                  }
+                : undefined,
+            location: corporation.home_station_id
+                ? {
+                      "@type": "Place",
+                      name: corporation.home_station_name || "Unknown Station",
+                      identifier: corporation.home_station_id.toString(),
+                  }
+                : undefined,
+            additionalProperty: [
+                {
+                    "@type": "PropertyValue",
+                    name: "Tax Rate",
+                    value: corporation.tax_rate
+                        ? `${(corporation.tax_rate * 100).toFixed(1)}%`
+                        : "Unknown",
+                },
+                {
+                    "@type": "PropertyValue",
+                    name: "Member Count",
+                    value: corporation.member_count || 0,
+                },
+                corporationAge
+                    ? {
+                          "@type": "PropertyValue",
+                          name: "Corporation Age",
+                          value: `${corporationAge} years`,
+                          unitText: "years",
+                      }
+                    : null,
+                stats
+                    ? {
+                          "@type": "PropertyValue",
+                          name: "Total Kills",
+                          value: stats.kills || 0,
+                      }
+                    : null,
+                stats
+                    ? {
+                          "@type": "PropertyValue",
+                          name: "Total Losses",
+                          value: stats.losses || 0,
+                      }
+                    : null,
+                stats
+                    ? {
+                          "@type": "PropertyValue",
+                          name: "ISK Destroyed",
+                          value: stats.iskKilled || 0,
+                          unitText: "ISK",
+                      }
+                    : null,
+                corporation.shares
+                    ? {
+                          "@type": "PropertyValue",
+                          name: "Shares",
+                          value: corporation.shares,
+                      }
+                    : null,
+            ].filter(Boolean),
+            knowsAbout: "EVE Online, Space Commerce, Corporate Management",
+            industry: "Space Transportation and Combat",
+            organizationType: "Corporation",
+        };
 
-    addStructuredDataToHead(structuredData);
-  }
+        addStructuredDataToHead(structuredData);
+    }
 
-  /**
-   * Generate Organization structured data for an alliance page
-   * @param alliance - The alliance data
-   * @param allianceUrl - URL of the alliance page
-   * @param stats - Optional alliance statistics
-   */
-  function generateAllianceStructuredData(alliance: any, allianceUrl: string, stats?: any) {
-    const { t } = useI18n();
+    /**
+     * Generate Organization structured data for an alliance page
+     * @param alliance - The alliance data
+     * @param allianceUrl - URL of the alliance page
+     * @param stats - Optional alliance statistics
+     */
+    function generateAllianceStructuredData(
+        alliance: any,
+        allianceUrl: string,
+        stats?: any
+    ) {
+        const { t } = useI18n();
 
-    const foundingDate = alliance.date_founded ? new Date(alliance.date_founded) : null;
-    const allianceAge = foundingDate ?
-      Math.floor((new Date().getTime() - foundingDate.getTime()) / (1000 * 60 * 60 * 24 * 365.25)) :
-      null;
+        const foundingDate = alliance.date_founded
+            ? new Date(alliance.date_founded)
+            : null;
+        const allianceAge = foundingDate
+            ? Math.floor(
+                  (new Date().getTime() - foundingDate.getTime()) /
+                      (1000 * 60 * 60 * 24 * 365.25)
+              )
+            : null;
 
-    const structuredData = {
-      "@context": "https://schema.org",
-      "@type": "Organization",
-      "@id": allianceUrl,
-      name: alliance.name,
-      alternateName: alliance.ticker,
-      description: `EVE Online alliance ${alliance.name} [${alliance.ticker}] - A coalition of corporations in New Eden`,
-      url: allianceUrl,
-      logo: `https://images.evetech.net/alliances/${alliance.alliance_id}/logo?size=512`,
-      image: `https://images.evetech.net/alliances/${alliance.alliance_id}/logo?size=512`,
-      identifier: {
-        "@type": "PropertyValue",
-        name: "Alliance ID",
-        value: alliance.alliance_id?.toString()
-      },
-      foundingDate: alliance.date_founded,
-      founder: alliance.creator_id ? {
-        "@type": "Person",
-        name: alliance.creator_name || "Unknown Founder",
-        identifier: alliance.creator_id.toString(),
-        url: `https://eve-kill.com/character/${alliance.creator_id}`
-      } : undefined,
-      member: alliance.executor_corporation_id ? [{
-        "@type": "Organization",
-        name: alliance.executor_corporation_name || "Executor Corporation",
-        identifier: alliance.executor_corporation_id.toString(),
-        url: `https://eve-kill.com/corporation/${alliance.executor_corporation_id}`,
-        roleName: "Executor Corporation"
-      }] : undefined,
-      additionalProperty: [
-        allianceAge ? {
-          "@type": "PropertyValue",
-          name: "Alliance Age",
-          value: `${allianceAge} years`,
-          unitText: "years"
-        } : null,
-        stats ? {
-          "@type": "PropertyValue",
-          name: "Total Kills",
-          value: stats.kills || 0
-        } : null,
-        stats ? {
-          "@type": "PropertyValue",
-          name: "Total Losses",
-          value: stats.losses || 0
-        } : null,
-        stats ? {
-          "@type": "PropertyValue",
-          name: "ISK Destroyed",
-          value: stats.iskKilled || 0,
-          unitText: "ISK"
-        } : null,
-        {
-          "@type": "PropertyValue",
-          name: "Creator Corporation",
-          value: alliance.creator_corporation_name || "Unknown"
-        }
-      ].filter(Boolean),
-      knowsAbout: "EVE Online, Space Warfare, Alliance Diplomacy",
-      industry: "Space Warfare and Territorial Control",
-      organizationType: "Alliance",
-      subOrganization: "Multiple member corporations"
-    };
+        const structuredData = {
+            "@context": "https://schema.org",
+            "@type": "Organization",
+            "@id": allianceUrl,
+            name: alliance.name,
+            alternateName: alliance.ticker,
+            description: `EVE Online alliance ${alliance.name} [${alliance.ticker}] - A coalition of corporations in New Eden`,
+            url: allianceUrl,
+            logo: `https://images.evetech.net/alliances/${alliance.alliance_id}/logo?size=512`,
+            image: `https://images.evetech.net/alliances/${alliance.alliance_id}/logo?size=512`,
+            identifier: {
+                "@type": "PropertyValue",
+                name: "Alliance ID",
+                value: alliance.alliance_id?.toString(),
+            },
+            foundingDate: alliance.date_founded,
+            founder: alliance.creator_id
+                ? {
+                      "@type": "Person",
+                      name: alliance.creator_name || "Unknown Founder",
+                      identifier: alliance.creator_id.toString(),
+                      url: `https://eve-kill.com/character/${alliance.creator_id}`,
+                  }
+                : undefined,
+            member: alliance.executor_corporation_id
+                ? [
+                      {
+                          "@type": "Organization",
+                          name:
+                              alliance.executor_corporation_name ||
+                              "Executor Corporation",
+                          identifier:
+                              alliance.executor_corporation_id.toString(),
+                          url: `https://eve-kill.com/corporation/${alliance.executor_corporation_id}`,
+                          roleName: "Executor Corporation",
+                      },
+                  ]
+                : undefined,
+            additionalProperty: [
+                allianceAge
+                    ? {
+                          "@type": "PropertyValue",
+                          name: "Alliance Age",
+                          value: `${allianceAge} years`,
+                          unitText: "years",
+                      }
+                    : null,
+                stats
+                    ? {
+                          "@type": "PropertyValue",
+                          name: "Total Kills",
+                          value: stats.kills || 0,
+                      }
+                    : null,
+                stats
+                    ? {
+                          "@type": "PropertyValue",
+                          name: "Total Losses",
+                          value: stats.losses || 0,
+                      }
+                    : null,
+                stats
+                    ? {
+                          "@type": "PropertyValue",
+                          name: "ISK Destroyed",
+                          value: stats.iskKilled || 0,
+                          unitText: "ISK",
+                      }
+                    : null,
+                {
+                    "@type": "PropertyValue",
+                    name: "Creator Corporation",
+                    value: alliance.creator_corporation_name || "Unknown",
+                },
+            ].filter(Boolean),
+            knowsAbout: "EVE Online, Space Warfare, Alliance Diplomacy",
+            industry: "Space Warfare and Territorial Control",
+            organizationType: "Alliance",
+            subOrganization: "Multiple member corporations",
+        };
 
-    addStructuredDataToHead(structuredData);
-  }
+        addStructuredDataToHead(structuredData);
+    }
 
-  /**
-   * Generate Dataset structured data for a campaign page
-   * @param campaign - The campaign data
-   * @param campaignUrl - URL of the campaign page
-   */
-  function generateCampaignDatasetStructuredData(campaign: any, campaignUrl: string) {
+    /**
+     * Generate Dataset structured data for a campaign page
+     * @param campaign - The campaign data
+     * @param campaignUrl - URL of the campaign page
+     */
+    function generateCampaignDatasetStructuredData(
+        campaign: any,
+        campaignUrl: string
+    ) {
         const { t } = useI18n();
 
         // Calculate campaign duration
