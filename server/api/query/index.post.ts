@@ -44,7 +44,8 @@ const INDEXED_FIELDS = [
     "victim.alliance_id",
     "victim.ship_id",
     "victim.ship_group_id",
-    "victim.faction_id", // Already present, but good to confirm its intended inclusion
+    "victim.faction_id",
+    "victim.damage_taken",
     "attackers.character_id",
     "attackers.corporation_id",
     "attackers.alliance_id",
@@ -172,18 +173,49 @@ function validateFilterValue(key: string, value: any): any {
         for (const [operator, operand] of Object.entries(value)) {
             if (VALID_OPERATORS.includes(operator as any)) {
                 if (["$gt", "$gte", "$lt", "$lte"].includes(operator)) {
-                    // Convert timestamp to Date for these operators
-                    validatedValue[operator] = new Date(
-                        validatePositiveInteger(operand, "kill_time") * 1000
-                    );
+                    // Handle both Unix timestamps (numbers) and ISO strings
+                    let dateValue: Date;
+                    if (typeof operand === "string") {
+                        // ISO string format from frontend
+                        dateValue = new Date(operand);
+                        if (isNaN(dateValue.getTime())) {
+                            throw new Error(
+                                `Invalid date format for kill_time: ${operand}`
+                            );
+                        }
+                    } else if (typeof operand === "number") {
+                        // Unix timestamp (seconds)
+                        dateValue = new Date(
+                            validatePositiveInteger(operand, "kill_time") * 1000
+                        );
+                    } else {
+                        throw new Error(
+                            `Invalid kill_time value type: expected string or number, got ${typeof operand}`
+                        );
+                    }
+                    validatedValue[operator] = dateValue;
                 } else if (operator === "$in" && Array.isArray(operand)) {
-                    // Convert array of timestamps to array of Dates
-                    validatedValue[operator] = operand.map(
-                        (ts) =>
-                            new Date(
-                                validatePositiveInteger(ts, "kill_time") * 1000
-                            )
-                    );
+                    // Convert array of timestamps/ISO strings to array of Dates
+                    validatedValue[operator] = operand.map((item) => {
+                        if (typeof item === "string") {
+                            const dateValue = new Date(item);
+                            if (isNaN(dateValue.getTime())) {
+                                throw new Error(
+                                    `Invalid date format in kill_time array: ${item}`
+                                );
+                            }
+                            return dateValue;
+                        } else if (typeof item === "number") {
+                            return new Date(
+                                validatePositiveInteger(item, "kill_time") *
+                                    1000
+                            );
+                        } else {
+                            throw new Error(
+                                `Invalid kill_time array item type: expected string or number, got ${typeof item}`
+                            );
+                        }
+                    });
                 } else {
                     validatedValue[operator] = operand;
                 }
@@ -369,7 +401,7 @@ function determineOptimalIndexHint(
                     // For non-time sorts, try compound with filter + sort
                     return {
                         [field]: -1,
-                        [primarySortField]: sortOptions![pgirimarySortField],
+                        [primarySortField]: sortOptions![primarySortField],
                     };
                 }
             }
@@ -526,6 +558,9 @@ function generateComplexQuery(input: QueryAPIRequest): ProcessedQuery {
         filter: {},
         options: {
             projection: { ...DEFAULT_EXCLUSIONS },
+            sort: undefined as Record<string, 1 | -1> | undefined,
+            limit: undefined as number | undefined,
+            skip: undefined as number | undefined,
         },
     };
 
@@ -567,8 +602,16 @@ function generateComplexQuery(input: QueryAPIRequest): ProcessedQuery {
             delete validatedOptions.projection;
         }
 
-        // Merge other options
-        query.options = { ...query.options, ...validatedOptions };
+        // Merge other options properly
+        if (validatedOptions.sort) {
+            query.options.sort = validatedOptions.sort;
+        }
+        if (validatedOptions.limit !== undefined) {
+            query.options.limit = validatedOptions.limit;
+        }
+        if (validatedOptions.skip !== undefined) {
+            query.options.skip = validatedOptions.skip;
+        }
     }
 
     // Build the pipeline - order matters for performance
@@ -633,9 +676,14 @@ export default defineCachedEventHandler(
             );
 
             // Execute the aggregation pipeline with hint (we always have one now due to automatic time filter)
-            const result = await Killmails.aggregate(queryData.pipeline)
-                .hint(hint)
-                .exec();
+            let aggregation = Killmails.aggregate(queryData.pipeline);
+
+            // Only apply hint if we have one and it makes sense
+            if (hint) {
+                aggregation = aggregation.hint(hint);
+            }
+
+            const result = await aggregation.exec();
 
             // Return the results
             return result;

@@ -2,49 +2,50 @@
  * MongoDB operators supported by the Query API
  */
 export type MongoOperator =
-  | "$gt"
-  | "$gte"
-  | "$lt"
-  | "$lte"
-  | "$eq"
-  | "$ne"
-  | "$in"
-  | "$nin"
-  | "$exists"
-  | "$or"
-  | "$and";
+    | "$gt"
+    | "$gte"
+    | "$lt"
+    | "$lte"
+    | "$eq"
+    | "$ne"
+    | "$in"
+    | "$nin"
+    | "$exists"
+    | "$or"
+    | "$and";
 
 /**
  * All fields that can be queried in the API
  */
 export type QueryableField =
-  | "killmail_id"
-  | "killmail_hash"
-  | "dna"
-  | "is_npc"
-  | "is_solo"
-  | "region_id"
-  | "system_id"
-  | "system_security"
-  | "constellation_id"
-  | "total_value"
-  | "war_id"
-  | "kill_time"
-  | "victim.ship_id"
-  | "victim.ship_group_id"
-  | "victim.character_id"
-  | "victim.corporation_id"
-  | "victim.alliance_id"
-  | "victim.faction_id"
-  | "attackers.ship_id"
-  | "attackers.ship_group_id"
-  | "attackers.character_id"
-  | "attackers.corporation_id"
-  | "attackers.alliance_id"
-  | "attackers.faction_id"
-  | "attackers.weapon_type_id"
-  | "items.type_id"
-  | "items.group_id";
+    | "killmail_id"
+    | "killmail_hash"
+    | "dna"
+    | "is_npc"
+    | "is_solo"
+    | "region_id"
+    | "system_id"
+    | "system_security"
+    | "constellation_id"
+    | "total_value"
+    | "war_id"
+    | "kill_time"
+    | "victim.ship_id"
+    | "victim.ship_group_id"
+    | "victim.character_id"
+    | "victim.corporation_id"
+    | "victim.alliance_id"
+    | "victim.faction_id"
+    | "victim.damage_taken"
+    | "attackers.ship_id"
+    | "attackers.ship_group_id"
+    | "attackers.character_id"
+    | "attackers.corporation_id"
+    | "attackers.alliance_id"
+    | "attackers.faction_id"
+    | "attackers.weapon_type_id"
+    | "items.type_id"
+    | "items.group_id";
 
 /**
  * Simple primitive values for filters
@@ -55,11 +56,11 @@ export type SimpleFilterValue = string | number | boolean | null;
  * Filter values that use MongoDB operators
  */
 export type OperatorFilterValue = {
-  [K in MongoOperator]?: K extends "$or" | "$and"
-    ? FilterCondition[]
-    : K extends "$in" | "$nin"
-      ? SimpleFilterValue[]
-      : SimpleFilterValue;
+    [K in MongoOperator]?: K extends "$or" | "$and"
+        ? FilterCondition[]
+        : K extends "$in" | "$nin"
+        ? SimpleFilterValue[]
+        : SimpleFilterValue;
 };
 
 /**
@@ -71,13 +72,13 @@ export type FilterValue = SimpleFilterValue | OperatorFilterValue;
  * Filter conditions for query fields
  */
 export type FilterCondition =
-  | {
-      [field in QueryableField]?: FilterValue;
-    }
-  | {
-      $or?: FilterCondition[];
-      $and?: FilterCondition[];
-    };
+    | {
+          [field in QueryableField]?: FilterValue;
+      }
+    | {
+          $or?: FilterCondition[];
+          $and?: FilterCondition[];
+      };
 
 /**
  * Valid sort directions
@@ -88,7 +89,7 @@ export type SortDirection = 1 | -1 | "asc" | "desc";
  * Options for sorting results
  */
 export type SortOptions = {
-  [field in QueryableField]?: SortDirection;
+    [field in QueryableField]?: SortDirection;
 };
 
 /**
@@ -100,80 +101,81 @@ export type ProjectionValue = 0 | 1;
  * Options for projecting fields in query results
  */
 export type ProjectionOptions = {
-  [key: string]: ProjectionValue;
+    [key: string]: ProjectionValue;
 };
 
 /**
  * Options for query execution
  */
 export interface QueryOptions {
-  sort?: SortOptions;
-  limit?: number;
-  skip?: number;
-  projection?: ProjectionOptions;
+    sort?: SortOptions;
+    limit?: number;
+    skip?: number;
+    projection?: ProjectionOptions;
 }
 
 /**
  * Complete Query API request structure
  */
 export interface QueryAPIRequest {
-  filter?: FilterCondition;
-  options?: QueryOptions;
+    filter?: FilterCondition;
+    options?: QueryOptions;
 }
 
 // Constants for validation
 export const VALID_OPERATORS: MongoOperator[] = [
-  "$gt",
-  "$gte",
-  "$lt",
-  "$lte",
-  "$eq",
-  "$ne",
-  "$in",
-  "$nin",
-  "$exists",
-  "$or",
-  "$and",
+    "$gt",
+    "$gte",
+    "$lt",
+    "$lte",
+    "$eq",
+    "$ne",
+    "$in",
+    "$nin",
+    "$exists",
+    "$or",
+    "$and",
 ];
 
 export const VALID_FIELDS: QueryableField[] = [
-  "killmail_id",
-  "killmail_hash",
-  "dna",
-  "is_npc",
-  "is_solo",
-  "region_id",
-  "system_id",
-  "system_security",
-  "constellation_id",
-  "total_value",
-  "war_id",
-  "kill_time",
-  "victim.ship_id",
-  "victim.ship_group_id",
-  "victim.character_id",
-  "victim.corporation_id",
-  "victim.alliance_id",
-  "victim.faction_id",
-  "attackers.ship_id",
-  "attackers.ship_group_id",
-  "attackers.character_id",
-  "attackers.corporation_id",
-  "attackers.alliance_id",
-  "attackers.faction_id",
-  "attackers.weapon_type_id",
-  "items.type_id",
-  "items.group_id",
+    "killmail_id",
+    "killmail_hash",
+    "dna",
+    "is_npc",
+    "is_solo",
+    "region_id",
+    "system_id",
+    "system_security",
+    "constellation_id",
+    "total_value",
+    "war_id",
+    "kill_time",
+    "victim.ship_id",
+    "victim.ship_group_id",
+    "victim.character_id",
+    "victim.corporation_id",
+    "victim.alliance_id",
+    "victim.faction_id",
+    "victim.damage_taken",
+    "attackers.ship_id",
+    "attackers.ship_group_id",
+    "attackers.character_id",
+    "attackers.corporation_id",
+    "attackers.alliance_id",
+    "attackers.faction_id",
+    "attackers.weapon_type_id",
+    "items.type_id",
+    "items.group_id",
 ];
 
 export const MAX_LIMIT = 10000;
 export const DEFAULT_LIMIT = 100;
 export const DEFAULT_EXCLUSIONS = {
-  _id: 0,
-  __v: 0,
-  createdAt: 0,
-  updatedAt: 0,
-  kill_time_str: 0,
+    _id: 0,
+    __v: 0,
+    createdAt: 0,
+    updatedAt: 0,
+    kill_time_str: 0,
 };
 
 // Builder functions
@@ -184,8 +186,11 @@ export const DEFAULT_EXCLUSIONS = {
  * @param options - Query execution options
  * @returns A properly formatted query request
  */
-export function createQuery(filter?: FilterCondition, options?: QueryOptions): QueryAPIRequest {
-  return { filter, options };
+export function createQuery(
+    filter?: FilterCondition,
+    options?: QueryOptions
+): QueryAPIRequest {
+    return { filter, options };
 }
 
 /**
@@ -194,8 +199,11 @@ export function createQuery(filter?: FilterCondition, options?: QueryOptions): Q
  * @param value - Value to filter by
  * @returns A filter condition for the specified field
  */
-export function field(field: QueryableField, value: FilterValue): FilterCondition {
-  return { [field]: value };
+export function field(
+    field: QueryableField,
+    value: FilterValue
+): FilterCondition {
+    return { [field]: value };
 }
 
 /**
@@ -204,7 +212,7 @@ export function field(field: QueryableField, value: FilterValue): FilterConditio
  * @returns A greater than filter expression
  */
 export function gt(value: SimpleFilterValue): OperatorFilterValue {
-  return { $gt: value };
+    return { $gt: value };
 }
 
 /**
@@ -213,7 +221,7 @@ export function gt(value: SimpleFilterValue): OperatorFilterValue {
  * @returns A greater than or equal filter expression
  */
 export function gte(value: SimpleFilterValue): OperatorFilterValue {
-  return { $gte: value };
+    return { $gte: value };
 }
 
 /**
@@ -222,7 +230,7 @@ export function gte(value: SimpleFilterValue): OperatorFilterValue {
  * @returns A less than filter expression
  */
 export function lt(value: SimpleFilterValue): OperatorFilterValue {
-  return { $lt: value };
+    return { $lt: value };
 }
 
 /**
@@ -231,7 +239,7 @@ export function lt(value: SimpleFilterValue): OperatorFilterValue {
  * @returns A less than or equal filter expression
  */
 export function lte(value: SimpleFilterValue): OperatorFilterValue {
-  return { $lte: value };
+    return { $lte: value };
 }
 
 /**
@@ -240,7 +248,7 @@ export function lte(value: SimpleFilterValue): OperatorFilterValue {
  * @returns An equal filter expression
  */
 export function eq(value: SimpleFilterValue): OperatorFilterValue {
-  return { $eq: value };
+    return { $eq: value };
 }
 
 /**
@@ -249,7 +257,7 @@ export function eq(value: SimpleFilterValue): OperatorFilterValue {
  * @returns A not equal filter expression
  */
 export function ne(value: SimpleFilterValue): OperatorFilterValue {
-  return { $ne: value };
+    return { $ne: value };
 }
 
 /**
@@ -258,7 +266,7 @@ export function ne(value: SimpleFilterValue): OperatorFilterValue {
  * @returns An 'in' filter expression
  */
 export function inArray(values: SimpleFilterValue[]): OperatorFilterValue {
-  return { $in: values };
+    return { $in: values };
 }
 
 /**
@@ -267,7 +275,7 @@ export function inArray(values: SimpleFilterValue[]): OperatorFilterValue {
  * @returns A 'not in' filter expression
  */
 export function notInArray(values: SimpleFilterValue[]): OperatorFilterValue {
-  return { $nin: values };
+    return { $nin: values };
 }
 
 /**
@@ -276,7 +284,7 @@ export function notInArray(values: SimpleFilterValue[]): OperatorFilterValue {
  * @returns An 'exists' filter expression
  */
 export function exists(exists: boolean): OperatorFilterValue {
-  return { $exists: exists };
+    return { $exists: exists };
 }
 
 /**
@@ -285,7 +293,7 @@ export function exists(exists: boolean): OperatorFilterValue {
  * @returns An OR filter
  */
 export function or(conditions: FilterCondition[]): FilterCondition {
-  return { $or: conditions };
+    return { $or: conditions };
 }
 
 /**
@@ -294,7 +302,7 @@ export function or(conditions: FilterCondition[]): FilterCondition {
  * @returns An AND filter
  */
 export function and(conditions: FilterCondition[]): FilterCondition {
-  return { $and: conditions };
+    return { $and: conditions };
 }
 
 /**
@@ -304,12 +312,12 @@ export function and(conditions: FilterCondition[]): FilterCondition {
  * @returns A time range filter
  */
 export function timeRange(from: number, to: number): FilterCondition {
-  return {
-    kill_time: {
-      $gte: from,
-      $lte: to,
-    },
-  };
+    return {
+        kill_time: {
+            $gte: from,
+            $lte: to,
+        },
+    };
 }
 
 /**
@@ -318,8 +326,11 @@ export function timeRange(from: number, to: number): FilterCondition {
  * @param direction - Sort direction
  * @returns Sort options object
  */
-export function sort(field: QueryableField, direction: SortDirection): SortOptions {
-  return { [field]: direction };
+export function sort(
+    field: QueryableField,
+    direction: SortDirection
+): SortOptions {
+    return { [field]: direction };
 }
 
 /**
@@ -328,11 +339,11 @@ export function sort(field: QueryableField, direction: SortDirection): SortOptio
  * @returns Projection options object
  */
 export function include(...fields: string[]): ProjectionOptions {
-  const projection: ProjectionOptions = { _id: 0 };
-  for (const field of fields) {
-    projection[field] = 1;
-  }
-  return projection;
+    const projection: ProjectionOptions = { _id: 0 };
+    for (const field of fields) {
+        projection[field] = 1;
+    }
+    return projection;
 }
 
 /**
@@ -341,11 +352,11 @@ export function include(...fields: string[]): ProjectionOptions {
  * @returns Projection options object
  */
 export function exclude(...fields: string[]): ProjectionOptions {
-  const projection: ProjectionOptions = {};
-  for (const field of fields) {
-    projection[field] = 0;
-  }
-  return projection;
+    const projection: ProjectionOptions = {};
+    for (const field of fields) {
+        projection[field] = 0;
+    }
+    return projection;
 }
 
 /**
@@ -354,7 +365,7 @@ export function exclude(...fields: string[]): ProjectionOptions {
  * @returns Query options object
  */
 export function options(options: QueryOptions): QueryOptions {
-  return options;
+    return options;
 }
 
 // Validation functions
@@ -365,7 +376,7 @@ export function options(options: QueryOptions): QueryOptions {
  * @returns Whether the field is valid
  */
 export function isValidField(field: string): field is QueryableField {
-  return VALID_FIELDS.includes(field as QueryableField);
+    return VALID_FIELDS.includes(field as QueryableField);
 }
 
 /**
@@ -374,7 +385,7 @@ export function isValidField(field: string): field is QueryableField {
  * @returns Whether the operator is valid
  */
 export function isValidOperator(operator: string): operator is MongoOperator {
-  return VALID_OPERATORS.includes(operator as MongoOperator);
+    return VALID_OPERATORS.includes(operator as MongoOperator);
 }
 
 /**
@@ -383,16 +394,16 @@ export function isValidOperator(operator: string): operator is MongoOperator {
  * @returns The validated query or throws an error
  */
 export function validateQuery(query: QueryAPIRequest): QueryAPIRequest {
-  if (!query || typeof query !== "object") {
-    throw new Error("Query must be an object");
-  }
+    if (!query || typeof query !== "object") {
+        throw new Error("Query must be an object");
+    }
 
-  // Basic structure validation
-  if (!query.filter && !query.options) {
-    throw new Error("Query must have at least one of filter or options");
-  }
+    // Basic structure validation
+    if (!query.filter && !query.options) {
+        throw new Error("Query must have at least one of filter or options");
+    }
 
-  // We could add more validation here but the API will validate thoroughly
+    // We could add more validation here but the API will validate thoroughly
 
-  return query;
+    return query;
 }
