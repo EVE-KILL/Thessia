@@ -677,31 +677,8 @@ export async function generateCampaignStats(
         );
     })();
 
-    // Fetch all killmails using the expanded query
-    const killmailsPromise = (async () => {
-        // Force a fresh query execution by cloning the query and using a new cursor
-        const queryClone = JSON.parse(JSON.stringify(expandedQuery));
-        const results = await Killmails.find(queryClone).lean().exec();
-
-        // Additional validation - check for null/undefined values that might cause issues
-        const validResults = results.filter(
-            (km) =>
-                km &&
-                km.killmail_id &&
-                km.victim &&
-                km.attackers &&
-                Array.isArray(km.attackers) &&
-                km.attackers.length > 0
-        );
-
-        return validResults;
-    })();
-
-    // Wait for both operations to complete in parallel
-    const [runtimeDays, relevantKillmails] = await Promise.all([
-        runtimeDaysPromise,
-        killmailsPromise,
-    ]);
+    // Calculate runtime days
+    const runtimeDays = await runtimeDaysPromise;
 
     const stats: ICampaignOutput = {
         // Include campaign metadata
@@ -803,28 +780,22 @@ export async function generateCampaignStats(
     // Collect all killmail IDs without limiting
     const killmailIds: number[] = [];
 
-    // Optimization: Process killmails in batches to avoid blocking the event loop
-    const BATCH_SIZE = 500;
-    const killmailBatches = [];
+    // Process killmails using cursor-based streaming for optimal memory usage
+    // This approach processes documents one at a time instead of loading everything into memory
+    const cursor = Killmails.find(expandedQuery).lean().cursor();
+    
+    let processedCount = 0;
+    
+    // Process each killmail document individually using the cursor
+    for (let km = await cursor.next(); km != null; km = await cursor.next()) {
+        // Validate the killmail document
+        if (!km || !km.killmail_id || !km.victim || !km.attackers || !Array.isArray(km.attackers) || km.attackers.length === 0) {
+            continue;
+        }
 
-    for (let i = 0; i < relevantKillmails.length; i += BATCH_SIZE) {
-        killmailBatches.push(relevantKillmails.slice(i, i + BATCH_SIZE));
-    }
-
-    // Process each batch
-    let killmailIdIndex = 0;
-
-    // Process batches sequentially to avoid race conditions on shared state
-    // The stats object and various Maps/Sets are shared mutable state that cannot be safely
-    // modified concurrently by multiple batches
-    for (
-        let batchIndex = 0;
-        batchIndex < killmailBatches.length;
-        batchIndex++
-    ) {
-        const batch = killmailBatches[batchIndex];
+        // Process the individual killmail
         await processKillmailBatch(
-            batch,
+            [km], // Single killmail as a "batch" of one
             stats,
             campaignQuery,
             shipGroupMap,
@@ -840,9 +811,19 @@ export async function generateCampaignStats(
             trackedKillmails,
             trackedForStats,
             killmailIds,
-            killmailIdIndex + batchIndex * BATCH_SIZE
+            processedCount
         );
+
+        processedCount++;
+
+        // Periodic garbage collection hint for large campaigns
+        if (processedCount % 1000 === 0 && global.gc) {
+            global.gc();
+        }
     }
+
+    // Close the cursor to free resources
+    await cursor.close();
 
     // Perform final calculations in parallel
     const [
@@ -955,12 +936,35 @@ export async function generateCampaignStats(
     stats.topVictimsByAlliance = topVictimsAlliances;
     stats.mostValuableKills = mostValuableKills;
 
+    // Clean up memory by clearing large data structures
+    try {
+        // Clear the aggregation maps
+        shipGroupMap.clear();
+        characterKillsMap.clear();
+        characterLossesMap.clear();
+        characterDamageMap.clear();
+        characterDamageTakenMap.clear();
+        corporationKillsMap.clear();
+        corporationLossesMap.clear();
+        allianceKillsMap.clear();
+        allianceLossesMap.clear();
+
+        // Clear tracking sets
+        trackedKillmails.clear();
+        trackedForStats.clear();
+
+        // Clear the temporary arrays
+        mostValuableKillsArray.length = 0;
+    } catch (error) {
+        // Ignore cleanup errors, they shouldn't affect the result
+    }
+
     return stats;
 }
 
 /**
- * Process a batch of killmails to update statistics
- * @param batch - Batch of killmails to process
+ * Process a single killmail (or small batch) to update statistics
+ * @param batch - Single killmail or small batch of killmails to process
  * @param stats - Statistics object to update
  * @param campaignQuery - Original campaign query
  * @param shipGroupMap - Map of ship group stats
@@ -976,7 +980,7 @@ export async function generateCampaignStats(
  * @param trackedKillmails - Set of tracked killmail IDs
  * @param trackedForStats - Set of tracked killmail IDs for stats consistency
  * @param killmailIds - Array to store killmail IDs
- * @param killmailIdIndex - Starting index for killmail IDs
+ * @param killmailIdIndex - Current index for killmail IDs
  */
 async function processKillmailBatch(
     batch: IKillmail[],
@@ -1034,29 +1038,19 @@ async function processKillmailBatch(
     killmailIds: number[],
     killmailIdIndex: number
 ): Promise<void> {
-    let localIndex = killmailIdIndex;
-
+    // Since we're now processing single killmails, we can simplify the logic
     for (const km of batch) {
         if (!km.victim || !km.attackers || km.attackers.length === 0) continue;
 
-        // Process attacker and victim side determination in parallel
-        const [
-            victimOnAttackerSide,
-            victimOnVictimSide,
-            attackersOnAttackerSide,
-            attackersOnVictimSide,
-        ] = await Promise.all([
-            isAttackerSide(km.victim, campaignQuery),
-            isVictimSide(km.victim, campaignQuery),
-            (async () =>
-                km.attackers.some((att: any) =>
-                    isAttackerSide(att, campaignQuery)
-                ))(),
-            (async () =>
-                km.attackers.some((att: any) =>
-                    isVictimSide(att, campaignQuery)
-                ))(),
-        ]);
+        // Process attacker and victim side determination
+        const victimOnAttackerSide = isAttackerSide(km.victim, campaignQuery);
+        const victimOnVictimSide = isVictimSide(km.victim, campaignQuery);
+        const attackersOnAttackerSide = km.attackers.some((att: any) =>
+            isAttackerSide(att, campaignQuery)
+        );
+        const attackersOnVictimSide = km.attackers.some((att: any) =>
+            isVictimSide(att, campaignQuery)
+        );
 
         // Determine if this killmail should be included in the main killmail list
         let shouldIncludeInKillmailList = false;
@@ -1089,7 +1083,7 @@ async function processKillmailBatch(
 
         // Store the killmail ID only if it should be included in the list
         if (km.killmail_id && shouldIncludeInKillmailList) {
-            killmailIds[localIndex++] = km.killmail_id;
+            killmailIds.push(km.killmail_id);
         }
 
         if (stats.attackerVsVictim) {
@@ -1156,44 +1150,43 @@ async function processKillmailBatch(
             stats.iskDamageDoneAttacker += km.total_value || 0;
         }
 
-        // Process ship group stats and character stats
-        await Promise.all([
-            processShipGroupStat(
-                km,
-                stats,
-                shipGroupMap,
-                victimOnAttackerSide,
-                attackersOnAttackerSide,
-                victimOnVictimSide,
-                attackersOnVictimSide
-            ),
-            processCharacterStats(
-                km,
-                stats,
-                characterKillsMap,
-                characterLossesMap,
-                characterDamageMap,
-                characterDamageTakenMap,
-                corporationKillsMap,
-                corporationLossesMap,
-                allianceKillsMap,
-                allianceLossesMap,
-                mostValuableKillsArray,
-                campaignQuery,
-                trackedKillmails,
-                victimOnAttackerSide,
-                attackersOnAttackerSide,
-                victimOnVictimSide,
-                attackersOnVictimSide
-            ),
-        ]);
+        // Process ship group stats and character stats synchronously for single documents
+        processShipGroupStat(
+            km,
+            stats,
+            shipGroupMap,
+            victimOnAttackerSide,
+            attackersOnAttackerSide,
+            victimOnVictimSide,
+            attackersOnVictimSide
+        );
+        
+        await processCharacterStats(
+            km,
+            stats,
+            characterKillsMap,
+            characterLossesMap,
+            characterDamageMap,
+            characterDamageTakenMap,
+            corporationKillsMap,
+            corporationLossesMap,
+            allianceKillsMap,
+            allianceLossesMap,
+            mostValuableKillsArray,
+            campaignQuery,
+            trackedKillmails,
+            victimOnAttackerSide,
+            attackersOnAttackerSide,
+            victimOnVictimSide,
+            attackersOnVictimSide
+        );
     }
 }
 
 /**
  * Process ship group statistics for a killmail
  */
-async function processShipGroupStat(
+function processShipGroupStat(
     km: IKillmail,
     stats: ICampaignOutput,
     shipGroupMap: Map<
@@ -1209,7 +1202,7 @@ async function processShipGroupStat(
     attackersOnAttackerSide: boolean,
     victimOnVictimSide: boolean,
     attackersOnVictimSide: boolean
-): Promise<void> {
+): void {
     const victimShipGroupName = km.victim.ship_group_name || {
         en: "Unknown Ship Group",
     };

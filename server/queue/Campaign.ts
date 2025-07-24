@@ -22,6 +22,8 @@ async function queueCampaignProcessing(campaignId: string, priority = 1) {
 }
 
 async function processCampaign(campaignId: string) {
+    let campaignStats = null;
+
     try {
         // Update campaign status to processing
         await Campaigns.updateOne(
@@ -33,7 +35,7 @@ async function processCampaign(campaignId: string) {
         );
 
         // Generate the campaign stats (this is the heavy operation)
-        const campaignStats = await generateCampaignStats(campaignId);
+        campaignStats = await generateCampaignStats(campaignId);
 
         // Store the processed data in the campaign document
         await Campaigns.updateOne(
@@ -62,6 +64,29 @@ async function processCampaign(campaignId: string) {
 
         // Re-throw the error so the worker can handle it
         throw error;
+    } finally {
+        // Aggressively clean up memory references
+        if (campaignStats) {
+            // Clear large arrays and maps from the stats object
+            if (campaignStats.killmailIds) {
+                campaignStats.killmailIds.length = 0;
+                campaignStats.killmailIds = null;
+            }
+            if (campaignStats.shipGroupStats) {
+                campaignStats.shipGroupStats.length = 0;
+                campaignStats.shipGroupStats = null;
+            }
+            if (campaignStats.mostValuableKills) {
+                campaignStats.mostValuableKills.length = 0;
+                campaignStats.mostValuableKills = null;
+            }
+            campaignStats = null;
+        }
+
+        // Force garbage collection if available
+        if (global.gc) {
+            global.gc();
+        }
     }
 }
 

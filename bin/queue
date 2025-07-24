@@ -6,11 +6,11 @@ PROJECT_ROOT=$(cd "$SCRIPT_DIR/.." && pwd)
 
 # Check for various possible queue locations, in order of preference
 if [ -f "$PROJECT_ROOT/queue.ts" ]; then
-    cd "$PROJECT_ROOT" && bun --bun run queue.ts "$@"
+    cd "$PROJECT_ROOT" && bun --bun --expose-gc run queue.ts "$@"
 elif [ -f "$PROJECT_ROOT/.output/queue/queue.js" ]; then
-    cd "$PROJECT_ROOT" && bun --bun run .output/queue/queue.js "$@"
+    cd "$PROJECT_ROOT" && bun --bun --expose-gc run .output/queue/queue.js "$@"
 elif [ -f "$PROJECT_ROOT/queue/queue.js" ]; then
-    cd "$PROJECT_ROOT" && bun --bun run queue/queue.js "$@"
+    cd "$PROJECT_ROOT" && bun --bun --expose-gc run queue/queue.js "$@"
 else
     echo "Error: Could not find queue executable in any of the expected locations:"
     echo "  - $PROJECT_ROOT/queue.ts"
