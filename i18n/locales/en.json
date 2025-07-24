@@ -949,7 +949,7 @@
         "noGooData": "No goo data",
         "showingResults": "Showing {start}-{end} of {total} Metenox locations",
         "search": {
-            "placeholder": "Search by moon, system, or region name...",
+            "placeholder": "Search for systems, regions, or moon names...",
             "systemPlaceholder": "Enter system name...",
             "regionPlaceholder": "Enter region name..."
         },

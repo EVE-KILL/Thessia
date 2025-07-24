@@ -18,14 +18,20 @@ const selectedPageSize = ref(pageSizeItems[0].value);
 
 // Filter and search state
 const searchQuery = ref('');
-const filter = ref('all'); // 'all', 'system', 'region'
 const selectedSystemId = ref<number | null>(null);
 const selectedRegionId = ref<number | null>(null);
 const selectedMoonGooTypes = ref<string[]>([]); // For moon goo quality filtering
+const selectedLocationName = ref(''); // Store the selected system or region name for display
+
+// Search results for the main search box
+const locationSearchResults = ref<{ id: number; name: string; type: 'system' | 'region' }[]>([]);
+const selectedLocationResultIndex = ref(-1);
+const lastLocationSearchTerm = ref('');
+const justSelectedLocation = ref(false);
 
 // Computed property to determine if any filter is active
 const hasActiveFilters = computed(() => {
-    return filter.value !== 'all' || searchQuery.value !== '' || selectedSystemId.value || selectedRegionId.value || selectedMoonGooTypes.value.length > 0;
+    return searchQuery.value !== '' || selectedSystemId.value || selectedRegionId.value || selectedMoonGooTypes.value.length > 0;
 });
 
 // Add a separate loading state ref to track loading beyond what useFetch provides
@@ -35,18 +41,6 @@ const isInitialLoad = ref(true);
 
 // Initialize with empty data structure for immediate rendering
 const initialData = ref<IMetenoxMoonResult[]>([]);
-
-// System and Region search functionality - Move declarations here before watchers
-const systemSearchQuery = ref('');
-const regionSearchQuery = ref('');
-const systemSearchResults = ref<{ id: number; name: string }[]>([]);
-const regionSearchResults = ref<{ id: number; name: string }[]>([]);
-const selectedSystemResultIndex = ref(-1);
-const selectedRegionResultIndex = ref(-1);
-const lastSystemSearchTerm = ref('');
-const lastRegionSearchTerm = ref('');
-const justSelectedSystem = ref(false);
-const justSelectedRegion = ref(false);
 
 // Computed API endpoint based on filter
 const apiEndpoint = computed(() => {
@@ -68,8 +62,8 @@ const { data, pending, error, refresh } = useFetch<IMetenoxMoonResult[]>(apiEndp
 const metenoxList = computed(() => {
     let list = data.value || initialData.value;
 
-    // Apply search filter
-    if (searchQuery.value) {
+    // Apply text search filter (only if no location filter is active)
+    if (searchQuery.value && !selectedSystemId.value && !selectedRegionId.value) {
         const query = searchQuery.value.toLowerCase();
         list = list.filter(moon =>
             moon.system_name.toLowerCase().includes(query) ||
@@ -144,33 +138,20 @@ onMounted(() => {
 });
 
 // Watch for changes to system search query
-watch(systemSearchQuery, (newTerm) => {
-    if (justSelectedSystem.value) return;
+watch(searchQuery, (newTerm) => {
+    if (justSelectedLocation.value) return;
 
     if (newTerm && newTerm.length >= 2) {
-        debouncedSystemSearch(newTerm);
+        debouncedLocationSearch(newTerm);
     } else {
-        systemSearchResults.value = [];
+        locationSearchResults.value = [];
     }
 
-    selectedSystemResultIndex.value = -1;
-});
-
-// Watch for changes to region search query
-watch(regionSearchQuery, (newTerm) => {
-    if (justSelectedRegion.value) return;
-
-    if (newTerm && newTerm.length >= 2) {
-        debouncedRegionSearch(newTerm);
-    } else {
-        regionSearchResults.value = [];
-    }
-
-    selectedRegionResultIndex.value = -1;
+    selectedLocationResultIndex.value = -1;
 });
 
 // Watch for changes to pagination params, search, filter, and locale, and refresh the data
-watch([currentPage, selectedPageSize, searchQuery, filter, selectedSystemId, selectedRegionId, selectedMoonGooTypes, currentLocale], () => {
+watch([currentPage, selectedPageSize, searchQuery, selectedSystemId, selectedRegionId, selectedMoonGooTypes, currentLocale], () => {
     moment.locale(currentLocale.value);
     loadData();
 });
@@ -216,33 +197,13 @@ const generateSkeletonRows = (count: number) => {
 const skeletonRows = computed(() => generateSkeletonRows(selectedPageSize.value));
 
 // Filter functions
-const setFilter = (newFilter: string) => {
-    filter.value = newFilter;
-    currentPage.value = 1; // Reset to first page when filter changes
-
-    // Clear specific filters when changing filter type
-    if (newFilter !== 'system') {
-        selectedSystemId.value = null;
-        systemSearchQuery.value = '';
-        systemSearchResults.value = [];
-    }
-    if (newFilter !== 'region') {
-        selectedRegionId.value = null;
-        regionSearchQuery.value = '';
-        regionSearchResults.value = [];
-    }
-};
-
 const clearAllFilters = () => {
     searchQuery.value = '';
-    filter.value = 'all';
     selectedSystemId.value = null;
     selectedRegionId.value = null;
+    selectedLocationName.value = '';
     selectedMoonGooTypes.value = [];
-    systemSearchQuery.value = '';
-    regionSearchQuery.value = '';
-    systemSearchResults.value = [];
-    regionSearchResults.value = [];
+    locationSearchResults.value = [];
     currentPage.value = 1; // Reset to first page when clearing filters
 };
 
@@ -294,134 +255,81 @@ const toggleMoonGooType = (type: string) => {
     currentPage.value = 1; // Reset to first page when filter changes
 };
 
-// Search for systems using the search API
-const searchSystems = async (term: string) => {
+// Search for systems and regions using the search API
+const searchLocations = async (term: string) => {
     if (term.length < 2) {
-        systemSearchResults.value = [];
+        locationSearchResults.value = [];
         return;
     }
 
-    if (lastSystemSearchTerm.value === term) return;
+    if (lastLocationSearchTerm.value === term) return;
 
     try {
         const encoded = encodeURIComponent(term);
         const { data } = await useFetch(`/api/search/${encoded}`);
 
         if (data.value && data.value.hits) {
-            systemSearchResults.value = data.value.hits
-                .filter((hit: any) => hit.type === 'system')
+            locationSearchResults.value = data.value.hits
+                .filter((hit: any) => hit.type === 'system' || hit.type === 'region')
                 .slice(0, 10)
-                .map((hit: any) => ({ id: hit.id, name: hit.name }));
+                .map((hit: any) => ({ id: hit.id, name: hit.name, type: hit.type }));
         }
 
-        lastSystemSearchTerm.value = term;
+        lastLocationSearchTerm.value = term;
     } catch (err) {
-        console.error("System search error:", err);
+        console.error("Location search error:", err);
     }
 };
 
-// Search for regions using the search API
-const searchRegions = async (term: string) => {
-    if (term.length < 2) {
-        regionSearchResults.value = [];
-        return;
+// Create debounced version of search function
+const debouncedLocationSearch = useDebounceFn(searchLocations, 300);
+
+// Handle location selection
+const selectLocation = (location: { id: number; name: string; type: 'system' | 'region' }) => {
+    justSelectedLocation.value = true;
+
+    // Clear previous selections
+    selectedSystemId.value = null;
+    selectedRegionId.value = null;
+
+    // Set the appropriate filter based on type
+    if (location.type === 'system') {
+        selectedSystemId.value = location.id;
+    } else if (location.type === 'region') {
+        selectedRegionId.value = location.id;
     }
 
-    if (lastRegionSearchTerm.value === term) return;
-
-    try {
-        const encoded = encodeURIComponent(term);
-        const { data } = await useFetch(`/api/search/${encoded}`);
-
-        if (data.value && data.value.hits) {
-            regionSearchResults.value = data.value.hits
-                .filter((hit: any) => hit.type === 'region')
-                .slice(0, 10)
-                .map((hit: any) => ({ id: hit.id, name: hit.name }));
-        }
-
-        lastRegionSearchTerm.value = term;
-    } catch (err) {
-        console.error("Region search error:", err);
-    }
-};
-
-// Create debounced versions of search functions
-const debouncedSystemSearch = useDebounceFn(searchSystems, 300);
-const debouncedRegionSearch = useDebounceFn(searchRegions, 300);
-
-// Handle system selection
-const selectSystem = (system: { id: number; name: string }) => {
-    justSelectedSystem.value = true;
-    selectedSystemId.value = system.id;
-    systemSearchQuery.value = system.name;
-    systemSearchResults.value = [];
-    selectedSystemResultIndex.value = -1;
+    selectedLocationName.value = location.name;
+    searchQuery.value = location.name;
+    locationSearchResults.value = [];
+    selectedLocationResultIndex.value = -1;
 
     setTimeout(() => {
-        justSelectedSystem.value = false;
+        justSelectedLocation.value = false;
     }, 500);
 };
 
-// Handle region selection
-const selectRegion = (region: { id: number; name: string }) => {
-    justSelectedRegion.value = true;
-    selectedRegionId.value = region.id;
-    regionSearchQuery.value = region.name;
-    regionSearchResults.value = [];
-    selectedRegionResultIndex.value = -1;
-
-    setTimeout(() => {
-        justSelectedRegion.value = false;
-    }, 500);
-};
-
-// Handle keyboard navigation for system search
-const handleSystemKeyDown = (e: KeyboardEvent) => {
-    if (systemSearchResults.value.length === 0) return;
+// Handle keyboard navigation for location search
+const handleLocationKeyDown = (e: KeyboardEvent) => {
+    if (locationSearchResults.value.length === 0) return;
 
     switch (e.key) {
         case 'ArrowDown':
             e.preventDefault();
-            selectedSystemResultIndex.value = Math.min(selectedSystemResultIndex.value + 1, systemSearchResults.value.length - 1);
+            selectedLocationResultIndex.value = Math.min(selectedLocationResultIndex.value + 1, locationSearchResults.value.length - 1);
             break;
         case 'ArrowUp':
             e.preventDefault();
-            selectedSystemResultIndex.value = Math.max(selectedSystemResultIndex.value - 1, 0);
+            selectedLocationResultIndex.value = Math.max(selectedLocationResultIndex.value - 1, 0);
             break;
         case 'Enter':
             e.preventDefault();
-            if (selectedSystemResultIndex.value >= 0) {
-                selectSystem(systemSearchResults.value[selectedSystemResultIndex.value]);
+            if (selectedLocationResultIndex.value >= 0) {
+                selectLocation(locationSearchResults.value[selectedLocationResultIndex.value]);
             }
             break;
         case 'Escape':
-            systemSearchResults.value = [];
-            break;
-    }
-};
-
-// Handle keyboard navigation for region search
-const handleRegionKeyDown = (e: KeyboardEvent) => {
-    if (regionSearchResults.value.length === 0) return;
-
-    switch (e.key) {
-        case 'ArrowDown':
-            e.preventDefault();
-            selectedRegionResultIndex.value = Math.min(selectedRegionResultIndex.value + 1, regionSearchResults.value.length - 1);
-            break;
-        case 'ArrowUp':
-            e.preventDefault();
-            selectedRegionResultIndex.value = Math.max(selectedRegionResultIndex.value - 1, 0);
-            break;
-        case 'Enter':
-            e.preventDefault();
-            if (selectedRegionResultIndex.value >= 0) {
-                selectRegion(regionSearchResults.value[selectedRegionResultIndex.value]);
-            }
-            break;
-        case 'Escape':
-            regionSearchResults.value = [];
+            locationSearchResults.value = [];
             break;
     }
 };
@@ -442,13 +350,14 @@ useSeoMeta({
 
         <!-- Search and Filters Section -->
         <div class="bg-background-800 p-4 rounded-lg shadow-lg border border-gray-700/30">
-            <!-- Search Input -->
-            <div class="mb-4">
+            <!-- Search Input with Autocomplete -->
+            <div class="mb-4 relative">
                 <UInput
                     v-model="searchQuery"
-                    :placeholder="t('metenoxMoons.search.placeholder', 'Search by moon, system, or region name...')"
+                    :placeholder="t('metenoxMoons.search.placeholder', 'Search for systems, regions, or moon names...')"
                     icon="lucide:search"
                     size="lg"
+                    @keydown="handleLocationKeyDown"
                     :ui="{
                         icon: {
                             trailing: {
@@ -464,54 +373,42 @@ useSeoMeta({
                             variant="link"
                             icon="lucide:x"
                             :padded="false"
-                            @click="searchQuery = ''"
+                            @click="searchQuery = ''; selectedSystemId = null; selectedRegionId = null; selectedLocationName = ''; locationSearchResults = [];"
                         />
                     </template>
                 </UInput>
+
+                <!-- Location Search Results Dropdown -->
+                <div v-if="locationSearchResults.length > 0"
+                     class="absolute z-50 w-full mt-1 bg-background-800 border border-gray-700/30 rounded-lg shadow-lg max-h-48 overflow-y-auto">
+                    <div
+                        v-for="(location, index) in locationSearchResults"
+                        :key="`${location.type}-${location.id}`"
+                        :class="[
+                            'px-3 py-2 cursor-pointer text-sm hover:bg-background-700 flex items-center justify-between',
+                            selectedLocationResultIndex === index ? 'bg-background-700' : ''
+                        ]"
+                        @click="selectLocation(location)"
+                    >
+                        <span>{{ location.name }}</span>
+                        <UBadge :color="location.type === 'system' ? 'blue' : 'green'" variant="soft" size="xs">
+                            {{ location.type }}
+                        </UBadge>
+                    </div>
+                </div>
             </div>
 
-            <!-- Filter Buttons -->
-            <div class="flex flex-col sm:flex-row gap-2 mb-4">
-                <div class="flex gap-2 flex-wrap">
-                    <UButton
-                        :variant="filter === 'all' ? 'solid' : 'outline'"
-                        :color="filter === 'all' ? 'primary' : 'gray'"
-                        @click="setFilter('all')"
-                        size="sm"
-                    >
-                        {{ t('metenoxMoons.filter.all', 'All Moons') }}
-                    </UButton>
-                    <UButton
-                        :variant="filter === 'system' ? 'solid' : 'outline'"
-                        :color="filter === 'system' ? 'primary' : 'gray'"
-                        @click="setFilter('system')"
-                        size="sm"
-                    >
-                        {{ t('metenoxMoons.filter.system', 'By System') }}
-                    </UButton>
-                    <UButton
-                        :variant="filter === 'region' ? 'solid' : 'outline'"
-                        :color="filter === 'region' ? 'primary' : 'gray'"
-                        @click="setFilter('region')"
-                        size="sm"
-                    >
-                        {{ t('metenoxMoons.filter.region', 'By Region') }}
-                    </UButton>
-                </div>
-
-                <!-- Clear Filters Button -->
-                <div class="flex justify-end sm:ml-auto">
-                    <UButton
-                        v-if="hasActiveFilters"
-                        variant="outline"
-                        color="red"
-                        size="sm"
-                        icon="lucide:x"
-                        @click="clearAllFilters"
-                    >
-                        {{ t('metenoxMoons.filter.clear', 'Clear Filters') }}
-                    </UButton>
-                </div>
+            <!-- Clear Filters Button -->
+            <div v-if="hasActiveFilters" class="flex justify-end mb-4">
+                <UButton
+                    variant="outline"
+                    color="red"
+                    size="sm"
+                    icon="lucide:x"
+                    @click="clearAllFilters"
+                >
+                    {{ t('metenoxMoons.filter.clear', 'Clear Filters') }}
+                </UButton>
             </div>
 
             <!-- Moon Goo Quality Filter -->
@@ -534,76 +431,18 @@ useSeoMeta({
                 </div>
             </div>
 
-            <!-- Specific System/Region Input -->
-            <div v-if="filter === 'system' || filter === 'region'" class="mb-4">
-                <div v-if="filter === 'system'" class="relative">
-                    <UInput
-                        v-model="systemSearchQuery"
-                        :placeholder="t('metenoxMoons.search.systemPlaceholder', 'Enter system name...')"
-                        icon="lucide:globe"
-                        size="md"
-                        @keydown="handleSystemKeyDown"
-                    />
-
-                    <!-- System Search Results Dropdown -->
-                    <div v-if="systemSearchResults.length > 0"
-                         class="absolute z-50 w-full mt-1 bg-background-800 border border-gray-700/30 rounded-lg shadow-lg max-h-48 overflow-y-auto">
-                        <div
-                            v-for="(system, index) in systemSearchResults"
-                            :key="system.id"
-                            :class="[
-                                'px-3 py-2 cursor-pointer text-sm hover:bg-background-700',
-                                selectedSystemResultIndex === index ? 'bg-background-700' : ''
-                            ]"
-                            @click="selectSystem(system)"
-                        >
-                            {{ system.name }}
-                        </div>
-                    </div>
-                </div>
-
-                <div v-if="filter === 'region'" class="relative">
-                    <UInput
-                        v-model="regionSearchQuery"
-                        :placeholder="t('metenoxMoons.search.regionPlaceholder', 'Enter region name...')"
-                        icon="lucide:map"
-                        size="md"
-                        @keydown="handleRegionKeyDown"
-                    />
-
-                    <!-- Region Search Results Dropdown -->
-                    <div v-if="regionSearchResults.length > 0"
-                         class="absolute z-50 w-full mt-1 bg-background-800 border border-gray-700/30 rounded-lg shadow-lg max-h-48 overflow-y-auto">
-                        <div
-                            v-for="(region, index) in regionSearchResults"
-                            :key="region.id"
-                            :class="[
-                                'px-3 py-2 cursor-pointer text-sm hover:bg-background-700',
-                                selectedRegionResultIndex === index ? 'bg-background-700' : ''
-                            ]"
-                            @click="selectRegion(region)"
-                        >
-                            {{ region.name }}
-                        </div>
-                    </div>
-                </div>
-            </div>
-
             <!-- Active Filters Display -->
             <div v-if="hasActiveFilters" class="pt-3 border-t border-gray-700/30">
                 <div class="flex flex-wrap gap-2 items-center">
                     <span class="text-sm text-gray-300">{{ t('active_filters', 'Active filters') }}:</span>
-                    <UBadge v-if="filter !== 'all'" color="blue" variant="soft" size="sm">
-                        {{ t(`metenoxMoons.filter.${filter}`) }}
-                    </UBadge>
-                    <UBadge v-if="searchQuery" color="green" variant="soft" size="sm">
+                    <UBadge v-if="searchQuery && !selectedSystemId && !selectedRegionId" color="green" variant="soft" size="sm">
                         {{ t('search', 'Search') }}: "{{ searchQuery }}"
                     </UBadge>
-                    <UBadge v-if="selectedSystemId && systemSearchQuery" color="orange" variant="soft" size="sm">
-                        {{ t('metenoxMoons.system', 'System') }}: {{ systemSearchQuery }}
+                    <UBadge v-if="selectedSystemId && selectedLocationName" color="blue" variant="soft" size="sm">
+                        {{ t('metenoxMoons.system', 'System') }}: {{ selectedLocationName }}
                     </UBadge>
-                    <UBadge v-if="selectedRegionId && regionSearchQuery" color="orange" variant="soft" size="sm">
-                        {{ t('metenoxMoons.region', 'Region') }}: {{ regionSearchQuery }}
+                    <UBadge v-if="selectedRegionId && selectedLocationName" color="green" variant="soft" size="sm">
+                        {{ t('metenoxMoons.region', 'Region') }}: {{ selectedLocationName }}
                     </UBadge>
                     <UBadge
                         v-for="gooType in selectedMoonGooTypes"
