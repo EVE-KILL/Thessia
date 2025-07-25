@@ -22,8 +22,18 @@
                     <tr v-for="battle in battlesList" :key="battle.battle_id" @click="goToBattle(battle.battle_id)"
                         class="border-b border-gray-700 hover:bg-gray-700 cursor-pointer">
                         <td class="px-4 py-2">{{ formatTimeAgo(battle.start_time) }}</td>
-                        <td class="px-4 py-2">{{ getLocalizedString(battle.system_name, locale) }}</td>
-                        <td class="px-4 py-2">{{ getLocalizedString(battle.region_name, locale) }}</td>
+                        <td class="px-4 py-2">
+                            <template v-for="(system, index) in getSystemsDisplay(battle)" :key="system.id">
+                                <span v-if="index > 0">, </span>
+                                <span>{{ system.name }}</span>
+                            </template>
+                        </td>
+                        <td class="px-4 py-2">
+                            <template v-for="(system, index) in getSystemsDisplay(battle)" :key="system.id">
+                                <span v-if="index > 0">, </span>
+                                <span>{{ system.region }}</span>
+                            </template>
+                        </td>
                         <td class="px-4 py-2">{{ formatDuration(battle.duration_ms) }}</td>
                         <td class="px-4 py-2">{{ formatNumber(battle.killmailsCount) }} kills</td>
                         <td class="px-4 py-2">
@@ -132,6 +142,38 @@ function getLocalizedString(obj: any, localeKey: string) {
     if (typeof obj === 'string') return obj;
     return obj[localeKey] || obj.en || '';
 }
+
+// Helper function to format systems from battles
+function getSystemsDisplay(battle: IBattlesDocument) {
+    if (battle.systems && battle.systems.length > 0) {
+        return battle.systems.map(system => {
+            const securityDisplay = system.system_security !== undefined && system.system_security !== null
+                ? system.system_security.toFixed(1)
+                : 'N/A';
+            const regionName = getLocalizedString(system.region_name, locale.value);
+            return {
+                id: system.system_id,
+                name: system.system_name,
+                security: securityDisplay,
+                region: regionName
+            };
+        });
+    } else if (battle.system_id) {
+        // Handle legacy format
+        const securityDisplay = battle.system_security !== undefined && battle.system_security !== null
+            ? battle.system_security.toFixed(1)
+            : 'N/A';
+        const regionName = getLocalizedString(battle.region_name, locale.value);
+        return [{
+            id: battle.system_id,
+            name: battle.system_name || t('unknownSystem', 'Unknown System'),
+            security: securityDisplay,
+            region: regionName
+        }];
+    }
+    return [];
+}
+
 function goToBattle(battleId: number) {
     router.push(`/battle/${battleId}`);
 }
