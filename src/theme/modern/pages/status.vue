@@ -365,32 +365,33 @@ const hasKeyspaceInfo = computed(() => {
 </script>
 
 <template>
-    <div class="mx-auto">
-        <div class="bg-gray-100 dark:bg-gray-900 rounded-lg shadow-lg">
-            <div class="flex justify-end items-center mb-4">
-                <div class="flex items-center gap-2">
-                    <div class="flex items-center">
-                        <USwitch v-model="autoRefresh" @change="toggleAutoRefresh" />
-                        <span class="ml-2 text-xs sm:text-sm">{{ $t('autoRefresh', { seconds: autoRefreshInterval })
-                        }}</span>
+    <ClientOnly>
+        <div class="mx-auto">
+            <div class="bg-gray-100 dark:bg-gray-900 rounded-lg shadow-lg">
+                <div class="flex justify-end items-center mb-4">
+                    <div class="flex items-center gap-2">
+                        <div class="flex items-center">
+                            <USwitch v-model="autoRefresh" @change="toggleAutoRefresh" />
+                            <span class="ml-2 text-xs sm:text-sm">{{ $t('autoRefresh', { seconds: autoRefreshInterval })
+                            }}</span>
+                        </div>
+                        <UButton color="primary" variant="ghost" icon="lucide:refresh-cw" size="sm" @click="refresh"
+                            :loading="loading" :disabled="loading" :title="$t('refreshNow')" />
                     </div>
-                    <UButton color="primary" variant="ghost" icon="lucide:refresh-cw" size="sm" @click="refresh"
-                        :loading="loading" :disabled="loading" :title="$t('refreshNow')" />
                 </div>
-            </div>
 
-            <div v-if="loading && !statusData" class="flex justify-center my-8">
-                <UProgress class="w-1/2" />
-            </div>
+                <div v-if="loading && !statusData" class="flex justify-center my-8">
+                    <UProgress class="w-1/2" />
+                </div>
 
-            <div v-else-if="error"
-                class="bg-red-100 dark:bg-red-900 border border-red-400 text-red-700 dark:text-red-300 px-4 py-3 rounded">
-                <p>{{ error }}</p>
-                <UButton class="mt-4" @click="refresh">{{ $t('retry') }}</UButton>
-            </div>
+                <div v-else-if="error"
+                    class="bg-red-100 dark:bg-red-900 border border-red-400 text-red-700 dark:text-red-300 px-4 py-3 rounded">
+                    <p>{{ error }}</p>
+                    <UButton class="mt-4" @click="refresh">{{ $t('retry') }}</UButton>
+                </div>
 
 
-                <div v-if="statusData">
+                    <div v-if="statusData">
                     <!-- Summary Cards -->
                     <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-6">
                         <div class="bg-indigo-50 dark:bg-indigo-900/30 rounded-lg shadow p-3">
@@ -613,9 +614,7 @@ const hasKeyspaceInfo = computed(() => {
                                         <UIcon name="lucide:loader" class="animate-spin h-6 w-6" />
                                     </div>
                                     <v-chart class="w-full h-full" :option="chartOptions" autoresize />
-                                </div>
-
-                                <!-- Show detailed stats directly when detailed is true -->
+                                </div>                                <!-- Show detailed stats directly when detailed is true -->
                                 <div v-if="detailed" class="mt-4">
                                     <h4 class="font-medium text-sm mb-2">{{ $t('detailedStats') }}</h4>
                                     <div class="overflow-x-auto">
@@ -915,6 +914,7 @@ const hasKeyspaceInfo = computed(() => {
                 </div>
         </div>
     </div>
+    </ClientOnly>
 </template>
 
 <style scoped>
