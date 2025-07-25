@@ -28,7 +28,7 @@ const FullStatsSchema = new Schema<IFullStats>(
                 kills: Number,
                 losses: Number,
                 efficiency: Number,
-            }
+            },
         ],
         monthlyStats: [
             {
@@ -40,7 +40,7 @@ const FullStatsSchema = new Schema<IFullStats>(
                 losses: Number,
                 iskLost: Number,
                 efficiency: Number,
-            }
+            },
         ],
         diesToCorporations: { type: Schema.Types.Mixed, default: {} },
         diesToAlliances: { type: Schema.Types.Mixed, default: {} },

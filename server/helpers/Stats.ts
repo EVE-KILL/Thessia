@@ -327,12 +327,14 @@ export async function calculateAllStats(
     }
 
     // Run base stats calculations in parallel for better performance
-    const [basicStats, shipGroupStats, monthlyStats, heatMapData] =
+    const [basicStats, shipGroupStats, monthlyStats, heatMapData, mostUsedShips, mostLostShips] =
         await Promise.all([
             getBasicStats(type, id, timeFilter),
             getShipGroupStats(type, id, timeFilter),
             getMonthlyStats(type, id, timeFilter),
             getHeatMapData(type, id, timeFilter),
+            getMostUsedShips(type, id, timeFilter),
+            getMostLostShips(type, id, timeFilter),
         ]);
 
     // Process character-specific stats only if needed
@@ -360,6 +362,16 @@ export async function calculateAllStats(
     // Process ship stats
     if (shipGroupStats && shipGroupStats.length > 0) {
         full.shipGroupStats = shipGroupStats;
+    }
+
+    // Process most used ships
+    if (mostUsedShips && Object.keys(mostUsedShips).length > 0) {
+        full.mostUsedShips = mostUsedShips;
+    }
+
+    // Process most lost ships
+    if (mostLostShips && Object.keys(mostLostShips).length > 0) {
+        full.mostLostShips = mostLostShips;
     }
 
     // Process monthly stats
@@ -1238,4 +1250,182 @@ async function getBlobFactorData(
     }
 
     return result[0] || { blobCount: 0 };
+}
+
+/**
+ * Get most used ships statistics with sampling for large datasets
+ */
+async function getMostUsedShips(type: StatsType, id: number, timeFilter?: { $gte: Date }) {
+    // Validate entity parameters to prevent attackers.undefined queries
+    const validation = validateEntity(type, id);
+    if (!validation.valid) {
+        console.error(`Invalid entity for most used ships: type=${type}, id=${id}`);
+        return {};
+    }
+
+    // Use validated values
+    type = validation.type;
+    id = validation.id;
+
+    // Prepare match conditions
+    const killMatchCondition: any = { [`attackers.${type}`]: id };
+
+    if (timeFilter) {
+        killMatchCondition.kill_time = timeFilter;
+    }
+
+    // Get all valid ship type IDs upfront (category_id = 6)
+    const shipTypes = await InvTypes.find(
+        { category_id: 6 },
+        { type_id: 1, _id: 0 }
+    ).lean();
+
+    // Create an array of valid ship type IDs
+    const validShipIds = shipTypes.map(item => item.type_id);
+
+    // Check if we need to sample (for extremely large datasets)
+    const totalKillCount = await Killmails.countDocuments(killMatchCondition).limit(1000000);
+
+    // Define sampling rates based on data size
+    const SAMPLE_THRESHOLD = 100000;
+    const useSamplingForKills = totalKillCount > SAMPLE_THRESHOLD;
+
+    // Limit to top 20 ships (most common)
+    const SHIP_LIMIT = 20;
+
+    // Ship usage statistics from kills pipeline
+    const killsPipeline = [];
+
+    // Add sampling stage for large datasets
+    if (useSamplingForKills) {
+        const sampleSize = Math.min(SAMPLE_THRESHOLD, Math.max(10000, Math.floor(totalKillCount * 0.1)));
+        killsPipeline.push({ $sample: { size: sampleSize } });
+    } else {
+        killsPipeline.push({ $match: killMatchCondition });
+    }
+
+    // Continue with the rest of the pipeline, now with early ship filtering
+    killsPipeline.push(
+        { $unwind: "$attackers" },
+        {
+            $match: {
+                [`attackers.${type}`]: id,
+                "attackers.ship_id": { $in: validShipIds } // Early ship filtering
+            }
+        },
+        {
+            $group: {
+                _id: "$attackers.ship_id",
+                count: { $sum: 1 },
+                name: { $first: "$attackers.ship_name" }
+            }
+        },
+        { $match: { _id: { $ne: 0 } } },
+        { $sort: { count: -1 } },
+        { $limit: SHIP_LIMIT }
+    );
+
+    // Run aggregation
+    const mostUsedShipsAgg = await Killmails.aggregate(killsPipeline).allowDiskUse(true);
+
+    // Process ship usage data
+    const mostUsedShips: Record<number, { count: number; name: any }> = {};
+    mostUsedShipsAgg.forEach(ship => {
+        if (ship._id) {
+            mostUsedShips[ship._id] = {
+                count: ship.count,
+                name: ship.name || { en: "" }
+            };
+        }
+    });
+
+    return mostUsedShips;
+}
+
+/**
+ * Get most lost ships statistics with sampling for large datasets
+ */
+async function getMostLostShips(type: StatsType, id: number, timeFilter?: { $gte: Date }) {
+    // Validate entity parameters to prevent attackers.undefined queries
+    const validation = validateEntity(type, id);
+    if (!validation.valid) {
+        console.error(`Invalid entity for most lost ships: type=${type}, id=${id}`);
+        return {};
+    }
+
+    // Use validated values
+    type = validation.type;
+    id = validation.id;
+
+    // Prepare match conditions
+    const lossMatchCondition: any = { [`victim.${type}`]: id };
+
+    if (timeFilter) {
+        lossMatchCondition.kill_time = timeFilter;
+    }
+
+    // Get all valid ship type IDs upfront (category_id = 6)
+    const shipTypes = await InvTypes.find(
+        { category_id: 6 },
+        { type_id: 1, _id: 0 }
+    ).lean();
+
+    // Create an array of valid ship type IDs
+    const validShipIds = shipTypes.map(item => item.type_id);
+
+    // Check if we need to sample (for extremely large datasets)
+    const totalLossCount = await Killmails.countDocuments(lossMatchCondition).limit(1000000);
+
+    // Define sampling rates based on data size
+    const SAMPLE_THRESHOLD = 100000;
+    const useSamplingForLosses = totalLossCount > SAMPLE_THRESHOLD;
+
+    // Limit to top 20 ships (most common)
+    const SHIP_LIMIT = 20;
+
+    // Ship loss statistics pipeline with early ship filtering
+    const lossesPipeline = [];
+
+    // Add sampling stage for large datasets
+    if (useSamplingForLosses) {
+        const sampleSize = Math.min(SAMPLE_THRESHOLD, Math.max(10000, Math.floor(totalLossCount * 0.1)));
+        lossesPipeline.push({ $sample: { size: sampleSize } });
+    } else {
+        lossesPipeline.push({ $match: lossMatchCondition });
+    }
+
+    // Add early ship filtering to losses pipeline
+    lossesPipeline.push(
+        {
+            $match: {
+                "victim.ship_id": { $in: validShipIds } // Early ship filtering
+            }
+        },
+        {
+            $group: {
+                _id: "$victim.ship_id",
+                count: { $sum: 1 },
+                name: { $first: "$victim.ship_name" }
+            }
+        },
+        { $match: { _id: { $ne: 0 } } },
+        { $sort: { count: -1 } },
+        { $limit: SHIP_LIMIT }
+    );
+
+    // Run aggregation
+    const mostLostShipsAgg = await Killmails.aggregate(lossesPipeline).allowDiskUse(true);
+
+    // Process ship loss data
+    const mostLostShips: Record<number, { count: number; name: any }> = {};
+    mostLostShipsAgg.forEach(ship => {
+        if (ship._id) {
+            mostLostShips[ship._id] = {
+                count: ship.count,
+                name: ship.name || { en: "" }
+            };
+        }
+    });
+
+    return mostLostShips;
 }
