@@ -7,6 +7,7 @@ export default {
     description: "Finds stats that need to be updated and queues them",
     schedule: "0 * * * *",
     run: async () => {
+        return;
         cliLogger.info("Updating stats");
 
         // Get current date information for frequency checks
