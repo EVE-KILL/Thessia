@@ -48,6 +48,11 @@ async function processCampaign(campaignId: string) {
             }
         );
 
+        // Log cache invalidation (cache bypass logic handles real-time updates)
+        console.log(
+            `Campaign ${campaignId} completed - cache will be refreshed on next request`
+        );
+
         console.log(`Successfully processed campaign: ${campaignId}`);
     } catch (error: any) {
         console.error(`Failed to process campaign ${campaignId}:`, error);
@@ -60,6 +65,11 @@ async function processCampaign(campaignId: string) {
                 processing_error: error.message || "Unknown error",
                 processing_completed_at: new Date(),
             }
+        );
+
+        // Log cache invalidation (cache bypass logic handles real-time updates)
+        console.log(
+            `Campaign ${campaignId} failed - cache will be refreshed on next request`
         );
 
         // Re-throw the error so the worker can handle it
@@ -128,6 +138,11 @@ async function reprocessCampaign(campaignId: string, priority = 10) {
             processing_started_at: null,
             processing_completed_at: null,
         }
+    );
+
+    // Log cache invalidation (cache bypass logic handles real-time updates)
+    console.log(
+        `Campaign ${campaignId} queued for reprocessing - cache will be refreshed on next request`
     );
 
     // Queue for processing with higher priority
