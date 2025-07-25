@@ -255,9 +255,14 @@
                         <CorporationMembers :corporation="corporation" />
                     </div>
                 </template>
+                <template #top>
+                    <div class="tab-content">
+                        <CorporationTop />
+                    </div>
+                </template>
                 <template #stats>
                     <div class="tab-content">
-                        <CorporationStats />
+                        <CorporationStats :corporation="corporation" />
                     </div>
                 </template>
                 <template #battles>
@@ -463,6 +468,12 @@ const tabItems = computed(() => [
         label: t("members"),
         icon: "i-lucide-users",
         slot: "members" as const,
+    },
+    {
+        id: "top",
+        label: t("top"),
+        icon: "i-lucide-trending-up",
+        slot: "top" as const,
     },
     {
         id: "stats",

@@ -246,9 +246,14 @@
                         <AllianceCharacterMembers :alliance="alliance" />
                     </div>
                 </template>
+                <template #top>
+                    <div class="tab-content">
+                        <AllianceTop />
+                    </div>
+                </template>
                 <template #stats>
                     <div class="tab-content">
-                        <AllianceStats />
+                        <AllianceStats :alliance="alliance" />
                     </div>
                 </template>
                 <template #battles>
@@ -477,6 +482,12 @@ const tabItems = computed(() => [
         label: t("characters"),
         icon: "i-lucide-users",
         slot: "characterMembers" as const,
+    },
+    {
+        id: "top",
+        label: t("top"),
+        icon: "i-lucide-trending-up",
+        slot: "top" as const,
     },
     {
         id: "stats",

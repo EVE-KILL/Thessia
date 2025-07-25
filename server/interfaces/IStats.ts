@@ -17,6 +17,22 @@ export interface IStatsBase {
 export interface IFullStats {
     mostUsedShips: Record<string, { count: number; name: Record<string, string> }>;
     mostLostShips: Record<string, { count: number; name: Record<string, string> }>;
+    shipGroupStats: Array<{
+        groupName: string;
+        kills: number;
+        losses: number;
+        efficiency: number;
+    }>;
+    monthlyStats: Array<{
+        year: number;
+        month: number;
+        monthLabel: string;
+        kills: number;
+        iskKilled: number;
+        losses: number;
+        iskLost: number;
+        efficiency: number;
+    }>;
     diesToCorporations: Record<string, { count: number; name: string }>;
     diesToAlliances: Record<string, { count: number; name: string }>;
     blobFactor: number;

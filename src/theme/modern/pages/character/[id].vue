@@ -358,6 +358,12 @@
                     </div>
                 </template>
 
+                <template #top>
+                    <div class="tab-content">
+                        <CharacterTop />
+                    </div>
+                </template>
+
                 <template #stats>
                     <div class="tab-content">
                         <CharacterStats />
@@ -447,6 +453,12 @@ const tabItems = [
         label: t("corporationHistory"),
         icon: "i-lucide-history",
         slot: "corporation-history" as const,
+    },
+    {
+        id: "top",
+        label: t("top"),
+        icon: "i-lucide-crown",
+        slot: "top" as const,
     },
     {
         id: "stats",

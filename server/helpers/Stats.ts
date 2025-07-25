@@ -174,6 +174,8 @@ export async function calculateAllStats(type: StatsType, id: number, days: numbe
             full: {
                 mostUsedShips: {},
                 mostLostShips: {},
+                shipGroupStats: [],
+                monthlyStats: [],
                 diesToCorporations: {},
                 diesToAlliances: {},
                 blobFactor: 0,
@@ -207,6 +209,8 @@ export async function calculateAllStats(type: StatsType, id: number, days: numbe
     const full: IFullStats = {
         mostUsedShips: {},
         mostLostShips: {},
+        shipGroupStats: [],
+        monthlyStats: [],
         diesToCorporations: {},
         diesToAlliances: {},
         blobFactor: 0,
@@ -260,11 +264,13 @@ export async function calculateAllStats(type: StatsType, id: number, days: numbe
     // Run base stats calculations in parallel for better performance
     const [
         basicStats,
-        shipStats,
+        shipGroupStats,
+        monthlyStats,
         heatMapData,
     ] = await Promise.all([
         getBasicStats(type, id, timeFilter),
-        getShipStats(type, id, timeFilter),
+        getShipGroupStats(type, id, timeFilter),
+        getMonthlyStats(type, id, timeFilter),
         getHeatMapData(type, id, timeFilter),
     ]);
 
@@ -290,12 +296,13 @@ export async function calculateAllStats(type: StatsType, id: number, days: numbe
     const lastActive = basicStats.lastActive;
 
     // Process ship stats
-    if (shipStats.mostUsedShips) {
-        full.mostUsedShips = shipStats.mostUsedShips;
+    if (shipGroupStats && shipGroupStats.length > 0) {
+        full.shipGroupStats = shipGroupStats;
     }
 
-    if (shipStats.mostLostShips) {
-        full.mostLostShips = shipStats.mostLostShips;
+    // Process monthly stats
+    if (monthlyStats && monthlyStats.length > 0) {
+        full.monthlyStats = monthlyStats;
     }
 
     // Process heat map
@@ -590,142 +597,345 @@ async function getSampledCountWithCondition(baseCondition: any, field: string, v
 }
 
 /**
- * Get ship statistics for both kills and losses
- * Optimized with sampling for extremely large datasets and early ship filtering
+ * Get ship group statistics (like the API endpoints expect)
+ * Returns kills, losses, and efficiency per ship group
  */
-async function getShipStats(type: StatsType, id: number, timeFilter?: { $gte: Date }) {
+async function getShipGroupStats(type: StatsType, id: number, timeFilter?: { $gte: Date }) {
     // Validate entity parameters to prevent attackers.undefined queries
     const validation = validateEntity(type, id);
     if (!validation.valid) {
-        console.error(`Invalid entity for ship stats: type=${type}, id=${id}`);
-        return { mostUsedShips: {}, mostLostShips: {} };
+        console.error(`Invalid entity for ship group stats: type=${type}, id=${id}`);
+        return [];
     }
 
     // Use validated values
     type = validation.type;
     id = validation.id;
 
-    // Prepare match conditions
-    const killMatchCondition: any = { [`attackers.${type}`]: id };
-    const lossMatchCondition: any = { [`victim.${type}`]: id };
+    // Map type to database field
+    const typeFieldMap: Record<string, string> = {
+        character_id: "victim.character_id",
+        corporation_id: "victim.corporation_id",
+        alliance_id: "victim.alliance_id",
+    };
 
-    if (timeFilter) {
-        killMatchCondition.kill_time = timeFilter;
-        lossMatchCondition.kill_time = timeFilter;
+    const attackerTypeFieldMap: Record<string, string> = {
+        character_id: "attackers.character_id",
+        corporation_id: "attackers.corporation_id",
+        alliance_id: "attackers.alliance_id",
+    };
+
+    try {
+        // Get all valid ship type IDs upfront (category_id = 6)
+        const shipTypes = await InvTypes.find(
+            { category_id: 6 },
+            { type_id: 1, type_name: 1, _id: 0 }
+        ).lean();
+
+        // Create maps for quick lookup
+        const shipIdToName = new Map<number, string>();
+        const validShipIds = shipTypes.map(ship => {
+            shipIdToName.set(ship.type_id, ship.type_name?.en || "Unknown Ship");
+            return ship.type_id;
+        });
+
+        // Prepare match conditions
+        const killMatchCondition: any = { [attackerTypeFieldMap[type]]: id };
+        const lossMatchCondition: any = { [typeFieldMap[type]]: id };
+
+        if (timeFilter) {
+            killMatchCondition.kill_time = timeFilter;
+            lossMatchCondition.kill_time = timeFilter;
+        }
+
+        // Aggregate ship usage from kills (where entity is attacker)
+        const killsAggregation = [
+            {
+                $match: killMatchCondition,
+            },
+            { $unwind: "$attackers" },
+            {
+                $match: {
+                    [`attackers.${type === "character_id" ? "character_id" : 
+                        type === "corporation_id" ? "corporation_id" : "alliance_id"}`]: id,
+                    "attackers.ship_id": { $in: validShipIds },
+                },
+            },
+            {
+                $group: {
+                    _id: "$attackers.ship_id",
+                    kills: { $sum: 1 },
+                },
+            },
+        ];
+
+        // Aggregate ship losses (where entity is victim)
+        const lossesAggregation = [
+            {
+                $match: {
+                    ...lossMatchCondition,
+                    "victim.ship_id": { $in: validShipIds },
+                },
+            },
+            {
+                $group: {
+                    _id: "$victim.ship_id",
+                    losses: { $sum: 1 },
+                },
+            },
+        ];
+
+        const [killResults, lossResults] = await Promise.all([
+            Killmails.aggregate(killsAggregation).allowDiskUse(true),
+            Killmails.aggregate(lossesAggregation).allowDiskUse(true),
+        ]);
+
+        // Combine results
+        const shipStatsMap = new Map<number, { groupName: string; kills: number; losses: number; efficiency: number }>();
+
+        // Process kills
+        killResults.forEach((result) => {
+            const shipId = result._id;
+            if (shipId && shipIdToName.has(shipId)) {
+                shipStatsMap.set(shipId, {
+                    groupName: shipIdToName.get(shipId)!,
+                    kills: result.kills,
+                    losses: 0,
+                    efficiency: 0,
+                });
+            }
+        });
+
+        // Process losses
+        lossResults.forEach((result) => {
+            const shipId = result._id;
+            if (shipId && shipIdToName.has(shipId)) {
+                const existing = shipStatsMap.get(shipId);
+                if (existing) {
+                    existing.losses = result.losses;
+                } else {
+                    shipStatsMap.set(shipId, {
+                        groupName: shipIdToName.get(shipId)!,
+                        kills: 0,
+                        losses: result.losses,
+                        efficiency: 0,
+                    });
+                }
+            }
+        });
+
+        // Calculate efficiency and convert to array
+        const shipGroupStats = Array.from(shipStatsMap.values()).map((stat) => {
+            const total = stat.kills + stat.losses;
+            stat.efficiency = total > 0 ? Math.round((stat.kills / total) * 100) : 0;
+            return stat;
+        });
+
+        // Sort by total activity (kills + losses) descending
+        shipGroupStats.sort((a, b) => (b.kills + b.losses) - (a.kills + a.losses));
+
+        return shipGroupStats;
+    } catch (error) {
+        console.error(`Error calculating ship group stats for ${type} ${id}:`, error);
+        return [];
+    }
+}
+
+/**
+ * Get monthly statistics for an entity
+ */
+async function getMonthlyStats(type: StatsType, id: number, timeFilter?: { $gte: Date }) {
+    // Validate entity parameters to prevent attackers.undefined queries
+    const validation = validateEntity(type, id);
+    if (!validation.valid) {
+        console.error(`Invalid entity for monthly stats: type=${type}, id=${id}`);
+        return [];
     }
 
-    // Get all valid ship type IDs upfront (category_id = 6)
-    const shipTypes = await InvTypes.find(
-        { category_id: 6 },
-        { type_id: 1, _id: 0 }
-    ).lean();
+    // Use validated values
+    type = validation.type;
+    id = validation.id;
 
-    // Create an array of valid ship type IDs
-    const validShipIds = shipTypes.map(item => item.type_id);
+    // Map type to database field
+    const typeFieldMap: Record<string, string> = {
+        character_id: "victim.character_id",
+        corporation_id: "victim.corporation_id",
+        alliance_id: "victim.alliance_id",
+    };
 
-    // Check if we need to sample (for extremely large datasets)
-    const totalKillCount = await Killmails.countDocuments(killMatchCondition).limit(1000000);
-    const totalLossCount = await Killmails.countDocuments(lossMatchCondition).limit(1000000);
+    const attackerTypeFieldMap: Record<string, string> = {
+        character_id: "attackers.character_id",
+        corporation_id: "attackers.corporation_id",
+        alliance_id: "attackers.alliance_id",
+    };
 
-    // Define sampling rates based on data size
-    const SAMPLE_THRESHOLD = 100000;
-    const useSamplingForKills = totalKillCount > SAMPLE_THRESHOLD;
-    const useSamplingForLosses = totalLossCount > SAMPLE_THRESHOLD;
-
-    // Limit to top 200 ships (most common)
-    const SHIP_LIMIT = 20;
-
-    // Ship usage statistics from kills pipeline
-    const killsPipeline = [];
-
-    // Add sampling stage for large datasets
-    if (useSamplingForKills) {
-        const sampleSize = Math.min(SAMPLE_THRESHOLD, Math.max(10000, Math.floor(totalKillCount * 0.1)));
-        killsPipeline.push({ $sample: { size: sampleSize } });
-    } else {
-        killsPipeline.push({ $match: killMatchCondition });
-    }
-
-    // Continue with the rest of the pipeline, now with early ship filtering
-    killsPipeline.push(
-        { $unwind: "$attackers" },
-        {
-            $match: {
-                [`attackers.${type}`]: id,
-                "attackers.ship_id": { $in: validShipIds } // Early ship filtering
-            }
-        },
-        {
-            $group: {
-                _id: "$attackers.ship_id",
-                count: { $sum: 1 },
-                name: { $first: "$attackers.ship_name" }
-            }
-        },
-        { $match: { _id: { $ne: 0 } } },
-        { $sort: { count: -1 } },
-        { $limit: SHIP_LIMIT }
-    );
-
-    // Ship loss statistics pipeline with early ship filtering
-    const lossesPipeline = [];
-
-    // Add sampling stage for large datasets
-    if (useSamplingForLosses) {
-        const sampleSize = Math.min(SAMPLE_THRESHOLD, Math.max(10000, Math.floor(totalLossCount * 0.1)));
-        lossesPipeline.push({ $sample: { size: sampleSize } });
-    } else {
-        lossesPipeline.push({ $match: lossMatchCondition });
-    }
-
-    // Add early ship filtering to losses pipeline
-    lossesPipeline.push(
-        {
-            $match: {
-                "victim.ship_id": { $in: validShipIds } // Early ship filtering
-            }
-        },
-        {
-            $group: {
-                _id: "$victim.ship_id",
-                count: { $sum: 1 },
-                name: { $first: "$victim.ship_name" }
-            }
-        },
-        { $match: { _id: { $ne: 0 } } },
-        { $sort: { count: -1 } },
-        { $limit: SHIP_LIMIT }
-    );
-
-    // Run aggregations in parallel
-    const [mostUsedShipsAgg, mostLostShipsAgg] = await Promise.all([
-        Killmails.aggregate(killsPipeline).allowDiskUse(true),
-        Killmails.aggregate(lossesPipeline).allowDiskUse(true)
+    // Get the earliest killmail date for this entity to determine how far back to go
+    const [earliestLoss, earliestKill] = await Promise.all([
+        Killmails.findOne({ [typeFieldMap[type]]: id })
+            .sort({ kill_time: 1 })
+            .select("kill_time")
+            .lean(),
+        Killmails.findOne({ [attackerTypeFieldMap[type]]: id })
+            .sort({ kill_time: 1 })
+            .select("kill_time")
+            .lean(),
     ]);
 
-    // Process ship usage data - no need to filter again since we did it in the pipeline
-    const mostUsedShips: Record<number, { count: number; name: any }> = {};
-    mostUsedShipsAgg.forEach(ship => {
-        if (ship._id) {
-            mostUsedShips[ship._id] = {
-                count: ship.count,
-                name: ship.name || { en: "" }
-            };
+    let earliestDate: Date | null = null;
+    if (earliestLoss && earliestKill) {
+        earliestDate = new Date(
+            Math.min(
+                earliestLoss.kill_time.getTime(),
+                earliestKill.kill_time.getTime()
+            )
+        );
+    } else if (earliestLoss) {
+        earliestDate = earliestLoss.kill_time;
+    } else if (earliestKill) {
+        earliestDate = earliestKill.kill_time;
+    }
+
+    if (!earliestDate) {
+        // No data found, return empty array
+        return [];
+    }
+
+    // Apply time filter if provided
+    const lossMatchCondition: any = { [typeFieldMap[type]]: id };
+    const killMatchCondition: any = { [attackerTypeFieldMap[type]]: id };
+
+    if (timeFilter) {
+        lossMatchCondition.kill_time = timeFilter;
+        killMatchCondition.kill_time = timeFilter;
+    }
+
+    // Aggregate losses (deaths) by month
+    const lossesAggregation = [
+        {
+            $match: lossMatchCondition,
+        },
+        {
+            $group: {
+                _id: {
+                    year: { $year: "$kill_time" },
+                    month: { $month: "$kill_time" },
+                },
+                losses: { $sum: 1 },
+                iskLost: { $sum: "$total_value" },
+            },
+        },
+    ];
+
+    // Aggregate kills (where entity is attacker) by month
+    const killsAggregation = [
+        {
+            $match: killMatchCondition,
+        },
+        {
+            $group: {
+                _id: {
+                    year: { $year: "$kill_time" },
+                    month: { $month: "$kill_time" },
+                },
+                kills: { $sum: 1 },
+                iskKilled: { $sum: "$total_value" },
+            },
+        },
+    ];
+
+    const [lossResults, killResults] = await Promise.all([
+        Killmails.aggregate(lossesAggregation).allowDiskUse(true),
+        Killmails.aggregate(killsAggregation).allowDiskUse(true),
+    ]);
+
+    // Create a map to combine results
+    const monthsMap = new Map<string, any>();
+
+    // Month names for display
+    const monthNames = [
+        "January",
+        "February",
+        "March",
+        "April",
+        "May",
+        "June",
+        "July",
+        "August",
+        "September",
+        "October",
+        "November",
+        "December",
+    ];
+
+    // Process losses
+    lossResults.forEach((result: any) => {
+        if (!result._id) return;
+
+        const year = result._id.year;
+        const month = result._id.month;
+        const key = `${year}-${month}`;
+
+        if (!monthsMap.has(key)) {
+            monthsMap.set(key, {
+                year,
+                month,
+                monthLabel: `${monthNames[month - 1]} ${year}`,
+                kills: 0,
+                iskKilled: 0,
+                losses: 0,
+                iskLost: 0,
+                efficiency: 0,
+            });
         }
+
+        const monthStat = monthsMap.get(key)!;
+        monthStat.losses = result.losses || 0;
+        monthStat.iskLost = result.iskLost || 0;
     });
 
-    // Process ship loss data - no need to filter again since we did it in the pipeline
-    const mostLostShips: Record<number, { count: number; name: any }> = {};
-    mostLostShipsAgg.forEach(ship => {
-        if (ship._id) {
-            mostLostShips[ship._id] = {
-                count: ship.count,
-                name: ship.name || { en: "" }
-            };
+    // Process kills
+    killResults.forEach((result: any) => {
+        if (!result._id) return;
+
+        const year = result._id.year;
+        const month = result._id.month;
+        const key = `${year}-${month}`;
+
+        if (!monthsMap.has(key)) {
+            monthsMap.set(key, {
+                year,
+                month,
+                monthLabel: `${monthNames[month - 1]} ${year}`,
+                kills: 0,
+                iskKilled: 0,
+                losses: 0,
+                iskLost: 0,
+                efficiency: 0,
+            });
         }
+
+        const monthStat = monthsMap.get(key)!;
+        monthStat.kills = result.kills || 0;
+        monthStat.iskKilled = result.iskKilled || 0;
     });
 
-    return { mostUsedShips, mostLostShips };
+    // Calculate efficiency and convert to array
+    const monthlyStats = Array.from(monthsMap.values()).map((stat) => {
+        const totalKills = stat.kills + stat.losses;
+        stat.efficiency =
+            totalKills > 0
+                ? Math.round((stat.kills / totalKills) * 100)
+                : 0;
+        return stat;
+    });
+
+    // Sort by year and month (newest first)
+    monthlyStats.sort((a, b) => {
+        if (a.year !== b.year) return b.year - a.year;
+        return b.month - a.month;
+    });
+
+    return monthlyStats;
 }
 
 /**
