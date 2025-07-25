@@ -34,7 +34,7 @@
         <!-- Top Section: Summary Stats -->
         <div class="mb-8">
           <!-- Summary Stats Cards -->
-          <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
             <UCard>
               <div class="text-center p-6">
                 <template v-if="isStatsLoading">
@@ -65,23 +65,6 @@
                     {{ formatIsk(stats?.iskDestroyed) }}
                   </div>
                   <div class="text-sm text-gray-500">ISK Destroyed</div>
-                </template>
-              </div>
-            </UCard>
-
-            <UCard>
-              <div class="text-center p-6">
-                <template v-if="isStatsLoading">
-                  <div class="animate-pulse">
-                    <div class="h-8 bg-gray-300 rounded mb-2"></div>
-                    <div class="h-4 bg-gray-300 rounded"></div>
-                  </div>
-                </template>
-                <template v-else>
-                  <div class="text-3xl font-bold text-purple-400">
-                    {{ stats?.totalKillmails?.toLocaleString() || '0' }}
-                  </div>
-                  <div class="text-sm text-gray-500">Total Killmails</div>
                 </template>
               </div>
             </UCard>
