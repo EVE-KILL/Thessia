@@ -295,6 +295,10 @@ async function generateAdvancedViewStats(
 
         // Process attackers
         if (killmail.attackers && Array.isArray(killmail.attackers)) {
+            // Track which corps and alliances we've already counted for this killmail
+            const countedCorporations = new Set<number>();
+            const countedAlliances = new Set<number>();
+
             killmail.attackers.forEach((attacker: any) => {
                 // Ship group stats (only for valid ship groups)
                 if (
@@ -339,11 +343,13 @@ async function generateAdvancedViewStats(
                     }
                 }
 
-                // Corporation killer stats
-                if (attacker.corporation_id && attacker.corporation_name) {
+                // Corporation killer stats (only count once per killmail per corporation)
+                if (attacker.corporation_id && attacker.corporation_name && 
+                    !countedCorporations.has(attacker.corporation_id)) {
+                    countedCorporations.add(attacker.corporation_id);
+                    
                     if (killerCorporationMap.has(attacker.corporation_id)) {
-                        killerCorporationMap.get(attacker.corporation_id)!
-                            .kills++;
+                        killerCorporationMap.get(attacker.corporation_id)!.kills++;
                     } else {
                         killerCorporationMap.set(attacker.corporation_id, {
                             corporation_name: attacker.corporation_name,
@@ -352,8 +358,11 @@ async function generateAdvancedViewStats(
                     }
                 }
 
-                // Alliance killer stats
-                if (attacker.alliance_id && attacker.alliance_name) {
+                // Alliance killer stats (only count once per killmail per alliance)
+                if (attacker.alliance_id && attacker.alliance_name && 
+                    !countedAlliances.has(attacker.alliance_id)) {
+                    countedAlliances.add(attacker.alliance_id);
+                    
                     if (killerAllianceMap.has(attacker.alliance_id)) {
                         killerAllianceMap.get(attacker.alliance_id)!.kills++;
                     } else {
