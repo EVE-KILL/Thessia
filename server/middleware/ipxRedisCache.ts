@@ -107,15 +107,7 @@ export default defineEventHandler(async (event) => {
         const buffer = captureStream.getBuffer();
 
         // Use the storage instance to set the cache with TTL
-        storage.client
-            .setex(redisKey, TTL, buffer)
-            .then(() => {
-                console.debug(`Cached image in Redis: ${reqUrl}`);
-            })
-            .catch((err) => {
-                console.error(`Error caching image in Redis: ${err}`);
-            });
-
+        storage.client.setex(redisKey, TTL, buffer);
         return originalRes;
     };
 
