@@ -331,6 +331,17 @@ onMounted(async () => {
   await loadData();
 });
 
+// Watch for route changes to reload data when filters change
+watch(() => route.query, async (newQuery, oldQuery) => {
+  // Only reload if the filters parameter actually changed
+  const newFilters = newQuery.filters || newQuery.filter;
+  const oldFilters = oldQuery?.filters || oldQuery?.filter;
+  
+  if (newFilters !== oldFilters && newFilters) {
+    await loadData();
+  }
+}, { deep: true });
+
 // Methods
 async function loadData() {
   isLoading.value = true;

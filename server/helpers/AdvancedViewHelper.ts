@@ -131,7 +131,7 @@ function normalizeQueryDates(query: Record<string, any>): Record<string, any> {
 
 /**
  * Generate advanced view statistics based on a MongoDB query.
- * Uses direct MongoDB aggregations for efficiency.
+ * Uses cursor-based iteration for database efficiency.
  *
  * @param query - The MongoDB query object to filter killmails
  * @returns An object containing the advanced view statistics
@@ -143,7 +143,7 @@ async function generateAdvancedViewStats(
     const normalizedQuery = normalizeQueryDates(query);
 
     console.log(
-        `Advanced view stats - Generating statistics with direct aggregations`
+        `Advanced view stats - Generating statistics with cursor iteration`
     );
 
     // Initialize statistics
@@ -165,353 +165,234 @@ async function generateAdvancedViewStats(
     // Get valid ship group IDs (category_id = 6, published = true)
     const validShipGroupIds = await getValidShipGroupIds();
 
-    // Get all statistics using direct MongoDB aggregations in parallel
-    const [
-        basicStats,
-        shipGroupStats,
-        topKillers,
-        topVictims,
-        topDamageDealers,
-        topKillersCorporations,
-        topKillersAlliances,
-        mostValuableKills,
-    ] = await Promise.all([
-        // Basic stats (total count, total kills, ISK destroyed)
-        (async () => {
-            try {
-                const [countResult, aggregateResult] = await Promise.all([
-                    Killmails.countDocuments(normalizedQuery).maxTimeMS(30000),
-                    Killmails.aggregate([
-                        { $match: normalizedQuery },
-                        {
-                            $group: {
-                                _id: null,
-                                totalKills: { $sum: 1 },
-                                iskDestroyed: { $sum: "$total_value" },
-                            },
-                        },
-                    ] as any[]),
-                ]);
+    // Maps to collect aggregated data
+    const shipGroupMap = new Map<number, { ship_group_name: string | any; killed: number }>();
+    const killerCharacterMap = new Map<number, { character_name: string; kills: number }>();
+    const victimCharacterMap = new Map<number, { character_name: string; losses: number }>();
+    const damageCharacterMap = new Map<number, { character_name: string; totalDamageValue: number; killCount: number }>();
+    const killerCorporationMap = new Map<number, { corporation_name: string; kills: number }>();
+    const killerAllianceMap = new Map<number, { alliance_name: string; kills: number }>();
+    const mostValuableList: Array<{
+        killmail_id: number;
+        total_value: number;
+        victim: any;
+        final_blow?: any;
+    }> = [];
 
-                return {
-                    totalKillmails: countResult,
-                    totalKills:
-                        aggregateResult.length > 0
-                            ? aggregateResult[0].totalKills
-                            : 0,
-                    iskDestroyed:
-                        aggregateResult.length > 0
-                            ? aggregateResult[0].iskDestroyed
-                            : 0,
-                };
-            } catch (error) {
-                console.warn("Could not get basic stats, using defaults");
-                return { totalKillmails: 0, totalKills: 0, iskDestroyed: 0 };
+    // Use cursor to iterate through killmails
+    const cursor = Killmails.find(normalizedQuery)
+        .select({
+            killmail_id: 1,
+            total_value: 1,
+            victim: 1,
+            attackers: 1,
+        })
+        .lean()
+        .cursor();
+
+    let processedCount = 0;
+    let totalIskDestroyed = 0;
+
+    await cursor.eachAsync((killmail: any) => {
+        processedCount++;
+        totalIskDestroyed += killmail.total_value || 0;
+
+        // Track victim for character losses
+        if (killmail.victim?.character_id && killmail.victim?.character_name) {
+            const victimId = killmail.victim.character_id;
+            if (victimCharacterMap.has(victimId)) {
+                victimCharacterMap.get(victimId)!.losses++;
+            } else {
+                victimCharacterMap.set(victimId, {
+                    character_name: killmail.victim.character_name,
+                    losses: 1,
+                });
             }
-        })(),
+        }
 
-        // Ship group stats
-        (async () => {
-            const pipeline = [
-                { $match: normalizedQuery },
-                { $unwind: "$attackers" },
-                {
-                    $match: {
-                        "attackers.ship_group_id": {
-                            $in: Array.from(validShipGroupIds),
-                        },
-                    },
-                },
-                {
-                    $group: {
-                        _id: "$attackers.ship_group_id",
-                        ship_group_name: {
-                            $first: "$attackers.ship_group_name",
-                        },
-                        killed: { $sum: 1 },
-                    },
-                },
-                {
-                    $project: {
-                        ship_group_id: "$_id",
-                        ship_group_name: 1,
-                        killed: 1,
-                        _id: 0,
-                    },
-                },
-            ] as any[];
-            return await Killmails.aggregate(pipeline);
-        })(),
-
-        // Top killers by character
-        (async () => {
-            const pipeline = [
-                { $match: normalizedQuery },
-                { $unwind: "$attackers" },
-                {
-                    $match: {
-                        "attackers.character_id": { $exists: true, $ne: null },
-                        "attackers.character_name": {
-                            $exists: true,
-                            $ne: null,
-                        },
-                    },
-                },
-                {
-                    $group: {
-                        _id: "$attackers.character_id",
-                        character_name: { $first: "$attackers.character_name" },
-                        kills: { $sum: 1 },
-                    },
-                },
-                { $sort: { kills: -1 } },
-                { $limit: 10 },
-                {
-                    $project: {
-                        character_id: "$_id",
-                        character_name: 1,
-                        kills: 1,
-                        _id: 0,
-                    },
-                },
-            ] as any[];
-            return await Killmails.aggregate(pipeline);
-        })(),
-
-        // Top victims by character
-        (async () => {
-            const pipeline = [
-                { $match: normalizedQuery },
-                {
-                    $match: {
-                        "victim.character_id": { $exists: true, $ne: null },
-                        "victim.character_name": { $exists: true, $ne: null },
-                    },
-                },
-                {
-                    $group: {
-                        _id: "$victim.character_id",
-                        character_name: { $first: "$victim.character_name" },
-                        losses: { $sum: 1 },
-                    },
-                },
-                { $sort: { losses: -1 } },
-                { $limit: 10 },
-                {
-                    $project: {
-                        character_id: "$_id",
-                        character_name: 1,
-                        losses: 1,
-                        _id: 0,
-                    },
-                },
-            ] as any[];
-            return await Killmails.aggregate(pipeline);
-        })(),
-
-        // Top damage dealers by character (using total_value as damage proxy)
-        (async () => {
-            const pipeline = [
-                { $match: normalizedQuery },
-                { $unwind: "$attackers" },
-                {
-                    $match: {
-                        "attackers.character_id": { $exists: true, $ne: null },
-                        "attackers.character_name": {
-                            $exists: true,
-                            $ne: null,
-                        },
-                    },
-                },
-                {
-                    $group: {
-                        _id: "$attackers.character_id",
-                        character_name: { $first: "$attackers.character_name" },
-                        totalDamageValue: { $sum: "$total_value" },
-                        killCount: { $sum: 1 },
-                    },
-                },
-                {
-                    $project: {
-                        character_id: "$_id",
-                        character_name: 1,
-                        damageDone: {
-                            $divide: ["$totalDamageValue", "$killCount"],
-                        }, // Average damage per kill
-                        _id: 0,
-                    },
-                },
-                { $sort: { damageDone: -1 } },
-                { $limit: 10 },
-            ] as any[];
-            return await Killmails.aggregate(pipeline);
-        })(),
-
-        // Top killers by corporation
-        (async () => {
-            const pipeline = [
-                { $match: normalizedQuery },
-                { $unwind: "$attackers" },
-                {
-                    $match: {
-                        "attackers.corporation_id": {
-                            $exists: true,
-                            $ne: null,
-                        },
-                        "attackers.corporation_name": {
-                            $exists: true,
-                            $ne: null,
-                        },
-                    },
-                },
-                {
-                    $group: {
-                        _id: "$attackers.corporation_id",
-                        corporation_name: {
-                            $first: "$attackers.corporation_name",
-                        },
-                        kills: { $sum: 1 },
-                    },
-                },
-                { $sort: { kills: -1 } },
-                { $limit: 10 },
-                {
-                    $project: {
-                        corporation_id: "$_id",
-                        corporation_name: 1,
-                        kills: 1,
-                        _id: 0,
-                    },
-                },
-            ] as any[];
-            return await Killmails.aggregate(pipeline);
-        })(),
-
-        // Top killers by alliance
-        (async () => {
-            const pipeline = [
-                { $match: normalizedQuery },
-                { $unwind: "$attackers" },
-                {
-                    $match: {
-                        "attackers.alliance_id": { $exists: true, $ne: null },
-                        "attackers.alliance_name": { $exists: true, $ne: null },
-                    },
-                },
-                {
-                    $group: {
-                        _id: "$attackers.alliance_id",
-                        alliance_name: { $first: "$attackers.alliance_name" },
-                        kills: { $sum: 1 },
-                    },
-                },
-                { $sort: { kills: -1 } },
-                { $limit: 10 },
-                {
-                    $project: {
-                        alliance_id: "$_id",
-                        alliance_name: 1,
-                        kills: 1,
-                        _id: 0,
-                    },
-                },
-            ] as any[];
-            return await Killmails.aggregate(pipeline);
-        })(),
-
-        // Most valuable kills
-        (async () => {
-            const pipeline = [
-                { $match: normalizedQuery },
-                { $sort: { total_value: -1 } },
-                { $limit: 10 },
-                {
-                    $project: {
-                        killmail_id: 1,
-                        total_value: 1,
-                        victim: 1,
-                        attackers: {
-                            $filter: {
-                                input: "$attackers",
-                                cond: { $eq: ["$$this.final_blow", true] },
-                            },
-                        },
-                        _id: 0,
-                    },
-                },
-                {
-                    $addFields: {
-                        final_blow: { $arrayElemAt: ["$attackers", 0] },
-                    },
-                },
-                {
-                    $project: {
-                        killmail_id: 1,
-                        total_value: 1,
-                        "victim.ship_id": 1,
-                        "victim.ship_name": 1,
-                        "victim.character_id": 1,
-                        "victim.character_name": 1,
-                        "victim.corporation_id": 1,
-                        "victim.corporation_name": 1,
-                        "victim.alliance_id": 1,
-                        "victim.alliance_name": 1,
-                        "final_blow.character_id": 1,
-                        "final_blow.character_name": 1,
-                        "final_blow.ship_id": 1,
-                        "final_blow.ship_name": 1,
-                    },
-                },
-            ] as any[];
-            const results = await Killmails.aggregate(pipeline);
-            return results.map((km: any) => ({
-                killmail_id: km.killmail_id,
-                total_value: km.total_value,
+        // Track most valuable kills (keep top 10)
+        if (mostValuableList.length < 10) {
+            const finalBlow = killmail.attackers?.find((attacker: any) => attacker.final_blow);
+            mostValuableList.push({
+                killmail_id: killmail.killmail_id,
+                total_value: killmail.total_value,
                 victim: {
-                    ship_id: km.victim?.ship_id || 0,
-                    ship_name: km.victim?.ship_name || "Unknown",
-                    character_id: km.victim?.character_id,
-                    character_name: km.victim?.character_name,
-                    corporation_id: km.victim?.corporation_id,
-                    corporation_name: km.victim?.corporation_name,
-                    alliance_id: km.victim?.alliance_id,
-                    alliance_name: km.victim?.alliance_name,
+                    ship_id: killmail.victim?.ship_id || 0,
+                    ship_name: killmail.victim?.ship_name || "Unknown",
+                    character_id: killmail.victim?.character_id,
+                    character_name: killmail.victim?.character_name,
+                    corporation_id: killmail.victim?.corporation_id,
+                    corporation_name: killmail.victim?.corporation_name,
+                    alliance_id: killmail.victim?.alliance_id,
+                    alliance_name: killmail.victim?.alliance_name,
                 },
-                final_blow: km.final_blow
-                    ? {
-                          character_id: km.final_blow.character_id,
-                          character_name: km.final_blow.character_name,
-                          ship_id: km.final_blow.ship_id || 0,
-                          ship_name: km.final_blow.ship_name || "Unknown",
-                      }
-                    : undefined,
-            }));
-        })(),
-    ]);
+                final_blow: finalBlow ? {
+                    character_id: finalBlow.character_id,
+                    character_name: finalBlow.character_name,
+                    ship_id: finalBlow.ship_id || 0,
+                    ship_name: finalBlow.ship_name || "Unknown",
+                } : undefined,
+            });
+            // Sort to keep highest value at top
+            mostValuableList.sort((a, b) => (b.total_value || 0) - (a.total_value || 0));
+        } else if ((killmail.total_value || 0) > (mostValuableList[9].total_value || 0)) {
+            // Replace lowest value kill
+            const finalBlow = killmail.attackers?.find((attacker: any) => attacker.final_blow);
+            mostValuableList[9] = {
+                killmail_id: killmail.killmail_id,
+                total_value: killmail.total_value,
+                victim: {
+                    ship_id: killmail.victim?.ship_id || 0,
+                    ship_name: killmail.victim?.ship_name || "Unknown",
+                    character_id: killmail.victim?.character_id,
+                    character_name: killmail.victim?.character_name,
+                    corporation_id: killmail.victim?.corporation_id,
+                    corporation_name: killmail.victim?.corporation_name,
+                    alliance_id: killmail.victim?.alliance_id,
+                    alliance_name: killmail.victim?.alliance_name,
+                },
+                final_blow: finalBlow ? {
+                    character_id: finalBlow.character_id,
+                    character_name: finalBlow.character_name,
+                    ship_id: finalBlow.ship_id || 0,
+                    ship_name: finalBlow.ship_name || "Unknown",
+                } : undefined,
+            };
+            mostValuableList.sort((a, b) => (b.total_value || 0) - (a.total_value || 0));
+        }
 
-    // Set final stats from the aggregation results
-    stats.totalKillmails = basicStats.totalKillmails;
-    stats.totalKills = basicStats.totalKills;
-    stats.iskDestroyed = basicStats.iskDestroyed;
-    stats.shipGroupStats = shipGroupStats;
-    stats.topKillersByCharacter = topKillers;
-    stats.topVictimsByCharacter = topVictims;
-    stats.topDamageDealersByCharacter = topDamageDealers;
-    stats.topKillersByCorporation = topKillersCorporations;
-    stats.topKillersByAlliance = topKillersAlliances;
-    stats.mostValuableKills = mostValuableKills;
+        // Process attackers
+        if (killmail.attackers && Array.isArray(killmail.attackers)) {
+            killmail.attackers.forEach((attacker: any) => {
+                // Ship group stats (only for valid ship groups)
+                if (attacker.ship_group_id && validShipGroupIds.has(attacker.ship_group_id)) {
+                    if (shipGroupMap.has(attacker.ship_group_id)) {
+                        shipGroupMap.get(attacker.ship_group_id)!.killed++;
+                    } else {
+                        shipGroupMap.set(attacker.ship_group_id, {
+                            ship_group_name: attacker.ship_group_name || "Unknown",
+                            killed: 1,
+                        });
+                    }
+                }
+
+                // Character killer stats
+                if (attacker.character_id && attacker.character_name) {
+                    if (killerCharacterMap.has(attacker.character_id)) {
+                        killerCharacterMap.get(attacker.character_id)!.kills++;
+                    } else {
+                        killerCharacterMap.set(attacker.character_id, {
+                            character_name: attacker.character_name,
+                            kills: 1,
+                        });
+                    }
+
+                    // Character damage stats (using total_value as proxy)
+                    if (damageCharacterMap.has(attacker.character_id)) {
+                        const entry = damageCharacterMap.get(attacker.character_id)!;
+                        entry.totalDamageValue += killmail.total_value || 0;
+                        entry.killCount++;
+                    } else {
+                        damageCharacterMap.set(attacker.character_id, {
+                            character_name: attacker.character_name,
+                            totalDamageValue: killmail.total_value || 0,
+                            killCount: 1,
+                        });
+                    }
+                }
+
+                // Corporation killer stats
+                if (attacker.corporation_id && attacker.corporation_name) {
+                    if (killerCorporationMap.has(attacker.corporation_id)) {
+                        killerCorporationMap.get(attacker.corporation_id)!.kills++;
+                    } else {
+                        killerCorporationMap.set(attacker.corporation_id, {
+                            corporation_name: attacker.corporation_name,
+                            kills: 1,
+                        });
+                    }
+                }
+
+                // Alliance killer stats
+                if (attacker.alliance_id && attacker.alliance_name) {
+                    if (killerAllianceMap.has(attacker.alliance_id)) {
+                        killerAllianceMap.get(attacker.alliance_id)!.kills++;
+                    } else {
+                        killerAllianceMap.set(attacker.alliance_id, {
+                            alliance_name: attacker.alliance_name,
+                            kills: 1,
+                        });
+                    }
+                }
+            });
+        }
+    });
+
+    // Convert maps to sorted arrays and take top 10
+    stats.shipGroupStats = Array.from(shipGroupMap.entries())
+        .map(([ship_group_id, data]) => ({
+            ship_group_id,
+            ship_group_name: data.ship_group_name,
+            killed: data.killed,
+        }))
+        .sort((a, b) => b.killed - a.killed);
+
+    stats.topKillersByCharacter = Array.from(killerCharacterMap.entries())
+        .map(([character_id, data]) => ({
+            character_id,
+            character_name: data.character_name,
+            kills: data.kills,
+        }))
+        .sort((a, b) => b.kills - a.kills)
+        .slice(0, 10);
+
+    stats.topVictimsByCharacter = Array.from(victimCharacterMap.entries())
+        .map(([character_id, data]) => ({
+            character_id,
+            character_name: data.character_name,
+            losses: data.losses,
+        }))
+        .sort((a, b) => b.losses - a.losses)
+        .slice(0, 10);
+
+    stats.topDamageDealersByCharacter = Array.from(damageCharacterMap.entries())
+        .map(([character_id, data]) => ({
+            character_id,
+            character_name: data.character_name,
+            damageDone: Math.round(data.totalDamageValue / data.killCount), // Average damage per kill
+        }))
+        .sort((a, b) => b.damageDone - a.damageDone)
+        .slice(0, 10);
+
+    stats.topKillersByCorporation = Array.from(killerCorporationMap.entries())
+        .map(([corporation_id, data]) => ({
+            corporation_id,
+            corporation_name: data.corporation_name,
+            kills: data.kills,
+        }))
+        .sort((a, b) => b.kills - a.kills)
+        .slice(0, 10);
+
+    stats.topKillersByAlliance = Array.from(killerAllianceMap.entries())
+        .map(([alliance_id, data]) => ({
+            alliance_id,
+            alliance_name: data.alliance_name,
+            kills: data.kills,
+        }))
+        .sort((a, b) => b.kills - a.kills)
+        .slice(0, 10);
+
+    stats.mostValuableKills = mostValuableList;
+
+    // Set basic stats
+    stats.totalKillmails = processedCount;
+    stats.totalKills = processedCount;
+    stats.iskDestroyed = totalIskDestroyed;
 
     // Debug: Log final array sizes
     console.log(
-        `Final stats: totalKills=${stats.totalKills}, shipGroups=${shipGroupStats.length}, topKillers=${topKillers.length}, topVictims=${topVictims.length}, topDamage=${topDamageDealers.length}, topCorps=${topKillersCorporations.length}, topAlliances=${topKillersAlliances.length}, mostValuable=${mostValuableKills.length}`
+        `Cursor processed ${processedCount} killmails. Final stats: totalKills=${stats.totalKills}, shipGroups=${stats.shipGroupStats.length}, topKillers=${stats.topKillersByCharacter.length}, topVictims=${stats.topVictimsByCharacter.length}, topDamage=${stats.topDamageDealersByCharacter.length}, topCorps=${stats.topKillersByCorporation.length}, topAlliances=${stats.topKillersByAlliance.length}, mostValuable=${stats.mostValuableKills.length}`
     );
-
-    if (topKillers.length > 0) {
-        console.log(`Sample top killer:`, topKillers[0]);
-    }
-    if (shipGroupStats.length > 0) {
-        console.log(`Sample ship group:`, shipGroupStats[0]);
-    }
 
     return stats;
 }
