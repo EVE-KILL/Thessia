@@ -8,25 +8,23 @@
                 <div class="w-[43%] flex items-center">{{ t('historicalStats.entity') }}</div>
                 <div class="w-[50%] grid" :class="getColumnsClass()">
                     <!-- Member count header -->
-                    <div v-if="props.showMemberCount" class="text-right">
+                    <div v-if="shouldShowColumnOnMobile.memberCount" class="text-right">
                         {{ t('historicalStats.members') }}
                     </div>
 
                     <!-- Change headers -->
-                    <template v-if="props.showChanges">
-                        <div class="text-right">{{ t('historicalStats.change1d') }}</div>
-                        <div v-if="showDetailedChanges" class="text-right">{{ t('historicalStats.change7d') }}</div>
-                        <div v-if="showDetailedChanges" class="text-right">{{ t('historicalStats.change14d') }}</div>
-                        <div v-if="showDetailedChanges" class="text-right">{{ t('historicalStats.change30d') }}</div>
-                    </template>
+                    <div v-if="shouldShowColumnOnMobile.change1d" class="text-right">{{ t('historicalStats.change1d') }}</div>
+                    <div v-if="shouldShowColumnOnMobile.change7d" class="text-right">{{ t('historicalStats.change7d') }}</div>
+                    <div v-if="shouldShowColumnOnMobile.change14d" class="text-right">{{ t('historicalStats.change14d') }}</div>
+                    <div v-if="shouldShowColumnOnMobile.change30d" class="text-right">{{ t('historicalStats.change30d') }}</div>
 
                     <!-- Security status header -->
-                    <div v-if="props.showSecStatus" class="text-right">
+                    <div v-if="shouldShowColumnOnMobile.secStatus" class="text-right">
                         {{ t('historicalStats.secStatus') }}
                     </div>
 
                     <!-- Date founded header -->
-                    <div v-if="props.showDateFounded" class="text-right">
+                    <div v-if="shouldShowColumnOnMobile.dateFounded" class="text-right">
                         {{ t('historicalStats.founded') }}
                     </div>
                 </div>
@@ -42,15 +40,13 @@
                         <div class="h-4 w-32 bg-gray-700 rounded animate-pulse"></div>
                     </div>
                     <div class="w-[50%] grid" :class="getColumnsClass()">
-                        <div v-if="props.showMemberCount" class="h-4 bg-gray-700 rounded animate-pulse"></div>
-                        <template v-if="props.showChanges">
-                            <div class="h-4 bg-gray-700 rounded animate-pulse"></div>
-                            <div v-if="showDetailedChanges" class="h-4 bg-gray-700 rounded animate-pulse"></div>
-                            <div v-if="showDetailedChanges" class="h-4 bg-gray-700 rounded animate-pulse"></div>
-                            <div v-if="showDetailedChanges" class="h-4 bg-gray-700 rounded animate-pulse"></div>
-                        </template>
-                        <div v-if="props.showSecStatus" class="h-4 bg-gray-700 rounded animate-pulse"></div>
-                        <div v-if="props.showDateFounded" class="h-4 bg-gray-700 rounded animate-pulse"></div>
+                        <div v-if="shouldShowColumnOnMobile.memberCount" class="h-4 bg-gray-700 rounded animate-pulse"></div>
+                        <div v-if="shouldShowColumnOnMobile.change1d" class="h-4 bg-gray-700 rounded animate-pulse"></div>
+                        <div v-if="shouldShowColumnOnMobile.change7d" class="h-4 bg-gray-700 rounded animate-pulse"></div>
+                        <div v-if="shouldShowColumnOnMobile.change14d" class="h-4 bg-gray-700 rounded animate-pulse"></div>
+                        <div v-if="shouldShowColumnOnMobile.change30d" class="h-4 bg-gray-700 rounded animate-pulse"></div>
+                        <div v-if="shouldShowColumnOnMobile.secStatus" class="h-4 bg-gray-700 rounded animate-pulse"></div>
+                        <div v-if="shouldShowColumnOnMobile.dateFounded" class="h-4 bg-gray-700 rounded animate-pulse"></div>
                     </div>
                 </div>
             </div>
@@ -79,34 +75,32 @@
                     </div>
                     <div class="w-[50%] grid" :class="getColumnsClass()">
                         <!-- Member count -->
-                        <div v-if="props.showMemberCount" class="text-right">
+                        <div v-if="shouldShowColumnOnMobile.memberCount" class="text-right">
                             {{ formatNumber(item.member_count) }}
                         </div>
 
                         <!-- Changes -->
-                        <template v-if="props.showChanges">
-                            <div :class="getChangeClass(item.change_1d)" class="text-right">
-                                {{ formatChange(item.change_1d) }}
-                            </div>
-                            <div v-if="showDetailedChanges" :class="getChangeClass(item.change_7d)" class="text-right">
-                                {{ formatChange(item.change_7d) }}
-                            </div>
-                            <div v-if="showDetailedChanges" :class="getChangeClass(item.change_14d)" class="text-right">
-                                {{ formatChange(item.change_14d) }}
-                            </div>
-                            <div v-if="showDetailedChanges" :class="getChangeClass(item.change_30d)" class="text-right">
-                                {{ formatChange(item.change_30d) }}
-                            </div>
-                        </template>
+                        <div v-if="shouldShowColumnOnMobile.change1d" :class="getChangeClass(item.change_1d)" class="text-right">
+                            {{ formatChange(item.change_1d) }}
+                        </div>
+                        <div v-if="shouldShowColumnOnMobile.change7d" :class="getChangeClass(item.change_7d)" class="text-right">
+                            {{ formatChange(item.change_7d) }}
+                        </div>
+                        <div v-if="shouldShowColumnOnMobile.change14d" :class="getChangeClass(item.change_14d)" class="text-right">
+                            {{ formatChange(item.change_14d) }}
+                        </div>
+                        <div v-if="shouldShowColumnOnMobile.change30d" :class="getChangeClass(item.change_30d)" class="text-right">
+                            {{ formatChange(item.change_30d) }}
+                        </div>
 
                         <!-- Security status -->
-                        <div v-if="props.showSecStatus" :class="getSecStatusClass(item.avg_sec_status)"
+                        <div v-if="shouldShowColumnOnMobile.secStatus" :class="getSecStatusClass(item.avg_sec_status)"
                             class="text-right">
                             {{ formatSecStatus(item.avg_sec_status) }}
                         </div>
 
                         <!-- Date founded -->
-                        <div v-if="props.showDateFounded" class="text-right">
+                        <div v-if="shouldShowColumnOnMobile.dateFounded" class="text-right">
                             {{ formatDate(item.date_founded) }}
                         </div>
                     </div>
@@ -118,7 +112,7 @@
 
 <script setup lang="ts">
 import { format } from 'date-fns';
-import { computed, onMounted } from 'vue';
+import { computed, onMounted, onUnmounted, ref } from 'vue';
 import { useI18n } from 'vue-i18n';
 
 interface IStatEntity {
@@ -157,8 +151,94 @@ const props = defineProps({
 
 const { t } = useI18n();
 
+// Mobile detection
+const isMobile = ref(false);
+
+// Check if we're on mobile
+const checkMobile = () => {
+    if (typeof window !== 'undefined') {
+        isMobile.value = window.innerWidth < 768; // md breakpoint
+    }
+};
+
+onMounted(() => {
+    checkMobile();
+    if (typeof window !== 'undefined') {
+        window.addEventListener('resize', checkMobile);
+    }
+    refresh();
+});
+
+onUnmounted(() => {
+    if (typeof window !== 'undefined') {
+        window.removeEventListener('resize', checkMobile);
+    }
+});
+
+// Mobile column visibility logic
+const shouldShowColumnOnMobile = computed(() => {
+    if (!isMobile.value) {
+        // On desktop, show all columns as configured by props
+        return {
+            memberCount: props.showMemberCount,
+            change1d: props.showChanges,
+            change7d: props.showChanges && showDetailedChanges.value,
+            change14d: props.showChanges && showDetailedChanges.value,
+            change30d: props.showChanges && showDetailedChanges.value,
+            secStatus: props.showSecStatus,
+            dateFounded: props.showDateFounded,
+        };
+    }
+
+    // On mobile, show only relevant columns based on list type
+    const mobileColumns = {
+        memberCount: false,
+        change1d: false,
+        change7d: false,
+        change14d: false,
+        change30d: false,
+        secStatus: false,
+        dateFounded: false,
+    };
+
+    switch (props.listType) {
+        case 'largest':
+            // For largest, show only member count
+            mobileColumns.memberCount = props.showMemberCount;
+            break;
+        case 'most_pirate':
+        case 'most_carebear':
+            // For security rankings, show only sec status
+            mobileColumns.secStatus = props.showSecStatus;
+            break;
+        case 'newest':
+            // For newest, show only founded date
+            mobileColumns.dateFounded = props.showDateFounded;
+            break;
+        case 'growing':
+        case 'shrinking':
+            // For growing/shrinking, show only the relevant period
+            if (props.period === '1d') {
+                mobileColumns.change1d = props.showChanges;
+            } else if (props.period === '7d') {
+                mobileColumns.change7d = props.showChanges;
+            } else if (props.period === '14d') {
+                mobileColumns.change14d = props.showChanges;
+            } else if (props.period === '30d') {
+                mobileColumns.change30d = props.showChanges;
+            }
+            break;
+    }
+
+    return mobileColumns;
+});
+
 const showDetailedChanges = computed(() => {
-    // Only show detailed changes for growing/shrinking lists
+    // Only show detailed changes for growing/shrinking lists and largest on desktop
+    if (isMobile.value) {
+        // On mobile, detailed changes are handled by shouldShowColumnOnMobile
+        return false;
+    }
     return props.showChanges &&
         (props.listType === 'growing' || props.listType === 'shrinking' || props.listType === 'largest');
 });
@@ -166,13 +246,16 @@ const showDetailedChanges = computed(() => {
 // Calculate number of columns to determine grid layout
 const columnCount = computed(() => {
     let count = 0;
-    if (props.showMemberCount) count++;
-    if (props.showChanges) {
-        count++; // 1d change
-        if (showDetailedChanges.value) count += 3; // 7d, 14d, 30d changes
-    }
-    if (props.showSecStatus) count++;
-    if (props.showDateFounded) count++;
+    const columns = shouldShowColumnOnMobile.value;
+
+    if (columns.memberCount) count++;
+    if (columns.change1d) count++;
+    if (columns.change7d) count++;
+    if (columns.change14d) count++;
+    if (columns.change30d) count++;
+    if (columns.secStatus) count++;
+    if (columns.dateFounded) count++;
+
     return count;
 });
 
@@ -215,8 +298,11 @@ const {
     key: `historicalStats-${props.entityType}-${props.listType}-${props.period}-${props.limit}-${props.title}-${props.sort}`,
 });
 
-// Refresh on mount to ensure we have the latest data
 onMounted(() => {
+    checkMobile();
+    if (typeof window !== 'undefined') {
+        window.addEventListener('resize', checkMobile);
+    }
     refresh();
 });
 
