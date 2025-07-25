@@ -1,5 +1,5 @@
-import { Schema, model, type Document } from 'mongoose';
-import type { IFullStats, StatsType } from '~/server/interfaces/IStats';
+import { Schema, model, type Document } from "mongoose";
+import type { IFullStats, StatsType } from "~/server/interfaces/IStats";
 
 export interface IStatsDocument extends Document {
     type: StatsType;
@@ -18,47 +18,78 @@ export interface IStatsDocument extends Document {
     needsUpdate?: boolean; // Added new field
 }
 
-const FullStatsSchema = new Schema<IFullStats>({
-    mostUsedShips: { type: Schema.Types.Mixed, default: {} },
-    mostLostShips: { type: Schema.Types.Mixed, default: {} },
-    diesToCorporations: { type: Schema.Types.Mixed, default: {} },
-    diesToAlliances: { type: Schema.Types.Mixed, default: {} },
-    blobFactor: Number,
-    heatMap: { type: Schema.Types.Mixed, default: {} },
-    fliesWithCorporations: { type: Schema.Types.Mixed, default: {} },
-    fliesWithAlliances: { type: Schema.Types.Mixed, default: {} },
-    sameShipAsOtherAttackers: Number,
-    possibleFC: Boolean,
-    possibleCynoAlt: Boolean,
-}, { _id: false });
-
-const StatsSchema = new Schema<IStatsDocument>({
-    type: { type: String, required: true, enum: ['character_id', 'corporation_id', 'alliance_id'] },
-    id: { type: Number, required: true },
-    days: { type: Number, required: true },
-    kills: Number,
-    losses: Number,
-    iskKilled: Number,
-    iskLost: Number,
-    npcLosses: Number,
-    soloKills: Number,
-    soloLosses: Number,
-    lastActive: Date,
-    full: { type: FullStatsSchema, required: true },
-    updatedAt: { type: Date, default: Date.now },
-    needsUpdate: { type: Boolean, default: false }, // Added new field to schema
-}, {
-    collection: 'stats',
-    timestamps: true,
-    toJSON: {
-        transform: (_doc, ret) => {
-            delete ret._id;
-            delete ret.__v;
-        },
+const FullStatsSchema = new Schema<IFullStats>(
+    {
+        mostUsedShips: { type: Schema.Types.Mixed, default: {} },
+        mostLostShips: { type: Schema.Types.Mixed, default: {} },
+        shipGroupStats: [
+            {
+                groupName: String,
+                kills: Number,
+                losses: Number,
+                efficiency: Number,
+            }
+        ],
+        monthlyStats: [
+            {
+                year: Number,
+                month: Number,
+                monthLabel: String,
+                kills: Number,
+                iskKilled: Number,
+                losses: Number,
+                iskLost: Number,
+                efficiency: Number,
+            }
+        ],
+        diesToCorporations: { type: Schema.Types.Mixed, default: {} },
+        diesToAlliances: { type: Schema.Types.Mixed, default: {} },
+        blobFactor: Number,
+        heatMap: { type: Schema.Types.Mixed, default: {} },
+        fliesWithCorporations: { type: Schema.Types.Mixed, default: {} },
+        fliesWithAlliances: { type: Schema.Types.Mixed, default: {} },
+        sameShipAsOtherAttackers: Number,
+        possibleFC: Boolean,
+        possibleCynoAlt: Boolean,
     },
-});
+    { _id: false }
+);
+
+const StatsSchema = new Schema<IStatsDocument>(
+    {
+        type: {
+            type: String,
+            required: true,
+            enum: ["character_id", "corporation_id", "alliance_id"],
+        },
+        id: { type: Number, required: true },
+        days: { type: Number, required: true },
+        kills: Number,
+        losses: Number,
+        iskKilled: Number,
+        iskLost: Number,
+        npcLosses: Number,
+        soloKills: Number,
+        soloLosses: Number,
+        lastActive: Date,
+        full: { type: FullStatsSchema, required: true },
+        updatedAt: { type: Date, default: Date.now },
+        needsUpdate: { type: Boolean, default: false }, // Added new field to schema
+    },
+    {
+        collection: "stats",
+        timestamps: true,
+        toJSON: {
+            transform: (_doc, ret) => {
+                delete ret._id;
+                delete ret.__v;
+            },
+        },
+    }
+);
 
 StatsSchema.index({ type: 1, id: 1, days: 1 }, { unique: true });
+StatsSchema.index({ needsUpdate: 1, days: 1 });
 
-const StatsModel = model<IStatsDocument>('stats', StatsSchema, 'stats');
+const StatsModel = model<IStatsDocument>("stats", StatsSchema, "stats");
 export { StatsModel as Stats };

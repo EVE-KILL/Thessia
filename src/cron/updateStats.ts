@@ -1,6 +1,7 @@
 import { cliLogger } from "~/server/helpers/Logger";
 import { Stats } from "~/server/models/Stats";
-import { addStatsJob } from "~/server/queue/Stats";
+import { addBulkStatsJobs } from "~/server/queue/Stats";
+import type { StatsType } from "~/server/interfaces/IStats";
 
 export default {
     name: "updateStats",
@@ -32,6 +33,12 @@ export default {
 
         // Track queued jobs
         let queuedCount = 0;
+        const bulkJobs: Array<{
+            entityType: StatsType;
+            entityId: number;
+            days: number;
+            priority: number;
+        }> = [];
 
         for (const stat of statsToUpdate) {
             // Determine if this stat should be updated based on frequency rules
@@ -71,10 +78,15 @@ export default {
             }
 
             if (shouldUpdate) {
-                // Queue jobs for all stat periods (0, 14, 30, 90 days)
+                // Prepare jobs for all stat periods (0, 14, 30, 90 days)
                 const statPeriods = [0, 14, 30, 90];
                 for (const days of statPeriods) {
-                    await addStatsJob(stat.type, stat.id, days, priority);
+                    bulkJobs.push({
+                        entityType: stat.type,
+                        entityId: stat.id,
+                        days,
+                        priority,
+                    });
                     queuedCount++;
                 }
 
@@ -87,6 +99,11 @@ export default {
                     { $set: { needsUpdate: false } }
                 );
             }
+        }
+
+        // Bulk add all jobs to the queue
+        if (bulkJobs.length > 0) {
+            await addBulkStatsJobs(bulkJobs);
         }
 
         cliLogger.info(`Queued ${queuedCount} stats jobs for update`);
