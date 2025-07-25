@@ -856,8 +856,11 @@ async function getShipGroupStats(
         // Process kills
         killResults.forEach((result) => {
             const shipGroupId = result._id;
-            const groupName = result.groupName?.en || result.groupName || "Unknown Ship Group";
-            
+            const groupName =
+                result.groupName?.en ||
+                result.groupName ||
+                "Unknown Ship Group";
+
             if (shipGroupId) {
                 shipGroupStatsMap.set(shipGroupId, {
                     groupName,
@@ -871,8 +874,11 @@ async function getShipGroupStats(
         // Process losses
         lossResults.forEach((result) => {
             const shipGroupId = result._id;
-            const groupName = result.groupName?.en || result.groupName || "Unknown Ship Group";
-            
+            const groupName =
+                result.groupName?.en ||
+                result.groupName ||
+                "Unknown Ship Group";
+
             if (shipGroupId) {
                 const existing = shipGroupStatsMap.get(shipGroupId);
                 if (existing) {
@@ -889,12 +895,14 @@ async function getShipGroupStats(
         });
 
         // Calculate efficiency and convert to array
-        const shipGroupStats = Array.from(shipGroupStatsMap.values()).map((stat) => {
-            const total = stat.kills + stat.losses;
-            stat.efficiency =
-                total > 0 ? Math.round((stat.kills / total) * 100) : 0;
-            return stat;
-        });
+        const shipGroupStats = Array.from(shipGroupStatsMap.values()).map(
+            (stat) => {
+                const total = stat.kills + stat.losses;
+                stat.efficiency =
+                    total > 0 ? Math.round((stat.kills / total) * 100) : 0;
+                return stat;
+            }
+        );
 
         // Sort by total activity (kills + losses) descending
         shipGroupStats.sort(

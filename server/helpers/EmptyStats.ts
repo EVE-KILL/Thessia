@@ -1,11 +1,17 @@
-import type { IFullStats, IStatsDocument, StatsType } from '~/server/interfaces/IStats';
+import type {
+    IFullStats,
+    IStatsDocument,
+    StatsType,
+} from "~/server/interfaces/IStats";
 
-export function ensureData(data: Partial<IStatsDocument> | null | undefined): Partial<IStatsDocument> {
+export function ensureData(
+    data: Partial<IStatsDocument> | null | undefined
+): Partial<IStatsDocument> {
     // Handle the case where data might be null or undefined
     const safeData = data || {};
 
     return {
-        type: safeData.type || 'character_id',
+        type: safeData.type || "character_id",
         id: safeData.id || 0,
         days: safeData.days || 0,
         kills: safeData.kills || 0,
@@ -41,7 +47,11 @@ export function ensureData(data: Partial<IStatsDocument> | null | undefined): Pa
  * @param days Time period in days (0 for all time)
  * @returns Empty stats document
  */
-export function createEmptyStats(type: StatsType, id: number, days: number): IStatsDocument {
+export function createEmptyStats(
+    type: StatsType,
+    id: number,
+    days: number
+): IStatsDocument {
     // Create empty heat map with zeros for all hours
     const heatMap: Record<string, number> = {};
     for (let i = 0; i < 24; i++) {

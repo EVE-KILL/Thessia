@@ -7,6 +7,7 @@ export default {
     description: "Finds stats that need to be updated and queues them",
     schedule: "0 * * * *",
     run: async () => {
+        return;
         cliLogger.info("Updating stats");
 
         // From the stats collection, find all documents that have needsUpdate set to true
