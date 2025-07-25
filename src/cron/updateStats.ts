@@ -7,34 +7,40 @@ export default {
     description: "Finds stats that need to be updated and queues them",
     schedule: "0 * * * *",
     run: async () => {
-        return;
         cliLogger.info("Updating stats");
-
-        // From the stats collection, find all documents that have needsUpdate set to true
-        // We only look for days: 0 as a trigger, but will update all related stat periods
-        const statsToUpdate = await Stats.find({
-            needsUpdate: true,
-            days: 0,
-        }).lean();
-
-        if (statsToUpdate.length === 0) {
-            cliLogger.info("No stats need updating");
-            return;
-        }
-
-        cliLogger.info(
-            `Found ${statsToUpdate.length} stats documents that need updating`
-        );
 
         // Get current date information for frequency checks
         const now = new Date();
         const currentHour = now.getHours();
         const currentDay = now.getDay(); // 0-6, Sunday is 0
 
-        // Track queued jobs
+        // Track queued jobs and processed documents
         let queuedCount = 0;
+        let processedCount = 0;
 
-        for (const stat of statsToUpdate) {
+        // Create cursor for stats that need updating (only days: 0 as trigger)
+        const cursor = Stats.find({
+            needsUpdate: true,
+            days: 0,
+        }).cursor();
+
+        // Batch jobs for bulk insertion
+        const jobBatch: Array<{
+            entityType: any;
+            entityId: number;
+            days: number;
+            priority: number;
+        }> = [];
+        const BATCH_SIZE = 100;
+
+        // Process documents one by one using cursor
+        for (
+            let stat = await cursor.next();
+            stat != null;
+            stat = await cursor.next()
+        ) {
+            processedCount++;
+
             // Determine if this stat should be updated based on frequency rules
             let shouldUpdate = false;
             let priority = 5; // Default priority (lower number = higher priority)
@@ -75,7 +81,12 @@ export default {
                 // Queue jobs for all stat periods (0, 14, 30, 90 days)
                 const statPeriods = [0, 14, 30, 90];
                 for (const days of statPeriods) {
-                    await addStatsJob(stat.type, stat.id, days, priority);
+                    jobBatch.push({
+                        entityType: stat.type,
+                        entityId: stat.id,
+                        days,
+                        priority,
+                    });
                     queuedCount++;
                 }
 
@@ -87,9 +98,29 @@ export default {
                     },
                     { $set: { needsUpdate: false } }
                 );
+
+                // Process batch if it reaches the batch size
+                if (jobBatch.length >= BATCH_SIZE) {
+                    await addBulkStatsJobs(jobBatch);
+                    jobBatch.length = 0; // Clear the batch
+                    cliLogger.info(
+                        `Processed batch: ${processedCount} documents processed, ${queuedCount} jobs queued so far`
+                    );
+                }
             }
         }
 
-        cliLogger.info(`Queued ${queuedCount} stats jobs for update`);
+        // Process any remaining jobs in the final batch
+        if (jobBatch.length > 0) {
+            await addBulkStatsJobs(jobBatch);
+        }
+
+        if (processedCount === 0) {
+            cliLogger.info("No stats need updating");
+        } else {
+            cliLogger.info(
+                `Processed ${processedCount} stats documents, queued ${queuedCount} stats jobs for update`
+            );
+        }
     },
 };

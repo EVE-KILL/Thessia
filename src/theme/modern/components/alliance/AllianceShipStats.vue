@@ -11,15 +11,15 @@
                     :bordered="true" :special-header="true" background="transparent" header-class="topbox-header">
                     <template #cell-entity="{ item }">
                         <div class="ship-name-container">
-                            {{ getLocalizedString(item.ship_group_name, locale) }}
+                            {{ getLocalizedString(item.groupName, locale) }}
                         </div>
                     </template>
                     <template #cell-stats="{ item }">
                         <div class="ship-stats-detailed">
                             <div class="stat-row">
-                                <span class="killed">{{ item.killed }}</span>
+                                <span class="killed">{{ item.kills }}</span>
                                 <span class="separator">/</span>
-                                <span class="lost">{{ item.lost }}</span>
+                                <span class="lost">{{ item.losses }}</span>
                                 <span class="efficiency" :class="getEfficiencyClass(item.efficiency)">
                                     ({{ item.efficiency }}%)
                                 </span>
@@ -30,14 +30,14 @@
                     <template #mobile-content="{ item }">
                         <div class="mobile-content">
                             <div class="mobile-header">
-                                <span class="mobile-title">{{ getLocalizedString(item.ship_group_name, locale) }}</span>
+                                <span class="mobile-title">{{ getLocalizedString(item.groupName, locale) }}</span>
                             </div>
                             <div class="mobile-stats">
                                 <div class="mobile-stat-line">
                                     <span class="stat-label">{{ t('killed') }}:</span>
-                                    <span class="killed">{{ item.killed }}</span>
+                                    <span class="killed">{{ item.kills }}</span>
                                     <span class="stat-label ml-4">{{ t('lost') }}:</span>
-                                    <span class="lost">{{ item.lost }}</span>
+                                    <span class="lost">{{ item.losses }}</span>
                                 </div>
                                 <div class="mobile-stat-line">
                                     <span class="stat-label">{{ t('efficiency') }}:</span>
@@ -57,15 +57,15 @@
                     :bordered="true" :special-header="true" background="transparent" header-class="topbox-header">
                     <template #cell-entity="{ item }">
                         <div class="ship-name-container">
-                            {{ getLocalizedString(item.ship_group_name, locale) }}
+                            {{ getLocalizedString(item.groupName, locale) }}
                         </div>
                     </template>
                     <template #cell-stats="{ item }">
                         <div class="ship-stats-detailed">
                             <div class="stat-row">
-                                <span class="killed">{{ item.killed }}</span>
+                                <span class="killed">{{ item.kills }}</span>
                                 <span class="separator">/</span>
-                                <span class="lost">{{ item.lost }}</span>
+                                <span class="lost">{{ item.losses }}</span>
                                 <span class="efficiency" :class="getEfficiencyClass(item.efficiency)">
                                     ({{ item.efficiency }}%)
                                 </span>
@@ -76,14 +76,14 @@
                     <template #mobile-content="{ item }">
                         <div class="mobile-content">
                             <div class="mobile-header">
-                                <span class="mobile-title">{{ getLocalizedString(item.ship_group_name, locale) }}</span>
+                                <span class="mobile-title">{{ getLocalizedString(item.groupName, locale) }}</span>
                             </div>
                             <div class="mobile-stats">
                                 <div class="mobile-stat-line">
                                     <span class="stat-label">{{ t('killed') }}:</span>
-                                    <span class="killed">{{ item.killed }}</span>
+                                    <span class="killed">{{ item.kills }}</span>
                                     <span class="stat-label ml-4">{{ t('lost') }}:</span>
-                                    <span class="lost">{{ item.lost }}</span>
+                                    <span class="lost">{{ item.losses }}</span>
                                 </div>
                                 <div class="mobile-stat-line">
                                     <span class="stat-label">{{ t('efficiency') }}:</span>
@@ -103,15 +103,15 @@
                     :bordered="true" :special-header="true" background="transparent" header-class="topbox-header">
                     <template #cell-entity="{ item }">
                         <div class="ship-name-container">
-                            {{ getLocalizedString(item.ship_group_name, locale) }}
+                            {{ getLocalizedString(item.groupName, locale) }}
                         </div>
                     </template>
                     <template #cell-stats="{ item }">
                         <div class="ship-stats-detailed">
                             <div class="stat-row">
-                                <span class="killed">{{ item.killed }}</span>
+                                <span class="killed">{{ item.kills }}</span>
                                 <span class="separator">/</span>
-                                <span class="lost">{{ item.lost }}</span>
+                                <span class="lost">{{ item.losses }}</span>
                                 <span class="efficiency" :class="getEfficiencyClass(item.efficiency)">
                                     ({{ item.efficiency }}%)
                                 </span>
@@ -122,14 +122,14 @@
                     <template #mobile-content="{ item }">
                         <div class="mobile-content">
                             <div class="mobile-header">
-                                <span class="mobile-title">{{ getLocalizedString(item.ship_group_name, locale) }}</span>
+                                <span class="mobile-title">{{ getLocalizedString(item.groupName, locale) }}</span>
                             </div>
                             <div class="mobile-stats">
                                 <div class="mobile-stat-line">
                                     <span class="stat-label">{{ t('killed') }}:</span>
-                                    <span class="killed">{{ item.killed }}</span>
+                                    <span class="killed">{{ item.kills }}</span>
                                     <span class="stat-label ml-4">{{ t('lost') }}:</span>
-                                    <span class="lost">{{ item.lost }}</span>
+                                    <span class="lost">{{ item.losses }}</span>
                                 </div>
                                 <div class="mobile-stat-line">
                                     <span class="stat-label">{{ t('efficiency') }}:</span>
@@ -161,9 +161,9 @@ import { type ITranslation } from '~/server/interfaces/ITranslation';
 interface ShipGroupStats {
     shipGroupStats: Array<{
         ship_group_id: number;
-        ship_group_name: string | Record<string, string>;
-        killed: number;
-        lost: number;
+        groupName: string | Record<string, string>;
+        kills: number;
+        losses: number;
         efficiency: number;
     }>;
 }
@@ -183,8 +183,8 @@ const sortedShipGroups = computed(() => {
 
     return [...props.stats.shipGroupStats].sort((a, b) => {
         // Sort by total activity (kills + losses) descending
-        const totalA = a.killed + a.lost;
-        const totalB = b.killed + b.lost;
+        const totalA = a.kills + a.losses;
+        const totalB = b.kills + b.losses;
         return totalB - totalA;
     });
 });

@@ -3,6 +3,7 @@ import type {
     IStatsDocument,
     StatsType,
 } from "~/server/interfaces/IStats";
+import { InvGroups } from "~/server/models/InvGroups";
 import { InvTypes } from "~/server/models/InvTypes";
 import { Killmails } from "~/server/models/Killmails";
 import { Stats } from "~/server/models/Stats";
@@ -40,6 +41,18 @@ function validateEntity(
     }
 
     return { valid: true, type, id };
+}
+
+/**
+ * Get valid ship group IDs from InvGroups where category_id = 6 (Ships) and published = true
+ */
+async function getValidShipGroupIds(): Promise<Set<number>> {
+    const shipGroups = await InvGroups.find(
+        { category_id: 6, published: true },
+        { group_id: 1 }
+    ).lean();
+
+    return new Set(shipGroups.map((group: any) => group.group_id));
 }
 
 export async function updateStatsOnKillmailProcessing(
@@ -784,6 +797,12 @@ async function getShipGroupStats(
     };
 
     try {
+        // Get valid ship group IDs (category_id = 6, published = true)
+        const validShipGroupIds = await getValidShipGroupIds();
+
+        // Convert Set to Array for MongoDB $in operator
+        const validShipGroupIdsArray = Array.from(validShipGroupIds);
+
         // Prepare match conditions
         const killMatchCondition: any = { [attackerTypeFieldMap[type]]: id };
         const lossMatchCondition: any = { [typeFieldMap[type]]: id };
@@ -808,7 +827,9 @@ async function getShipGroupStats(
                             ? "corporation_id"
                             : "alliance_id"
                     }`]: id,
-                    "attackers.ship_group_id": { $exists: true, $ne: null },
+                    "attackers.ship_group_id": {
+                        $in: validShipGroupIdsArray,
+                    },
                 },
             },
             {
@@ -825,7 +846,9 @@ async function getShipGroupStats(
             {
                 $match: {
                     ...lossMatchCondition,
-                    "victim.ship_group_id": { $exists: true, $ne: null },
+                    "victim.ship_group_id": {
+                        $in: validShipGroupIdsArray,
+                    },
                 },
             },
             {
