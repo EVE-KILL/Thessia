@@ -1,4 +1,4 @@
-import { writeFile, mkdir } from "node:fs/promises";
+import { writeFile, mkdir, readdir, stat } from "node:fs/promises";
 import { join } from "node:path";
 import { existsSync } from "node:fs";
 import { gzip } from "node:zlib";
@@ -177,6 +177,82 @@ export async function writeSitemapIndex(
     if (logger) {
         logger.info(
             `📋 Written ${category}.xml.gz index with ${sitemapFiles.length} sitemaps`
+        );
+    }
+}
+
+/**
+ * Write sitemap index file by scanning disk for existing files
+ */
+export async function writeSitemapIndexFromDisk(
+    category: string,
+    logger?: any
+): Promise<void> {
+    const categoryDir = join(SITEMAPS_DIR, category);
+
+    // Always ensure the category directory exists
+    await ensureDir(categoryDir);
+
+    const sitemapFiles: {
+        filename: string;
+        relativePath: string;
+        lastmod?: string;
+    }[] = [];
+
+    // Only scan if directory exists and has files
+    if (existsSync(categoryDir)) {
+        // Recursively scan the category directory for .xml.gz files
+        async function scanDirectory(
+            dirPath: string,
+            relativeBase: string
+        ): Promise<void> {
+            try {
+                const entries = await readdir(dirPath, { withFileTypes: true });
+
+                for (const entry of entries) {
+                    const fullPath = join(dirPath, entry.name);
+                    const relativePath = join(relativeBase, entry.name);
+
+                    if (entry.isDirectory()) {
+                        // Recursively scan subdirectories
+                        await scanDirectory(fullPath, relativePath);
+                    } else if (
+                        entry.isFile() &&
+                        entry.name.endsWith(".xml.gz")
+                    ) {
+                        // Get file stats for lastmod
+                        const stats = await stat(fullPath);
+                        const lastmod = formatDate(stats.mtime);
+
+                        sitemapFiles.push({
+                            filename: entry.name,
+                            relativePath: relativePath.replace(/\\/g, "/"), // Normalize path separators
+                            lastmod,
+                        });
+                    }
+                }
+            } catch (error) {
+                if (logger) {
+                    logger.warn(
+                        `⚠️ Error reading directory ${dirPath}: ${error}`
+                    );
+                }
+            }
+        }
+
+        await scanDirectory(categoryDir, category);
+
+        // Sort files by filename for consistent ordering
+        sitemapFiles.sort((a, b) => a.filename.localeCompare(b.filename));
+    }
+
+    // Always write the index file, even if no sitemap files were found
+    // This ensures the index file exists and is valid (albeit empty)
+    await writeSitemapIndex(category, sitemapFiles, logger);
+
+    if (logger && sitemapFiles.length === 0) {
+        logger.info(
+            `📋 Created empty ${category}.xml.gz index (no sitemap files found)`
         );
     }
 }

@@ -7,83 +7,108 @@ import type {
     ISideData,
     ISystemInfo,
     ITeamSummaryStats,
-    ITopEntity
+    ITopEntity,
 } from "~/server/interfaces/IBattles"; // Adjust the path as necessary
 
 // Extend the IBattles interface with Mongoose's Document interface
-export interface IBattlesDocument extends IBattles, Document { }
+export interface IBattlesDocument extends IBattles, Document {}
 
 // Define a sub-schema for ICharacterShipManifestEntry
-const characterShipManifestEntrySchema = new Schema<ICharacterShipManifestEntry>({
-    character_id: { type: Number, required: false },
-    character_name: { type: String, required: false },
-    corporation_id: { type: Number, required: false },
-    corporation_name: { type: String, required: false },
-    alliance_id: { type: Number, required: false },
-    alliance_name: { type: String, required: false },
-    ship_type_id: { type: Number, required: true },
-    ship_name: { type: Schema.Types.Mixed, required: true }, // Can be ITranslation (Object) or string
-    ship_group_id: { type: Number, required: false },
-    ship_group_name: { type: Schema.Types.Mixed, required: false }, // Can be ITranslation (Object) or string
-    was_lost: { type: Boolean, required: true },
-    killmail_id_if_lost: { type: Number, required: false },
-    damage_taken: { type: Number, required: false },
-    damage_dealt: { type: Number, required: false }
-}, { _id: false }); // _id: false for subdocuments if not needed as separate IDs
+const characterShipManifestEntrySchema =
+    new Schema<ICharacterShipManifestEntry>(
+        {
+            character_id: { type: Number, required: false },
+            character_name: { type: String, required: false },
+            corporation_id: { type: Number, required: false },
+            corporation_name: { type: String, required: false },
+            alliance_id: { type: Number, required: false },
+            alliance_name: { type: String, required: false },
+            ship_type_id: { type: Number, required: true },
+            ship_name: { type: Schema.Types.Mixed, required: true }, // Can be ITranslation (Object) or string
+            ship_group_id: { type: Number, required: false },
+            ship_group_name: { type: Schema.Types.Mixed, required: false }, // Can be ITranslation (Object) or string
+            was_lost: { type: Boolean, required: true },
+            killmail_id_if_lost: { type: Number, required: false },
+            damage_taken: { type: Number, required: false },
+            damage_dealt: { type: Number, required: false },
+        },
+        { _id: false }
+    ); // _id: false for subdocuments if not needed as separate IDs
 
 // Define schema for entity statistics
-const entityStatsSchema = new Schema<IEntityStats>({
-    id: { type: Number, required: true },
-    name: { type: String, required: true },
-    alliance_id: { type: Number, required: false },
-    alliance_name: { type: String, required: false },
-    kills: { type: Number, default: 0 },
-    losses: { type: Number, default: 0 },
-    valueInflicted: { type: Number, default: 0 },
-    valueSuffered: { type: Number, default: 0 }
-}, { _id: false });
+const entityStatsSchema = new Schema<IEntityStats>(
+    {
+        id: { type: Number, required: true },
+        name: { type: String, required: true },
+        alliance_id: { type: Number, required: false },
+        alliance_name: { type: String, required: false },
+        kills: { type: Number, default: 0 },
+        losses: { type: Number, default: 0 },
+        valueInflicted: { type: Number, default: 0 },
+        valueSuffered: { type: Number, default: 0 },
+    },
+    { _id: false }
+);
 
 // Define schema for team summary stats
-const teamSummaryStatsSchema = new Schema<ITeamSummaryStats>({
-    iskLost: { type: Number, default: 0 },
-    shipsLost: { type: Number, default: 0 },
-    damageInflicted: { type: Number, default: 0 }
-}, { _id: false });
+const teamSummaryStatsSchema = new Schema<ITeamSummaryStats>(
+    {
+        iskLost: { type: Number, default: 0 },
+        shipsLost: { type: Number, default: 0 },
+        damageInflicted: { type: Number, default: 0 },
+    },
+    { _id: false }
+);
 
 // Define schema for team entity lists
-const teamEntitySchema = new Schema<IEntityItem>({
-    id: { type: Number, required: true },
-    name: { type: String, required: false }
-}, { _id: false });
+const teamEntitySchema = new Schema<IEntityItem>(
+    {
+        id: { type: Number, required: true },
+        name: { type: String, required: false },
+    },
+    { _id: false }
+);
 
 // Define schema for a single side/team
-const sideSchema = new Schema<ISideData>({
-    name: { type: String, required: false },
-    alliances: [teamEntitySchema],
-    corporations: [teamEntitySchema],
-    kill_ids: { type: [Number], default: [] },
-    stats: { type: teamSummaryStatsSchema, default: {} },
-    alliances_stats: { type: [entityStatsSchema], default: [] },
-    corporations_stats: { type: [entityStatsSchema], default: [] },
-    characters_stats: { type: [entityStatsSchema], default: [] },
-    ship_manifest: { type: [characterShipManifestEntrySchema], default: [] }
-}, { _id: false });
+const sideSchema = new Schema<ISideData>(
+    {
+        name: { type: String, required: false },
+        alliances: [teamEntitySchema],
+        corporations: [teamEntitySchema],
+        kill_ids: { type: [Number], default: [] },
+        stats: { type: teamSummaryStatsSchema, default: {} },
+        alliances_stats: { type: [entityStatsSchema], default: [] },
+        corporations_stats: { type: [entityStatsSchema], default: [] },
+        characters_stats: { type: [entityStatsSchema], default: [] },
+        ship_manifest: {
+            type: [characterShipManifestEntrySchema],
+            default: [],
+        },
+    },
+    { _id: false }
+);
 
 // Define enhanced system schema for storing multiple systems
-const systemSchema = new Schema<ISystemInfo>({
-    system_id: { type: Number, required: true },
-    system_name: { type: String, required: false },
-    system_security: { type: Number, required: false },
-    region_id: { type: Number, required: false },
-    region_name: { type: Schema.Types.Mixed, required: false }
-}, { _id: false });
+const systemSchema = new Schema<ISystemInfo>(
+    {
+        system_id: { type: Number, required: true },
+        system_name: { type: String, required: false },
+        system_security: { type: Number, required: false },
+        region_id: { type: Number, required: false },
+        region_name: { type: Schema.Types.Mixed, required: false },
+    },
+    { _id: false }
+);
 
 // Define schema for top entities (alliances, corporations, ship types)
-const topEntitySchema = new Schema<ITopEntity>({
-    id: { type: Number, required: true },
-    name: { type: Schema.Types.Mixed, required: true }, // Handles string or ITranslation
-    count: { type: Number, required: true },
-}, { _id: false });
+const topEntitySchema = new Schema<ITopEntity>(
+    {
+        id: { type: Number, required: true },
+        name: { type: Schema.Types.Mixed, required: true }, // Handles string or ITranslation
+        count: { type: Number, required: true },
+    },
+    { _id: false }
+);
 
 // Define the battles schema
 const BattlesSchema = new Schema<IBattlesDocument>(
@@ -136,14 +161,14 @@ const BattlesSchema = new Schema<IBattlesDocument>(
                 delete ret.__v;
             },
         },
-    },
+    }
 );
 
 // Create and export the battles model
 export const Battles: Model<IBattlesDocument> = model<IBattlesDocument>(
     "battles",
     BattlesSchema,
-    "battles",
+    "battles"
 );
 
 // Apply indexes
@@ -158,3 +183,5 @@ BattlesSchema.index({ start_time: 1 }, { sparse: true });
 BattlesSchema.index({ start_time: -1 }, { sparse: true }); // Add descending index for sorting
 BattlesSchema.index({ end_time: 1 }, { sparse: true });
 BattlesSchema.index({ end_time: -1 }, { sparse: true });
+BattlesSchema.index({ createdAt: 1 }, { sparse: true });
+BattlesSchema.index({ updatedAt: 1 }, { sparse: true });
