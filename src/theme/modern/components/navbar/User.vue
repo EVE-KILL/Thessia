@@ -31,6 +31,12 @@ const handleEveLogin = () => {
   isDropdownOpen.value = false;
 };
 
+const handleBasicLogin = () => {
+  const currentPath = window.location.pathname;
+  auth.login(currentPath, ["publicData"]);
+  isDropdownOpen.value = false;
+};
+
 const handleLogout = () => {
   auth.logout();
   isDropdownOpen.value = false;
@@ -88,46 +94,81 @@ const ssoImageDimensions = computed(() => {
                 </template>
 
                 <!-- Dropdown Content -->
-                <div class="py-2 w-56">
+                <div class="py-2 w-64">
                     <!-- Not Logged In Content -->
                     <div v-if="!auth.isAuthenticated.value">
-                        <button
-                            class="w-full px-4 py-2 flex justify-center items-center hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
-                            @click="handleEveLogin" :disabled="auth.isLoading.value">
-                            <div v-if="auth.isLoading.value" class="flex items-center justify-center">
-                                <UIcon name="lucide:loader" class="animate-spin mr-2" />
-                                {{ t('auth.loading', 'Loading...') }}
+                        <!-- Basic Login Section -->
+                        <div class="px-4 py-2">
+                            <h3 class="text-sm font-medium text-gray-900 dark:text-white mb-2">{{ t('auth.basicLogin', 'Basic Login') }}</h3>
+                            <button
+                                class="w-full px-3 py-2 flex justify-center items-center hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors rounded-md"
+                                @click="handleBasicLogin" :disabled="auth.isLoading.value">
+                                <div v-if="auth.isLoading.value" class="flex items-center justify-center">
+                                    <UIcon name="lucide:loader" class="animate-spin mr-2" />
+                                    {{ t('auth.loading', 'Loading...') }}
+                                </div>
+                                <NuxtImg
+                                    v-else
+                                    :src="ssoImageSrc"
+                                    alt="Basic Login with EVE Online"
+                                    class="sso-image w-full h-auto"
+                                    :width="ssoImageDimensions.width"
+                                    :height="ssoImageDimensions.height"
+                                    format="webp"
+                                    quality="95"
+                                />
+                            </button>
+                            <div class="text-xs text-gray-500 dark:text-gray-400 text-center mt-1">
+                                {{ t('auth.basicLoginInfo', 'Basic login with publicData only') }}
                             </div>
-                            <NuxtImg
-                                v-else
-                                :src="ssoImageSrc"
-                                alt="Login with EVE Online"
-                                class="sso-image"
-                                :width="ssoImageDimensions.width"
-                                :height="ssoImageDimensions.height"
-                                format="webp"
-                                quality="95"
-                            />
-                        </button>
+                        </div>
 
-                        <!-- Add Customize Scopes option -->
-                        <button
-                            class="w-full px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors text-left"
-                            @click="handleCustomizeLogin">
-                            <div class="flex items-center">
-                                <UIcon name="lucide:settings" class="mr-2" />
-                                {{ t('auth.customizeScopes', 'Customize Login Scopes') }}
+                        <!-- Divider -->
+                        <div class="border-t border-gray-100 dark:border-gray-800 my-2"></div>
+
+                        <!-- Killmail Login Section -->
+                        <div class="px-4 py-2">
+                            <h3 class="text-sm font-medium text-gray-900 dark:text-white mb-2">{{ t('auth.killmailLogin', 'Killmail Login') }}</h3>
+                            <button
+                                class="w-full px-3 py-2 flex justify-center items-center hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors rounded-md"
+                                @click="handleEveLogin" :disabled="auth.isLoading.value">
+                                <div v-if="auth.isLoading.value" class="flex items-center justify-center">
+                                    <UIcon name="lucide:loader" class="animate-spin mr-2" />
+                                    {{ t('auth.loading', 'Loading...') }}
+                                </div>
+                                <NuxtImg
+                                    v-else
+                                    :src="ssoImageSrc"
+                                    alt="Killmail Login with EVE Online"
+                                    class="sso-image w-full h-auto"
+                                    :width="ssoImageDimensions.width"
+                                    :height="ssoImageDimensions.height"
+                                    format="webp"
+                                    quality="95"
+                                />
+                            </button>
+                            <div class="text-xs text-gray-500 dark:text-gray-400 text-center mt-1">
+                                {{ t('auth.killmailLoginInfo', 'For accessing private and corporation killmails') }}
                             </div>
-                        </button>
+                        </div>
+
+                        <!-- Divider -->
+                        <div class="border-t border-gray-100 dark:border-gray-800 my-2"></div>
+
+                        <!-- Customize Scopes Section -->
+                        <div class="px-4 py-2">
+                            <button
+                                class="w-full px-3 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors text-left rounded-md border border-gray-200 dark:border-gray-600"
+                                @click="handleCustomizeLogin">
+                                <div class="flex items-center justify-center">
+                                    <UIcon name="lucide:settings" class="mr-2" />
+                                    {{ t('auth.customizeScopes', 'Customize Login Scopes') }}
+                                </div>
+                            </button>
+                        </div>
 
                         <div v-if="auth.hasError.value" class="px-4 py-2 text-sm text-red-600 dark:text-red-400">
                             {{ auth.errorMessage.value }}
-                        </div>
-
-                        <div class="border-t border-gray-100 dark:border-gray-800 my-1 pt-1 opacity-30">
-                            <div class="px-4 py-2 text-xs text-gray-400 dark:text-gray-500">
-                                {{ t('auth.ssoRequiredForLogin', 'EVE SSO is required for login') }}
-                            </div>
                         </div>
                     </div>
 
@@ -223,35 +264,76 @@ const ssoImageDimensions = computed(() => {
                 </UButton>
 
                 <div v-if="!auth.isAuthenticated.value && isDropdownOpen"
-                    class="absolute top-16 right-4 bg-white dark:bg-gray-800 shadow-lg rounded-md py-2 w-48 z-50">
-                    <button
-                        class="w-full px-4 py-2 flex justify-center items-center hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
-                        @click="handleEveLogin" :disabled="auth.isLoading.value">
-                        <div v-if="auth.isLoading.value" class="flex items-center justify-center">
-                            <UIcon name="lucide:loader" class="animate-spin mr-2" />
-                            {{ t('auth.loading', 'Loading...') }}
+                    class="absolute top-16 right-4 bg-white dark:bg-gray-800 shadow-lg rounded-md py-2 w-56 z-50">
+                    <!-- Basic Login Section -->
+                    <div class="px-3 py-2">
+                        <h3 class="text-sm font-medium text-gray-900 dark:text-white mb-2">{{ t('auth.basicLogin', 'Basic Login') }}</h3>
+                        <button
+                            class="w-full px-2 py-2 flex justify-center items-center hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors rounded-md"
+                            @click="handleBasicLogin" :disabled="auth.isLoading.value">
+                            <div v-if="auth.isLoading.value" class="flex items-center justify-center">
+                                <UIcon name="lucide:loader" class="animate-spin mr-2" />
+                                {{ t('auth.loading', 'Loading...') }}
+                            </div>
+                            <NuxtImg
+                                v-else
+                                :src="ssoImageSrc"
+                                alt="Basic Login with EVE Online"
+                                class="sso-image w-full h-auto"
+                                :width="ssoImageDimensions.width"
+                                :height="ssoImageDimensions.height"
+                                format="webp"
+                                quality="95"
+                            />
+                        </button>
+                        <div class="text-xs text-gray-500 dark:text-gray-400 text-center mt-1">
+                            {{ t('auth.basicLoginInfo', 'Basic login with publicData only') }}
                         </div>
-                        <NuxtImg
-                            v-else
-                            :src="ssoImageSrc"
-                            alt="Login with EVE Online"
-                            class="sso-image"
-                            :width="ssoImageDimensions.width"
-                            :height="ssoImageDimensions.height"
-                            format="webp"
-                            quality="95"
-                        />
-                    </button>
+                    </div>
 
-                    <!-- Add Customize Scopes option for mobile -->
-                    <button
-                        class="w-full px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors text-left"
-                        @click="handleCustomizeLogin">
-                        <div class="flex items-center">
-                            <UIcon name="lucide:settings" class="mr-2" />
-                            {{ t('auth.customizeScopes', 'Customize Login') }}
+                    <!-- Divider -->
+                    <div class="border-t border-gray-100 dark:border-gray-800 my-2"></div>
+
+                    <!-- Killmail Login Section -->
+                    <div class="px-3 py-2">
+                        <h3 class="text-sm font-medium text-gray-900 dark:text-white mb-2">{{ t('auth.killmailLogin', 'Killmail Login') }}</h3>
+                        <button
+                            class="w-full px-2 py-2 flex justify-center items-center hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors rounded-md"
+                            @click="handleEveLogin" :disabled="auth.isLoading.value">
+                            <div v-if="auth.isLoading.value" class="flex items-center justify-center">
+                                <UIcon name="lucide:loader" class="animate-spin mr-2" />
+                                {{ t('auth.loading', 'Loading...') }}
+                            </div>
+                            <NuxtImg
+                                v-else
+                                :src="ssoImageSrc"
+                                alt="Killmail Login with EVE Online"
+                                class="sso-image w-full h-auto"
+                                :width="ssoImageDimensions.width"
+                                :height="ssoImageDimensions.height"
+                                format="webp"
+                                quality="95"
+                            />
+                        </button>
+                        <div class="text-xs text-gray-500 dark:text-gray-400 text-center mt-1">
+                            {{ t('auth.killmailLoginInfo', 'For private and corporation killmails') }}
                         </div>
-                    </button>
+                    </div>
+
+                    <!-- Divider -->
+                    <div class="border-t border-gray-100 dark:border-gray-800 my-2"></div>
+
+                    <!-- Customize Scopes -->
+                    <div class="px-3 py-2">
+                        <button
+                            class="w-full px-2 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors text-left rounded-md border border-gray-200 dark:border-gray-600"
+                            @click="handleCustomizeLogin">
+                            <div class="flex items-center justify-center">
+                                <UIcon name="lucide:settings" class="mr-2" />
+                                {{ t('auth.customizeScopes', 'Customize Login') }}
+                            </div>
+                        </button>
+                    </div>
 
                     <div v-if="auth.hasError.value" class="px-4 py-2 text-sm text-red-500">
                         {{ auth.errorMessage.value }}
@@ -265,34 +347,75 @@ const ssoImageDimensions = computed(() => {
     <div v-else class="p-4 bg-gray-50/70 dark:bg-gray-800/50 rounded-lg shadow-sm">
         <!-- Not logged in content -->
         <div v-if="!auth.isAuthenticated.value">
-            <button
-                class="w-full mb-3 px-4 py-2 flex justify-center items-center hover:bg-gray-100 dark:hover:bg-gray-700/70 transition-colors rounded-md"
-                @click="handleEveLogin" :disabled="auth.isLoading.value">
-                <div v-if="auth.isLoading.value" class="flex items-center justify-center">
-                    <UIcon name="lucide:loader" class="animate-spin mr-2" />
-                    {{ t('auth.loading', 'Loading...') }}
+            <!-- Basic Login Section -->
+            <div class="mb-4">
+                <h3 class="text-sm font-medium text-gray-900 dark:text-white mb-3">{{ t('auth.basicLogin', 'Basic Login') }}</h3>
+                <button
+                    class="w-full mb-2 px-4 py-3 flex justify-center items-center hover:bg-gray-100 dark:hover:bg-gray-700/70 transition-colors rounded-md"
+                    @click="handleBasicLogin" :disabled="auth.isLoading.value">
+                    <div v-if="auth.isLoading.value" class="flex items-center justify-center">
+                        <UIcon name="lucide:loader" class="animate-spin mr-2" />
+                        {{ t('auth.loading', 'Loading...') }}
+                    </div>
+                    <NuxtImg
+                        v-else
+                        :src="ssoImageSrc"
+                        alt="Basic Login with EVE Online"
+                        class="sso-image w-full h-auto"
+                        :width="ssoImageDimensions.width"
+                        :height="ssoImageDimensions.height"
+                        format="webp"
+                        quality="95"
+                    />
+                </button>
+                <div class="text-xs text-gray-500 dark:text-gray-400 text-center">
+                    {{ t('auth.basicLoginInfo', 'Basic login with publicData only') }}
                 </div>
-                <NuxtImg
-                    v-else
-                    :src="ssoImageSrc"
-                    alt="Login with EVE Online"
-                    class="sso-image"
-                    :width="ssoImageDimensions.width"
-                    :height="ssoImageDimensions.height"
-                    format="webp"
-                    quality="95"
-                />
-            </button>
+            </div>
 
-            <!-- Add Customize Scopes option for mobile fullscreen menu -->
-            <button
-                class="w-full mb-3 px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700/70 transition-colors rounded-md text-left"
-                @click="handleCustomizeLogin">
-                <div class="flex items-center">
-                    <UIcon name="lucide:settings" class="mr-2" />
-                    {{ t('auth.customizeScopes', 'Customize Login Scopes') }}
+            <!-- Divider -->
+            <div class="border-t border-gray-100 dark:border-gray-800 my-4"></div>
+
+            <!-- Killmail Login Section -->
+            <div class="mb-4">
+                <h3 class="text-sm font-medium text-gray-900 dark:text-white mb-3">{{ t('auth.killmailLogin', 'Killmail Login') }}</h3>
+                <button
+                    class="w-full mb-2 px-4 py-3 flex justify-center items-center hover:bg-gray-100 dark:hover:bg-gray-700/70 transition-colors rounded-md"
+                    @click="handleEveLogin" :disabled="auth.isLoading.value">
+                    <div v-if="auth.isLoading.value" class="flex items-center justify-center">
+                        <UIcon name="lucide:loader" class="animate-spin mr-2" />
+                        {{ t('auth.loading', 'Loading...') }}
+                    </div>
+                    <NuxtImg
+                        v-else
+                        :src="ssoImageSrc"
+                        alt="Killmail Login with EVE Online"
+                        class="sso-image w-full h-auto"
+                        :width="ssoImageDimensions.width"
+                        :height="ssoImageDimensions.height"
+                        format="webp"
+                        quality="95"
+                    />
+                </button>
+                <div class="text-xs text-gray-500 dark:text-gray-400 text-center">
+                    {{ t('auth.killmailLoginInfo', 'For accessing private and corporation killmails') }}
                 </div>
-            </button>
+            </div>
+
+            <!-- Divider -->
+            <div class="border-t border-gray-100 dark:border-gray-800 my-4"></div>
+
+            <!-- Customize Scopes Section -->
+            <div class="mb-4">
+                <button
+                    class="w-full px-4 py-3 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700/70 transition-colors rounded-md text-left border border-gray-200 dark:border-gray-600"
+                    @click="handleCustomizeLogin">
+                    <div class="flex items-center justify-center">
+                        <UIcon name="lucide:settings" class="mr-2" />
+                        {{ t('auth.customizeScopes', 'Customize Login Scopes') }}
+                    </div>
+                </button>
+            </div>
 
             <div v-if="auth.hasError.value" class="px-2 py-2 text-sm text-red-500 mb-3">
                 {{ auth.errorMessage.value }}
@@ -416,5 +539,18 @@ const ssoImageDimensions = computed(() => {
   display: block;
   object-fit: contain;
   max-width: 100%;
+  height: auto;
+}
+
+/* Enhanced button styling for login buttons */
+button:has(.sso-image) {
+  padding: 0 !important;
+  overflow: hidden;
+}
+
+button:has(.sso-image) .sso-image {
+  width: 100%;
+  height: auto;
+  border-radius: 0.375rem; /* rounded-md */
 }
 </style>
