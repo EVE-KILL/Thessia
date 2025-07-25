@@ -1,4 +1,5 @@
 import { createError, defineEventHandler, parseCookies, readBody } from 'h3';
+import { nanoid } from 'nanoid';
 import { Campaigns } from '~/server/models/Campaigns';
 import { queueCampaignProcessing, reprocessCampaign } from '~/server/queue/Campaign';
 
@@ -79,7 +80,7 @@ export default defineEventHandler(async (event) => {
         // Validate entity limits in query
         validateEntityLimits(query);
 
-                // Create campaign document with creator ID from authenticated user
+        // Create campaign document with creator ID from authenticated user
         const campaignData = {
             name: name.trim(),
             description: description?.trim(),
@@ -138,8 +139,14 @@ export default defineEventHandler(async (event) => {
         }
         // Creating a new campaign
         else {
+            // Generate a unique campaign ID
+            const newCampaignData = {
+                ...campaignData,
+                campaign_id: nanoid()
+            };
+
             // Save to database
-            const campaign = new Campaigns(campaignData);
+            const campaign = new Campaigns(newCampaignData);
             await campaign.save();
 
             // Queue the campaign for processing
