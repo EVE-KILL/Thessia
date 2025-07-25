@@ -1,0 +1,20 @@
+{{- if and .Values.thessia.enabled .Values.thessia.persistence.enabled }}
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: thessia-sitemaps
+  namespace: {{ .Values.namespace.name }}
+  labels:
+    {{- include "thessia.labels" . | nindent 4 }}
+spec:
+  accessModes:
+    {{- range .Values.thessia.persistence.accessModes }}
+    - {{ . | quote }}
+    {{- end }}
+  {{- if .Values.thessia.persistence.storageClassName }}
+  storageClassName: {{ .Values.thessia.persistence.storageClassName }}
+  {{- end }}
+  resources:
+    requests:
+      storage: {{ .Values.thessia.persistence.size }}
+{{- end }}

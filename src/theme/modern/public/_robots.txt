@@ -6,3 +6,13 @@ Disallow: /api/*
 
 User-agent: *
 Disallow: /_healthcheck
+
+# Sitemaps
+Sitemap: https://eve-kill.com/sitemap.xml
+Sitemap: https://eve-kill.com/sitemaps/index.xml.gz
+Sitemap: https://eve-kill.com/sitemaps/killmails.xml.gz
+Sitemap: https://eve-kill.com/sitemaps/battles.xml.gz
+Sitemap: https://eve-kill.com/sitemaps/campaigns.xml.gz
+Sitemap: https://eve-kill.com/sitemaps/characters.xml.gz
+Sitemap: https://eve-kill.com/sitemaps/corporations.xml.gz
+Sitemap: https://eve-kill.com/sitemaps/alliances.xml.gz

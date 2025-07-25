@@ -111,6 +111,13 @@ thessia:
         runAsGroup: 1000
         fsGroup: 1000
         runAsNonRoot: true
+    persistence:
+        enabled: true
+        storageClassName: nvme
+        accessModes:
+          - ReadWriteOnce
+        size: 20Gi
+        mountPath: /app/public/sitemaps
 
 # Image server
 imageserver:

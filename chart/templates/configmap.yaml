@@ -19,3 +19,6 @@ data:
 
   # RedisQ
   REDISQ_ID: {{ .Values.global.env.redisqId | quote }}
+
+  # Container environment detection
+  THESSIA_CONTAINER: "true"

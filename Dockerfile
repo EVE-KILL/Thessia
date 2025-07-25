@@ -28,6 +28,7 @@ RUN \
 WORKDIR /app
 
 ENV PATH="/app/bin:${PATH}"
+ENV THESSIA_CONTAINER=true
 
 # Expose the application port
 EXPOSE 3000

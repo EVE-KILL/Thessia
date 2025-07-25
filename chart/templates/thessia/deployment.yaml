@@ -57,6 +57,11 @@ spec:
                 name: config
             - secretRef:
                 name: secrets
+          {{- if .Values.thessia.persistence.enabled }}
+          volumeMounts:
+            - name: thessia-sitemaps-storage
+              mountPath: {{ .Values.thessia.persistence.mountPath }}
+          {{- end }}
         {{- if and .Values.monitoring.enabled .Values.monitoring.jsonExporter.enabled }}
         - name: json-exporter
           image: "{{ .Values.monitoring.jsonExporter.image.repository }}:{{ .Values.monitoring.jsonExporter.image.tag }}"
@@ -74,6 +79,11 @@ spec:
               subPath: config.yml
         {{- end }}
       volumes:
+        {{- if .Values.thessia.persistence.enabled }}
+        - name: thessia-sitemaps-storage
+          persistentVolumeClaim:
+            claimName: thessia-sitemaps
+        {{- end }}
         {{- if and .Values.monitoring.enabled .Values.monitoring.jsonExporter.enabled }}
         - name: json-exporter-config
           configMap:
