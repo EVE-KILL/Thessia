@@ -106,10 +106,10 @@ const leftNavItems = computed(() => [
         position: "left",
         children: [
             {
-                name: t("Query"),
-                label: t("Query"),
+                name: t("Advanced Search"),
+                label: t("Advanced Search"),
                 position: "left",
-                to: "/query",
+                to: "/advancedsearch",
                 icon: "lucide:search",
             },
             {

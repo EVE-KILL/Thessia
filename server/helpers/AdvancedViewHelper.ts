@@ -294,13 +294,16 @@ async function generateAdvancedViewStats(
         }
 
         // Track victim ship group stats (ships destroyed)
-        if (killmail.victim?.ship_group_id && 
-            validShipGroupIds.has(killmail.victim.ship_group_id)) {
+        if (
+            killmail.victim?.ship_group_id &&
+            validShipGroupIds.has(killmail.victim.ship_group_id)
+        ) {
             if (shipGroupMap.has(killmail.victim.ship_group_id)) {
                 shipGroupMap.get(killmail.victim.ship_group_id)!.killed++;
             } else {
                 shipGroupMap.set(killmail.victim.ship_group_id, {
-                    ship_group_name: killmail.victim.ship_group_name || "Unknown",
+                    ship_group_name:
+                        killmail.victim.ship_group_name || "Unknown",
                     killed: 1,
                 });
             }
@@ -341,12 +344,16 @@ async function generateAdvancedViewStats(
                 }
 
                 // Corporation killer stats (only count once per killmail per corporation)
-                if (attacker.corporation_id && attacker.corporation_name && 
-                    !countedCorporations.has(attacker.corporation_id)) {
+                if (
+                    attacker.corporation_id &&
+                    attacker.corporation_name &&
+                    !countedCorporations.has(attacker.corporation_id)
+                ) {
                     countedCorporations.add(attacker.corporation_id);
-                    
+
                     if (killerCorporationMap.has(attacker.corporation_id)) {
-                        killerCorporationMap.get(attacker.corporation_id)!.kills++;
+                        killerCorporationMap.get(attacker.corporation_id)!
+                            .kills++;
                     } else {
                         killerCorporationMap.set(attacker.corporation_id, {
                             corporation_name: attacker.corporation_name,
@@ -356,10 +363,13 @@ async function generateAdvancedViewStats(
                 }
 
                 // Alliance killer stats (only count once per killmail per alliance)
-                if (attacker.alliance_id && attacker.alliance_name && 
-                    !countedAlliances.has(attacker.alliance_id)) {
+                if (
+                    attacker.alliance_id &&
+                    attacker.alliance_name &&
+                    !countedAlliances.has(attacker.alliance_id)
+                ) {
                     countedAlliances.add(attacker.alliance_id);
-                    
+
                     if (killerAllianceMap.has(attacker.alliance_id)) {
                         killerAllianceMap.get(attacker.alliance_id)!.kills++;
                     } else {
