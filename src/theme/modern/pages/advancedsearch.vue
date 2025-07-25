@@ -455,7 +455,7 @@
             <span v-if="isLoading">Loading...</span>
             <span v-else>Preview Filter</span>
           </button>
-          
+
           <button
             @click="showFilter"
             :disabled="!hasValidQuery"
@@ -1001,10 +1001,11 @@ const clearAllItems = () => {
 
 const showFilter = () => {
   if (!hasValidQuery.value || !generatedQuery.value) return
-  
-  // Encode the query as a URL parameter
-  const encodedFilter = encodeURIComponent(JSON.stringify(generatedQuery.value))
-  
+
+  // Only send the filter portion - let the advanced view generate the complete query
+  const filterOnly = generatedQuery.value.filter || {}
+  const encodedFilter = encodeURIComponent(JSON.stringify(filterOnly))
+
   // Navigate to the advanced view page with the filter
   router.push(`/advancedview?filter=${encodedFilter}`)
 }

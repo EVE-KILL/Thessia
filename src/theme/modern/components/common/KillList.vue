@@ -9,6 +9,9 @@ import { useWebSocket } from "~/src/theme/modern/composables/useWebsocket";
 const { t, locale } = useI18n();
 const currentLocale = computed(() => locale.value);
 
+// Define emits
+const emit = defineEmits(['update:page', 'update:limit']);
+
 // Define props with defaults
 const props = defineProps({
     combinedKillsAndLosses: { type: Boolean, default: false },
@@ -21,6 +24,8 @@ const props = defineProps({
     enablePagination: { type: Boolean, default: true },
     limit: { type: Number, default: 100 },
     apiEndpoint: { type: String, default: "/api/killlist" },
+    currentPage: { type: Number, default: 1 },
+    totalPages: { type: Number, default: 1 },
 });
 
 // Pagination and display settings
@@ -122,8 +127,12 @@ watch(selectedPageSize, async (newSize) => {
     pagination.value.pageSize = newSize;
     pagination.value.pageIndex = 0;
 
-    // Only attempt to refresh if using fetched data
-    if (!useExternalData.value) {
+    // If using external data, emit limit change to parent
+    if (useExternalData.value) {
+        emit('update:limit', newSize);
+        emit('update:page', 1); // Reset to first page
+    } else {
+        // Only attempt to refresh if using fetched data
         try {
             await refresh();
         } catch (err) {
@@ -473,8 +482,13 @@ const openInNewTab = (url: string) => {
 // Update pagination structure to work with UPagination
 const currentPageIndex = ref(1); // Start at 1 for UPagination display
 
-// Calculate dynamic total based on current page
+// Calculate dynamic total based on external pagination or default behavior
 const dynamicTotal = computed(() => {
+    if (useExternalData.value && props.totalPages > 0) {
+        // Use external pagination data
+        return props.totalPages * selectedPageSize.value;
+    }
+    // Default behavior for internal pagination
     return 100 + currentPageIndex.value * 10;
 });
 
@@ -488,6 +502,11 @@ watch(currentPageIndex, (newPage) => {
     const newPageIndex = pageToPageIndex(newPage);
     pagination.value.pageIndex = newPageIndex;
 
+    // If using external data, emit page change to parent
+    if (useExternalData.value) {
+        emit('update:page', newPage);
+    }
+
     // Handle WebSocket state based on page
     if (newPageIndex > 0) {
         pauseWebSocket("pagination");
@@ -495,6 +514,20 @@ watch(currentPageIndex, (newPage) => {
         resumeWebSocket();
     }
 });
+
+// Watch external currentPage prop to sync internal pagination
+watch(() => props.currentPage, (newPage) => {
+    if (useExternalData.value && currentPageIndex.value !== newPage) {
+        currentPageIndex.value = newPage;
+    }
+}, { immediate: true });
+
+// Watch external limit prop to sync internal page size
+watch(() => props.limit, (newLimit) => {
+    if (selectedPageSize.value !== newLimit) {
+        selectedPageSize.value = newLimit;
+    }
+}, { immediate: true });
 
 // Watch pagination.pageIndex changes to keep currentPageIndex in sync
 watch(
