@@ -378,7 +378,13 @@ useSeoMeta({
         return a?.name && a?.ticker
             ? t('seo.alliance.description', { allianceName: a.name, ticker: a.ticker })
             : t("allianceDefaultDescription", { id: allianceId })
-    })
+    }),
+    twitterImage: computed(() => {
+        const a = alliance.value as any
+        return a?.alliance_id
+            ? `https://images.evetech.net/alliances/${a.alliance_id}/logo?size=512`
+            : "/images/default-og.png"
+    }),
 })
 
 interface IShortStats {

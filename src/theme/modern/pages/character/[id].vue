@@ -689,7 +689,7 @@ useSeoMeta({
         if (!char?.name) return t("character.characterPage");
 
         if (!char.corporation_name || !char.corporation_ticker) {
-            return `${char.name} - EVE Online Character`;
+            return `${char.name}`;
         }
 
         // Build title manually for better control
@@ -765,7 +765,13 @@ useSeoMeta({
         description += '. Access killmail history, combat statistics, corporation details, and activity metrics.';
 
         return description;
-    })
+    }),
+    twitterImage: computed(() => {
+        const char = character.value as any;
+        return char?.character_id
+            ? `https://images.evetech.net/characters/${char.character_id}/portrait?size=512`
+            : "/images/default-og.png";
+    }),
 });
 
 const formatNumber = (value: number): string => {

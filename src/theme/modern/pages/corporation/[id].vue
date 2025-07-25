@@ -352,7 +352,13 @@ useSeoMeta({
         return c?.name && c?.ticker
             ? t('seo.corporation.description', { corporationName: c.name, ticker: c.ticker })
             : t("corporationDefaultDescription", { id: corporationId })
-    })
+    }),
+    twitterImage: computed(() => {
+        const c = corporation.value as any
+        return c?.corporation_id
+            ? `https://images.evetech.net/corporations/${c.corporation_id}/logo?size=512`
+            : "/images/default-og.png"
+    }),
 })
 
 interface IShortStats {
