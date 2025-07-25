@@ -166,12 +166,30 @@ async function generateAdvancedViewStats(
     const validShipGroupIds = await getValidShipGroupIds();
 
     // Maps to collect aggregated data
-    const shipGroupMap = new Map<number, { ship_group_name: string | any; killed: number }>();
-    const killerCharacterMap = new Map<number, { character_name: string; kills: number }>();
-    const victimCharacterMap = new Map<number, { character_name: string; losses: number }>();
-    const damageCharacterMap = new Map<number, { character_name: string; totalDamageValue: number; killCount: number }>();
-    const killerCorporationMap = new Map<number, { corporation_name: string; kills: number }>();
-    const killerAllianceMap = new Map<number, { alliance_name: string; kills: number }>();
+    const shipGroupMap = new Map<
+        number,
+        { ship_group_name: string | any; killed: number }
+    >();
+    const killerCharacterMap = new Map<
+        number,
+        { character_name: string; kills: number }
+    >();
+    const victimCharacterMap = new Map<
+        number,
+        { character_name: string; losses: number }
+    >();
+    const damageCharacterMap = new Map<
+        number,
+        { character_name: string; totalDamageValue: number; killCount: number }
+    >();
+    const killerCorporationMap = new Map<
+        number,
+        { corporation_name: string; kills: number }
+    >();
+    const killerAllianceMap = new Map<
+        number,
+        { alliance_name: string; kills: number }
+    >();
     const mostValuableList: Array<{
         killmail_id: number;
         total_value: number;
@@ -212,7 +230,9 @@ async function generateAdvancedViewStats(
 
         // Track most valuable kills (keep top 10)
         if (mostValuableList.length < 10) {
-            const finalBlow = killmail.attackers?.find((attacker: any) => attacker.final_blow);
+            const finalBlow = killmail.attackers?.find(
+                (attacker: any) => attacker.final_blow
+            );
             mostValuableList.push({
                 killmail_id: killmail.killmail_id,
                 total_value: killmail.total_value,
@@ -226,18 +246,26 @@ async function generateAdvancedViewStats(
                     alliance_id: killmail.victim?.alliance_id,
                     alliance_name: killmail.victim?.alliance_name,
                 },
-                final_blow: finalBlow ? {
-                    character_id: finalBlow.character_id,
-                    character_name: finalBlow.character_name,
-                    ship_id: finalBlow.ship_id || 0,
-                    ship_name: finalBlow.ship_name || "Unknown",
-                } : undefined,
+                final_blow: finalBlow
+                    ? {
+                          character_id: finalBlow.character_id,
+                          character_name: finalBlow.character_name,
+                          ship_id: finalBlow.ship_id || 0,
+                          ship_name: finalBlow.ship_name || "Unknown",
+                      }
+                    : undefined,
             });
             // Sort to keep highest value at top
-            mostValuableList.sort((a, b) => (b.total_value || 0) - (a.total_value || 0));
-        } else if ((killmail.total_value || 0) > (mostValuableList[9].total_value || 0)) {
+            mostValuableList.sort(
+                (a, b) => (b.total_value || 0) - (a.total_value || 0)
+            );
+        } else if (
+            (killmail.total_value || 0) > (mostValuableList[9].total_value || 0)
+        ) {
             // Replace lowest value kill
-            const finalBlow = killmail.attackers?.find((attacker: any) => attacker.final_blow);
+            const finalBlow = killmail.attackers?.find(
+                (attacker: any) => attacker.final_blow
+            );
             mostValuableList[9] = {
                 killmail_id: killmail.killmail_id,
                 total_value: killmail.total_value,
@@ -251,26 +279,34 @@ async function generateAdvancedViewStats(
                     alliance_id: killmail.victim?.alliance_id,
                     alliance_name: killmail.victim?.alliance_name,
                 },
-                final_blow: finalBlow ? {
-                    character_id: finalBlow.character_id,
-                    character_name: finalBlow.character_name,
-                    ship_id: finalBlow.ship_id || 0,
-                    ship_name: finalBlow.ship_name || "Unknown",
-                } : undefined,
+                final_blow: finalBlow
+                    ? {
+                          character_id: finalBlow.character_id,
+                          character_name: finalBlow.character_name,
+                          ship_id: finalBlow.ship_id || 0,
+                          ship_name: finalBlow.ship_name || "Unknown",
+                      }
+                    : undefined,
             };
-            mostValuableList.sort((a, b) => (b.total_value || 0) - (a.total_value || 0));
+            mostValuableList.sort(
+                (a, b) => (b.total_value || 0) - (a.total_value || 0)
+            );
         }
 
         // Process attackers
         if (killmail.attackers && Array.isArray(killmail.attackers)) {
             killmail.attackers.forEach((attacker: any) => {
                 // Ship group stats (only for valid ship groups)
-                if (attacker.ship_group_id && validShipGroupIds.has(attacker.ship_group_id)) {
+                if (
+                    attacker.ship_group_id &&
+                    validShipGroupIds.has(attacker.ship_group_id)
+                ) {
                     if (shipGroupMap.has(attacker.ship_group_id)) {
                         shipGroupMap.get(attacker.ship_group_id)!.killed++;
                     } else {
                         shipGroupMap.set(attacker.ship_group_id, {
-                            ship_group_name: attacker.ship_group_name || "Unknown",
+                            ship_group_name:
+                                attacker.ship_group_name || "Unknown",
                             killed: 1,
                         });
                     }
@@ -289,7 +325,9 @@ async function generateAdvancedViewStats(
 
                     // Character damage stats (using total_value as proxy)
                     if (damageCharacterMap.has(attacker.character_id)) {
-                        const entry = damageCharacterMap.get(attacker.character_id)!;
+                        const entry = damageCharacterMap.get(
+                            attacker.character_id
+                        )!;
                         entry.totalDamageValue += killmail.total_value || 0;
                         entry.killCount++;
                     } else {
@@ -304,7 +342,8 @@ async function generateAdvancedViewStats(
                 // Corporation killer stats
                 if (attacker.corporation_id && attacker.corporation_name) {
                     if (killerCorporationMap.has(attacker.corporation_id)) {
-                        killerCorporationMap.get(attacker.corporation_id)!.kills++;
+                        killerCorporationMap.get(attacker.corporation_id)!
+                            .kills++;
                     } else {
                         killerCorporationMap.set(attacker.corporation_id, {
                             corporation_name: attacker.corporation_name,

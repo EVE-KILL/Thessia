@@ -329,7 +329,7 @@ export default defineCachedEventHandler(
         }
     },
     {
-        maxAge: 600, // 10 minutes cache
+        maxAge: 3600, // 1 hour cache
         staleMaxAge: -1,
         swr: true,
         base: "redis",

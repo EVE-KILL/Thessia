@@ -336,7 +336,7 @@ watch(() => route.query, async (newQuery, oldQuery) => {
   // Only reload if the filters parameter actually changed
   const newFilters = newQuery.filters || newQuery.filter;
   const oldFilters = oldQuery?.filters || oldQuery?.filter;
-  
+
   if (newFilters !== oldFilters && newFilters) {
     await loadData();
   }
