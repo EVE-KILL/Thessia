@@ -337,23 +337,48 @@ const { data: alliance, pending, error } = await useFetch(`/api/alliances/${alli
 useSeoMeta({
     title: computed(() => {
         const a = alliance.value as any
-        return a?.name ? `${a.name}` : t("alliance.alliancePage")
+        return a?.name && a?.ticker
+            ? t('seo.alliance.title', { allianceName: a.name, ticker: a.ticker })
+            : t("alliance.alliancePage")
     }),
     description: computed(() => {
         const a = alliance.value as any
         return a?.name && a?.ticker
-            ? t("allianceMetaDescription", {
-                name: a.name,
-                ticker: a.ticker,
-            })
+            ? t('seo.alliance.description', { allianceName: a.name, ticker: a.ticker })
+            : t("allianceDefaultDescription", { id: allianceId })
+    }),
+    ogTitle: computed(() => {
+        const a = alliance.value as any
+        return a?.name && a?.ticker
+            ? t('seo.alliance.title', { allianceName: a.name, ticker: a.ticker })
+            : t("alliance.alliancePage")
+    }),
+    ogDescription: computed(() => {
+        const a = alliance.value as any
+        return a?.name && a?.ticker
+            ? t('seo.alliance.description', { allianceName: a.name, ticker: a.ticker })
             : t("allianceDefaultDescription", { id: allianceId })
     }),
     ogImage: computed(() => {
         const a = alliance.value as any
         return a?.alliance_id
-            ? `https://images.eve-kill.com/alliances/${a.alliance_id}/logo?size=256`
+            ? `https://images.evetech.net/alliances/${a.alliance_id}/logo?size=512`
             : "/images/default-og.png"
     }),
+    ogType: 'website',
+    twitterCard: 'summary_large_image',
+    twitterTitle: computed(() => {
+        const a = alliance.value as any
+        return a?.name && a?.ticker
+            ? t('seo.alliance.title', { allianceName: a.name, ticker: a.ticker })
+            : t("alliance.alliancePage")
+    }),
+    twitterDescription: computed(() => {
+        const a = alliance.value as any
+        return a?.name && a?.ticker
+            ? t('seo.alliance.description', { allianceName: a.name, ticker: a.ticker })
+            : t("allianceDefaultDescription", { id: allianceId })
+    })
 })
 
 interface IShortStats {

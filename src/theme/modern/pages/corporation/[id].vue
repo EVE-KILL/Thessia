@@ -311,24 +311,48 @@ const { data: corporation, pending, error } = await useFetch(`/api/corporations/
 useSeoMeta({
     title: computed(() => {
         const c = corporation.value as any
-        return c?.name ? `${c.name}` : t("corporation.corporationPage")
+        return c?.name && c?.ticker
+            ? t('seo.corporation.title', { corporationName: c.name, ticker: c.ticker })
+            : t("corporation.corporationPage")
     }),
     description: computed(() => {
         const c = corporation.value as any
         return c?.name && c?.ticker
-            ? t("corporationMetaDescription", {
-                name: c.name,
-                ticker: c.ticker,
-                alliance: c.alliance_name || t("noAlliance"),
-            })
+            ? t('seo.corporation.description', { corporationName: c.name, ticker: c.ticker })
+            : t("corporationDefaultDescription", { id: corporationId })
+    }),
+    ogTitle: computed(() => {
+        const c = corporation.value as any
+        return c?.name && c?.ticker
+            ? t('seo.corporation.title', { corporationName: c.name, ticker: c.ticker })
+            : t("corporation.corporationPage")
+    }),
+    ogDescription: computed(() => {
+        const c = corporation.value as any
+        return c?.name && c?.ticker
+            ? t('seo.corporation.description', { corporationName: c.name, ticker: c.ticker })
             : t("corporationDefaultDescription", { id: corporationId })
     }),
     ogImage: computed(() => {
         const c = corporation.value as any
         return c?.corporation_id
-            ? `https://images.eve-kill.com/corporations/${c.corporation_id}/logo?size=256`
+            ? `https://images.evetech.net/corporations/${c.corporation_id}/logo?size=512`
             : "/images/default-og.png"
     }),
+    ogType: 'website',
+    twitterCard: 'summary_large_image',
+    twitterTitle: computed(() => {
+        const c = corporation.value as any
+        return c?.name && c?.ticker
+            ? t('seo.corporation.title', { corporationName: c.name, ticker: c.ticker })
+            : t("corporation.corporationPage")
+    }),
+    twitterDescription: computed(() => {
+        const c = corporation.value as any
+        return c?.name && c?.ticker
+            ? t('seo.corporation.description', { corporationName: c.name, ticker: c.ticker })
+            : t("corporationDefaultDescription", { id: corporationId })
+    })
 })
 
 interface IShortStats {

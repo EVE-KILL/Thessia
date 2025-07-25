@@ -58,6 +58,7 @@ import { useRoute, useRouter } from 'vue-router';
 import SystemBattles from '~/components/system/SystemBattles.vue';
 import KillList from '../../components/common/KillList.vue';
 
+const { t, locale } = useI18n();
 const route = useRoute();
 const router = useRouter();
 const { id } = route.params;
@@ -68,6 +69,30 @@ const {
     error,
 } = useFetch(`/api/solarsystems/${id}`);
 
+// SEO setup with dynamic content
+useSeoMeta({
+    title: () => system.value
+        ? t('seo.system.title', { systemName: system.value.system_name })
+        : t('systemPageTitle'),
+    description: () => system.value
+        ? t('seo.system.description', { systemName: system.value.system_name })
+        : 'EVE Online solar system information and combat activity',
+    ogTitle: () => system.value
+        ? t('seo.system.title', { systemName: system.value.system_name })
+        : t('systemPageTitle'),
+    ogDescription: () => system.value
+        ? t('seo.system.description', { systemName: system.value.system_name })
+        : 'EVE Online solar system information and combat activity',
+    ogType: 'website',
+    twitterCard: 'summary',
+    twitterTitle: () => system.value
+        ? t('seo.system.title', { systemName: system.value.system_name })
+        : t('systemPageTitle'),
+    twitterDescription: () => system.value
+        ? t('seo.system.description', { systemName: system.value.system_name })
+        : 'EVE Online solar system information and combat activity'
+});
+
 const getSecurityStatusColor = (security: number): string => {
     if (security >= 0.5) return "#00FF00";
     if (security >= 0.0) return "#FFFF00";
@@ -75,7 +100,6 @@ const getSecurityStatusColor = (security: number): string => {
     return "#FF0000";
 };
 
-const { t } = useI18n();
 const tabItems = [
     { id: "overview", label: t("overview"), icon: "i-lucide-home", slot: "overview" as const },
     { id: "battles", label: t("battles"), icon: "i-lucide-swords", slot: "battles" as const },

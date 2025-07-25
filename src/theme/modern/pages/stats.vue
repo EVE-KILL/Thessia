@@ -133,10 +133,14 @@ onMounted(() => {
 });
 
 useSeoMeta({
-    title: 'Historical Statistics - EVE Online',
-    description: 'View historical statistics for EVE Online alliances and corporations',
-    ogTitle: 'EVE Online Historical Statistics',
-    ogDescription: 'View top growing, shrinking, and largest alliances and corporations in EVE Online',
+    title: () => t('seo.stats.title'),
+    description: () => t('seo.stats.description'),
+    ogTitle: () => t('seo.stats.title'),
+    ogDescription: () => t('seo.stats.description'),
+    ogType: 'website',
+    twitterCard: 'summary_large_image',
+    twitterTitle: () => t('seo.stats.title'),
+    twitterDescription: () => t('seo.stats.description')
 });
 </script>
 

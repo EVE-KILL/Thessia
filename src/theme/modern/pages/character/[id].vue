@@ -646,24 +646,126 @@ watch(character, (newCharacter) => {
 useSeoMeta({
     title: computed(() => {
         const char = character.value as any;
-        return char?.name ? `${char.name}` : t("character.characterPage");
+
+        if (!char?.name) return t("character.characterPage");
+
+        // Build title manually if corporation data is missing
+        if (!char.corporation_name || !char.corporation_ticker) {
+            return `${char.name}`;
+        }
+
+        // Build title manually for better control
+        let title = `${char.name} | ${char.corporation_name} [${char.corporation_ticker}]`;
+
+        // Add alliance if available
+        if (char.alliance_name && char.alliance_ticker) {
+            title += ` | ${char.alliance_name} [${char.alliance_ticker}]`;
+        }
+
+        return title;
     }),
     description: computed(() => {
         const char = character.value as any;
-        return char?.name && char?.corporation_name
-            ? t("characterMetaDescription", {
-                name: char.name,
-                corporation: char.corporation_name,
-                alliance: char.alliance_name || t("noAlliance"),
-            })
-            : t("characterDefaultDescription", { id: id });
+        if (!char?.name) return t("characterDefaultDescription", { id: id });
+
+        // Fallback if corporation data is missing
+        if (!char.corporation_name || !char.corporation_ticker) {
+            return `View detailed EVE Online character profile for ${char.name}. Access killmail history, combat statistics, and activity metrics.`;
+        }
+
+        // Build description manually
+        let description = `View detailed EVE Online character profile for ${char.name} from ${char.corporation_name} [${char.corporation_ticker}]`;
+
+        if (char.alliance_name && char.alliance_ticker) {
+            description += ` in alliance ${char.alliance_name} [${char.alliance_ticker}]`;
+        }
+
+        description += '. Access killmail history, combat statistics, corporation details, and activity metrics.';
+
+        return description;
+    }),
+    ogTitle: computed(() => {
+        const char = character.value as any;
+        if (!char?.name) return t("character.characterPage");
+
+        if (!char.corporation_name || !char.corporation_ticker) {
+            return `${char.name} - EVE Online Character`;
+        }
+
+        // Build title manually for better control
+        let title = `${char.name} | ${char.corporation_name} [${char.corporation_ticker}]`;
+
+        // Add alliance if available
+        if (char.alliance_name && char.alliance_ticker) {
+            title += ` | ${char.alliance_name} [${char.alliance_ticker}]`;
+        }
+
+        return title;
+    }),
+    ogDescription: computed(() => {
+        const char = character.value as any;
+        if (!char?.name) return t("characterDefaultDescription", { id: id });
+
+        if (!char.corporation_name || !char.corporation_ticker) {
+            return `View detailed EVE Online character profile for ${char.name}. Access killmail history, combat statistics, and activity metrics.`;
+        }
+
+        // Build description manually
+        let description = `View detailed EVE Online character profile for ${char.name} from ${char.corporation_name} [${char.corporation_ticker}]`;
+
+        if (char.alliance_name && char.alliance_ticker) {
+            description += ` in alliance ${char.alliance_name} [${char.alliance_ticker}]`;
+        }
+
+        description += '. Access killmail history, combat statistics, corporation details, and activity metrics.';
+
+        return description;
     }),
     ogImage: computed(() => {
         const char = character.value as any;
         return char?.character_id
-            ? `https://images.eve-kill.com/characters/${char.character_id}/portrait?size=256`
+            ? `https://images.evetech.net/characters/${char.character_id}/portrait?size=512`
             : "/images/default-og.png";
     }),
+    ogType: 'profile',
+    twitterCard: 'summary_large_image',
+    twitterTitle: computed(() => {
+        const char = character.value as any;
+        if (!char?.name) return t("character.characterPage");
+
+        if (!char.corporation_name || !char.corporation_ticker) {
+            return `${char.name} - EVE Online Character`;
+        }
+
+        // Build title manually for better control
+        let title = `${char.name} | ${char.corporation_name} [${char.corporation_ticker}]`;
+
+        // Add alliance if available
+        if (char.alliance_name && char.alliance_ticker) {
+            title += ` | ${char.alliance_name} [${char.alliance_ticker}]`;
+        }
+
+        return title;
+    }),
+    twitterDescription: computed(() => {
+        const char = character.value as any;
+        if (!char?.name) return t("characterDefaultDescription", { id: id });
+
+        if (!char.corporation_name || !char.corporation_ticker) {
+            return `View detailed EVE Online character profile for ${char.name}. Access killmail history, combat statistics, and activity metrics.`;
+        }
+
+        // Build description manually
+        let description = `View detailed EVE Online character profile for ${char.name} from ${char.corporation_name} [${char.corporation_ticker}]`;
+
+        if (char.alliance_name && char.alliance_ticker) {
+            description += ` in alliance ${char.alliance_name} [${char.alliance_ticker}]`;
+        }
+
+        description += '. Access killmail history, combat statistics, corporation details, and activity metrics.';
+
+        return description;
+    })
 });
 
 const formatNumber = (value: number): string => {

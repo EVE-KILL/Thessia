@@ -394,9 +394,30 @@ watch(() => route.query.q, async (newQuery, oldQuery) => {
         searchQuery.value = "";
         results.value = null;
     }
-}, { immediate: false }); // Don't run immediately as onMounted handles initial load// Define page metadata using useSeoMeta instead of useHead
+}, { immediate: false }); // Don't run immediately as onMounted handles initial load
+
+// Define page metadata using useSeoMeta instead of useHead
 useSeoMeta({
-    title: computed(() => (searchQuery.value ? `${searchQuery.value} - searchResults` : "Search")),
+    title: computed(() =>
+        searchQuery.value
+            ? `${searchQuery.value} - ${t('seo.search.title')}`
+            : t('seo.search.title')
+    ),
+    description: computed(() => t('seo.search.description')),
+    ogTitle: computed(() =>
+        searchQuery.value
+            ? `${searchQuery.value} - ${t('seo.search.title')}`
+            : t('seo.search.title')
+    ),
+    ogDescription: computed(() => t('seo.search.description')),
+    ogType: 'website',
+    twitterCard: 'summary',
+    twitterTitle: computed(() =>
+        searchQuery.value
+            ? `${searchQuery.value} - ${t('seo.search.title')}`
+            : t('seo.search.title')
+    ),
+    twitterDescription: computed(() => t('seo.search.description'))
 });
 </script>
 

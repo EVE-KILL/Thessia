@@ -49,12 +49,13 @@
 </template>
 
 <script setup lang="ts">
-import { onMounted, ref, watch } from 'vue';
+import { computed, onMounted, ref, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useRoute, useRouter } from 'vue-router';
 import RegionBattles from '~/components/region/RegionBattles.vue';
 import KillList from '../../components/common/KillList.vue';
 
+const { t, locale } = useI18n();
 const route = useRoute();
 const router = useRouter();
 const { id } = route.params;
@@ -65,7 +66,48 @@ const {
     error,
 } = useFetch(`/api/regions/${id}`);
 
-const { t } = useI18n();
+// SEO setup with dynamic content
+useSeoMeta({
+    title: computed(() => {
+        if (!region.value) return t('regionPageTitle');
+
+        const regionName = region.value.name?.en || region.value.name?.en_us || `Region ${region.value.region_id}`;
+        return `${regionName}`;
+    }),
+    description: computed(() => {
+        if (!region.value) return 'EVE Online region information and combat activity';
+
+        const regionName = region.value.name?.en || region.value.name?.en_us || `Region ${region.value.region_id}`;
+        return `Browse EVE Online combat data for the ${regionName} region. Access detailed killmail statistics, battle reports, and activity analysis.`;
+    }),
+    ogTitle: computed(() => {
+        if (!region.value) return t('regionPageTitle');
+
+        const regionName = region.value.name?.en || region.value.name?.en_us || `Region ${region.value.region_id}`;
+        return `${regionName}`;
+    }),
+    ogDescription: computed(() => {
+        if (!region.value) return 'EVE Online region information and combat activity';
+
+        const regionName = region.value.name?.en || region.value.name?.en_us || `Region ${region.value.region_id}`;
+        return `Browse EVE Online combat data for the ${regionName} region. Access detailed killmail statistics, battle reports, and activity analysis.`;
+    }),
+    ogType: 'website',
+    twitterCard: 'summary',
+    twitterTitle: computed(() => {
+        if (!region.value) return t('regionPageTitle');
+
+        const regionName = region.value.name?.en || region.value.name?.en_us || `Region ${region.value.region_id}`;
+        return `${regionName} - EVE Online Region`;
+    }),
+    twitterDescription: computed(() => {
+        if (!region.value) return 'EVE Online region information and combat activity';
+
+        const regionName = region.value.name?.en || region.value.name?.en_us || `Region ${region.value.region_id}`;
+        return `Browse EVE Online combat data for the ${regionName} region. Access detailed killmail statistics, battle reports, and activity analysis.`;
+    })
+});
+
 const tabItems = [
     { id: "overview", label: t("overview"), icon: "i-lucide-home", slot: "overview" as const },
     { id: "battles", label: t("battles"), icon: "i-lucide-swords", slot: "battles" as const },

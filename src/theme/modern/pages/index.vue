@@ -92,11 +92,11 @@ const tabItems = ref([
 useSeoMeta({
     title: t("homePageTitle"),
     description: "The premier EVE Online killboard providing real-time combat data, killmail tracking, and battle reports for the EVE Online community",
-    ogTitle: t("homePageTitle") + " - EVE-KILL",
+    ogTitle: t("homePageTitle"),
     ogDescription: "Track EVE Online killmails, analyze combat data, and explore battle reports on the premier EVE killboard",
     ogType: "website",
     twitterCard: "summary_large_image",
-    twitterTitle: t("homePageTitle") + " - EVE-KILL",
+    twitterTitle: t("homePageTitle"),
     twitterDescription: "The premier EVE Online killboard for combat data and killmail tracking"
 });
 

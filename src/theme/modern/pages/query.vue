@@ -37,8 +37,14 @@ const { t } = useI18n();
 
 // SEO
 useSeoMeta({
-    title: "Query Builder",
-    description: "Advanced killmail search and filtering",
+    title: () => t('seo.query.title'),
+    description: () => t('seo.query.description'),
+    ogTitle: () => t('seo.query.title'),
+    ogDescription: () => t('seo.query.description'),
+    ogType: 'website',
+    twitterCard: 'summary_large_image',
+    twitterTitle: () => t('seo.query.title'),
+    twitterDescription: () => t('seo.query.description')
 });
 
 // Constants

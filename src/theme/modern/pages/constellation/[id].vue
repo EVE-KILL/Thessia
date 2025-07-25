@@ -43,6 +43,7 @@
 import { useRoute } from 'vue-router';
 import KillList from '../../components/common/KillList.vue';
 
+const { t } = useI18n();
 const route = useRoute();
 const { id } = route.params;
 
@@ -51,4 +52,28 @@ const {
     pending,
     error,
 } = useFetch(`/api/constellations/${id}`);
+
+// SEO setup with dynamic content
+useSeoMeta({
+    title: () => constellation.value
+        ? t('seo.constellation.title', { constellationName: constellation.value.constellation_name })
+        : t('constellationPageTitle'),
+    description: () => constellation.value
+        ? t('seo.constellation.description', { constellationName: constellation.value.constellation_name })
+        : 'EVE Online constellation information and combat activity',
+    ogTitle: () => constellation.value
+        ? t('seo.constellation.title', { constellationName: constellation.value.constellation_name })
+        : t('constellationPageTitle'),
+    ogDescription: () => constellation.value
+        ? t('seo.constellation.description', { constellationName: constellation.value.constellation_name })
+        : 'EVE Online constellation information and combat activity',
+    ogType: 'website',
+    twitterCard: 'summary',
+    twitterTitle: () => constellation.value
+        ? t('seo.constellation.title', { constellationName: constellation.value.constellation_name })
+        : t('constellationPageTitle'),
+    twitterDescription: () => constellation.value
+        ? t('seo.constellation.description', { constellationName: constellation.value.constellation_name })
+        : 'EVE Online constellation information and combat activity'
+});
 </script>

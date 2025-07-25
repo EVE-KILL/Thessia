@@ -93,28 +93,41 @@ watch(
 useSeoMeta({
     title: computed(() =>
         item.value
-            ? `${getLocalizedString(item.value.name, currentLocale)} | EVE-KILL`
+            ? t('seo.item.title', { itemName: getLocalizedString(item.value.name, currentLocale.value) })
             : "Item Details | EVE-KILL",
     ),
     ogTitle: computed(() =>
         item.value
-            ? `${getLocalizedString(item.value.name, currentLocale)} | EVE-KILL`
+            ? t('seo.item.title', { itemName: getLocalizedString(item.value.name, currentLocale.value) })
             : "Item Details | EVE-KILL",
     ),
     description: computed(() =>
         item.value
-            ? truncateText(stripHtml(getLocalizedString(item.value.description, currentLocale)), 160)
-            : "EVE Online item details",
+            ? t('seo.item.description', { itemName: getLocalizedString(item.value.name, currentLocale.value) })
+            : "EVE Online item details and market information",
     ),
     ogDescription: computed(() =>
         item.value
-            ? truncateText(stripHtml(getLocalizedString(item.value.description, currentLocale)), 160)
-            : "EVE Online item details",
+            ? t('seo.item.description', { itemName: getLocalizedString(item.value.name, currentLocale.value) })
+            : "EVE Online item details and market information",
     ),
     ogImage: computed(() =>
-        item.value ? `https://images.evetech.net/types/${item.value.type_id}/render?size=512` : "",
+        item.value
+            ? `https://images.evetech.net/types/${item.value.type_id}/icon?size=512`
+            : "/images/default-og.png",
     ),
+    ogType: 'website',
     twitterCard: "summary_large_image",
+    twitterTitle: computed(() =>
+        item.value
+            ? t('seo.item.title', { itemName: getLocalizedString(item.value.name, currentLocale.value) })
+            : "Item Details | EVE-KILL",
+    ),
+    twitterDescription: computed(() =>
+        item.value
+            ? t('seo.item.description', { itemName: getLocalizedString(item.value.name, currentLocale.value) })
+            : "EVE Online item details and market information",
+    )
 });
 
 /**

@@ -227,10 +227,14 @@ const { isAuthenticated, currentUser } = useAuth();
 
 // SEO setup
 useSeoMeta({
-    title: () => `${t('campaign.list.title')} | EVE Kill`,
-    description: () => t('campaign.list.meta_description'),
-    ogTitle: () => `${t('campaign.list.title')} | EVE Kill`,
-    ogDescription: () => t('campaign.list.meta_description'),
+    title: () => t('seo.campaignsList.title'),
+    description: () => t('seo.campaignsList.description'),
+    ogTitle: () => t('seo.campaignsList.title'),
+    ogDescription: () => t('seo.campaignsList.description'),
+    ogType: 'website',
+    twitterCard: 'summary_large_image',
+    twitterTitle: () => t('seo.campaignsList.title'),
+    twitterDescription: () => t('seo.campaignsList.description')
 });
 
 // Pagination

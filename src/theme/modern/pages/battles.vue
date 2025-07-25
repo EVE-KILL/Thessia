@@ -7,6 +7,32 @@ const { t, locale } = useI18n();
 const router = useRouter();
 const currentLocale = computed(() => locale.value);
 
+// SEO setup with dynamic content based on filters
+const seoTitle = computed(() => {
+    if (filter.value !== 'all') {
+        return t('seo.battlesFilter.title', { filter: filter.value });
+    }
+    return t('seo.battlesList.title');
+});
+
+const seoDescription = computed(() => {
+    if (filter.value !== 'all') {
+        return t('seo.battlesFilter.description', { filter: filter.value });
+    }
+    return t('seo.battlesList.description');
+});
+
+useSeoMeta({
+    title: seoTitle,
+    description: seoDescription,
+    ogTitle: seoTitle,
+    ogDescription: seoDescription,
+    ogType: 'website',
+    twitterCard: 'summary_large_image',
+    twitterTitle: seoTitle,
+    twitterDescription: seoDescription
+});
+
 const currentPage = ref(1);
 const pageSizeItems = [
     { label: "10", value: 10 },
