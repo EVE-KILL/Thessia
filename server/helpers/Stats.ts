@@ -327,15 +327,21 @@ export async function calculateAllStats(
     }
 
     // Run base stats calculations in parallel for better performance
-    const [basicStats, shipGroupStats, monthlyStats, heatMapData, mostUsedShips, mostLostShips] =
-        await Promise.all([
-            getBasicStats(type, id, timeFilter),
-            getShipGroupStats(type, id, timeFilter),
-            getMonthlyStats(type, id, timeFilter),
-            getHeatMapData(type, id, timeFilter),
-            getMostUsedShips(type, id, timeFilter),
-            getMostLostShips(type, id, timeFilter),
-        ]);
+    const [
+        basicStats,
+        shipGroupStats,
+        monthlyStats,
+        heatMapData,
+        mostUsedShips,
+        mostLostShips,
+    ] = await Promise.all([
+        getBasicStats(type, id, timeFilter),
+        getShipGroupStats(type, id, timeFilter),
+        getMonthlyStats(type, id, timeFilter),
+        getHeatMapData(type, id, timeFilter),
+        getMostUsedShips(type, id, timeFilter),
+        getMostLostShips(type, id, timeFilter),
+    ]);
 
     // Process character-specific stats only if needed
     const characterSpecificStats =
@@ -1255,11 +1261,17 @@ async function getBlobFactorData(
 /**
  * Get most used ships statistics with sampling for large datasets
  */
-async function getMostUsedShips(type: StatsType, id: number, timeFilter?: { $gte: Date }) {
+async function getMostUsedShips(
+    type: StatsType,
+    id: number,
+    timeFilter?: { $gte: Date }
+) {
     // Validate entity parameters to prevent attackers.undefined queries
     const validation = validateEntity(type, id);
     if (!validation.valid) {
-        console.error(`Invalid entity for most used ships: type=${type}, id=${id}`);
+        console.error(
+            `Invalid entity for most used ships: type=${type}, id=${id}`
+        );
         return {};
     }
 
@@ -1281,10 +1293,12 @@ async function getMostUsedShips(type: StatsType, id: number, timeFilter?: { $gte
     ).lean();
 
     // Create an array of valid ship type IDs
-    const validShipIds = shipTypes.map(item => item.type_id);
+    const validShipIds = shipTypes.map((item) => item.type_id);
 
     // Check if we need to sample (for extremely large datasets)
-    const totalKillCount = await Killmails.countDocuments(killMatchCondition).limit(1000000);
+    const totalKillCount = await Killmails.countDocuments(
+        killMatchCondition
+    ).limit(1000000);
 
     // Define sampling rates based on data size
     const SAMPLE_THRESHOLD = 100000;
@@ -1298,7 +1312,10 @@ async function getMostUsedShips(type: StatsType, id: number, timeFilter?: { $gte
 
     // Add sampling stage for large datasets
     if (useSamplingForKills) {
-        const sampleSize = Math.min(SAMPLE_THRESHOLD, Math.max(10000, Math.floor(totalKillCount * 0.1)));
+        const sampleSize = Math.min(
+            SAMPLE_THRESHOLD,
+            Math.max(10000, Math.floor(totalKillCount * 0.1))
+        );
         killsPipeline.push({ $sample: { size: sampleSize } });
     } else {
         killsPipeline.push({ $match: killMatchCondition });
@@ -1310,15 +1327,15 @@ async function getMostUsedShips(type: StatsType, id: number, timeFilter?: { $gte
         {
             $match: {
                 [`attackers.${type}`]: id,
-                "attackers.ship_id": { $in: validShipIds } // Early ship filtering
-            }
+                "attackers.ship_id": { $in: validShipIds }, // Early ship filtering
+            },
         },
         {
             $group: {
                 _id: "$attackers.ship_id",
                 count: { $sum: 1 },
-                name: { $first: "$attackers.ship_name" }
-            }
+                name: { $first: "$attackers.ship_name" },
+            },
         },
         { $match: { _id: { $ne: 0 } } },
         { $sort: { count: -1 } },
@@ -1326,15 +1343,17 @@ async function getMostUsedShips(type: StatsType, id: number, timeFilter?: { $gte
     );
 
     // Run aggregation
-    const mostUsedShipsAgg = await Killmails.aggregate(killsPipeline).allowDiskUse(true);
+    const mostUsedShipsAgg = await Killmails.aggregate(
+        killsPipeline
+    ).allowDiskUse(true);
 
     // Process ship usage data
     const mostUsedShips: Record<number, { count: number; name: any }> = {};
-    mostUsedShipsAgg.forEach(ship => {
+    mostUsedShipsAgg.forEach((ship) => {
         if (ship._id) {
             mostUsedShips[ship._id] = {
                 count: ship.count,
-                name: ship.name || { en: "" }
+                name: ship.name || { en: "" },
             };
         }
     });
@@ -1345,11 +1364,17 @@ async function getMostUsedShips(type: StatsType, id: number, timeFilter?: { $gte
 /**
  * Get most lost ships statistics with sampling for large datasets
  */
-async function getMostLostShips(type: StatsType, id: number, timeFilter?: { $gte: Date }) {
+async function getMostLostShips(
+    type: StatsType,
+    id: number,
+    timeFilter?: { $gte: Date }
+) {
     // Validate entity parameters to prevent attackers.undefined queries
     const validation = validateEntity(type, id);
     if (!validation.valid) {
-        console.error(`Invalid entity for most lost ships: type=${type}, id=${id}`);
+        console.error(
+            `Invalid entity for most lost ships: type=${type}, id=${id}`
+        );
         return {};
     }
 
@@ -1371,10 +1396,12 @@ async function getMostLostShips(type: StatsType, id: number, timeFilter?: { $gte
     ).lean();
 
     // Create an array of valid ship type IDs
-    const validShipIds = shipTypes.map(item => item.type_id);
+    const validShipIds = shipTypes.map((item) => item.type_id);
 
     // Check if we need to sample (for extremely large datasets)
-    const totalLossCount = await Killmails.countDocuments(lossMatchCondition).limit(1000000);
+    const totalLossCount = await Killmails.countDocuments(
+        lossMatchCondition
+    ).limit(1000000);
 
     // Define sampling rates based on data size
     const SAMPLE_THRESHOLD = 100000;
@@ -1388,7 +1415,10 @@ async function getMostLostShips(type: StatsType, id: number, timeFilter?: { $gte
 
     // Add sampling stage for large datasets
     if (useSamplingForLosses) {
-        const sampleSize = Math.min(SAMPLE_THRESHOLD, Math.max(10000, Math.floor(totalLossCount * 0.1)));
+        const sampleSize = Math.min(
+            SAMPLE_THRESHOLD,
+            Math.max(10000, Math.floor(totalLossCount * 0.1))
+        );
         lossesPipeline.push({ $sample: { size: sampleSize } });
     } else {
         lossesPipeline.push({ $match: lossMatchCondition });
@@ -1398,15 +1428,15 @@ async function getMostLostShips(type: StatsType, id: number, timeFilter?: { $gte
     lossesPipeline.push(
         {
             $match: {
-                "victim.ship_id": { $in: validShipIds } // Early ship filtering
-            }
+                "victim.ship_id": { $in: validShipIds }, // Early ship filtering
+            },
         },
         {
             $group: {
                 _id: "$victim.ship_id",
                 count: { $sum: 1 },
-                name: { $first: "$victim.ship_name" }
-            }
+                name: { $first: "$victim.ship_name" },
+            },
         },
         { $match: { _id: { $ne: 0 } } },
         { $sort: { count: -1 } },
@@ -1414,15 +1444,17 @@ async function getMostLostShips(type: StatsType, id: number, timeFilter?: { $gte
     );
 
     // Run aggregation
-    const mostLostShipsAgg = await Killmails.aggregate(lossesPipeline).allowDiskUse(true);
+    const mostLostShipsAgg = await Killmails.aggregate(
+        lossesPipeline
+    ).allowDiskUse(true);
 
     // Process ship loss data
     const mostLostShips: Record<number, { count: number; name: any }> = {};
-    mostLostShipsAgg.forEach(ship => {
+    mostLostShipsAgg.forEach((ship) => {
         if (ship._id) {
             mostLostShips[ship._id] = {
                 count: ship.count,
-                name: ship.name || { en: "" }
+                name: ship.name || { en: "" },
             };
         }
     });
