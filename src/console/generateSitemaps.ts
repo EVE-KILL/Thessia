@@ -5,541 +5,817 @@ import { Campaigns } from "~/server/models/Campaigns";
 import { Characters } from "~/server/models/Characters";
 import { Corporations } from "~/server/models/Corporations";
 import { Alliances } from "~/server/models/Alliances";
-import { writeFile, mkdir } from "node:fs/promises";
 import { join } from "node:path";
-import { existsSync } from "node:fs";
-import { gzip } from "node:zlib";
-import { promisify } from "node:util";
-
-const gzipAsync = promisify(gzip);
-
-const SITEMAP_MAX_URLS = 50000; // Google's limit for URLs per sitemap
-const SITE_URL = "https://eve-kill.com";
-
-// Dynamically determine sitemaps directory based on environment
-const SITEMAPS_DIR = process.env.THESSIA_CONTAINER 
-    ? join(process.cwd(), "public/sitemaps")           // Container environment
-    : join(process.cwd(), "src/theme/modern/public/sitemaps"); // Development environment
-
-interface SitemapUrl {
-    loc: string;
-    lastmod?: string;
-    changefreq?:
-        | "always"
-        | "hourly"
-        | "daily"
-        | "weekly"
-        | "monthly"
-        | "yearly"
-        | "never";
-    priority?: number;
-}
+import {
+    SITEMAP_MAX_URLS,
+    SITE_URL,
+    SITEMAPS_DIR,
+    SitemapUrl,
+    ensureDir,
+    writeSitemapFile,
+    writeSitemapIndex,
+    generateMainSitemapIndex as generateMainIndex,
+    formatDate,
+    getNextDay,
+    getDayBounds,
+} from "~/server/helpers/Sitemaps";
 
 /**
- * Generate XML content for a sitemap
+ * Generate killmail sitemaps - organized by date with daily files
  */
-function generateSitemapXML(urls: SitemapUrl[]): string {
-    const urlElements = urls
-        .map((url) => {
-            let urlXml = `    <url>\n        <loc>${url.loc}</loc>\n`;
-            if (url.lastmod) {
-                urlXml += `        <lastmod>${url.lastmod}</lastmod>\n`;
-            }
-            if (url.changefreq) {
-                urlXml += `        <changefreq>${url.changefreq}</changefreq>\n`;
-            }
-            if (url.priority !== undefined) {
-                urlXml += `        <priority>${url.priority}</priority>\n`;
-            }
-            urlXml += `    </url>`;
-            return urlXml;
-        })
-        .join("\n");
-
-    return `<?xml version="1.0" encoding="UTF-8"?>
-<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-${urlElements}
-</urlset>`;
-}
-
-/**
- * Generate XML content for a sitemap index
- */
-function generateSitemapIndexXML(
-    sitemaps: { loc: string; lastmod?: string }[]
-): string {
-    const sitemapElements = sitemaps
-        .map((sitemap) => {
-            let sitemapXml = `    <sitemap>\n        <loc>${sitemap.loc}</loc>\n`;
-            if (sitemap.lastmod) {
-                sitemapXml += `        <lastmod>${sitemap.lastmod}</lastmod>\n`;
-            }
-            sitemapXml += `    </sitemap>`;
-            return sitemapXml;
-        })
-        .join("\n");
-
-    return `<?xml version="1.0" encoding="UTF-8"?>
-<sitemapindex xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-${sitemapElements}
-</sitemapindex>`;
-}
-
-/**
- * Ensure directory exists
- */
-async function ensureDir(dirPath: string): Promise<void> {
-    if (!existsSync(dirPath)) {
-        await mkdir(dirPath, { recursive: true });
-        cliLogger.info(`📁 Created directory: ${dirPath}`);
-    }
-}
-
-/**
- * Write sitemap file and return the filename
- */
-async function writeSitemapFile(
-    category: string,
-    urls: SitemapUrl[],
-    chunkIndex?: number
-): Promise<string> {
-    const baseFilename =
-        chunkIndex !== undefined
-            ? `${category}-${chunkIndex.toString().padStart(4, "0")}`
-            : `${category}`;
-
-    const filename = `${baseFilename}.xml.gz`; // Always compress
-    const filePath = join(SITEMAPS_DIR, category, filename);
-    const xmlContent = generateSitemapXML(urls);
-
-    // Compress the XML content
-    const compressedContent = await gzipAsync(xmlContent);
-
-    await writeFile(filePath, compressedContent);
-
-    const originalSize = Buffer.byteLength(xmlContent, "utf8");
-    const compressedSize = compressedContent.length;
-    const compressionRatio = (
-        (1 - compressedSize / originalSize) *
-        100
-    ).toFixed(1);
-
-    cliLogger.info(
-        `✅ Written ${filename} with ${urls.length} URLs (${(
-            originalSize /
-            1024 /
-            1024
-        ).toFixed(2)}MB → ${(compressedSize / 1024 / 1024).toFixed(
-            2
-        )}MB, ${compressionRatio}% compression)`
-    );
-
-    return filename;
-}
-
-/**
- * Write sitemap index file
- */
-async function writeSitemapIndex(
-    category: string,
-    sitemapFiles: string[]
-): Promise<void> {
-    const indexPath = join(SITEMAPS_DIR, `${category}.xml.gz`);
-    const sitemaps = sitemapFiles.map((file) => ({
-        loc: `${SITE_URL}/sitemaps/${category}/${file}`,
-        lastmod: new Date().toISOString().split("T")[0],
-    }));
-
-    const xmlContent = generateSitemapIndexXML(sitemaps);
-    const compressedContent = await gzipAsync(xmlContent);
-
-    await writeFile(indexPath, compressedContent);
-    cliLogger.info(
-        `📋 Written ${category}.xml.gz index with ${sitemapFiles.length} sitemaps`
-    );
-}
-
-/**
- * Generate killmail sitemaps - chunked by date ranges due to massive volume
- */
-async function generateKillmailSitemaps(): Promise<string[]> {
+async function generateKillmailSitemaps(): Promise<
+    { filename: string; relativePath: string; lastmod?: string }[]
+> {
     cliLogger.info("🔪 Starting killmail sitemap generation...");
 
     const categoryDir = join(SITEMAPS_DIR, "killmails");
     await ensureDir(categoryDir);
 
-    const sitemapFiles: string[] = [];
-    let chunkIndex = 0;
-    let currentUrls: SitemapUrl[] = [];
+    const sitemapFiles: {
+        filename: string;
+        relativePath: string;
+        lastmod?: string;
+    }[] = [];
 
-    // Get total count for progress tracking
-    const totalCount = await Killmails.estimatedDocumentCount({});
-    cliLogger.info(
-        `📊 Total killmails to process: ${totalCount.toLocaleString()}`
-    );
+    // Get the earliest killmail to start from
+    const earliestKillmail = await Killmails.findOne(
+        {},
+        { kill_time: 1 },
+        { sort: { killmail_id: 1 } }
+    ).lean();
 
-    let processed = 0;
-    const batchSize = 10000;
-
-    // Use cursor for memory efficiency - Remove sort to start immediately
-    // Sorting 89M records takes forever, we'll just process in natural order
-    const cursor = Killmails.find({}, { killmail_id: 1, kill_time: 1 }).cursor({
-        batchSize,
-    });
-
-    for (
-        let doc = await cursor.next();
-        doc != null;
-        doc = await cursor.next()
-    ) {
-        currentUrls.push({
-            loc: `${SITE_URL}/kill/${doc.killmail_id}`,
-            lastmod: doc.kill_time
-                ? new Date(doc.kill_time).toISOString().split("T")[0]
-                : undefined,
-            changefreq: "never", // Killmails don't change after creation
-            priority: 0.7,
-        });
-
-        processed++;
-
-        // Write chunk when we reach the limit
-        if (currentUrls.length >= SITEMAP_MAX_URLS) {
-            const filename = await writeSitemapFile(
-                "killmails",
-                currentUrls,
-                chunkIndex
-            );
-            sitemapFiles.push(filename);
-            currentUrls = [];
-            chunkIndex++;
-        }
-
-        // Progress logging
-        if (processed % 100000 === 0) {
-            const percentage = ((processed / totalCount) * 100).toFixed(1);
-            cliLogger.info(
-                `⏳ Processed ${processed.toLocaleString()}/${totalCount.toLocaleString()} killmails (${percentage}%)`
-            );
-        }
+    if (!earliestKillmail || !earliestKillmail.kill_time) {
+        cliLogger.warn("⚠️ No killmails found with kill_time");
+        return sitemapFiles;
     }
 
-    // Write remaining URLs
-    if (currentUrls.length > 0) {
-        const filename = await writeSitemapFile(
-            "killmails",
-            currentUrls,
-            chunkIndex
-        );
-        sitemapFiles.push(filename);
+    const startDate = new Date(earliestKillmail.kill_time);
+    const endDate = new Date(); // Today
+
+    // Calculate total days to process
+    const totalDays = Math.ceil(
+        (endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24)
+    );
+
+    cliLogger.info(
+        `📅 Processing killmails from ${formatDate(startDate)} to ${formatDate(
+            endDate
+        )} (${totalDays} days total)`
+    );
+
+    let currentDate = new Date(startDate);
+    let totalProcessed = 0;
+    let dayCount = 0;
+
+    while (currentDate <= endDate) {
+        const { start, end } = getDayBounds(currentDate);
+        const dateStr = formatDate(currentDate);
+        dayCount++;
+        const daysLeft = totalDays - dayCount;
+
+        // Get killmails for this day
+        const dayKillmails = await Killmails.find(
+            {
+                kill_time: {
+                    $gte: start,
+                    $lte: end,
+                },
+            },
+            { killmail_id: 1, kill_time: 1 }
+        )
+            .sort({ kill_time: 1 })
+            .lean();
+
+        if (dayKillmails.length > 0) {
+            cliLogger.info(
+                `📆 Processing ${dayKillmails.length.toLocaleString()} killmails for ${dateStr} (${daysLeft} days left)`
+            );
+
+            // If day has more than max URLs, split into chunks
+            if (dayKillmails.length > SITEMAP_MAX_URLS) {
+                let chunkIndex = 0;
+                for (
+                    let i = 0;
+                    i < dayKillmails.length;
+                    i += SITEMAP_MAX_URLS
+                ) {
+                    const chunk = dayKillmails.slice(i, i + SITEMAP_MAX_URLS);
+                    const urls: SitemapUrl[] = chunk.map((killmail) => ({
+                        loc: `${SITE_URL}/kill/${killmail.killmail_id}`,
+                        lastmod: formatDate(new Date(killmail.kill_time)),
+                        changefreq: "never",
+                        priority: 0.7,
+                    }));
+
+                    const filename = `${dateStr}-${chunkIndex
+                        .toString()
+                        .padStart(3, "0")}`;
+                    const result = await writeSitemapFile(
+                        "killmails",
+                        urls,
+                        filename,
+                        cliLogger
+                    );
+                    sitemapFiles.push({
+                        ...result,
+                        lastmod: dateStr,
+                    });
+                    chunkIndex++;
+                }
+            } else {
+                // Single file for the day
+                const urls: SitemapUrl[] = dayKillmails.map((killmail) => ({
+                    loc: `${SITE_URL}/kill/${killmail.killmail_id}`,
+                    lastmod: formatDate(new Date(killmail.kill_time)),
+                    changefreq: "never",
+                    priority: 0.7,
+                }));
+
+                const result = await writeSitemapFile(
+                    "killmails",
+                    urls,
+                    dateStr,
+                    cliLogger
+                );
+                sitemapFiles.push({
+                    ...result,
+                    lastmod: dateStr,
+                });
+            }
+
+            totalProcessed += dayKillmails.length;
+
+            // Write/update index after each day to keep it current
+            await writeSitemapIndex("killmails", sitemapFiles, cliLogger);
+        }
+
+        currentDate = getNextDay(currentDate);
     }
 
     cliLogger.info(
         `✅ Killmail sitemaps completed: ${
             sitemapFiles.length
-        } files, ${processed.toLocaleString()} URLs`
+        } files, ${totalProcessed.toLocaleString()} URLs`
     );
     return sitemapFiles;
 }
 
 /**
- * Generate battle sitemaps
+ * Generate battle sitemaps - organized by date
  */
-async function generateBattleSitemaps(): Promise<string[]> {
+async function generateBattleSitemaps(): Promise<
+    { filename: string; relativePath: string; lastmod?: string }[]
+> {
     cliLogger.info("⚔️ Starting battle sitemap generation...");
 
     const categoryDir = join(SITEMAPS_DIR, "battles");
     await ensureDir(categoryDir);
 
-    const sitemapFiles: string[] = [];
-    let chunkIndex = 0;
-    let currentUrls: SitemapUrl[] = [];
+    const sitemapFiles: {
+        filename: string;
+        relativePath: string;
+        lastmod?: string;
+    }[] = [];
 
-    const totalCount = await Battles.estimatedDocumentCount({});
-    cliLogger.info(
-        `📊 Total battles to process: ${totalCount.toLocaleString()}`
-    );
+    // Get the earliest battle to start from
+    const earliestBattle = await Battles.findOne({}, { createdAt: 1 })
+        .sort({ createdAt: 1 })
+        .lean();
 
-    let processed = 0;
-
-    const cursor = Battles.find({}, { battle_id: 1, end_time: 1 })
-        .sort({ end_time: -1 })
-        .cursor({ batchSize: 5000 });
-
-    for (
-        let doc = await cursor.next();
-        doc != null;
-        doc = await cursor.next()
-    ) {
-        currentUrls.push({
-            loc: `${SITE_URL}/battle/${doc.battle_id}`,
-            lastmod: doc.end_time
-                ? new Date(doc.end_time).toISOString().split("T")[0]
-                : undefined,
-            changefreq: "never", // Battles don't change after completion
-            priority: 0.8,
-        });
-
-        processed++;
-
-        if (currentUrls.length >= SITEMAP_MAX_URLS) {
-            const filename = await writeSitemapFile(
-                "battles",
-                currentUrls,
-                chunkIndex
-            );
-            sitemapFiles.push(filename);
-            currentUrls = [];
-            chunkIndex++;
-        }
-
-        if (processed % 10000 === 0) {
-            const percentage = ((processed / totalCount) * 100).toFixed(1);
-            cliLogger.info(
-                `⏳ Processed ${processed.toLocaleString()}/${totalCount.toLocaleString()} battles (${percentage}%)`
-            );
-        }
+    if (!earliestBattle || !earliestBattle.createdAt) {
+        cliLogger.warn("⚠️ No battles found with createdAt");
+        return sitemapFiles;
     }
 
-    if (currentUrls.length > 0) {
-        const filename = await writeSitemapFile(
-            "battles",
-            currentUrls,
-            chunkIndex
-        );
-        sitemapFiles.push(filename);
+    const startDate = new Date(earliestBattle.createdAt);
+    const endDate = new Date(); // Today
+
+    // Calculate total days to process
+    const totalDays = Math.ceil(
+        (endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24)
+    );
+
+    cliLogger.info(
+        `📅 Processing battles from ${formatDate(startDate)} to ${formatDate(
+            endDate
+        )} (${totalDays} days total)`
+    );
+
+    let currentDate = new Date(startDate);
+    let totalProcessed = 0;
+    let dayCount = 0;
+
+    while (currentDate <= endDate) {
+        const { start, end } = getDayBounds(currentDate);
+        const dateStr = formatDate(currentDate);
+        dayCount++;
+        const daysLeft = totalDays - dayCount;
+
+        // Get battles for this day
+        const dayBattles = await Battles.find(
+            {
+                createdAt: {
+                    $gte: start,
+                    $lte: end,
+                },
+            },
+            { battle_id: 1, end_time: 1, createdAt: 1 }
+        )
+            .sort({ createdAt: 1 })
+            .lean();
+
+        if (dayBattles.length > 0) {
+            cliLogger.info(
+                `📆 Processing ${dayBattles.length.toLocaleString()} battles for ${dateStr} (${daysLeft} days left)`
+            );
+
+            // If day has more than max URLs, split into chunks
+            if (dayBattles.length > SITEMAP_MAX_URLS) {
+                let chunkIndex = 0;
+                for (let i = 0; i < dayBattles.length; i += SITEMAP_MAX_URLS) {
+                    const chunk = dayBattles.slice(i, i + SITEMAP_MAX_URLS);
+                    const urls: SitemapUrl[] = chunk.map((battle) => ({
+                        loc: `${SITE_URL}/battle/${battle.battle_id}`,
+                        lastmod: battle.end_time
+                            ? formatDate(new Date(battle.end_time))
+                            : formatDate(new Date(battle.createdAt)),
+                        changefreq: "never",
+                        priority: 0.8,
+                    }));
+
+                    const filename = `${dateStr}-${chunkIndex
+                        .toString()
+                        .padStart(3, "0")}`;
+                    const result = await writeSitemapFile(
+                        "battles",
+                        urls,
+                        filename,
+                        cliLogger
+                    );
+                    sitemapFiles.push({
+                        ...result,
+                        lastmod: dateStr,
+                    });
+                    chunkIndex++;
+                }
+            } else {
+                // Single file for the day
+                const urls: SitemapUrl[] = dayBattles.map((battle) => ({
+                    loc: `${SITE_URL}/battle/${battle.battle_id}`,
+                    lastmod: battle.end_time
+                        ? formatDate(new Date(battle.end_time))
+                        : formatDate(new Date(battle.createdAt)),
+                    changefreq: "never",
+                    priority: 0.8,
+                }));
+
+                const result = await writeSitemapFile(
+                    "battles",
+                    urls,
+                    dateStr,
+                    cliLogger
+                );
+                sitemapFiles.push({
+                    ...result,
+                    lastmod: dateStr,
+                });
+            }
+
+            totalProcessed += dayBattles.length;
+
+            // Write/update index after each day to keep it current
+            await writeSitemapIndex("battles", sitemapFiles, cliLogger);
+        }
+
+        currentDate = getNextDay(currentDate);
     }
 
     cliLogger.info(
         `✅ Battle sitemaps completed: ${
             sitemapFiles.length
-        } files, ${processed.toLocaleString()} URLs`
+        } files, ${totalProcessed.toLocaleString()} URLs`
     );
     return sitemapFiles;
 }
 
 /**
- * Generate campaign sitemaps
+ * Generate campaign sitemaps - organized by date
  */
-async function generateCampaignSitemaps(): Promise<string[]> {
+async function generateCampaignSitemaps(): Promise<
+    { filename: string; relativePath: string; lastmod?: string }[]
+> {
     cliLogger.info("🎯 Starting campaign sitemap generation...");
 
     const categoryDir = join(SITEMAPS_DIR, "campaigns");
     await ensureDir(categoryDir);
 
-    const campaigns = await Campaigns.find(
-        { public: true }, // Only public campaigns
-        { campaign_id: 1, processing_completed_at: 1, last_processed_at: 1 }
-    ).sort({ processing_completed_at: -1 });
+    const sitemapFiles: {
+        filename: string;
+        relativePath: string;
+        lastmod?: string;
+    }[] = [];
 
-    const urls: SitemapUrl[] = campaigns.map((campaign) => ({
-        loc: `${SITE_URL}/campaigns/${campaign.campaign_id}`,
-        lastmod: campaign.processing_completed_at
-            ? new Date(campaign.processing_completed_at)
-                  .toISOString()
-                  .split("T")[0]
-            : campaign.last_processed_at
-            ? new Date(campaign.last_processed_at).toISOString().split("T")[0]
-            : undefined,
-        changefreq: "weekly", // Campaigns might get updated
-        priority: 0.6,
-    }));
+    // Get the earliest campaign to start from
+    const earliestCampaign = await Campaigns.findOne(
+        { public: true },
+        { createdAt: 1 }
+    )
+        .sort({ createdAt: 1 })
+        .lean();
 
-    const filename = await writeSitemapFile("campaigns", urls);
-    cliLogger.info(
-        `✅ Campaign sitemaps completed: 1 file, ${urls.length} URLs`
+    if (!earliestCampaign || !earliestCampaign.createdAt) {
+        cliLogger.warn("⚠️ No public campaigns found with createdAt");
+        return sitemapFiles;
+    }
+
+    const startDate = new Date(earliestCampaign.createdAt);
+    const endDate = new Date(); // Today
+
+    // Calculate total days to process
+    const totalDays = Math.ceil(
+        (endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24)
     );
-    return [filename];
+
+    cliLogger.info(
+        `📅 Processing campaigns from ${formatDate(startDate)} to ${formatDate(
+            endDate
+        )} (${totalDays} days total)`
+    );
+
+    let currentDate = new Date(startDate);
+    let totalProcessed = 0;
+    let dayCount = 0;
+
+    while (currentDate <= endDate) {
+        const { start, end } = getDayBounds(currentDate);
+        const dateStr = formatDate(currentDate);
+        dayCount++;
+        const daysLeft = totalDays - dayCount;
+
+        // Get campaigns for this day
+        const dayCampaigns = await Campaigns.find(
+            {
+                public: true,
+                createdAt: {
+                    $gte: start,
+                    $lte: end,
+                },
+            },
+            {
+                campaign_id: 1,
+                processing_completed_at: 1,
+                last_processed_at: 1,
+                createdAt: 1,
+            }
+        )
+            .sort({ createdAt: 1 })
+            .lean();
+
+        if (dayCampaigns.length > 0) {
+            cliLogger.info(
+                `📆 Processing ${dayCampaigns.length.toLocaleString()} campaigns for ${dateStr} (${daysLeft} days left)`
+            );
+
+            // Single file for the day (campaigns are usually much fewer)
+            const urls: SitemapUrl[] = dayCampaigns.map((campaign) => ({
+                loc: `${SITE_URL}/campaigns/${campaign.campaign_id}`,
+                lastmod: campaign.processing_completed_at
+                    ? formatDate(new Date(campaign.processing_completed_at))
+                    : campaign.last_processed_at
+                    ? formatDate(new Date(campaign.last_processed_at))
+                    : formatDate(new Date(campaign.createdAt)),
+                changefreq: "weekly",
+                priority: 0.6,
+            }));
+
+            const result = await writeSitemapFile(
+                "campaigns",
+                urls,
+                dateStr,
+                cliLogger
+            );
+            sitemapFiles.push({
+                ...result,
+                lastmod: dateStr,
+            });
+
+            totalProcessed += dayCampaigns.length;
+
+            // Write/update index after each day to keep it current
+            await writeSitemapIndex("campaigns", sitemapFiles, cliLogger);
+        }
+
+        currentDate = getNextDay(currentDate);
+    }
+
+    cliLogger.info(
+        `✅ Campaign sitemaps completed: ${
+            sitemapFiles.length
+        } files, ${totalProcessed.toLocaleString()} URLs`
+    );
+    return sitemapFiles;
 }
 
 /**
- * Generate character sitemaps
+ * Generate character sitemaps - organized by date
  */
-async function generateCharacterSitemaps(): Promise<string[]> {
+async function generateCharacterSitemaps(): Promise<
+    { filename: string; relativePath: string; lastmod?: string }[]
+> {
     cliLogger.info("👤 Starting character sitemap generation...");
 
     const categoryDir = join(SITEMAPS_DIR, "characters");
     await ensureDir(categoryDir);
 
-    const sitemapFiles: string[] = [];
-    let chunkIndex = 0;
-    let currentUrls: SitemapUrl[] = [];
+    const sitemapFiles: {
+        filename: string;
+        relativePath: string;
+        lastmod?: string;
+    }[] = [];
 
-    const totalCount = await Characters.estimatedDocumentCount({});
-    cliLogger.info(
-        `📊 Total characters to process: ${totalCount.toLocaleString()}`
-    );
+    // Get the earliest character to start from
+    const earliestCharacter = await Characters.findOne({}, { createdAt: 1 })
+        .sort({ createdAt: 1 })
+        .lean();
 
-    let processed = 0;
-
-    const cursor = Characters.find({}, { character_id: 1, updatedAt: 1 })
-        .sort({ character_id: 1 })
-        .cursor({ batchSize: 10000 });
-
-    for (
-        let doc = await cursor.next();
-        doc != null;
-        doc = await cursor.next()
-    ) {
-        currentUrls.push({
-            loc: `${SITE_URL}/character/${doc.character_id}`,
-            lastmod: doc.updatedAt
-                ? new Date(doc.updatedAt).toISOString().split("T")[0]
-                : undefined,
-            changefreq: "monthly", // Character pages get updated periodically
-            priority: 0.5,
-        });
-
-        processed++;
-
-        if (currentUrls.length >= SITEMAP_MAX_URLS) {
-            const filename = await writeSitemapFile(
-                "characters",
-                currentUrls,
-                chunkIndex
-            );
-            sitemapFiles.push(filename);
-            currentUrls = [];
-            chunkIndex++;
-        }
-
-        if (processed % 50000 === 0) {
-            const percentage = ((processed / totalCount) * 100).toFixed(1);
-            cliLogger.info(
-                `⏳ Processed ${processed.toLocaleString()}/${totalCount.toLocaleString()} characters (${percentage}%)`
-            );
-        }
+    if (!earliestCharacter || !earliestCharacter.createdAt) {
+        cliLogger.warn("⚠️ No characters found with createdAt");
+        return sitemapFiles;
     }
 
-    if (currentUrls.length > 0) {
-        const filename = await writeSitemapFile(
-            "characters",
-            currentUrls,
-            chunkIndex
-        );
-        sitemapFiles.push(filename);
+    const startDate = new Date(earliestCharacter.createdAt);
+    const endDate = new Date(); // Today
+
+    // Calculate total days to process
+    const totalDays = Math.ceil(
+        (endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24)
+    );
+
+    cliLogger.info(
+        `📅 Processing characters from ${formatDate(startDate)} to ${formatDate(
+            endDate
+        )} (${totalDays} days total)`
+    );
+
+    let currentDate = new Date(startDate);
+    let totalProcessed = 0;
+    let dayCount = 0;
+
+    while (currentDate <= endDate) {
+        const { start, end } = getDayBounds(currentDate);
+        const dateStr = formatDate(currentDate);
+        dayCount++;
+        const daysLeft = totalDays - dayCount;
+
+        // Get characters for this day
+        const dayCharacters = await Characters.find(
+            {
+                createdAt: {
+                    $gte: start,
+                    $lte: end,
+                },
+            },
+            { character_id: 1, updatedAt: 1, createdAt: 1 }
+        )
+            .sort({ createdAt: 1 })
+            .lean();
+
+        if (dayCharacters.length > 0) {
+            cliLogger.info(
+                `📆 Processing ${dayCharacters.length.toLocaleString()} characters for ${dateStr} (${daysLeft} days left)`
+            );
+
+            // If day has more than max URLs, split into chunks
+            if (dayCharacters.length > SITEMAP_MAX_URLS) {
+                let chunkIndex = 0;
+                for (
+                    let i = 0;
+                    i < dayCharacters.length;
+                    i += SITEMAP_MAX_URLS
+                ) {
+                    const chunk = dayCharacters.slice(i, i + SITEMAP_MAX_URLS);
+                    const urls: SitemapUrl[] = chunk.map((character) => ({
+                        loc: `${SITE_URL}/character/${character.character_id}`,
+                        lastmod: character.updatedAt
+                            ? formatDate(new Date(character.updatedAt))
+                            : formatDate(new Date(character.createdAt)),
+                        changefreq: "monthly",
+                        priority: 0.5,
+                    }));
+
+                    const filename = `${dateStr}-${chunkIndex
+                        .toString()
+                        .padStart(3, "0")}`;
+                    const result = await writeSitemapFile(
+                        "characters",
+                        urls,
+                        filename,
+                        cliLogger
+                    );
+                    sitemapFiles.push({
+                        ...result,
+                        lastmod: dateStr,
+                    });
+                    chunkIndex++;
+                }
+            } else {
+                // Single file for the day
+                const urls: SitemapUrl[] = dayCharacters.map((character) => ({
+                    loc: `${SITE_URL}/character/${character.character_id}`,
+                    lastmod: character.updatedAt
+                        ? formatDate(new Date(character.updatedAt))
+                        : formatDate(new Date(character.createdAt)),
+                    changefreq: "monthly",
+                    priority: 0.5,
+                }));
+
+                const result = await writeSitemapFile(
+                    "characters",
+                    urls,
+                    dateStr,
+                    cliLogger
+                );
+                sitemapFiles.push({
+                    ...result,
+                    lastmod: dateStr,
+                });
+            }
+
+            totalProcessed += dayCharacters.length;
+
+            // Write/update index after each day to keep it current
+            await writeSitemapIndex("characters", sitemapFiles, cliLogger);
+        }
+
+        currentDate = getNextDay(currentDate);
     }
 
     cliLogger.info(
         `✅ Character sitemaps completed: ${
             sitemapFiles.length
-        } files, ${processed.toLocaleString()} URLs`
+        } files, ${totalProcessed.toLocaleString()} URLs`
     );
     return sitemapFiles;
 }
 
 /**
- * Generate corporation sitemaps
+ * Generate corporation sitemaps - organized by date
  */
-async function generateCorporationSitemaps(): Promise<string[]> {
+async function generateCorporationSitemaps(): Promise<
+    { filename: string; relativePath: string; lastmod?: string }[]
+> {
     cliLogger.info("🏢 Starting corporation sitemap generation...");
 
     const categoryDir = join(SITEMAPS_DIR, "corporations");
     await ensureDir(categoryDir);
 
-    const sitemapFiles: string[] = [];
-    let chunkIndex = 0;
-    let currentUrls: SitemapUrl[] = [];
+    const sitemapFiles: {
+        filename: string;
+        relativePath: string;
+        lastmod?: string;
+    }[] = [];
 
-    const totalCount = await Corporations.estimatedDocumentCount({});
-    cliLogger.info(
-        `📊 Total corporations to process: ${totalCount.toLocaleString()}`
-    );
+    // Get the earliest corporation to start from
+    const earliestCorporation = await Corporations.findOne({}, { createdAt: 1 })
+        .sort({ createdAt: 1 })
+        .lean();
 
-    let processed = 0;
-
-    const cursor = Corporations.find({}, { corporation_id: 1, updatedAt: 1 })
-        .sort({ corporation_id: 1 })
-        .cursor({ batchSize: 10000 });
-
-    for (
-        let doc = await cursor.next();
-        doc != null;
-        doc = await cursor.next()
-    ) {
-        currentUrls.push({
-            loc: `${SITE_URL}/corporation/${doc.corporation_id}`,
-            lastmod: doc.updatedAt
-                ? new Date(doc.updatedAt).toISOString().split("T")[0]
-                : undefined,
-            changefreq: "monthly",
-            priority: 0.5,
-        });
-
-        processed++;
-
-        if (currentUrls.length >= SITEMAP_MAX_URLS) {
-            const filename = await writeSitemapFile(
-                "corporations",
-                currentUrls,
-                chunkIndex
-            );
-            sitemapFiles.push(filename);
-            currentUrls = [];
-            chunkIndex++;
-        }
-
-        if (processed % 25000 === 0) {
-            const percentage = ((processed / totalCount) * 100).toFixed(1);
-            cliLogger.info(
-                `⏳ Processed ${processed.toLocaleString()}/${totalCount.toLocaleString()} corporations (${percentage}%)`
-            );
-        }
+    if (!earliestCorporation || !earliestCorporation.createdAt) {
+        cliLogger.warn("⚠️ No corporations found with createdAt");
+        return sitemapFiles;
     }
 
-    if (currentUrls.length > 0) {
-        const filename = await writeSitemapFile(
-            "corporations",
-            currentUrls,
-            chunkIndex
-        );
-        sitemapFiles.push(filename);
+    const startDate = new Date(earliestCorporation.createdAt);
+    const endDate = new Date(); // Today
+
+    // Calculate total days to process
+    const totalDays = Math.ceil(
+        (endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24)
+    );
+
+    cliLogger.info(
+        `📅 Processing corporations from ${formatDate(
+            startDate
+        )} to ${formatDate(endDate)} (${totalDays} days total)`
+    );
+
+    let currentDate = new Date(startDate);
+    let totalProcessed = 0;
+    let dayCount = 0;
+
+    while (currentDate <= endDate) {
+        const { start, end } = getDayBounds(currentDate);
+        const dateStr = formatDate(currentDate);
+        dayCount++;
+        const daysLeft = totalDays - dayCount;
+
+        // Get corporations for this day
+        const dayCorporations = await Corporations.find(
+            {
+                createdAt: {
+                    $gte: start,
+                    $lte: end,
+                },
+            },
+            { corporation_id: 1, updatedAt: 1, createdAt: 1 }
+        )
+            .sort({ createdAt: 1 })
+            .lean();
+
+        if (dayCorporations.length > 0) {
+            cliLogger.info(
+                `📆 Processing ${dayCorporations.length.toLocaleString()} corporations for ${dateStr} (${daysLeft} days left)`
+            );
+
+            // If day has more than max URLs, split into chunks
+            if (dayCorporations.length > SITEMAP_MAX_URLS) {
+                let chunkIndex = 0;
+                for (
+                    let i = 0;
+                    i < dayCorporations.length;
+                    i += SITEMAP_MAX_URLS
+                ) {
+                    const chunk = dayCorporations.slice(
+                        i,
+                        i + SITEMAP_MAX_URLS
+                    );
+                    const urls: SitemapUrl[] = chunk.map((corporation) => ({
+                        loc: `${SITE_URL}/corporation/${corporation.corporation_id}`,
+                        lastmod: corporation.updatedAt
+                            ? formatDate(new Date(corporation.updatedAt))
+                            : formatDate(new Date(corporation.createdAt)),
+                        changefreq: "monthly",
+                        priority: 0.5,
+                    }));
+
+                    const filename = `${dateStr}-${chunkIndex
+                        .toString()
+                        .padStart(3, "0")}`;
+                    const result = await writeSitemapFile(
+                        "corporations",
+                        urls,
+                        filename,
+                        cliLogger
+                    );
+                    sitemapFiles.push({
+                        ...result,
+                        lastmod: dateStr,
+                    });
+                    chunkIndex++;
+                }
+            } else {
+                // Single file for the day
+                const urls: SitemapUrl[] = dayCorporations.map(
+                    (corporation) => ({
+                        loc: `${SITE_URL}/corporation/${corporation.corporation_id}`,
+                        lastmod: corporation.updatedAt
+                            ? formatDate(new Date(corporation.updatedAt))
+                            : formatDate(new Date(corporation.createdAt)),
+                        changefreq: "monthly",
+                        priority: 0.5,
+                    })
+                );
+
+                const result = await writeSitemapFile(
+                    "corporations",
+                    urls,
+                    dateStr,
+                    cliLogger
+                );
+                sitemapFiles.push({
+                    ...result,
+                    lastmod: dateStr,
+                });
+            }
+
+            totalProcessed += dayCorporations.length;
+
+            // Write/update index after each day to keep it current
+            await writeSitemapIndex("corporations", sitemapFiles, cliLogger);
+        }
+
+        currentDate = getNextDay(currentDate);
     }
 
     cliLogger.info(
         `✅ Corporation sitemaps completed: ${
             sitemapFiles.length
-        } files, ${processed.toLocaleString()} URLs`
+        } files, ${totalProcessed.toLocaleString()} URLs`
     );
     return sitemapFiles;
 }
 
 /**
- * Generate alliance sitemaps
+ * Generate alliance sitemaps - organized by date
  */
-async function generateAllianceSitemaps(): Promise<string[]> {
+async function generateAllianceSitemaps(): Promise<
+    { filename: string; relativePath: string; lastmod?: string }[]
+> {
     cliLogger.info("🤝 Starting alliance sitemap generation...");
 
     const categoryDir = join(SITEMAPS_DIR, "alliances");
     await ensureDir(categoryDir);
 
-    const alliances = await Alliances.find(
-        {},
-        { alliance_id: 1, updatedAt: 1 }
-    ).sort({ alliance_id: 1 });
+    const sitemapFiles: {
+        filename: string;
+        relativePath: string;
+        lastmod?: string;
+    }[] = [];
 
-    const urls: SitemapUrl[] = alliances.map((alliance) => ({
-        loc: `${SITE_URL}/alliance/${alliance.alliance_id}`,
-        lastmod: alliance.updatedAt
-            ? new Date(alliance.updatedAt).toISOString().split("T")[0]
-            : undefined,
-        changefreq: "monthly",
-        priority: 0.6,
-    }));
+    // Get the earliest alliance to start from
+    const earliestAlliance = await Alliances.findOne({}, { createdAt: 1 })
+        .sort({ createdAt: 1 })
+        .lean();
 
-    const filename = await writeSitemapFile("alliances", urls);
-    cliLogger.info(
-        `✅ Alliance sitemaps completed: 1 file, ${urls.length} URLs`
+    if (!earliestAlliance || !earliestAlliance.createdAt) {
+        cliLogger.warn("⚠️ No alliances found with createdAt");
+        return sitemapFiles;
+    }
+
+    const startDate = new Date(earliestAlliance.createdAt);
+    const endDate = new Date(); // Today
+
+    // Calculate total days to process
+    const totalDays = Math.ceil(
+        (endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24)
     );
-    return [filename];
+
+    cliLogger.info(
+        `📅 Processing alliances from ${formatDate(startDate)} to ${formatDate(
+            endDate
+        )} (${totalDays} days total)`
+    );
+
+    let currentDate = new Date(startDate);
+    let totalProcessed = 0;
+    let dayCount = 0;
+
+    while (currentDate <= endDate) {
+        const { start, end } = getDayBounds(currentDate);
+        const dateStr = formatDate(currentDate);
+        dayCount++;
+        const daysLeft = totalDays - dayCount;
+
+        // Get alliances for this day
+        const dayAlliances = await Alliances.find(
+            {
+                createdAt: {
+                    $gte: start,
+                    $lte: end,
+                },
+            },
+            { alliance_id: 1, updatedAt: 1, createdAt: 1 }
+        )
+            .sort({ createdAt: 1 })
+            .lean();
+
+        if (dayAlliances.length > 0) {
+            cliLogger.info(
+                `📆 Processing ${dayAlliances.length.toLocaleString()} alliances for ${dateStr} (${daysLeft} days left)`
+            );
+
+            // Single file for the day (alliances are usually much fewer)
+            const urls: SitemapUrl[] = dayAlliances.map((alliance) => ({
+                loc: `${SITE_URL}/alliance/${alliance.alliance_id}`,
+                lastmod: alliance.updatedAt
+                    ? formatDate(new Date(alliance.updatedAt))
+                    : formatDate(new Date(alliance.createdAt)),
+                changefreq: "monthly",
+                priority: 0.6,
+            }));
+
+            const result = await writeSitemapFile(
+                "alliances",
+                urls,
+                dateStr,
+                cliLogger
+            );
+            sitemapFiles.push({
+                ...result,
+                lastmod: dateStr,
+            });
+
+            totalProcessed += dayAlliances.length;
+
+            // Write/update index after each day to keep it current
+            await writeSitemapIndex("alliances", sitemapFiles, cliLogger);
+        }
+
+        currentDate = getNextDay(currentDate);
+    }
+
+    cliLogger.info(
+        `✅ Alliance sitemaps completed: ${
+            sitemapFiles.length
+        } files, ${totalProcessed.toLocaleString()} URLs`
+    );
+    return sitemapFiles;
 }
 
 /**
  * Generate main sitemap index
  */
 async function generateMainSitemapIndex(): Promise<void> {
-    cliLogger.info("📋 Generating main sitemap index...");
-
     const categories = [
         "killmails",
         "battles",
@@ -548,20 +824,8 @@ async function generateMainSitemapIndex(): Promise<void> {
         "corporations",
         "alliances",
     ];
-    const sitemaps = categories.map((category) => ({
-        loc: `${SITE_URL}/sitemaps/${category}.xml.gz`,
-        lastmod: new Date().toISOString().split("T")[0],
-    }));
 
-    const indexPath = join(SITEMAPS_DIR, "index.xml.gz");
-    const xmlContent = generateSitemapIndexXML(sitemaps);
-    const compressedContent = await gzipAsync(xmlContent);
-
-    await writeFile(indexPath, compressedContent);
-
-    cliLogger.info(
-        `✅ Main sitemap index written with ${categories.length} category sitemaps`
-    );
+    await generateMainIndex(categories, cliLogger);
 }
 
 export default {
@@ -579,22 +843,26 @@ export default {
 
             // Generate sitemaps for each category
             const killmailFiles = await generateKillmailSitemaps();
-            await writeSitemapIndex("killmails", killmailFiles);
+            await writeSitemapIndex("killmails", killmailFiles, cliLogger);
 
             const battleFiles = await generateBattleSitemaps();
-            await writeSitemapIndex("battles", battleFiles);
+            await writeSitemapIndex("battles", battleFiles, cliLogger);
 
             const campaignFiles = await generateCampaignSitemaps();
-            await writeSitemapIndex("campaigns", campaignFiles);
+            await writeSitemapIndex("campaigns", campaignFiles, cliLogger);
 
             const characterFiles = await generateCharacterSitemaps();
-            await writeSitemapIndex("characters", characterFiles);
+            await writeSitemapIndex("characters", characterFiles, cliLogger);
 
             const corporationFiles = await generateCorporationSitemaps();
-            await writeSitemapIndex("corporations", corporationFiles);
+            await writeSitemapIndex(
+                "corporations",
+                corporationFiles,
+                cliLogger
+            );
 
             const allianceFiles = await generateAllianceSitemaps();
-            await writeSitemapIndex("alliances", allianceFiles);
+            await writeSitemapIndex("alliances", allianceFiles, cliLogger);
 
             // Generate main index
             await generateMainSitemapIndex();
@@ -606,9 +874,7 @@ export default {
             cliLogger.info(
                 `⏱️ Total time taken: ${duration.toFixed(2)} minutes`
             );
-            cliLogger.info(
-                `📁 Sitemaps have been written to: ${SITEMAPS_DIR}`
-            );
+            cliLogger.info(`📁 Sitemaps have been written to: ${SITEMAPS_DIR}`);
             cliLogger.info(
                 "💡 Don't forget to update robots.txt to reference the new sitemaps!"
             );
