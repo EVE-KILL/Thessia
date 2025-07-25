@@ -1,4 +1,4 @@
-export type StatsType = 'character_id' | 'corporation_id' | 'alliance_id';
+export type StatsType = "character_id" | "corporation_id" | "alliance_id";
 
 export interface IStatsBase {
     type: StatsType;
@@ -15,8 +15,14 @@ export interface IStatsBase {
 }
 
 export interface IFullStats {
-    mostUsedShips: Record<string, { count: number; name: Record<string, string> }>;
-    mostLostShips: Record<string, { count: number; name: Record<string, string> }>;
+    mostUsedShips: Record<
+        string,
+        { count: number; name: Record<string, string> }
+    >;
+    mostLostShips: Record<
+        string,
+        { count: number; name: Record<string, string> }
+    >;
     shipGroupStats: Array<{
         groupName: string;
         kills: number;

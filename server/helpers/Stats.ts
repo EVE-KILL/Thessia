@@ -1,73 +1,109 @@
-import type { IFullStats, IStatsDocument, StatsType } from '~/server/interfaces/IStats';
-import { InvTypes } from '~/server/models/InvTypes';
+import type {
+    IFullStats,
+    IStatsDocument,
+    StatsType,
+} from "~/server/interfaces/IStats";
+import { InvTypes } from "~/server/models/InvTypes";
 import { Killmails } from "~/server/models/Killmails";
 import { Stats } from "~/server/models/Stats";
-import { IKillmail } from '../interfaces/IKillmail';
+import { IKillmail } from "../interfaces/IKillmail";
 
 /**
  * Validates that the entity type is a valid StatsType and entity ID is valid
  * to prevent problematic database queries
  */
-function validateEntity(type: StatsType | undefined, id: number | undefined): {
+function validateEntity(
+    type: StatsType | undefined,
+    id: number | undefined
+): {
     valid: boolean;
     type: StatsType;
     id: number;
 } {
-    const validTypes = ['character_id', 'corporation_id', 'alliance_id'];
-    const defaultType: StatsType = 'character_id';
+    const validTypes = ["character_id", "corporation_id", "alliance_id"];
+    const defaultType: StatsType = "character_id";
 
     // Check type validity
     if (!type || !validTypes.includes(type)) {
-        console.error(`Invalid entity type: ${type}. Skipping entity processing.`);
+        console.error(
+            `Invalid entity type: ${type}. Skipping entity processing.`
+        );
         return { valid: false, type: defaultType, id: 0 };
     }
 
     // Check ID validity
     if (id === undefined || id === null || isNaN(id) || id <= 0) {
-        console.error(`Invalid entity ID: ${id} for type ${type}. Skipping entity processing.`);
+        console.error(
+            `Invalid entity ID: ${id} for type ${type}. Skipping entity processing.`
+        );
         return { valid: false, type, id: 0 };
     }
 
     return { valid: true, type, id };
 }
 
-export async function updateStatsOnKillmailProcessing(killmail: IKillmail): Promise<void> {
+export async function updateStatsOnKillmailProcessing(
+    killmail: IKillmail
+): Promise<void> {
     const involvedEntities: { type: StatsType; id: number }[] = [];
     const killTime = new Date(killmail.kill_time);
 
     // Add victim entities
     if (killmail.victim.character_id) {
-        involvedEntities.push({ type: "character_id", id: killmail.victim.character_id });
+        involvedEntities.push({
+            type: "character_id",
+            id: killmail.victim.character_id,
+        });
     }
     if (killmail.victim.corporation_id) {
-        involvedEntities.push({ type: "corporation_id", id: killmail.victim.corporation_id });
+        involvedEntities.push({
+            type: "corporation_id",
+            id: killmail.victim.corporation_id,
+        });
     }
     if (killmail.victim.alliance_id) {
-        involvedEntities.push({ type: "alliance_id", id: killmail.victim.alliance_id });
+        involvedEntities.push({
+            type: "alliance_id",
+            id: killmail.victim.alliance_id,
+        });
     }
 
     // Add attacker entities
     for (const attacker of killmail.attackers) {
         if (attacker.character_id) {
-            involvedEntities.push({ type: "character_id", id: attacker.character_id });
+            involvedEntities.push({
+                type: "character_id",
+                id: attacker.character_id,
+            });
         }
         if (attacker.corporation_id) {
-            involvedEntities.push({ type: "corporation_id", id: attacker.corporation_id });
+            involvedEntities.push({
+                type: "corporation_id",
+                id: attacker.corporation_id,
+            });
         }
         if (attacker.alliance_id) {
-            involvedEntities.push({ type: "alliance_id", id: attacker.alliance_id });
+            involvedEntities.push({
+                type: "alliance_id",
+                id: attacker.alliance_id,
+            });
         }
     }
 
     // Deduplicate entities
     const uniqueEntities = involvedEntities.filter(
         (entity, index, self) =>
-            index === self.findIndex((e) => e.type === entity.type && e.id === entity.id)
+            index ===
+            self.findIndex((e) => e.type === entity.type && e.id === entity.id)
     );
 
     // Filter out any entities with undefined type or id (additional safeguard)
-    const validEntities = uniqueEntities.filter(entity =>
-        entity.type && entity.id && typeof entity.id === 'number' && entity.id > 0
+    const validEntities = uniqueEntities.filter(
+        (entity) =>
+            entity.type &&
+            entity.id &&
+            typeof entity.id === "number" &&
+            entity.id > 0
     );
 
     const timePeriodsToUpdate = [0]; // Always update all-time stats
@@ -93,12 +129,19 @@ export async function updateStatsOnKillmailProcessing(killmail: IKillmail): Prom
         const validId = validation.id;
 
         for (const days of timePeriodsToUpdate) {
-            const update: any = { $set: { needsUpdate: true, updatedAt: new Date() }, $inc: {} };
+            const update: any = {
+                $set: { needsUpdate: true, updatedAt: new Date() },
+                $inc: {},
+            };
 
             // Determine if this entity was a victim or an attacker in this specific killmail
-            const isVictim = killmail.victim.character_id === validId && validType === "character_id" ||
-                killmail.victim.corporation_id === validId && validType === "corporation_id" ||
-                killmail.victim.alliance_id === validId && validType === "alliance_id";
+            const isVictim =
+                (killmail.victim.character_id === validId &&
+                    validType === "character_id") ||
+                (killmail.victim.corporation_id === validId &&
+                    validType === "corporation_id") ||
+                (killmail.victim.alliance_id === validId &&
+                    validType === "alliance_id");
 
             if (isVictim) {
                 update.$inc.losses = 1;
@@ -111,10 +154,14 @@ export async function updateStatsOnKillmailProcessing(killmail: IKillmail): Prom
                 }
             } else {
                 // Check if this entity is among the attackers
-                const attackerInfo = killmail.attackers.find(a =>
-                    (a.character_id === validId && validType === "character_id") ||
-                    (a.corporation_id === validId && validType === "corporation_id") ||
-                    (a.alliance_id === validId && validType === "alliance_id")
+                const attackerInfo = killmail.attackers.find(
+                    (a) =>
+                        (a.character_id === validId &&
+                            validType === "character_id") ||
+                        (a.corporation_id === validId &&
+                            validType === "corporation_id") ||
+                        (a.alliance_id === validId &&
+                            validType === "alliance_id")
                 );
                 if (attackerInfo) {
                     update.$inc.kills = 1;
@@ -126,10 +173,21 @@ export async function updateStatsOnKillmailProcessing(killmail: IKillmail): Prom
             }
 
             // Update lastActive, ensuring it's only set if the killTime is more recent
-            update.$set.lastActive = killTime > (await Stats.findOne({ type: validType, id: validId, days: days }, { lastActive: 1 })?.lean()?.then(s => s?.lastActive) || new Date(0)) ? killTime : undefined;
-            if (update.$set.lastActive === undefined) delete update.$set.lastActive; // don't set if not newer
+            update.$set.lastActive =
+                killTime >
+                ((await Stats.findOne(
+                    { type: validType, id: validId, days: days },
+                    { lastActive: 1 }
+                )
+                    ?.lean()
+                    ?.then((s) => s?.lastActive)) || new Date(0))
+                    ? killTime
+                    : undefined;
+            if (update.$set.lastActive === undefined)
+                delete update.$set.lastActive; // don't set if not newer
 
-            if (Object.keys(update.$inc).length > 0) { // Only update if there are increments
+            if (Object.keys(update.$inc).length > 0) {
+                // Only update if there are increments
                 await Stats.findOneAndUpdate(
                     { type: validType, id: validId, days: days },
                     update,
@@ -144,12 +202,18 @@ export async function updateStatsOnKillmailProcessing(killmail: IKillmail): Prom
  * Calculates all stats for an entity and returns a single object with all root fields and full sub-object.
  * Optimized version for entities with large numbers of killmails.
  */
-export async function calculateAllStats(type: StatsType, id: number, days: number): Promise<IStatsDocument> {
+export async function calculateAllStats(
+    type: StatsType,
+    id: number,
+    days: number
+): Promise<IStatsDocument> {
     // Validate entity parameters to prevent attackers.undefined queries
     const validation = validateEntity(type, id);
     if (!validation.valid) {
         // Return empty stats with valid: false indicator when validation fails
-        console.log(`Skipping stats calculation for invalid entity: type=${type}, id=${id}`);
+        console.log(
+            `Skipping stats calculation for invalid entity: type=${type}, id=${id}`
+        );
 
         // Initialize heat map for empty result
         const heatMap: Record<string, number> = {};
@@ -223,9 +287,10 @@ export async function calculateAllStats(type: StatsType, id: number, days: numbe
     };
 
     // Set up time filter
-    const timeFilter = days > 0
-        ? { $gte: new Date(Date.now() - days * 24 * 60 * 60 * 1000) }
-        : undefined;
+    const timeFilter =
+        days > 0
+            ? { $gte: new Date(Date.now() - days * 24 * 60 * 60 * 1000) }
+            : undefined;
 
     // Early check: Determine if there are any killmails at all for this entity
     const killMatchCondition: any = { [`attackers.${type}`]: id };
@@ -239,7 +304,7 @@ export async function calculateAllStats(type: StatsType, id: number, days: numbe
     // Check if there are any kills or losses for this entity
     const [killsExist, lossesExist] = await Promise.all([
         Killmails.countDocuments(killMatchCondition).limit(1).lean(),
-        Killmails.countDocuments(lossMatchCondition).limit(1).lean()
+        Killmails.countDocuments(lossMatchCondition).limit(1).lean(),
     ]);
 
     // If there are no kills and no losses, return zero stats immediately
@@ -262,26 +327,23 @@ export async function calculateAllStats(type: StatsType, id: number, days: numbe
     }
 
     // Run base stats calculations in parallel for better performance
-    const [
-        basicStats,
-        shipGroupStats,
-        monthlyStats,
-        heatMapData,
-    ] = await Promise.all([
-        getBasicStats(type, id, timeFilter),
-        getShipGroupStats(type, id, timeFilter),
-        getMonthlyStats(type, id, timeFilter),
-        getHeatMapData(type, id, timeFilter),
-    ]);
+    const [basicStats, shipGroupStats, monthlyStats, heatMapData] =
+        await Promise.all([
+            getBasicStats(type, id, timeFilter),
+            getShipGroupStats(type, id, timeFilter),
+            getMonthlyStats(type, id, timeFilter),
+            getHeatMapData(type, id, timeFilter),
+        ]);
 
     // Process character-specific stats only if needed
-    const characterSpecificStats = type === 'character_id'
-        ? await getCharacterSpecificStats(id, timeFilter, basicStats.kills)
-        : { possibleFC: false, possibleCynoAlt: false };
+    const characterSpecificStats =
+        type === "character_id"
+            ? await getCharacterSpecificStats(id, timeFilter, basicStats.kills)
+            : { possibleFC: false, possibleCynoAlt: false };
 
     // Only calculate these for characters
     let blobFactorData = { blobCount: 0 };
-    if (type === 'character_id') {
+    if (type === "character_id") {
         blobFactorData = await getBlobFactorData(type, id, timeFilter);
     }
 
@@ -307,25 +369,30 @@ export async function calculateAllStats(type: StatsType, id: number, days: numbe
 
     // Process heat map
     if (heatMapData && heatMapData.length > 0) {
-        heatMapData.forEach(hourData => {
+        heatMapData.forEach((hourData) => {
             const hourKey = `h${hourData._id.toString().padStart(2, "0")}`;
             full.heatMap[hourKey] = hourData.count;
         });
     }
 
     // Process blob factor for characters only
-    if (type === 'character_id' && kills > 0 && blobFactorData && blobFactorData.blobCount) {
+    if (
+        type === "character_id" &&
+        kills > 0 &&
+        blobFactorData &&
+        blobFactorData.blobCount
+    ) {
         full.blobFactor = (blobFactorData.blobCount / kills) * 100;
     }
 
     // Apply character-specific checks
-    if (type === 'character_id') {
+    if (type === "character_id") {
         full.possibleFC = characterSpecificStats.possibleFC;
         full.possibleCynoAlt = characterSpecificStats.possibleCynoAlt;
     }
 
     // Clean up unnecessary fields based on entity type
-    if (type !== 'character_id') {
+    if (type !== "character_id") {
         // Remove character-specific fields for corps and alliances
         full.diesToCorporations = {};
         full.diesToAlliances = {};
@@ -355,10 +422,16 @@ export async function calculateAllStats(type: StatsType, id: number, days: numbe
 /**
  * Get character-specific stats like possibleFC and possibleCynoAlt
  */
-async function getCharacterSpecificStats(id: number, timeFilter?: { $gte: Date }, kills: number = 0): Promise<{ possibleFC: boolean, possibleCynoAlt: boolean }> {
+async function getCharacterSpecificStats(
+    id: number,
+    timeFilter?: { $gte: Date },
+    kills: number = 0
+): Promise<{ possibleFC: boolean; possibleCynoAlt: boolean }> {
     // Validate ID before proceeding
     if (!id || isNaN(id) || id <= 0) {
-        console.error(`Invalid character ID: ${id}. Skipping character-specific stats.`);
+        console.error(
+            `Invalid character ID: ${id}. Skipping character-specific stats.`
+        );
         return { possibleFC: false, possibleCynoAlt: false };
     }
 
@@ -371,7 +444,7 @@ async function getCharacterSpecificStats(id: number, timeFilter?: { $gte: Date }
     // Check for Monitor ship (ID 45534) for FC detection
     const monitorLoss = await Killmails.countDocuments({
         ...lossMatchCondition,
-        "victim.ship_id": 45534
+        "victim.ship_id": 45534,
     });
 
     // Check for possible cyno alt
@@ -387,23 +460,29 @@ async function getCharacterSpecificStats(id: number, timeFilter?: { $gte: Date }
         const cynoLossMatchCondition = {
             ...lossMatchCondition,
             kill_time: { $gte: cynoCutoff },
-            "items.type_id": { $in: CYNO_MODULE_IDS }
+            "items.type_id": { $in: CYNO_MODULE_IDS },
         };
 
-        const cynoModuleLosses = await Killmails.countDocuments(cynoLossMatchCondition);
+        const cynoModuleLosses = await Killmails.countDocuments(
+            cynoLossMatchCondition
+        );
         possibleCynoAlt = cynoModuleLosses > 0;
     }
 
     return {
         possibleFC: monitorLoss > 0,
-        possibleCynoAlt
+        possibleCynoAlt,
     };
 }
 
 /**
  * Get basic kill and loss statistics using individual optimized queries
  */
-async function getBasicStats(type: StatsType, id: number, timeFilter?: { $gte: Date }) {
+async function getBasicStats(
+    type: StatsType,
+    id: number,
+    timeFilter?: { $gte: Date }
+) {
     // Validate entity parameters to prevent attackers.undefined queries
     const validation = validateEntity(type, id);
     if (!validation.valid) {
@@ -416,7 +495,7 @@ async function getBasicStats(type: StatsType, id: number, timeFilter?: { $gte: D
             soloKills: 0,
             soloLosses: 0,
             npcLosses: 0,
-            lastActive: null
+            lastActive: null,
         };
     }
 
@@ -434,7 +513,9 @@ async function getBasicStats(type: StatsType, id: number, timeFilter?: { $gte: D
     }
 
     // Check if we need sampling by doing a quick count
-    const quickCountKills = await Killmails.countDocuments(killMatchCondition).limit(1000);
+    const quickCountKills = await Killmails.countDocuments(
+        killMatchCondition
+    ).limit(1000);
     const needsSampling = quickCountKills >= 1000;
 
     // Define sample size and sampling threshold
@@ -446,16 +527,34 @@ async function getBasicStats(type: StatsType, id: number, timeFilter?: { $gte: D
 
     // Apply sampling for very large datasets (especially alliances)
     if (needsSampling) {
-        iskKilledPipeline.push({ $match: killMatchCondition }, { $sample: { size: SAMPLE_SIZE } });
-        iskLostPipeline.push({ $match: lossMatchCondition }, { $sample: { size: SAMPLE_SIZE } });
+        iskKilledPipeline.push(
+            { $match: killMatchCondition },
+            { $sample: { size: SAMPLE_SIZE } }
+        );
+        iskLostPipeline.push(
+            { $match: lossMatchCondition },
+            { $sample: { size: SAMPLE_SIZE } }
+        );
     } else {
         iskKilledPipeline.push({ $match: killMatchCondition });
         iskLostPipeline.push({ $match: lossMatchCondition });
     }
 
     // Complete the aggregation pipelines
-    iskKilledPipeline.push({ $group: { _id: null, total: { $sum: "$total_value" }, count: { $sum: 1 } } });
-    iskLostPipeline.push({ $group: { _id: null, total: { $sum: "$total_value" }, count: { $sum: 1 } } });
+    iskKilledPipeline.push({
+        $group: {
+            _id: null,
+            total: { $sum: "$total_value" },
+            count: { $sum: 1 },
+        },
+    });
+    iskLostPipeline.push({
+        $group: {
+            _id: null,
+            total: { $sum: "$total_value" },
+            count: { $sum: 1 },
+        },
+    });
 
     // Run all queries in parallel for better performance
     const [
@@ -470,7 +569,7 @@ async function getBasicStats(type: StatsType, id: number, timeFilter?: { $gte: D
         iskLostResult,
         soloLossesCount,
         npcLossesCount,
-        lastActiveLoss
+        lastActiveLoss,
     ] = await Promise.all([
         // Kills count - simple count operation
         Killmails.countDocuments(killMatchCondition),
@@ -480,8 +579,16 @@ async function getBasicStats(type: StatsType, id: number, timeFilter?: { $gte: D
 
         // Solo kills - use optimized pipeline for large datasets
         needsSampling
-            ? getSampledCountWithCondition(killMatchCondition, "is_solo", true, SAMPLE_SIZE)
-            : Killmails.countDocuments({ ...killMatchCondition, is_solo: true }),
+            ? getSampledCountWithCondition(
+                  killMatchCondition,
+                  "is_solo",
+                  true,
+                  SAMPLE_SIZE
+              )
+            : Killmails.countDocuments({
+                  ...killMatchCondition,
+                  is_solo: true,
+              }),
 
         // Last active kill - single document query with sort
         Killmails.findOne(killMatchCondition, { kill_time: 1, _id: 0 })
@@ -496,18 +603,31 @@ async function getBasicStats(type: StatsType, id: number, timeFilter?: { $gte: D
 
         // Solo losses - use optimized pipeline for large datasets
         needsSampling
-            ? getSampledCountWithCondition(lossMatchCondition, "is_solo", true, SAMPLE_SIZE)
-            : Killmails.countDocuments({ ...lossMatchCondition, is_solo: true }),
+            ? getSampledCountWithCondition(
+                  lossMatchCondition,
+                  "is_solo",
+                  true,
+                  SAMPLE_SIZE
+              )
+            : Killmails.countDocuments({
+                  ...lossMatchCondition,
+                  is_solo: true,
+              }),
 
         // NPC losses - use optimized pipeline for large datasets
         needsSampling
-            ? getSampledCountWithCondition(lossMatchCondition, "is_npc", true, SAMPLE_SIZE)
+            ? getSampledCountWithCondition(
+                  lossMatchCondition,
+                  "is_npc",
+                  true,
+                  SAMPLE_SIZE
+              )
             : Killmails.countDocuments({ ...lossMatchCondition, is_npc: true }),
 
         // Last active loss - single document query with sort
         Killmails.findOne(lossMatchCondition, { kill_time: 1, _id: 0 })
             .sort({ kill_time: -1 })
-            .lean()
+            .lean(),
     ]);
 
     // Process results, handling sampled data appropriately
@@ -540,12 +660,21 @@ async function getBasicStats(type: StatsType, id: number, timeFilter?: { $gte: D
     }
 
     // Determine last active time from both kills and losses
-    const lastActiveFromKills = lastActiveKill ? lastActiveKill.kill_time : null;
-    const lastActiveFromLosses = lastActiveLoss ? lastActiveLoss.kill_time : null;
+    const lastActiveFromKills = lastActiveKill
+        ? lastActiveKill.kill_time
+        : null;
+    const lastActiveFromLosses = lastActiveLoss
+        ? lastActiveLoss.kill_time
+        : null;
 
     let lastActive = null;
     if (lastActiveFromKills && lastActiveFromLosses) {
-        lastActive = new Date(Math.max(lastActiveFromKills.getTime(), lastActiveFromLosses.getTime()));
+        lastActive = new Date(
+            Math.max(
+                lastActiveFromKills.getTime(),
+                lastActiveFromLosses.getTime()
+            )
+        );
     } else if (lastActiveFromKills) {
         lastActive = lastActiveFromKills;
     } else if (lastActiveFromLosses) {
@@ -560,24 +689,29 @@ async function getBasicStats(type: StatsType, id: number, timeFilter?: { $gte: D
         soloKills,
         soloLosses,
         npcLosses,
-        lastActive
+        lastActive,
     };
 }
 
 /**
  * Helper function to get a count with a condition using sampling for large datasets
  */
-async function getSampledCountWithCondition(baseCondition: any, field: string, value: any, sampleSize: number): Promise<number> {
+async function getSampledCountWithCondition(
+    baseCondition: any,
+    field: string,
+    value: any,
+    sampleSize: number
+): Promise<number> {
     const pipeline = [
         { $match: baseCondition },
         { $sample: { size: sampleSize } },
         { $match: { [field]: value } },
-        { $count: "count" }
+        { $count: "count" },
     ];
 
     const [sampleResult, totalResult] = await Promise.all([
         Killmails.aggregate(pipeline).allowDiskUse(true),
-        Killmails.countDocuments(baseCondition)
+        Killmails.countDocuments(baseCondition),
     ]);
 
     if (sampleResult.length === 0) return 0;
@@ -600,11 +734,17 @@ async function getSampledCountWithCondition(baseCondition: any, field: string, v
  * Get ship group statistics (like the API endpoints expect)
  * Returns kills, losses, and efficiency per ship group
  */
-async function getShipGroupStats(type: StatsType, id: number, timeFilter?: { $gte: Date }) {
+async function getShipGroupStats(
+    type: StatsType,
+    id: number,
+    timeFilter?: { $gte: Date }
+) {
     // Validate entity parameters to prevent attackers.undefined queries
     const validation = validateEntity(type, id);
     if (!validation.valid) {
-        console.error(`Invalid entity for ship group stats: type=${type}, id=${id}`);
+        console.error(
+            `Invalid entity for ship group stats: type=${type}, id=${id}`
+        );
         return [];
     }
 
@@ -634,8 +774,11 @@ async function getShipGroupStats(type: StatsType, id: number, timeFilter?: { $gt
 
         // Create maps for quick lookup
         const shipIdToName = new Map<number, string>();
-        const validShipIds = shipTypes.map(ship => {
-            shipIdToName.set(ship.type_id, ship.type_name?.en || "Unknown Ship");
+        const validShipIds = shipTypes.map((ship) => {
+            shipIdToName.set(
+                ship.type_id,
+                ship.type_name?.en || "Unknown Ship"
+            );
             return ship.type_id;
         });
 
@@ -656,8 +799,13 @@ async function getShipGroupStats(type: StatsType, id: number, timeFilter?: { $gt
             { $unwind: "$attackers" },
             {
                 $match: {
-                    [`attackers.${type === "character_id" ? "character_id" : 
-                        type === "corporation_id" ? "corporation_id" : "alliance_id"}`]: id,
+                    [`attackers.${
+                        type === "character_id"
+                            ? "character_id"
+                            : type === "corporation_id"
+                            ? "corporation_id"
+                            : "alliance_id"
+                    }`]: id,
                     "attackers.ship_id": { $in: validShipIds },
                 },
             },
@@ -691,7 +839,15 @@ async function getShipGroupStats(type: StatsType, id: number, timeFilter?: { $gt
         ]);
 
         // Combine results
-        const shipStatsMap = new Map<number, { groupName: string; kills: number; losses: number; efficiency: number }>();
+        const shipStatsMap = new Map<
+            number,
+            {
+                groupName: string;
+                kills: number;
+                losses: number;
+                efficiency: number;
+            }
+        >();
 
         // Process kills
         killResults.forEach((result) => {
@@ -727,16 +883,22 @@ async function getShipGroupStats(type: StatsType, id: number, timeFilter?: { $gt
         // Calculate efficiency and convert to array
         const shipGroupStats = Array.from(shipStatsMap.values()).map((stat) => {
             const total = stat.kills + stat.losses;
-            stat.efficiency = total > 0 ? Math.round((stat.kills / total) * 100) : 0;
+            stat.efficiency =
+                total > 0 ? Math.round((stat.kills / total) * 100) : 0;
             return stat;
         });
 
         // Sort by total activity (kills + losses) descending
-        shipGroupStats.sort((a, b) => (b.kills + b.losses) - (a.kills + a.losses));
+        shipGroupStats.sort(
+            (a, b) => b.kills + b.losses - (a.kills + a.losses)
+        );
 
         return shipGroupStats;
     } catch (error) {
-        console.error(`Error calculating ship group stats for ${type} ${id}:`, error);
+        console.error(
+            `Error calculating ship group stats for ${type} ${id}:`,
+            error
+        );
         return [];
     }
 }
@@ -744,11 +906,17 @@ async function getShipGroupStats(type: StatsType, id: number, timeFilter?: { $gt
 /**
  * Get monthly statistics for an entity
  */
-async function getMonthlyStats(type: StatsType, id: number, timeFilter?: { $gte: Date }) {
+async function getMonthlyStats(
+    type: StatsType,
+    id: number,
+    timeFilter?: { $gte: Date }
+) {
     // Validate entity parameters to prevent attackers.undefined queries
     const validation = validateEntity(type, id);
     if (!validation.valid) {
-        console.error(`Invalid entity for monthly stats: type=${type}, id=${id}`);
+        console.error(
+            `Invalid entity for monthly stats: type=${type}, id=${id}`
+        );
         return [];
     }
 
@@ -923,9 +1091,7 @@ async function getMonthlyStats(type: StatsType, id: number, timeFilter?: { $gte:
     const monthlyStats = Array.from(monthsMap.values()).map((stat) => {
         const totalKills = stat.kills + stat.losses;
         stat.efficiency =
-            totalKills > 0
-                ? Math.round((stat.kills / totalKills) * 100)
-                : 0;
+            totalKills > 0 ? Math.round((stat.kills / totalKills) * 100) : 0;
         return stat;
     });
 
@@ -941,7 +1107,11 @@ async function getMonthlyStats(type: StatsType, id: number, timeFilter?: { $gte:
 /**
  * Get heat map data (kills by hour) with sampling for large datasets
  */
-async function getHeatMapData(type: StatsType, id: number, timeFilter?: { $gte: Date }) {
+async function getHeatMapData(
+    type: StatsType,
+    id: number,
+    timeFilter?: { $gte: Date }
+) {
     // Validate entity parameters to prevent attackers.undefined queries
     const validation = validateEntity(type, id);
     if (!validation.valid) {
@@ -960,7 +1130,9 @@ async function getHeatMapData(type: StatsType, id: number, timeFilter?: { $gte: 
     }
 
     // Check if we need to sample (for extremely large datasets)
-    const totalCount = await Killmails.countDocuments(matchCondition).limit(1000000);
+    const totalCount = await Killmails.countDocuments(matchCondition).limit(
+        1000000
+    );
 
     // Apply sampling for large datasets
     const SAMPLE_THRESHOLD = 100000;
@@ -970,7 +1142,10 @@ async function getHeatMapData(type: StatsType, id: number, timeFilter?: { $gte: 
 
     // Add sampling for large datasets
     if (useSampling) {
-        const sampleSize = Math.min(SAMPLE_THRESHOLD, Math.max(10000, Math.floor(totalCount * 0.1)));
+        const sampleSize = Math.min(
+            SAMPLE_THRESHOLD,
+            Math.max(10000, Math.floor(totalCount * 0.1))
+        );
         pipeline.push({ $sample: { size: sampleSize } });
     } else {
         pipeline.push({ $match: matchCondition });
@@ -980,8 +1155,8 @@ async function getHeatMapData(type: StatsType, id: number, timeFilter?: { $gte: 
     pipeline.push({
         $group: {
             _id: { $hour: "$kill_time" },
-            count: { $sum: 1 }
-        }
+            count: { $sum: 1 },
+        },
     });
 
     return Killmails.aggregate(pipeline).allowDiskUse(true);
@@ -990,7 +1165,11 @@ async function getHeatMapData(type: StatsType, id: number, timeFilter?: { $gte: 
 /**
  * Get blob factor data with sampling for large datasets
  */
-async function getBlobFactorData(type: StatsType, id: number, timeFilter?: { $gte: Date }) {
+async function getBlobFactorData(
+    type: StatsType,
+    id: number,
+    timeFilter?: { $gte: Date }
+) {
     // Validate entity parameters to prevent attackers.undefined queries
     const validation = validateEntity(type, id);
     if (!validation.valid) {
@@ -1009,7 +1188,9 @@ async function getBlobFactorData(type: StatsType, id: number, timeFilter?: { $gt
     }
 
     // Check if we need to sample (for extremely large datasets)
-    const totalCount = await Killmails.countDocuments(matchCondition).limit(1000000);
+    const totalCount = await Killmails.countDocuments(matchCondition).limit(
+        1000000
+    );
 
     // Apply sampling for large datasets
     const SAMPLE_THRESHOLD = 100000;
@@ -1019,7 +1200,10 @@ async function getBlobFactorData(type: StatsType, id: number, timeFilter?: { $gt
 
     // Add sampling for large datasets
     if (useSampling) {
-        const sampleSize = Math.min(SAMPLE_THRESHOLD, Math.max(10000, Math.floor(totalCount * 0.1)));
+        const sampleSize = Math.min(
+            SAMPLE_THRESHOLD,
+            Math.max(10000, Math.floor(totalCount * 0.1))
+        );
         pipeline.push({ $sample: { size: sampleSize } });
     } else {
         pipeline.push({ $match: matchCondition });
@@ -1029,14 +1213,14 @@ async function getBlobFactorData(type: StatsType, id: number, timeFilter?: { $gt
     pipeline.push(
         {
             $project: {
-                attackersCount: { $size: "$attackers" }
-            }
+                attackersCount: { $size: "$attackers" },
+            },
         },
         {
-            $match: { attackersCount: { $gt: 10 } }
+            $match: { attackersCount: { $gt: 10 } },
         },
         {
-            $count: "blobCount"
+            $count: "blobCount",
         }
     );
 
@@ -1044,10 +1228,14 @@ async function getBlobFactorData(type: StatsType, id: number, timeFilter?: { $gt
 
     // Adjust the blob count if we used sampling
     if (useSampling && result.length > 0) {
-        const samplingRatio = totalCount / Math.min(SAMPLE_THRESHOLD, Math.max(10000, Math.floor(totalCount * 0.1)));
+        const samplingRatio =
+            totalCount /
+            Math.min(
+                SAMPLE_THRESHOLD,
+                Math.max(10000, Math.floor(totalCount * 0.1))
+            );
         return { blobCount: Math.round(result[0].blobCount * samplingRatio) };
     }
 
     return result[0] || { blobCount: 0 };
 }
-

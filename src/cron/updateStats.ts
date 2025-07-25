@@ -10,14 +10,20 @@ export default {
         cliLogger.info("Updating stats");
 
         // From the stats collection, find all documents that have needsUpdate set to true
-        const statsToUpdate = await Stats.find({ needsUpdate: true }).lean();
+        // We only look for days: 0 as a trigger, but will update all related stat periods
+        const statsToUpdate = await Stats.find({
+            needsUpdate: true,
+            days: 0,
+        }).lean();
 
         if (statsToUpdate.length === 0) {
             cliLogger.info("No stats need updating");
             return;
         }
 
-        cliLogger.info(`Found ${statsToUpdate.length} stats documents that need updating`);
+        cliLogger.info(
+            `Found ${statsToUpdate.length} stats documents that need updating`
+        );
 
         // Get current date information for frequency checks
         const now = new Date();
@@ -33,14 +39,14 @@ export default {
             let priority = 5; // Default priority (lower number = higher priority)
 
             // Characters: update every hour (always)
-            if (stat.type === 'character_id') {
+            if (stat.type === "character_id") {
                 shouldUpdate = true;
                 priority = 5;
             }
             // Corporations: update once a day (first hour of day)
-            else if (stat.type === 'corporation_id') {
+            else if (stat.type === "corporation_id") {
                 // Check if this is a small corporation (less than 50k kills+losses)
-                const isSmallCorp = (stat.kills + stat.losses) < 50000;
+                const isSmallCorp = stat.kills + stat.losses < 50000;
 
                 // Update small corps every hour, larger corps only at midnight
                 if (isSmallCorp || currentHour === 0) {
@@ -49,9 +55,9 @@ export default {
                 }
             }
             // Alliances: update once a week (Sunday at midnight) or if small
-            else if (stat.type === 'alliance_id') {
+            else if (stat.type === "alliance_id") {
                 // Check if this is a small alliance (less than 50k kills+losses)
-                const isSmallAlliance = (stat.kills + stat.losses) < 50000;
+                const isSmallAlliance = stat.kills + stat.losses < 50000;
 
                 // Update small alliances daily (at midnight), larger alliances weekly (Sunday midnight)
                 if (isSmallAlliance && currentHour === 0) {
@@ -65,18 +71,24 @@ export default {
             }
 
             if (shouldUpdate) {
-                // Add job to queue with appropriate priority
-                await addStatsJob(stat.type, stat.id, stat.days, priority);
-                queuedCount++;
+                // Queue jobs for all stat periods (0, 14, 30, 90 days)
+                const statPeriods = [0, 14, 30, 90];
+                for (const days of statPeriods) {
+                    await addStatsJob(stat.type, stat.id, days, priority);
+                    queuedCount++;
+                }
 
-                // Reset the needsUpdate flag since we've queued this stat for update
-                await Stats.updateOne(
-                    { _id: stat._id },
+                // Reset the needsUpdate flag for all related stat documents
+                await Stats.updateMany(
+                    {
+                        type: stat.type,
+                        id: stat.id,
+                    },
                     { $set: { needsUpdate: false } }
                 );
             }
         }
 
-        cliLogger.info(`Queued ${queuedCount} stats for update`);
+        cliLogger.info(`Queued ${queuedCount} stats jobs for update`);
     },
 };
