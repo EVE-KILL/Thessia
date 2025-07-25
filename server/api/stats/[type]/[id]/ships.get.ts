@@ -49,13 +49,13 @@ export default defineCachedEventHandler(
 
             if (!stats || !stats.full || !stats.full.shipGroupStats) {
                 return {
-                    shipStats: [],
+                    shipGroupStats: [],
                 };
             }
 
             // Return the pre-calculated ship group stats
             return {
-                shipStats: stats.full.shipGroupStats,
+                shipGroupStats: stats.full.shipGroupStats,
             };
         } catch (error) {
             console.error(

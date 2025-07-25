@@ -784,22 +784,6 @@ async function getShipGroupStats(
     };
 
     try {
-        // Get all valid ship type IDs upfront (category_id = 6)
-        const shipTypes = await InvTypes.find(
-            { category_id: 6 },
-            { type_id: 1, type_name: 1, _id: 0 }
-        ).lean();
-
-        // Create maps for quick lookup
-        const shipIdToName = new Map<number, string>();
-        const validShipIds = shipTypes.map((ship) => {
-            shipIdToName.set(
-                ship.type_id,
-                ship.type_name?.en || "Unknown Ship"
-            );
-            return ship.type_id;
-        });
-
         // Prepare match conditions
         const killMatchCondition: any = { [attackerTypeFieldMap[type]]: id };
         const lossMatchCondition: any = { [typeFieldMap[type]]: id };
@@ -809,7 +793,7 @@ async function getShipGroupStats(
             lossMatchCondition.kill_time = timeFilter;
         }
 
-        // Aggregate ship usage from kills (where entity is attacker)
+        // Aggregate ship group usage from kills (where entity is attacker)
         const killsAggregation = [
             {
                 $match: killMatchCondition,
@@ -824,29 +808,31 @@ async function getShipGroupStats(
                             ? "corporation_id"
                             : "alliance_id"
                     }`]: id,
-                    "attackers.ship_id": { $in: validShipIds },
+                    "attackers.ship_group_id": { $exists: true, $ne: null },
                 },
             },
             {
                 $group: {
-                    _id: "$attackers.ship_id",
+                    _id: "$attackers.ship_group_id",
                     kills: { $sum: 1 },
+                    groupName: { $first: "$attackers.ship_group_name" },
                 },
             },
         ];
 
-        // Aggregate ship losses (where entity is victim)
+        // Aggregate ship group losses (where entity is victim)
         const lossesAggregation = [
             {
                 $match: {
                     ...lossMatchCondition,
-                    "victim.ship_id": { $in: validShipIds },
+                    "victim.ship_group_id": { $exists: true, $ne: null },
                 },
             },
             {
                 $group: {
-                    _id: "$victim.ship_id",
+                    _id: "$victim.ship_group_id",
                     losses: { $sum: 1 },
+                    groupName: { $first: "$victim.ship_group_name" },
                 },
             },
         ];
@@ -857,7 +843,7 @@ async function getShipGroupStats(
         ]);
 
         // Combine results
-        const shipStatsMap = new Map<
+        const shipGroupStatsMap = new Map<
             number,
             {
                 groupName: string;
@@ -869,10 +855,12 @@ async function getShipGroupStats(
 
         // Process kills
         killResults.forEach((result) => {
-            const shipId = result._id;
-            if (shipId && shipIdToName.has(shipId)) {
-                shipStatsMap.set(shipId, {
-                    groupName: shipIdToName.get(shipId)!,
+            const shipGroupId = result._id;
+            const groupName = result.groupName?.en || result.groupName || "Unknown Ship Group";
+            
+            if (shipGroupId) {
+                shipGroupStatsMap.set(shipGroupId, {
+                    groupName,
                     kills: result.kills,
                     losses: 0,
                     efficiency: 0,
@@ -882,14 +870,16 @@ async function getShipGroupStats(
 
         // Process losses
         lossResults.forEach((result) => {
-            const shipId = result._id;
-            if (shipId && shipIdToName.has(shipId)) {
-                const existing = shipStatsMap.get(shipId);
+            const shipGroupId = result._id;
+            const groupName = result.groupName?.en || result.groupName || "Unknown Ship Group";
+            
+            if (shipGroupId) {
+                const existing = shipGroupStatsMap.get(shipGroupId);
                 if (existing) {
                     existing.losses = result.losses;
                 } else {
-                    shipStatsMap.set(shipId, {
-                        groupName: shipIdToName.get(shipId)!,
+                    shipGroupStatsMap.set(shipGroupId, {
+                        groupName,
                         kills: 0,
                         losses: result.losses,
                         efficiency: 0,
@@ -899,7 +889,7 @@ async function getShipGroupStats(
         });
 
         // Calculate efficiency and convert to array
-        const shipGroupStats = Array.from(shipStatsMap.values()).map((stat) => {
+        const shipGroupStats = Array.from(shipGroupStatsMap.values()).map((stat) => {
             const total = stat.kills + stat.losses;
             stat.efficiency =
                 total > 0 ? Math.round((stat.kills / total) * 100) : 0;

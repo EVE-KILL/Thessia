@@ -19,6 +19,8 @@ export function ensureData(data: Partial<IStatsDocument> | null | undefined): Pa
         full: safeData.full || {
             mostUsedShips: {},
             mostLostShips: {},
+            shipGroupStats: [],
+            monthlyStats: [],
             diesToCorporations: {},
             diesToAlliances: {},
             blobFactor: 0,
@@ -51,6 +53,8 @@ export function createEmptyStats(type: StatsType, id: number, days: number): ISt
     const full: IFullStats = {
         mostUsedShips: {},
         mostLostShips: {},
+        shipGroupStats: [],
+        monthlyStats: [],
         diesToCorporations: {},
         diesToAlliances: {},
         blobFactor: 0,
