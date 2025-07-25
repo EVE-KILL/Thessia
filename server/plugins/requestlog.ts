@@ -4,11 +4,22 @@ import { cliLogger } from "~/server/helpers/Logger";
 
 export default defineNitroPlugin(() => {
     nitroApp.hooks.hook("request", (event) => {
+        // If the request url starts with /_ipx we can ignore it (Stops all the image generation requests from showing in the log)
+        if (event.node.req.url?.startsWith("/_ipx/")) {
+            return;
+        }
+
         const requestIp = getRequestIP(event, { xForwardedFor: true });
 
         // Output request log info similar to nginx but with colors
         cliLogger.info(
-            `${chalk.cyan(event.node.req.method)} ${chalk.white(event.node.req.url)} ${chalk.gray(`HTTP/${event.node.req.httpVersion}`)} ${chalk.yellow(event.node.req.headers["user-agent"])} ${chalk.magenta(`[${requestIp}]`)}`,
+            `${chalk.cyan(event.node.req.method)} ${chalk.white(
+                event.node.req.url
+            )} ${chalk.gray(
+                `HTTP/${event.node.req.httpVersion}`
+            )} ${chalk.yellow(
+                event.node.req.headers["user-agent"]
+            )} ${chalk.magenta(`[${requestIp}]`)}`
         );
     });
 });
