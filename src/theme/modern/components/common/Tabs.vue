@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, type PropType } from 'vue';
+import { computed, watchEffect, type PropType } from 'vue';
 import { useResponsive } from '~/composables/useResponsive';
 
 interface TabItem {
@@ -94,7 +94,26 @@ const getButtonClasses = (item: TabItem) => {
     return baseClasses.filter(c => c).join(' '); // Filter out empty strings and join
 }
 
-// Get display text for a tab based on mobile settings
+// Helper function to clean icon names for different icon components
+const getCleanIconName = (iconName: string) => {
+    if (!iconName) return '';
+
+    // Remove any extra classes like 'text-xl', 'text-lg', etc.
+    const cleanName = iconName.split(' ')[0];
+
+    // Convert from UIcon format (i-lucide-swords) to @nuxt/icon format (lucide:swords)
+    if (cleanName.startsWith('i-lucide-')) {
+        return cleanName.replace('i-lucide-', 'lucide:');
+    }
+
+    // If it's already in the right format, return as is
+    if (cleanName.includes(':')) {
+        return cleanName;
+    }
+
+    // If it's just the icon name, assume it's lucide
+    return `lucide:${cleanName}`;
+}
 const getTabDisplayText = (item: TabItem) => {
     if (!isMobile.value || props.mobileDisplayMode === 'full') {
         return item.label; // On desktop or if full labels are requested, show full label
@@ -122,29 +141,55 @@ const headerContainerClass = computed(() => {
 
     return classes.join(' ');
 });
+
+// Debug function to help troubleshoot mobile issues
+const debugInfo = computed(() => ({
+    isMobile: isMobile.value,
+    mobileDisplayMode: props.mobileDisplayMode,
+    itemsCount: props.items.length,
+    firstItemHasIcon: props.items[0]?.icon ? true : false,
+    firstItemIcon: props.items[0]?.icon,
+    firstItemCleanIcon: getCleanIconName(props.items[0]?.icon || ''),
+    allItemsWithIcons: props.items.map(item => ({
+        id: item.id,
+        label: item.label,
+        icon: item.icon,
+        cleanIcon: getCleanIconName(item.icon || '')
+    }))
+}));
+
+// Log debug info when in development (can be removed once working)
+if (process.dev) {
+    watchEffect(() => {
+        console.log('Tabs Debug Info:', debugInfo.value);
+    });
+}
 </script>
 
 <template>
     <div>
         <div :class="headerContainerClass">
-            <button v-for="item in items" :key="item.id" type="button" :disabled="item.disabled"
-                :class="getButtonClasses(item)" @click="selectTab(item.id)">
-                <!-- Always show the icon if available -->
-                <UIcon v-if="item.icon" :name="item.icon" class="tab-icon" />
-
-                <!-- Mobile view with tooltips -->
-                <template v-if="isMobile">
-                    <UTooltip v-if="mobileDisplayMode !== 'full'" :text="item.label">
-                        <span v-if="!(mobileDisplayMode === 'icon-only' && item.icon)" class="tab-label">
+            <template v-for="item in items" :key="item.id">
+                <!-- Simple approach: Always wrap in tooltip on mobile, regardless of mode -->
+                <UTooltip v-if="isMobile" :text="item.label">
+                    <button type="button" :disabled="item.disabled"
+                        :class="getButtonClasses(item)" @click="selectTab(item.id)">
+                        <!-- Use @nuxt/icon for mobile -->
+                        <Icon v-if="item.icon" :name="getCleanIconName(item.icon)" class="tab-icon mobile-icon-force icon-mobile" size="20" />
+                        <!-- Show text based on mobile display mode -->
+                        <span v-if="mobileDisplayMode !== 'icon-only' || !item.icon" class="tab-label">
                             {{ getTabDisplayText(item) }}
                         </span>
-                    </UTooltip>
-                    <span v-else class="tab-label">{{ item.label }}</span>
-                </template>
+                    </button>
+                </UTooltip>
 
-                <!-- Desktop view -->
-                <span v-else class="tab-label">{{ item.label }}</span>
-            </button>
+                <!-- Desktop: No tooltip, always show icon + label -->
+                <button v-else type="button" :disabled="item.disabled"
+                    :class="getButtonClasses(item)" @click="selectTab(item.id)">
+                    <UIcon v-if="item.icon" :name="item.icon" class="tab-icon" />
+                    <span class="tab-label">{{ item.label }}</span>
+                </button>
+            </template>
         </div>
 
         <div :class="contentContainerClass">
@@ -364,6 +409,74 @@ div>.custom-tabs-header-container {
     height: 1.25rem;
 }
 
+/* Force mobile icons to be visible */
+.mobile-icon-force {
+    display: inline-flex !important;
+    width: 1.25rem !important;
+    height: 1.25rem !important;
+    flex-shrink: 0 !important;
+    opacity: 1 !important;
+    visibility: visible !important;
+    color: currentColor !important;
+}
+
+/* Force iconify icons to display properly */
+.iconify {
+    display: inline-block !important;
+    width: 1em !important;
+    height: 1em !important;
+    vertical-align: -0.125em !important;
+}
+
+/* Ensure iconify icons work on mobile */
+@media (max-width: 768px) {
+    .iconify {
+        display: inline-block !important;
+        font-size: 1.25rem !important;
+        width: 1.25rem !important;
+        height: 1.25rem !important;
+        line-height: 1 !important;
+    }
+
+    /* Force specific iconify classes */
+    .i-lucide\:swords,
+    .i-lucide\:list-ordered,
+    .i-lucide\:layout-dashboard,
+    .iconify[class*="i-lucide"] {
+        display: inline-block !important;
+        width: 1.25rem !important;
+        height: 1.25rem !important;
+        background-size: contain !important;
+        background-repeat: no-repeat !important;
+        background-position: center !important;
+    }
+
+    /* Mobile fallback text styling */
+    .mobile-fallback-text {
+        display: inline-block !important;
+        font-size: 0.875rem !important;
+        font-weight: 600 !important;
+        color: currentColor !important;
+        margin-left: 0.25rem !important;
+    }
+
+    /* NuxtIcon mobile styling */
+    .nuxt-icon-mobile {
+        font-size: 1.25rem !important;
+        width: 1.25rem !important;
+        height: 1.25rem !important;
+        display: inline-block !important;
+    }
+
+    /* Icon component mobile styling */
+    .icon-mobile {
+        display: inline-block !important;
+        width: 1.25rem !important;
+        height: 1.25rem !important;
+        font-size: 20px !important;
+    }
+}
+
 /* Custom styling for compact mobile buttons */
 @media (max-width: 768px) {
 
@@ -391,6 +504,9 @@ div>.custom-tabs-header-container {
         /* Force display */
         width: 1.25rem;
         height: 1.25rem;
+        flex-shrink: 0 !important;
+        opacity: 1 !important;
+        visibility: visible !important;
     }
 
     /* Better touch targets on mobile */
@@ -412,6 +528,16 @@ div>.custom-tabs-header-container {
     .custom-tabs-active-button {
         border-bottom-width: 2px;
         /* Make the bottom border more visible */
+    }
+
+    /* Force UIcon component visibility on mobile */
+    .custom-tabs-active-button .tab-icon,
+    .custom-tabs-inactive-button .tab-icon {
+        display: inline-flex !important;
+        opacity: 1 !important;
+        visibility: visible !important;
+        min-width: 1.25rem !important;
+        min-height: 1.25rem !important;
     }
 }
 
