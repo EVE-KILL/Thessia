@@ -293,6 +293,19 @@ async function generateAdvancedViewStats(
             );
         }
 
+        // Track victim ship group stats (ships destroyed)
+        if (killmail.victim?.ship_group_id && 
+            validShipGroupIds.has(killmail.victim.ship_group_id)) {
+            if (shipGroupMap.has(killmail.victim.ship_group_id)) {
+                shipGroupMap.get(killmail.victim.ship_group_id)!.killed++;
+            } else {
+                shipGroupMap.set(killmail.victim.ship_group_id, {
+                    ship_group_name: killmail.victim.ship_group_name || "Unknown",
+                    killed: 1,
+                });
+            }
+        }
+
         // Process attackers
         if (killmail.attackers && Array.isArray(killmail.attackers)) {
             // Track which corps and alliances we've already counted for this killmail
@@ -300,22 +313,6 @@ async function generateAdvancedViewStats(
             const countedAlliances = new Set<number>();
 
             killmail.attackers.forEach((attacker: any) => {
-                // Ship group stats (only for valid ship groups)
-                if (
-                    attacker.ship_group_id &&
-                    validShipGroupIds.has(attacker.ship_group_id)
-                ) {
-                    if (shipGroupMap.has(attacker.ship_group_id)) {
-                        shipGroupMap.get(attacker.ship_group_id)!.killed++;
-                    } else {
-                        shipGroupMap.set(attacker.ship_group_id, {
-                            ship_group_name:
-                                attacker.ship_group_name || "Unknown",
-                            killed: 1,
-                        });
-                    }
-                }
-
                 // Character killer stats
                 if (attacker.character_id && attacker.character_name) {
                     if (killerCharacterMap.has(attacker.character_id)) {
