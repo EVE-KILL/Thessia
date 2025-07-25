@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, watchEffect, type PropType } from 'vue';
+import { computed, type PropType } from 'vue';
 import { useResponsive } from '~/composables/useResponsive';
 
 interface TabItem {
@@ -141,29 +141,6 @@ const headerContainerClass = computed(() => {
 
     return classes.join(' ');
 });
-
-// Debug function to help troubleshoot mobile issues
-const debugInfo = computed(() => ({
-    isMobile: isMobile.value,
-    mobileDisplayMode: props.mobileDisplayMode,
-    itemsCount: props.items.length,
-    firstItemHasIcon: props.items[0]?.icon ? true : false,
-    firstItemIcon: props.items[0]?.icon,
-    firstItemCleanIcon: getCleanIconName(props.items[0]?.icon || ''),
-    allItemsWithIcons: props.items.map(item => ({
-        id: item.id,
-        label: item.label,
-        icon: item.icon,
-        cleanIcon: getCleanIconName(item.icon || '')
-    }))
-}));
-
-// Log debug info when in development (can be removed once working)
-if (process.dev) {
-    watchEffect(() => {
-        console.log('Tabs Debug Info:', debugInfo.value);
-    });
-}
 </script>
 
 <template>
