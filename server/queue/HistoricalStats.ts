@@ -14,10 +14,12 @@ async function hasQueuedJobs(): Promise<boolean> {
     const waiting = await historicalStatsQueue.getWaiting();
     const active = await historicalStatsQueue.getActive();
     const delayed = await historicalStatsQueue.getDelayed();
-    
+
     const totalPending = waiting.length + active.length + delayed.length;
-    cliLogger.info(`Historical stats queue status: ${totalPending} jobs pending (${waiting.length} waiting, ${active.length} active, ${delayed.length} delayed)`);
-    
+    cliLogger.info(
+        `Historical stats queue status: ${totalPending} jobs pending (${waiting.length} waiting, ${active.length} active, ${delayed.length} delayed)`
+    );
+
     return totalPending > 0;
 }
 

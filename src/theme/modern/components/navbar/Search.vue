@@ -103,7 +103,9 @@ const handleSearchSubmit = (e: Event) => {
     // If we have an active item, navigate to it
     if (activeItemIndex.value >= 0 && flattenedResults.value[activeItemIndex.value]) {
         const activeHit = flattenedResults.value[activeItemIndex.value];
-        navigateTo(`/${activeHit.type}/${activeHit.id}`);
+        // Map ship type back to item for navigation since ships are items in the database
+        const routeType = activeHit.type === 'ship' ? 'item' : activeHit.type;
+        navigateTo(`/${routeType}/${activeHit.id}`);
         query.value = "";
         shouldShowDropdown.value = false;
         isFullscreenMobile.value = false;
@@ -245,7 +247,9 @@ const handleClickOutside = () => { };
 
 // Click on search result
 const handleResultClick = (hit: any) => {
-    navigateTo(`/${hit.type}/${hit.id}`);
+    // Map ship type back to item for navigation since ships are items in the database
+    const routeType = hit.type === 'ship' ? 'item' : hit.type;
+    navigateTo(`/${routeType}/${hit.id}`);
     query.value = "";
     shouldShowDropdown.value = false;
     isFullscreenMobile.value = false;
@@ -341,7 +345,7 @@ onUnmounted(() => { });
                                     <div class="flex items-center">
                                         <!-- Entity Image -->
                                         <div class="flex-shrink-0 mr-3">
-                                            <Image :type="hit.type" :id="hit.id" :size="32" />
+                                            <Image :type="hit.type === 'ship' ? 'type-icon' : hit.type" :id="hit.id" :size="32" />
                                         </div>
 
                                         <div class="flex-1 min-w-0 flex items-center">
@@ -420,7 +424,7 @@ onUnmounted(() => { });
                             <div class="flex items-center">
                                 <!-- Entity Image -->
                                 <div class="flex-shrink-0 mr-3">
-                                    <Image :type="hit.type" :id="hit.id" :size="40" />
+                                    <Image :type="hit.type === 'ship' ? 'type-icon' : hit.type" :id="hit.id" :size="40" />
                                 </div>
 
                                 <div class="flex-1 min-w-0 flex items-center">

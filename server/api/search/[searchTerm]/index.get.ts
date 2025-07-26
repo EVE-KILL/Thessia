@@ -1,4 +1,5 @@
-import { Meilisearch } from "~/server/helpers/Meilisearch";
+import { Meilisearch } from "../../../helpers/Meilisearch";
+import { batchClassifyTypeIds } from "../../../helpers/ItemClassifier";
 
 interface SearchHit {
     id: any;
@@ -57,9 +58,30 @@ export default defineCachedEventHandler(async (event) => {
         return hit;
     });
 
+    // Classify items vs ships for proper type assignment
+    const itemHits = results.hits.filter((hit: SearchHit) => hit.type === 'item');
+    if (itemHits.length > 0) {
+        try {
+            const typeIds = itemHits.map((hit: SearchHit) => Number(hit.id));
+            const classifications = await batchClassifyTypeIds(typeIds);
+            
+            // Update the type based on classification
+            for (const hit of itemHits) {
+                const classification = classifications.get(Number(hit.id));
+                if (classification) {
+                    hit.type = classification; // Either 'ship' or 'item'
+                }
+            }
+        } catch (error) {
+            console.error('Error classifying items vs ships in search results:', error);
+            // If classification fails, leave as 'item' (original behavior)
+        }
+    }
+
     // Group results by type
     const groupedResults: Record<string, any[]> = {
         items: [],
+        ships: [],
         alliances: [],
         corporations: [],
         factions: [],
@@ -72,38 +94,42 @@ export default defineCachedEventHandler(async (event) => {
     for (const hit of results.hits) {
         switch (hit.type) {
             case "item":
-                groupedResults.items.push(hit);
+                groupedResults.items!.push(hit);
+                break;
+            case "ship":
+                groupedResults.ships!.push(hit);
                 break;
             case "alliance":
-                groupedResults.alliances.push(hit);
+                groupedResults.alliances!.push(hit);
                 break;
             case "corporation":
-                groupedResults.corporations.push(hit);
+                groupedResults.corporations!.push(hit);
                 break;
             case "faction":
-                groupedResults.factions.push(hit);
+                groupedResults.factions!.push(hit);
                 break;
             case "system":
-                groupedResults.systems.push(hit);
+                groupedResults.systems!.push(hit);
                 break;
             case "region":
-                groupedResults.regions.push(hit);
+                groupedResults.regions!.push(hit);
                 break;
             case "character":
-                groupedResults.characters.push(hit);
+                groupedResults.characters!.push(hit);
                 break;
         }
     }
 
     // Calculate entity counts
     const entityCounts = {
-        items: groupedResults.items.length,
-        alliances: groupedResults.alliances.length,
-        corporations: groupedResults.corporations.length,
-        factions: groupedResults.factions.length,
-        systems: groupedResults.systems.length,
-        regions: groupedResults.regions.length,
-        characters: groupedResults.characters.length,
+        items: groupedResults.items!.length,
+        ships: groupedResults.ships!.length,
+        alliances: groupedResults.alliances!.length,
+        corporations: groupedResults.corporations!.length,
+        factions: groupedResults.factions!.length,
+        systems: groupedResults.systems!.length,
+        regions: groupedResults.regions!.length,
+        characters: groupedResults.characters!.length,
     };
 
     // Get entity types with results, sorted by result count (ascending)
@@ -116,7 +142,10 @@ export default defineCachedEventHandler(async (event) => {
     let sortedHits: any[] = [];
     for (const entityType of entityTypesWithResults) {
         const entityKey = entityType as keyof typeof groupedResults;
-        sortedHits = [...sortedHits, ...groupedResults[entityKey]];
+        const entityArray = groupedResults[entityKey];
+        if (entityArray) {
+            sortedHits = [...sortedHits, ...entityArray];
+        }
     }
 
     // Replace the hits with our reordered array

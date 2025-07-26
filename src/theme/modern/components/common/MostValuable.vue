@@ -159,12 +159,12 @@ const generateKillLink = (item: IMostValuableKill): string | null => {
 
 const generateShipLink = (item: IMostValuableShip): string | null => {
     if (!item || !item.ship_id) return null;
-    return `/ship/${item.ship_id}`;
+    return `/item/${item.ship_id}`;
 };
 
 const generateStructureLink = (item: IMostValuableStructure): string | null => {
     if (!item || !item.type_id) return null;
-    return `/ship/${item.type_id}`; // Structures use type_id like ships
+    return `/item/${item.type_id}`; // Structures use type_id like ships
 };
 
 // Display items limited by props.limit for each tab

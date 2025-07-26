@@ -51,7 +51,7 @@
                             <ul class="space-y-2">
                                 <li v-for="hit in group" :key="hit.id"
                                     class="border border-gray-100 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-750 rounded-md transition-all">
-                                    <UButton :to="`/${hit.type}/${hit.id}`" variant="ghost" block
+                                    <UButton :to="`/${getRouteType(hit.type)}/${hit.id}`" variant="ghost" block
                                         class="justify-between h-auto py-2">
                                         <span class="font-medium">{{ hit.name }}</span>
                                         <UIcon name="lucide:arrow-right" class="text-gray-400" />
@@ -310,6 +310,12 @@ const capitalizeWords = (string: string) => {
         .split(" ")
         .map((word) => capitalizeFirstLetter(word))
         .join(" ");
+};
+
+// Helper to get the correct route type for navigation
+const getRouteType = (hitType: string) => {
+    // Map ship type back to item for navigation since ships are items in the database
+    return hitType === 'ship' ? 'item' : hitType;
 };
 
 // Search function - updated to use debounce

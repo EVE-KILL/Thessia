@@ -1,6 +1,9 @@
 import { cliLogger } from "~/server/helpers/Logger";
 import { Characters } from "~/server/models/Characters";
-import { queueHistoricalStatsProcessingBulk, hasQueuedJobs } from "~/server/queue/HistoricalStats";
+import {
+    queueHistoricalStatsProcessingBulk,
+    hasQueuedJobs,
+} from "~/server/queue/HistoricalStats";
 
 export default {
     name: "updateHistoricalCounts",
@@ -13,8 +16,12 @@ export default {
         // Check if there are already jobs in the queue
         const hasExistingJobs = await hasQueuedJobs();
         if (hasExistingJobs) {
-            cliLogger.info("⏸️ Historical stats queue already has pending jobs, skipping this run to prevent duplicates");
-            return cliLogger.info("Historical stats job queueing skipped - queue not empty");
+            cliLogger.info(
+                "⏸️ Historical stats queue already has pending jobs, skipping this run to prevent duplicates"
+            );
+            return cliLogger.info(
+                "Historical stats job queueing skipped - queue not empty"
+            );
         }
 
         // Collect all alliances that need processing

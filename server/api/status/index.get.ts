@@ -1443,7 +1443,11 @@ export default defineEventHandler(async () => {
                             )
                         ).data
                             .slice(1)
-                            .reduce((acc: any, cur: any) => Number(acc) + Number(cur), 0)
+                            .reduce(
+                                (acc: any, cur: any) =>
+                                    Number(acc) + Number(cur),
+                                0
+                            )
                     )
                 ),
                 "15min": numberFormat(
@@ -1456,7 +1460,11 @@ export default defineEventHandler(async () => {
                             )
                         ).data
                             .slice(1)
-                            .reduce((acc: any, cur: any) => Number(acc) + Number(cur), 0)
+                            .reduce(
+                                (acc: any, cur: any) =>
+                                    Number(acc) + Number(cur),
+                                0
+                            )
                     )
                 ),
                 "1hour": numberFormat(
@@ -1469,7 +1477,11 @@ export default defineEventHandler(async () => {
                             )
                         ).data
                             .slice(1)
-                            .reduce((acc: any, cur: any) => Number(acc) + Number(cur), 0)
+                            .reduce(
+                                (acc: any, cur: any) =>
+                                    Number(acc) + Number(cur),
+                                0
+                            )
                     )
                 ),
                 "6hours": numberFormat(
@@ -1482,7 +1494,11 @@ export default defineEventHandler(async () => {
                             )
                         ).data
                             .slice(1)
-                            .reduce((acc: any, cur: any) => Number(acc) + Number(cur), 0)
+                            .reduce(
+                                (acc: any, cur: any) =>
+                                    Number(acc) + Number(cur),
+                                0
+                            )
                     )
                 ),
                 "12hours": numberFormat(
@@ -1495,7 +1511,11 @@ export default defineEventHandler(async () => {
                             )
                         ).data
                             .slice(1)
-                            .reduce((acc: any, cur: any) => Number(acc) + Number(cur), 0)
+                            .reduce(
+                                (acc: any, cur: any) =>
+                                    Number(acc) + Number(cur),
+                                0
+                            )
                     )
                 ),
                 "24hours": numberFormat(
@@ -1508,7 +1528,11 @@ export default defineEventHandler(async () => {
                             )
                         ).data
                             .slice(1)
-                            .reduce((acc: any, cur: any) => Number(acc) + Number(cur), 0)
+                            .reduce(
+                                (acc: any, cur: any) =>
+                                    Number(acc) + Number(cur),
+                                0
+                            )
                     )
                 ),
                 "1week": numberFormat(
@@ -1521,7 +1545,11 @@ export default defineEventHandler(async () => {
                             )
                         ).data
                             .slice(1)
-                            .reduce((acc: any, cur: any) => Number(acc) + Number(cur), 0)
+                            .reduce(
+                                (acc: any, cur: any) =>
+                                    Number(acc) + Number(cur),
+                                0
+                            )
                     )
                 ),
                 "1month": numberFormat(
@@ -1534,7 +1562,11 @@ export default defineEventHandler(async () => {
                             )
                         ).data
                             .slice(1)
-                            .reduce((acc: any, cur: any) => Number(acc) + Number(cur), 0)
+                            .reduce(
+                                (acc: any, cur: any) =>
+                                    Number(acc) + Number(cur),
+                                0
+                            )
                     )
                 ),
             },
