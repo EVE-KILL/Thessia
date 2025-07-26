@@ -489,58 +489,180 @@ export default defineEventHandler(async () => {
             },
             wars: {
                 "1min": await getSingleMinuteProcessingCount(warQueue),
-                "5min": await getQueueProcessingMetrics(warQueue, MetricsTime.FIVE_MINUTES),
-                "15min": await getQueueProcessingMetrics(warQueue, MetricsTime.FIFTEEN_MINUTES),
-                "1hour": await getQueueProcessingMetrics(warQueue, MetricsTime.ONE_HOUR),
-                "6hours": await getQueueProcessingMetrics(warQueue, MetricsTime.ONE_HOUR * 6),
-                "12hours": await getQueueProcessingMetrics(warQueue, MetricsTime.ONE_HOUR * 12),
-                "24hours": await getQueueProcessingMetrics(warQueue, MetricsTime.ONE_HOUR * 24),
-                "1week": await getQueueProcessingMetrics(warQueue, MetricsTime.ONE_HOUR * 24 * 7),
-                "1month": await getQueueProcessingMetrics(warQueue, MetricsTime.ONE_MONTH),
+                "5min": await getQueueProcessingMetrics(
+                    warQueue,
+                    MetricsTime.FIVE_MINUTES
+                ),
+                "15min": await getQueueProcessingMetrics(
+                    warQueue,
+                    MetricsTime.FIFTEEN_MINUTES
+                ),
+                "1hour": await getQueueProcessingMetrics(
+                    warQueue,
+                    MetricsTime.ONE_HOUR
+                ),
+                "6hours": await getQueueProcessingMetrics(
+                    warQueue,
+                    MetricsTime.ONE_HOUR * 6
+                ),
+                "12hours": await getQueueProcessingMetrics(
+                    warQueue,
+                    MetricsTime.ONE_HOUR * 12
+                ),
+                "24hours": await getQueueProcessingMetrics(
+                    warQueue,
+                    MetricsTime.ONE_HOUR * 24
+                ),
+                "1week": await getQueueProcessingMetrics(
+                    warQueue,
+                    MetricsTime.ONE_HOUR * 24 * 7
+                ),
+                "1month": await getQueueProcessingMetrics(
+                    warQueue,
+                    MetricsTime.ONE_MONTH
+                ),
             },
             stats: {
                 "1min": await getSingleMinuteProcessingCount(statsQueue),
-                "5min": await getQueueProcessingMetrics(statsQueue, MetricsTime.FIVE_MINUTES),
-                "15min": await getQueueProcessingMetrics(statsQueue, MetricsTime.FIFTEEN_MINUTES),
-                "1hour": await getQueueProcessingMetrics(statsQueue, MetricsTime.ONE_HOUR),
-                "6hours": await getQueueProcessingMetrics(statsQueue, MetricsTime.ONE_HOUR * 6),
-                "12hours": await getQueueProcessingMetrics(statsQueue, MetricsTime.ONE_HOUR * 12),
-                "24hours": await getQueueProcessingMetrics(statsQueue, MetricsTime.ONE_HOUR * 24),
-                "1week": await getQueueProcessingMetrics(statsQueue, MetricsTime.ONE_HOUR * 24 * 7),
-                "1month": await getQueueProcessingMetrics(statsQueue, MetricsTime.ONE_MONTH),
+                "5min": await getQueueProcessingMetrics(
+                    statsQueue,
+                    MetricsTime.FIVE_MINUTES
+                ),
+                "15min": await getQueueProcessingMetrics(
+                    statsQueue,
+                    MetricsTime.FIFTEEN_MINUTES
+                ),
+                "1hour": await getQueueProcessingMetrics(
+                    statsQueue,
+                    MetricsTime.ONE_HOUR
+                ),
+                "6hours": await getQueueProcessingMetrics(
+                    statsQueue,
+                    MetricsTime.ONE_HOUR * 6
+                ),
+                "12hours": await getQueueProcessingMetrics(
+                    statsQueue,
+                    MetricsTime.ONE_HOUR * 12
+                ),
+                "24hours": await getQueueProcessingMetrics(
+                    statsQueue,
+                    MetricsTime.ONE_HOUR * 24
+                ),
+                "1week": await getQueueProcessingMetrics(
+                    statsQueue,
+                    MetricsTime.ONE_HOUR * 24 * 7
+                ),
+                "1month": await getQueueProcessingMetrics(
+                    statsQueue,
+                    MetricsTime.ONE_MONTH
+                ),
             },
             achievements: {
                 "1min": await getSingleMinuteProcessingCount(achievementQueue),
-                "5min": await getQueueProcessingMetrics(achievementQueue, MetricsTime.FIVE_MINUTES),
-                "15min": await getQueueProcessingMetrics(achievementQueue, MetricsTime.FIFTEEN_MINUTES),
-                "1hour": await getQueueProcessingMetrics(achievementQueue, MetricsTime.ONE_HOUR),
-                "6hours": await getQueueProcessingMetrics(achievementQueue, MetricsTime.ONE_HOUR * 6),
-                "12hours": await getQueueProcessingMetrics(achievementQueue, MetricsTime.ONE_HOUR * 12),
-                "24hours": await getQueueProcessingMetrics(achievementQueue, MetricsTime.ONE_HOUR * 24),
-                "1week": await getQueueProcessingMetrics(achievementQueue, MetricsTime.ONE_HOUR * 24 * 7),
-                "1month": await getQueueProcessingMetrics(achievementQueue, MetricsTime.ONE_MONTH),
+                "5min": await getQueueProcessingMetrics(
+                    achievementQueue,
+                    MetricsTime.FIVE_MINUTES
+                ),
+                "15min": await getQueueProcessingMetrics(
+                    achievementQueue,
+                    MetricsTime.FIFTEEN_MINUTES
+                ),
+                "1hour": await getQueueProcessingMetrics(
+                    achievementQueue,
+                    MetricsTime.ONE_HOUR
+                ),
+                "6hours": await getQueueProcessingMetrics(
+                    achievementQueue,
+                    MetricsTime.ONE_HOUR * 6
+                ),
+                "12hours": await getQueueProcessingMetrics(
+                    achievementQueue,
+                    MetricsTime.ONE_HOUR * 12
+                ),
+                "24hours": await getQueueProcessingMetrics(
+                    achievementQueue,
+                    MetricsTime.ONE_HOUR * 24
+                ),
+                "1week": await getQueueProcessingMetrics(
+                    achievementQueue,
+                    MetricsTime.ONE_HOUR * 24 * 7
+                ),
+                "1month": await getQueueProcessingMetrics(
+                    achievementQueue,
+                    MetricsTime.ONE_MONTH
+                ),
             },
             campaigns: {
                 "1min": await getSingleMinuteProcessingCount(campaignQueue),
-                "5min": await getQueueProcessingMetrics(campaignQueue, MetricsTime.FIVE_MINUTES),
-                "15min": await getQueueProcessingMetrics(campaignQueue, MetricsTime.FIFTEEN_MINUTES),
-                "1hour": await getQueueProcessingMetrics(campaignQueue, MetricsTime.ONE_HOUR),
-                "6hours": await getQueueProcessingMetrics(campaignQueue, MetricsTime.ONE_HOUR * 6),
-                "12hours": await getQueueProcessingMetrics(campaignQueue, MetricsTime.ONE_HOUR * 12),
-                "24hours": await getQueueProcessingMetrics(campaignQueue, MetricsTime.ONE_HOUR * 24),
-                "1week": await getQueueProcessingMetrics(campaignQueue, MetricsTime.ONE_HOUR * 24 * 7),
-                "1month": await getQueueProcessingMetrics(campaignQueue, MetricsTime.ONE_MONTH),
+                "5min": await getQueueProcessingMetrics(
+                    campaignQueue,
+                    MetricsTime.FIVE_MINUTES
+                ),
+                "15min": await getQueueProcessingMetrics(
+                    campaignQueue,
+                    MetricsTime.FIFTEEN_MINUTES
+                ),
+                "1hour": await getQueueProcessingMetrics(
+                    campaignQueue,
+                    MetricsTime.ONE_HOUR
+                ),
+                "6hours": await getQueueProcessingMetrics(
+                    campaignQueue,
+                    MetricsTime.ONE_HOUR * 6
+                ),
+                "12hours": await getQueueProcessingMetrics(
+                    campaignQueue,
+                    MetricsTime.ONE_HOUR * 12
+                ),
+                "24hours": await getQueueProcessingMetrics(
+                    campaignQueue,
+                    MetricsTime.ONE_HOUR * 24
+                ),
+                "1week": await getQueueProcessingMetrics(
+                    campaignQueue,
+                    MetricsTime.ONE_HOUR * 24 * 7
+                ),
+                "1month": await getQueueProcessingMetrics(
+                    campaignQueue,
+                    MetricsTime.ONE_MONTH
+                ),
             },
             historicalStats: {
-                "1min": await getSingleMinuteProcessingCount(historicalStatsQueue),
-                "5min": await getQueueProcessingMetrics(historicalStatsQueue, MetricsTime.FIVE_MINUTES),
-                "15min": await getQueueProcessingMetrics(historicalStatsQueue, MetricsTime.FIFTEEN_MINUTES),
-                "1hour": await getQueueProcessingMetrics(historicalStatsQueue, MetricsTime.ONE_HOUR),
-                "6hours": await getQueueProcessingMetrics(historicalStatsQueue, MetricsTime.ONE_HOUR * 6),
-                "12hours": await getQueueProcessingMetrics(historicalStatsQueue, MetricsTime.ONE_HOUR * 12),
-                "24hours": await getQueueProcessingMetrics(historicalStatsQueue, MetricsTime.ONE_HOUR * 24),
-                "1week": await getQueueProcessingMetrics(historicalStatsQueue, MetricsTime.ONE_HOUR * 24 * 7),
-                "1month": await getQueueProcessingMetrics(historicalStatsQueue, MetricsTime.ONE_MONTH),
+                "1min": await getSingleMinuteProcessingCount(
+                    historicalStatsQueue
+                ),
+                "5min": await getQueueProcessingMetrics(
+                    historicalStatsQueue,
+                    MetricsTime.FIVE_MINUTES
+                ),
+                "15min": await getQueueProcessingMetrics(
+                    historicalStatsQueue,
+                    MetricsTime.FIFTEEN_MINUTES
+                ),
+                "1hour": await getQueueProcessingMetrics(
+                    historicalStatsQueue,
+                    MetricsTime.ONE_HOUR
+                ),
+                "6hours": await getQueueProcessingMetrics(
+                    historicalStatsQueue,
+                    MetricsTime.ONE_HOUR * 6
+                ),
+                "12hours": await getQueueProcessingMetrics(
+                    historicalStatsQueue,
+                    MetricsTime.ONE_HOUR * 12
+                ),
+                "24hours": await getQueueProcessingMetrics(
+                    historicalStatsQueue,
+                    MetricsTime.ONE_HOUR * 24
+                ),
+                "1week": await getQueueProcessingMetrics(
+                    historicalStatsQueue,
+                    MetricsTime.ONE_HOUR * 24 * 7
+                ),
+                "1month": await getQueueProcessingMetrics(
+                    historicalStatsQueue,
+                    MetricsTime.ONE_MONTH
+                ),
             },
         },
         databaseCounts: {
