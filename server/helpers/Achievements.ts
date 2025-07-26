@@ -12,6 +12,7 @@ export interface IAchievement {
     description: string;
     type: "pvp" | "pve" | "exploration" | "industry" | "special";
     points: number;
+    pointsModifier: "positive" | "negative"; // Whether points are added or subtracted from total score
     rarity: "common" | "uncommon" | "rare" | "epic" | "legendary";
     icon?: string;
     category: string;
@@ -32,6 +33,7 @@ export const achievements: IAchievement[] = [
         description: "Get your very first kill on an enemy player.",
         type: "pvp",
         points: 5,
+        pointsModifier: "positive",
         rarity: "common",
         category: "Combat",
         threshold: 1,
@@ -55,6 +57,7 @@ export const achievements: IAchievement[] = [
         description: "Achieve 10 kills on enemy players.",
         type: "pvp",
         points: 15,
+        pointsModifier: "positive",
         rarity: "common",
         category: "Combat",
         threshold: 10,
@@ -78,6 +81,7 @@ export const achievements: IAchievement[] = [
         description: "Achieve 100 kills on enemy players.",
         type: "pvp",
         points: 50,
+        pointsModifier: "positive",
         rarity: "uncommon",
         category: "Combat",
         threshold: 100,
@@ -101,6 +105,7 @@ export const achievements: IAchievement[] = [
         description: "Achieve 1,000 kills on enemy players.",
         type: "pvp",
         points: 200,
+        pointsModifier: "positive",
         rarity: "rare",
         category: "Combat",
         threshold: 1000,
@@ -124,6 +129,7 @@ export const achievements: IAchievement[] = [
         description: "Achieve 10,000 kills on enemy players.",
         type: "pvp",
         points: 750,
+        pointsModifier: "positive",
         rarity: "epic",
         category: "Combat",
         threshold: 10000,
@@ -147,6 +153,7 @@ export const achievements: IAchievement[] = [
         description: "Achieve 100,000 kills on enemy players.",
         type: "pvp",
         points: 2500,
+        pointsModifier: "positive",
         rarity: "legendary",
         category: "Combat",
         threshold: 100000,
@@ -172,6 +179,7 @@ export const achievements: IAchievement[] = [
         description: "Get your first solo kill on an enemy player.",
         type: "pvp",
         points: 10,
+        pointsModifier: "positive",
         rarity: "common",
         category: "Combat",
         threshold: 1,
@@ -196,6 +204,7 @@ export const achievements: IAchievement[] = [
         description: "Achieve 100 solo kills on enemy players.",
         type: "pvp",
         points: 50,
+        pointsModifier: "positive",
         rarity: "uncommon",
         category: "Combat",
         threshold: 100,
@@ -220,6 +229,7 @@ export const achievements: IAchievement[] = [
         description: "Achieve 1,000 solo kills on enemy players.",
         type: "pvp",
         points: 200,
+        pointsModifier: "positive",
         rarity: "rare",
         category: "Combat",
         threshold: 1000,
@@ -244,6 +254,7 @@ export const achievements: IAchievement[] = [
         description: "Achieve 10,000 solo kills on enemy players.",
         type: "pvp",
         points: 1000,
+        pointsModifier: "positive",
         rarity: "legendary",
         category: "Combat",
         threshold: 10000,
@@ -270,6 +281,7 @@ export const achievements: IAchievement[] = [
         description: "Lose your first ship to enemy players.",
         type: "special",
         points: 5,
+        pointsModifier: "negative",
         rarity: "common",
         category: "Learning Experience",
         threshold: 1,
@@ -292,6 +304,7 @@ export const achievements: IAchievement[] = [
         description: "Lose 10 ships to enemy players.",
         type: "special",
         points: 10,
+        pointsModifier: "negative",
         rarity: "common",
         category: "Learning Experience",
         threshold: 10,
@@ -314,6 +327,7 @@ export const achievements: IAchievement[] = [
         description: "Lose 100 ships to enemy players.",
         type: "special",
         points: 25,
+        pointsModifier: "negative",
         rarity: "uncommon",
         category: "Learning Experience",
         threshold: 100,
@@ -336,6 +350,7 @@ export const achievements: IAchievement[] = [
         description: "Lose 1,000 ships to enemy players.",
         type: "special",
         points: 100,
+        pointsModifier: "negative",
         rarity: "rare",
         category: "Learning Experience",
         threshold: 1000,
@@ -358,6 +373,7 @@ export const achievements: IAchievement[] = [
         description: "Lose 10,000 ships to enemy players.",
         type: "special",
         points: 500,
+        pointsModifier: "negative",
         rarity: "epic",
         category: "Learning Experience",
         threshold: 10000,
@@ -380,6 +396,7 @@ export const achievements: IAchievement[] = [
         description: "Lose 100,000 ships to enemy players.",
         type: "special",
         points: 2000,
+        pointsModifier: "negative",
         rarity: "legendary",
         category: "Learning Experience",
         threshold: 100000,
@@ -404,6 +421,7 @@ export const achievements: IAchievement[] = [
         description: "Get your first kill in highsec space.",
         type: "pvp",
         points: 10,
+        pointsModifier: "positive",
         rarity: "common",
         category: "Regional Combat",
         threshold: 1,
@@ -428,6 +446,7 @@ export const achievements: IAchievement[] = [
         description: "Achieve 100 kills in highsec space.",
         type: "pvp",
         points: 50,
+        pointsModifier: "positive",
         rarity: "uncommon",
         category: "Regional Combat",
         threshold: 100,
@@ -452,6 +471,7 @@ export const achievements: IAchievement[] = [
         description: "Achieve 1,000 kills in highsec space.",
         type: "pvp",
         points: 200,
+        pointsModifier: "positive",
         rarity: "rare",
         category: "Regional Combat",
         threshold: 1000,
@@ -476,6 +496,7 @@ export const achievements: IAchievement[] = [
         description: "Achieve 10,000 kills in highsec space.",
         type: "pvp",
         points: 1000,
+        pointsModifier: "positive",
         rarity: "epic",
         category: "Regional Combat",
         threshold: 10000,
@@ -500,6 +521,7 @@ export const achievements: IAchievement[] = [
         description: "Achieve 100,000 kills in highsec space.",
         type: "pvp",
         points: 4000,
+        pointsModifier: "positive",
         rarity: "legendary",
         category: "Regional Combat",
         threshold: 100000,
@@ -526,6 +548,7 @@ export const achievements: IAchievement[] = [
         description: "Get your first kill in lowsec space.",
         type: "pvp",
         points: 15,
+        pointsModifier: "positive",
         rarity: "common",
         category: "Regional Combat",
         threshold: 1,
@@ -550,6 +573,7 @@ export const achievements: IAchievement[] = [
         description: "Achieve 100 kills in lowsec space.",
         type: "pvp",
         points: 75,
+        pointsModifier: "positive",
         rarity: "uncommon",
         category: "Regional Combat",
         threshold: 100,
@@ -574,6 +598,7 @@ export const achievements: IAchievement[] = [
         description: "Achieve 1,000 kills in lowsec space.",
         type: "pvp",
         points: 300,
+        pointsModifier: "positive",
         rarity: "rare",
         category: "Regional Combat",
         threshold: 1000,
@@ -598,6 +623,7 @@ export const achievements: IAchievement[] = [
         description: "Achieve 10,000 kills in lowsec space.",
         type: "pvp",
         points: 1500,
+        pointsModifier: "positive",
         rarity: "epic",
         category: "Regional Combat",
         threshold: 10000,
@@ -622,6 +648,7 @@ export const achievements: IAchievement[] = [
         description: "Achieve 100,000 kills in lowsec space.",
         type: "pvp",
         points: 6000,
+        pointsModifier: "positive",
         rarity: "legendary",
         category: "Regional Combat",
         threshold: 100000,
@@ -648,6 +675,7 @@ export const achievements: IAchievement[] = [
         description: "Get your first kill in nullsec space.",
         type: "pvp",
         points: 20,
+        pointsModifier: "positive",
         rarity: "common",
         category: "Regional Combat",
         threshold: 1,
@@ -672,6 +700,7 @@ export const achievements: IAchievement[] = [
         description: "Achieve 100 kills in nullsec space.",
         type: "pvp",
         points: 100,
+        pointsModifier: "positive",
         rarity: "uncommon",
         category: "Regional Combat",
         threshold: 100,
@@ -696,6 +725,7 @@ export const achievements: IAchievement[] = [
         description: "Achieve 1,000 kills in nullsec space.",
         type: "pvp",
         points: 400,
+        pointsModifier: "positive",
         rarity: "rare",
         category: "Regional Combat",
         threshold: 1000,
@@ -720,6 +750,7 @@ export const achievements: IAchievement[] = [
         description: "Achieve 10,000 kills in nullsec space.",
         type: "pvp",
         points: 2000,
+        pointsModifier: "positive",
         rarity: "epic",
         category: "Regional Combat",
         threshold: 10000,
@@ -744,6 +775,7 @@ export const achievements: IAchievement[] = [
         description: "Achieve 100,000 kills in nullsec space.",
         type: "pvp",
         points: 8000,
+        pointsModifier: "positive",
         rarity: "legendary",
         category: "Regional Combat",
         threshold: 100000,
@@ -770,6 +802,7 @@ export const achievements: IAchievement[] = [
         description: "Get your first kill in wormhole space.",
         type: "exploration",
         points: 25,
+        pointsModifier: "positive",
         rarity: "uncommon",
         category: "Regional Combat",
         threshold: 1,
@@ -794,6 +827,7 @@ export const achievements: IAchievement[] = [
         description: "Achieve 100 kills in wormhole space.",
         type: "exploration",
         points: 125,
+        pointsModifier: "positive",
         rarity: "rare",
         category: "Regional Combat",
         threshold: 100,
@@ -818,6 +852,7 @@ export const achievements: IAchievement[] = [
         description: "Achieve 1,000 kills in wormhole space.",
         type: "exploration",
         points: 500,
+        pointsModifier: "positive",
         rarity: "epic",
         category: "Regional Combat",
         threshold: 1000,
@@ -842,6 +877,7 @@ export const achievements: IAchievement[] = [
         description: "Achieve 10,000 kills in wormhole space.",
         type: "exploration",
         points: 2500,
+        pointsModifier: "positive",
         rarity: "legendary",
         category: "Regional Combat",
         threshold: 10000,
@@ -866,6 +902,7 @@ export const achievements: IAchievement[] = [
         description: "Achieve 100,000 kills in wormhole space.",
         type: "exploration",
         points: 10000,
+        pointsModifier: "positive",
         rarity: "legendary",
         category: "Regional Combat",
         threshold: 100000,
@@ -892,6 +929,7 @@ export const achievements: IAchievement[] = [
         description: "Get your first kill in Pochven space.",
         type: "exploration",
         points: 30,
+        pointsModifier: "positive",
         rarity: "rare",
         category: "Regional Combat",
         threshold: 1,
@@ -916,6 +954,7 @@ export const achievements: IAchievement[] = [
         description: "Achieve 100 kills in Pochven space.",
         type: "exploration",
         points: 150,
+        pointsModifier: "positive",
         rarity: "epic",
         category: "Regional Combat",
         threshold: 100,
@@ -940,6 +979,7 @@ export const achievements: IAchievement[] = [
         description: "Achieve 1,000 kills in Pochven space.",
         type: "exploration",
         points: 750,
+        pointsModifier: "positive",
         rarity: "legendary",
         category: "Regional Combat",
         threshold: 1000,
@@ -964,6 +1004,7 @@ export const achievements: IAchievement[] = [
         description: "Achieve 10,000 kills in Pochven space.",
         type: "exploration",
         points: 3500,
+        pointsModifier: "positive",
         rarity: "legendary",
         category: "Regional Combat",
         threshold: 10000,
@@ -988,6 +1029,7 @@ export const achievements: IAchievement[] = [
         description: "Achieve 100,000 kills in Pochven space.",
         type: "exploration",
         points: 15000,
+        pointsModifier: "positive",
         rarity: "legendary",
         category: "Regional Combat",
         threshold: 100000,
@@ -1014,6 +1056,7 @@ export const achievements: IAchievement[] = [
         description: "Get your first kill in abyssal space.",
         type: "exploration",
         points: 35,
+        pointsModifier: "positive",
         rarity: "rare",
         category: "Regional Combat",
         threshold: 1,
@@ -1038,6 +1081,7 @@ export const achievements: IAchievement[] = [
         description: "Achieve 100 kills in abyssal space.",
         type: "exploration",
         points: 175,
+        pointsModifier: "positive",
         rarity: "epic",
         category: "Regional Combat",
         threshold: 100,
@@ -1062,6 +1106,7 @@ export const achievements: IAchievement[] = [
         description: "Achieve 1,000 kills in abyssal space.",
         type: "exploration",
         points: 875,
+        pointsModifier: "positive",
         rarity: "legendary",
         category: "Regional Combat",
         threshold: 1000,
@@ -1088,6 +1133,7 @@ export const achievements: IAchievement[] = [
         description: "Kill a capital ship, supercarrier, titan, or freighter.",
         type: "pvp",
         points: 100,
+        pointsModifier: "positive",
         rarity: "rare",
         category: "High Value Targets",
         threshold: 1,
@@ -1114,6 +1160,7 @@ export const achievements: IAchievement[] = [
         description: "Kill 10 capital ships.",
         type: "pvp",
         points: 500,
+        pointsModifier: "positive",
         rarity: "epic",
         category: "High Value Targets",
         threshold: 10,
@@ -1138,6 +1185,7 @@ export const achievements: IAchievement[] = [
         description: "Kill a titan.",
         type: "pvp",
         points: 2000,
+        pointsModifier: "positive",
         rarity: "legendary",
         category: "High Value Targets",
         threshold: 1,
@@ -1162,6 +1210,7 @@ export const achievements: IAchievement[] = [
         description: "Kill a supercarrier.",
         type: "pvp",
         points: 1500,
+        pointsModifier: "positive",
         rarity: "legendary",
         category: "High Value Targets",
         threshold: 1,
@@ -1186,6 +1235,7 @@ export const achievements: IAchievement[] = [
         description: "Get a kill worth at least 1 billion ISK.",
         type: "pvp",
         points: 50,
+        pointsModifier: "positive",
         rarity: "uncommon",
         category: "High Value Targets",
         threshold: 1,
@@ -1210,6 +1260,7 @@ export const achievements: IAchievement[] = [
         description: "Get a kill worth at least 5 billion ISK.",
         type: "pvp",
         points: 150,
+        pointsModifier: "positive",
         rarity: "rare",
         category: "High Value Targets",
         threshold: 1,
@@ -1234,6 +1285,7 @@ export const achievements: IAchievement[] = [
         description: "Get a kill worth at least 10 billion ISK.",
         type: "pvp",
         points: 500,
+        pointsModifier: "positive",
         rarity: "epic",
         category: "High Value Targets",
         threshold: 1,
@@ -1260,6 +1312,7 @@ export const achievements: IAchievement[] = [
         description: "Destroy a citadel or structure.",
         type: "pvp",
         points: 250,
+        pointsModifier: "positive",
         rarity: "epic",
         category: "Infrastructure",
         threshold: 1,
@@ -1286,6 +1339,7 @@ export const achievements: IAchievement[] = [
         description: "Destroy 10 citadels or structures.",
         type: "pvp",
         points: 1000,
+        pointsModifier: "positive",
         rarity: "legendary",
         category: "Infrastructure",
         threshold: 10,
@@ -1314,6 +1368,7 @@ export const achievements: IAchievement[] = [
         description: "Get killed by CONCORD for your crimes.",
         type: "special",
         points: 10,
+        pointsModifier: "negative",
         rarity: "uncommon",
         category: "Special Events",
         threshold: 1,
@@ -1336,6 +1391,7 @@ export const achievements: IAchievement[] = [
         description: "Get killed by a CCP developer.",
         type: "special",
         points: 100,
+        pointsModifier: "negative",
         rarity: "epic",
         category: "Special Events",
         threshold: 1,
@@ -1358,6 +1414,7 @@ export const achievements: IAchievement[] = [
         description: "Kill a CCP developer (good luck with that!).",
         type: "special",
         points: 500,
+        pointsModifier: "positive",
         rarity: "legendary",
         category: "Special Events",
         threshold: 1,
@@ -1381,6 +1438,7 @@ export const achievements: IAchievement[] = [
         description: "Participate in an official EVE tournament.",
         type: "special",
         points: 1000,
+        pointsModifier: "positive",
         rarity: "legendary",
         category: "Special Events",
         threshold: 1,
@@ -1406,6 +1464,7 @@ export const achievements: IAchievement[] = [
         description: "Destroy a freighter.",
         type: "pvp",
         points: 150,
+        pointsModifier: "positive",
         rarity: "rare",
         category: "High Value Targets",
         threshold: 1,
@@ -1433,6 +1492,7 @@ export const achievements: IAchievement[] = [
             "Get a kill in highsec then die to CONCORD within 60 seconds.",
         type: "special",
         points: 50,
+        pointsModifier: "positive",
         rarity: "rare",
         category: "Special Events",
         threshold: 1,
@@ -1461,6 +1521,7 @@ export const achievements: IAchievement[] = [
         description: "Destroy 100 frigates.",
         type: "pvp",
         points: 25,
+        pointsModifier: "positive",
         rarity: "uncommon",
         category: "Ship Classes",
         threshold: 100,
@@ -1485,6 +1546,7 @@ export const achievements: IAchievement[] = [
         description: "Destroy 100 destroyers.",
         type: "pvp",
         points: 35,
+        pointsModifier: "positive",
         rarity: "uncommon",
         category: "Ship Classes",
         threshold: 100,
@@ -1509,6 +1571,7 @@ export const achievements: IAchievement[] = [
         description: "Destroy 100 cruisers.",
         type: "pvp",
         points: 50,
+        pointsModifier: "positive",
         rarity: "uncommon",
         category: "Ship Classes",
         threshold: 100,
@@ -1535,6 +1598,7 @@ export const achievements: IAchievement[] = [
         description: "Destroy 50 battlecruisers.",
         type: "pvp",
         points: 75,
+        pointsModifier: "positive",
         rarity: "rare",
         category: "Ship Classes",
         threshold: 50,
@@ -1559,6 +1623,7 @@ export const achievements: IAchievement[] = [
         description: "Destroy 50 battleships.",
         type: "pvp",
         points: 100,
+        pointsModifier: "positive",
         rarity: "rare",
         category: "Ship Classes",
         threshold: 50,
@@ -1585,6 +1650,7 @@ export const achievements: IAchievement[] = [
         description: "Destroy 500 Tech 1 ships.",
         type: "pvp",
         points: 100,
+        pointsModifier: "positive",
         rarity: "uncommon",
         category: "Tech Levels",
         threshold: 500,
@@ -1614,6 +1680,7 @@ export const achievements: IAchievement[] = [
         description: "Destroy 250 Tech 2 ships.",
         type: "pvp",
         points: 200,
+        pointsModifier: "positive",
         rarity: "rare",
         category: "Tech Levels",
         threshold: 250,
@@ -1643,6 +1710,7 @@ export const achievements: IAchievement[] = [
         description: "Destroy 25 Tech 3 ships.",
         type: "pvp",
         points: 400,
+        pointsModifier: "positive",
         rarity: "epic",
         category: "Tech Levels",
         threshold: 25,
@@ -1712,6 +1780,7 @@ export class AchievementService {
                     } ${groupName} in combat.`,
                     type: "pvp",
                     points: this.getPointsForShipType(groupName),
+                    pointsModifier: "positive",
                     rarity: this.getRarityForShipType(groupName),
                     category: "Ship Kills",
                     threshold: 1,
@@ -1756,6 +1825,7 @@ export class AchievementService {
                     points: Math.ceil(
                         this.getPointsForShipType(groupName) * 0.3
                     ), // Loss achievements worth 30% of kill achievements
+                    pointsModifier: "negative",
                     rarity: this.getRarityForShipType(groupName),
                     category: "Ship Losses",
                     threshold: 1,
@@ -2121,12 +2191,23 @@ export class AchievementService {
                 const completedAchievements = updatedRecord.achievements.filter(
                     (a) => a.is_completed
                 );
-                // Calculate total points based on completion tiers (each tier = full points)
+                // Calculate total points based on completion tiers and pointsModifier
                 const totalPoints = updatedRecord.achievements.reduce(
-                    (sum, achievement) =>
-                        sum +
-                        achievement.points *
-                            (achievement.completion_tiers || 0),
+                    (sum, achievement) => {
+                        const basePoints =
+                            achievement.points *
+                            (achievement.completion_tiers || 0);
+                        // Find the achievement definition to get pointsModifier
+                        const achievementDef = allAchievements.find(
+                            (def) => def.id === achievement.achievement_id
+                        );
+                        const modifier =
+                            achievementDef?.pointsModifier || "positive";
+                        return (
+                            sum +
+                            (modifier === "negative" ? -basePoints : basePoints)
+                        );
+                    },
                     0
                 );
 
@@ -2147,11 +2228,23 @@ export class AchievementService {
             const completedAchievements = characterRecord.achievements.filter(
                 (a) => a.is_completed
             );
-            // Calculate total points based on completion tiers (each tier = full points)
+            // Calculate total points based on completion tiers and pointsModifier
             const totalPoints = characterRecord.achievements.reduce(
-                (sum, achievement) =>
-                    sum +
-                    achievement.points * (achievement.completion_tiers || 0),
+                (sum, achievement) => {
+                    const basePoints =
+                        achievement.points *
+                        (achievement.completion_tiers || 0);
+                    // Find the achievement definition to get pointsModifier
+                    const achievementDef = allAchievements.find(
+                        (def) => def.id === achievement.achievement_id
+                    );
+                    const modifier =
+                        achievementDef?.pointsModifier || "positive";
+                    return (
+                        sum +
+                        (modifier === "negative" ? -basePoints : basePoints)
+                    );
+                },
                 0
             );
 
