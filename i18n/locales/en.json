@@ -1096,7 +1096,15 @@
         "character": "Character",
         "corporation": "Corporation",
         "noCorporation": "No Corporation",
-        "errorLoading": "Error loading data"
+        "errorLoading": "Error loading data",
+        "filters": {
+            "all": "All Statistics",
+            "largest": "Largest",
+            "security": "Security Rankings",
+            "newest": "Newest",
+            "growth": "Growth & Decline",
+            "achievements": "Achievement Points"
+        }
     },
     "campaignCreator": {
         "locationTimeFilters": "Location & Time Filters",
