@@ -148,128 +148,357 @@
                 <h2 class="text-xl font-semibold">{{ t('achievements.yourAchievements') }}</h2>
             </div>
 
-            <Table
-                :items="filteredAchievements"
-                :columns="columns"
-                :loading="false"
-                :hover="true"
-                :striped="true"
-                class="w-full"
-            >
-                <!-- Achievement Name Column -->
-                <template #cell-name="{ item }">
-                    <div class="flex items-center space-x-3">
-                        <UIcon
-                            :name="getAchievementIcon(item)"
-                            :class="[
-                                'h-5 w-5 flex-shrink-0',
-                                getRarityColor(item.rarity)
-                            ]"
-                        />
-                        <div class="min-w-0 flex-1">
-                            <div class="font-medium text-gray-900 dark:text-white truncate">
-                                {{ getAchievementName(item.achievement_id, item.name, t) }}
+            <!-- Desktop Table -->
+            <div class="hidden lg:block">
+                <div class="overflow-hidden border border-gray-200 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-900">
+                    <!-- Table Header -->
+                    <div class="grid grid-cols-12 gap-4 px-6 py-3 bg-gray-50 dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 text-sm font-medium text-gray-900 dark:text-gray-100">
+                        <div class="col-span-4">{{ t('achievements.name') }}</div>
+                        <div class="col-span-1 text-center">{{ t('achievements.type') }}</div>
+                        <div class="col-span-1 text-center">{{ t('achievements.rarity') }}</div>
+                        <div class="col-span-2">{{ t('achievements.progress') }}</div>
+                        <div class="col-span-1 text-center">{{ t('achievements.basePoints') }}</div>
+                        <div class="col-span-1 text-center">{{ t('achievements.earnedPoints') }}</div>
+                        <div class="col-span-1 text-center">{{ t('achievements.status') }}</div>
+                        <div class="col-span-1"></div>
+                    </div>
+
+                    <!-- Table Body -->
+                    <div class="divide-y divide-gray-200 dark:divide-gray-700">
+                        <div v-for="achievement in filteredAchievements" :key="achievement.achievement_id">
+                            <!-- Main Achievement Row -->
+                            <div class="grid grid-cols-12 gap-4 px-6 py-4 items-center hover:bg-gray-50 dark:hover:bg-gray-800 text-sm">
+                                <!-- Name -->
+                                <div class="col-span-4">
+                                    <div class="flex items-center space-x-3">
+                                        <UIcon
+                                            :name="getAchievementIcon(achievement)"
+                                            :class="['h-5 w-5 flex-shrink-0', getRarityColor(achievement.rarity)]"
+                                        />
+                                        <div class="min-w-0 flex-1">
+                                            <div class="font-medium text-gray-900 dark:text-white truncate">
+                                                {{ getAchievementName(achievement.achievement_id, achievement.name, t) }}
+                                            </div>
+                                            <div class="text-sm text-gray-500 dark:text-gray-400 truncate">
+                                                {{ getAchievementDescription(achievement.achievement_id, achievement.description, t) }}
+                                            </div>
+                                            <div v-if="hasKillmails(achievement)" class="text-xs text-blue-500 dark:text-blue-400 mt-1">
+                                                {{ t('achievements.killmailsCount', { count: achievement.killmailIds?.length || 0 }) }}
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Type -->
+                                <div class="col-span-1 text-center">
+                                    <UBadge :color="getTypeColor(achievement.type)" variant="soft" size="xs">
+                                        {{ achievement.type }}
+                                    </UBadge>
+                                </div>
+
+                                <!-- Rarity -->
+                                <div class="col-span-1 text-center">
+                                    <UBadge :color="getRarityBadgeColor(achievement.rarity)" variant="soft" size="xs">
+                                        {{ achievement.rarity }}
+                                    </UBadge>
+                                </div>
+
+                                <!-- Progress -->
+                                <div class="col-span-2">
+                                    <div class="space-y-1 min-w-0 w-full">
+                                        <div class="flex justify-between items-center text-xs">
+                                            <span :class="achievement.is_completed ? 'text-green-600 font-medium' : 'text-gray-600'">
+                                                {{ achievement.current_count.toLocaleString() }} / {{ achievement.threshold.toLocaleString() }}
+                                            </span>
+                                            <div class="flex items-center gap-1">
+                                                <span class="text-gray-500">
+                                                    {{ Math.round((achievement.current_count / achievement.threshold) * 100) }}%
+                                                </span>
+                                                <span v-if="Math.floor(achievement.current_count / achievement.threshold) > 1" class="text-gray-500">
+                                                    x{{ Math.floor(achievement.current_count / achievement.threshold) }}
+                                                </span>
+                                            </div>
+                                        </div>
+                                        <ProgressBar
+                                            :value="(achievement.current_count / achievement.threshold) * 100"
+                                            size="xs"
+                                            color="primary"
+                                        />
+                                    </div>
+                                </div>
+
+                                <!-- Base Points -->
+                                <div class="col-span-1 text-center">
+                                    <div class="text-sm font-medium text-gray-600 dark:text-gray-400">
+                                        {{ achievement.points.toLocaleString() }}
+                                    </div>
+                                </div>
+
+                                <!-- Earned Points -->
+                                <div class="col-span-1 text-center">
+                                    <div class="text-sm font-medium text-amber-600">
+                                        {{ (achievement.points * Math.floor(achievement.current_count / achievement.threshold)).toLocaleString() }}
+                                    </div>
+                                    <div v-if="Math.floor(achievement.current_count / achievement.threshold) > 1" class="text-xs text-gray-500">
+                                        {{ achievement.points }} × {{ Math.floor(achievement.current_count / achievement.threshold) }}
+                                    </div>
+                                    <div v-else-if="Math.floor(achievement.current_count / achievement.threshold) === 1" class="text-xs text-gray-500">
+                                        {{ achievement.points }} × 1
+                                    </div>
+                                </div>
+
+                                <!-- Status -->
+                                <div class="col-span-1 text-center">
+                                    <div class="flex items-center justify-center space-x-2">
+                                        <UIcon
+                                            :name="achievement.is_completed ? 'i-lucide-check-circle' : achievement.current_count > 0 ? 'i-lucide-clock' : 'i-lucide-circle'"
+                                            :class="[
+                                                'h-4 w-4',
+                                                achievement.is_completed ? 'text-green-500' : achievement.current_count > 0 ? 'text-blue-500' : 'text-gray-400'
+                                            ]"
+                                        />
+                                        <span class="text-xs">
+                                            {{ achievement.is_completed ? t('achievements.completed') : achievement.current_count > 0 ? t('achievements.inProgress') : t('achievements.notStarted') }}
+                                        </span>
+                                    </div>
+                                </div>
+
+                                <!-- Expand Button -->
+                                <div class="col-span-1 text-center">
+                                    <UButton
+                                        v-if="hasKillmails(achievement)"
+                                        variant="ghost"
+                                        size="sm"
+                                        :icon="isExpanded(achievement.achievement_id) ? 'i-lucide-chevron-down' : 'i-lucide-chevron-right'"
+                                        @click="toggleKillmailExpansion(achievement)"
+                                        :aria-label="isExpanded(achievement.achievement_id) ? t('achievements.hideKillmails') : t('achievements.showKillmails')"
+                                    />
+                                </div>
                             </div>
-                            <div class="text-sm text-gray-500 dark:text-gray-400 truncate">
-                                {{ getAchievementDescription(item.achievement_id, item.description, t) }}
+
+                            <!-- Expanded Killmails Section -->
+                            <div v-if="isExpanded(achievement.achievement_id)" class="border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800">
+                                <div class="p-6">
+                                    <h4 class="text-sm font-medium mb-3">{{ t('achievements.relatedKillmails') }}</h4>
+
+                                    <!-- Loading State -->
+                                    <div v-if="isLoadingKillmails(achievement.achievement_id)" class="text-center py-4">
+                                        <UIcon name="i-lucide-loader-2" class="animate-spin h-5 w-5 mx-auto" />
+                                        <p class="text-sm text-gray-500 mt-2">{{ t('achievements.loadingKillmails') }}</p>
+                                    </div>
+
+                                    <!-- Killmails List -->
+                                    <div v-else-if="getKillmailsForAchievement(achievement.achievement_id).length > 0" class="space-y-2">
+                                        <div
+                                            v-for="killmail in getKillmailsForAchievement(achievement.achievement_id)"
+                                            :key="killmail.killmail_id"
+                                            class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-600 rounded-lg p-3 hover:shadow-md transition-shadow"
+                                        >
+                                            <NuxtLink :to="getKillmailLink(killmail.killmail_id)" class="block">
+                                                <div class="grid grid-cols-12 gap-3 items-center text-sm">
+                                                    <!-- Victim Ship -->
+                                                    <div class="col-span-3 flex items-center space-x-2">
+                                                        <img
+                                                            :src="`https://images.evetech.net/types/${killmail.victim.ship_id}/icon?size=32`"
+                                                            :alt="killmail.victim.ship_name.en || 'Ship'"
+                                                            class="w-8 h-8 rounded"
+                                                        />
+                                                        <div>
+                                                            <div class="font-medium truncate">{{ killmail.victim.character_name }}</div>
+                                                            <div class="text-gray-500 text-xs truncate">{{ killmail.victim.ship_name.en }}</div>
+                                                        </div>
+                                                    </div>
+
+                                                    <!-- ISK Value -->
+                                                    <div class="col-span-2 text-right">
+                                                        <div class="font-medium">{{ formatIsk(killmail.total_value) }}</div>
+                                                    </div>
+
+                                                    <!-- System -->
+                                                    <div class="col-span-2">
+                                                        <div class="font-medium">{{ killmail.system_name }}</div>
+                                                        <div :class="getSecurityColor(killmail.system_security)" class="text-xs">
+                                                            {{ killmail.system_security.toFixed(1) }}
+                                                        </div>
+                                                    </div>
+
+                                                    <!-- Final Blow -->
+                                                    <div class="col-span-3 flex items-center space-x-2">
+                                                        <img
+                                                            :src="`https://images.evetech.net/characters/${killmail.finalblow.character_id}/portrait?size=32`"
+                                                            :alt="killmail.finalblow.character_name"
+                                                            class="w-6 h-6 rounded-full"
+                                                            @error="$event.target.src = 'https://images.evetech.net/characters/1/portrait?size=32'"
+                                                        />
+                                                        <div>
+                                                            <div class="font-medium text-xs truncate">{{ killmail.finalblow.character_name }}</div>
+                                                            <div class="text-gray-500 text-xs truncate">{{ killmail.finalblow.corporation_name }}</div>
+                                                        </div>
+                                                    </div>
+
+                                                    <!-- Attackers -->
+                                                    <div class="col-span-2 text-right">
+                                                        <div class="font-medium text-xs">{{ killmail.attackerCount }} {{ killmail.attackerCount === 1 ? 'attacker' : 'attackers' }}</div>
+                                                    </div>
+                                                </div>
+                                            </NuxtLink>
+                                        </div>
+                                    </div>
+
+                                    <!-- No Killmails -->
+                                    <div v-else class="text-center py-4">
+                                        <p class="text-sm text-gray-500">{{ t('achievements.noKillmails') }}</p>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>
-                </template>
+                </div>
+            </div>
 
-                <!-- Type Column -->
-                <template #cell-type="{ item }">
-                    <UBadge
-                        :color="getTypeColor(item.type)"
-                        variant="soft"
-                        size="xs"
-                    >
-                        {{ item.type }}
-                    </UBadge>
-                </template>
+            <!-- Mobile Cards -->
+            <div class="lg:hidden space-y-4">
+                <div v-for="achievement in filteredAchievements" :key="achievement.achievement_id" class="border border-gray-200 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-900">
+                    <!-- Mobile Achievement Card -->
+                    <div class="p-4">
+                        <div class="flex items-start justify-between">
+                            <div class="flex items-center space-x-3 flex-1 min-w-0">
+                                <UIcon
+                                    :name="getAchievementIcon(achievement)"
+                                    :class="['h-6 w-6 flex-shrink-0', getRarityColor(achievement.rarity)]"
+                                />
+                                <div class="min-w-0 flex-1">
+                                    <div class="font-medium text-gray-900 dark:text-white">
+                                        {{ getAchievementName(achievement.achievement_id, achievement.name, t) }}
+                                    </div>
+                                    <div class="text-sm text-gray-500 dark:text-gray-400 mt-1">
+                                        {{ getAchievementDescription(achievement.achievement_id, achievement.description, t) }}
+                                    </div>
+                                </div>
+                            </div>
+                            <UButton
+                                v-if="hasKillmails(achievement)"
+                                variant="ghost"
+                                size="sm"
+                                :icon="isExpanded(achievement.achievement_id) ? 'i-lucide-chevron-down' : 'i-lucide-chevron-right'"
+                                @click="toggleKillmailExpansion(achievement)"
+                                :aria-label="isExpanded(achievement.achievement_id) ? t('achievements.hideKillmails') : t('achievements.showKillmails')"
+                            />
+                        </div>
 
-                <!-- Rarity Column -->
-                <template #cell-rarity="{ item }">
-                    <UBadge
-                        :color="getRarityBadgeColor(item.rarity)"
-                        variant="soft"
-                        size="xs"
-                    >
-                        {{ item.rarity }}
-                    </UBadge>
-                </template>
+                        <div class="mt-4 space-y-3">
+                            <!-- Type & Rarity -->
+                            <div class="flex space-x-2">
+                                <UBadge :color="getTypeColor(achievement.type)" variant="soft" size="xs">
+                                    {{ achievement.type }}
+                                </UBadge>
+                                <UBadge :color="getRarityBadgeColor(achievement.rarity)" variant="soft" size="xs">
+                                    {{ achievement.rarity }}
+                                </UBadge>
+                            </div>
 
-                <!-- Category Column -->
-                <template #cell-category="{ item }">
-                    <span class="text-sm text-gray-600 dark:text-gray-400">
-                        {{ item.category }}
-                    </span>
-                </template>
+                            <!-- Progress -->
+                            <div class="space-y-1">
+                                <div class="flex justify-between items-center text-xs">
+                                    <span :class="achievement.is_completed ? 'text-green-600 font-medium' : 'text-gray-600'">
+                                        {{ achievement.current_count.toLocaleString() }} / {{ achievement.threshold.toLocaleString() }}
+                                    </span>
+                                    <span class="text-gray-500">
+                                        {{ Math.round((achievement.current_count / achievement.threshold) * 100) }}%
+                                    </span>
+                                </div>
+                                <ProgressBar
+                                    :value="(achievement.current_count / achievement.threshold) * 100"
+                                    size="xs"
+                                    color="primary"
+                                />
+                            </div>
 
-                <!-- Progress Column -->
-                <template #cell-progress="{ item }">
-                    <div class="space-y-1 min-w-0 w-32">
-                        <div class="flex justify-between items-center text-xs">
-                            <span :class="item.is_completed ? 'text-green-600 font-medium' : 'text-gray-600'">
-                                {{ item.current_count }} / {{ item.threshold }}
-                            </span>
-                            <div class="flex items-center gap-1">
-                                <span class="text-gray-500">
-                                    {{ Math.round((item.current_count / item.threshold) * 100) }}%
-                                </span>
-                                <span v-if="Math.floor(item.current_count / item.threshold) > 1" class="text-gray-500">
-                                    x{{ Math.floor(item.current_count / item.threshold) }}
-                                </span>
+                            <!-- Points & Status -->
+                            <div class="flex justify-between items-center text-sm">
+                                <div class="flex items-center space-x-2">
+                                    <UIcon
+                                        :name="achievement.is_completed ? 'i-lucide-check-circle' : achievement.current_count > 0 ? 'i-lucide-clock' : 'i-lucide-circle'"
+                                        :class="[
+                                            'h-4 w-4',
+                                            achievement.is_completed ? 'text-green-500' : achievement.current_count > 0 ? 'text-blue-500' : 'text-gray-400'
+                                        ]"
+                                    />
+                                    <span class="text-xs">
+                                        {{ achievement.is_completed ? t('achievements.completed') : achievement.current_count > 0 ? t('achievements.inProgress') : t('achievements.notStarted') }}
+                                    </span>
+                                </div>
+                                <div class="text-amber-600 font-medium">
+                                    {{ (achievement.points * Math.floor(achievement.current_count / achievement.threshold)).toLocaleString() }} pts
+                                </div>
+                            </div>
+
+                            <!-- Killmails count -->
+                            <div v-if="hasKillmails(achievement)" class="text-xs text-blue-500 dark:text-blue-400">
+                                {{ t('achievements.killmailsCount', { count: achievement.killmailIds?.length || 0 }) }}
                             </div>
                         </div>
-                        <ProgressBar
-                            :value="(item.current_count / item.threshold) * 100"
-                            size="xs"
-                            color="primary"
-                        />
                     </div>
-                </template>
 
-                <!-- Points Column -->
-                <template #cell-points="{ item }">
-                    <div class="text-right">
-                        <div class="text-sm font-medium text-gray-600 dark:text-gray-400">
-                            {{ item.points.toLocaleString() }}
-                        </div>
-                    </div>
-                </template>
+                    <!-- Mobile Expanded Killmails Section -->
+                    <div v-if="isExpanded(achievement.achievement_id)" class="border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800">
+                        <div class="p-4">
+                            <h4 class="text-sm font-medium mb-3">{{ t('achievements.relatedKillmails') }}</h4>
 
-                <!-- Cumulative Points Column -->
-                <template #cell-cumulativePoints="{ item }">
-                    <div class="text-right">
-                        <div class="text-sm font-medium text-amber-600">
-                            {{ (item.points * Math.floor(item.current_count / item.threshold)).toLocaleString() }}
-                        </div>
-                        <div v-if="Math.floor(item.current_count / item.threshold) > 1" class="text-xs text-gray-500">
-                            {{ item.points }} × {{ Math.floor(item.current_count / item.threshold) }}
-                        </div>
-                        <div v-else-if="Math.floor(item.current_count / item.threshold) === 1" class="text-xs text-gray-500">
-                            {{ item.points }} × 1
-                        </div>
-                    </div>
-                </template>
+                            <!-- Loading State -->
+                            <div v-if="isLoadingKillmails(achievement.achievement_id)" class="text-center py-4">
+                                <UIcon name="i-lucide-loader-2" class="animate-spin h-5 w-5 mx-auto" />
+                                <p class="text-sm text-gray-500 mt-2">{{ t('achievements.loadingKillmails') }}</p>
+                            </div>
 
-                <!-- Status Column -->
-                <template #cell-status="{ item }">
-                    <div class="flex items-center space-x-2">
-                        <UIcon
-                            :name="item.is_completed ? 'i-lucide-check-circle' : item.current_count > 0 ? 'i-lucide-clock' : 'i-lucide-circle'"
-                            :class="[
-                                'h-4 w-4',
-                                item.is_completed ? 'text-green-500' : item.current_count > 0 ? 'text-blue-500' : 'text-gray-400'
-                            ]"
-                        />
-                        <span class="text-xs">
-                            {{ item.is_completed ? t('achievements.completed') : item.current_count > 0 ? t('achievements.inProgress') : t('achievements.notStarted') }}
-                        </span>
+                            <!-- Killmails List -->
+                            <div v-else-if="getKillmailsForAchievement(achievement.achievement_id).length > 0" class="space-y-3">
+                                <div
+                                    v-for="killmail in getKillmailsForAchievement(achievement.achievement_id)"
+                                    :key="killmail.killmail_id"
+                                    class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-600 rounded-lg p-3"
+                                >
+                                    <NuxtLink :to="getKillmailLink(killmail.killmail_id)" class="block space-y-2">
+                                        <!-- Victim -->
+                                        <div class="flex items-center space-x-3">
+                                            <img
+                                                :src="`https://images.evetech.net/types/${killmail.victim.ship_id}/icon?size=32`"
+                                                :alt="killmail.victim.ship_name.en || 'Ship'"
+                                                class="w-8 h-8 rounded"
+                                            />
+                                            <div class="flex-1 min-w-0">
+                                                <div class="font-medium text-sm truncate">{{ killmail.victim.character_name }}</div>
+                                                <div class="text-gray-500 text-xs truncate">{{ killmail.victim.ship_name.en }}</div>
+                                            </div>
+                                            <div class="text-right">
+                                                <div class="font-medium text-sm">{{ formatIsk(killmail.total_value) }}</div>
+                                            </div>
+                                        </div>
+
+                                        <!-- System & Final Blow -->
+                                        <div class="flex justify-between items-center text-xs">
+                                            <div>
+                                                <span class="font-medium">{{ killmail.system_name }}</span>
+                                                <span :class="getSecurityColor(killmail.system_security)" class="ml-1">
+                                                    ({{ killmail.system_security.toFixed(1) }})
+                                                </span>
+                                            </div>
+                                            <div class="text-gray-500">
+                                                {{ killmail.attackerCount }} attackers
+                                            </div>
+                                        </div>
+                                    </NuxtLink>
+                                </div>
+                            </div>
+
+                            <!-- No Killmails -->
+                            <div v-else class="text-center py-4">
+                                <p class="text-sm text-gray-500">{{ t('achievements.noKillmails') }}</p>
+                            </div>
+                        </div>
                     </div>
-                </template>
-            </Table>
+                </div>
+            </div>
         </div>
 
         <!-- No Achievements State -->
@@ -290,8 +519,10 @@ import { computed, ref } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { format } from 'date-fns';
 import type { ICharacterAchievements, ICharacterAchievement } from '~/server/interfaces/ICharacterAchievements';
-import Table from '~/components/common/Table.vue';
+import type { IKillmail } from '~/server/interfaces/IKillmail';
+import type { IKillList } from '~/server/interfaces/IKillList';
 import { getAchievementName, getAchievementDescription } from '~/server/helpers/AchievementTranslations';
+import ProgressBar from '~/src/theme/modern/components/common/ProgressBar.vue';
 
 interface Props {
     achievements: ICharacterAchievements | null;
@@ -305,6 +536,11 @@ const selectedStatus = ref('completed_or_progress');
 const selectedType = ref('all');
 const selectedRarity = ref('all');
 const selectedCategory = ref('all');
+
+// Expandable killmails state
+const expandedAchievements = ref<Set<string>>(new Set());
+const killmailData = ref<Map<string, IKillList[]>>(new Map());
+const loadingKillmails = ref<Set<string>>(new Set());
 
 // Status filter options (these are static)
 const statusOptions = [
@@ -365,52 +601,6 @@ const categoryOptions = computed(() => [
         value: category
     }))
 ]);
-
-// Table columns
-const columns = [
-    {
-        id: 'name',
-        header: t('achievements.name'),
-        width: '30%'
-    },
-    {
-        id: 'type',
-        header: t('achievements.type'),
-        width: '8%'
-    },
-    {
-        id: 'rarity',
-        header: t('achievements.rarity'),
-        width: '8%'
-    },
-    {
-        id: 'category',
-        header: t('achievements.category'),
-        width: '12%'
-    },
-    {
-        id: 'progress',
-        header: t('achievements.progress'),
-        width: '12%'
-    },
-    {
-        id: 'points',
-        header: t('achievements.basePoints'),
-        width: '8%',
-        cellClass: 'text-right'
-    },
-    {
-        id: 'cumulativePoints',
-        header: t('achievements.earnedPoints'),
-        width: '8%',
-        cellClass: 'text-right'
-    },
-    {
-        id: 'status',
-        header: t('achievements.status'),
-        width: '14%'
-    }
-];
 
 // Rarity order for sorting (highest to lowest)
 const rarityOrder = {
@@ -557,5 +747,168 @@ const getRarityBadgeColor = (rarity: string) => {
 const formatDate = (date: Date | string | undefined) => {
     if (!date) return t('achievements.never');
     return format(new Date(date), 'MMM d, yyyy');
+};
+
+/**
+ * Toggle killmail expansion for an achievement
+ */
+const toggleKillmailExpansion = async (achievement: ICharacterAchievement) => {
+    const achievementId = achievement.achievement_id;
+
+    if (expandedAchievements.value.has(achievementId)) {
+        // Collapse
+        expandedAchievements.value.delete(achievementId);
+    } else {
+        // Expand
+        expandedAchievements.value.add(achievementId);
+
+        // Fetch killmail data if not already loaded and achievement has killmailIds
+        if (!killmailData.value.has(achievementId) && achievement.killmailIds && achievement.killmailIds.length > 0) {
+            await fetchKillmailsForAchievement(achievement);
+        }
+    }
+};
+
+/**
+ * Fetch killmail data for an achievement
+ */
+const fetchKillmailsForAchievement = async (achievement: ICharacterAchievement) => {
+    if (!achievement.killmailIds || achievement.killmailIds.length === 0) return;
+
+    const achievementId = achievement.achievement_id;
+    loadingKillmails.value.add(achievementId);
+
+    try {
+        const killmails = await $fetch<IKillmail[]>('/api/killmail/batch', {
+            method: 'POST',
+            body: {
+                ids: achievement.killmailIds
+            }
+        });
+
+        // Transform killmails to KillList format
+        const killList = killmails.map(formatKillmailToKillList);
+        killmailData.value.set(achievementId, killList);
+    } catch (error) {
+        console.error('Error fetching killmails for achievement:', error);
+        // Set empty array on error
+        killmailData.value.set(achievementId, []);
+    } finally {
+        loadingKillmails.value.delete(achievementId);
+    }
+};/**
+ * Format killmail data to KillList format
+ */
+const formatKillmailToKillList = (killmail: IKillmail): IKillList => {
+    const finalBlowAttacker = killmail.attackers.find(attacker => attacker.final_blow);
+
+    return {
+        killmail_id: killmail.killmail_id,
+        total_value: killmail.total_value,
+        system_id: killmail.system_id,
+        system_name: killmail.system_name,
+        system_security: killmail.system_security,
+        region_id: killmail.region_id,
+        region_name: killmail.region_name,
+        kill_time: typeof killmail.kill_time === 'string' ? killmail.kill_time : killmail.kill_time.toISOString(),
+        attackerCount: killmail.attackers.length,
+        commentCount: 0,
+        is_npc: killmail.is_npc,
+        is_solo: killmail.is_solo,
+        victim: {
+            ship_id: killmail.victim.ship_id,
+            ship_name: killmail.victim.ship_name,
+            character_id: killmail.victim.character_id,
+            character_name: killmail.victim.character_name,
+            corporation_id: killmail.victim.corporation_id,
+            corporation_name: killmail.victim.corporation_name,
+            alliance_id: killmail.victim.alliance_id,
+            alliance_name: killmail.victim.alliance_name,
+            faction_id: killmail.victim.faction_id,
+            faction_name: killmail.victim.faction_name,
+        },
+        finalblow: finalBlowAttacker ? {
+            character_id: finalBlowAttacker.character_id,
+            character_name: finalBlowAttacker.character_name,
+            corporation_id: finalBlowAttacker.corporation_id,
+            corporation_name: finalBlowAttacker.corporation_name,
+            alliance_id: finalBlowAttacker.alliance_id,
+            alliance_name: finalBlowAttacker.alliance_name,
+            faction_id: finalBlowAttacker.faction_id,
+            faction_name: finalBlowAttacker.faction_name,
+            ship_group_name: finalBlowAttacker.ship_group_name || {},
+            is_npc: finalBlowAttacker.character_id === 0,
+        } : {
+            character_id: 0,
+            character_name: 'Unknown',
+            corporation_id: 0,
+            corporation_name: 'Unknown',
+            alliance_id: 0,
+            alliance_name: 'Unknown',
+            faction_id: 0,
+            faction_name: 'Unknown',
+            ship_group_name: {},
+            is_npc: true,
+        }
+    };
+};
+
+/**
+ * Check if an achievement is expanded
+ */
+const isExpanded = (achievementId: string): boolean => {
+    return expandedAchievements.value.has(achievementId);
+};
+
+/**
+ * Check if an achievement has killmails to show
+ */
+const hasKillmails = (achievement: ICharacterAchievement): boolean => {
+    return achievement.killmailIds && achievement.killmailIds.length > 0;
+};
+
+/**
+ * Get killmails for an achievement
+ */
+const getKillmailsForAchievement = (achievementId: string): IKillList[] => {
+    return killmailData.value.get(achievementId) || [];
+};
+
+/**
+ * Check if killmails are loading for an achievement
+ */
+const isLoadingKillmails = (achievementId: string): boolean => {
+    return loadingKillmails.value.has(achievementId);
+};
+
+/**
+ * Format ISK values
+ */
+const formatIsk = (value: number): string => {
+    if (!value) return "0 ISK";
+
+    if (value >= 1000000000) {
+        return `${(value / 1000000000).toFixed(1)}B ISK`;
+    }
+    if (value >= 1000000) {
+        return `${(value / 1000000).toFixed(1)}M ISK`;
+    }
+    return `${Math.round(value).toLocaleString()} ISK`;
+};
+
+/**
+ * Format security status color
+ */
+const getSecurityColor = (security: number): string => {
+    if (security >= 0.45) return 'text-green-500';
+    if (security >= 0.05) return 'text-yellow-500';
+    return 'text-red-500';
+};
+
+/**
+ * Generate killmail link
+ */
+const getKillmailLink = (killmailId: number): string => {
+    return `/kill/${killmailId}`;
 };
 </script>
