@@ -173,11 +173,11 @@ const updateChartOptions = () => {
         const value = processedCounts[category][period];
         return {
             name: category,
-            value: typeof value === "number" ? value : 0,
+            value: parseFormattedNumber(value),
         };
     });
 
-    // Sort by value (descending order)
+    // Sort by value (descending order) - keeping value-based sorting for chart visualization
     dataPoints.sort((a, b) => b.value - a.value);
 
     // Colors for the bars
@@ -285,7 +285,7 @@ const summaryStats = computed(() => {
             0,
         ),
         totalProcessed: Object.values(statusData.value.processedCounts).reduce(
-            (sum, val) => sum + parseFormattedNumber(val["5min"]),
+            (sum, queueData) => sum + parseFormattedNumber(queueData["5min"]),
             0,
         ),
         unprocessedItems: statusData.value.databaseCounts.unprocessedCount || 0,
@@ -498,12 +498,12 @@ const hasKeyspaceInfo = computed(() => {
                                             </div>
                                         </template>
                                         <div class="space-y-2 text-sm">
-                                            <!-- Top 3 processed items in 5min -->
-                                            <div v-for="(queue, index) in Object.keys(statusData.processedCounts).sort((a, b) => (statusData.processedCounts[b]['5min'] || 0) - (statusData.processedCounts[a]['5min'] || 0))"
+                                            <!-- Top processed items in 5min - sorted alphabetically -->
+                                            <div v-for="(queue, index) in Object.keys(statusData.processedCounts).sort()"
                                                 :key="queue" class="flex justify-between">
                                                 <span class="capitalize">{{ queue }}:</span>
                                                 <span class="font-mono">{{
-                                                    formatNumber(statusData.processedCounts[queue]['5min'] || 0)
+                                                    formatNumber(parseFormattedNumber(statusData.processedCounts[queue]['5min']))
                                                 }}</span>
                                             </div>
                                         </div>
@@ -519,8 +519,8 @@ const hasKeyspaceInfo = computed(() => {
                                         </template>
 
                                         <div class="space-y-2 text-sm">
-                                            <!-- Top 5 queues -->
-                                            <div v-for="(queue, index) in Object.entries(statusData.queueCounts || {}).sort(([, a], [, b]) => Number(b) - Number(a))"
+                                            <!-- Queue counts sorted alphabetically -->
+                                            <div v-for="(queue, index) in Object.entries(statusData.queueCounts || {}).sort(([a], [b]) => a.localeCompare(b))"
                                                 :key="queue[0]" class="flex justify-between">
                                                 <span class="capitalize">{{ queue[0] }}:</span>
                                                 <span class="font-mono">{{ formatNumber(queue[1]) }}</span>
@@ -630,12 +630,12 @@ const hasKeyspaceInfo = computed(() => {
                                                 </tr>
                                             </thead>
                                             <tbody>
-                                                <tr v-for="(data, queue) in statusData.processedCounts" :key="queue"
+                                                <tr v-for="(entry, index) in Object.entries(statusData.processedCounts).sort(([a], [b]) => a.localeCompare(b))" :key="entry[0]"
                                                     class="border-t border-gray-200 dark:border-gray-700">
-                                                    <td class="py-1 capitalize">{{ queue }}</td>
+                                                    <td class="py-1 capitalize">{{ entry[0] }}</td>
                                                     <td v-for="period in timePeriods" :key="period.value"
                                                         class="py-1 px-1 text-right font-mono">
-                                                        {{ formatNumber(data[period.value]) }}
+                                                        {{ formatNumber(parseFormattedNumber(entry[1][period.value])) }}
                                                     </td>
                                                 </tr>
                                             </tbody>
@@ -663,11 +663,11 @@ const hasKeyspaceInfo = computed(() => {
                                             </tr>
                                         </thead>
                                         <tbody>
-                                            <tr v-for="(count, collection) in statusData.databaseCounts"
-                                                :key="collection" class="border-t border-gray-200 dark:border-gray-700"
-                                                :class="{ 'bg-amber-100 dark:bg-amber-900/50': collection === 'unprocessedCount' }">
-                                                <td class="py-1 capitalize text-sm">{{ collection }}</td>
-                                                <td class="py-1 text-right font-mono text-sm">{{ formatNumber(count) }}
+                                            <tr v-for="(entry, index) in Object.entries(statusData.databaseCounts).sort(([, a], [, b]) => Number(b) - Number(a))"
+                                                :key="entry[0]" class="border-t border-gray-200 dark:border-gray-700"
+                                                :class="{ 'bg-amber-100 dark:bg-amber-900/50': entry[0] === 'unprocessedCount' }">
+                                                <td class="py-1 capitalize text-sm">{{ entry[0] }}</td>
+                                                <td class="py-1 text-right font-mono text-sm">{{ formatNumber(entry[1]) }}
                                                 </td>
                                             </tr>
                                         </tbody>
