@@ -17,6 +17,7 @@ export interface ICharacterAchievement {
     completion_tiers: number; // How many times they've earned this achievement (e.g., 10 for someone with 500 kills when threshold is 50)
     completed_at?: Date;
     last_updated: Date;
+    killmailIds?: number[]; // Optional array of killmail IDs that contributed to this achievement
 }
 
 /**

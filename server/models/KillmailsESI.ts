@@ -7,7 +7,7 @@ import type {
 } from "~/server/interfaces/IESIKillmail";
 
 // Extend the IESIKillmail interface with Mongoose's Document interface
-export interface IESIKillmailDocument extends IESIKillmail, Document { }
+export interface IESIKillmailDocument extends IESIKillmail, Document {}
 
 // Subschema for Victim Items
 const victimItemSchema = new Schema<IESIVictimItem>(
@@ -18,7 +18,7 @@ const victimItemSchema = new Schema<IESIVictimItem>(
         flag: { type: Number },
         singleton: { type: Number },
     },
-    { _id: false }, // Prevents automatic creation of _id for subdocuments
+    { _id: false } // Prevents automatic creation of _id for subdocuments
 );
 victimItemSchema.add({
     items: { type: [victimItemSchema], default: undefined, required: false },
@@ -40,7 +40,7 @@ const victimSchema = new Schema<IESIVictim>(
             z: { type: Number },
         },
     },
-    { _id: false },
+    { _id: false }
 );
 
 // Subschema for Attackers
@@ -56,7 +56,7 @@ const attackerSchema = new Schema<IESIAttacker>(
         ship_type_id: { type: Number },
         weapon_type_id: { type: Number },
     },
-    { _id: false },
+    { _id: false }
 );
 
 // Main KillmailsESI schema
@@ -69,15 +69,19 @@ const killmailsESISchema = new Schema<IESIKillmailDocument>(
         attackers: { type: [attackerSchema] },
         victim: { type: victimSchema },
         processed: { type: Boolean, default: false },
+        processAfter: { type: Date, default: null },
     },
     {
         collection: "killmails_esi",
-        timestamps: true
-    },
+        timestamps: true,
+    }
 );
 
 // Define indexes for the schema
-killmailsESISchema.index({ killmail_id: 1, killmail_hash: 1 }, { unique: true });
+killmailsESISchema.index(
+    { killmail_id: 1, killmail_hash: 1 },
+    { unique: true }
+);
 killmailsESISchema.index({ killmail_time: -1 }, { sparse: true });
 killmailsESISchema.index({ createdAt: 1 }, { sparse: true });
 killmailsESISchema.index({ updatedAt: 1 }, { sparse: true });
@@ -93,10 +97,11 @@ killmailsESISchema.index({ "victim.corporation_id": 1 }, { sparse: true });
 killmailsESISchema.index({ "victim.alliance_id": 1 }, { sparse: true });
 
 // Create and export the KillmailsESI model
-export const KillmailsESI: Model<IESIKillmailDocument> = model<IESIKillmailDocument>(
-    "killmails_esi",
-    killmailsESISchema,
-    "killmails_esi",
-);
+export const KillmailsESI: Model<IESIKillmailDocument> =
+    model<IESIKillmailDocument>(
+        "killmails_esi",
+        killmailsESISchema,
+        "killmails_esi"
+    );
 
 export type { IESIKillmailDocument as ESIKillmailDocument };

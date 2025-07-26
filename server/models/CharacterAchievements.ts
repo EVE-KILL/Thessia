@@ -35,6 +35,7 @@ const characterAchievementSchema = new Schema<ICharacterAchievement>(
         completion_tiers: { type: Number, required: true, default: 0 },
         completed_at: { type: Date },
         last_updated: { type: Date, required: true, default: Date.now },
+        killmailIds: { type: [Number], default: undefined }, // Optional array of killmail IDs
     },
     { _id: false } // Don't create separate _id for subdocuments
 );

@@ -18,6 +18,11 @@ export interface IAchievement {
     category: string;
     query: PipelineStage[];
     threshold?: number; // For achievements that require multiple occurrences
+    temporal?: boolean; // Whether this achievement requires temporal logic (default: false)
+    trackKillmails?: boolean; // Whether to track killmail IDs for this achievement
+    customFunction?: (
+        characterId: number
+    ) => Promise<number | { count: number; killmailIds: number[] }>; // Custom function to handle this achievement's logic
     isActive: boolean;
 }
 
@@ -1143,7 +1148,7 @@ export const achievements: IAchievement[] = [
                 $match: {
                     is_npc: false,
                     "victim.ship_group_id": {
-                        $in: [547, 485, 513, 902, 941, 30, 659],
+                        $in: [547, 485, 659, 30, 513, 902], // carriers, dreadnoughts, supercarriers, titans, freighters, jump freighters
                     },
                     "attackers.character_id": "{{character_id}}",
                     "attackers.final_blow": true,
@@ -1169,7 +1174,9 @@ export const achievements: IAchievement[] = [
             {
                 $match: {
                     is_npc: false,
-                    "victim.ship_group_id": { $in: [547, 485] },
+                    "victim.ship_group_id": {
+                        $in: [547, 485, 659, 30, 513, 902],
+                    }, // all capital types
                     "attackers.character_id": "{{character_id}}",
                     "attackers.final_blow": true,
                 },
@@ -1190,6 +1197,7 @@ export const achievements: IAchievement[] = [
         category: "High Value Targets",
         threshold: 1,
         isActive: true,
+        trackKillmails: true,
         query: [
             {
                 $match: {
@@ -1373,6 +1381,7 @@ export const achievements: IAchievement[] = [
         category: "Special Events",
         threshold: 1,
         isActive: true,
+        trackKillmails: true,
         query: [
             {
                 $match: {
@@ -1396,6 +1405,7 @@ export const achievements: IAchievement[] = [
         category: "Special Events",
         threshold: 1,
         isActive: true,
+        trackKillmails: true,
         query: [
             {
                 $match: {
@@ -1419,6 +1429,7 @@ export const achievements: IAchievement[] = [
         category: "Special Events",
         threshold: 1,
         isActive: true,
+        trackKillmails: true,
         query: [
             {
                 $match: {
@@ -1443,6 +1454,7 @@ export const achievements: IAchievement[] = [
         category: "Special Events",
         threshold: 1,
         isActive: true,
+        trackKillmails: true,
         query: [
             {
                 $match: {
@@ -1512,6 +1524,412 @@ export const achievements: IAchievement[] = [
                 $count: "potential_gank_kills",
             },
         ],
+    },
+
+    // === TEMPORAL ACHIEVEMENTS ===
+    {
+        id: "sweet_revenge",
+        name: "Sweet Revenge",
+        description: "Kill a player who killed you within the last 2 hours.",
+        type: "special",
+        points: 100,
+        pointsModifier: "positive",
+        rarity: "rare",
+        category: "Temporal Events",
+        threshold: 1,
+        temporal: true,
+        trackKillmails: true,
+        isActive: true,
+        customFunction: async (
+            characterId: number
+        ): Promise<{ count: number; killmailIds: number[] }> => {
+            try {
+                // Use Maps to efficiently track deaths and potential revenge targets
+                const deathsByKiller = new Map<number, any[]>(); // killer_id -> death records
+                const revengeKills = new Set<string>(); // Track unique revenge kills to avoid duplicates
+                const revengeKillmailIds: number[] = []; // Track killmail IDs for revenge kills
+
+                const twoHours = 2 * 60 * 60 * 1000; // 2 hours in milliseconds
+
+                // First pass: collect all deaths where this character was the victim
+                const deathCursor = Killmails.find({
+                    is_npc: false,
+                    "victim.character_id": characterId,
+                })
+                    .lean()
+                    .cursor();
+
+                let deathCount = 0;
+                for (
+                    let death = await deathCursor.next();
+                    death != null;
+                    death = await deathCursor.next()
+                ) {
+                    const km = death as any;
+                    deathCount++;
+
+                    // Find who killed this character (final blow)
+                    const killer = km.attackers.find(
+                        (attacker: any) => attacker.final_blow === true
+                    );
+                    if (killer && killer.character_id) {
+                        const killerId = killer.character_id;
+                        if (!deathsByKiller.has(killerId)) {
+                            deathsByKiller.set(killerId, []);
+                        }
+                        deathsByKiller.get(killerId)!.push({
+                            kill_time: new Date(km.kill_time).getTime(),
+                            killer_name: killer.character_name || killerId,
+                        });
+                    }
+                }
+
+                // Second pass: check kills by this character for revenge opportunities
+                const killCursor = Killmails.find({
+                    is_npc: false,
+                    "attackers.character_id": characterId,
+                    "attackers.final_blow": true,
+                })
+                    .lean()
+                    .cursor();
+
+                let killCount = 0;
+                let revengeCount = 0;
+
+                for (
+                    let kill = await killCursor.next();
+                    kill != null;
+                    kill = await killCursor.next()
+                ) {
+                    const km = kill as any;
+                    killCount++;
+
+                    const victimId = km.victim.character_id;
+                    if (!victimId || !deathsByKiller.has(victimId)) {
+                        continue; // This victim never killed us
+                    }
+
+                    const killTime = new Date(km.kill_time).getTime();
+                    const ourDeaths = deathsByKiller.get(victimId)!;
+
+                    // Check if any of our deaths by this victim were within 2 hours before this kill
+                    for (const death of ourDeaths) {
+                        const timeDiff = killTime - death.kill_time;
+                        if (timeDiff > 0 && timeDiff <= twoHours) {
+                            // This is a revenge kill!
+                            const revengeKey = `${km.killmail_id}`; // Use killmail ID to ensure uniqueness
+                            if (!revengeKills.has(revengeKey)) {
+                                revengeKills.add(revengeKey);
+                                revengeKillmailIds.push(km.killmail_id);
+                                revengeCount++;
+
+                                const minutesAgo = Math.round(
+                                    timeDiff / (1000 * 60)
+                                );
+                                break; // Only count this kill once, even if multiple deaths match
+                            }
+                        }
+                    }
+                }
+
+                return { count: revengeCount, killmailIds: revengeKillmailIds };
+            } catch (error) {
+                console.error(
+                    `Error calculating Sweet Revenge achievement for character ${characterId}:`,
+                    error
+                );
+                return { count: 0, killmailIds: [] };
+            }
+        },
+        query: [], // Empty query since we use custom function
+    },
+
+    // === MORE TEMPORAL ACHIEVEMENTS ===
+    {
+        id: "killing_spree",
+        name: "Killing Spree",
+        description: "Kill 10 ships within 10 minutes, solo (no fleet).",
+        type: "special",
+        points: 150,
+        pointsModifier: "positive",
+        rarity: "rare",
+        category: "Temporal Events",
+        threshold: 1,
+        temporal: true,
+        trackKillmails: true,
+        isActive: true,
+        customFunction: async (characterId: number): Promise<number> => {
+            try {
+                const tenMinutes = 10 * 60 * 1000; // 10 minutes in milliseconds
+                let killingSprees = 0;
+
+                // Get all solo kills by this character, sorted by time
+                const soloKills = await Killmails.find({
+                    is_npc: false,
+                    is_solo: true, // Use the built-in solo flag
+                    "attackers.character_id": characterId,
+                    "attackers.final_blow": true,
+                })
+                    .lean()
+                    .sort({ kill_time: 1 });
+
+                if (soloKills.length < 10) return 0;
+
+                // Sliding window approach to find 10 kills within 10 minutes
+                for (let i = 0; i <= soloKills.length - 10; i++) {
+                    const firstKill = new Date(
+                        (soloKills[i] as any).kill_time
+                    ).getTime();
+                    const tenthKill = new Date(
+                        (soloKills[i + 9] as any).kill_time
+                    ).getTime();
+
+                    if (tenthKill - firstKill <= tenMinutes) {
+                        killingSprees++;
+                        // Skip ahead to avoid overlapping sprees
+                        i += 9;
+                    }
+                }
+
+                return killingSprees;
+            } catch (error) {
+                console.error(
+                    `Error calculating Killing Spree achievement for character ${characterId}:`,
+                    error
+                );
+                return 0;
+            }
+        },
+        query: [],
+    },
+
+    {
+        id: "nullbloc_private",
+        name: "Nullbloc Private First Class",
+        description:
+            "Kill 100 ships within an hour in a fleet of more than 50 people in nullsec.",
+        type: "special",
+        points: 300,
+        pointsModifier: "positive",
+        rarity: "epic",
+        category: "Temporal Events",
+        threshold: 1,
+        temporal: true,
+        isActive: true,
+        customFunction: async (characterId: number): Promise<number> => {
+            try {
+                const oneHour = 60 * 60 * 1000; // 1 hour in milliseconds
+                let massFleetKills = 0;
+
+                // Get all kills in nullsec (security <= 0) with large fleet
+                const fleetKills = await Killmails.aggregate([
+                    {
+                        $match: {
+                            is_npc: false,
+                            "attackers.character_id": characterId,
+                            "attackers.final_blow": true,
+                            system_security: { $lte: 0.0 }, // Corrected field name for nullsec
+                        },
+                    },
+                    {
+                        $addFields: {
+                            fleet_size: { $size: "$attackers" },
+                        },
+                    },
+                    {
+                        $match: {
+                            fleet_size: { $gt: 50 }, // Fleet larger than 50
+                        },
+                    },
+                    {
+                        $sort: { kill_time: 1 },
+                    },
+                ]);
+
+                if (fleetKills.length < 100) return 0;
+
+                // Check for 100 kills within 1 hour
+                for (let i = 0; i <= fleetKills.length - 100; i++) {
+                    const firstKill = new Date(
+                        fleetKills[i].kill_time
+                    ).getTime();
+                    const hundredthKill = new Date(
+                        fleetKills[i + 99].kill_time
+                    ).getTime();
+
+                    if (hundredthKill - firstKill <= oneHour) {
+                        massFleetKills++;
+                        console.log(
+                            `   ⚔️  Mass fleet engagement: 100 kills between ${
+                                fleetKills[i].kill_time
+                            } and ${
+                                fleetKills[i + 99].kill_time
+                            } with fleet size ${fleetKills[i].fleet_size}`
+                        );
+                        i += 99; // Skip ahead
+                    }
+                }
+
+                return massFleetKills;
+            } catch (error) {
+                console.error(
+                    `Error calculating Nullbloc Private achievement for character ${characterId}:`,
+                    error
+                );
+                return 0;
+            }
+        },
+        query: [],
+    },
+
+    {
+        id: "david_vs_goliath",
+        name: "David vs Goliath",
+        description:
+            "Kill a capital ship in a subcapital ship, solo (no fleet assistance).",
+        type: "special",
+        points: 500,
+        pointsModifier: "positive",
+        rarity: "legendary",
+        category: "Temporal Events",
+        threshold: 1,
+        temporal: true,
+        trackKillmails: true,
+        isActive: true,
+        customFunction: async (characterId: number): Promise<number> => {
+            try {
+                // Capital ship group IDs from killlist API - all capital types
+                const capitalShipGroups = [547, 485, 659, 30];
+
+                // Subcapital ship groups (everything that's NOT a capital)
+                const subcapitalGroups = [
+                    324,
+                    893,
+                    25,
+                    831,
+                    237, // frigates
+                    420,
+                    541, // destroyers
+                    906,
+                    26,
+                    833,
+                    358,
+                    894,
+                    832,
+                    963, // cruisers
+                    419,
+                    540, // battlecruisers
+                    27,
+                    898,
+                    900, // battleships
+                ];
+
+                let davidKills = 0; // Find kills where this character killed a capital ship, solo
+                const capitalKills = await Killmails.find({
+                    is_npc: false,
+                    is_solo: true, // Solo kill
+                    "attackers.character_id": characterId,
+                    "attackers.final_blow": true,
+                    "victim.ship_group_id": { $in: capitalShipGroups },
+                }).lean();
+
+                for (const kill of capitalKills) {
+                    const km = kill as any;
+
+                    // Find this character's attacker entry to check their ship
+                    const attackerEntry = km.attackers.find(
+                        (attacker: any) =>
+                            attacker.character_id === characterId &&
+                            attacker.final_blow === true
+                    );
+
+                    if (
+                        attackerEntry &&
+                        subcapitalGroups.includes(attackerEntry.ship_group_id)
+                    ) {
+                        davidKills++;
+                        console.log(
+                            `   🏹 David vs Goliath: Killed capital ship (${km.victim.ship_name}) in a subcapital (${attackerEntry.ship_name}) at ${km.kill_time}`
+                        );
+                    }
+                }
+
+                return davidKills;
+            } catch (error) {
+                console.error(
+                    `Error calculating David vs Goliath achievement for character ${characterId}:`,
+                    error
+                );
+                return 0;
+            }
+        },
+        query: [],
+    },
+
+    {
+        id: "rampage",
+        name: "Rampage",
+        description: "Get 5 kills without dying.",
+        type: "special",
+        points: 100,
+        pointsModifier: "positive",
+        rarity: "rare",
+        category: "Temporal Events",
+        threshold: 1,
+        temporal: true,
+        isActive: true,
+        customFunction: async (characterId: number): Promise<number> => {
+            try {
+                let rampages = 0;
+                let currentKillStreak = 0;
+
+                // Get all events (kills and deaths) sorted by time
+                const allEvents = await Killmails.find({
+                    is_npc: false,
+                    $or: [
+                        { "victim.character_id": characterId },
+                        {
+                            "attackers.character_id": characterId,
+                            "attackers.final_blow": true,
+                        },
+                    ],
+                })
+                    .lean()
+                    .sort({ kill_time: 1 });
+
+                for (const event of allEvents) {
+                    const km = event as any;
+
+                    if (km.victim.character_id === characterId) {
+                        // We died, reset kill streak
+                        currentKillStreak = 0;
+                    } else {
+                        // Check if we got the kill
+                        const gotKill = km.attackers.some(
+                            (attacker: any) =>
+                                attacker.character_id === characterId &&
+                                attacker.final_blow === true
+                        );
+
+                        if (gotKill) {
+                            currentKillStreak++;
+                            if (currentKillStreak === 5) {
+                                rampages++;
+                            }
+                        }
+                    }
+                }
+
+                return rampages;
+            } catch (error) {
+                console.error(
+                    `Error calculating Rampage achievement for character ${characterId}:`,
+                    error
+                );
+                return 0;
+            }
+        },
+        query: [],
     },
 
     // === SHIP TYPE SPECIFIC ACHIEVEMENTS ===
@@ -2103,18 +2521,54 @@ export class AchievementService {
         // Process each active achievement
         for (const achievement of allAchievements.filter((a) => a.isActive)) {
             try {
-                // Replace placeholder in query with actual character ID
-                const query = this.replaceCharacterIdInQuery(
-                    achievement.query,
-                    characterId
-                );
+                let count = 0;
+                let killmailIds: number[] = [];
 
-                // Execute the aggregation query
-                const result = await Killmails.aggregate(query);
-                const count =
-                    result.length > 0
-                        ? result[0][Object.keys(result[0])[0]] || 0
-                        : 0;
+                // Handle achievements with custom functions (like temporal achievements)
+                if (achievement.customFunction) {
+                    const result = await achievement.customFunction(
+                        characterId
+                    );
+                    if (typeof result === "number") {
+                        count = result;
+                    } else {
+                        count = result.count;
+                        killmailIds = result.killmailIds;
+                    }
+                } else {
+                    // Replace placeholder in query with actual character ID
+                    const query = this.replaceCharacterIdInQuery(
+                        achievement.query,
+                        characterId
+                    );
+
+                    // Execute the aggregation query
+                    const queryResult = await Killmails.aggregate(query);
+                    const resultKeys =
+                        queryResult.length > 0
+                            ? Object.keys(queryResult[0])
+                            : [];
+                    count =
+                        queryResult.length > 0 && resultKeys.length > 0
+                            ? queryResult[0][resultKeys[0]!] || 0
+                            : 0;
+
+                    // For achievements that track killmails but don't use custom functions,
+                    // we need to get the actual killmail IDs
+                    if (achievement.trackKillmails && count > 0) {
+                        const killmailQuery = this.replaceCharacterIdInQuery(
+                            achievement.query.slice(0, -1), // Remove the $count stage
+                            characterId
+                        );
+                        killmailQuery.push({ $project: { killmail_id: 1 } });
+                        const killmailResult = await Killmails.aggregate(
+                            killmailQuery
+                        );
+                        killmailIds = killmailResult.map(
+                            (doc) => doc.killmail_id
+                        );
+                    }
+                }
 
                 // Find existing achievement in character record
                 const existingAchievementIndex =
@@ -2125,43 +2579,56 @@ export class AchievementService {
                 if (existingAchievementIndex >= 0) {
                     const existingAchievement =
                         characterRecord.achievements[existingAchievementIndex];
-                    const wasCompleted = existingAchievement.is_completed;
-                    const isCompleted = count >= (achievement.threshold || 1);
+                    if (existingAchievement) {
+                        const wasCompleted = existingAchievement.is_completed;
+                        const isCompleted =
+                            count >= (achievement.threshold || 1);
 
-                    // Calculate completion tiers (how many times they've earned this achievement)
-                    const newCompletionTiers = Math.floor(
-                        count / (achievement.threshold || 1)
-                    );
-                    const oldCompletionTiers =
-                        existingAchievement.completion_tiers || 0;
+                        // Calculate completion tiers (how many times they've earned this achievement)
+                        const newCompletionTiers = Math.floor(
+                            count / (achievement.threshold || 1)
+                        );
+                        const oldCompletionTiers =
+                            existingAchievement.completion_tiers || 0;
 
-                    // Update if count changed or completion status changed
-                    if (
-                        existingAchievement.current_count !== count ||
-                        wasCompleted !== isCompleted ||
-                        oldCompletionTiers !== newCompletionTiers
-                    ) {
-                        updates[
-                            `achievements.${existingAchievementIndex}.current_count`
-                        ] = count;
-                        updates[
-                            `achievements.${existingAchievementIndex}.is_completed`
-                        ] = isCompleted;
-                        updates[
-                            `achievements.${existingAchievementIndex}.completion_tiers`
-                        ] = newCompletionTiers;
-                        updates[
-                            `achievements.${existingAchievementIndex}.last_updated`
-                        ] = new Date();
-
-                        // Set completion date if newly completed
-                        if (isCompleted && !wasCompleted) {
+                        // Update if count changed or completion status changed
+                        if (
+                            existingAchievement.current_count !== count ||
+                            wasCompleted !== isCompleted ||
+                            oldCompletionTiers !== newCompletionTiers
+                        ) {
                             updates[
-                                `achievements.${existingAchievementIndex}.completed_at`
+                                `achievements.${existingAchievementIndex}.current_count`
+                            ] = count;
+                            updates[
+                                `achievements.${existingAchievementIndex}.is_completed`
+                            ] = isCompleted;
+                            updates[
+                                `achievements.${existingAchievementIndex}.completion_tiers`
+                            ] = newCompletionTiers;
+                            updates[
+                                `achievements.${existingAchievementIndex}.last_updated`
                             ] = new Date();
-                        }
 
-                        hasUpdates = true;
+                            // Update killmail IDs if this achievement tracks them
+                            if (
+                                achievement.trackKillmails &&
+                                killmailIds.length > 0
+                            ) {
+                                updates[
+                                    `achievements.${existingAchievementIndex}.killmailIds`
+                                ] = killmailIds;
+                            }
+
+                            // Set completion date if newly completed
+                            if (isCompleted && !wasCompleted) {
+                                updates[
+                                    `achievements.${existingAchievementIndex}.completed_at`
+                                ] = new Date();
+                            }
+
+                            hasUpdates = true;
+                        }
                     }
                 }
             } catch (error) {
@@ -2310,6 +2777,103 @@ export class AchievementService {
             characterId.toString()
         );
         return JSON.parse(replacedString);
+    }
+
+    /**
+     * Test a single achievement for a character
+     * Useful for debugging and testing specific achievements without running all of them
+     */
+    static async testSingleAchievement(
+        characterId: number,
+        achievementId: string
+    ): Promise<{
+        count: number;
+        killmailIds: number[];
+        achievement: IAchievement | null;
+    }> {
+        try {
+            const allAchievements = await this.getAllAchievements();
+            const achievement = allAchievements.find(
+                (a) => a.id === achievementId
+            );
+
+            if (!achievement) {
+                console.log(
+                    `❌ Achievement with ID "${achievementId}" not found`
+                );
+                return { count: 0, killmailIds: [], achievement: null };
+            }
+
+            if (!achievement.isActive) {
+                console.log(`⚠️  Achievement "${achievementId}" is not active`);
+                return { count: 0, killmailIds: [], achievement };
+            }
+
+            let count = 0;
+            let killmailIds: number[] = [];
+
+            // Handle achievements with custom functions (like temporal achievements)
+            if (achievement.customFunction) {
+                console.log(
+                    `🔧 Running custom function for achievement: ${achievement.name}`
+                );
+                const result = await achievement.customFunction(characterId);
+                if (typeof result === "number") {
+                    count = result;
+                } else {
+                    count = result.count;
+                    killmailIds = result.killmailIds;
+                }
+            } else {
+                console.log(
+                    `🔍 Running query for achievement: ${achievement.name}`
+                );
+                // Replace placeholder in query with actual character ID
+                const query = this.replaceCharacterIdInQuery(
+                    achievement.query,
+                    characterId
+                );
+
+                // Execute the aggregation query
+                const queryResult = await Killmails.aggregate(query);
+                const resultKeys =
+                    queryResult.length > 0 ? Object.keys(queryResult[0]) : [];
+                count =
+                    queryResult.length > 0 && resultKeys.length > 0
+                        ? queryResult[0][resultKeys[0]!] || 0
+                        : 0;
+
+                // For achievements that track killmails but don't use custom functions,
+                // we need to get the actual killmail IDs
+                if (achievement.trackKillmails && count > 0) {
+                    const killmailQuery = this.replaceCharacterIdInQuery(
+                        achievement.query.slice(0, -1), // Remove the $count stage
+                        characterId
+                    );
+                    killmailQuery.push({ $project: { killmail_id: 1 } });
+                    const killmailResult = await Killmails.aggregate(
+                        killmailQuery
+                    );
+                    killmailIds = killmailResult.map((doc) => doc.killmail_id);
+                }
+            }
+
+            console.log(
+                `📊 Achievement "${achievement.name}" result: ${count}${
+                    killmailIds.length > 0
+                        ? ` (with ${killmailIds.length} killmails tracked)`
+                        : ""
+                }`
+            );
+
+            return { count, killmailIds, achievement };
+        } catch (error) {
+            console.error(
+                `Error testing achievement ${achievementId} for character ${characterId}:`,
+                error
+            );
+            return { count: 0, killmailIds: [], achievement: null };
+        }
     }
 
     /**
