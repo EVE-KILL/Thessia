@@ -4,6 +4,7 @@ import { Bloodlines } from "~/server/models/Bloodlines";
 import { Corporations } from "~/server/models/Corporations";
 import { Factions } from "~/server/models/Factions";
 import { Races } from "~/server/models/Races";
+import { CharacterAchievements } from "~/server/models/CharacterAchievements";
 
 export default defineCachedEventHandler(
     async (event) => {
@@ -39,6 +40,11 @@ export default defineCachedEventHandler(
         });
         const race = await Races.findOne({ race_id: character.race_id });
 
+        // Load character achievements if they exist
+        const achievements = await CharacterAchievements.findOne({
+            character_id: characterId,
+        });
+
         // Add the corporation and alliance names to the character object
         // And add in all the race and bloodline data
         const characterData = (character as any).toObject
@@ -55,6 +61,7 @@ export default defineCachedEventHandler(
             bloodline_description: bloodline?.description || null,
             race_name: race?.race_name,
             race_description: race?.description,
+            achievements: achievements || null,
         };
 
         return enhancedCharacter;

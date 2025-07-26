@@ -369,6 +369,12 @@
                         <CharacterStats v-if="character" />
                     </div>
                 </template>
+
+                <template #achievements>
+                    <div class="tab-content">
+                        <CharacterAchievements v-if="character" :achievements="(character as any).achievements" />
+                    </div>
+                </template>
             </Tabs>
         </div>
 
@@ -465,6 +471,12 @@ const tabItems = [
         label: t("stats"),
         icon: "i-lucide-bar-chart",
         slot: "stats" as const,
+    },
+    {
+        id: "achievements",
+        label: t("achievements"),
+        icon: "i-lucide-trophy",
+        slot: "achievements" as const,
     },
 ] satisfies TabsItem[];
 
