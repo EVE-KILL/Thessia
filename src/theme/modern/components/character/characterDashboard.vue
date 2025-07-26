@@ -301,9 +301,9 @@ const sortByCountDesc = (items: Record<string, any>) => {
 };
 
 // Function to handle period change
-const changePeriod = async (period: string) => {
+const changePeriod = (period: string) => {
     activePeriod.value = period;
-    await fetchStats(period);
+    fetchStats(period);
 };
 
 // Function to determine the most active timezone based on the heatmap
@@ -413,7 +413,7 @@ const fetchStats = async (period = "90") => {
     statsError.value = false;
 
     try {
-        const url = `/api/characters/${props.character.character_id}/stats${period === "all" ? "" : `?days=${period}`}`;
+        const url = `/api/stats/character_id/${props.character.character_id}${period === "all" ? "?days=0" : `?days=${period}`}`;
 
         const data = await $fetch(url);
 
@@ -427,8 +427,8 @@ const fetchStats = async (period = "90") => {
         statsLoading.value = false;
     }
 };// Fetch data on component mount
-onMounted(async () => {
-    await fetchStats(activePeriod.value);
+onMounted(() => {
+    fetchStats(activePeriod.value);
 });
 
 onUnmounted(() => {

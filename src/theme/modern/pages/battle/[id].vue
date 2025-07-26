@@ -245,7 +245,7 @@ const apiUrl = computed(() => {
 });
 
 // Fetch battle data with killmails for all tabs
-const { data: battle, pending, error, refresh } = useFetch(() => apiUrl.value, {
+const { data: battle, pending, error, refresh } = await useFetch(() => apiUrl.value, {
     key: computed(() => battleId.value
         ? `battle-${isKillmailMode.value ? 'killmail-' : ''}${battleId.value}`
         : null),

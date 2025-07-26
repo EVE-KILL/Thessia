@@ -410,7 +410,7 @@ const shortStatsData = ref<IShortStats | { error: string } | null>(null)
 // Only fetch shortstats on client-side to prevent SSR bottleneck
 onMounted(() => {
     // Use $fetch instead of useFetch to ensure it only runs on client
-    $fetch<IShortStats | { error: string } | null>(`/api/alliances/${allianceId}/shortstats`)
+    $fetch<IShortStats | { error: string } | null>(`/api/stats/alliance_id/${allianceId}?dataType=basic&days=0`)
         .then(data => {
             shortStatsData.value = data
             shortStatsLoading.value = false

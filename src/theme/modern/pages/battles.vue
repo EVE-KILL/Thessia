@@ -7,6 +7,10 @@ const { t, locale } = useI18n();
 const router = useRouter();
 const currentLocale = computed(() => locale.value);
 
+// Filter and search state
+const searchQuery = ref('');
+const filter = ref('all'); // 'all' or 'custom'
+
 // SEO setup with dynamic content based on filters
 const seoTitle = computed(() => {
     if (filter.value !== 'all') {
@@ -41,10 +45,6 @@ const pageSizeItems = [
     { label: "100", value: 100 },
 ];
 const selectedPageSize = ref(pageSizeItems[0].value);
-
-// Filter and search state
-const searchQuery = ref('');
-const filter = ref('all'); // 'all' or 'custom'
 
 // Computed property to determine if any filter is active
 const hasActiveFilters = computed(() => {

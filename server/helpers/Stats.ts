@@ -1,6 +1,10 @@
 import type {
     IFullStats,
+    IMostValuableKill,
+    IMostValuableShip,
+    IMostValuableStructure,
     IStatsDocument,
+    ITopEntity,
     StatsType,
 } from "~/server/interfaces/IStats";
 import { InvGroups } from "~/server/models/InvGroups";
@@ -212,6 +216,154 @@ export async function updateStatsOnKillmailProcessing(
 }
 
 /**
+ * Calculate only basic stats for an entity (lightweight)
+ */
+export async function calculateBasicStats(
+    type: StatsType,
+    id: number,
+    days: number
+): Promise<Partial<IStatsDocument>> {
+    const validation = validateEntity(type, id);
+    if (!validation.valid) {
+        return {
+            type: validation.type,
+            id: validation.id,
+            days,
+            kills: 0,
+            losses: 0,
+            iskKilled: 0,
+            iskLost: 0,
+            npcLosses: 0,
+            soloKills: 0,
+            soloLosses: 0,
+            lastActive: null,
+            updatedAt: new Date(),
+        };
+    }
+
+    // Build date filter
+    const dateFilter: any = {};
+    if (days > 0) {
+        const startDate = new Date();
+        startDate.setDate(startDate.getDate() - days);
+        dateFilter.kill_time = { $gte: startDate };
+    }
+
+    // Build match filter for kills (where entity is attacker)
+    const killsMatchFilter = {
+        ...dateFilter,
+        attackers: {
+            $elemMatch: { [type]: id },
+        },
+    };
+
+    // Build match filter for losses (where entity is victim)
+    const lossesMatchFilter = {
+        ...dateFilter,
+        [`victim.${type}`]: id,
+    };
+
+    const [killsAgg, lossesAgg] = await Promise.all([
+        // Kills aggregation
+        Killmails.aggregate([
+            { $match: killsMatchFilter },
+            {
+                $group: {
+                    _id: null,
+                    count: { $sum: 1 },
+                    iskValue: { $sum: "$total_value" },
+                    soloKills: {
+                        $sum: {
+                            $cond: [
+                                { $eq: [{ $size: "$attackers" }, 1] },
+                                1,
+                                0,
+                            ],
+                        },
+                    },
+                    lastActive: { $max: "$kill_time" },
+                },
+            },
+        ]),
+        // Losses aggregation
+        Killmails.aggregate([
+            { $match: lossesMatchFilter },
+            {
+                $group: {
+                    _id: null,
+                    count: { $sum: 1 },
+                    iskValue: { $sum: "$total_value" },
+                    npcLosses: {
+                        $sum: {
+                            $cond: [
+                                {
+                                    $allElementsTrue: {
+                                        $map: {
+                                            input: "$attackers",
+                                            as: "attacker",
+                                            in: {
+                                                $eq: [
+                                                    "$$attacker.character_id",
+                                                    null,
+                                                ],
+                                            },
+                                        },
+                                    },
+                                },
+                                1,
+                                0,
+                            ],
+                        },
+                    },
+                    soloLosses: {
+                        $sum: {
+                            $cond: [
+                                { $eq: [{ $size: "$attackers" }, 1] },
+                                1,
+                                0,
+                            ],
+                        },
+                    },
+                    lastActive: { $max: "$kill_time" },
+                },
+            },
+        ]),
+    ]);
+
+    const kills = killsAgg[0] || {
+        count: 0,
+        iskValue: 0,
+        soloKills: 0,
+        lastActive: null,
+    };
+    const losses = lossesAgg[0] || {
+        count: 0,
+        iskValue: 0,
+        npcLosses: 0,
+        soloLosses: 0,
+        lastActive: null,
+    };
+
+    return {
+        type: validation.type,
+        id: validation.id,
+        days,
+        kills: kills.count,
+        losses: losses.count,
+        iskKilled: kills.iskValue,
+        iskLost: losses.iskValue,
+        npcLosses: losses.npcLosses,
+        soloKills: kills.soloKills,
+        soloLosses: losses.soloLosses,
+        lastActive:
+            kills.lastActive > losses.lastActive
+                ? kills.lastActive
+                : losses.lastActive,
+        updatedAt: new Date(),
+    };
+}
+
+/**
  * Calculates all stats for an entity and returns a single object with all root fields and full sub-object.
  * Optimized version for entities with large numbers of killmails.
  */
@@ -224,10 +376,6 @@ export async function calculateAllStats(
     const validation = validateEntity(type, id);
     if (!validation.valid) {
         // Return empty stats with valid: false indicator when validation fails
-        console.log(
-            `Skipping stats calculation for invalid entity: type=${type}, id=${id}`
-        );
-
         // Initialize heat map for empty result
         const heatMap: Record<string, number> = {};
         for (let i = 0; i < 24; i++) {
@@ -251,6 +399,15 @@ export async function calculateAllStats(
             full: {
                 mostUsedShips: {},
                 mostLostShips: {},
+                mostValuableKills: [],
+                mostValuableShips: [],
+                mostValuableStructures: [],
+                topCharacters: [],
+                topCorporations: [],
+                topShips: [],
+                topSystems: [],
+                topConstellations: [],
+                topRegions: [],
                 shipGroupStats: [],
                 monthlyStats: [],
                 diesToCorporations: {},
@@ -286,6 +443,15 @@ export async function calculateAllStats(
     const full: IFullStats = {
         mostUsedShips: {},
         mostLostShips: {},
+        mostValuableKills: [],
+        mostValuableShips: [],
+        mostValuableStructures: [],
+        topCharacters: [],
+        topCorporations: [],
+        topShips: [],
+        topSystems: [],
+        topConstellations: [],
+        topRegions: [],
         shipGroupStats: [],
         monthlyStats: [],
         diesToCorporations: {},
@@ -347,6 +513,15 @@ export async function calculateAllStats(
         heatMapData,
         mostUsedShips,
         mostLostShips,
+        mostValuableKills,
+        mostValuableShips,
+        mostValuableStructures,
+        topCharacters,
+        topCorporations,
+        topShips,
+        topSystems,
+        topConstellations,
+        topRegions,
     ] = await Promise.all([
         getBasicStats(type, id, timeFilter),
         getShipGroupStats(type, id, timeFilter),
@@ -354,6 +529,15 @@ export async function calculateAllStats(
         getHeatMapData(type, id, timeFilter),
         getMostUsedShips(type, id, timeFilter),
         getMostLostShips(type, id, timeFilter),
+        getMostValuableKills(type, id, timeFilter),
+        getMostValuableShips(type, id, timeFilter),
+        getMostValuableStructures(type, id, timeFilter),
+        getTopCharacters(type, id, timeFilter),
+        getTopCorporations(type, id, timeFilter),
+        getTopShips(type, id, timeFilter),
+        getTopSystems(type, id, timeFilter),
+        getTopConstellations(type, id, timeFilter),
+        getTopRegions(type, id, timeFilter),
     ]);
 
     // Process character-specific stats only if needed
@@ -393,6 +577,55 @@ export async function calculateAllStats(
         full.mostLostShips = mostLostShips;
     }
 
+    // Process most valuable kills
+    if (mostValuableKills && mostValuableKills.length > 0) {
+        full.mostValuableKills = mostValuableKills;
+    }
+
+    // Process most valuable ships
+    if (mostValuableShips && mostValuableShips.length > 0) {
+        full.mostValuableShips = mostValuableShips;
+    }
+
+    // Process most valuable structures
+    if (mostValuableStructures && mostValuableStructures.length > 0) {
+        full.mostValuableStructures = mostValuableStructures;
+    }
+
+    // Process top characters (not applicable for character stats)
+    if (type !== "character_id" && topCharacters && topCharacters.length > 0) {
+        full.topCharacters = topCharacters;
+    }
+
+    // Process top corporations (only applicable for alliance stats)
+    if (
+        type === "alliance_id" &&
+        topCorporations &&
+        topCorporations.length > 0
+    ) {
+        full.topCorporations = topCorporations;
+    }
+
+    // Process top ships
+    if (topShips && topShips.length > 0) {
+        full.topShips = topShips;
+    }
+
+    // Process top systems
+    if (topSystems && topSystems.length > 0) {
+        full.topSystems = topSystems;
+    }
+
+    // Process top constellations
+    if (topConstellations && topConstellations.length > 0) {
+        full.topConstellations = topConstellations;
+    }
+
+    // Process top regions
+    if (topRegions && topRegions.length > 0) {
+        full.topRegions = topRegions;
+    }
+
     // Process monthly stats
     if (monthlyStats && monthlyStats.length > 0) {
         full.monthlyStats = monthlyStats;
@@ -424,13 +657,26 @@ export async function calculateAllStats(
 
     // Clean up unnecessary fields based on entity type
     if (type !== "character_id") {
-        // Remove character-specific fields for corps and alliances
-        full.diesToCorporations = {};
-        full.diesToAlliances = {};
-        full.fliesWithCorporations = {};
-        full.fliesWithAlliances = {};
+        // For corporations and alliances, remove character-specific stats
         full.possibleFC = false;
         full.possibleCynoAlt = false;
+        full.blobFactor = 0;
+        full.sameShipAsOtherAttackers = 0;
+        full.fliesWithCorporations = {};
+        full.fliesWithAlliances = {};
+        full.diesToCorporations = {};
+        full.diesToAlliances = {};
+    }
+
+    // For characters, remove top characters (as they don't make sense)
+    if (type === "character_id") {
+        full.topCharacters = [];
+        full.topCorporations = [];
+    }
+
+    // For corporations, remove top corporations (only alliances have those)
+    if (type === "corporation_id") {
+        full.topCorporations = [];
     }
 
     return {
@@ -1481,4 +1727,528 @@ async function getMostLostShips(
     });
 
     return mostLostShips;
+}
+
+/**
+ * Get most valuable kills for an entity with sampling for large datasets
+ */
+async function getMostValuableKills(
+    type: StatsType,
+    id: number,
+    timeFilter?: { $gte: Date }
+) {
+    const KILL_LIMIT = 10;
+
+    // Build match conditions
+    const matchCondition: any = {
+        [`attackers.${type}`]: id,
+    };
+
+    if (timeFilter) {
+        matchCondition.kill_time = timeFilter;
+    }
+
+    // Pipeline to get most valuable kills
+    const pipeline = [
+        { $match: matchCondition },
+        {
+            $project: {
+                killmail_id: 1,
+                total_value: 1,
+                "victim.ship_id": 1,
+                "victim.ship_name": 1,
+                "victim.character_id": 1,
+                "victim.character_name": 1,
+                "victim.corporation_id": 1,
+                "victim.corporation_name": 1,
+                "victim.alliance_id": 1,
+                "victim.alliance_name": 1,
+                attackers: {
+                    $filter: {
+                        input: "$attackers",
+                        as: "attacker",
+                        cond: { $eq: ["$$attacker.final_blow", true] },
+                    },
+                },
+            },
+        },
+        {
+            $addFields: {
+                final_blow: { $arrayElemAt: ["$attackers", 0] },
+            },
+        },
+        {
+            $project: {
+                killmail_id: 1,
+                total_value: 1,
+                victim: 1,
+                "final_blow.character_id": 1,
+                "final_blow.character_name": 1,
+                "final_blow.ship_id": 1,
+                "final_blow.ship_name": 1,
+            },
+        },
+        { $sort: { total_value: -1 } },
+        { $limit: KILL_LIMIT },
+    ];
+
+    // Run aggregation
+    const mostValuableKillsAgg = await Killmails.aggregate(
+        pipeline
+    ).allowDiskUse(true);
+
+    return mostValuableKillsAgg;
+}
+
+/**
+ * Get most valuable ships killed by this entity
+ */
+async function getMostValuableShips(
+    type: StatsType,
+    id: number,
+    timeFilter?: { $gte: Date }
+) {
+    const SHIP_LIMIT = 10;
+
+    // Ship group IDs from TopLists.ts
+    const shipGroupIDs = [
+        547, 485, 513, 902, 941, 30, 659, 419, 27, 29, 26, 420, 25, 28, 463,
+        237, 31, 324, 898, 906, 540, 830, 893, 543, 541, 833, 358, 894, 831,
+        832, 900, 834, 380, 963, 1305,
+    ];
+
+    // Build match conditions - look for ships killed BY this entity
+    const matchCondition: any = {
+        [`attackers.${type}`]: id,
+        "victim.ship_group_id": { $in: shipGroupIDs },
+    };
+
+    if (timeFilter) {
+        matchCondition.kill_time = timeFilter;
+    }
+
+    // Aggregate to get the highest value kill per ship type
+    const pipeline = [
+        { $match: matchCondition },
+        {
+            $group: {
+                _id: "$victim.ship_id",
+                ship_name: { $first: "$victim.ship_name" },
+                max_value: { $max: "$total_value" },
+                count: { $sum: 1 },
+            },
+        },
+        { $sort: { max_value: -1 } },
+        { $limit: SHIP_LIMIT },
+        {
+            $project: {
+                _id: 0,
+                ship_id: "$_id",
+                ship_name: "$ship_name",
+                total_value: "$max_value",
+                count: 1,
+            },
+        },
+    ];
+
+    const mostValuableShips = await Killmails.aggregate(pipeline);
+
+    return mostValuableShips;
+}
+
+/**
+ * Get most valuable structures killed by this entity
+ */
+async function getMostValuableStructures(
+    type: StatsType,
+    id: number,
+    timeFilter?: { $gte: Date }
+) {
+    const STRUCTURE_LIMIT = 10;
+
+    // Structure group IDs from TopLists.ts
+    const structureGroupIDs = [1657, 1406, 1404, 1408, 2017, 2016];
+
+    // Build match conditions - look for structures killed BY this entity
+    const matchCondition: any = {
+        [`attackers.${type}`]: id,
+        "victim.ship_group_id": { $in: structureGroupIDs },
+    };
+
+    if (timeFilter) {
+        matchCondition.kill_time = timeFilter;
+    }
+
+    // Aggregate to get the highest value kill per structure type
+    const pipeline = [
+        { $match: matchCondition },
+        {
+            $group: {
+                _id: "$victim.ship_id",
+                type_name: { $first: "$victim.ship_name" },
+                max_value: { $max: "$total_value" },
+                count: { $sum: 1 },
+                system_id: { $first: "$system_id" },
+                system_name: { $first: "$system_name" },
+            },
+        },
+        { $sort: { max_value: -1 } },
+        { $limit: STRUCTURE_LIMIT },
+        {
+            $project: {
+                _id: 0,
+                type_id: "$_id",
+                type_name: "$type_name",
+                total_value: "$max_value",
+                count: 1,
+                system_id: 1,
+                system_name: 1,
+            },
+        },
+    ];
+
+    const mostValuableStructures = await Killmails.aggregate(pipeline);
+
+    return mostValuableStructures;
+}
+
+/**
+ * Get top characters for corporation/alliance
+ */
+async function getTopCharacters(
+    type: StatsType,
+    id: number,
+    timeFilter?: { $gte: Date }
+) {
+    // Only applicable for corporation and alliance
+    if (type === "character_id") {
+        return [];
+    }
+
+    const CHARACTER_LIMIT = 10;
+
+    // Build match conditions
+    const matchCondition: any = {
+        [`attackers.${type}`]: id,
+        "attackers.character_id": { $ne: 0 },
+    };
+
+    if (timeFilter) {
+        matchCondition.kill_time = timeFilter;
+    }
+
+    // Pipeline to get top characters
+    const pipeline = [
+        { $match: matchCondition },
+        { $unwind: "$attackers" },
+        {
+            $match: {
+                [`attackers.${type}`]: id,
+                "attackers.character_id": { $ne: 0 },
+            },
+        },
+        {
+            $group: {
+                _id: "$attackers.character_id",
+                count: { $sum: 1 },
+                name: { $first: "$attackers.character_name" },
+            },
+        },
+        { $match: { _id: { $ne: 0 } } },
+        { $sort: { count: -1 } },
+        { $limit: CHARACTER_LIMIT },
+        {
+            $project: {
+                character_id: "$_id",
+                id: "$_id",
+                name: 1,
+                count: 1,
+                _id: 0,
+            },
+        },
+    ];
+
+    // Run aggregation
+    const topCharactersAgg = await Killmails.aggregate(pipeline).allowDiskUse(
+        true
+    );
+
+    return topCharactersAgg;
+}
+
+/**
+ * Get top corporations for alliance
+ */
+async function getTopCorporations(
+    type: StatsType,
+    id: number,
+    timeFilter?: { $gte: Date }
+) {
+    // Only applicable for alliance
+    if (type !== "alliance_id") {
+        return [];
+    }
+
+    const CORPORATION_LIMIT = 10;
+
+    // Build match conditions
+    const matchCondition: any = {
+        "attackers.alliance_id": id,
+        "attackers.corporation_id": { $ne: 0 },
+    };
+
+    if (timeFilter) {
+        matchCondition.kill_time = timeFilter;
+    }
+
+    // Pipeline to get top corporations
+    const pipeline = [
+        { $match: matchCondition },
+        { $unwind: "$attackers" },
+        {
+            $match: {
+                "attackers.alliance_id": id,
+                "attackers.corporation_id": { $ne: 0 },
+            },
+        },
+        {
+            $group: {
+                _id: "$attackers.corporation_id",
+                count: { $sum: 1 },
+                name: { $first: "$attackers.corporation_name" },
+            },
+        },
+        { $match: { _id: { $ne: 0 } } },
+        { $sort: { count: -1 } },
+        { $limit: CORPORATION_LIMIT },
+        {
+            $project: {
+                corporation_id: "$_id",
+                id: "$_id",
+                name: 1,
+                count: 1,
+                _id: 0,
+            },
+        },
+    ];
+
+    // Run aggregation
+    const topCorporationsAgg = await Killmails.aggregate(pipeline).allowDiskUse(
+        true
+    );
+
+    return topCorporationsAgg;
+}
+
+/**
+ * Get top ships for an entity
+ */
+async function getTopShips(
+    type: StatsType,
+    id: number,
+    timeFilter?: { $gte: Date }
+) {
+    const SHIP_LIMIT = 10;
+
+    // Build match conditions
+    const matchCondition: any = {
+        [`attackers.${type}`]: id,
+        "attackers.ship_id": { $ne: 0 },
+    };
+
+    if (timeFilter) {
+        matchCondition.kill_time = timeFilter;
+    }
+
+    // Pipeline to get top ships
+    const pipeline = [
+        { $match: matchCondition },
+        { $unwind: "$attackers" },
+        {
+            $match: {
+                [`attackers.${type}`]: id,
+                "attackers.ship_id": { $ne: 0 },
+            },
+        },
+        {
+            $group: {
+                _id: "$attackers.ship_id",
+                count: { $sum: 1 },
+                name: { $first: "$attackers.ship_name" },
+            },
+        },
+        { $match: { _id: { $ne: 0 } } },
+        { $sort: { count: -1 } },
+        { $limit: SHIP_LIMIT },
+        {
+            $project: {
+                type_id: "$_id",
+                id: "$_id",
+                name: 1,
+                count: 1,
+                _id: 0,
+            },
+        },
+    ];
+
+    // Run aggregation
+    const topShipsAgg = await Killmails.aggregate(pipeline).allowDiskUse(true);
+
+    return topShipsAgg;
+}
+
+/**
+ * Get top systems for an entity
+ */
+async function getTopSystems(
+    type: StatsType,
+    id: number,
+    timeFilter?: { $gte: Date }
+) {
+    const SYSTEM_LIMIT = 10;
+
+    // Build match conditions
+    const matchCondition: any = {
+        [`attackers.${type}`]: id,
+        system_id: { $ne: 0 },
+    };
+
+    if (timeFilter) {
+        matchCondition.kill_time = timeFilter;
+    }
+
+    // Pipeline to get top systems
+    const pipeline = [
+        { $match: matchCondition },
+        {
+            $group: {
+                _id: "$system_id",
+                count: { $sum: 1 },
+                name: { $first: "$system_name" },
+            },
+        },
+        { $match: { _id: { $ne: 0 } } },
+        { $sort: { count: -1 } },
+        { $limit: SYSTEM_LIMIT },
+        {
+            $project: {
+                system_id: "$_id",
+                id: "$_id",
+                name: 1,
+                count: 1,
+                _id: 0,
+            },
+        },
+    ];
+
+    // Run aggregation
+    const topSystemsAgg = await Killmails.aggregate(pipeline).allowDiskUse(
+        true
+    );
+
+    return topSystemsAgg;
+}
+
+/**
+ * Get top constellations for an entity
+ */
+async function getTopConstellations(
+    type: StatsType,
+    id: number,
+    timeFilter?: { $gte: Date }
+) {
+    const CONSTELLATION_LIMIT = 10;
+
+    // Build match conditions
+    const matchCondition: any = {
+        [`attackers.${type}`]: id,
+        constellation_id: { $ne: 0 },
+    };
+
+    if (timeFilter) {
+        matchCondition.kill_time = timeFilter;
+    }
+
+    // Pipeline to get top constellations
+    const pipeline = [
+        { $match: matchCondition },
+        {
+            $group: {
+                _id: "$constellation_id",
+                count: { $sum: 1 },
+                name: { $first: "$constellation_name" },
+            },
+        },
+        { $match: { _id: { $ne: 0 } } },
+        { $sort: { count: -1 } },
+        { $limit: CONSTELLATION_LIMIT },
+        {
+            $project: {
+                constellation_id: "$_id",
+                id: "$_id",
+                name: 1,
+                count: 1,
+                _id: 0,
+            },
+        },
+    ];
+
+    // Run aggregation
+    const topConstellationsAgg = await Killmails.aggregate(
+        pipeline
+    ).allowDiskUse(true);
+
+    return topConstellationsAgg;
+}
+
+/**
+ * Get top regions for an entity
+ */
+async function getTopRegions(
+    type: StatsType,
+    id: number,
+    timeFilter?: { $gte: Date }
+) {
+    const REGION_LIMIT = 10;
+
+    // Build match conditions
+    const matchCondition: any = {
+        [`attackers.${type}`]: id,
+        region_id: { $ne: 0 },
+    };
+
+    if (timeFilter) {
+        matchCondition.kill_time = timeFilter;
+    }
+
+    // Pipeline to get top regions
+    const pipeline = [
+        { $match: matchCondition },
+        {
+            $group: {
+                _id: "$region_id",
+                count: { $sum: 1 },
+                name: { $first: "$region_name" },
+            },
+        },
+        { $match: { _id: { $ne: 0 } } },
+        { $sort: { count: -1 } },
+        { $limit: REGION_LIMIT },
+        {
+            $project: {
+                region_id: "$_id",
+                id: "$_id",
+                name: 1,
+                count: 1,
+                _id: 0,
+            },
+        },
+    ];
+
+    // Run aggregation
+    const topRegionsAgg = await Killmails.aggregate(pipeline).allowDiskUse(
+        true
+    );
+
+    return topRegionsAgg;
 }

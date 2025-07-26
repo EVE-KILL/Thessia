@@ -324,49 +324,49 @@
             <Tabs :items="tabItems" class="space-y-4" v-model="activeTabId">
                 <template #dashboard>
                     <div class="tab-content">
-                        <characterDashboard :character="character" />
+                        <characterDashboard v-if="character" :character="character" />
                     </div>
                 </template>
 
                 <template #kills>
                     <div class="tab-content">
-                        <CharacterKills :character="character" />
+                        <CharacterKills v-if="character" :character="character" />
                     </div>
                 </template>
 
                 <template #losses>
                     <div class="tab-content">
-                        <CharacterLosses :character="character" />
+                        <CharacterLosses v-if="character" :character="character" />
                     </div>
                 </template>
 
                 <template #combined>
                     <div class="tab-content">
-                        <CharacterCombined :character="character" />
+                        <CharacterCombined v-if="character" :character="character" />
                     </div>
                 </template>
 
                 <template #battles>
                     <div class="tab-content">
-                        <CharacterBattles />
+                        <CharacterBattles v-if="character" />
                     </div>
                 </template>
 
                 <template #corporation-history>
                     <div class="tab-content">
-                        <CharacterCorporationHistory />
+                        <CharacterCorporationHistory v-if="character" />
                     </div>
                 </template>
 
                 <template #top>
                     <div class="tab-content">
-                        <CharacterTop />
+                        <CharacterTop v-if="character" />
                     </div>
                 </template>
 
                 <template #stats>
                     <div class="tab-content">
-                        <CharacterStats />
+                        <CharacterStats v-if="character" />
                     </div>
                 </template>
             </Tabs>
@@ -601,7 +601,7 @@ const {
     pending,
     error,
     refresh,
-} = useFetch<ICharacter | { error: string } | null>(`/api/characters/${id}`, {
+} = await useFetch<ICharacter | { error: string } | null>(`/api/characters/${id}`, {
     key: fetchKey.value,
     watch: [() => route.params.id],
 });
@@ -628,7 +628,7 @@ const shortStatsLoading = ref(true);
 const shortStatsData = ref<IShortStats | { error: string } | null>(null);
 
 onMounted(() => {
-    $fetch<IShortStats | { error: string } | null>(`/api/characters/${id}/shortstats`)
+    $fetch<IShortStats | { error: string } | null>(`/api/stats/character_id/${id}?dataType=basic&days=0`)
         .then(data => {
             shortStatsData.value = data;
             shortStatsLoading.value = false;
@@ -840,10 +840,8 @@ const calcNpcLossRatio = (stats: IShortStats | null): string => {
 const calcAvgKillsPerDay = (stats: IShortStats | null, birthday: Date): string => {
     if (!stats || !stats.lastActive) return "0";
     const characterAge = new Date(birthday).getTime();
-    console.log(characterAge);
     //const characterAge = new Date().getTime() - new Date(stats.lastActive).getTime();
     const daysActive = Math.max(1, Math.ceil(characterAge / (1000 * 60 * 60 * 24)));
-    console.log(daysActive);
     return (stats.kills / daysActive).toFixed(1);
 };
 

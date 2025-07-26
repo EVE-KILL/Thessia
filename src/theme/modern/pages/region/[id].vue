@@ -64,7 +64,7 @@ const {
     data: region,
     pending,
     error,
-} = useFetch(`/api/regions/${id}`);
+} = await useFetch(`/api/regions/${id}`);
 
 // SEO setup with dynamic content
 useSeoMeta({

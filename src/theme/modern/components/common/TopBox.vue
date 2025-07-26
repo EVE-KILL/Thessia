@@ -9,11 +9,12 @@ interface ITopEntity {
 }
 
 const props = defineProps({
-    type: { type: String, default: "character" },
+    dataType: { type: String, default: "characters" },
     limit: { type: Number, default: 10 },
     days: { type: Number, default: 7 },
     title: { type: String, default: "" },
     apiUrl: { type: String, default: "/api/stats" },
+    icon: { type: String, default: "" },
 });
 
 const { t, locale } = useI18n();
@@ -22,21 +23,21 @@ const currentLocale = computed(() => locale.value);
 const displayTitle = computed(() => {
     if (props.title) return props.title;
 
-    const typeMap = {
-        character: t("topBox.characters"),
-        corporation: t("topBox.corporations"),
-        alliance: t("topBox.alliances"),
-        ship: t("topBox.ships"),
-        solarsystem: t("topBox.systems"),
-        constellation: t("topBox.constellations"),
-        region: t("topBox.regions"),
+    const dataTypeMap = {
+        characters: t("topBox.characters"),
+        corporations: t("topBox.corporations"),
+        alliances: t("topBox.alliances"),
+        ships: t("topBox.ships"),
+        systems: t("topBox.systems"),
+        constellations: t("topBox.constellations"),
+        regions: t("topBox.regions"),
     };
 
-    return `${t("topBox.top")} ${props.limit} ${typeMap[props.type] || props.type}`;
+    return `${t("topBox.top")} ${props.limit} ${dataTypeMap[props.dataType] || props.dataType}`;
 });
 
 const queryParams = computed(() => ({
-    type: `${props.type}s`,
+    dataType: props.dataType,
     limit: props.limit,
     days: props.days,
 }));
@@ -47,7 +48,7 @@ const {
     error,
 } = useFetch<ITopEntity[]>(props.apiUrl, {
     query: queryParams,
-    key: `top-${props.type}-${props.limit}-${props.days}-${props.apiUrl}`,
+    key: `top-${props.dataType}-${props.limit}-${props.days}-${props.apiUrl}`,
 });
 
 const getLocalizedString = (obj: any, locale: string): string => {
@@ -56,6 +57,17 @@ const getLocalizedString = (obj: any, locale: string): string => {
 };
 
 // Mapping of entity types to image types for the Image component
+// Map dataType to actual entity type for images and URLs
+const entityTypeMap = {
+    characters: "character",
+    corporations: "corporation",
+    alliances: "alliance",
+    ships: "ship",
+    systems: "solarsystem",
+    constellations: "constellation",
+    regions: "region",
+};
+
 const imageTypeMap = {
     character: "character",
     corporation: "corporation",
@@ -66,8 +78,11 @@ const imageTypeMap = {
     region: "region",
 };
 
+const getEntityType = () => entityTypeMap[props.dataType] || props.dataType;
+
 const getEntityDisplayName = (entity: ITopEntity): string => {
-    if ((props.type === "ship" || props.type === "region") && typeof entity.name === "object") {
+    const entityType = getEntityType();
+    if ((entityType === "ship" || entityType === "region") && typeof entity.name === "object") {
         return getLocalizedString(entity.name, currentLocale.value);
     }
     return entity.name;
@@ -76,6 +91,7 @@ const getEntityDisplayName = (entity: ITopEntity): string => {
 const getEntityId = (entity: ITopEntity): number => {
     if (!entity) return 0;
 
+    const entityType = getEntityType();
     const idFieldMap = {
         character: "character_id",
         corporation: "corporation_id",
@@ -86,7 +102,7 @@ const getEntityId = (entity: ITopEntity): number => {
         region: "region_id",
     };
 
-    const idField = idFieldMap[props.type];
+    const idField = idFieldMap[entityType];
     const entityId = idField && entity[idField];
 
     if (!entityId && entity.id) {
@@ -137,13 +153,14 @@ const columns: TableColumn<ITopEntity>[] = [
 
             const entityId = Number(getEntityId(row.original));
             const entityName = getEntityDisplayName(row.original);
-            const imageType = imageTypeMap[props.type];
+            const entityType = getEntityType();
+            const imageType = imageTypeMap[entityType];
 
             return h("div", { class: "flex items-center py-1" }, [
                 h(resolveComponent("Image"), {
                     type: imageType,
                     id: entityId,
-                    alt: `${props.type}: ${entityName}`,
+                    alt: `${entityType}: ${entityName}`,
                     class: "w-7 flex-shrink-0 mr-2",
                     size: 32,
                     format: "webp",
@@ -183,7 +200,8 @@ const columns: TableColumn<ITopEntity>[] = [
 // Properly handle row click with middle-click support
 const generateEntityLink = (item: any): string | null => {
     if (item.isLoading) return null;
-    return `/${getUrlPath(props.type)}/${getEntityId(item)}`;
+    const entityType = getEntityType();
+    return `/${getUrlPath(entityType)}/${getEntityId(item)}`;
 };
 
 // Simplify column definitions - use only entity and count without the title column
@@ -219,8 +237,8 @@ const tableColumns = [
             <!-- Cell templates for desktop view -->
             <template #cell-entity="{ item }">
                 <div class="flex items-center py-1">
-                    <Image v-if="!item.isLoading" :type="imageTypeMap[props.type]" :id="getEntityId(item)"
-                        :alt="`${props.type}: ${getEntityDisplayName(item)}`" class="w-7 flex-shrink-0 mr-2" size="32"
+                    <Image v-if="!item.isLoading" :type="imageTypeMap[getEntityType()]" :id="getEntityId(item)"
+                        :alt="`${getEntityType()}: ${getEntityDisplayName(item)}`" class="w-7 flex-shrink-0 mr-2" size="32"
                         format="webp" />
                     <div v-else class="w-7 h-7 flex-shrink-0 mr-2 rounded bg-gray-200 dark:bg-gray-700 animate-pulse">
                     </div>
@@ -243,8 +261,8 @@ const tableColumns = [
                 <div class="flex items-center justify-between p-2 w-full">
                     <!-- Entity with image - same layout as desktop -->
                     <div class="flex items-center py-1 flex-1 min-w-0">
-                        <Image v-if="!item.isLoading" :type="imageTypeMap[props.type]" :id="getEntityId(item)"
-                            :alt="`${props.type}: ${getEntityDisplayName(item)}`" class="w-7 flex-shrink-0 mr-2"
+                        <Image v-if="!item.isLoading" :type="imageTypeMap[getEntityType()]" :id="getEntityId(item)"
+                            :alt="`${getEntityType()}: ${getEntityDisplayName(item)}`" class="w-7 flex-shrink-0 mr-2"
                             size="32" format="webp" />
                         <div v-else
                             class="w-7 h-7 flex-shrink-0 mr-2 rounded bg-gray-200 dark:bg-gray-700 animate-pulse">
@@ -290,7 +308,7 @@ const tableColumns = [
         </div>
 
         <div class="text-sm text-center text-background-300 py-1 rounded-br-lg rounded-bl-lg">
-            ({{ t('killsOverLastXDays', { days: props.days }) }})
+            ({{ props.days === 0 ? t('allTime') : t('killsOverLastXDays', { days: props.days }) }})
         </div>
     </div>
 </template>

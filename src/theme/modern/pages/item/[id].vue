@@ -70,7 +70,7 @@ const loading = ref(true);
 const fetchKey = computed(() => `item-${id}-${Date.now()}`);
 
 // Fetch item data with improved caching strategy
-const { data: item, pending } = useFetch(`/api/items/${id}`, {
+const { data: item, pending } = await useFetch(`/api/items/${id}`, {
     initialCache: false, // Don't use initial cache
     key: fetchKey.value, // Use dynamic key to ensure proper cache invalidation
     watch: [() => route.params.id], // Watch for route parameter changes

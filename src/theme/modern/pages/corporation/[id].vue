@@ -381,7 +381,7 @@ const shortStatsLoading = ref(true)
 const shortStatsData = ref<IShortStats | { error: string } | null>(null)
 
 onMounted(() => {
-    $fetch<IShortStats | { error: string } | null>(`/api/corporations/${corporationId}/shortstats`)
+    $fetch<IShortStats | { error: string } | null>(`/api/stats/corporation_id/${corporationId}?dataType=basic&days=0`)
         .then(data => {
             shortStatsData.value = data
             shortStatsLoading.value = false

@@ -51,7 +51,7 @@ const {
     data: constellation,
     pending,
     error,
-} = useFetch(`/api/constellations/${id}`);
+} = await useFetch(`/api/constellations/${id}`);
 
 // SEO setup with dynamic content
 useSeoMeta({

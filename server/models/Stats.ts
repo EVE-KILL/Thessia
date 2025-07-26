@@ -22,6 +22,94 @@ const FullStatsSchema = new Schema<IFullStats>(
     {
         mostUsedShips: { type: Schema.Types.Mixed, default: {} },
         mostLostShips: { type: Schema.Types.Mixed, default: {} },
+        mostValuableKills: [
+            {
+                killmail_id: Number,
+                total_value: Number,
+                victim: {
+                    ship_id: Number,
+                    ship_name: Schema.Types.Mixed,
+                    character_id: Number,
+                    character_name: String,
+                    corporation_id: Number,
+                    corporation_name: String,
+                    alliance_id: Number,
+                    alliance_name: String,
+                },
+                final_blow: {
+                    character_id: Number,
+                    character_name: String,
+                    ship_id: Number,
+                    ship_name: Schema.Types.Mixed,
+                },
+            },
+        ],
+        mostValuableShips: [
+            {
+                ship_id: Number,
+                ship_name: Schema.Types.Mixed,
+                total_value: Number,
+                count: Number,
+            },
+        ],
+        mostValuableStructures: [
+            {
+                type_id: Number,
+                type_name: Schema.Types.Mixed,
+                total_value: Number,
+                count: Number,
+                system_id: Number,
+                system_name: String,
+            },
+        ],
+        topCharacters: [
+            {
+                id: Number,
+                character_id: Number,
+                name: String,
+                count: Number,
+            },
+        ],
+        topCorporations: [
+            {
+                id: Number,
+                corporation_id: Number,
+                name: String,
+                count: Number,
+            },
+        ],
+        topShips: [
+            {
+                id: Number,
+                type_id: Number,
+                name: Schema.Types.Mixed,
+                count: Number,
+            },
+        ],
+        topSystems: [
+            {
+                id: Number,
+                system_id: Number,
+                name: Schema.Types.Mixed,
+                count: Number,
+            },
+        ],
+        topConstellations: [
+            {
+                id: Number,
+                constellation_id: Number,
+                name: Schema.Types.Mixed,
+                count: Number,
+            },
+        ],
+        topRegions: [
+            {
+                id: Number,
+                region_id: Number,
+                name: Schema.Types.Mixed,
+                count: Number,
+            },
+        ],
         shipGroupStats: [
             {
                 groupName: String,

@@ -67,7 +67,7 @@ const {
     data: system,
     pending,
     error,
-} = useFetch(`/api/solarsystems/${id}`);
+} = await useFetch(`/api/solarsystems/${id}`);
 
 // SEO setup with dynamic content
 useSeoMeta({

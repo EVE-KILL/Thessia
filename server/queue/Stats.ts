@@ -141,7 +141,12 @@ async function processStats(
     } finally {
         await Stats.updateOne(
             { type: entityType, id: entityId, days },
-            { $set: { updatedAt: new Date() } },
+            {
+                $set: {
+                    updatedAt: new Date(),
+                    needsUpdate: false, // Mark as no longer needing update
+                },
+            },
             { upsert: true }
         );
     }

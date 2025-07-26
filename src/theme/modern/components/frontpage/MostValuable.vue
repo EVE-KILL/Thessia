@@ -42,7 +42,7 @@ const tabItemsForTabsComponent = computed(() => {
 
 // Create fetch query parameters
 const queryParams = computed(() => ({
-    type: activeTabId.value, // Simplified as activeTabId now holds the direct key
+    dataType: activeTabId.value, // Use dataType instead of type
     days: props.days,
     limit: props.limit,
 }));

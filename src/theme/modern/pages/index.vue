@@ -3,19 +3,19 @@
         <!-- Desktop View - Only shown on desktop -->
         <div v-if="!isMobile" class="desktop-layout">
             <div class="top-row">
-                <MostValuable />
+                <FrontpageMostValuable />
             </div>
 
             <div class="main-content">
                 <div class="left-column">
                     <div class="mt-[48.39px]"></div>
-                    <TopBox type="character" :limit="10" :days="7" :title="t('top') + ' ' + t('characters')" />
-                    <TopBox type="corporation" :limit="10" :days="7" :title="t('top') + ' ' + t('corporations')" />
-                    <TopBox type="alliance" :limit="10" :days="7" :title="t('top') + ' ' + t('alliances')" />
-                    <TopBox type="ship" :limit="10" :days="7" :title="t('top') + ' ' + t('ships')" />
-                    <TopBox type="solarsystem" :limit="10" :days="7" :title="t('top') + ' ' + t('systems')" />
-                    <TopBox type="constellation" :limit="10" :days="7" :title="t('top') + ' ' + t('constellations')" />
-                    <TopBox type="region" :limit="10" :days="7" :title="t('top') + ' ' + t('regions')" />
+                    <TopBox dataType="characters" :limit="10" :days="7" :title="t('top') + ' ' + t('characters')" />
+                    <TopBox dataType="corporations" :limit="10" :days="7" :title="t('top') + ' ' + t('corporations')" />
+                    <TopBox dataType="alliances" :limit="10" :days="7" :title="t('top') + ' ' + t('alliances')" />
+                    <TopBox dataType="ships" :limit="10" :days="7" :title="t('top') + ' ' + t('ships')" />
+                    <TopBox dataType="systems" :limit="10" :days="7" :title="t('top') + ' ' + t('systems')" />
+                    <TopBox dataType="constellations" :limit="10" :days="7" :title="t('top') + ' ' + t('constellations')" />
+                    <TopBox dataType="regions" :limit="10" :days="7" :title="t('top') + ' ' + t('regions')" />
                 </div>
 
                 <div class="right-column">
@@ -36,22 +36,22 @@
                 <template #topLists="{ item }">
                     <div class="tab-content">
                         <div class="mobile-top-lists space-y-4">
-                            <TopBox type="character" :limit="10" :days="7" :title="t('top') + ' ' + t('characters')" />
-                            <TopBox type="corporation" :limit="10" :days="7"
+                            <TopBox dataType="characters" :limit="10" :days="7" :title="t('top') + ' ' + t('characters')" />
+                            <TopBox dataType="corporations" :limit="10" :days="7"
                                 :title="t('top') + ' ' + t('corporations')" />
-                            <TopBox type="alliance" :limit="10" :days="7" :title="t('top') + ' ' + t('alliances')" />
-                            <TopBox type="ship" :limit="10" :days="7" :title="t('top') + ' ' + t('ships')" />
-                            <TopBox type="solarsystem" :limit="10" :days="7" :title="t('top') + ' ' + t('systems')" />
-                            <TopBox type="constellation" :limit="10" :days="7"
+                            <TopBox dataType="alliances" :limit="10" :days="7" :title="t('top') + ' ' + t('alliances')" />
+                            <TopBox dataType="ships" :limit="10" :days="7" :title="t('top') + ' ' + t('ships')" />
+                            <TopBox dataType="systems" :limit="10" :days="7" :title="t('top') + ' ' + t('systems')" />
+                            <TopBox dataType="constellations" :limit="10" :days="7"
                                 :title="t('top') + ' ' + t('constellations')" />
-                            <TopBox type="region" :limit="10" :days="7" :title="t('top') + ' ' + t('regions')" />
+                            <TopBox dataType="regions" :limit="10" :days="7" :title="t('top') + ' ' + t('regions')" />
                         </div>
                     </div>
                 </template>
 
                 <template #mostValuable="{ item }">
                     <div class="tab-content">
-                        <MostValuable />
+                        <FrontpageMostValuable />
                     </div>
                 </template>
             </Tabs>
@@ -60,6 +60,8 @@
 </template>
 
 <script setup lang="ts">
+import FrontpageMostValuable from '~/src/theme/modern/components/frontpage/MostValuable.vue';
+
 const { t } = useI18n();
 const { isMobile } = useResponsive();
 const { generateWebsiteStructuredData, generateOrganizationStructuredData, addStructuredDataToHead } = useStructuredData();

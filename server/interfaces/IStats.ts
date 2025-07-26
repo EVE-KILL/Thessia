@@ -14,6 +14,53 @@ export interface IStatsBase {
     lastActive: Date | null;
 }
 
+export interface IMostValuableKill {
+    killmail_id: number;
+    total_value: number;
+    victim: {
+        ship_id: number;
+        ship_name: string | Record<string, string>;
+        character_id?: number;
+        character_name?: string;
+        corporation_id?: number;
+        corporation_name?: string;
+        alliance_id?: number;
+        alliance_name?: string;
+    };
+    final_blow?: {
+        character_id?: number;
+        character_name?: string;
+        ship_id: number;
+        ship_name: string | Record<string, string>;
+    };
+}
+
+export interface IMostValuableShip {
+    ship_id: number;
+    ship_name: string | Record<string, string>;
+    total_value: number;
+    count: number;
+}
+
+export interface IMostValuableStructure {
+    structure_id?: number;
+    type_id: number;
+    type_name: string | Record<string, string>;
+    total_value: number;
+    count: number;
+    system_id?: number;
+    system_name?: string;
+}
+
+export interface ITopEntity {
+    id: number;
+    character_id?: number;
+    corporation_id?: number;
+    alliance_id?: number;
+    name: string;
+    count: number;
+}
+
 export interface IFullStats {
     mostUsedShips: Record<
         string,
@@ -23,6 +70,15 @@ export interface IFullStats {
         string,
         { count: number; name: Record<string, string> }
     >;
+    mostValuableKills: IMostValuableKill[];
+    mostValuableShips: IMostValuableShip[];
+    mostValuableStructures: IMostValuableStructure[];
+    topCharacters: ITopEntity[];
+    topCorporations: ITopEntity[];
+    topShips: ITopEntity[];
+    topSystems: ITopEntity[];
+    topConstellations: ITopEntity[];
+    topRegions: ITopEntity[];
     shipGroupStats: Array<{
         groupName: string;
         kills: number;

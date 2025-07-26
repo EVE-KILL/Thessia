@@ -274,7 +274,7 @@ const fetchStats = (period = "90") => {
         return;
     }
 
-    const url = `/api/alliances/${props.alliance.alliance_id}/stats${period === "all" ? "" : `?days=${period}`}`;
+    const url = `/api/stats/alliance_id/${props.alliance.alliance_id}${period === "all" ? "?days=0" : `?days=${period}`}`;
 
     const {
         data: fetchedData,

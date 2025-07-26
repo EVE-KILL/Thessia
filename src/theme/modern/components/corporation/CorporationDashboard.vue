@@ -276,7 +276,7 @@ const fetchStats = (period = "90") => {
         return;
     }
 
-    const url = `/api/corporations/${props.corporation.corporation_id}/stats${period === "all" ? "" : `?days=${period}`}`;
+    const url = `/api/stats/corporation_id/${props.corporation.corporation_id}${period === "all" ? "?days=0" : `?days=${period}`}`;
 
     const {
         data: fetchedData,
@@ -299,12 +299,10 @@ const fetchStats = (period = "90") => {
 
 // Fetch data on component mount
 onMounted(() => {
-    console.log('[CorporationDashboard] Component Mounted. Initial activePeriod:', activePeriod.value);
     fetchStats(activePeriod.value);
 });
 
 onUnmounted(() => {
-    console.log('[CorporationDashboard] Component Unmounted');
 });
 </script>
 
