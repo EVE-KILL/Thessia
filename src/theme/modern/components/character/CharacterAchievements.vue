@@ -168,10 +168,10 @@
                         />
                         <div class="min-w-0 flex-1">
                             <div class="font-medium text-gray-900 dark:text-white truncate">
-                                {{ item.name }}
+                                {{ getAchievementName(item.achievement_id, item.name, t) }}
                             </div>
                             <div class="text-sm text-gray-500 dark:text-gray-400 truncate">
-                                {{ item.description }}
+                                {{ getAchievementDescription(item.achievement_id, item.description, t) }}
                             </div>
                         </div>
                     </div>
@@ -291,6 +291,7 @@ import { useI18n } from 'vue-i18n';
 import { format } from 'date-fns';
 import type { ICharacterAchievements, ICharacterAchievement } from '~/server/interfaces/ICharacterAchievements';
 import Table from '~/components/common/Table.vue';
+import { getAchievementName, getAchievementDescription } from '~/server/helpers/AchievementTranslations';
 
 interface Props {
     achievements: ICharacterAchievements | null;
@@ -400,7 +401,7 @@ const columns = [
     },
     {
         id: 'cumulativePoints',
-        header: t('achievements.totalPoints'),
+        header: t('achievements.earnedPoints'),
         width: '8%',
         cellClass: 'text-right'
     },

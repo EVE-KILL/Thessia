@@ -474,7 +474,7 @@ const tabItems = [
     },
     {
         id: "achievements",
-        label: t("achievements"),
+        label: t("achievements.title"),
         icon: "i-lucide-trophy",
         slot: "achievements" as const,
     },
