@@ -23,6 +23,7 @@ export default defineEventHandler(async () => {
     const statsQueue = createQueue("stats");
     const achievementQueue = createQueue("achievement");
     const campaignQueue = createQueue("campaign");
+    const historicalStatsQueue = createQueue("historicalStats");
 
     const [
         allianceQueueCount,
@@ -35,6 +36,7 @@ export default defineEventHandler(async () => {
         statsQueueCount,
         achievementQueueCount,
         campaignQueueCount,
+        historicalStatsQueueCount,
         allianceCount,
         celestialCount,
         characterCount,
@@ -76,6 +78,7 @@ export default defineEventHandler(async () => {
         statsQueue.count(),
         achievementQueue.count(),
         campaignQueue.count(),
+        historicalStatsQueue.count(),
         Alliances.estimatedDocumentCount(),
         Celestials.estimatedDocumentCount(),
         Characters.estimatedDocumentCount(),
@@ -230,6 +233,7 @@ export default defineEventHandler(async () => {
             stats: statsQueueCount,
             achievement: achievementQueueCount,
             campaign: campaignQueueCount,
+            historicalStats: historicalStatsQueueCount,
         },
         processedCounts: {
             killmails: {
