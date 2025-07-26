@@ -107,6 +107,28 @@
                 title="Top Shrinking Alliances (30d)" :limit="10" :show-member-count="true" :show-changes="true" />
             <StatsListDisplay entityType="corporation" listType="shrinking" period="30d"
                 title="Top Shrinking Corporations (30d)" :limit="10" :show-member-count="true" :show-changes="true" />
+
+            <!-- Achievement Points Section -->
+            <div class="md:col-span-2 bg-gray-900 rounded-lg p-4 mb-2">
+                <h2 class="text-xl font-medium text-white mb-4">{{ $t('historicalStats.achievementRankings') }}</h2>
+                <p class="text-sm text-gray-300">{{ $t('historicalStats.achievementRankingsInfo') }}</p>
+            </div>
+
+            <!-- Character Achievement Rankings -->
+            <CharacterAchievementDisplay listType="highest" title="Highest Achievement Points (Characters)" :limit="10" />
+            <CharacterAchievementDisplay listType="lowest" title="Lowest Achievement Points (Characters)" :limit="10" />
+
+            <!-- Alliance Achievement Rankings -->
+            <StatsListDisplay entityType="alliance" listType="highest_achievement_points"
+                title="Highest Achievement Points (Alliances)" :limit="10" :show-member-count="true" :show-achievement-points="true" />
+            <StatsListDisplay entityType="alliance" listType="lowest_achievement_points"
+                title="Lowest Achievement Points (Alliances)" :limit="10" :show-member-count="true" :show-achievement-points="true" />
+
+            <!-- Corporation Achievement Rankings -->
+            <StatsListDisplay entityType="corporation" listType="highest_achievement_points"
+                title="Highest Achievement Points (Corporations)" :limit="10" :show-member-count="true" :show-achievement-points="true" />
+            <StatsListDisplay entityType="corporation" listType="lowest_achievement_points"
+                title="Lowest Achievement Points (Corporations)" :limit="10" :show-member-count="true" :show-achievement-points="true" />
         </div>
     </div>
 </template>
@@ -115,6 +137,7 @@
 import { onMounted, ref } from 'vue';
 import { useI18n } from 'vue-i18n';
 import StatsListDisplay from '../components/historicalStats/StatsListDisplay.vue';
+import CharacterAchievementDisplay from '../components/historicalStats/CharacterAchievementDisplay.vue';
 
 const { t } = useI18n();
 const loaded = ref(false);

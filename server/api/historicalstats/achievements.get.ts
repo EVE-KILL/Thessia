@@ -1,0 +1,221 @@
+import url from "url";
+import { CharacterAchievements } from "~/server/models/CharacterAchievements";
+import { Characters } from "~/server/models/Characters";
+import { Corporations } from "~/server/models/Corporations";
+import { Alliances } from "~/server/models/Alliances";
+
+interface QueryParams {
+    listType?: string;
+    limit?: string;
+    offset?: string;
+}
+
+interface CharacterAchievementResult {
+    character_id: number;
+    total_points: number;
+    completed_achievements: number;
+    total_achievements: number;
+    last_calculated: Date;
+}
+
+interface CharacterResult {
+    character_id: number;
+    name: string;
+    corporation_id?: number;
+    alliance_id?: number;
+}
+
+interface CorporationResult {
+    corporation_id: number;
+    name: string;
+}
+
+interface AllianceResult {
+    alliance_id: number;
+    name: string;
+}
+
+export default defineCachedEventHandler(
+    async (event) => {
+        const query = url.parse(event.node.req.url!, true).query as QueryParams;
+        const { listType, limit: limitStr, offset: offsetStr } = query;
+
+        // Parameter Validation
+        const validListTypes = [
+            "highest_character_points",
+            "lowest_character_points",
+        ];
+        if (!listType || !validListTypes.includes(listType)) {
+            event.node.res.statusCode = 400;
+            return {
+                error: `Invalid or missing listType. Must be one of: ${validListTypes.join(
+                    ", "
+                )}.`,
+            };
+        }
+
+        const limit = limitStr ? parseInt(limitStr, 10) : 10;
+        const offset = offsetStr ? parseInt(offsetStr, 10) : 0;
+
+        if (isNaN(limit) || limit <= 0 || limit > 100) {
+            event.node.res.statusCode = 400;
+            return {
+                error: "Invalid limit. Must be a positive integer less than or equal to 100.",
+            };
+        }
+        if (isNaN(offset) || offset < 0) {
+            event.node.res.statusCode = 400;
+            return { error: "Invalid offset. Must be a non-negative integer." };
+        }
+
+        try {
+            // Determine sort order
+            let sortQuery: any = {};
+            let mongoQuery: any = {
+                total_points: { $gt: 0 },
+            };
+
+            switch (listType) {
+                case "highest_character_points":
+                    sortQuery = { total_points: -1 };
+                    break;
+                case "lowest_character_points":
+                    sortQuery = { total_points: 1 };
+                    break;
+            }
+
+            // Get character achievements with character info
+            const topCharacters = (await CharacterAchievements.find(mongoQuery)
+                .sort(sortQuery)
+                .skip(offset)
+                .limit(limit)
+                .select(
+                    "character_id total_points completed_achievements total_achievements last_calculated"
+                )
+                .lean()) as CharacterAchievementResult[];
+
+            if (topCharacters.length === 0) {
+                return [];
+            }
+
+            // Get character details for the top characters
+            const characterIds = topCharacters.map(
+                (char: CharacterAchievementResult) => char.character_id
+            );
+            const characterDetails = (await Characters.find({
+                character_id: { $in: characterIds },
+            })
+                .select("character_id name corporation_id alliance_id")
+                .lean()) as CharacterResult[];
+
+            // Get unique corporation and alliance IDs
+            const corporationIds = [
+                ...new Set(
+                    characterDetails
+                        .map((char) => char.corporation_id)
+                        .filter((id) => id && id > 0)
+                ),
+            ];
+            const allianceIds = [
+                ...new Set(
+                    characterDetails
+                        .map((char) => char.alliance_id)
+                        .filter((id) => id && id > 0)
+                ),
+            ];
+
+            // Fetch corporation and alliance names
+            const [corporationDetails, allianceDetails] = await Promise.all([
+                corporationIds.length > 0
+                    ? (Corporations.find({
+                          corporation_id: { $in: corporationIds },
+                      })
+                          .select("corporation_id name")
+                          .lean() as Promise<CorporationResult[]>)
+                    : Promise.resolve([]),
+                allianceIds.length > 0
+                    ? (Alliances.find({ alliance_id: { $in: allianceIds } })
+                          .select("alliance_id name")
+                          .lean() as Promise<AllianceResult[]>)
+                    : Promise.resolve([]),
+            ]);
+
+            // Create maps for quick lookup
+            const characterMap = new Map(
+                characterDetails.map((char: CharacterResult) => [
+                    char.character_id,
+                    char,
+                ])
+            );
+            const corporationMap = new Map(
+                corporationDetails.map((corp: CorporationResult) => [
+                    corp.corporation_id,
+                    corp.name,
+                ])
+            );
+            const allianceMap = new Map(
+                allianceDetails.map((alliance: AllianceResult) => [
+                    alliance.alliance_id,
+                    alliance.name,
+                ])
+            );
+
+            // Format response
+            const finalResponse = topCharacters.map(
+                (achievement: CharacterAchievementResult) => {
+                    const character = characterMap.get(
+                        achievement.character_id
+                    );
+                    return {
+                        character_id: achievement.character_id,
+                        character_name: character?.name || "Unknown",
+                        corporation_id: character?.corporation_id || null,
+                        corporation_name: character?.corporation_id
+                            ? corporationMap.get(character.corporation_id) ||
+                              "Unknown"
+                            : "Unknown",
+                        alliance_id: character?.alliance_id || null,
+                        alliance_name: character?.alliance_id
+                            ? allianceMap.get(character.alliance_id) ||
+                              "Unknown"
+                            : "Unknown",
+                        total_points: achievement.total_points,
+                        completed_achievements:
+                            achievement.completed_achievements,
+                        total_achievements: achievement.total_achievements,
+                        completion_percentage:
+                            achievement.total_achievements > 0
+                                ? Math.round(
+                                      (achievement.completed_achievements /
+                                          achievement.total_achievements) *
+                                          100
+                                  )
+                                : 0,
+                        last_calculated: achievement.last_calculated,
+                    };
+                }
+            );
+
+            return finalResponse;
+        } catch (error) {
+            console.error("API Error in /historicalstats/achievements:", error);
+            event.node.res.statusCode = 500;
+            return { error: "Internal Server Error" };
+        }
+    },
+    {
+        maxAge: 3600,
+        staleMaxAge: -1,
+        swr: true,
+        base: "redis",
+        shouldBypassCache: (event) => {
+            return process.env.NODE_ENV !== "production";
+        },
+        getKey: (event) => {
+            const query = url.parse(event.node.req.url!, true)
+                .query as QueryParams;
+            const { listType, limit, offset } = query;
+            return `historicalstats:achievements:${listType}:${limit}:${offset}`;
+        },
+    }
+);

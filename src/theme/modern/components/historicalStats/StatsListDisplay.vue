@@ -27,6 +27,11 @@
                     <div v-if="shouldShowColumnOnMobile.dateFounded" class="text-right">
                         {{ t('historicalStats.founded') }}
                     </div>
+
+                    <!-- Achievement points header -->
+                    <div v-if="shouldShowColumnOnMobile.achievementPoints" class="text-right">
+                        {{ t('historicalStats.achievementPoints') }}
+                    </div>
                 </div>
             </div>
 
@@ -47,6 +52,7 @@
                         <div v-if="shouldShowColumnOnMobile.change30d" class="h-4 bg-gray-700 rounded animate-pulse"></div>
                         <div v-if="shouldShowColumnOnMobile.secStatus" class="h-4 bg-gray-700 rounded animate-pulse"></div>
                         <div v-if="shouldShowColumnOnMobile.dateFounded" class="h-4 bg-gray-700 rounded animate-pulse"></div>
+                        <div v-if="shouldShowColumnOnMobile.achievementPoints" class="h-4 bg-gray-700 rounded animate-pulse"></div>
                     </div>
                 </div>
             </div>
@@ -103,6 +109,11 @@
                         <div v-if="shouldShowColumnOnMobile.dateFounded" class="text-right">
                             {{ formatDate(item.date_founded) }}
                         </div>
+
+                        <!-- Achievement points -->
+                        <div v-if="shouldShowColumnOnMobile.achievementPoints" class="text-right">
+                            {{ formatNumber(item.total_achievement_points || item.avg_achievement_points || 0) }}
+                        </div>
                     </div>
                 </div>
             </div>
@@ -131,12 +142,14 @@ interface IStatEntity {
     weighted_score?: number; // Add this field
     date_founded?: string | Date;
     last_active?: string | Date;
+    total_achievement_points?: number;
+    avg_achievement_points?: number;
 }
 
 const props = defineProps({
     entityType: { type: String as () => 'alliance' | 'corporation', required: true },
     listType: {
-        type: String as () => 'largest' | 'growing' | 'newest' | 'shrinking' | 'most_pirate' | 'most_carebear' | 'dead',
+        type: String as () => 'largest' | 'growing' | 'newest' | 'shrinking' | 'most_pirate' | 'most_carebear' | 'dead' | 'highest_achievement_points' | 'lowest_achievement_points',
         required: true,
     },
     period: { type: String as () => '1d' | '7d' | '14d' | '30d', default: '7d' },
@@ -147,6 +160,7 @@ const props = defineProps({
     showChanges: { type: Boolean, default: false },
     showSecStatus: { type: Boolean, default: false },
     showDateFounded: { type: Boolean, default: false },
+    showAchievementPoints: { type: Boolean, default: false },
 });
 
 const { t } = useI18n();
@@ -187,6 +201,7 @@ const shouldShowColumnOnMobile = computed(() => {
             change30d: props.showChanges && showDetailedChanges.value,
             secStatus: props.showSecStatus,
             dateFounded: props.showDateFounded,
+            achievementPoints: props.showAchievementPoints,
         };
     }
 
@@ -199,6 +214,7 @@ const shouldShowColumnOnMobile = computed(() => {
         change30d: false,
         secStatus: false,
         dateFounded: false,
+        achievementPoints: false,
     };
 
     switch (props.listType) {
@@ -228,6 +244,11 @@ const shouldShowColumnOnMobile = computed(() => {
                 mobileColumns.change30d = props.showChanges;
             }
             break;
+        case 'highest_achievement_points':
+        case 'lowest_achievement_points':
+            // For achievement rankings, show only achievement points
+            mobileColumns.achievementPoints = props.showAchievementPoints;
+            break;
     }
 
     return mobileColumns;
@@ -255,6 +276,7 @@ const columnCount = computed(() => {
     if (columns.change30d) count++;
     if (columns.secStatus) count++;
     if (columns.dateFounded) count++;
+    if (columns.achievementPoints) count++;
 
     return count;
 });

@@ -1089,7 +1089,14 @@
         "carebearScoreTitle": "Carebear Score Calculation",
         "carebearScoreExplanation": "For carebears, the most positive score is best. Larger organizations with more positive average security status will rank higher in the carebear list.",
         "minimumRequirements": "Note: Only entities with at least 10 members and appropriate security status (negative for pirates, positive for carebears) are included in these rankings.",
-        "score": "Weighted Score"
+        "score": "Weighted Score",
+        "achievementRankings": "Achievement Point Rankings",
+        "achievementRankingsInfo": "Rankings based on total achievement points earned by characters, corporations, and alliances.",
+        "achievementPoints": "Achievement Points",
+        "character": "Character",
+        "corporation": "Corporation",
+        "noCorporation": "No Corporation",
+        "errorLoading": "Error loading data"
     },
     "campaignCreator": {
         "locationTimeFilters": "Location & Time Filters",
