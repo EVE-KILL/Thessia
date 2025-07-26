@@ -18,18 +18,20 @@ export async function isShip(typeId: number): Promise<boolean> {
  * Classifies a type_id as either 'ship' or 'item' based on category_id
  * Ships have category_id === 6, everything else is considered an item
  */
-export async function classifyTypeId(typeId: number): Promise<'ship' | 'item'> {
+export async function classifyTypeId(typeId: number): Promise<"ship" | "item"> {
     const shipCheck = await isShip(typeId);
-    return shipCheck ? 'ship' : 'item';
+    return shipCheck ? "ship" : "item";
 }
 
 /**
  * Batch classify multiple type_ids for efficiency
  * Returns a Map of typeId -> classification
  */
-export async function batchClassifyTypeIds(typeIds: number[]): Promise<Map<number, 'ship' | 'item'>> {
-    const results = new Map<number, 'ship' | 'item'>();
-    
+export async function batchClassifyTypeIds(
+    typeIds: number[]
+): Promise<Map<number, "ship" | "item">> {
+    const results = new Map<number, "ship" | "item">();
+
     // Process all type_ids in parallel
     const classifications = await Promise.all(
         typeIds.map(async (typeId) => {
@@ -37,11 +39,11 @@ export async function batchClassifyTypeIds(typeIds: number[]): Promise<Map<numbe
             return { typeId, classification };
         })
     );
-    
+
     // Build the result map
     for (const { typeId, classification } of classifications) {
         results.set(typeId, classification);
     }
-    
+
     return results;
 }
