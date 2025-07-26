@@ -1421,6 +1421,123 @@ export default defineEventHandler(async () => {
                         )
                 ),
             },
+            historicalStats: {
+                "1min": numberFormat(
+                    Number(
+                        (
+                            await historicalStatsQueue.getMetrics(
+                                "completed",
+                                0,
+                                MetricsTime.ONE_MINUTE
+                            )
+                        ).data[0]
+                    ) || 0
+                ),
+                "5min": numberFormat(
+                    Number(
+                        (
+                            await historicalStatsQueue.getMetrics(
+                                "completed",
+                                0,
+                                MetricsTime.FIVE_MINUTES
+                            )
+                        ).data
+                            .slice(1)
+                            .reduce((acc: any, cur: any) => Number(acc) + Number(cur), 0)
+                    )
+                ),
+                "15min": numberFormat(
+                    Number(
+                        (
+                            await historicalStatsQueue.getMetrics(
+                                "completed",
+                                0,
+                                MetricsTime.FIFTEEN_MINUTES
+                            )
+                        ).data
+                            .slice(1)
+                            .reduce((acc: any, cur: any) => Number(acc) + Number(cur), 0)
+                    )
+                ),
+                "1hour": numberFormat(
+                    Number(
+                        (
+                            await historicalStatsQueue.getMetrics(
+                                "completed",
+                                0,
+                                MetricsTime.ONE_HOUR
+                            )
+                        ).data
+                            .slice(1)
+                            .reduce((acc: any, cur: any) => Number(acc) + Number(cur), 0)
+                    )
+                ),
+                "6hours": numberFormat(
+                    Number(
+                        (
+                            await historicalStatsQueue.getMetrics(
+                                "completed",
+                                0,
+                                MetricsTime.ONE_HOUR * 6
+                            )
+                        ).data
+                            .slice(1)
+                            .reduce((acc: any, cur: any) => Number(acc) + Number(cur), 0)
+                    )
+                ),
+                "12hours": numberFormat(
+                    Number(
+                        (
+                            await historicalStatsQueue.getMetrics(
+                                "completed",
+                                0,
+                                MetricsTime.ONE_HOUR * 12
+                            )
+                        ).data
+                            .slice(1)
+                            .reduce((acc: any, cur: any) => Number(acc) + Number(cur), 0)
+                    )
+                ),
+                "24hours": numberFormat(
+                    Number(
+                        (
+                            await historicalStatsQueue.getMetrics(
+                                "completed",
+                                0,
+                                MetricsTime.ONE_HOUR * 24
+                            )
+                        ).data
+                            .slice(1)
+                            .reduce((acc: any, cur: any) => Number(acc) + Number(cur), 0)
+                    )
+                ),
+                "1week": numberFormat(
+                    Number(
+                        (
+                            await historicalStatsQueue.getMetrics(
+                                "completed",
+                                0,
+                                MetricsTime.ONE_HOUR * 24 * 7
+                            )
+                        ).data
+                            .slice(1)
+                            .reduce((acc: any, cur: any) => Number(acc) + Number(cur), 0)
+                    )
+                ),
+                "1month": numberFormat(
+                    Number(
+                        (
+                            await historicalStatsQueue.getMetrics(
+                                "completed",
+                                0,
+                                MetricsTime.ONE_MONTH
+                            )
+                        ).data
+                            .slice(1)
+                            .reduce((acc: any, cur: any) => Number(acc) + Number(cur), 0)
+                    )
+                ),
+            },
         },
         databaseCounts: {
             alliances: allianceCount,
