@@ -49,8 +49,10 @@ export default defineCachedEventHandler(
 
             // If no stats exist, create placeholder and queue for processing
             if (!stats) {
-                console.log(`No stats found for ${type} ${id} days:${days} - creating placeholder and queuing`);
-                
+                console.log(
+                    `No stats found for ${type} ${id} days:${days} - creating placeholder and queuing`
+                );
+
                 const basicStats = await calculateBasicStats(type, id, days);
                 stats = {
                     ...basicStats,
@@ -59,16 +61,17 @@ export default defineCachedEventHandler(
                 } as any;
 
                 // Save placeholder to database
-                await Stats.findOneAndUpdate(
-                    { type, id, days }, 
-                    stats, 
-                    { upsert: true, setDefaultsOnInsert: true }
-                );
+                await Stats.findOneAndUpdate({ type, id, days }, stats, {
+                    upsert: true,
+                    setDefaultsOnInsert: true,
+                });
 
                 // Queue high-priority job for immediate processing
                 await addStatsJob(type, id, days, 1); // Priority 1 = highest priority
 
-                console.log(`Created placeholder and queued high-priority job for ${type} ${id} days:${days}`);
+                console.log(
+                    `Created placeholder and queued high-priority job for ${type} ${id} days:${days}`
+                );
             }
 
             // Return data based on requested type (from existing DB data only)
@@ -138,22 +141,24 @@ export default defineCachedEventHandler(
 
                 default:
                     // Return all stats
-                    return stats || {
-                        type,
-                        id,
-                        days,
-                        kills: 0,
-                        losses: 0,
-                        iskKilled: 0,
-                        iskLost: 0,
-                        npcLosses: 0,
-                        soloKills: 0,
-                        soloLosses: 0,
-                        lastActive: null,
-                        full: {},
-                        updatedAt: new Date(),
-                        needsUpdate: true,
-                    };
+                    return (
+                        stats || {
+                            type,
+                            id,
+                            days,
+                            kills: 0,
+                            losses: 0,
+                            iskKilled: 0,
+                            iskLost: 0,
+                            npcLosses: 0,
+                            soloKills: 0,
+                            soloLosses: 0,
+                            lastActive: null,
+                            full: {},
+                            updatedAt: new Date(),
+                            needsUpdate: true,
+                        }
+                    );
             }
         } catch (error: any) {
             console.error(`Error fetching stats for ${type} ${id}:`, error);
