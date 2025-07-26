@@ -480,7 +480,20 @@ const tabItems = [
     },
 ] satisfies TabsItem[];
 
-const activeTabId = ref(tabItems[0].id); // Default to the first tab's ID
+// For SSR compatibility, always start with the default tab
+// Hash-based initialization will happen after hydration
+const activeTabId = ref<string>(tabItems[0]?.id || '');
+
+// Only initialize from hash on client-side after hydration
+onMounted(() => {
+    const currentHash = route.hash.slice(1);
+    console.log('onMounted - currentHash:', currentHash);
+
+    if (currentHash && tabItems.some(item => item.id === currentHash)) {
+        console.log('onMounted - setting activeTabId to hash:', currentHash);
+        activeTabId.value = currentHash;
+    }
+});
 
 // Watch for changes in route.hash to update activeTabId
 watch(() => route.hash, (newHash) => {
@@ -491,7 +504,7 @@ watch(() => route.hash, (newHash) => {
         // If hash is empty or invalid, just set the active tab without updating URL
         activeTabId.value = tabItems[0].id;
     }
-}, { immediate: true });
+});
 
 // Update URL only when activeTabId changes due to user interaction
 watch(activeTabId, (newTabId, oldTabId) => {
@@ -505,18 +518,6 @@ watch(activeTabId, (newTabId, oldTabId) => {
         route.hash !== `#${newTabId}` &&
         (route.hash || newTabId !== tabItems[0].id)) {
         router.push({ hash: `#${newTabId}` });
-    }
-});
-
-// Ensure correct tab is selected on page load without changing URL
-onMounted(() => {
-    const currentHash = route.hash.slice(1);
-    const isValidHash = tabItems.some(item => item.id === currentHash);
-
-    if (isValidHash) {
-        activeTabId.value = currentHash;
-    } else if (tabItems.length > 0) {
-        activeTabId.value = tabItems[0].id;
     }
 });
 

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, type PropType } from 'vue';
+import { computed, onMounted, watch, type PropType } from 'vue';
 import { useResponsive } from '~/composables/useResponsive';
 
 interface TabItem {
@@ -67,6 +67,24 @@ const emit = defineEmits(['update:modelValue'])
 
 // Check if we're on mobile
 const { isMobile } = useResponsive();
+
+// Ensure we have a valid active tab (fallback only)
+const ensureValidTab = () => {
+    // Only set to first tab if modelValue is completely empty or invalid
+    if (!props.modelValue || !props.items.find(item => item.id === props.modelValue)) {
+        if (props.items.length > 0) {
+            emit('update:modelValue', props.items[0].id);
+        }
+    }
+};
+
+// Watch for changes in items array to ensure current tab is still valid
+watch(() => props.items, ensureValidTab, { immediate: true });
+
+// Initialize on mount only if needed
+onMounted(() => {
+    ensureValidTab();
+});
 
 const selectTab = (tabId: string) => {
     const item = props.items.find(i => i.id === tabId)
