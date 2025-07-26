@@ -1,36 +1,43 @@
 import type { Job } from "bullmq";
 import { cliLogger } from "~/server/helpers/Logger";
 import { createWorker } from "~/server/helpers/Queue";
-import { processAchievement } from "~/server/queue/Achievement";
+import { processHistoricalStats } from "~/server/queue/HistoricalStats";
 
 export default {
-    name: "process:achievement",
-    description: "Processes achievements",
+    name: "process:historicalStats",
+    description:
+        "Processes historical statistics for alliances and corporations",
     run: () => {
-        cliLogger.info("✔ Starting achievements processor");
+        cliLogger.info("✔ Starting historical stats processor");
 
         createWorker(
-            "achievement",
+            "historicalStats",
             async (job: Job) => {
-                const { characterId } = job.data;
-                await processAchievement(characterId);
+                const { entityId, entityType, memberCount, currentDate } =
+                    job.data;
+                await processHistoricalStats(
+                    entityId,
+                    entityType,
+                    memberCount,
+                    new Date(currentDate)
+                );
             },
             {
-                concurrency: 2,
+                concurrency: 1, // Higher concurrency for stats processing
             }
         )
             .on("failed", (job: Job | undefined, err: Error) => {
                 cliLogger.error(
-                    `Achievement Processing: ${job?.id} ( CharacterID: ${job?.data.characterId} ) | ${err.message}`
+                    `Historical Stats Processing: ${job?.id} ( ${job?.data.entityType}ID: ${job?.data.entityId} ) | ${err.message}`
                 );
             })
             .on("completed", (job: Job) => {
                 cliLogger.info(
-                    `Achievement Processing: ${job.id} ( CharacterID: ${job.data.characterId} ) | Completed`
+                    `Historical Stats Processing: ${job.id} ( ${job.data.entityType}ID: ${job.data.entityId} ) | Completed`
                 );
             })
             .on("ready", () => {
-                cliLogger.info("Achievement Worker Ready");
+                cliLogger.info("Historical Stats Worker Ready");
             });
     },
 };
