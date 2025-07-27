@@ -135,7 +135,7 @@ export interface IExportError {
  * Exports data from the specified collection with pagination support
  */
 export default defineEventHandler(
-    async (event): Promise<IExportResult | IExportError> => {
+    async (event): Promise<IExportResult | IExportError | ReadableStream> => {
         const collection = getRouterParam(event, "collection");
         const query = getQuery(event);
 
@@ -255,30 +255,14 @@ export default defineEventHandler(
             // Get collection count for headers
             const totalCount = await model.estimatedDocumentCount();
 
-            // Build the query filter
-            const filter: any = {};
-
-            if (after) {
-                filter._id = { $lt: after }; // Get items FROM the specified ID onwards (greater than or equal)
-            } else if (before) {
-                filter._id = { $gt: before }; // Get items UP TO the specified ID (less than or equal)
-            }
-
-            // Execute the query - always use descending order to maintain consistent ordering
-            const sortOrder: 1 | -1 = -1; // Always descending (newest first)
-
-            const data = await model
-                .find(filter)
-                .sort({ _id: sortOrder })
-                .limit(limit)
-                .lean(); // Use lean() for better performance
-
-            // Set success rate limit headers
+            // Set all headers upfront before streaming starts
             const remaining = Math.max(
                 0,
                 rateLimitResult.rateLimitInfo.maxBurstRequests -
                     rateLimitResult.rateLimitInfo.requestsInWindow
             );
+
+            // Set rate limit headers
             setHeader(
                 event,
                 "X-RateLimit-Limit",
@@ -304,7 +288,6 @@ export default defineEventHandler(
             // Set export-specific headers
             setHeader(event, "X-Export-Collection", collectionLower);
             setHeader(event, "X-Export-Total-Count", totalCount.toString());
-            setHeader(event, "X-Export-Returned-Count", data.length.toString());
             setHeader(event, "X-Export-Limit-Used", limit.toString());
             setHeader(event, "X-Export-Max-Limit", "10000");
             setHeader(
@@ -321,7 +304,9 @@ export default defineEventHandler(
                 ).toString()
             );
 
-            // Set cache headers
+            // Set streaming headers
+            setHeader(event, "Content-Type", "application/json");
+            setHeader(event, "Transfer-Encoding", "chunked");
             setHeader(
                 event,
                 "Cache-Control",
@@ -330,24 +315,104 @@ export default defineEventHandler(
             setHeader(event, "Pragma", "no-cache");
             setHeader(event, "Expires", "0");
 
-            return {
-                collection: collectionLower,
-                limit,
-                after,
-                before,
-                count: data.length,
-                data,
-            };
+            // Build the query filter
+            const filter: any = {};
+
+            if (after) {
+                filter._id = { $lt: after };
+            } else if (before) {
+                filter._id = { $gt: before };
+            }
+
+            // Execute the query - always use descending order to maintain consistent ordering
+            const sortOrder: 1 | -1 = -1; // Always descending (newest first)
+
+            // Create a streaming response
+            return new ReadableStream({
+                async start(controller) {
+                    const encoder = new TextEncoder();
+                    let documentCount = 0;
+
+                    try {
+                        // Start the JSON response structure
+                        const responseStart = {
+                            collection: collectionLower,
+                            limit,
+                            after,
+                            before,
+                            count: 0, // Will be updated in the final chunk
+                            data: [] as any[]
+                        };
+                        
+                        // Convert to string and remove the closing }] to prepare for streaming
+                        const responseStartStr = JSON.stringify(responseStart);
+                        const responseStartPart = responseStartStr.slice(0, responseStartStr.lastIndexOf(']'));
+                        
+                        controller.enqueue(encoder.encode(responseStartPart));
+
+                        // Create a cursor for streaming results
+                        const cursor = model
+                            .find(filter)
+                            .sort({ _id: sortOrder })
+                            .limit(limit)
+                            .lean()
+                            .cursor();
+
+                        let isFirst = true;
+
+                        // Stream documents one by one
+                        for (
+                            let doc = await cursor.next();
+                            doc != null;
+                            doc = await cursor.next()
+                        ) {
+                            if (!isFirst) {
+                                controller.enqueue(encoder.encode(","));
+                            } else {
+                                isFirst = false;
+                            }
+
+                            controller.enqueue(
+                                encoder.encode(JSON.stringify(doc))
+                            );
+                            documentCount++;
+                        }
+
+                        // Close the data array and update the count
+                        const responseEnd = `],"count":${documentCount}}`;
+                        controller.enqueue(encoder.encode(responseEnd));
+
+                        // Note: Cannot set headers here as streaming has already started
+                        // The X-Export-Returned-Count header will show 0 since we can't update it
+                    } catch (error) {
+                        console.error(
+                            `Error streaming collection ${collection}:`,
+                            error
+                        );
+
+                        // Send error as part of the stream if possible
+                        const errorResponse = JSON.stringify({
+                            error: "Internal Server Error",
+                            statusCode: 500,
+                            statusMessage:
+                                "Error occurred while streaming data",
+                        });
+                        controller.enqueue(encoder.encode(errorResponse));
+                    } finally {
+                        controller.close();
+                    }
+                },
+            });
         } catch (error) {
             console.error(
-                `Error exporting from collection ${collection}:`,
+                `Error initializing export for collection ${collection}:`,
                 error
             );
             setResponseStatus(event, 500);
             setHeader(event, "Content-Type", "application/json");
             return {
                 statusCode: 500,
-                statusMessage: "Internal server error while exporting data",
+                statusMessage: "Internal server error while initializing export",
                 error: "Internal Server Error",
             };
         }
