@@ -162,7 +162,7 @@ export default defineCachedEventHandler(
                 case "lowest_achievement_points":
                     // Sort by total achievement points ascending
                     sortQuery = { total_achievement_points: 1 };
-                    mongoQuery.total_achievement_points = { $ne: null, $gt: 0 };
+                    mongoQuery.total_achievement_points = { $ne: null };
                     break;
 
                 case "newest":

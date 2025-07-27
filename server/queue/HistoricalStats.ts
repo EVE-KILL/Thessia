@@ -217,10 +217,7 @@ async function processAllianceHistoricalStats(
                 { total_points: 1, character_id: 1 }
             );
 
-            if (
-                characterAchievement &&
-                (characterAchievement as any).total_points > 0
-            ) {
+            if (characterAchievement) {
                 totalPoints += (characterAchievement as any).total_points;
                 achievementMemberCount++;
 
@@ -395,10 +392,7 @@ async function processCorporationHistoricalStats(
                 { total_points: 1, character_id: 1 }
             );
 
-            if (
-                characterAchievement &&
-                (characterAchievement as any).total_points > 0
-            ) {
+            if (characterAchievement) {
                 totalPoints += (characterAchievement as any).total_points;
                 achievementMemberCount++;
 

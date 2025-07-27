@@ -341,13 +341,16 @@ export default defineEventHandler(
                             after,
                             before,
                             count: 0, // Will be updated in the final chunk
-                            data: [] as any[]
+                            data: [] as any[],
                         };
-                        
+
                         // Convert to string and remove the closing }] to prepare for streaming
                         const responseStartStr = JSON.stringify(responseStart);
-                        const responseStartPart = responseStartStr.slice(0, responseStartStr.lastIndexOf(']'));
-                        
+                        const responseStartPart = responseStartStr.slice(
+                            0,
+                            responseStartStr.lastIndexOf("]")
+                        );
+
                         controller.enqueue(encoder.encode(responseStartPart));
 
                         // Create a cursor for streaming results
@@ -412,7 +415,8 @@ export default defineEventHandler(
             setHeader(event, "Content-Type", "application/json");
             return {
                 statusCode: 500,
-                statusMessage: "Internal server error while initializing export",
+                statusMessage:
+                    "Internal server error while initializing export",
                 error: "Internal Server Error",
             };
         }

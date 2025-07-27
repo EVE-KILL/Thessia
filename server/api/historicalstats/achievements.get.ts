@@ -71,21 +71,24 @@ export default defineCachedEventHandler(
         try {
             // Determine sort order
             let sortQuery: any = {};
-            let mongoQuery: any = {
-                total_points: { $gt: 0 },
-            };
+            let mongoQuery: any = {};
 
             switch (listType) {
                 case "highest_character_points":
                     sortQuery = { total_points: -1 };
+                    // For highest points, we might want to exclude 0 or negative
+                    mongoQuery = { total_points: { $gt: 0 } };
                     break;
                 case "lowest_character_points":
                     sortQuery = { total_points: 1 };
+                    // For lowest points, include all values including negative
+                    mongoQuery = {};
                     break;
             }
 
             // Get character achievements with character info
             const topCharacters = (await CharacterAchievements.find(mongoQuery)
+                .hint({ total_points: -1 })
                 .sort(sortQuery)
                 .skip(offset)
                 .limit(limit)
