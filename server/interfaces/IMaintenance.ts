@@ -1,5 +1,5 @@
 export interface IMaintenanceState {
-  isEnabled: boolean;
-  message: string;
-  lastChecked: Date;
+    isEnabled: boolean;
+    message: string;
+    lastChecked: Date;
 }
