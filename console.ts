@@ -64,10 +64,10 @@ async function main() {
 
         command
             .argument("[args...]", "Command arguments")
-            .action(async (args) => {
+            .action(async (args, options) => {
                 try {
-                    // Pass the raw args array directly to the run function
-                    await commandModule.run(args || []);
+                    // Pass both raw args and parsed options to the run function
+                    await commandModule.run(args || [], options);
                 } catch (error) {
                     console.error(`Error executing command ${name}:`, error);
                     throw error;

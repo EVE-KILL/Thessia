@@ -9,46 +9,72 @@ export default {
     description:
         "Generates stats for all entities in the database for multiple time periods",
     longRunning: false,
-    run: async () => {
+    options: [
+        {
+            flags: "-l, --limit <number>",
+            description:
+                "Limit the number of killmails to process (0 = unlimited)",
+            defaultValue: "0",
+        },
+        {
+            flags: "-f, --force",
+            description:
+                "Force queue everything even if it already exists in stats",
+            defaultValue: false,
+        },
+    ],
+    examples: [
+        "bin/console backfillStatsCalculations                         # Process all killmails",
+        "bin/console backfillStatsCalculations --limit 1000           # Process only first 1000 killmails",
+        "bin/console backfillStatsCalculations --force                # Queue everything, even if stats exist",
+        "bin/console backfillStatsCalculations --limit 500 --force    # Process first 500 killmails and force all",
+    ],
+    run: async (args: string[] = [], options: any = {}) => {
+        // Parse command line arguments - use options from Commander.js first, then fall back to manual parsing
+        let limit = parseInt(options.limit || "0", 10);
+        let force = options.force || false;
+
+        cliLogger.info(
+            `🚀 Starting backfill with killmail limit: ${
+                limit === 0 ? "unlimited" : limit.toLocaleString()
+            }, force: ${force}`
+        );
+
         const TIME_PERIODS = [0, 14, 30, 90];
         const BULK_SIZE = 1000000;
 
         const statsQueue = createQueue("stats");
 
         /**
-         * Get a set of all entity IDs that already have stats calculated
+         * Get a set of entity IDs that already have stats calculated for specific entities
          */
-        async function getExistingStatsIds(
-            entityType: StatsType
+        async function getExistingStatsIdsForEntities(
+            entityType: StatsType,
+            entityIds: number[]
         ): Promise<Set<number>> {
+            if (entityIds.length === 0) {
+                return new Set<number>();
+            }
+
             cliLogger.info(
-                `📊 Fetching existing ${entityType} IDs from Stats collection...`
+                `📊 Checking existing stats for ${entityIds.length} ${entityType}s...`
             );
 
             const existingIds = new Set<number>();
-            let processedCount = 0;
 
-            // Use aggregation with cursor to avoid 16MB limit of distinct()
+            // Query only for the specific entity IDs we're interested in
             const cursor = Stats.aggregate([
-                { $match: { type: entityType } },
+                { $match: { type: entityType, id: { $in: entityIds } } },
                 { $group: { _id: "$id" } },
                 { $project: { _id: 1 } },
             ]).cursor();
 
             for await (const doc of cursor) {
                 existingIds.add(Number(doc._id));
-                processedCount++;
-
-                // Log progress every 100,000 IDs
-                if (processedCount % 100000 === 0) {
-                    cliLogger.info(
-                        `📊 Processed ${processedCount.toLocaleString()} existing ${entityType} stats so far...`
-                    );
-                }
             }
 
             cliLogger.info(
-                `✅ Found ${existingIds.size} ${entityType}s with existing stats`
+                `✅ Found ${existingIds.size}/${entityIds.length} ${entityType}s with existing stats`
             );
             return existingIds;
         }
@@ -56,13 +82,17 @@ export default {
         /**
          * Get unique entity IDs for ALL entity types from the Killmails collection in a single pass
          */
-        async function getAllUniqueEntityIdsFromKillmails(): Promise<{
+        async function getAllUniqueEntityIdsFromKillmails(
+            killmailLimit: number = 0
+        ): Promise<{
             alliance_id: number[];
             corporation_id: number[];
             character_id: number[];
         }> {
             cliLogger.info(
-                `🔍 Extracting ALL unique entity IDs from killmails in single pass...`
+                killmailLimit > 0
+                    ? `🔍 Extracting unique entity IDs from first ${killmailLimit.toLocaleString()} killmails...`
+                    : `🔍 Extracting ALL unique entity IDs from killmails in single pass...`
             );
 
             const startTime = Date.now();
@@ -72,7 +102,7 @@ export default {
             let processedCount = 0;
 
             // Use a simple find cursor with projection to only get the fields we need
-            const cursor = Killmails.find(
+            let query = Killmails.find(
                 {}, // No filter - process all documents
                 {
                     // Project only the fields we need to minimize data transfer
@@ -84,9 +114,20 @@ export default {
                     "attackers.character_id": true,
                     _id: false,
                 } as any
-            ).cursor();
+            );
 
-            cliLogger.info(`📊 Processing killmails for ALL entity types...`);
+            // Apply limit if specified
+            if (killmailLimit > 0) {
+                query = query.limit(killmailLimit);
+            }
+
+            const cursor = query.cursor();
+
+            cliLogger.info(
+                killmailLimit > 0
+                    ? `📊 Processing first ${killmailLimit.toLocaleString()} killmails for entity extraction...`
+                    : `📊 Processing killmails for ALL entity types...`
+            );
 
             for await (const doc of cursor) {
                 // Extract victim IDs
@@ -131,8 +172,17 @@ export default {
 
                 processedCount++;
 
-                // Log progress every 1 million documents
-                if (processedCount % 1000000 === 0) {
+                // Break early if we've reached the limit
+                if (killmailLimit > 0 && processedCount >= killmailLimit) {
+                    break;
+                }
+
+                // Log progress every 1 million documents (or every 100k if limit is small)
+                const logInterval =
+                    killmailLimit > 0 && killmailLimit < 1000000
+                        ? 100000
+                        : 1000000;
+                if (processedCount % logInterval === 0) {
                     cliLogger.info(
                         `📊 Processed ${processedCount.toLocaleString()} killmails, found ${allianceIds.size.toLocaleString()} alliances, ${corporationIds.size.toLocaleString()} corporations, ${characterIds.size.toLocaleString()} characters so far...`
                     );
@@ -142,7 +192,9 @@ export default {
             const duration = ((Date.now() - startTime) / 1000).toFixed(2);
 
             cliLogger.info(
-                `✅ Single pass complete! Found ${allianceIds.size.toLocaleString()} alliances, ${corporationIds.size.toLocaleString()} corporations, ${characterIds.size.toLocaleString()} characters from ${processedCount.toLocaleString()} killmails (took ${duration}s)`
+                killmailLimit > 0
+                    ? `✅ Limited processing complete! Found ${allianceIds.size.toLocaleString()} alliances, ${corporationIds.size.toLocaleString()} corporations, ${characterIds.size.toLocaleString()} characters from ${processedCount.toLocaleString()} killmails (took ${duration}s)`
+                    : `✅ Single pass complete! Found ${allianceIds.size.toLocaleString()} alliances, ${corporationIds.size.toLocaleString()} corporations, ${characterIds.size.toLocaleString()} characters from ${processedCount.toLocaleString()} killmails (took ${duration}s)`
             );
 
             return {
@@ -157,15 +209,34 @@ export default {
          */
         async function queueStatsForEntityIds(
             entityType: StatsType,
-            entityIds: number[]
+            entityIds: number[],
+            forceQueue: boolean = false
         ) {
-            const existingStatsIds = await getExistingStatsIds(entityType);
+            let existingStatsIds = new Set<number>();
+
+            if (!forceQueue) {
+                existingStatsIds = await getExistingStatsIdsForEntities(
+                    entityType,
+                    entityIds
+                );
+            } else {
+                cliLogger.info(
+                    `🔄 Force mode enabled - queuing all ${entityType}s regardless of existing stats`
+                );
+            }
 
             cliLogger.info(
-                `ℹ️ Backfilling stats for ${entityIds.length} ${entityType}s across ${TIME_PERIODS.length} time periods.`
+                `ℹ️ Backfilling stats for ${
+                    entityIds.length
+                } ${entityType}s across ${
+                    TIME_PERIODS.length
+                } time periods. Force mode: ${
+                    forceQueue ? "enabled" : "disabled"
+                }`
             );
 
             let processedCount = 0;
+            let skippedCount = 0;
             let bulkJobs: Array<{
                 name: string;
                 data: {
@@ -217,8 +288,9 @@ export default {
 
             // Process each entity ID
             for (const entityId of entityIds) {
-                // Skip if this entity already has stats calculated
-                if (existingStatsIds.has(entityId)) {
+                // Skip if this entity already has stats calculated (unless force is enabled)
+                if (!forceQueue && existingStatsIds.has(entityId)) {
+                    skippedCount++;
                     continue;
                 }
 
@@ -260,8 +332,11 @@ export default {
             }
 
             const totalPossibleJobs = entityIds.length * TIME_PERIODS.length;
+            const actualQueuedJobs = processedCount;
+            const skippedJobs = skippedCount * TIME_PERIODS.length;
+
             cliLogger.info(
-                `✅ Backfill complete for ${entityType}s. Processed: ${processedCount}/${totalPossibleJobs}`
+                `✅ Backfill complete for ${entityType}s. Queued: ${actualQueuedJobs}/${totalPossibleJobs} jobs (skipped ${skippedCount} entities with existing stats)`
             );
             cliLogger.info(
                 `📊 Stats by time period: ${TIME_PERIODS.map(
@@ -271,19 +346,25 @@ export default {
         }
 
         // Extract all unique entity IDs in a single pass
-        const entityIds = await getAllUniqueEntityIdsFromKillmails();
+        const entityIds = await getAllUniqueEntityIdsFromKillmails(limit);
 
-        // Process alliance_ids from killmails
-        await queueStatsForEntityIds("alliance_id", entityIds.alliance_id);
+        // No need to apply limit again since it was applied during killmail processing
+        const allianceIds = entityIds.alliance_id;
+        const corporationIds = entityIds.corporation_id;
+        const characterIds = entityIds.character_id;
 
-        // Process corporation_ids from killmails
-        await queueStatsForEntityIds(
-            "corporation_id",
-            entityIds.corporation_id
+        cliLogger.info(
+            `� Final counts: ${allianceIds.length} alliances, ${corporationIds.length} corporations, ${characterIds.length} characters`
         );
 
+        // Process alliance_ids from killmails
+        await queueStatsForEntityIds("alliance_id", allianceIds, force);
+
+        // Process corporation_ids from killmails
+        await queueStatsForEntityIds("corporation_id", corporationIds, force);
+
         // Process character_ids from killmails
-        await queueStatsForEntityIds("character_id", entityIds.character_id);
+        await queueStatsForEntityIds("character_id", characterIds, force);
 
         cliLogger.info("🎉 All stats backfill processes complete.");
     },

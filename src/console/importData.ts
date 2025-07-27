@@ -137,50 +137,19 @@ export default {
         'bin/console importData -c "alliances,corporations"            # Import only specific collections',
         "bin/console importData -d 500 -b 500                          # Slower with smaller batches",
     ],
-    run: async (args: string[] = []) => {
-        // Parse simple command line arguments
+    run: async (args: string[] = [], cmdOptions: any = {}) => {
+        // Use options from Commander.js directly
         const options: IImportOptions = {
-            url: "https://eve-kill.com",
-            collections: [],
-            delay: 200,
-            dryRun: false,
-            batchSize: 1000,
+            url: cmdOptions.url || "https://eve-kill.com",
+            collections: cmdOptions.collections
+                ? cmdOptions.collections
+                      .split(",")
+                      .map((c: string) => c.trim().toLowerCase())
+                : [],
+            delay: parseInt(cmdOptions.delay || "200", 10),
+            dryRun: cmdOptions.dryRun || false,
+            batchSize: parseInt(cmdOptions.batchSize || "1000", 10),
         };
-
-        // Parse arguments
-        for (let i = 0; i < args.length; i++) {
-            const arg = args[i];
-            switch (arg) {
-                case "-u":
-                case "--url":
-                    options.url = args[++i] || options.url;
-                    break;
-                case "-c":
-                case "--collections":
-                    const collectionsArg = args[++i];
-                    if (collectionsArg) {
-                        options.collections = collectionsArg
-                            .split(",")
-                            .map((c: string) => c.trim().toLowerCase());
-                    }
-                    break;
-                case "-d":
-                case "--delay":
-                    options.delay = parseInt(args[++i] || "200", 10);
-                    break;
-                case "--dry-run":
-                    options.dryRun = true;
-                    break;
-                case "-b":
-                case "--batch-size":
-                    options.batchSize = parseInt(args[++i] || "1000", 10);
-                    break;
-                case "-h":
-                case "--help":
-                    // Help will be handled by commander.js now
-                    return { result: "Help displayed" };
-            }
-        }
 
         // Normalize URL (remove trailing slash)
         options.url = options.url.replace(/\/$/, "");
