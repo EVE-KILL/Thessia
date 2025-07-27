@@ -1,167 +1,20 @@
 import { createError, getQuery } from "h3";
 import url from "url";
 import { Killmails } from "../../models/Killmails";
-
-// List of fields that have optimized indexes in the database
-const INDEXED_FIELDS = [
-    "killmail_id",
-    "killmail_hash",
-    "kill_time",
-    "is_npc",
-    "is_solo",
-    "region_id",
-    "system_id",
-    "system_security",
-    "constellation_id",
-    "total_value",
-    "victim.character_id",
-    "victim.corporation_id",
-    "victim.alliance_id",
-    "victim.ship_id",
-    "victim.ship_group_id",
-    "victim.faction_id",
-    "victim.damage_taken",
-    "attackers.character_id",
-    "attackers.corporation_id",
-    "attackers.alliance_id",
-    "attackers.ship_id",
-    "attackers.ship_group_id",
-    "attackers.faction_id",
-    "attackers.weapon_type_id",
-    "items.type_id",
-    "items.group_id",
-];
-
-/**
- * Check if a filter contains any kill_time constraints
- */
-function hasKillTimeFilter(filter: any): boolean {
-    if (!filter || typeof filter !== "object") return false;
-
-    // Direct kill_time filter
-    if (filter.kill_time) return true;
-
-    // Check $and conditions
-    if (filter.$and && Array.isArray(filter.$and)) {
-        return filter.$and.some((condition: any) =>
-            hasKillTimeFilter(condition)
-        );
-    }
-
-    // Check $or conditions
-    if (filter.$or && Array.isArray(filter.$or)) {
-        return filter.$or.some((condition: any) =>
-            hasKillTimeFilter(condition)
-        );
-    }
-
-    return false;
-}
-
-/**
- * Adds a default kill_time filter to limit results to last 30 days if no time constraint exists
- */
-function addDefaultTimeFilter(filter: any): any {
-    if (hasKillTimeFilter(filter)) {
-        return filter; // Already has time constraint, don't modify
-    }
-
-    // Calculate 30 days ago
-    const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
-
-    // If filter is empty, just add kill_time constraint
-    if (!filter || Object.keys(filter).length === 0) {
-        return { kill_time: { $gte: thirtyDaysAgo } };
-    }
-
-    // If filter exists but no time constraint, add it with $and
-    return {
-        $and: [filter, { kill_time: { $gte: thirtyDaysAgo } }],
-    };
-}
-
-/**
- * Extract filter fields for index optimization
- */
-function extractFilterFields(filter: any): string[] {
-    const fields: string[] = [];
-
-    // Handle $and and $or operators
-    if (filter.$and && Array.isArray(filter.$and)) {
-        filter.$and.forEach((condition: any) => {
-            fields.push(...extractFilterFields(condition));
-        });
-    } else if (filter.$or && Array.isArray(filter.$or)) {
-        if (filter.$or.length > 0) {
-            fields.push(...extractFilterFields(filter.$or[0]));
-        }
-    } else {
-        // For regular filters, add any non-operator keys
-        Object.keys(filter).forEach((key) => {
-            if (!key.startsWith("$")) {
-                fields.push(key);
-            }
-        });
-    }
-
-    return fields;
-}
-
-/**
- * Determines the best index to use for a query based on filter and sort
- */
-function determineOptimalIndexHint(
-    filter: any,
-    sortOptions?: Record<string, any>
-): Record<string, number> | undefined {
-    // Extract the primary sort field if provided
-    let primarySortField: string | undefined;
-    if (sortOptions && Object.keys(sortOptions).length > 0) {
-        primarySortField = Object.keys(sortOptions)[0];
-    }
-
-    // Get filter fields to check for optimal compound indexes
-    const filterFields = extractFilterFields(filter);
-
-    // First priority: exact match between filter field and sort field
-    if (primarySortField) {
-        for (const field of filterFields) {
-            if (INDEXED_FIELDS.includes(field) && field === primarySortField) {
-                return { [field]: -1 };
-            }
-        }
-    }
-
-    // Second priority: compound index with filter field + sort field
-    if (primarySortField && INDEXED_FIELDS.includes(primarySortField)) {
-        for (const field of filterFields) {
-            if (INDEXED_FIELDS.includes(field) && field !== "kill_time") {
-                // Use compound index with the filter field first, then sort field
-                if (primarySortField === "kill_time") {
-                    return { [field]: -1, kill_time: -1 };
-                } else {
-                    // For non-time sorts, try compound with filter + sort
-                    return {
-                        [field]: -1,
-                        [primarySortField]: sortOptions![primarySortField],
-                    };
-                }
-            }
-        }
-    }
-
-    // Since we always have kill_time filter now, default to kill_time index
-    return { kill_time: -1 };
-}
+import { 
+    determineOptimalIndexHint, 
+    addDefaultTimeFilter,
+    hasKillTimeFilter
+} from "~/server/utils/indexOptimizer";
 
 /**
  * Handle filter parameter - either a MongoDB filter object or advanced search filters
  */
 function processFilterParam(parsedFilters: any): Record<string, any> {
     // If it's already a MongoDB filter object (from advanced search or query API),
-    // use it directly as it contains all the necessary filter conditions
+    // normalize the data types and use it directly
     if (isMongoFilter(parsedFilters)) {
-        return parsedFilters;
+        return normalizeMongoFilterTypes(parsedFilters);
     }
 
     // Otherwise, convert legacy filter format to MongoDB query
@@ -186,6 +39,106 @@ function isMongoFilter(obj: any): boolean {
             key === "region_id" ||
             key === "total_value"
     );
+}
+
+/**
+ * Normalize data types in MongoDB filters to ensure proper querying
+ * This handles cases where JSON parsing from URL parameters results in string values
+ * when numeric values are expected for database fields
+ */
+function normalizeMongoFilterTypes(filter: any): any {
+    if (!filter || typeof filter !== "object") {
+        return filter;
+    }
+
+    // Handle arrays (for $and, $or, $in, etc.)
+    if (Array.isArray(filter)) {
+        return filter.map((item) => normalizeMongoFilterTypes(item));
+    }
+
+    const normalized: any = {};
+
+    for (const [key, value] of Object.entries(filter)) {
+        // Fields that should be converted to numbers
+        const numericFields = [
+            "victim.character_id",
+            "victim.corporation_id",
+            "victim.alliance_id",
+            "victim.ship_id",
+            "victim.ship_group_id",
+            "victim.faction_id",
+            "attackers.character_id",
+            "attackers.corporation_id",
+            "attackers.alliance_id",
+            "attackers.ship_id",
+            "attackers.ship_group_id",
+            "attackers.faction_id",
+            "attackers.weapon_type_id",
+            "character_id",
+            "corporation_id",
+            "alliance_id",
+            "ship_id",
+            "ship_group_id",
+            "faction_id",
+            "killmail_id",
+            "system_id",
+            "region_id",
+            "constellation_id",
+            "total_value",
+            "items.type_id",
+            "items.group_id",
+        ];
+
+        if (numericFields.includes(key)) {
+            // Convert string numbers to actual numbers for ID fields
+            if (typeof value === "string" && /^\d+$/.test(value)) {
+                normalized[key] = parseInt(value, 10);
+            } else if (typeof value === "object" && value !== null) {
+                // Handle operators like {$in: ["123", "456"]} or {$gte: "100"}
+                if (Array.isArray(value)) {
+                    // Handle arrays directly (e.g., for field: ["123", "456"])
+                    normalized[key] = value.map((item) =>
+                        typeof item === "string" && /^\d+$/.test(item)
+                            ? parseInt(item, 10)
+                            : item
+                    );
+                } else {
+                    // Handle objects with operators recursively, but special case for $in arrays
+                    const normalizedValue: any = {};
+                    for (const [opKey, opValue] of Object.entries(value)) {
+                        if (opKey === "$in" && Array.isArray(opValue)) {
+                            normalizedValue[opKey] = opValue.map((item) =>
+                                typeof item === "string" && /^\d+$/.test(item)
+                                    ? parseInt(item, 10)
+                                    : item
+                            );
+                        } else if (
+                            typeof opValue === "string" &&
+                            /^\d+$/.test(opValue)
+                        ) {
+                            normalizedValue[opKey] = parseInt(opValue, 10);
+                        } else {
+                            normalizedValue[opKey] =
+                                normalizeMongoFilterTypes(opValue);
+                        }
+                    }
+                    normalized[key] = normalizedValue;
+                }
+            } else {
+                normalized[key] = value;
+            }
+        } else if (key.startsWith("$")) {
+            // Handle MongoDB operators recursively
+            normalized[key] = normalizeMongoFilterTypes(value);
+        } else if (typeof value === "object" && value !== null) {
+            // Recursively process nested objects
+            normalized[key] = normalizeMongoFilterTypes(value);
+        } else {
+            normalized[key] = value;
+        }
+    }
+
+    return normalized;
 }
 
 /**
@@ -380,7 +333,13 @@ export default defineCachedEventHandler(
 
             // Determine optimal index hint for the query
             const sortOptions = { kill_time: -1 };
-            const hint = determineOptimalIndexHint(mongoQuery, sortOptions);
+            const hint = await determineOptimalIndexHint(
+                Killmails.collection,
+                'killmails',
+                mongoQuery,
+                sortOptions,
+                '[Killmails API]'
+            );
 
             // Fetch killmails with pagination and index hint (with 30s timeout)
             let killmailQuery = Killmails.find(mongoQuery)

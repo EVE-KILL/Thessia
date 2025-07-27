@@ -923,7 +923,7 @@ export function createDefaultFilters(): AdvancedSearchFilters {
             value: null,
             securityTypes: [],
         },
-        timeFilter: null,
+        timeFilter: "last30d", // Default to 30 days to match backend behavior
         customTimeRange: {
             from: null,
             to: null,

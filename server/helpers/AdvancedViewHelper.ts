@@ -142,10 +142,6 @@ async function generateAdvancedViewStats(
     // Normalize query dates to proper Date objects
     const normalizedQuery = normalizeQueryDates(query);
 
-    console.log(
-        `Advanced view stats - Generating statistics with cursor iteration`
-    );
-
     // Initialize statistics
     const stats: IAdvancedViewOutput = {
         query,
@@ -443,11 +439,6 @@ async function generateAdvancedViewStats(
     stats.totalKillmails = processedCount;
     stats.totalKills = processedCount;
     stats.iskDestroyed = totalIskDestroyed;
-
-    // Debug: Log final array sizes
-    console.log(
-        `Cursor processed ${processedCount} killmails. Final stats: totalKills=${stats.totalKills}, shipGroups=${stats.shipGroupStats.length}, topKillers=${stats.topKillersByCharacter.length}, topVictims=${stats.topVictimsByCharacter.length}, topDamage=${stats.topDamageDealersByCharacter.length}, topCorps=${stats.topKillersByCorporation.length}, topAlliances=${stats.topKillersByAlliance.length}, mostValuable=${stats.mostValuableKills.length}`
-    );
 
     return stats;
 }

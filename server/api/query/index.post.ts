@@ -9,6 +9,10 @@ import {
     VALID_FIELDS,
     VALID_OPERATORS,
 } from "~/shared/helpers/queryAPIHelper";
+import { 
+    determineOptimalIndexHint, 
+    addDefaultTimeFilter 
+} from "~/server/utils/indexOptimizer";
 
 /**
  * Query API - MongoDB-like query interface for killmail data
@@ -25,37 +29,6 @@ import {
  *   }
  * }
  */
-
-// List of fields that have optimized indexes in the database
-// This ensures our query only uses valid indexes
-const INDEXED_FIELDS = [
-    "killmail_id",
-    "killmail_hash",
-    "kill_time",
-    "is_npc",
-    "is_solo",
-    "region_id",
-    "system_id",
-    "system_security",
-    "constellation_id",
-    "total_value",
-    "victim.character_id",
-    "victim.corporation_id",
-    "victim.alliance_id",
-    "victim.ship_id",
-    "victim.ship_group_id",
-    "victim.faction_id",
-    "victim.damage_taken",
-    "attackers.character_id",
-    "attackers.corporation_id",
-    "attackers.alliance_id",
-    "attackers.ship_id",
-    "attackers.ship_group_id", // Added for query builder
-    "attackers.faction_id", // Added for query builder
-    "attackers.weapon_type_id", // Added for query builder
-    "items.type_id",
-    "items.group_id", // Added for query builder
-];
 
 /**
  * Interface for the processed query
@@ -226,7 +199,48 @@ function validateFilterValue(key: string, value: any): any {
         return validatedValue;
     }
 
-    // Handle ID fields
+    // Handle ID fields with comprehensive normalization
+    const numericFields = [
+        "victim.character_id", "victim.corporation_id", "victim.alliance_id",
+        "victim.ship_id", "victim.ship_group_id", "victim.faction_id",
+        "attackers.character_id", "attackers.corporation_id", "attackers.alliance_id",
+        "attackers.ship_id", "attackers.ship_group_id", "attackers.faction_id",
+        "attackers.weapon_type_id",
+        "character_id", "corporation_id", "alliance_id", "ship_id", "ship_group_id", "faction_id",
+        "killmail_id", "system_id", "region_id", "constellation_id", "total_value",
+        "items.type_id", "items.group_id"
+    ];
+
+    if (numericFields.includes(key)) {
+        // Convert string numbers to actual numbers for ID fields
+        if (typeof value === "string" && /^\d+$/.test(value)) {
+            return parseInt(value, 10);
+        } else if (typeof value === "object" && value !== null) {
+            // Handle operators like {$in: ["123", "456"]} or {$gte: "100"}
+            const validatedValue: any = {};
+            for (const [operator, operand] of Object.entries(value)) {
+                if (VALID_OPERATORS.includes(operator as any)) {
+                    if (operator === "$in" && Array.isArray(operand)) {
+                        validatedValue[operator] = operand.map(item =>
+                            typeof item === "string" && /^\d+$/.test(item)
+                                ? parseInt(item, 10)
+                                : item
+                        );
+                    } else if (typeof operand === "string" && /^\d+$/.test(operand)) {
+                        validatedValue[operator] = parseInt(operand, 10);
+                    } else {
+                        validatedValue[operator] = operand;
+                    }
+                } else {
+                    throw new Error(`Invalid filter operator: ${operator}`);
+                }
+            }
+            return validatedValue;
+        }
+        return value;
+    }
+
+    // Handle legacy ID fields (for backward compatibility)
     if (key.includes("_id") && !Number.isNaN(Number(value))) {
         return Number.parseInt(value, 10);
     }
@@ -332,220 +346,6 @@ function validateQuery(query: QueryAPIRequest): QueryAPIRequest {
     }
 
     return query;
-}
-
-/**
- * Extract potential index fields from a filter expression
- */
-function extractFilterFields(filter: any): string[] {
-    const fields: string[] = [];
-
-    // Handle $and and $or operators
-    if (filter.$and && Array.isArray(filter.$and)) {
-        // For AND, any field could be a good candidate for an index
-        filter.$and.forEach((condition: any) => {
-            fields.push(...extractFilterFields(condition));
-        });
-    } else if (filter.$or && Array.isArray(filter.$or)) {
-        // For OR, we ideally need indexes on all branches, but take the first one for now
-        if (filter.$or.length > 0) {
-            fields.push(...extractFilterFields(filter.$or[0]));
-        }
-    } else {
-        // For regular filters, add any non-operator keys
-        Object.keys(filter).forEach((key) => {
-            if (!key.startsWith("$")) {
-                fields.push(key);
-            }
-        });
-    }
-
-    return fields;
-}
-
-/**
- * Determines the best index to use for a query based on filter and sort
- * This replaces the frontend hint logic with backend intelligence
- * Now that we always have a kill_time filter, we can be more aggressive with hints
- */
-function determineOptimalIndexHint(
-    filter: any,
-    sortOptions?: Record<string, any>
-): Record<string, number> | undefined {
-    // Extract the primary sort field if provided
-    let primarySortField: string | undefined;
-    if (sortOptions && Object.keys(sortOptions).length > 0) {
-        primarySortField = Object.keys(sortOptions)[0];
-    }
-
-    // Get filter fields to check for optimal compound indexes
-    const filterFields = extractFilterFields(filter);
-
-    // First priority: exact match between filter field and sort field
-    if (primarySortField) {
-        for (const field of filterFields) {
-            if (INDEXED_FIELDS.includes(field) && field === primarySortField) {
-                return { [field]: -1 };
-            }
-        }
-    }
-
-    // Second priority: compound index with filter field + sort field
-    if (primarySortField && INDEXED_FIELDS.includes(primarySortField)) {
-        for (const field of filterFields) {
-            if (INDEXED_FIELDS.includes(field) && field !== "kill_time") {
-                // Use compound index with the filter field first, then sort field
-                if (primarySortField === "kill_time") {
-                    return { [field]: -1, kill_time: -1 };
-                } else {
-                    // For non-time sorts, try compound with filter + sort
-                    return {
-                        [field]: -1,
-                        [primarySortField]: sortOptions![primarySortField],
-                    };
-                }
-            }
-        }
-    }
-
-    // Third priority: use filter field index if available (non-time fields)
-    for (const field of filterFields) {
-        if (INDEXED_FIELDS.includes(field) && field !== "kill_time") {
-            // Since we always have kill_time filter now, use compound index
-            if (primarySortField === "kill_time") {
-                return { [field]: -1, kill_time: -1 };
-            } else {
-                // For other sorts, check if field only exists in compound indexes
-                const compoundOnlyFields = [
-                    "is_npc",
-                    "is_solo",
-                    "total_value",
-                    "system_security",
-                    "region_id",
-                    "system_id",
-                    "constellation_id",
-                    "victim.character_id",
-                    "victim.corporation_id",
-                    "victim.alliance_id",
-                    "victim.ship_id",
-                    "victim.ship_group_id",
-                    "victim.faction_id",
-                    "attackers.character_id",
-                    "attackers.corporation_id",
-                    "attackers.alliance_id",
-                    "attackers.ship_id",
-                    "attackers.ship_group_id",
-                    "attackers.faction_id",
-                    "attackers.weapon_type_id",
-                    "items.type_id",
-                    "items.group_id",
-                ];
-
-                if (compoundOnlyFields.includes(field)) {
-                    // Use compound index with kill_time since that's what exists
-                    return { [field]: -1, kill_time: -1 };
-                } else {
-                    // Single field index exists
-                    return { [field]: -1 };
-                }
-            }
-        }
-    }
-
-    // Fourth priority: use sort field index if available
-    if (primarySortField && INDEXED_FIELDS.includes(primarySortField)) {
-        // Check if this is a field that only has compound indexes with kill_time
-        const compoundOnlyFields = [
-            "is_npc",
-            "is_solo",
-            "total_value",
-            "system_security",
-            "region_id",
-            "system_id",
-            "constellation_id",
-            "victim.character_id",
-            "victim.corporation_id",
-            "victim.alliance_id",
-            "victim.ship_id",
-            "victim.ship_group_id",
-            "victim.faction_id",
-            "attackers.character_id",
-            "attackers.corporation_id",
-            "attackers.alliance_id",
-            "attackers.ship_id",
-            "attackers.ship_group_id",
-            "attackers.faction_id",
-            "attackers.weapon_type_id",
-            "items.type_id",
-            "items.group_id",
-        ];
-
-        if (compoundOnlyFields.includes(primarySortField)) {
-            // These fields only exist in compound indexes with kill_time
-            return {
-                [primarySortField]: sortOptions![primarySortField],
-                kill_time: -1,
-            };
-        } else {
-            // Single field index exists
-            return { [primarySortField]: sortOptions![primarySortField] };
-        }
-    }
-
-    // Since we always have kill_time filter now, default to kill_time index
-    return { kill_time: -1 };
-}
-
-/**
- * Check if a filter contains any kill_time constraints
- */
-function hasKillTimeFilter(filter: any): boolean {
-    if (!filter || typeof filter !== "object") {
-        return false;
-    }
-
-    // Direct kill_time filter
-    if (filter.kill_time) {
-        return true;
-    }
-
-    // Check $and conditions
-    if (filter.$and && Array.isArray(filter.$and)) {
-        return filter.$and.some((condition: any) =>
-            hasKillTimeFilter(condition)
-        );
-    }
-
-    // Check $or conditions
-    if (filter.$or && Array.isArray(filter.$or)) {
-        return filter.$or.some((condition: any) =>
-            hasKillTimeFilter(condition)
-        );
-    }
-
-    return false;
-}
-
-/**
- * Adds a default kill_time filter to limit results to last 30 days if no time constraint exists
- */
-function addDefaultTimeFilter(filter: any): any {
-    if (hasKillTimeFilter(filter)) {
-        return filter; // Already has time constraint, don't modify
-    }
-
-    // Calculate 30 days ago
-    const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
-
-    // If filter is empty, just add kill_time constraint
-    if (!filter || Object.keys(filter).length === 0) {
-        return { kill_time: { $gte: thirtyDaysAgo } };
-    }
-
-    // If filter exists but no time constraint, add it with $and
-    return {
-        $and: [filter, { kill_time: { $gte: thirtyDaysAgo } }],
-    };
 }
 
 /**
@@ -670,9 +470,12 @@ export default defineCachedEventHandler(
             const queryData = generateComplexQuery(body);
 
             // Use our intelligent index selection
-            const hint = determineOptimalIndexHint(
+            const hint = await determineOptimalIndexHint(
+                Killmails.collection,
+                'killmails',
                 queryData.query.filter,
-                queryData.query.options.sort
+                queryData.query.options.sort,
+                '[Query API]'
             );
 
             // Execute the aggregation pipeline with hint (we always have one now due to automatic time filter)
