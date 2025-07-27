@@ -1,10 +1,10 @@
 import { createError, getQuery } from "h3";
 import url from "url";
 import { Killmails } from "../../models/Killmails";
-import { 
-    determineOptimalIndexHint, 
+import {
+    determineOptimalIndexHint,
     addDefaultTimeFilter,
-    hasKillTimeFilter
+    hasKillTimeFilter,
 } from "~/server/utils/indexOptimizer";
 
 /**
@@ -335,10 +335,10 @@ export default defineCachedEventHandler(
             const sortOptions = { kill_time: -1 };
             const hint = await determineOptimalIndexHint(
                 Killmails.collection,
-                'killmails',
+                "killmails",
                 mongoQuery,
                 sortOptions,
-                '[Killmails API]'
+                "[Killmails API]"
             );
 
             // Fetch killmails with pagination and index hint (with 30s timeout)

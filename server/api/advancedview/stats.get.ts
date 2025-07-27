@@ -78,7 +78,7 @@ function addDefaultTimeFilter(filter: any): any {
     // This avoids unnecessary $and wrapping for simple filters
     const mergedFilter = { ...filter };
     mergedFilter.kill_time = { $gte: thirtyDaysAgo };
-    
+
     return mergedFilter;
 }
 
@@ -128,7 +128,7 @@ function normalizeMongoFilterTypes(filter: any): any {
 
     // Handle arrays (for $and, $or, $in, etc.)
     if (Array.isArray(filter)) {
-        return filter.map(item => normalizeMongoFilterTypes(item));
+        return filter.map((item) => normalizeMongoFilterTypes(item));
     }
 
     const normalized: any = {};
@@ -136,43 +136,65 @@ function normalizeMongoFilterTypes(filter: any): any {
     for (const [key, value] of Object.entries(filter)) {
         // Fields that should be converted to numbers
         const numericFields = [
-            'victim.character_id', 'victim.corporation_id', 'victim.alliance_id',
-            'victim.ship_id', 'victim.ship_group_id', 'victim.faction_id',
-            'attackers.character_id', 'attackers.corporation_id', 'attackers.alliance_id', 
-            'attackers.ship_id', 'attackers.ship_group_id', 'attackers.faction_id',
-            'attackers.weapon_type_id',
-            'character_id', 'corporation_id', 'alliance_id', 'ship_id', 'ship_group_id', 'faction_id',
-            'killmail_id', 'system_id', 'region_id', 'constellation_id', 'total_value',
-            'items.type_id', 'items.group_id'
+            "victim.character_id",
+            "victim.corporation_id",
+            "victim.alliance_id",
+            "victim.ship_id",
+            "victim.ship_group_id",
+            "victim.faction_id",
+            "attackers.character_id",
+            "attackers.corporation_id",
+            "attackers.alliance_id",
+            "attackers.ship_id",
+            "attackers.ship_group_id",
+            "attackers.faction_id",
+            "attackers.weapon_type_id",
+            "character_id",
+            "corporation_id",
+            "alliance_id",
+            "ship_id",
+            "ship_group_id",
+            "faction_id",
+            "killmail_id",
+            "system_id",
+            "region_id",
+            "constellation_id",
+            "total_value",
+            "items.type_id",
+            "items.group_id",
         ];
 
         if (numericFields.includes(key)) {
             // Convert string numbers to actual numbers for ID fields
-            if (typeof value === 'string' && /^\d+$/.test(value)) {
+            if (typeof value === "string" && /^\d+$/.test(value)) {
                 normalized[key] = parseInt(value, 10);
-            } else if (typeof value === 'object' && value !== null) {
+            } else if (typeof value === "object" && value !== null) {
                 // Handle operators like {$in: ["123", "456"]} or {$gte: "100"}
                 if (Array.isArray(value)) {
                     // Handle arrays directly (e.g., for field: ["123", "456"])
-                    normalized[key] = value.map(item => 
-                        typeof item === 'string' && /^\d+$/.test(item) 
-                            ? parseInt(item, 10) 
+                    normalized[key] = value.map((item) =>
+                        typeof item === "string" && /^\d+$/.test(item)
+                            ? parseInt(item, 10)
                             : item
                     );
                 } else {
                     // Handle objects with operators recursively, but special case for $in arrays
                     const normalizedValue: any = {};
                     for (const [opKey, opValue] of Object.entries(value)) {
-                        if (opKey === '$in' && Array.isArray(opValue)) {
-                            normalizedValue[opKey] = opValue.map(item => 
-                                typeof item === 'string' && /^\d+$/.test(item) 
-                                    ? parseInt(item, 10) 
+                        if (opKey === "$in" && Array.isArray(opValue)) {
+                            normalizedValue[opKey] = opValue.map((item) =>
+                                typeof item === "string" && /^\d+$/.test(item)
+                                    ? parseInt(item, 10)
                                     : item
                             );
-                        } else if (typeof opValue === 'string' && /^\d+$/.test(opValue)) {
+                        } else if (
+                            typeof opValue === "string" &&
+                            /^\d+$/.test(opValue)
+                        ) {
                             normalizedValue[opKey] = parseInt(opValue, 10);
                         } else {
-                            normalizedValue[opKey] = normalizeMongoFilterTypes(opValue);
+                            normalizedValue[opKey] =
+                                normalizeMongoFilterTypes(opValue);
                         }
                     }
                     normalized[key] = normalizedValue;
@@ -180,10 +202,10 @@ function normalizeMongoFilterTypes(filter: any): any {
             } else {
                 normalized[key] = value;
             }
-        } else if (key.startsWith('$')) {
+        } else if (key.startsWith("$")) {
             // Handle MongoDB operators recursively
             normalized[key] = normalizeMongoFilterTypes(value);
-        } else if (typeof value === 'object' && value !== null) {
+        } else if (typeof value === "object" && value !== null) {
             // Recursively process nested objects
             normalized[key] = normalizeMongoFilterTypes(value);
         } else {

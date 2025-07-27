@@ -1,11 +1,8 @@
 User-agent: *
 Disallow:
-
-User-agent: *
 Disallow: /api/*
-
-User-agent: *
 Disallow: /_healthcheck
+Disallow: /advancedview
 
 # Sitemaps
 Sitemap: https://eve-kill.com/sitemap.xml

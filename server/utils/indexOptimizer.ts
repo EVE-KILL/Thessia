@@ -1,11 +1,14 @@
-import type { Collection } from 'mongoose';
-import { LRUCache } from 'lru-cache';
+import type { Collection } from "mongoose";
+import { LRUCache } from "lru-cache";
 
 /**
  * Cache for MongoDB indexes to avoid repeated queries
  * Uses LRU cache with automatic TTL management
  */
-const indexCache = new LRUCache<string, Array<{ key: Record<string, number>; name: string }>>({
+const indexCache = new LRUCache<
+    string,
+    Array<{ key: Record<string, number>; name: string }>
+>({
     max: 50, // Maximum number of collections to cache
     ttl: 1000 * 60 * 5, // 5 minutes TTL
     allowStale: true,
@@ -23,25 +26,28 @@ async function getAvailableIndexes(
     if (cached) {
         return cached;
     }
-    
+
     try {
         const indexes = await collection.getIndexes({ full: true });
         const indexArray = Object.values(indexes).map((index: any) => ({
             key: index.key,
-            name: index.name
+            name: index.name,
         }));
-        
+
         // Cache the result in LRU cache
         indexCache.set(collectionName, indexArray);
-        
+
         return indexArray;
     } catch (error) {
         // Return empty array and let MongoDB choose its own indexes
-        const emptyResult: Array<{ key: Record<string, number>; name: string }> = [];
-        
+        const emptyResult: Array<{
+            key: Record<string, number>;
+            name: string;
+        }> = [];
+
         // Cache the empty result to avoid repeated failures
         indexCache.set(collectionName, emptyResult);
-        
+
         return emptyResult;
     }
 }
@@ -86,17 +92,17 @@ function calculateIndexScore(
     sortField?: string
 ): number {
     // Skip the _id_ index
-    if (!index.key || index.name === '_id_') {
+    if (!index.key || index.name === "_id_") {
         return -1000; // Ensure this never gets selected
     }
-    
+
     const indexFields = Object.keys(index.key);
     let score = 0;
-    
+
     // Check if this index can support our filter fields
     let canUseIndex = true;
     let matchedFilterFields = 0;
-    
+
     for (const filterField of filterFields) {
         const indexPosition = indexFields.indexOf(filterField);
         if (indexPosition >= 0) {
@@ -113,21 +119,21 @@ function calculateIndexScore(
             }
         }
     }
-    
+
     if (!canUseIndex) {
         return -1000; // This index cannot be effectively used
     }
-    
+
     // Bonus points for having kill_time as the last field (common pattern)
-    if (indexFields[indexFields.length - 1] === 'kill_time') {
+    if (indexFields[indexFields.length - 1] === "kill_time") {
         score += 5;
     }
-    
+
     // Bonus for having the sort field in the index
     if (sortField && indexFields.includes(sortField)) {
         score += 8;
     }
-    
+
     // Penalty for unused index fields (less selective)
     const unusedFields = indexFields.length - matchedFilterFields;
     score -= unusedFields * 2;
@@ -144,12 +150,15 @@ export async function determineOptimalIndexHint(
     collectionName: string,
     filter: any,
     sortOptions?: Record<string, any>,
-    debugPrefix: string = '[Index Optimizer]',
+    debugPrefix: string = "[Index Optimizer]",
     fallbackIndex?: Record<string, number>
 ): Promise<Record<string, number> | undefined> {
     try {
-        const availableIndexes = await getAvailableIndexes(collection, collectionName);
-        
+        const availableIndexes = await getAvailableIndexes(
+            collection,
+            collectionName
+        );
+
         // Extract the primary sort field if provided
         let primarySortField: string | undefined;
         if (sortOptions && Object.keys(sortOptions).length > 0) {
@@ -158,20 +167,24 @@ export async function determineOptimalIndexHint(
 
         // Get filter fields to check for optimal compound indexes
         const filterFields = extractFilterFields(filter);
-        
+
         // Score all available indexes using the improved algorithm
         let bestIndex = null;
         let bestScore = 0;
 
         for (const index of availableIndexes) {
-            const score = calculateIndexScore(index, filterFields, primarySortField);
-            
+            const score = calculateIndexScore(
+                index,
+                filterFields,
+                primarySortField
+            );
+
             if (score > bestScore) {
                 bestScore = score;
                 bestIndex = index;
             }
         }
-        
+
         if (bestIndex && bestScore > 0) {
             return bestIndex.key;
         } else {
@@ -182,7 +195,6 @@ export async function determineOptimalIndexHint(
                 return { kill_time: -1 };
             }
         }
-        
     } catch (error) {
         // Use provided fallback or let MongoDB choose
         if (fallbackIndex) {
@@ -241,6 +253,6 @@ export function addDefaultTimeFilter(filter: any): any {
     // If filter exists but no time constraint, add it
     return {
         kill_time: { $gte: thirtyDaysAgo },
-        ...filter
+        ...filter,
     };
 }

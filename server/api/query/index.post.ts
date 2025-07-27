@@ -9,9 +9,9 @@ import {
     VALID_FIELDS,
     VALID_OPERATORS,
 } from "~/shared/helpers/queryAPIHelper";
-import { 
-    determineOptimalIndexHint, 
-    addDefaultTimeFilter 
+import {
+    determineOptimalIndexHint,
+    addDefaultTimeFilter,
 } from "~/server/utils/indexOptimizer";
 
 /**
@@ -201,14 +201,32 @@ function validateFilterValue(key: string, value: any): any {
 
     // Handle ID fields with comprehensive normalization
     const numericFields = [
-        "victim.character_id", "victim.corporation_id", "victim.alliance_id",
-        "victim.ship_id", "victim.ship_group_id", "victim.faction_id",
-        "attackers.character_id", "attackers.corporation_id", "attackers.alliance_id",
-        "attackers.ship_id", "attackers.ship_group_id", "attackers.faction_id",
+        "victim.character_id",
+        "victim.corporation_id",
+        "victim.alliance_id",
+        "victim.ship_id",
+        "victim.ship_group_id",
+        "victim.faction_id",
+        "attackers.character_id",
+        "attackers.corporation_id",
+        "attackers.alliance_id",
+        "attackers.ship_id",
+        "attackers.ship_group_id",
+        "attackers.faction_id",
         "attackers.weapon_type_id",
-        "character_id", "corporation_id", "alliance_id", "ship_id", "ship_group_id", "faction_id",
-        "killmail_id", "system_id", "region_id", "constellation_id", "total_value",
-        "items.type_id", "items.group_id"
+        "character_id",
+        "corporation_id",
+        "alliance_id",
+        "ship_id",
+        "ship_group_id",
+        "faction_id",
+        "killmail_id",
+        "system_id",
+        "region_id",
+        "constellation_id",
+        "total_value",
+        "items.type_id",
+        "items.group_id",
     ];
 
     if (numericFields.includes(key)) {
@@ -221,12 +239,15 @@ function validateFilterValue(key: string, value: any): any {
             for (const [operator, operand] of Object.entries(value)) {
                 if (VALID_OPERATORS.includes(operator as any)) {
                     if (operator === "$in" && Array.isArray(operand)) {
-                        validatedValue[operator] = operand.map(item =>
+                        validatedValue[operator] = operand.map((item) =>
                             typeof item === "string" && /^\d+$/.test(item)
                                 ? parseInt(item, 10)
                                 : item
                         );
-                    } else if (typeof operand === "string" && /^\d+$/.test(operand)) {
+                    } else if (
+                        typeof operand === "string" &&
+                        /^\d+$/.test(operand)
+                    ) {
                         validatedValue[operator] = parseInt(operand, 10);
                     } else {
                         validatedValue[operator] = operand;
@@ -472,10 +493,10 @@ export default defineCachedEventHandler(
             // Use our intelligent index selection
             const hint = await determineOptimalIndexHint(
                 Killmails.collection,
-                'killmails',
+                "killmails",
                 queryData.query.filter,
                 queryData.query.options.sort,
-                '[Query API]'
+                "[Query API]"
             );
 
             // Execute the aggregation pipeline with hint (we always have one now due to automatic time filter)
