@@ -178,6 +178,8 @@ const StatsSchema = new Schema<IStatsDocument>(
 
 StatsSchema.index({ type: 1, id: 1, days: 1 }, { unique: true });
 StatsSchema.index({ needsUpdate: 1, days: 1 });
+StatsSchema.index({ type: 1, id: 1, "full.possibleFC": 1 });
+StatsSchema.index({ type: 1, id: 1, "full.possibleCynoAlt": 1 });
 
 const StatsModel = model<IStatsDocument>("stats", StatsSchema, "stats");
 export { StatsModel as Stats };

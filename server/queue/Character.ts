@@ -4,13 +4,17 @@ import { createQueue } from "~/server/helpers/Queue";
 const characterQueue = createQueue("character");
 const characterHistoryQueue = createQueue("characterhistory");
 
-async function queueUpdateCharacter(characterId: number, priority = 1) {
+async function queueUpdateCharacter(
+    characterId: number,
+    priority = 1,
+    attempts = 10
+) {
     await characterQueue.add(
         "character",
         { characterId: characterId },
         {
             priority: priority,
-            attempts: 10,
+            attempts: attempts,
             backoff: {
                 type: "fixed",
                 delay: 5000, // 5 seconds

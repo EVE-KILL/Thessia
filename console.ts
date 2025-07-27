@@ -32,16 +32,42 @@ async function main() {
 
     // Register all commands from the generated loader
     Object.entries(commands).forEach(([name, commandModule]) => {
-        program
+        const command = program
             .command(name)
             .description(commandModule.description)
-            .allowUnknownOption(true)
-            .argument('[args...]', 'Command arguments')
-            .action(async (args, options) => {
+            .allowUnknownOption(true);
+
+        // Add options if they exist (use 'any' to bypass TypeScript checking for optional properties)
+        const moduleAny = commandModule as any;
+        if (moduleAny.options) {
+            moduleAny.options.forEach((option: any) => {
+                command.option(
+                    option.flags,
+                    option.description,
+                    option.defaultValue
+                );
+            });
+        }
+
+        // Add examples to help if they exist
+        if (moduleAny.examples) {
+            const originalHelp = command.helpInformation.bind(command);
+            command.helpInformation = function () {
+                let help = originalHelp();
+                help += "\nExamples:\n";
+                moduleAny.examples.forEach((example: string) => {
+                    help += `  ${example}\n`;
+                });
+                return help;
+            };
+        }
+
+        command
+            .argument("[args...]", "Command arguments")
+            .action(async (args) => {
                 try {
                     // Pass the raw args array directly to the run function
-                    const result = await commandModule.run(args || []);
-                    return result;
+                    await commandModule.run(args || []);
                 } catch (error) {
                     console.error(`Error executing command ${name}:`, error);
                     throw error;
@@ -58,7 +84,9 @@ async function main() {
 
     // Determine which command was invoked
     const invokedCommandName = program.args[0];
-    const invokedCommand = commandsMetadata.find((cmd) => cmd.name === invokedCommandName);
+    const invokedCommand = commandsMetadata.find(
+        (cmd) => cmd.name === invokedCommandName
+    );
 
     // If it's not a long-running command, clean up and exit
     if (!invokedCommand?.longRunning) {
