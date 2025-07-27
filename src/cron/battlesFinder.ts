@@ -1,4 +1,7 @@
-import { compileFullBattleData, determineTeamsFromKillmails } from "~/server/helpers/Battles";
+import {
+    compileFullBattleData,
+    determineTeamsFromKillmails,
+} from "~/server/helpers/Battles";
 import { cliLogger } from "~/server/helpers/Logger";
 import type { IKillmail } from "~/server/interfaces/IKillmail";
 import { Battles } from "~/server/models/Battles";
@@ -27,13 +30,13 @@ export default {
             // Aggregate killmails by system in this hour
             const pipeline: any[] = [
                 { $match: { kill_time: { $gte: fromTime, $lt: toTime } } },
-                { $group: { _id: '$system_id', count: { $sum: 1 } } },
+                { $group: { _id: "$system_id", count: { $sum: 1 } } },
                 { $match: { count: { $gte: 10 } } },
                 { $sort: { count: -1 } },
             ];
             const systems = await Killmails.aggregate(pipeline, {
                 allowDiskUse: true,
-                hint: 'kill_time_-1',
+                hint: "kill_time_-1",
             });
 
             for (const sys of systems) {
@@ -67,8 +70,11 @@ async function processPotentialBattle(
     // Slide 5-minute segments to find contiguous activity
     while (segmentEnd < extensibleTo) {
         const count = await Killmails.countDocuments(
-            { kill_time: { $gte: segmentStart, $lt: segmentEnd }, system_id: systemId },
-            { allowDiskUse: true, hint: 'system_id_-1_kill_time_-1' }
+            {
+                kill_time: { $gte: segmentStart, $lt: segmentEnd },
+                system_id: systemId,
+            },
+            { allowDiskUse: true, hint: "system_id_kill_time" }
         );
 
         if (count >= minKills) {
@@ -91,9 +97,7 @@ async function processPotentialBattle(
 
         if (failCount === 6) {
             foundEnd = true;
-            battleEnd = new Date(
-                segmentStart.getTime() - 6 * 5 * 60 * 1000
-            );
+            battleEnd = new Date(segmentStart.getTime() - 6 * 5 * 60 * 1000);
             break;
         }
 
@@ -110,7 +114,10 @@ async function processPotentialBattle(
     // If valid battle period found
     if (foundStart && foundEnd && battleEnd > battleStart) {
         const data = (await Killmails.find(
-            { kill_time: { $gte: battleStart, $lt: battleEnd }, system_id: systemId },
+            {
+                kill_time: { $gte: battleStart, $lt: battleEnd },
+                system_id: systemId,
+            },
             {
                 _id: 0,
                 killmail_id: 1,
@@ -124,7 +131,14 @@ async function processPotentialBattle(
 
         if (data.length >= minKills) {
             const battleSides = await determineTeamsFromKillmails(data);
-            const doc = await compileFullBattleData(data, [systemId], battleStart, battleEnd, undefined, battleSides);
+            const doc = await compileFullBattleData(
+                data,
+                [systemId],
+                battleStart,
+                battleEnd,
+                undefined,
+                battleSides
+            );
 
             // Collapse into overlapping existing battle
             // Updated to use the new model structure with systems array
@@ -136,7 +150,11 @@ async function processPotentialBattle(
 
             if (overlapping) {
                 if (overlapping.battle_id !== doc.battle_id) {
-                    cliLogger.info(`🔄 Merging battle ${doc.battle_id} into existing ${overlapping.battle_id} for system ${systemId} from ${battleStart.toISOString()} to ${battleEnd.toISOString()}`);
+                    cliLogger.info(
+                        `🔄 Merging battle ${doc.battle_id} into existing ${
+                            overlapping.battle_id
+                        } for system ${systemId} from ${battleStart.toISOString()} to ${battleEnd.toISOString()}`
+                    );
                 }
 
                 // Create a new update object without the battle_id to avoid duplicate key errors
@@ -146,44 +164,67 @@ async function processPotentialBattle(
                 // Properly merge systems arrays to avoid duplicates
                 if (overlapping.systems && updateDoc.systems) {
                     // Create a Set of system IDs already in the battle
-                    const existingSystemIds = new Set(overlapping.systems.map(sys => sys.system_id));
+                    const existingSystemIds = new Set(
+                        overlapping.systems.map((sys) => sys.system_id)
+                    );
 
                     // Only add systems that don't already exist
                     updateDoc.systems = [
                         ...overlapping.systems,
-                        ...updateDoc.systems.filter(sys => !existingSystemIds.has(sys.system_id))
+                        ...updateDoc.systems.filter(
+                            (sys) => !existingSystemIds.has(sys.system_id)
+                        ),
                     ];
                 }
 
                 // Merge killmail IDs to avoid duplicates
                 if (overlapping.killmail_ids && updateDoc.killmail_ids) {
-                    const allKillmailIds = new Set([...overlapping.killmail_ids, ...updateDoc.killmail_ids]);
+                    const allKillmailIds = new Set([
+                        ...overlapping.killmail_ids,
+                        ...updateDoc.killmail_ids,
+                    ]);
                     updateDoc.killmail_ids = Array.from(allKillmailIds);
                 }
 
                 // Update involved entities counts
-                updateDoc.involved_alliances_count = updateDoc.alliancesInvolved?.length || 0;
-                updateDoc.involved_corporations_count = updateDoc.corporationsInvolved?.length || 0;
-                updateDoc.involved_characters_count = updateDoc.charactersInvolved?.length || 0;
+                updateDoc.involved_alliances_count =
+                    updateDoc.alliancesInvolved?.length || 0;
+                updateDoc.involved_corporations_count =
+                    updateDoc.corporationsInvolved?.length || 0;
+                updateDoc.involved_characters_count =
+                    updateDoc.charactersInvolved?.length || 0;
 
                 // Merge the sides data properly
                 if (overlapping.sides && updateDoc.sides) {
                     const mergedSides = { ...overlapping.sides };
 
                     // Combine side data from both battles
-                    for (const [sideId, sideData] of Object.entries(updateDoc.sides)) {
+                    for (const [sideId, sideData] of Object.entries(
+                        updateDoc.sides
+                    )) {
                         if (mergedSides[sideId]) {
                             // Side exists in both battles, merge their data
                             if (sideData.kill_ids) {
-                                const uniqueKillIds = new Set([...mergedSides[sideId].kill_ids, ...sideData.kill_ids]);
-                                mergedSides[sideId].kill_ids = Array.from(uniqueKillIds);
+                                const uniqueKillIds = new Set([
+                                    ...mergedSides[sideId].kill_ids,
+                                    ...sideData.kill_ids,
+                                ]);
+                                mergedSides[sideId].kill_ids =
+                                    Array.from(uniqueKillIds);
                             }
 
                             // Update stats
                             if (sideData.stats) {
-                                mergedSides[sideId].stats.iskLost = (mergedSides[sideId].stats.iskLost || 0) + (sideData.stats.iskLost || 0);
-                                mergedSides[sideId].stats.shipsLost = (mergedSides[sideId].stats.shipsLost || 0) + (sideData.stats.shipsLost || 0);
-                                mergedSides[sideId].stats.damageInflicted = (mergedSides[sideId].stats.damageInflicted || 0) + (sideData.stats.damageInflicted || 0);
+                                mergedSides[sideId].stats.iskLost =
+                                    (mergedSides[sideId].stats.iskLost || 0) +
+                                    (sideData.stats.iskLost || 0);
+                                mergedSides[sideId].stats.shipsLost =
+                                    (mergedSides[sideId].stats.shipsLost || 0) +
+                                    (sideData.stats.shipsLost || 0);
+                                mergedSides[sideId].stats.damageInflicted =
+                                    (mergedSides[sideId].stats
+                                        .damageInflicted || 0) +
+                                    (sideData.stats.damageInflicted || 0);
                             }
 
                             // Merge entity stats (simplified for brevity - in production you might want more sophisticated merging)
@@ -202,7 +243,11 @@ async function processPotentialBattle(
                     { $set: updateDoc }
                 );
             } else {
-                cliLogger.info(`ℹ️  Inserting new battle ${doc.battle_id} for system ${systemId} from ${battleStart.toISOString()} to ${battleEnd.toISOString()}`);
+                cliLogger.info(
+                    `ℹ️  Inserting new battle ${
+                        doc.battle_id
+                    } for system ${systemId} from ${battleStart.toISOString()} to ${battleEnd.toISOString()}`
+                );
                 await Battles.create(doc);
             }
         }

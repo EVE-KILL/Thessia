@@ -104,7 +104,7 @@ const killmailsSchema = new Schema<IKillmailDocument>(
         collection: "killmails",
         timestamps: true,
         toJSON: {
-            transform: (_doc, ret) => {
+            transform: (_doc, ret: any) => {
                 delete ret._id;
                 delete ret.__v;
             },
@@ -117,33 +117,45 @@ const indexes = [
     // Core indexes - keep these
     {
         fields: { killmail_id: -1, killmail_hash: -1 },
-        options: { unique: true },
+        options: { unique: true, name: "killmail_id_hash_unique" },
     },
-    { fields: { war_id: -1, kill_time: -1 }, options: { sparse: true } },
-    { fields: { kill_time: -1 }, options: { sparse: true } },
-    { fields: { createdAt: -1 }, options: { sparse: true } },
-    { fields: { updatedAt: -1 }, options: { sparse: true } },
+    {
+        fields: { war_id: -1, kill_time: -1 },
+        options: { sparse: true, name: "war_id_kill_time" },
+    },
+    {
+        fields: { kill_time: -1 },
+        options: { sparse: true, name: "kill_time_-1" },
+    },
+    {
+        fields: { createdAt: -1 },
+        options: { sparse: true, name: "createdAt_-1" },
+    },
+    {
+        fields: { updatedAt: -1 },
+        options: { sparse: true, name: "updatedAt_-1" },
+    },
 
     // Victim entity indexes - highly used in queries
     {
         fields: { "victim.character_id": -1, kill_time: -1 },
-        options: { sparse: true },
+        options: { sparse: true, name: "victim_character_id_kill_time" },
     },
     {
         fields: { "victim.corporation_id": -1, kill_time: -1 },
-        options: { sparse: true },
+        options: { sparse: true, name: "victim_corporation_id_kill_time" },
     },
     {
         fields: { "victim.alliance_id": -1, kill_time: -1 },
-        options: { sparse: true },
+        options: { sparse: true, name: "victim_alliance_id_kill_time" },
     },
     {
         fields: { "victim.ship_id": -1, kill_time: -1 },
-        options: { sparse: true },
+        options: { sparse: true, name: "victim_ship_id_kill_time" },
     },
     {
         fields: { "victim.ship_group_id": -1, kill_time: -1 },
-        options: { sparse: true },
+        options: { sparse: true, name: "victim_ship_group_id_kill_time" },
     },
 
     // Optimized index for T1 ships
@@ -324,25 +336,58 @@ const indexes = [
     // Attacker entity indexes - highly used in queries
     {
         fields: { "attackers.character_id": -1, kill_time: -1 },
-        options: { sparse: true },
+        options: { sparse: true, name: "attackers_character_id_kill_time" },
     },
     {
         fields: { "attackers.corporation_id": -1, kill_time: -1 },
-        options: { sparse: true },
+        options: { sparse: true, name: "attackers_corporation_id_kill_time" },
     },
     {
         fields: { "attackers.alliance_id": -1, kill_time: -1 },
-        options: { sparse: true },
+        options: { sparse: true, name: "attackers_alliance_id_kill_time" },
     },
     {
         fields: { "attackers.ship_id": -1, kill_time: -1 },
-        options: { sparse: true },
+        options: { sparse: true, name: "attackers_ship_id_kill_time" },
+    },
+
+    // Simple single-field indexes for optimal $or query performance
+    // These are much more efficient than compound indexes for $or queries
+    {
+        fields: { "attackers.character_id": 1 },
+        options: { sparse: true, name: "attackers_character_id_1" },
+    },
+    {
+        fields: { "victim.character_id": 1 },
+        options: { sparse: true, name: "victim_character_id_1" },
+    },
+    {
+        fields: { "attackers.corporation_id": 1 },
+        options: { sparse: true, name: "attackers_corporation_id_1" },
+    },
+    {
+        fields: { "victim.corporation_id": 1 },
+        options: { sparse: true, name: "victim_corporation_id_1" },
+    },
+    {
+        fields: { "attackers.alliance_id": 1 },
+        options: { sparse: true, name: "attackers_alliance_id_1" },
+    },
+    {
+        fields: { "victim.alliance_id": 1 },
+        options: { sparse: true, name: "victim_alliance_id_1" },
     },
 
     // Additional indexes for stats calculations
     // Optimized index for sampling operations - single field to keep it light
-    { fields: { "attackers.ship_id": 1 }, options: { sparse: true } },
-    { fields: { "victim.ship_id": 1 }, options: { sparse: true } },
+    {
+        fields: { "attackers.ship_id": 1 },
+        options: { sparse: true, name: "attackers_ship_id_1" },
+    },
+    {
+        fields: { "victim.ship_id": 1 },
+        options: { sparse: true, name: "victim_ship_id_1" },
+    },
 
     // Specialized indexes for the stats aggregation pipelines
     {
@@ -351,7 +396,7 @@ const indexes = [
             "attackers.ship_id": 1,
             kill_time: -1,
         },
-        options: { sparse: true },
+        options: { sparse: true, name: "attackers_char_ship_kill_time" },
     },
     {
         fields: {
@@ -359,7 +404,7 @@ const indexes = [
             "attackers.ship_id": 1,
             kill_time: -1,
         },
-        options: { sparse: true },
+        options: { sparse: true, name: "attackers_corp_ship_kill_time" },
     },
     {
         fields: {
@@ -367,63 +412,82 @@ const indexes = [
             "attackers.ship_id": 1,
             kill_time: -1,
         },
-        options: { sparse: true },
+        options: { sparse: true, name: "attackers_alli_ship_kill_time" },
     },
 
     // Item/fitting related indexes
     {
         fields: { "items.type_id": -1, kill_time: -1 },
-        options: { sparse: true },
+        options: { sparse: true, name: "items_type_id_kill_time" },
     },
 
     // Location indexes
-    { fields: { system_security: -1 }, options: { sparse: true } },
-    { fields: { system_id: -1, kill_time: -1 }, options: { sparse: true } },
-    { fields: { region_id: -1, kill_time: -1 }, options: { sparse: true } },
+    {
+        fields: { system_security: -1 },
+        options: { sparse: true, name: "system_security_-1" },
+    },
+    {
+        fields: { system_id: -1, kill_time: -1 },
+        options: { sparse: true, name: "system_id_kill_time" },
+    },
+    {
+        fields: { region_id: -1, kill_time: -1 },
+        options: { sparse: true, name: "region_id_kill_time" },
+    },
     {
         fields: { constellation_id: -1, kill_time: -1 },
-        options: { sparse: true },
+        options: { sparse: true, name: "constellation_id_kill_time" },
     },
     {
         fields: { system_security: -1, kill_time: -1 },
-        options: { sparse: true },
+        options: { sparse: true, name: "system_security_kill_time" },
     },
 
     // Feature-based filters
-    { fields: { is_npc: -1, kill_time: -1 }, options: { sparse: true } },
-    { fields: { is_solo: -1, kill_time: -1 }, options: { sparse: true } },
-    { fields: { total_value: -1, kill_time: -1 }, options: { sparse: true } },
+    {
+        fields: { is_npc: -1, kill_time: -1 },
+        options: { sparse: true, name: "is_npc_kill_time" },
+    },
+    {
+        fields: { is_solo: -1, kill_time: -1 },
+        options: { sparse: true, name: "is_solo_kill_time" },
+    },
+    {
+        fields: { total_value: -1, kill_time: -1 },
+        options: { sparse: true, name: "total_value_kill_time" },
+    },
 
     // Spatial queries
     {
         fields: { system_id: -1, x: -1, y: -1, z: -1 },
-        options: { sparse: true },
+        options: { sparse: true, name: "system_spatial_coordinates" },
     },
     // Specific Query Optimizations
     {
         fields: { "victim.character_id": 1, system_id: 1, kill_time: -1 },
-        options: { sparse: true },
+        options: { sparse: true, name: "victim_char_system_kill_time" },
     },
     {
         fields: { "victim.ship_group_id": 1, total_value: -1, kill_time: -1 },
-        options: { sparse: true },
+        options: { sparse: true, name: "victim_ship_value_kill_time" },
     },
 
     // For Query Builder - Attacker fields often filtered with kill_time sort
     {
         fields: { "attackers.ship_group_id": -1, kill_time: -1 },
-        options: { sparse: true },
+        options: { sparse: true, name: "attackers_ship_group_kill_time" },
     },
     {
         fields: { "attackers.faction_id": -1, kill_time: -1 },
-        options: { sparse: true },
+        options: { sparse: true, name: "attackers_faction_kill_time" },
     },
     {
         fields: { "attackers.weapon_type_id": -1, kill_time: -1 },
-        options: { sparse: true },
+        options: { sparse: true, name: "attackers_weapon_kill_time" },
     },
 ];
 
+// Add indexes to schema (Mongoose will handle duplicates automatically)
 for (const { fields, options } of indexes) {
     killmailsSchema.index(fields as any, options);
 }
@@ -443,30 +507,54 @@ killmailsSchema.on("index", (error) => {
 
 // After creating the model, compute allowed index names from our definitions.
 // The auto-generated name is computed by concatenating each key and its value in order.
-const computeIndexName = (fields: Record<string, number>) =>
-    Object.entries(fields)
-        .map(([key, val]) => `${key}_${val}`)
-        .join("_");
+const computeIndexName = (fields: any) => {
+    const entries = Object.entries(fields).filter(
+        ([key, val]) => val !== undefined
+    );
+    return entries.map(([key, val]) => `${key}_${val}`).join("_");
+};
 
 const allowedIndexNames = new Set(
-    indexes.map((idx) => computeIndexName(idx.fields))
+    indexes.map((idx) => idx.options?.name || computeIndexName(idx.fields))
 );
 
-// Drop any index on the collection that doesn't match the allowed names (except _id)
+// Intelligent index management - check what exists and log only new creations
 Killmails.collection
     .indexes()
     .then(async (currentIndexes) => {
+        const existingIndexNames = new Set(
+            currentIndexes.map((idx) => idx.name)
+        );
+
+        // Log only new index creations
+        for (const { fields, options } of indexes) {
+            const indexName = options?.name || computeIndexName(fields);
+
+            if (!existingIndexNames.has(indexName)) {
+                cliLogger.info(
+                    `Creating new index "${indexName}" on fields: ${JSON.stringify(
+                        fields
+                    )}`
+                );
+            }
+        }
+
+        // Drop any index that doesn't match our allowed names (except _id)
         for (const idx of currentIndexes) {
-            if (idx.name !== "_id_" && !allowedIndexNames.has(idx.name)) {
+            if (
+                idx.name &&
+                idx.name !== "_id_" &&
+                !allowedIndexNames.has(idx.name)
+            ) {
                 try {
-                    //await Killmails.collection.dropIndex(idx.name);
-                    //cliLogger.info(`Dropped index ${idx.name}`);
+                    await Killmails.collection.dropIndex(idx.name);
+                    cliLogger.info(`Dropped obsolete index: ${idx.name}`);
                 } catch (err) {
-                    //console.error(`Error dropping index ${idx.name}:`, err);
+                    console.error(`Error dropping index ${idx.name}:`, err);
                 }
             }
         }
     })
     .catch((err) => {
-        console.error("Error fetching indexes:", err);
+        console.error("Error managing indexes:", err);
     });

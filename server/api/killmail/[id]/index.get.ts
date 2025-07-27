@@ -33,7 +33,7 @@ export default defineCachedEventHandler(
             const killmail: IKillmail | null = await Killmails.findOne(
                 { killmail_id: Number(killmail_id) },
                 projection,
-                { hint: "killmail_id_-1_killmail_hash_-1" },
+                { hint: "killmail_id_hash_unique" }
             ).lean();
 
             if (!killmail) {
@@ -65,10 +65,10 @@ export default defineCachedEventHandler(
             const idParam = event.context.params?.id;
             const query = getQuery(event);
             const fields = query.fields as string | undefined;
-            return `killmail:${idParam}:fields:${fields || 'all'}`;
+            return `killmail:${idParam}:fields:${fields || "all"}`;
         },
         shouldBypassCache: (event) => {
             return process.env.NODE_ENV !== "production";
-        }
-    },
+        },
+    }
 );
