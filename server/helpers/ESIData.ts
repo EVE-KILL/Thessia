@@ -48,11 +48,13 @@ async function fetchESIKillmail(
 
         return esiKillmail;
     } catch (error) {
-        const errorMessage = error instanceof Error ? error.message : String(error);
-        const errorResponse = error && typeof error === 'object' && 'response' in error ? error.response : '';
-        throw new Error(
-            `error: ${errorMessage} | response: ${errorResponse}`
-        );
+        const errorMessage =
+            error instanceof Error ? error.message : String(error);
+        const errorResponse =
+            error && typeof error === "object" && "response" in error
+                ? error.response
+                : "";
+        throw new Error(`error: ${errorMessage} | response: ${errorResponse}`);
     }
 }
 
@@ -130,17 +132,29 @@ async function getCharacter(
 
     // Ensure ESI takes precedence for alliance and faction fields
     // Handle cases where character left alliance/faction (ESI returns null/undefined)
-    if (data.alliance_id === null || data.alliance_id === undefined || data.alliance_id === 0) {
+    if (
+        data.alliance_id === null ||
+        data.alliance_id === undefined ||
+        data.alliance_id === 0
+    ) {
         data.alliance_id = 0;
         data.alliance_name = "";
     }
-    if (data.faction_id === null || data.faction_id === undefined || data.faction_id === 0) {
+    if (
+        data.faction_id === null ||
+        data.faction_id === undefined ||
+        data.faction_id === 0
+    ) {
         data.faction_id = 0;
         data.faction_name = "";
     }
 
     // If character doesn't have alliance info but has corporation, derive alliance from corporation
-    if (data.alliance_id === 0 && data.corporation_id && data.corporation_id > 0) {
+    if (
+        data.alliance_id === 0 &&
+        data.corporation_id &&
+        data.corporation_id > 0
+    ) {
         try {
             const corporation = await getCorporation(data.corporation_id);
             if (corporation.alliance_id && corporation.alliance_id > 0) {
@@ -148,7 +162,10 @@ async function getCharacter(
                 data.alliance_name = corporation.alliance_name || "";
             }
         } catch (error) {
-            console.log(`Failed to derive alliance from corporation ${data.corporation_id} for character ${character_id}:`, error instanceof Error ? error.message : String(error));
+            console.log(
+                `Failed to derive alliance from corporation ${data.corporation_id} for character ${character_id}:`,
+                error instanceof Error ? error.message : String(error)
+            );
         }
     }
 
@@ -157,12 +174,13 @@ async function getCharacter(
     // 2. Current corporation_id doesn't match latest history entry
     // 3. We have no history entries
     // 4. Alliance status changed (from database vs ESI)
-    const shouldUpdateHistory = !data.deleted && (
-        data.history.length === 0 ||
-        data.corporation_id !== data.history[0]?.corporation_id ||
-        (existingCharacter && existingCharacter.alliance_id !== data.alliance_id)
-    );
-    
+    const shouldUpdateHistory =
+        !data.deleted &&
+        (data.history.length === 0 ||
+            data.corporation_id !== data.history[0]?.corporation_id ||
+            (existingCharacter &&
+                existingCharacter.alliance_id !== data.alliance_id));
+
     if (shouldUpdateHistory) {
         await queueUpdateCharacterHistory(character_id);
     }
@@ -282,11 +300,19 @@ async function getCorporation(
 
     // Ensure ESI takes precedence for alliance and faction fields
     // Handle cases where corporation left alliance/faction (ESI returns null/undefined)
-    if (data.alliance_id === null || data.alliance_id === undefined || data.alliance_id === 0) {
+    if (
+        data.alliance_id === null ||
+        data.alliance_id === undefined ||
+        data.alliance_id === 0
+    ) {
         data.alliance_id = 0;
         data.alliance_name = "";
     }
-    if (data.faction_id === null || data.faction_id === undefined || data.faction_id === 0) {
+    if (
+        data.faction_id === null ||
+        data.faction_id === undefined ||
+        data.faction_id === 0
+    ) {
         data.faction_id = 0;
         data.faction_name = "";
     }
@@ -295,12 +321,12 @@ async function getCorporation(
     // 1. Current alliance_id doesn't match latest history entry
     // 2. We have no history entries
     // 3. Alliance status changed from what's in database
-    const shouldUpdateHistory = (
+    const shouldUpdateHistory =
         data.history.length === 0 ||
         data.alliance_id !== data.history[0]?.alliance_id ||
-        (existingCorporation && existingCorporation.alliance_id !== data.alliance_id)
-    );
-    
+        (existingCorporation &&
+            existingCorporation.alliance_id !== data.alliance_id);
+
     if (shouldUpdateHistory) {
         await queueUpdateCorporationHistory(corporation_id);
     }
@@ -384,7 +410,11 @@ async function getAlliance(
 
     // Ensure ESI takes precedence for faction fields
     // Handle cases where alliance left faction (ESI returns null/undefined)
-    if (data.faction_id === null || data.faction_id === undefined || data.faction_id === 0) {
+    if (
+        data.faction_id === null ||
+        data.faction_id === undefined ||
+        data.faction_id === 0
+    ) {
         data.faction_id = 0;
         data.faction_name = "";
     }
