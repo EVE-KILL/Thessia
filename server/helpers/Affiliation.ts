@@ -29,8 +29,6 @@ async function processChunk(characters: ICharacters[], attempt = 0): Promise<num
     }
 
     if (
-      affiliation.corporation_id &&
-      originalData.corporation_id &&
       affiliation.corporation_id !== originalData.corporation_id
     ) {
       updates.push({
@@ -39,12 +37,10 @@ async function processChunk(characters: ICharacters[], attempt = 0): Promise<num
       });
     }
 
-    // Opdater alliance_id hvis der er ændring
-    if (
-      affiliation.alliance_id &&
-      originalData.alliance_id &&
-      affiliation.alliance_id !== originalData.alliance_id
-    ) {
+    // Update alliance_id if there's any change (including joining/leaving alliance)
+    const originalAllianceId = originalData.alliance_id || 0;
+    const newAllianceId = affiliation.alliance_id || 0;
+    if (originalAllianceId !== newAllianceId) {
       updates.push({
         character_id: characterId,
         alliance_id: affiliation.alliance_id,
