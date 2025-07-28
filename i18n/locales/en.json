@@ -522,8 +522,25 @@
     "errorNotFound": "Error: Not Found",
     "errorForbidden": "Error: Forbidden",
     "errorServerError": "Error: Server Error",
+    "errorMaintenance": "Service Temporarily Unavailable",
     "errorGeneric": "Error: Generic Error",
     "backToHome": "Back to Frontpage",
+    "errors": {
+        "titles": {
+            "404": "Page Not Found",
+            "403": "Access Forbidden",
+            "500": "Server Error",
+            "503": "Service Unavailable",
+            "generic": "Error"
+        },
+        "whatToDo": {
+            "title": "What can you do?",
+            "goBack": "Try going back to the previous page",
+            "tryAgain": "Wait a moment and try again",
+            "contact": "Contact support if the problem persists"
+        },
+        "goBack": "Go Back"
+    },
     "autoRefresh": "Auto Refresh",
     "1min": "1 min",
     "5min": "5 min",

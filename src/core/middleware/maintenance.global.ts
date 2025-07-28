@@ -47,7 +47,9 @@ export default defineNuxtRouteMiddleware(async (to) => {
                 });
             }
 
-            // Redirect to maintenance page for all other routes
+            // For non-API routes, redirect to maintenance page
+            // Note: The maintenance page itself will show with 200 status to avoid Nuxt error handling
+            // but the middleware ensures proper access control
             return navigateTo("/maintenance");
         }
     } catch (error) {
