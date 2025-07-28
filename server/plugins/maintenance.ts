@@ -54,8 +54,6 @@ export function getMaintenanceState(): IMaintenanceState {
 }
 
 export default defineNitroPlugin(async () => {
-    console.log("[Maintenance] Plugin initialized");
-
     // Perform initial check
     await fetchMaintenanceConfig();
 

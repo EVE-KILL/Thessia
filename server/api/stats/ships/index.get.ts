@@ -1,5 +1,5 @@
-import { Killmails } from "~/server/models/Killmails";
 import { InvTypes } from "~/server/models/InvTypes";
+import { Killmails } from "~/server/models/Killmails";
 import { determineOptimalAggregationHint } from "~/server/utils/indexOptimizer";
 
 /**
@@ -63,7 +63,6 @@ async function topLostShips(
     // Determine optimal index hint for the aggregation pipeline
     const hint = await determineOptimalAggregationHint(
         Killmails.collection,
-        "killmails",
         query,
         "[Stats Ships API]"
     );

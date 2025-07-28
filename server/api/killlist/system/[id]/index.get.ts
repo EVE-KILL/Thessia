@@ -1,9 +1,4 @@
-// API endpoint to fetch killlist data for a specific solar system
-
-import { getQuery } from "h3";
-import type { IKillmail } from "~/server/interfaces/IKillmail";
 import { Killmails } from "~/server/models/Killmails";
-import { determineOptimalIndexHint } from "~/server/utils/indexOptimizer";
 
 export default defineCachedEventHandler(
     async (event: any) => {
@@ -26,16 +21,6 @@ export default defineCachedEventHandler(
             system_id: Number(id),
         };
 
-        // Determine optimal index hint for the system query
-        const sortOptions = { kill_time: -1 };
-        const hint = await determineOptimalIndexHint(
-            Killmails.collection,
-            "killmails",
-            mongoQuery,
-            sortOptions,
-            "[System API]"
-        );
-
         // Create cursor for streaming killmails
         let cursor = Killmails.find(
             mongoQuery,
@@ -46,11 +31,6 @@ export default defineCachedEventHandler(
                 limit: limit,
             }
         );
-
-        // Apply index hint if we have one
-        if (hint) {
-            cursor = cursor.hint(hint);
-        }
 
         // Stream through killmails using cursor and format on-the-fly
         const result: any[] = [];

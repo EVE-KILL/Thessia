@@ -98,10 +98,10 @@
 </template>
 
 <script setup lang="ts">
+import moment from "moment";
 import { computed, ref, watch } from "vue";
 import { useI18n } from "vue-i18n";
 import { useRoute } from "vue-router";
-import moment from "moment";
 
 const { t, locale } = useI18n();
 const currentLocale = computed(() => locale.value);
@@ -153,9 +153,7 @@ const {
         }
 
         try {
-            console.log(`Fetching killmails for item type: ${props.item.type_id}`);
             const response = await $fetch(`/api/items/${props.item.type_id}/killmails?limit=20`);
-            console.log(`Received ${response?.length || 0} killmails`);
             return response;
         } catch (err) {
             console.error("Error fetching killmail data:", err);
@@ -192,7 +190,6 @@ watch(
     () => props.item?.type_id,
     (newTypeId) => {
         if (newTypeId) {
-            console.log(`Item type_id changed to: ${newTypeId}, triggering fetch`);
             refresh();
         }
     },

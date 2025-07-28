@@ -132,11 +132,9 @@ const {
         }
 
         try {
-            console.log(`Fetching price data for item type: ${props.item.type_id}`);
             const result = await $fetch<PriceData[]>(
                 `/api/items/${props.item.type_id}/pricing?regionId=${REGION_ID}&days=30`,
             );
-            console.log(`Received ${result?.length || 0} price entries`);
             return result;
         } catch (err) {
             console.error("Error fetching price data:", err);
@@ -164,7 +162,6 @@ watch(
     () => props.item?.type_id,
     (newTypeId) => {
         if (newTypeId) {
-            console.log(`Item type_id changed to: ${newTypeId}, triggering price fetch`);
             refresh();
         }
     },

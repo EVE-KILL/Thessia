@@ -1,122 +1,79 @@
 import { LRUCache } from "lru-cache";
+import type { IndexDescription } from "mongodb";
+import { cliLogger } from "~/server/helpers/Logger";
 
 /**
  * Cache for MongoDB indexes to avoid repeated queries
- * Uses LRU cache with automatic TTL management
  */
-const indexCache = new LRUCache<
-    string,
-    Array<{ key: Record<string, number>; name: string }>
->({
-    max: 50, // Maximum number of collections to cache
-    ttl: 1000 * 60 * 5, // 5 minutes TTL
+const indexCache = new LRUCache<string, IndexDescription[]>({
+    max: 50,
+    ttl: 5 * 60 * 1000, // 5 minutes TTL
     allowStale: true,
 });
 
 /**
- * Get available indexes from MongoDB collection
+ * Check if we're in development mode
  */
-async function getAvailableIndexes(
+const isDev = process.env.NODE_ENV === "development";
+
+/**
+ * Development-only logging helper
+ */
+function devLog(prefix: string, message: string) {
+    if (!isDev) return;
+    cliLogger.info(`${prefix} ${message}`);
+}
+/**
+ * Fetch available indexes from MongoDB collection
+ */
+async function fetchIndexes(
     collection: any,
     collectionName: string
-): Promise<Array<{ key: Record<string, number>; name: string }>> {
-    // Check LRU cache first
+): Promise<IndexDescription[]> {
     const cached = indexCache.get(collectionName);
     if (cached) {
         return cached;
     }
 
     try {
-        const indexes = await collection.getIndexes({ full: true });
-        const indexArray = Object.values(indexes).map((index: any) => ({
-            key: index.key,
-            name: index.name,
-        }));
-
-        // Cache the result in LRU cache
-        indexCache.set(collectionName, indexArray);
-
-        return indexArray;
+        const indexes = await collection.listIndexes().toArray();
+        indexCache.set(collectionName, indexes);
+        return indexes;
     } catch (error) {
-        // Return empty array and let MongoDB choose its own indexes
-        const emptyResult: Array<{
-            key: Record<string, number>;
-            name: string;
-        }> = [];
-
-        // Cache the empty result to avoid repeated failures
+        cliLogger.warn(
+            `Failed to fetch indexes for ${collectionName}: ${error}`
+        );
+        const emptyResult: IndexDescription[] = [];
         indexCache.set(collectionName, emptyResult);
-
         return emptyResult;
     }
 }
 
 /**
- * Extract filter fields from MongoDB query to analyze index requirements
- * Enhanced to handle $or queries and extract individual branches
+ * Extract filter fields from MongoDB query
  */
-function extractFilterFields(filter: any): {
+function extractFilterFields(filter: Record<string, any>): {
     fields: string[];
     isOrQuery: boolean;
-    orBranches: string[][];
 } {
-    const fields: string[] = [];
+    const fields = new Set<string>();
     let isOrQuery = false;
-    let orBranches: string[][] = [];
 
-    function traverse(obj: any, parentKey?: string) {
-        for (const [key, value] of Object.entries(obj)) {
-            if (key === "$or" && Array.isArray(value)) {
+    function traverse(obj: any) {
+        if (obj && typeof obj === "object") {
+            // Check for $or queries
+            if (Array.isArray(obj.$or)) {
                 isOrQuery = true;
+                obj.$or.forEach(traverse);
+            }
 
-                // Extract fields from each $or branch
-                for (const orCondition of value) {
-                    const branchFields: string[] = [];
-                    traverse(orCondition, key);
-
-                    // Collect fields from this branch
-                    for (const [branchKey, branchValue] of Object.entries(
-                        orCondition
-                    )) {
-                        if (
-                            typeof branchValue === "object" &&
-                            branchValue !== null
-                        ) {
-                            branchFields.push(branchKey);
-                        } else {
-                            branchFields.push(branchKey);
-                        }
-                    }
-
-                    if (branchFields.length > 0) {
-                        orBranches.push(branchFields);
-                    }
+            // Extract field names (skip operators)
+            for (const [key, value] of Object.entries(obj)) {
+                if (key.startsWith("$")) continue;
+                fields.add(key);
+                if (typeof value === "object" && value !== null) {
+                    traverse(value);
                 }
-
-                // Mark complex $or if multiple conditions
-                if (value.length > 1) {
-                    fields.push("$or_complex");
-                }
-            } else if (typeof value === "object" && value !== null) {
-                // Handle nested conditions
-                if (Array.isArray(value)) {
-                    // Array conditions like $in, $nin
-                    fields.push(key);
-                } else {
-                    // Nested object conditions
-                    const hasOperators = Object.keys(value).some((k) =>
-                        k.startsWith("$")
-                    );
-                    if (hasOperators) {
-                        fields.push(key);
-                        traverse(value, key);
-                    } else {
-                        fields.push(key);
-                        traverse(value, key);
-                    }
-                }
-            } else {
-                fields.push(key);
             }
         }
     }
@@ -124,636 +81,135 @@ function extractFilterFields(filter: any): {
     traverse(filter);
 
     return {
-        fields: [...new Set(fields)], // Remove duplicates
+        fields: Array.from(fields),
         isOrQuery,
-        orBranches,
     };
 }
 
 /**
- * Calculate score for an index based on filter fields and sort options
- * Higher score = better index for the query
- * Enhanced with stricter scoring for complex queries and $or optimization
+ * Score an index for a given query
  */
-function calculateIndexScore(
-    index: { key: Record<string, number>; name: string },
+function scoreIndex(
+    index: IndexDescription,
     filterFields: string[],
     sortField?: string,
-    isOrQuery: boolean = false,
-    orBranches: string[][] = []
+    isOrQuery: boolean = false
 ): number {
-    // Skip the _id_ index
-    if (!index.key || index.name === "_id_") {
-        return -1000; // Ensure this never gets selected
-    }
+    const indexKeys = Object.keys(index.key);
 
-    const indexFields = Object.keys(index.key);
-    let score = 0;
+    // Skip the default _id index
+    if (index.name === "_id_") return -Infinity;
 
-    // Special handling for $or queries with combined indexes
-    if (isOrQuery && orBranches.length > 0) {
-        // Check if this is a combined attacker/victim index
-        const isCombinedIndex =
-            index.name?.includes("attacker_victim") ||
-            (indexFields.includes("attackers.character_id") &&
-                indexFields.includes("victim.character_id")) ||
-            (indexFields.includes("attackers.corporation_id") &&
-                indexFields.includes("victim.corporation_id")) ||
-            (indexFields.includes("attackers.alliance_id") &&
-                indexFields.includes("victim.alliance_id"));
+    // For $or queries, let MongoDB handle optimization
+    if (isOrQuery) return 0;
 
-        if (isCombinedIndex) {
-            // For $or queries, combined indexes are often less efficient than separate indexes
-            // This is because MongoDB can't efficiently use compound indexes for $or conditions
-            // where each branch only uses one field from the compound index
+    // Count matching filter fields
+    const matchingFields = filterFields.filter((field) =>
+        indexKeys.includes(field)
+    ).length;
 
-            // Check if this is a simple $or with just two branches (attacker vs victim pattern)
-            const isSimpleAttackerVictimOr =
-                orBranches.length === 2 &&
-                orBranches.some((branch) =>
-                    branch.some((field) => field.includes("attackers."))
-                ) &&
-                orBranches.some((branch) =>
-                    branch.some((field) => field.includes("victim."))
-                );
+    // Base score from matching fields
+    let score = matchingFields * 10;
 
-            if (isSimpleAttackerVictimOr) {
-                // For simple attacker vs victim $or queries, compound indexes are less efficient
-                // Penalize heavily as MongoDB will likely scan many documents
-                score -= 75;
-            } else {
-                // Check if all OR branches can be satisfied by this combined index
-                let branchesSupported = 0;
-                for (const branch of orBranches) {
-                    const branchSupported = branch.every((field) =>
-                        indexFields.includes(field)
-                    );
-                    if (branchSupported) {
-                        branchesSupported++;
-                    }
-                }
-
-                // If this combined index supports all OR branches, give moderate bonus
-                if (branchesSupported === orBranches.length) {
-                    score += 30; // Reduced bonus due to $or inefficiency with compound indexes
-                }
-            }
-        }
-    }
-
-    // Check if this index can support our filter fields
-    let canUseIndex = true;
-    let matchedFilterFields = 0;
-    let exactFieldMatch = true;
-
-    // For compound indexes, be more lenient when the first field matches
-    for (const filterField of filterFields) {
-        const indexPosition = indexFields.indexOf(filterField);
-        if (indexPosition >= 0) {
-            // Higher score for fields that appear earlier in the compound index
-            const positionBonus = (indexFields.length - indexPosition) * 10;
-
-            // Extra bonus if this is the first field in the index (most efficient)
-            const firstFieldBonus = indexPosition === 0 ? 15 : 0;
-
-            score += positionBonus + firstFieldBonus;
-            matchedFilterFields++;
-        } else {
-            exactFieldMatch = false;
-            // For compound indexes, missing fields are penalized, but not as heavily if we have good matches
-            if (indexFields.length > 1 && matchedFilterFields === 0) {
-                score -= 20; // Heavy penalty only if no fields match
-            } else if (indexFields.length > 1) {
-                score -= 5; // Light penalty if we have some matches
-            }
-        }
-    }
-
-    // If compound index has fields not in our query, penalize more leniently
-    const extraFields = indexFields.length - matchedFilterFields;
-    if (extraFields > 0 && indexFields.length > 1) {
-        // For each extra field in compound index, apply lighter penalty if first field matches
-        const hasFirstFieldMatch =
-            matchedFilterFields > 0 &&
-            indexFields.indexOf(filterFields[0]) === 0;
-        const extraFieldPenalty = hasFirstFieldMatch ? 5 : 15;
-
-        score -= extraFields * extraFieldPenalty;
-
-        // If more than half the index fields are unused and no first field match, this is a bad choice
-        if (extraFields > matchedFilterFields && !hasFirstFieldMatch) {
-            score -= 30;
-        }
-    }
-
-    // Special handling for $or queries - they benefit most from simple single-field indexes
-    if (isOrQuery && orBranches.length > 0) {
-        // For $or queries, simple single-field indexes are most efficient
-        if (indexFields.length === 1) {
-            // Check if this single-field index matches any of the $or branches
-            const indexField = indexFields[0];
-            if (indexField) {
-                const matchesOrBranch = orBranches.some((branch) =>
-                    branch.includes(indexField)
-                );
-
-                if (matchesOrBranch) {
-                    score += 50; // Big bonus for simple indexes that match $or branches
-                }
-            }
-        } else {
-            // Compound indexes are less efficient for $or queries
-            score -= 20;
-        }
-    }
-
-    // Special handling for complex $or queries
-    if (filterFields.includes("$or_complex")) {
-        // For complex $or queries, heavily favor simple indexes or our combined indexes
-        if (
-            indexFields.length > 2 &&
-            !index.name?.includes("attacker_victim")
-        ) {
-            score -= 100; // Make compound indexes very unattractive (except combined ones)
-        }
-
-        // If this is a sort-only query due to complex $or, prefer sort index
-        if (
-            sortField &&
-            indexFields.length === 1 &&
-            indexFields[0] === sortField
-        ) {
-            score += 50; // Heavily favor simple sort index for complex $or
-        }
-    }
-
-    // For perfect field matches on simple indexes, give bonus
-    if (
-        exactFieldMatch &&
-        indexFields.length === filterFields.length &&
-        indexFields.length <= 2
-    ) {
-        score += 20;
-    }
-
-    // If no filter fields match at all, check if this is a sort-only query
-    if (matchedFilterFields === 0) {
-        // For sort-only queries (empty filter), prioritize indexes that support the sort field
-        if (
-            filterFields.length === 0 &&
-            sortField &&
-            indexFields.includes(sortField)
-        ) {
-            // This is a sort-only query and this index supports the sort field
-            // Give it a good base score and let the sort bonus apply
-            score = 50;
-
-            // Bonus for single-field sort index (most efficient for sort-only queries)
-            if (indexFields.length === 1 && indexFields[0] === sortField) {
-                score += 30; // Total score of 80 + sort bonus
-            }
-
-            // Light penalty for compound indexes in sort-only queries
-            if (indexFields.length > 1) {
-                score -= (indexFields.length - 1) * 5;
-            }
-        } else {
-            // No filter fields and this index doesn't help with sorting
-            return -1000;
-        }
-    }
-
-    // Bonus points for having kill_time as the last field (common pattern)
-    if (indexFields[indexFields.length - 1] === "kill_time") {
+    // Bonus if index supports sort field
+    if (sortField && indexKeys.includes(sortField)) {
         score += 5;
     }
 
-    // Bonus for having the sort field in the index
-    if (sortField && indexFields.includes(sortField)) {
-        score += 8;
+    // Penalty for extra fields in compound indexes that we don't use
+    const sortFieldInIndex = sortField && indexKeys.includes(sortField) ? 1 : 0;
+    const unusedFields = Math.max(
+        0,
+        indexKeys.length - matchingFields - sortFieldInIndex
+    );
+    score -= unusedFields * 2;
+
+    // Bonus for exact match (all our fields, no extra fields)
+    // Don't double-count if sort field is also a filter field
+    const sortFieldAlsoInFilter = sortField && filterFields.includes(sortField);
+    const totalUsefulFields = sortFieldAlsoInFilter
+        ? matchingFields // Don't add sortFieldInIndex if it's already counted in matchingFields
+        : matchingFields + sortFieldInIndex;
+
+    if (totalUsefulFields === indexKeys.length && matchingFields > 0) {
+        score += 10;
     }
 
     return score;
 }
 
 /**
- * Suggest optimal indexes that don't exist yet for a given query
- * Returns suggested index structures that would improve query performance
- */
-export function suggestOptimalIndexes(
-    filter: any,
-    sortOptions?: Record<string, any>,
-    availableIndexes: Array<{ key: Record<string, number>; name: string }> = []
-): Array<{
-    index: Record<string, number>;
-    reason: string;
-    score: number;
-    indexName?: string;
-}> {
-    const suggestions: Array<{
-        index: Record<string, number>;
-        reason: string;
-        score: number;
-        indexName?: string;
-    }> = [];
-
-    // Extract filter analysis
-    const filterAnalysis = extractFilterFields(filter);
-    const { fields: filterFields, isOrQuery, orBranches } = filterAnalysis;
-
-    // Get primary sort field
-    let primarySortField: string | undefined;
-    if (sortOptions && Object.keys(sortOptions).length > 0) {
-        primarySortField = Object.keys(sortOptions)[0];
-    }
-
-    // Remove special markers from filter fields for index creation
-    const cleanFilterFields = filterFields.filter(
-        (field) => !field.startsWith("$")
-    );
-
-    // Check if we already have good indexes for these fields
-    const existingIndexNames = new Set(
-        availableIndexes.map((idx) => Object.keys(idx.key).sort().join("_"))
-    );
-
-    // Suggestion 1: Simple single-field indexes for each filter field
-    for (const field of cleanFilterFields) {
-        const singleFieldIndex = { [field]: 1 };
-        const indexName = field.replace(/\./g, "_");
-
-        if (!existingIndexNames.has(field)) {
-            suggestions.push({
-                index: singleFieldIndex,
-                reason: `Single-field index for frequent filtering on ${field}`,
-                score: 30,
-                indexName: `${indexName}_1`,
-            });
-        }
-    }
-
-    // Suggestion 2: Compound index with filter fields + sort field
-    if (primarySortField && cleanFilterFields.length > 0) {
-        const compoundFields: Record<string, number> = {};
-
-        // Add filter fields first (equality fields should come first in compound indexes)
-        for (const field of cleanFilterFields) {
-            compoundFields[field] = 1;
-        }
-
-        // Add sort field last
-        if (!compoundFields[primarySortField]) {
-            compoundFields[primarySortField] = sortOptions![primarySortField];
-        }
-
-        const compoundIndexName = Object.keys(compoundFields)
-            .map((f) => f.replace(/\./g, "_"))
-            .join("_");
-
-        if (
-            !existingIndexNames.has(
-                Object.keys(compoundFields).sort().join("_")
-            )
-        ) {
-            suggestions.push({
-                index: compoundFields,
-                reason: `Compound index supporting both filtering (${cleanFilterFields.join(
-                    ", "
-                )}) and sorting (${primarySortField})`,
-                score: 60,
-                indexName: compoundIndexName,
-            });
-        }
-    }
-
-    // Suggestion 3: Specialized $or query indexes
-    if (isOrQuery && orBranches.length > 0) {
-        // Check if this looks like an attacker/victim pattern
-        const hasAttackerVictimPattern = orBranches.some(
-            (branch) =>
-                branch.some((field) => field.includes("attackers.")) &&
-                orBranches.some((otherBranch) =>
-                    otherBranch.some((field) => field.includes("victim."))
-                )
-        );
-
-        if (hasAttackerVictimPattern) {
-            // Extract entity types from the $or branches
-            const entityTypes = new Set<string>();
-            for (const branch of orBranches) {
-                for (const field of branch) {
-                    if (field.includes("character_id"))
-                        entityTypes.add("character_id");
-                    if (field.includes("corporation_id"))
-                        entityTypes.add("corporation_id");
-                    if (field.includes("alliance_id"))
-                        entityTypes.add("alliance_id");
-                }
-            }
-
-            // For simple attacker/victim $or queries, suggest separate simple indexes instead of combined
-            // This is more efficient for MongoDB's $or query execution
-            for (const entityType of entityTypes) {
-                // Suggest separate simple attacker index (no kill_time for better $or performance)
-                const attackerIndex: Record<string, number> = {
-                    [`attackers.${entityType}`]: 1,
-                };
-
-                suggestions.push({
-                    index: attackerIndex,
-                    reason: `Simple attacker ${entityType} index optimized for $or queries (single-field indexes are most efficient for $or)`,
-                    score: 80,
-                    indexName: `attackers_${entityType.replace(".", "_")}_1`,
-                });
-
-                // Suggest separate simple victim index (no kill_time for better $or performance)
-                const victimIndex: Record<string, number> = {
-                    [`victim.${entityType}`]: 1,
-                };
-
-                suggestions.push({
-                    index: victimIndex,
-                    reason: `Simple victim ${entityType} index optimized for $or queries (single-field indexes are most efficient for $or)`,
-                    score: 80,
-                    indexName: `victim_${entityType.replace(".", "_")}_1`,
-                });
-
-                // Also suggest compound versions with kill_time but with lower score
-                if (primarySortField) {
-                    const attackerCompoundIndex: Record<string, number> = {
-                        [`attackers.${entityType}`]: 1,
-                        [primarySortField]: sortOptions![primarySortField],
-                    };
-
-                    suggestions.push({
-                        index: attackerCompoundIndex,
-                        reason: `Attacker ${entityType} + sort compound index (less efficient than simple index for $or, but supports sorting)`,
-                        score: 60,
-                        indexName: `attackers_${entityType.replace(
-                            ".",
-                            "_"
-                        )}_${primarySortField.replace(".", "_")}`,
-                    });
-
-                    const victimCompoundIndex: Record<string, number> = {
-                        [`victim.${entityType}`]: 1,
-                        [primarySortField]: sortOptions![primarySortField],
-                    };
-
-                    suggestions.push({
-                        index: victimCompoundIndex,
-                        reason: `Victim ${entityType} + sort compound index (less efficient than simple index for $or, but supports sorting)`,
-                        score: 60,
-                        indexName: `victim_${entityType.replace(
-                            ".",
-                            "_"
-                        )}_${primarySortField.replace(".", "_")}`,
-                    });
-                }
-            }
-
-            // Also suggest combined indexes but with lower score
-            for (const entityType of entityTypes) {
-                const combinedIndex: Record<string, number> = {
-                    [`attackers.${entityType}`]: 1,
-                    [`victim.${entityType}`]: 1,
-                };
-
-                if (primarySortField) {
-                    combinedIndex[primarySortField] =
-                        sortOptions![primarySortField];
-                }
-
-                const indexName = `attacker_victim_${entityType.replace(
-                    ".",
-                    "_"
-                )}${
-                    primarySortField
-                        ? "_" + primarySortField.replace(".", "_")
-                        : ""
-                }`;
-
-                suggestions.push({
-                    index: combinedIndex,
-                    reason: `Combined attacker/victim index for ${entityType} (Note: separate indexes usually perform better for $or queries)`,
-                    score: 40,
-                    indexName,
-                });
-            }
-        } else {
-            // General $or optimization - suggest indexes for each branch
-            for (let i = 0; i < orBranches.length; i++) {
-                const branch = orBranches[i];
-                if (branch && branch.length > 0) {
-                    const branchIndex: Record<string, number> = {};
-
-                    for (const field of branch) {
-                        branchIndex[field] = 1;
-                    }
-
-                    if (primarySortField && !branchIndex[primarySortField]) {
-                        branchIndex[primarySortField] =
-                            sortOptions![primarySortField];
-                    }
-
-                    const branchIndexName = Object.keys(branchIndex)
-                        .map((f) => f.replace(/\./g, "_"))
-                        .join("_");
-
-                    suggestions.push({
-                        index: branchIndex,
-                        reason: `Index for $or branch ${
-                            i + 1
-                        }: optimizes ${branch.join(", ")}`,
-                        score: 50,
-                        indexName: branchIndexName,
-                    });
-                }
-            }
-        }
-    }
-
-    // Suggestion 4: Sort-only index if no good compound options exist
-    if (primarySortField && cleanFilterFields.length === 0) {
-        const sortIndex = {
-            [primarySortField]: sortOptions![primarySortField],
-        };
-        const sortIndexName = primarySortField.replace(/\./g, "_") + "_sort";
-
-        if (!existingIndexNames.has(primarySortField)) {
-            suggestions.push({
-                index: sortIndex,
-                reason: `Sort-only index for ${primarySortField} ordering`,
-                score: 25,
-                indexName: sortIndexName,
-            });
-        }
-    }
-
-    // Sort suggestions by score (highest first) and remove duplicates
-    const uniqueSuggestions = suggestions.filter(
-        (suggestion, index, self) =>
-            index ===
-            self.findIndex(
-                (s) =>
-                    JSON.stringify(s.index) === JSON.stringify(suggestion.index)
-            )
-    );
-
-    return uniqueSuggestions.sort((a, b) => b.score - a.score);
-}
-
-/**
  * Determines the best index to use for a query based on filter and sort
- * Uses advanced scoring algorithm to find optimal compound indexes
- * Optionally returns suggestions for missing indexes that would improve performance
+ * Returns undefined for $or queries to let MongoDB handle optimization
  */
 export async function determineOptimalIndexHint(
     collection: any,
-    collectionName: string,
-    filter: any,
-    sortOptions?: Record<string, any>,
-    debugPrefix: string = "[Index Optimizer]",
-    fallbackIndex?: Record<string, number>,
-    returnSuggestions: boolean = false
-): Promise<
-    | Record<string, number>
-    | undefined
-    | {
-          hint?: Record<string, number>;
-          suggestions?: Array<{
-              index: Record<string, number>;
-              reason: string;
-              score: number;
-              indexName?: string;
-          }>;
-      }
-> {
+    filter: Record<string, any> = {},
+    sortOptions?: Record<string, number>,
+    debugPrefix: string = "[Index Optimizer]"
+): Promise<Record<string, number> | undefined> {
     try {
-        const availableIndexes = await getAvailableIndexes(
-            collection,
-            collectionName
-        );
+        // Get collection name from the collection object
+        const collectionName =
+            collection?.collectionName ||
+            collection?.namespace?.collection ||
+            collection?.name ||
+            "unknown";
 
-        // Extract the primary sort field if provided
-        let primarySortField: string | undefined;
-        if (sortOptions && Object.keys(sortOptions).length > 0) {
-            primarySortField = Object.keys(sortOptions)[0];
+        const { fields: filterFields, isOrQuery } = extractFilterFields(filter);
+        const sortField = sortOptions ? Object.keys(sortOptions)[0] : undefined;
+
+        // For $or queries, let MongoDB handle optimization
+        if (isOrQuery) {
+            return undefined;
         }
 
-        // Get filter fields to check for optimal compound indexes
-        const filterAnalysis = extractFilterFields(filter);
-        const { fields: filterFields, isOrQuery, orBranches } = filterAnalysis;
+        const indexes = await fetchIndexes(collection, collectionName);
 
-        // Score all available indexes using the improved algorithm
-        let bestIndex = null;
-        let bestScore = 0;
+        let bestIndex: IndexDescription | undefined;
+        let bestScore = -Infinity;
+        let bestMatches = 0;
 
-        for (const index of availableIndexes) {
-            const score = calculateIndexScore(
-                index,
-                filterFields,
-                primarySortField,
-                isOrQuery,
-                orBranches
-            );
+        for (const index of indexes) {
+            const score = scoreIndex(index, filterFields, sortField, isOrQuery);
+            const matchingFields = filterFields.filter((field) =>
+                Object.keys(index.key).includes(field)
+            ).length;
 
-            if (score > bestScore) {
+            // First look at score, then at matchingFields in case of tie
+            if (
+                score > bestScore ||
+                (score === bestScore && matchingFields > bestMatches)
+            ) {
                 bestScore = score;
                 bestIndex = index;
+                bestMatches = matchingFields;
             }
-        }
-
-        // Generate suggestions for missing indexes if no good index found
-        if (bestScore < 30 && bestScore >= 0) {
-            // Only suggest when existing indexes are poor but not completely useless
-            const suggestions = suggestOptimalIndexes(
-                filter,
-                sortOptions,
-                availableIndexes
-            );
-
-            if (suggestions.length > 0) {
-                console.log(
-                    `${debugPrefix} Query could benefit from better indexes:`
-                );
-                console.log(`${debugPrefix} Collection: ${collectionName}`);
-                console.log(`${debugPrefix} Current best score: ${bestScore}`);
-                console.log(
-                    `${debugPrefix} Filter:`,
-                    JSON.stringify(filter, null, 2)
-                );
-                if (sortOptions) {
-                    console.log(
-                        `${debugPrefix} Sort:`,
-                        JSON.stringify(sortOptions, null, 2)
-                    );
-                }
-                console.log(`${debugPrefix} Suggested indexes:`);
-
-                suggestions.slice(0, 3).forEach((suggestion, i) => {
-                    // Show top 3 suggestions
-                    console.log(
-                        `${debugPrefix}   ${i + 1}. ${
-                            suggestion.reason
-                        } (Score: ${suggestion.score})`
-                    );
-                    console.log(
-                        `${debugPrefix}      Index: ${JSON.stringify(
-                            suggestion.index
-                        )}`
-                    );
-                    if (suggestion.indexName) {
-                        console.log(
-                            `${debugPrefix}      Name: ${suggestion.indexName}`
-                        );
-                    }
-                });
-            }
-        }
-
-        if (returnSuggestions) {
-            const suggestions = suggestOptimalIndexes(
-                filter,
-                sortOptions,
-                availableIndexes
-            );
-            return {
-                hint: bestIndex && bestScore > 0 ? bestIndex.key : undefined,
-                suggestions,
-            };
         }
 
         if (bestIndex && bestScore > 0) {
-            return bestIndex.key;
+            devLog(
+                debugPrefix,
+                `✅ Selected index '${
+                    bestIndex.name
+                }' for ${collectionName} (score: ${bestScore}, matches: ${bestMatches}/${
+                    filterFields.length
+                }, fields: [${filterFields.join(", ")}], sort: ${
+                    sortField || "none"
+                })`
+            );
+            return bestIndex.key as Record<string, number>;
         } else {
-            // Only suggest fallbacks for very poor situations
-            // If we have some reasonable indexes (score > 0), let MongoDB decide
-
-            if (bestScore > 0) {
-                // We found indexes with positive scores - let MongoDB's query planner decide
-                return undefined;
-            }
-
-            // Only use fallbacks when we have no useful indexes at all
-            if (filterFields.includes("$or_complex")) {
-                // For complex $or queries, prefer simple sort index
-                return sortOptions ? sortOptions : { kill_time: -1 };
-            }
-
-            // Use provided fallback only when no indexes match at all
-            if (fallbackIndex && bestScore <= 0) {
-                return fallbackIndex;
-            }
-
-            // Let MongoDB choose when we have some matches but they're not great
+            devLog(
+                debugPrefix,
+                `❌ No suitable index found for ${collectionName} (best score: ${bestScore}) - letting MongoDB choose`
+            );
             return undefined;
         }
     } catch (error) {
-        // Use provided fallback or let MongoDB choose
-        if (fallbackIndex) {
-            return fallbackIndex;
-        }
+        cliLogger.warn(
+            `${debugPrefix} Failed to determine optimal index: ${error}`
+        );
         return undefined;
     }
 }
@@ -794,36 +250,45 @@ export function hasKillTimeFilter(filter: any): boolean {
  */
 export async function determineOptimalAggregationHint(
     collection: any,
-    collectionName: string,
     pipeline: any[],
-    debugPrefix: string = "[Aggregation Optimizer]",
-    fallbackIndex?: Record<string, number>
+    debugPrefix: string = "[Aggregation Optimizer]"
 ): Promise<Record<string, number> | undefined> {
     try {
+        // Get collection name from the collection object
+        const collectionName =
+            collection?.collectionName ||
+            collection?.namespace?.collection ||
+            collection?.name ||
+            "unknown";
+
         // Find the first $match stage in the pipeline
         const matchStage = pipeline.find((stage) => stage.$match);
         if (!matchStage) {
-            // No $match stage, use fallback or default
-            return fallbackIndex || { _id: 1 };
+            devLog(
+                debugPrefix,
+                `❌ No $match stage found for ${collectionName} aggregation - letting MongoDB handle optimization`
+            );
+            return undefined;
         }
 
         // Use the existing optimizer on the $match filter
-        const result = (await determineOptimalIndexHint(
+        const result = await determineOptimalIndexHint(
             collection,
-            collectionName,
             matchStage.$match,
             undefined, // No sort for aggregation
-            debugPrefix,
-            fallbackIndex,
-            false // Don't return suggestions for aggregation
-        )) as Record<string, number> | undefined;
+            debugPrefix
+        );
 
         return result;
     } catch (error) {
-        // Use provided fallback or let MongoDB choose
-        if (fallbackIndex) {
-            return fallbackIndex;
-        }
+        const collectionName =
+            collection?.collectionName ||
+            collection?.namespace?.collection ||
+            collection?.name ||
+            "unknown";
+        cliLogger.warn(
+            `${debugPrefix} Failed to determine aggregation hint for ${collectionName}: ${error}`
+        );
         return undefined;
     }
 }
@@ -832,7 +297,9 @@ export async function determineOptimalAggregationHint(
  * Adds a default kill_time filter to limit results to last 30 days if no time constraint exists
  */
 export function addDefaultTimeFilter(filter: any): any {
-    if (hasKillTimeFilter(filter)) {
+    const hasTimeFilter = hasKillTimeFilter(filter);
+
+    if (hasTimeFilter) {
         return filter; // Already has time constraint, don't modify
     }
 
@@ -841,12 +308,24 @@ export function addDefaultTimeFilter(filter: any): any {
 
     // If filter is empty, just add kill_time constraint
     if (!filter || Object.keys(filter).length === 0) {
-        return { kill_time: { $gte: thirtyDaysAgo } };
+        const newFilter = { kill_time: { $gte: thirtyDaysAgo } };
+        devLog(
+            "[Time Filter]",
+            `📅 Added default 30-day time filter to empty query`
+        );
+        return newFilter;
     }
 
     // If filter exists but no time constraint, add it
-    return {
+    const newFilter = {
         kill_time: { $gte: thirtyDaysAgo },
         ...filter,
     };
+
+    devLog(
+        "[Time Filter]",
+        `📅 Added default 30-day time filter to existing query`
+    );
+
+    return newFilter;
 }

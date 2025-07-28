@@ -88,7 +88,6 @@ export default defineCachedEventHandler(
             const sortOptions = { start_time: -1 };
             const hint = await determineOptimalIndexHint(
                 Battles.collection,
-                "battles",
                 mongoQuery,
                 sortOptions,
                 "[Battles API]"

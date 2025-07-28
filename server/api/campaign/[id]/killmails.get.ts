@@ -42,7 +42,6 @@ export default defineCachedEventHandler(
             const sortOptions = { kill_time: -1 };
             const hint = await determineOptimalIndexHint(
                 Killmails.collection,
-                "killmails",
                 killmailQuery,
                 sortOptions,
                 "[Campaign API]"

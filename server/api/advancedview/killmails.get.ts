@@ -1,11 +1,10 @@
 import { createError, getQuery } from "h3";
 import url from "url";
-import { Killmails } from "../../models/Killmails";
 import {
-    determineOptimalIndexHint,
     addDefaultTimeFilter,
-    hasKillTimeFilter,
+    determineOptimalIndexHint,
 } from "~/server/utils/indexOptimizer";
+import { Killmails } from "../../models/Killmails";
 
 /**
  * Handle filter parameter - either a MongoDB filter object or advanced search filters
@@ -335,7 +334,6 @@ export default defineCachedEventHandler(
             const sortOptions = { kill_time: -1 };
             const hint = await determineOptimalIndexHint(
                 Killmails.collection,
-                "killmails",
                 mongoQuery,
                 sortOptions,
                 "[Killmails API]"

@@ -2,6 +2,10 @@ import crypto from "crypto";
 import type { H3Event } from "h3";
 import { Killmails } from "~/server/models/Killmails";
 import {
+    addDefaultTimeFilter,
+    determineOptimalIndexHint,
+} from "~/server/utils/indexOptimizer";
+import {
     DEFAULT_EXCLUSIONS,
     DEFAULT_LIMIT,
     MAX_LIMIT,
@@ -9,10 +13,6 @@ import {
     VALID_FIELDS,
     VALID_OPERATORS,
 } from "~/shared/helpers/queryAPIHelper";
-import {
-    determineOptimalIndexHint,
-    addDefaultTimeFilter,
-} from "~/server/utils/indexOptimizer";
 
 /**
  * Query API - MongoDB-like query interface for killmail data
@@ -493,7 +493,6 @@ export default defineCachedEventHandler(
             // Use our intelligent index selection
             const hint = await determineOptimalIndexHint(
                 Killmails.collection,
-                "killmails",
                 queryData.query.filter,
                 queryData.query.options.sort,
                 "[Query API]"
