@@ -53,14 +53,14 @@ export default defineEventHandler(async (event) => {
         const skip = (page - 1) * limit;
 
         // Get ESI logs for this user, sorted by most recent first
-        const logs = await ESILogs.find({ userId: user._id })
+        const logs = await ESILogs.find({ characterId: user.characterId })
             .sort({ timestamp: -1 })
             .skip(skip)
             .limit(limit)
             .lean();
 
         // Get total count for pagination
-        const total = await ESILogs.countDocuments({ userId: user._id });
+        const total = await ESILogs.countDocuments({ characterId: user.characterId });
 
         return {
             success: true,
