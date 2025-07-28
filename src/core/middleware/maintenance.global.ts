@@ -9,6 +9,24 @@ export default defineNuxtRouteMiddleware(async (to) => {
         return;
     }
 
+    // Define pages that should pass through during maintenance
+    const allowedPages = [
+        "/kill", // Kill detail pages like /kill/128753181
+        "/about",
+        "/faq",
+        "/status",
+    ];
+
+    // Check if current path is in allowed pages
+    const isAllowedPage = allowedPages.some((allowedPath) => {
+        return to.path.startsWith(allowedPath);
+    });
+
+    // If this is an allowed page, skip maintenance check
+    if (isAllowedPage) {
+        return;
+    }
+
     // Check maintenance state via API call
     try {
         const maintenanceState = (await $fetch("/api/maintenance/status")) as {
