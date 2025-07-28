@@ -60,7 +60,9 @@ export default defineEventHandler(async (event) => {
             .lean();
 
         // Get total count for pagination
-        const total = await ESILogs.countDocuments({ characterId: user.characterId });
+        const total = await ESILogs.countDocuments({
+            characterId: user.characterId,
+        });
 
         return {
             success: true,
