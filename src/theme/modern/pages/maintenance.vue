@@ -63,6 +63,13 @@ definePageMeta({
 
 const { t } = useI18n();
 
+// Set proper HTTP status for maintenance page
+const event = useRequestEvent();
+if (event && process.server) {
+    setResponseStatus(event, 503, "Service Unavailable");
+    setHeader(event, "Retry-After", "300"); // Suggest retry after 5 minutes
+}
+
 // Get maintenance state from server
 const { data: maintenanceData, refresh: refreshMaintenanceData } = await useFetch('/api/maintenance/status');
 const maintenanceMessage = computed(() => maintenanceData.value?.message || '');

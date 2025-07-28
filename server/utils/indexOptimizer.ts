@@ -213,10 +213,10 @@ function calculateIndexScore(
         if (indexPosition >= 0) {
             // Higher score for fields that appear earlier in the compound index
             const positionBonus = (indexFields.length - indexPosition) * 10;
-            
+
             // Extra bonus if this is the first field in the index (most efficient)
             const firstFieldBonus = indexPosition === 0 ? 15 : 0;
-            
+
             score += positionBonus + firstFieldBonus;
             matchedFilterFields++;
         } else {
@@ -234,9 +234,11 @@ function calculateIndexScore(
     const extraFields = indexFields.length - matchedFilterFields;
     if (extraFields > 0 && indexFields.length > 1) {
         // For each extra field in compound index, apply lighter penalty if first field matches
-        const hasFirstFieldMatch = matchedFilterFields > 0 && indexFields.indexOf(filterFields[0]) === 0;
+        const hasFirstFieldMatch =
+            matchedFilterFields > 0 &&
+            indexFields.indexOf(filterFields[0]) === 0;
         const extraFieldPenalty = hasFirstFieldMatch ? 5 : 15;
-        
+
         score -= extraFields * extraFieldPenalty;
 
         // If more than half the index fields are unused and no first field match, this is a bad choice
@@ -706,12 +708,12 @@ export async function determineOptimalIndexHint(
         } else {
             // Only suggest fallbacks for very poor situations
             // If we have some reasonable indexes (score > 0), let MongoDB decide
-            
+
             if (bestScore > 0) {
                 // We found indexes with positive scores - let MongoDB's query planner decide
                 return undefined;
             }
-            
+
             // Only use fallbacks when we have no useful indexes at all
             if (filterFields.includes("$or_complex")) {
                 // For complex $or queries, prefer simple sort index
@@ -721,8 +723,8 @@ export async function determineOptimalIndexHint(
             // Use provided fallback only when no indexes match at all
             if (fallbackIndex && bestScore <= 0) {
                 return fallbackIndex;
-            } 
-            
+            }
+
             // Let MongoDB choose when we have some matches but they're not great
             return undefined;
         }
