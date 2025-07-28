@@ -167,10 +167,11 @@ const headerContainerClass = computed(() => {
             <template v-for="item in items" :key="item.id">
                 <!-- Simple approach: Always wrap in tooltip on mobile, regardless of mode -->
                 <UTooltip v-if="isMobile" :text="item.label">
-                    <button type="button" :disabled="item.disabled"
-                        :class="getButtonClasses(item)" @click="selectTab(item.id)">
+                    <button type="button" :disabled="item.disabled" :class="getButtonClasses(item)"
+                        @click="selectTab(item.id)">
                         <!-- Use @nuxt/icon for mobile -->
-                        <Icon v-if="item.icon" :name="getCleanIconName(item.icon)" class="tab-icon mobile-icon-force icon-mobile" size="20" />
+                        <Icon v-if="item.icon" :name="getCleanIconName(item.icon)"
+                            class="tab-icon mobile-icon-force icon-mobile" size="20" />
                         <!-- Show text based on mobile display mode -->
                         <span v-if="mobileDisplayMode !== 'icon-only' || !item.icon" class="tab-label">
                             {{ getTabDisplayText(item) }}
@@ -179,8 +180,8 @@ const headerContainerClass = computed(() => {
                 </UTooltip>
 
                 <!-- Desktop: No tooltip, always show icon + label -->
-                <button v-else type="button" :disabled="item.disabled"
-                    :class="getButtonClasses(item)" @click="selectTab(item.id)">
+                <button v-else type="button" :disabled="item.disabled" :class="getButtonClasses(item)"
+                    @click="selectTab(item.id)">
                     <UIcon v-if="item.icon" :name="item.icon" class="tab-icon" />
                     <span class="tab-label">{{ item.label }}</span>
                 </button>
@@ -190,7 +191,7 @@ const headerContainerClass = computed(() => {
         <div :class="contentContainerClass">
             <template v-for="item in items" :key="item.id">
                 <KeepAlive v-if="keepAliveContent">
-                    <div v-show="modelValue === item.id">
+                    <div v-if="modelValue === item.id">
                         <slot :name="item.slot" :item="item"></slot>
                     </div>
                 </KeepAlive>

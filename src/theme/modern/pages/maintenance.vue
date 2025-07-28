@@ -1,5 +1,5 @@
 <template>
-  <!-- This page just throws a 503 error, the actual maintenance UI is in error.vue -->
+    <!-- This page just throws a 503 error, the actual maintenance UI is in error.vue -->
 </template>
 
 <script setup lang="ts">

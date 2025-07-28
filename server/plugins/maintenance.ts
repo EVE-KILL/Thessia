@@ -1,5 +1,5 @@
-import { Config } from "../models/Config";
 import type { IMaintenanceState } from "../interfaces/IMaintenance";
+import { Config } from "../models/Config";
 
 // Global maintenance state cache
 let maintenanceState: IMaintenanceState = {
@@ -26,11 +26,9 @@ async function fetchMaintenanceConfig(): Promise<void> {
         maintenanceState.message = (messageConfig as any)?.value || "";
         maintenanceState.lastChecked = new Date();
 
-        console.log(
-            `[Maintenance] Status updated: ${
-                maintenanceState.isEnabled ? "ENABLED" : "DISABLED"
-            }`
-        );
+        if (maintenanceState.isEnabled) {
+            console.log(`[Maintenance] Status updated: ENABLED`);
+        }
     } catch (error) {
         console.error("[Maintenance] Error fetching config:", error);
         // On error, keep previous state but update timestamp to avoid constant retries

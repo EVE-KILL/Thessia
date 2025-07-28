@@ -36,5 +36,5 @@
         "vue": "html",
         "vue-html": "html"
     },
-    "typescript.experimental.useTsgo": true
+    "typescript.experimental.useTsgo": false
 }

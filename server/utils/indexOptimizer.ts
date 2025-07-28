@@ -1,4 +1,3 @@
-import type { Collection } from "mongoose";
 import { LRUCache } from "lru-cache";
 
 /**
@@ -297,9 +296,31 @@ function calculateIndexScore(
         score += 20;
     }
 
-    // If no filter fields match at all, this index is useless
+    // If no filter fields match at all, check if this is a sort-only query
     if (matchedFilterFields === 0) {
-        return -1000;
+        // For sort-only queries (empty filter), prioritize indexes that support the sort field
+        if (
+            filterFields.length === 0 &&
+            sortField &&
+            indexFields.includes(sortField)
+        ) {
+            // This is a sort-only query and this index supports the sort field
+            // Give it a good base score and let the sort bonus apply
+            score = 50;
+
+            // Bonus for single-field sort index (most efficient for sort-only queries)
+            if (indexFields.length === 1 && indexFields[0] === sortField) {
+                score += 30; // Total score of 80 + sort bonus
+            }
+
+            // Light penalty for compound indexes in sort-only queries
+            if (indexFields.length > 1) {
+                score -= (indexFields.length - 1) * 5;
+            }
+        } else {
+            // No filter fields and this index doesn't help with sorting
+            return -1000;
+        }
     }
 
     // Bonus points for having kill_time as the last field (common pattern)
