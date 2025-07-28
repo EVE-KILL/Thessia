@@ -1,5 +1,7 @@
 // src/helpers/esiFetcher.ts
 import { RedisStorage } from "~/server/helpers/Storage";
+import type { IESILog } from "~/server/interfaces/IESILog";
+import { ESILogs } from "~/server/models/ESILogs";
 
 function sleep(ms: number): Promise<void> {
     return new Promise((resolve) => setTimeout(resolve, ms));
@@ -116,4 +118,90 @@ async function esiFetcher(url: string, options?: RequestInit): Promise<any> {
     return await response.json();
 }
 
-export { esiFetcher };
+/**
+ * ESI Fetcher with logging for transparency
+ * @param url - The ESI URL to fetch
+ * @param options - Request options
+ * @param logContext - Optional logging context for transparency
+ */
+async function esiFetcherWithLogging(
+    url: string,
+    options?: RequestInit,
+    logContext?: {
+        characterId: number;
+        characterName: string;
+        dataType: string;
+        source: string;
+        killmailDelay?: number;
+    }
+): Promise<any> {
+    const timestamp = new Date();
+    let error = false;
+    let errorMessage: string | undefined;
+    let itemsReturned: number | undefined;
+    let result: any;
+
+    try {
+        result = await esiFetcher(url, options);
+
+        // Count items returned if it's an array
+        if (Array.isArray(result)) {
+            itemsReturned = result.length;
+        } else if (result && typeof result === "object") {
+            itemsReturned = 1;
+        }
+    } catch (fetchError: any) {
+        error = true;
+        errorMessage = fetchError.message || String(fetchError);
+        throw fetchError; // Re-throw the error
+    } finally {
+        // Log the ESI call if context is provided
+        if (logContext) {
+            try {
+                const logEntry: Partial<IESILog> = {
+                    characterId: logContext.characterId,
+                    characterName: logContext.characterName,
+                    endpoint: getEndpointFromUrl(url),
+                    dataType: logContext.dataType,
+                    itemsReturned,
+                    killmailDelay: logContext.killmailDelay,
+                    error,
+                    errorMessage,
+                    source: logContext.source,
+                    timestamp,
+                };
+
+                // Save log entry asynchronously to not block the response
+                const esiLog = new ESILogs(logEntry);
+                esiLog.save().catch((logError) => {
+                    console.error("Failed to save ESI log:", logError);
+                });
+            } catch (logError) {
+                console.error("Error creating ESI log entry:", logError);
+            }
+        }
+    }
+
+    return result;
+}
+
+/**
+ * Extract endpoint name from URL for logging
+ */
+function getEndpointFromUrl(url: string): string {
+    try {
+        const urlObj = new URL(url);
+        const pathParts = urlObj.pathname.split("/").filter(Boolean);
+
+        // Remove version (latest, v1, v2, etc.) if present
+        if (pathParts[0] && /^(latest|v\d+)$/.test(pathParts[0])) {
+            pathParts.shift();
+        }
+
+        return pathParts.join("/");
+    } catch {
+        return url;
+    }
+}
+
+export { esiFetcher, esiFetcherWithLogging };

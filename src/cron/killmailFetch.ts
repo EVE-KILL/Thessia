@@ -1,5 +1,5 @@
 import { getCharacter } from "~/server/helpers/ESIData";
-import { esiFetcher } from "~/server/helpers/ESIFetcher";
+import { esiFetcherWithLogging } from "~/server/helpers/ESIFetcher";
 import { cliLogger } from "~/server/helpers/Logger";
 import { getUserSettingsHelper } from "~/server/helpers/UserSettings";
 import type { ICharacter } from "~/server/interfaces/ICharacter";
@@ -118,11 +118,19 @@ export default {
                         // We can get upto 1000 killmails back at a time, if we get 1000 back we need to fetch more by increasing the page number
                         let page = 1;
                         let killmailsPage = [];
+
+                        // Get delay setting for logging
+                        const settingsHelper = getUserSettingsHelper(user);
+                        const delayHours =
+                            settingsHelper.getSetting("killmailDelay");
+
                         do {
                             killmailsPage = await getCharacterKillmails(
                                 accessToken,
                                 characterId,
-                                page
+                                page,
+                                characterName,
+                                delayHours
                             );
                             killmails.push(...killmailsPage);
                             page++;
@@ -142,13 +150,21 @@ export default {
                         try {
                             let page = 1;
                             let killmailsPage = [];
+
+                            // Get delay setting for logging
+                            const settingsHelper = getUserSettingsHelper(user);
+                            const delayHours =
+                                settingsHelper.getSetting("killmailDelay");
+
                             do {
                                 try {
                                     killmailsPage =
                                         await getCorporationKillmails(
                                             accessToken,
                                             corporationId,
-                                            page
+                                            page,
+                                            characterName,
+                                            delayHours
                                         );
                                     killmails.push(...killmailsPage);
                                     page++;
@@ -341,17 +357,29 @@ export default {
 async function getCharacterKillmails(
     accessToken: string,
     characterId: number,
-    page = 1
+    page = 1,
+    characterName?: string,
+    killmailDelay?: number
 ): Promise<IKillmail[]> {
     try {
-        const killmails = await esiFetcher(
-            `${
-                process.env.ESI_URL || "https://esi.evetech.net/"
-            }latest/characters/${characterId}/killmails/recent/?page=${page}`,
+        const url = `${
+            process.env.ESI_URL || "https://esi.evetech.net/"
+        }latest/characters/${characterId}/killmails/recent/?page=${page}`;
+
+        const killmails = await esiFetcherWithLogging(
+            url,
             {
                 headers: {
                     Authorization: `Bearer ${accessToken}`,
                 },
+            },
+            {
+                characterId,
+                characterName: characterName || `Character ${characterId}`,
+                dataType: "character_killmails",
+                source: "killmailFetch",
+                killmailDelay,
+                scopes: ["esi-killmails.read_killmails.v1"],
             }
         );
         return Array.isArray(killmails) ? killmails : [];
@@ -364,17 +392,29 @@ async function getCharacterKillmails(
 async function getCorporationKillmails(
     accessToken: string,
     corporationId: number,
-    page = 1
+    page = 1,
+    characterName?: string,
+    killmailDelay?: number
 ): Promise<IKillmail[]> {
     try {
-        const killmails = await esiFetcher(
-            `${
-                process.env.ESI_URL || "https://esi.evetech.net/"
-            }latest/corporations/${corporationId}/killmails/recent/?page=${page}`,
+        const url = `${
+            process.env.ESI_URL || "https://esi.evetech.net/"
+        }latest/corporations/${corporationId}/killmails/recent/?page=${page}`;
+
+        const killmails = await esiFetcherWithLogging(
+            url,
             {
                 headers: {
                     Authorization: `Bearer ${accessToken}`,
                 },
+            },
+            {
+                characterId: 0, // Corporation calls don't have a specific character
+                characterName: characterName || `Corporation ${corporationId}`,
+                dataType: "corporation_killmails",
+                source: "killmailFetch",
+                killmailDelay,
+                scopes: ["esi-killmails.read_corporation_killmails.v1"],
             }
         );
         return Array.isArray(killmails) ? killmails : [];
