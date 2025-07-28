@@ -55,15 +55,16 @@ const handleDeleteAccount = async () => {
 </script>
 
 <template>
-    <div class="mb-6 bg-gradient-to-r from-primary-50 to-gray-100 dark:from-gray-800 dark:to-gray-900 rounded-lg p-4 sm:p-6">
+    <div
+        class="mb-6 bg-gradient-to-r from-primary-50 to-gray-100 dark:from-gray-800 dark:to-gray-900 rounded-lg p-4 sm:p-6">
         <div class="flex flex-col sm:flex-row items-center sm:items-start gap-4">
             <!-- Character Avatar -->
             <div class="relative">
                 <div class="w-20 h-20 sm:w-24 sm:h-24 rounded-lg overflow-hidden shadow-lg">
                     <NuxtLink v-if="auth.user.value.characterId" :to="`/character/${auth.user.value.characterId}`"
                         class="block w-full h-full">
-                        <Image type="character" :id="auth.user.value.characterId"
-                            :alt="auth.user.value.characterName" :size="128" class="w-full h-full" :quality="90" />
+                        <Image type="character" :id="auth.user.value.characterId" :alt="auth.user.value.characterName"
+                            :size="128" class="w-full h-full" :quality="90" />
                     </NuxtLink>
                 </div>
 
@@ -85,13 +86,15 @@ const handleDeleteAccount = async () => {
                 <!-- Character details from API -->
                 <div class="space-y-2 mt-3">
                     <!-- Corporation info -->
-                    <div v-if="characterData?.corporation_name" class="flex items-center justify-center sm:justify-start">
-                        <NuxtLink :to="`/corporation/${characterData.corporation_id}`" 
+                    <div v-if="characterData?.corporation_name"
+                        class="flex items-center justify-center sm:justify-start">
+                        <NuxtLink :to="`/corporation/${characterData.corporation_id}`"
                             class="flex items-center hover:underline text-gray-700 dark:text-gray-300">
                             <Image type="corporation" :id="characterData.corporation_id"
                                 :alt="characterData.corporation_name" :size="20" class="w-5 h-5 mr-2" />
                             <span class="text-sm font-medium">{{ characterData.corporation_name }}</span>
-                            <span v-if="characterData.corporation_ticker" class="text-xs text-gray-500 dark:text-gray-400 ml-1">
+                            <span v-if="characterData.corporation_ticker"
+                                class="text-xs text-gray-500 dark:text-gray-400 ml-1">
                                 [{{ characterData.corporation_ticker }}]
                             </span>
                         </NuxtLink>
@@ -99,19 +102,21 @@ const handleDeleteAccount = async () => {
 
                     <!-- Alliance info -->
                     <div v-if="characterData?.alliance_name" class="flex items-center justify-center sm:justify-start">
-                        <NuxtLink :to="`/alliance/${characterData.alliance_id}`" 
+                        <NuxtLink :to="`/alliance/${characterData.alliance_id}`"
                             class="flex items-center hover:underline text-gray-700 dark:text-gray-300">
-                            <Image type="alliance" :id="characterData.alliance_id"
-                                :alt="characterData.alliance_name" :size="20" class="w-5 h-5 mr-2" />
+                            <Image type="alliance" :id="characterData.alliance_id" :alt="characterData.alliance_name"
+                                :size="20" class="w-5 h-5 mr-2" />
                             <span class="text-sm font-medium">{{ characterData.alliance_name }}</span>
-                            <span v-if="characterData.alliance_ticker" class="text-xs text-gray-500 dark:text-gray-400 ml-1">
+                            <span v-if="characterData.alliance_ticker"
+                                class="text-xs text-gray-500 dark:text-gray-400 ml-1">
                                 &lt;{{ characterData.alliance_ticker }}&gt;
                             </span>
                         </NuxtLink>
                     </div>
 
                     <!-- Additional character details -->
-                    <div v-if="characterData" class="flex flex-wrap items-center justify-center sm:justify-start gap-x-4 gap-y-1 text-xs text-gray-500 dark:text-gray-400">
+                    <div v-if="characterData"
+                        class="flex flex-wrap items-center justify-center sm:justify-start gap-x-4 gap-y-1 text-xs text-gray-500 dark:text-gray-400">
                         <span v-if="characterData.security_status !== undefined">
                             Security: {{ characterData.security_status.toFixed(1) }}
                         </span>

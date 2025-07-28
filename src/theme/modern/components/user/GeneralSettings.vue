@@ -34,7 +34,8 @@ const { t } = useI18n();
                 <Icon name="lucide:info" class="h-5 w-5 text-blue-400" />
                 <div class="ml-3">
                     <p class="text-sm text-blue-700 dark:text-blue-300">
-                        {{ t("settings.general.placeholder", "Additional general settings will be added here in future updates.") }}
+                        {{ t("settings.general.placeholder")
+                        }}
                     </p>
                 </div>
             </div>

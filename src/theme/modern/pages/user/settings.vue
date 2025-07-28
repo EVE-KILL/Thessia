@@ -71,7 +71,7 @@ const updateSettings = async () => {
     } catch (err: any) {
         console.error("Error updating settings:", err);
         const errorMessage = err?.data?.message || t("settings.updateError", "Failed to update settings");
-        
+
         // Show error toast
         toast.add({
             title: t("settings.updateError", "Failed to update settings"),
@@ -169,7 +169,7 @@ const checkIfMobile = () => {
                     },
                     {
                         id: 'esi',
-                        label: t('settings.tabs.esi', 'ESI/OAuth'),
+                        label: t('settings.tabs.esi', 'ESI'),
                         icon: 'lucide:key',
                         slot: 'esi'
                     }
@@ -181,15 +181,10 @@ const checkIfMobile = () => {
                     </template>
 
                     <template #esi>
-                        <EsiSettings
-                            :profile-data="profileData"
-                            :user-settings="userSettings"
-                            :is-updating-settings="isUpdatingSettings"
-                            :settings-success="settingsSuccess"
-                            :settings-error="settingsError"
-                            @update-settings="updateSettings"
-                            @update:user-settings="userSettings = $event"
-                        />
+                        <EsiSettings :profile-data="profileData" :user-settings="userSettings"
+                            :is-updating-settings="isUpdatingSettings" :settings-success="settingsSuccess"
+                            :settings-error="settingsError" @update-settings="updateSettings"
+                            @update:user-settings="userSettings = $event" />
                     </template>
                 </Tabs>
             </div>
