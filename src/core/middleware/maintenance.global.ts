@@ -4,8 +4,8 @@ export default defineNuxtRouteMiddleware(async (to) => {
         return;
     }
 
-    // Skip maintenance check for API routes (optional - you might want to block these too)
-    if (to.path.startsWith("/api/")) {
+    // Always allow maintenance API endpoints
+    if (to.path.startsWith("/api/maintenance/")) {
         return;
     }
 
@@ -18,11 +18,25 @@ export default defineNuxtRouteMiddleware(async (to) => {
         };
 
         if (maintenanceState?.isEnabled) {
-            // Redirect to maintenance page
+            // If maintenance is enabled, block all other API routes
+            if (to.path.startsWith("/api/")) {
+                throw createError({
+                    statusCode: 503,
+                    statusMessage:
+                        "Service Unavailable - Site is currently under maintenance",
+                });
+            }
+
+            // Redirect to maintenance page for all other routes
             return navigateTo("/maintenance");
         }
     } catch (error) {
-        // On error, continue normally (don't block the site if maintenance check fails)
+        // If this is already a 503 error from maintenance blocking, re-throw it
+        if (error.statusCode === 503) {
+            throw error;
+        }
+
+        // On other errors, continue normally (don't block the site if maintenance check fails)
         console.error("Failed to check maintenance status:", error);
     }
 });
