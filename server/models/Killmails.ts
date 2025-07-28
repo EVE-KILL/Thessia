@@ -489,7 +489,7 @@ const indexes = [
 
 // Add indexes to schema (Mongoose will handle duplicates automatically)
 for (const { fields, options } of indexes) {
-    //killmailsSchema.index(fields as any, options);
+    killmailsSchema.index(fields as any, options);
 }
 
 export const Killmails: Model<IKillmailDocument> = model<IKillmailDocument>(
@@ -531,11 +531,11 @@ Killmails.collection
             const indexName = options?.name || computeIndexName(fields);
 
             if (!existingIndexNames.has(indexName)) {
-                //cliLogger.info(
-                //    `Creating new index "${indexName}" on fields: ${JSON.stringify(
-                //        fields
-                //    )}`
-                //);
+                cliLogger.info(
+                    `Creating new index "${indexName}" on fields: ${JSON.stringify(
+                        fields
+                    )}`
+                );
             }
         }
 

@@ -7,7 +7,7 @@ export function numberFormat(value: number): string {
     // Use current i18n locale or fallback to 'en-US' for consistent number formatting
     // This ensures the same formatting in both development and production
     let locale = "en-US";
-    
+
     // Try to get the current locale from i18n if available
     try {
         if (typeof useI18n === "function") {
