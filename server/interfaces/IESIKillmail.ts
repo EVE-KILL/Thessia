@@ -48,5 +48,5 @@ export interface IESIKillmail {
     createdAt?: Date;
     error?: string;
     processed?: boolean;
-    processAfter?: Date | null;
+    delayedUntil?: Date | null; // When the killmail should be processed
 }

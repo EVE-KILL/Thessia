@@ -28,15 +28,34 @@ export default {
             ],
         });
 
+        const now = new Date();
+
         // Limit it to 100k mails at a time
         const limit = 100000;
+
+        // Find unprocessed killmails that are either:
+        // 1. Not delayed (delayedUntil is null/undefined)
+        // 2. Have passed their delay time (delayedUntil <= now)
         const unprocessedKillmails = await KillmailsESI.find(
             {
                 processed: false,
+                $or: [
+                    { delayedUntil: { $exists: false } },
+                    { delayedUntil: null },
+                    { delayedUntil: { $lte: now } },
+                ],
             },
             { killmail_id: 1, killmail_hash: 1 },
             { limit: limit }
         );
+
+        if (unprocessedKillmails.length === 0) {
+            return {
+                result: {
+                    foundKillmailCount: 0,
+                },
+            };
+        }
 
         await killmailQueue.addBulk(
             unprocessedKillmails.map((killmail) => ({
@@ -58,8 +77,14 @@ export default {
             }))
         );
 
-        return cliLogger.info(
+        cliLogger.info(
             `Added ${unprocessedKillmails.length} unprocessed killmails to the queue`
         );
+
+        return {
+            result: {
+                foundKillmailCount: unprocessedKillmails.length,
+            },
+        };
     },
 };

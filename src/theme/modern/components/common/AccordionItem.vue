@@ -1,20 +1,55 @@
 <script setup lang="ts">
-defineProps<{
+const props = defineProps<{
     label: string;
     content: string;
     icon?: string;
     isOpen?: boolean;
+    itemKey?: string;
 }>();
 
 const isExpanded = ref(false);
+const route = useRoute();
+
+// Check if this item should be opened based on URL hash
+onMounted(() => {
+    if (route.hash && route.hash.slice(1) === props.itemKey) {
+        isExpanded.value = true;
+        // Scroll to the element after a short delay to ensure it's rendered
+        nextTick(() => {
+            const element = document.getElementById(props.itemKey || '');
+            if (element) {
+                element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }
+        });
+    }
+});
+
+// Watch for route changes to handle hash navigation
+watch(() => route.hash, (newHash) => {
+    if (newHash && newHash.slice(1) === props.itemKey) {
+        isExpanded.value = true;
+        nextTick(() => {
+            const element = document.getElementById(props.itemKey || '');
+            if (element) {
+                element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }
+        });
+    }
+});
 
 const toggle = () => {
     isExpanded.value = !isExpanded.value;
+
+    // Update URL hash when opening an accordion item
+    if (isExpanded.value && props.itemKey) {
+        // Use navigateTo to update the hash without causing a page reload
+        navigateTo(`#${props.itemKey}`, { replace: true });
+    }
 };
 </script>
 
 <template>
-    <div class="border-b border-gray-700/50 last:border-b-0">
+    <div :id="itemKey" class="border-b border-gray-700/50 last:border-b-0">
         <button class="w-full flex items-center justify-between py-5 px-2 focus:outline-none text-left" @click="toggle"
             :aria-expanded="isExpanded">
             <div class="flex items-center">

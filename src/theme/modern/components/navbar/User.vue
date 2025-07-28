@@ -3,10 +3,10 @@ import { computed, nextTick, onMounted } from "vue";
 
 // Component props
 const props = defineProps({
-  isMobileView: {
-    type: Boolean,
-    default: false,
-  },
+    isMobileView: {
+        type: Boolean,
+        default: false,
+    },
 });
 
 // Composables
@@ -16,60 +16,73 @@ const auth = useAuth();
 
 // UI state
 const isDropdownOpen = ref(false);
+const killmailDelay = ref(0); // Hours delay for killmails (0-72)
 
 // Initialize authentication state
 onMounted(() => {
-  nextTick(async () => {
-    await auth.checkAuth();
-  });
+    nextTick(async () => {
+        await auth.checkAuth();
+    });
 });
 
 // Auth handlers
 const handleEveLogin = () => {
-  const currentPath = window.location.pathname;
-  auth.login(currentPath);
-  isDropdownOpen.value = false;
+    const currentPath = window.location.pathname;
+    auth.login(currentPath, undefined, killmailDelay.value);
+    isDropdownOpen.value = false;
 };
 
 const handleBasicLogin = () => {
-  const currentPath = window.location.pathname;
-  auth.login(currentPath, ["publicData"]);
-  isDropdownOpen.value = false;
+    const currentPath = window.location.pathname;
+    auth.login(currentPath, ["publicData"]);
+    isDropdownOpen.value = false;
 };
 
 const handleLogout = () => {
-  auth.logout();
-  isDropdownOpen.value = false;
+    auth.logout();
+    isDropdownOpen.value = false;
 };
 
 const handleCustomizeLogin = () => {
-  const currentPath = window.location.pathname;
-  navigateTo(`/user/login?customize=true&redirect=${encodeURIComponent(currentPath)}`);
-  isDropdownOpen.value = false;
+    const currentPath = window.location.pathname;
+    const delayParam = killmailDelay.value > 0 ? `&delay=${killmailDelay.value}` : '';
+    navigateTo(`/user/login?customize=true&redirect=${encodeURIComponent(currentPath)}${delayParam}`);
+    isDropdownOpen.value = false;
 };
+
+// Computed properties for delay display
+const delayText = computed(() => {
+    if (killmailDelay.value === 0) {
+        return t('killmail.delay.instant', 'Instant (no delay)');
+    } else if (killmailDelay.value === 1) {
+        return t('killmail.delay.oneHour', '1 hour delay');
+    } else {
+        return `${killmailDelay.value} ${t('killmail.delay.hoursUnit', 'hours delay')}`;
+    }
+});
 
 // SSO image configuration
 const SSO_IMAGES = {
-  light: {
-    large: "/images/sso-light-large.png",
-    small: "/images/sso-light-small.png",
-  },
-  dark: {
-    large: "/images/sso-dark-large.png",
-    small: "/images/sso-dark-small.png",
-  },
+    light: {
+        large: "/images/sso-light-large.png",
+        small: "/images/sso-light-small.png",
+    },
+    dark: {
+        large: "/images/sso-dark-large.png",
+        small: "/images/sso-dark-small.png",
+    },
 };
 
 // Image source based on theme and viewport size
 const ssoImageSrc = computed(() => {
-  const theme = colorMode.value === "dark" ? "light" : "dark";
-  const size = props.isMobileView ? "small" : "large";
-  return SSO_IMAGES[theme][size];
+    const theme = colorMode.value === "dark" ? "light" : "dark";
+    const size = props.isMobileView ? "small" : "large";
+    return SSO_IMAGES[theme][size];
 });
 
 // Image dimensions for consistent sizing
 const ssoImageDimensions = computed(() => {
-  return props.isMobileView ? { width: 195, height: 30 } : { width: 270, height: 45 };
+    return props.isMobileView ? { width: 195, height: 30 } : { width: 270, height: 45 };
 });
 </script>
 
@@ -82,14 +95,8 @@ const ssoImageDimensions = computed(() => {
                 <template #trigger>
                     <UButton color="neutral" variant="ghost" size="sm" class="flex items-center" aria-label="User menu">
                         <UIcon v-if="!auth.isAuthenticated.value" name="lucide:user" class="text-lg" />
-                        <Image
-                            v-else
-                            type="character"
-                            :id="auth.user.value.characterId"
-                            :alt="auth.user.value.characterName"
-                            :size="20"
-                            class="w-5 h-5"
-                        />
+                        <Image v-else type="character" :id="auth.user.value.characterId"
+                            :alt="auth.user.value.characterName" :size="20" class="w-5 h-5" />
                     </UButton>
                 </template>
 
@@ -99,7 +106,9 @@ const ssoImageDimensions = computed(() => {
                     <div v-if="!auth.isAuthenticated.value">
                         <!-- Basic Login Section -->
                         <div class="px-4 py-2">
-                            <h3 class="text-sm font-medium text-gray-900 dark:text-white mb-2">{{ t('auth.basicLogin', 'Basic Login') }}</h3>
+                            <h3 class="text-sm font-medium text-gray-900 dark:text-white mb-2">{{ t('auth.basicLogin',
+                                'Basic Login') }}
+                            </h3>
                             <button
                                 class="w-full px-3 py-2 flex justify-center items-center hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors rounded-md"
                                 @click="handleBasicLogin" :disabled="auth.isLoading.value">
@@ -107,16 +116,9 @@ const ssoImageDimensions = computed(() => {
                                     <UIcon name="lucide:loader" class="animate-spin mr-2" />
                                     {{ t('auth.loading', 'Loading...') }}
                                 </div>
-                                <NuxtImg
-                                    v-else
-                                    :src="ssoImageSrc"
-                                    alt="Basic Login with EVE Online"
-                                    class="sso-image w-full h-auto"
-                                    :width="ssoImageDimensions.width"
-                                    :height="ssoImageDimensions.height"
-                                    format="webp"
-                                    quality="95"
-                                />
+                                <NuxtImg v-else :src="ssoImageSrc" alt="Basic Login with EVE Online"
+                                    class="sso-image w-full h-auto" :width="ssoImageDimensions.width"
+                                    :height="ssoImageDimensions.height" format="webp" quality="95" />
                             </button>
                             <div class="text-xs text-gray-500 dark:text-gray-400 text-center mt-1">
                                 {{ t('auth.basicLoginInfo', 'Basic login with publicData only') }}
@@ -128,7 +130,9 @@ const ssoImageDimensions = computed(() => {
 
                         <!-- Killmail Login Section -->
                         <div class="px-4 py-2">
-                            <h3 class="text-sm font-medium text-gray-900 dark:text-white mb-2">{{ t('auth.killmailLogin', 'Killmail Login') }}</h3>
+                            <h3 class="text-sm font-medium text-gray-900 dark:text-white mb-2">
+                                {{ t('auth.killmailLogin') }}
+                            </h3>
                             <button
                                 class="w-full px-3 py-2 flex justify-center items-center hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors rounded-md"
                                 @click="handleEveLogin" :disabled="auth.isLoading.value">
@@ -136,19 +140,39 @@ const ssoImageDimensions = computed(() => {
                                     <UIcon name="lucide:loader" class="animate-spin mr-2" />
                                     {{ t('auth.loading', 'Loading...') }}
                                 </div>
-                                <NuxtImg
-                                    v-else
-                                    :src="ssoImageSrc"
-                                    alt="Killmail Login with EVE Online"
-                                    class="sso-image w-full h-auto"
-                                    :width="ssoImageDimensions.width"
-                                    :height="ssoImageDimensions.height"
-                                    format="webp"
-                                    quality="95"
-                                />
+                                <NuxtImg v-else :src="ssoImageSrc" alt="Killmail Login with EVE Online"
+                                    class="sso-image w-full h-auto" :width="ssoImageDimensions.width"
+                                    :height="ssoImageDimensions.height" format="webp" quality="95" />
                             </button>
                             <div class="text-xs text-gray-500 dark:text-gray-400 text-center mt-1">
                                 {{ t('auth.killmailLoginInfo', 'For accessing private and corporation killmails') }}
+                            </div>
+
+                            <!-- Killmail Delay Slider -->
+                            <div class="mt-3 pt-2 border-t border-gray-100 dark:border-gray-700">
+                                <label class="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                    {{ t('killmail.delay.label', 'Killmail Delay') }}
+                                </label>
+                                <div class="space-y-2">
+                                    <USlider v-model="killmailDelay" :default-value="0" :min="0" :max="72" :step="1"
+                                        class="w-full" />
+                                    <div class="flex justify-between text-xs text-gray-500 dark:text-gray-400">
+                                        <span>0h</span>
+                                        <span class="font-medium text-gray-700 dark:text-gray-300">{{ delayText
+                                        }}</span>
+                                        <span>72h</span>
+                                    </div>
+                                </div>
+                                <div class="text-xs text-gray-500 dark:text-gray-400 text-center mt-1">
+                                    {{ t('killmail.delay.description') }}
+                                </div>
+                                <div class="text-center mt-2">
+                                    <NuxtLink to="/faq#killmail-delay"
+                                        class="text-xs text-blue-500 hover:text-blue-400 dark:text-blue-400 dark:hover:text-blue-300 underline"
+                                        @click="isDropdownOpen = false">
+                                        {{ t('killmail.delay.learnMore', 'Learn more about killmail delays') }}
+                                    </NuxtLink>
+                                </div>
                             </div>
                         </div>
 
@@ -177,14 +201,9 @@ const ssoImageDimensions = computed(() => {
                         <!-- User Profile -->
                         <div class="px-4 py-3 border-b border-gray-100 dark:border-gray-800">
                             <div class="flex flex-col items-center text-center">
-                                <Image
-                                    type="character"
-                                    :id="auth.user.value.characterId"
-                                    :alt="auth.user.value.characterName"
-                                    :size="64"
-                                    class="w-16 h-16 mb-2"
-                                    :quality="90"
-                                />
+                                <Image type="character" :id="auth.user.value.characterId"
+                                    :alt="auth.user.value.characterName" :size="64" class="w-16 h-16 mb-2"
+                                    :quality="90" />
 
                                 <div class="font-medium text-sm text-gray-900 dark:text-white mb-1">
                                     {{ auth.user.value.characterName }}
@@ -192,25 +211,15 @@ const ssoImageDimensions = computed(() => {
 
                                 <div v-if="auth.user.value.corporationName"
                                     class="text-xs text-gray-500 dark:text-gray-400 flex items-center mt-1 w-full justify-center">
-                                    <Image
-                                        type="corporation"
-                                        :id="auth.user.value.corporationId"
-                                        :alt="auth.user.value.corporationName"
-                                        :size="20"
-                                        class="w-5 h-5 mr-1"
-                                    />
+                                    <Image type="corporation" :id="auth.user.value.corporationId"
+                                        :alt="auth.user.value.corporationName" :size="20" class="w-5 h-5 mr-1" />
                                     {{ auth.user.value.corporationName }}
                                 </div>
 
                                 <div v-if="auth.user.value.allianceName"
                                     class="text-xs text-gray-500 dark:text-gray-400 flex items-center mt-1 w-full justify-center">
-                                    <Image
-                                        type="alliance"
-                                        :id="auth.user.value.allianceId"
-                                        :alt="auth.user.value.allianceName"
-                                        :size="20"
-                                        class="w-5 h-5 mr-1"
-                                    />
+                                    <Image type="alliance" :id="auth.user.value.allianceId"
+                                        :alt="auth.user.value.allianceName" :size="20" class="w-5 h-5 mr-1" />
                                     {{ auth.user.value.allianceName }}
                                 </div>
                             </div>
@@ -267,7 +276,9 @@ const ssoImageDimensions = computed(() => {
                     class="absolute top-16 right-4 bg-white dark:bg-gray-800 shadow-lg rounded-md py-2 w-56 z-50">
                     <!-- Basic Login Section -->
                     <div class="px-3 py-2">
-                        <h3 class="text-sm font-medium text-gray-900 dark:text-white mb-2">{{ t('auth.basicLogin', 'Basic Login') }}</h3>
+                        <h3 class="text-sm font-medium text-gray-900 dark:text-white mb-2">
+                            {{ t('auth.basicLogin') }}
+                        </h3>
                         <button
                             class="w-full px-2 py-2 flex justify-center items-center hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors rounded-md"
                             @click="handleBasicLogin" :disabled="auth.isLoading.value">
@@ -275,16 +286,9 @@ const ssoImageDimensions = computed(() => {
                                 <UIcon name="lucide:loader" class="animate-spin mr-2" />
                                 {{ t('auth.loading', 'Loading...') }}
                             </div>
-                            <NuxtImg
-                                v-else
-                                :src="ssoImageSrc"
-                                alt="Basic Login with EVE Online"
-                                class="sso-image w-full h-auto"
-                                :width="ssoImageDimensions.width"
-                                :height="ssoImageDimensions.height"
-                                format="webp"
-                                quality="95"
-                            />
+                            <NuxtImg v-else :src="ssoImageSrc" alt="Basic Login with EVE Online"
+                                class="sso-image w-full h-auto" :width="ssoImageDimensions.width"
+                                :height="ssoImageDimensions.height" format="webp" quality="95" />
                         </button>
                         <div class="text-xs text-gray-500 dark:text-gray-400 text-center mt-1">
                             {{ t('auth.basicLoginInfo', 'Basic login with publicData only') }}
@@ -296,7 +300,9 @@ const ssoImageDimensions = computed(() => {
 
                     <!-- Killmail Login Section -->
                     <div class="px-3 py-2">
-                        <h3 class="text-sm font-medium text-gray-900 dark:text-white mb-2">{{ t('auth.killmailLogin', 'Killmail Login') }}</h3>
+                        <h3 class="text-sm font-medium text-gray-900 dark:text-white mb-2">
+                            {{ t('auth.killmailLogin') }}
+                        </h3>
                         <button
                             class="w-full px-2 py-2 flex justify-center items-center hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors rounded-md"
                             @click="handleEveLogin" :disabled="auth.isLoading.value">
@@ -304,19 +310,38 @@ const ssoImageDimensions = computed(() => {
                                 <UIcon name="lucide:loader" class="animate-spin mr-2" />
                                 {{ t('auth.loading', 'Loading...') }}
                             </div>
-                            <NuxtImg
-                                v-else
-                                :src="ssoImageSrc"
-                                alt="Killmail Login with EVE Online"
-                                class="sso-image w-full h-auto"
-                                :width="ssoImageDimensions.width"
-                                :height="ssoImageDimensions.height"
-                                format="webp"
-                                quality="95"
-                            />
+                            <NuxtImg v-else :src="ssoImageSrc" alt="Killmail Login with EVE Online"
+                                class="sso-image w-full h-auto" :width="ssoImageDimensions.width"
+                                :height="ssoImageDimensions.height" format="webp" quality="95" />
                         </button>
                         <div class="text-xs text-gray-500 dark:text-gray-400 text-center mt-1">
                             {{ t('auth.killmailLoginInfo', 'For private and corporation killmails') }}
+                        </div>
+
+                        <!-- Killmail Delay Slider -->
+                        <div class="mt-3 pt-2 border-t border-gray-100 dark:border-gray-700">
+                            <label class="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                {{ t('killmail.delay.label', 'Killmail Delay') }}
+                            </label>
+                            <div class="space-y-2">
+                                <USlider v-model="killmailDelay" :default-value="0" :min="0" :max="72" :step="1"
+                                    class="w-full" />
+                                <div class="flex justify-between text-xs text-gray-500 dark:text-gray-400">
+                                    <span>0h</span>
+                                    <span class="font-medium text-gray-700 dark:text-gray-300">{{ delayText }}</span>
+                                    <span>72h</span>
+                                </div>
+                            </div>
+                            <div class="text-xs text-gray-500 dark:text-gray-400 text-center mt-1">
+                                {{ t('killmail.delay.description', 'Delay killmails to prevent instant leaks') }}
+                            </div>
+                            <div class="text-center mt-2">
+                                <NuxtLink to="/faq#killmail-delay"
+                                    class="text-xs text-blue-500 hover:text-blue-400 dark:text-blue-400 dark:hover:text-blue-300 underline"
+                                    @click="isDropdownOpen = false">
+                                    {{ t('killmail.delay.learnMore', 'Learn more about killmail delays') }}
+                                </NuxtLink>
+                            </div>
                         </div>
                     </div>
 
@@ -349,7 +374,9 @@ const ssoImageDimensions = computed(() => {
         <div v-if="!auth.isAuthenticated.value">
             <!-- Basic Login Section -->
             <div class="mb-4">
-                <h3 class="text-sm font-medium text-gray-900 dark:text-white mb-3">{{ t('auth.basicLogin', 'Basic Login') }}</h3>
+                <h3 class="text-sm font-medium text-gray-900 dark:text-white mb-3">
+                    {{ t('auth.basicLogin') }}
+                </h3>
                 <button
                     class="w-full mb-2 px-4 py-3 flex justify-center items-center hover:bg-gray-100 dark:hover:bg-gray-700/70 transition-colors rounded-md"
                     @click="handleBasicLogin" :disabled="auth.isLoading.value">
@@ -357,16 +384,9 @@ const ssoImageDimensions = computed(() => {
                         <UIcon name="lucide:loader" class="animate-spin mr-2" />
                         {{ t('auth.loading', 'Loading...') }}
                     </div>
-                    <NuxtImg
-                        v-else
-                        :src="ssoImageSrc"
-                        alt="Basic Login with EVE Online"
-                        class="sso-image w-full h-auto"
-                        :width="ssoImageDimensions.width"
-                        :height="ssoImageDimensions.height"
-                        format="webp"
-                        quality="95"
-                    />
+                    <NuxtImg v-else :src="ssoImageSrc" alt="Basic Login with EVE Online" class="sso-image w-full h-auto"
+                        :width="ssoImageDimensions.width" :height="ssoImageDimensions.height" format="webp"
+                        quality="95" />
                 </button>
                 <div class="text-xs text-gray-500 dark:text-gray-400 text-center">
                     {{ t('auth.basicLoginInfo', 'Basic login with publicData only') }}
@@ -378,7 +398,9 @@ const ssoImageDimensions = computed(() => {
 
             <!-- Killmail Login Section -->
             <div class="mb-4">
-                <h3 class="text-sm font-medium text-gray-900 dark:text-white mb-3">{{ t('auth.killmailLogin', 'Killmail Login') }}</h3>
+                <h3 class="text-sm font-medium text-gray-900 dark:text-white mb-3">
+                    {{ t('auth.killmailLogin') }}
+                </h3>
                 <button
                     class="w-full mb-2 px-4 py-3 flex justify-center items-center hover:bg-gray-100 dark:hover:bg-gray-700/70 transition-colors rounded-md"
                     @click="handleEveLogin" :disabled="auth.isLoading.value">
@@ -386,19 +408,37 @@ const ssoImageDimensions = computed(() => {
                         <UIcon name="lucide:loader" class="animate-spin mr-2" />
                         {{ t('auth.loading', 'Loading...') }}
                     </div>
-                    <NuxtImg
-                        v-else
-                        :src="ssoImageSrc"
-                        alt="Killmail Login with EVE Online"
-                        class="sso-image w-full h-auto"
-                        :width="ssoImageDimensions.width"
-                        :height="ssoImageDimensions.height"
-                        format="webp"
-                        quality="95"
-                    />
+                    <NuxtImg v-else :src="ssoImageSrc" alt="Killmail Login with EVE Online"
+                        class="sso-image w-full h-auto" :width="ssoImageDimensions.width"
+                        :height="ssoImageDimensions.height" format="webp" quality="95" />
                 </button>
                 <div class="text-xs text-gray-500 dark:text-gray-400 text-center">
                     {{ t('auth.killmailLoginInfo', 'For accessing private and corporation killmails') }}
+                </div>
+
+                <!-- Killmail Delay Slider -->
+                <div class="mt-4 pt-3 border-t border-gray-100 dark:border-gray-700">
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
+                        {{ t('killmail.delay.label', 'Killmail Delay') }}
+                    </label>
+                    <div class="space-y-3">
+                        <USlider v-model="killmailDelay" :default-value="0" :min="0" :max="72" :step="1"
+                            class="w-full" />
+                        <div class="flex justify-between text-sm text-gray-500 dark:text-gray-400">
+                            <span>0h</span>
+                            <span class="font-medium text-gray-700 dark:text-gray-300">{{ delayText }}</span>
+                            <span>72h</span>
+                        </div>
+                    </div>
+                    <div class="text-xs text-gray-500 dark:text-gray-400 text-center mt-2">
+                        {{ t('killmail.delay.description') }}
+                    </div>
+                    <div class="text-center mt-2">
+                        <NuxtLink to="/faq#killmail-delay"
+                            class="text-xs text-blue-500 hover:text-blue-400 dark:text-blue-400 dark:hover:text-blue-300 underline">
+                            {{ t('killmail.delay.learnMore', 'Learn more about killmail delays') }}
+                        </NuxtLink>
+                    </div>
                 </div>
             </div>
 
@@ -425,15 +465,10 @@ const ssoImageDimensions = computed(() => {
         <!-- Logged in content -->
         <div v-else>
             <!-- User Profile -->
-            <div class="flex flex-col items-center text-center px-2 py-3 mb-3 border-b border-gray-100 dark:border-gray-800">
-                <Image
-                    type="character"
-                    :id="auth.user.value.characterId"
-                    :alt="auth.user.value.characterName"
-                    :size="64"
-                    class="w-16 h-16 mb-2"
-                    :quality="90"
-                />
+            <div
+                class="flex flex-col items-center text-center px-2 py-3 mb-3 border-b border-gray-100 dark:border-gray-800">
+                <Image type="character" :id="auth.user.value.characterId" :alt="auth.user.value.characterName"
+                    :size="64" class="w-16 h-16 mb-2" :quality="90" />
 
                 <div class="font-medium text-base text-gray-900 dark:text-white">
                     {{ auth.user.value.characterName }}
@@ -441,25 +476,15 @@ const ssoImageDimensions = computed(() => {
 
                 <div v-if="auth.user.value.corporationName"
                     class="text-sm text-gray-500 dark:text-gray-400 flex items-center mt-1 w-full justify-center">
-                    <Image
-                        type="corporation"
-                        :id="auth.user.value.corporationId"
-                        :alt="auth.user.value.corporationName"
-                        :size="20"
-                        class="w-5 h-5 mr-1"
-                    />
+                    <Image type="corporation" :id="auth.user.value.corporationId" :alt="auth.user.value.corporationName"
+                        :size="20" class="w-5 h-5 mr-1" />
                     {{ auth.user.value.corporationName }}
                 </div>
 
                 <div v-if="auth.user.value.allianceName"
                     class="text-sm text-gray-500 dark:text-gray-400 flex items-center mt-1 w-full justify-center">
-                    <Image
-                        type="alliance"
-                        :id="auth.user.value.allianceId"
-                        :alt="auth.user.value.allianceName"
-                        :size="20"
-                        class="w-5 h-5 mr-1"
-                    />
+                    <Image type="alliance" :id="auth.user.value.allianceId" :alt="auth.user.value.allianceName"
+                        :size="20" class="w-5 h-5 mr-1" />
                     {{ auth.user.value.allianceName }}
                 </div>
             </div>
@@ -518,7 +543,8 @@ const ssoImageDimensions = computed(() => {
 }
 
 /* Glass effect for containers */
-.bg-gray-50\/70, .dark\:bg-gray-800\/50 {
+.bg-gray-50\/70,
+.dark\:bg-gray-800\/50 {
     backdrop-filter: blur(4px);
     -webkit-backdrop-filter: blur(4px);
 }
@@ -536,21 +562,22 @@ const ssoImageDimensions = computed(() => {
 
 /* Consistent SSO image sizing */
 .sso-image {
-  display: block;
-  object-fit: contain;
-  max-width: 100%;
-  height: auto;
+    display: block;
+    object-fit: contain;
+    max-width: 100%;
+    height: auto;
 }
 
 /* Enhanced button styling for login buttons */
 button:has(.sso-image) {
-  padding: 0 !important;
-  overflow: hidden;
+    padding: 0 !important;
+    overflow: hidden;
 }
 
 button:has(.sso-image) .sso-image {
-  width: 100%;
-  height: auto;
-  border-radius: 0.375rem; /* rounded-md */
+    width: 100%;
+    height: auto;
+    border-radius: 0.375rem;
+    /* rounded-md */
 }
 </style>

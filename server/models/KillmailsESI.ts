@@ -69,7 +69,7 @@ const killmailsESISchema = new Schema<IESIKillmailDocument>(
         attackers: { type: [attackerSchema] },
         victim: { type: victimSchema },
         processed: { type: Boolean, default: false },
-        processAfter: { type: Date, default: null },
+        delayedUntil: { type: Date, default: null },
     },
     {
         collection: "killmails_esi",
@@ -87,6 +87,7 @@ killmailsESISchema.index({ createdAt: 1 }, { sparse: true });
 killmailsESISchema.index({ updatedAt: 1 }, { sparse: true });
 killmailsESISchema.index({ processed: 1 }, { sparse: true });
 killmailsESISchema.index({ killmail_time: -1, processed: 1 }, { sparse: true });
+killmailsESISchema.index({ delayedUntil: 1, processed: 1 }, { sparse: true });
 
 // Add indexes for attackers and victim (character_id, corporation_id and alliance_id)
 killmailsESISchema.index({ "attackers.character_id": 1 }, { sparse: true });

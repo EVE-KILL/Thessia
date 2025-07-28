@@ -21,6 +21,12 @@ const redirectPath = computed(() => {
   return route.query.redirect?.toString() || "/";
 });
 
+// Get delay parameter from query
+const killmailDelay = computed(() => {
+  const delay = route.query.delay?.toString();
+  return delay ? parseInt(delay, 10) : undefined;
+});
+
 // Available scopes with descriptions
 const availableScopes = reactive([
   {
@@ -49,6 +55,26 @@ const availableScopes = reactive([
 // Check if customize mode is active
 const isCustomizeMode = computed(() => route.query.customize === "true");
 
+// Customize link that preserves delay parameter
+const customizeLink = computed(() => {
+  const baseUrl = "/user/login?customize=true";
+  const currentRedirect = route.query.redirect;
+  const currentDelay = route.query.delay;
+  
+  const params = new URLSearchParams();
+  params.set('customize', 'true');
+  
+  if (currentRedirect) {
+    params.set('redirect', currentRedirect.toString());
+  }
+  
+  if (currentDelay) {
+    params.set('delay', currentDelay.toString());
+  }
+  
+  return `/user/login?${params.toString()}`;
+});
+
 // SSO image configuration
 const ssoImages = {
   light: {
@@ -71,12 +97,12 @@ const ssoImageSrc = computed(() => {
 const handleCustomLogin = () => {
   const selectedScopes = availableScopes.filter((scope) => scope.selected).map((scope) => scope.id);
 
-  auth.login(redirectPath.value, selectedScopes);
+  auth.login(redirectPath.value, selectedScopes, killmailDelay.value);
 };
 
 // Simple login with default scopes
 const handleQuickLogin = () => {
-  auth.login(redirectPath.value);
+  auth.login(redirectPath.value, undefined, killmailDelay.value);
 };
 
 // Check if already authenticated
@@ -224,7 +250,7 @@ onBeforeUnmount(() => {
 
               <div class="w-full pt-4 text-center">
                 <UButton
-                  to="/user/login?customize=true"
+                  :to="customizeLink"
                   variant="ghost"
                   size="sm"
                   color="primary"

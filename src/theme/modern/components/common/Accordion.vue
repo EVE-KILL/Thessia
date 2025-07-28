@@ -14,6 +14,6 @@ defineProps<{
 <template>
     <div class="divide-y divide-gray-700/50 bg-black/20 rounded-lg">
         <AccordionItem v-for="(item, index) in items" :key="item.key || index" :label="item.label"
-            :content="item.content" :icon="item.icon" />
+            :content="item.content" :icon="item.icon" :item-key="item.key" />
     </div>
 </template>

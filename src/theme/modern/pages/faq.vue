@@ -50,6 +50,12 @@ const items = computed(() => [
         key: 'ads'
     },
     {
+        label: t('faq.items.killmailDelay.label'),
+        icon: 'i-lucide-clock',
+        content: t('faq.items.killmailDelay.content'),
+        key: 'killmail-delay'
+    },
+    {
         label: t('faq.items.account.label'),
         icon: 'i-lucide-user',
         content: t('faq.items.account.content'),
