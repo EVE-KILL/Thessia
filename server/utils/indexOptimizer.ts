@@ -207,31 +207,41 @@ function calculateIndexScore(
     let matchedFilterFields = 0;
     let exactFieldMatch = true;
 
-    // For compound indexes, be much more strict about field matching
+    // For compound indexes, be more lenient when the first field matches
     for (const filterField of filterFields) {
         const indexPosition = indexFields.indexOf(filterField);
         if (indexPosition >= 0) {
             // Higher score for fields that appear earlier in the compound index
-            score += (indexFields.length - indexPosition) * 10;
+            const positionBonus = (indexFields.length - indexPosition) * 10;
+            
+            // Extra bonus if this is the first field in the index (most efficient)
+            const firstFieldBonus = indexPosition === 0 ? 15 : 0;
+            
+            score += positionBonus + firstFieldBonus;
             matchedFilterFields++;
         } else {
             exactFieldMatch = false;
-            // For compound indexes, missing fields are heavily penalized
-            if (indexFields.length > 1) {
-                score -= 20; // Heavy penalty for missing fields in compound index
+            // For compound indexes, missing fields are penalized, but not as heavily if we have good matches
+            if (indexFields.length > 1 && matchedFilterFields === 0) {
+                score -= 20; // Heavy penalty only if no fields match
+            } else if (indexFields.length > 1) {
+                score -= 5; // Light penalty if we have some matches
             }
         }
     }
 
-    // If compound index has fields not in our query, penalize heavily
+    // If compound index has fields not in our query, penalize more leniently
     const extraFields = indexFields.length - matchedFilterFields;
     if (extraFields > 0 && indexFields.length > 1) {
-        // For each extra field in compound index, apply significant penalty
-        score -= extraFields * 15;
+        // For each extra field in compound index, apply lighter penalty if first field matches
+        const hasFirstFieldMatch = matchedFilterFields > 0 && indexFields.indexOf(filterFields[0]) === 0;
+        const extraFieldPenalty = hasFirstFieldMatch ? 5 : 15;
+        
+        score -= extraFields * extraFieldPenalty;
 
-        // If more than half the index fields are unused, this is likely a bad choice
-        if (extraFields > matchedFilterFields) {
-            score -= 50;
+        // If more than half the index fields are unused and no first field match, this is a bad choice
+        if (extraFields > matchedFilterFields && !hasFirstFieldMatch) {
+            score -= 30;
         }
     }
 
@@ -632,8 +642,8 @@ export async function determineOptimalIndexHint(
         }
 
         // Generate suggestions for missing indexes if no good index found
-        if (bestScore < 50) {
-            // Suggest when existing indexes are poor
+        if (bestScore < 30 && bestScore >= 0) {
+            // Only suggest when existing indexes are poor but not completely useless
             const suggestions = suggestOptimalIndexes(
                 filter,
                 sortOptions,
@@ -694,19 +704,27 @@ export async function determineOptimalIndexHint(
         if (bestIndex && bestScore > 0) {
             return bestIndex.key;
         } else {
-            // Intelligent fallback based on query type
+            // Only suggest fallbacks for very poor situations
+            // If we have some reasonable indexes (score > 0), let MongoDB decide
+            
+            if (bestScore > 0) {
+                // We found indexes with positive scores - let MongoDB's query planner decide
+                return undefined;
+            }
+            
+            // Only use fallbacks when we have no useful indexes at all
             if (filterFields.includes("$or_complex")) {
                 // For complex $or queries, prefer simple sort index
                 return sortOptions ? sortOptions : { kill_time: -1 };
             }
 
-            // Use provided fallback or intelligent default
-            if (fallbackIndex) {
+            // Use provided fallback only when no indexes match at all
+            if (fallbackIndex && bestScore <= 0) {
                 return fallbackIndex;
-            } else {
-                // Default to kill_time index for time-series data
-                return { kill_time: -1 };
-            }
+            } 
+            
+            // Let MongoDB choose when we have some matches but they're not great
+            return undefined;
         }
     } catch (error) {
         // Use provided fallback or let MongoDB choose
