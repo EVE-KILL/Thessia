@@ -12,6 +12,8 @@ export default defineNuxtRouteMiddleware(async (to) => {
     // Define pages that should pass through during maintenance
     const allowedPages = [
         "/kill", // Kill detail pages like /kill/128753181
+        "/api/killmail", // API endpoint for killmails
+        "/api/comments", // API endpoint for comments
         "/about",
         "/faq",
         "/status",
