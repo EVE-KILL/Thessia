@@ -554,6 +554,8 @@
     "1week": "1 week",
     "1month": "1 month",
     "uptimeFormat": "{days}d {hours}h {minutes}m {seconds}s",
+    "processed": "Processed",
+    "processedLast1m": "Processed last 1min",
     "processedLast5m": "Processed last 5min",
     "queuedItems": "Queued Items",
     "systemInfo": "System Info",

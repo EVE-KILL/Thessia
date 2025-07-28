@@ -47,7 +47,7 @@ const timePeriods = [
     { value: "1month", label: t("1month") },
 ];
 // Default time period
-const selectedTimePeriod = ref("5min");
+const selectedTimePeriod = ref("1min");
 
 // Variable to track the active tab
 const activeStatusTab = ref("overview");
@@ -65,6 +65,17 @@ const prevProcessedCount = ref(0);
 const prevQueuedCount = ref(0);
 const processedDiff = ref(0);
 const queuedDiff = ref(0);
+
+// Track individual queue and processing changes
+const prevQueueCounts = ref<Record<string, number>>({});
+const prevProcessedCounts = ref<Record<string, number>>({});
+const queueCountDiffs = ref<Record<string, number>>({});
+const processedCountDiffs = ref<Record<string, number>>({});
+
+// Track cumulative processing from queue decreases
+const cumulativeProcessed = ref(0);
+const updateCount = ref(0);
+const lastProcessedFromAPI = ref(0);
 
 // Fetch status data
 const {
@@ -87,14 +98,84 @@ const refresh = async () => {
         if (statusData.value) {
             prevProcessedCount.value = summaryStats.value?.totalProcessed || 0;
             prevQueuedCount.value = summaryStats.value?.totalQueued || 0;
+
+            // Store individual queue counts
+            prevQueueCounts.value = { ...statusData.value.queueCounts };
+
+            // Store individual processed counts (using 5min for consistency with overview display)
+            const currentProcessedCounts: Record<string, number> = {};
+            Object.entries(statusData.value.processedCounts).forEach(([queue, data]) => {
+                currentProcessedCounts[queue] = parseFormattedNumber(data["5min"]);
+            });
+            prevProcessedCounts.value = { ...currentProcessedCounts };
         }
 
         await refreshData();
 
         // Calculate differences
         if (statusData.value) {
-            processedDiff.value = (summaryStats.value?.totalProcessed || 0) - prevProcessedCount.value;
+            const currentTotalProcessedFromAPI = Object.values(statusData.value.processedCounts).reduce(
+                (sum, queueData) => sum + parseFormattedNumber(queueData["1min"]),
+                0,
+            );
+
+            // Check if 1min API data has updated (reset cumulative count)
+            if (currentTotalProcessedFromAPI !== lastProcessedFromAPI.value) {
+                lastProcessedFromAPI.value = currentTotalProcessedFromAPI;
+                cumulativeProcessed.value = 0;
+                updateCount.value = 0;
+            }
+
+            // Calculate queue decreases (items that were processed)
+            let queueDecrease = 0;
+            Object.entries(statusData.value.queueCounts).forEach(([queue, count]) => {
+                const prevCount = prevQueueCounts.value[queue] || 0;
+                const currentCount = typeof count === "number" ? count : 0;
+                const diff = prevCount - currentCount; // Positive if queue decreased
+                if (diff > 0) {
+                    queueDecrease += diff;
+                }
+            });
+
+            // Add queue decrease to cumulative processed
+            cumulativeProcessed.value += queueDecrease;
+            updateCount.value += 1;
+
+            // Reset cumulative count after 6 updates if API data hasn't updated
+            if (updateCount.value >= 6) {
+                cumulativeProcessed.value = 0;
+                updateCount.value = 0;
+            }
+
+            // Calculate total processed (API data + cumulative from queue decreases)
+            const totalProcessedDisplay = currentTotalProcessedFromAPI + cumulativeProcessed.value;
+            
+            processedDiff.value = totalProcessedDisplay - prevProcessedCount.value;
             queuedDiff.value = (summaryStats.value?.totalQueued || 0) - prevQueuedCount.value;
+
+            // Store the display value for next comparison
+            prevProcessedCount.value = totalProcessedDisplay;
+
+            // Calculate individual queue count differences
+            queueCountDiffs.value = {};
+            Object.entries(statusData.value.queueCounts).forEach(([queue, count]) => {
+                const prevCount = prevQueueCounts.value[queue] || 0;
+                const diff = (typeof count === "number" ? count : 0) - prevCount;
+                if (diff !== 0) {
+                    queueCountDiffs.value[queue] = diff;
+                }
+            });
+
+            // Calculate individual processed count differences
+            processedCountDiffs.value = {};
+            Object.entries(statusData.value.processedCounts).forEach(([queue, data]) => {
+                const currentCount = parseFormattedNumber(data["5min"]);
+                const prevCount = prevProcessedCounts.value[queue] || 0;
+                const diff = currentCount - prevCount;
+                if (diff !== 0) {
+                    processedCountDiffs.value[queue] = diff;
+                }
+            });
         }
 
         if (import.meta.client) {
@@ -279,15 +360,17 @@ const detailed = ref(false);
 const summaryStats = computed(() => {
     if (!statusData.value) return null;
 
+    const apiProcessedTotal = Object.values(statusData.value.processedCounts).reduce(
+        (sum, queueData) => sum + parseFormattedNumber(queueData["1min"]),
+        0,
+    );
+
     return {
         totalQueued: Object.values(statusData.value.queueCounts).reduce(
             (sum, val) => sum + (typeof val === "number" ? val : 0),
             0,
         ),
-        totalProcessed: Object.values(statusData.value.processedCounts).reduce(
-            (sum, queueData) => sum + parseFormattedNumber(queueData["5min"]),
-            0,
-        ),
+        totalProcessed: apiProcessedTotal + cumulativeProcessed.value,
         unprocessedItems: statusData.value.databaseCounts.unprocessedCount || 0,
     };
 });
@@ -391,7 +474,7 @@ const hasKeyspaceInfo = computed(() => {
                 </div>
 
 
-                    <div v-if="statusData">
+                <div v-if="statusData">
                     <!-- Summary Cards -->
                     <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-6">
                         <div class="bg-indigo-50 dark:bg-indigo-900/30 rounded-lg shadow p-3">
@@ -400,14 +483,9 @@ const hasKeyspaceInfo = computed(() => {
                         </div>
                         <div class="bg-emerald-50 dark:bg-emerald-900/30 rounded-lg shadow p-3">
                             <div class="text-xs uppercase text-emerald-700 dark:text-emerald-300">{{
-                                $t('processedLast5m') }}</div>
+                                $t('processed') }}</div>
                             <div class="text-xl font-mono">
                                 {{ formatNumber(summaryStats?.totalProcessed) }}
-                                <span v-if="processedDiff !== 0"
-                                    :class="processedDiff > 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'"
-                                    class="text-sm ml-1">
-                                    ({{ processedDiff > 0 ? '+' : '' }}{{ formatNumber(processedDiff) }})
-                                </span>
                             </div>
                         </div>
                         <div class="bg-amber-50 dark:bg-amber-900/30 rounded-lg shadow p-3">
@@ -502,9 +580,17 @@ const hasKeyspaceInfo = computed(() => {
                                             <div v-for="(queue, index) in Object.keys(statusData.processedCounts).sort()"
                                                 :key="queue" class="flex justify-between">
                                                 <span class="capitalize">{{ queue }}:</span>
-                                                <span class="font-mono">{{
-                                                    formatNumber(parseFormattedNumber(statusData.processedCounts[queue]['5min']))
-                                                }}</span>
+                                                <span class="font-mono">
+                                                    <span v-if="processedCountDiffs[queue]"
+                                                        :class="processedCountDiffs[queue] > 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'"
+                                                        class="text-xs ml-1">
+                                                        ({{ processedCountDiffs[queue] > 0 ? '+' : '-' }}{{
+                                                            formatNumber(Math.abs(processedCountDiffs[queue])) }})
+                                                    </span>
+                                                    {{
+                                                        formatNumber(parseFormattedNumber(statusData.processedCounts[queue]['5min']))
+                                                    }}
+                                                </span>
                                             </div>
                                         </div>
                                     </UCard>
@@ -523,7 +609,16 @@ const hasKeyspaceInfo = computed(() => {
                                             <div v-for="(queue, index) in Object.entries(statusData.queueCounts || {}).sort(([a], [b]) => a.localeCompare(b))"
                                                 :key="queue[0]" class="flex justify-between">
                                                 <span class="capitalize">{{ queue[0] }}:</span>
-                                                <span class="font-mono">{{ formatNumber(queue[1]) }}</span>
+                                                <span class="font-mono">
+                                                    <span v-if="queueCountDiffs[queue[0]]"
+                                                        :class="queueCountDiffs[queue[0]] > 0 ? 'text-amber-600 dark:text-amber-400' : 'text-green-600 dark:text-green-400'"
+                                                        class="text-xs ml-1">
+                                                        ({{ queueCountDiffs[queue[0]] > 0 ? '+' : '-' }}{{
+                                                            formatNumber(Math.abs(queueCountDiffs[queue[0]]))
+                                                        }})
+                                                    </span>
+                                                    {{ formatNumber(queue[1]) }}
+                                                </span>
                                             </div>
                                         </div>
                                     </UCard>
@@ -614,7 +709,7 @@ const hasKeyspaceInfo = computed(() => {
                                         <UIcon name="lucide:loader" class="animate-spin h-6 w-6" />
                                     </div>
                                     <v-chart class="w-full h-full" :option="chartOptions" autoresize />
-                                </div>                                <!-- Show detailed stats directly when detailed is true -->
+                                </div> <!-- Show detailed stats directly when detailed is true -->
                                 <div v-if="detailed" class="mt-4">
                                     <h4 class="font-medium text-sm mb-2">{{ $t('detailedStats') }}</h4>
                                     <div class="overflow-x-auto">
@@ -630,7 +725,8 @@ const hasKeyspaceInfo = computed(() => {
                                                 </tr>
                                             </thead>
                                             <tbody>
-                                                <tr v-for="(entry, index) in Object.entries(statusData.processedCounts).sort(([a], [b]) => a.localeCompare(b))" :key="entry[0]"
+                                                <tr v-for="(entry, index) in Object.entries(statusData.processedCounts).sort(([a], [b]) => a.localeCompare(b))"
+                                                    :key="entry[0]"
                                                     class="border-t border-gray-200 dark:border-gray-700">
                                                     <td class="py-1 capitalize">{{ entry[0] }}</td>
                                                     <td v-for="period in timePeriods" :key="period.value"
@@ -667,7 +763,8 @@ const hasKeyspaceInfo = computed(() => {
                                                 :key="entry[0]" class="border-t border-gray-200 dark:border-gray-700"
                                                 :class="{ 'bg-amber-100 dark:bg-amber-900/50': entry[0] === 'unprocessedCount' }">
                                                 <td class="py-1 capitalize text-sm">{{ entry[0] }}</td>
-                                                <td class="py-1 text-right font-mono text-sm">{{ formatNumber(entry[1]) }}
+                                                <td class="py-1 text-right font-mono text-sm">{{ formatNumber(entry[1])
+                                                }}
                                                 </td>
                                             </tr>
                                         </tbody>
@@ -912,8 +1009,8 @@ const hasKeyspaceInfo = computed(() => {
                         <span v-if="autoRefresh"> · {{ $t('autoRefreshing', { seconds: autoRefreshInterval }) }}</span>
                     </div>
                 </div>
+            </div>
         </div>
-    </div>
     </ClientOnly>
 </template>
 
