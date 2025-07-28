@@ -150,6 +150,10 @@ const indexes = [
         options: { sparse: true, name: "victim_alliance_id_kill_time" },
     },
     {
+        fields: { "victim.faction_id": -1, kill_time: -1 },
+        options: { sparse: true, name: "victim_faction_id_kill_time" },
+    },
+    {
         fields: { "victim.ship_id": -1, kill_time: -1 },
         options: { sparse: true, name: "victim_ship_id_kill_time" },
     },
@@ -345,6 +349,10 @@ const indexes = [
     {
         fields: { "attackers.alliance_id": -1, kill_time: -1 },
         options: { sparse: true, name: "attackers_alliance_id_kill_time" },
+    },
+    {
+        fields: { "attackers.faction_id": -1, kill_time: -1 },
+        options: { sparse: true, name: "attackers_faction_id_kill_time" },
     },
     {
         fields: { "attackers.ship_id": -1, kill_time: -1 },
