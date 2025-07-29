@@ -838,129 +838,91 @@ async function getBasicStats(
         lossMatchCondition.kill_time = timeFilter;
     }
 
-    // Create aggregation pipelines for ISK calculations
-    const iskKilledPipeline = [
+    // Create comprehensive aggregation pipelines that combine multiple stats in single queries
+    const killsAggregationPipeline = [
         { $match: killMatchCondition },
         {
             $group: {
                 _id: null,
-                total: { $sum: "$total_value" },
-                count: { $sum: 1 },
+                kills: { $sum: 1 },
+                iskKilled: { $sum: "$total_value" },
+                soloKills: {
+                    $sum: {
+                        $cond: [{ $eq: ["$is_solo", true] }, 1, 0],
+                    },
+                },
+                lastActive: { $max: "$kill_time" },
             },
         },
     ];
 
-    const iskLostPipeline = [
+    const lossesAggregationPipeline = [
         { $match: lossMatchCondition },
         {
             $group: {
                 _id: null,
-                total: { $sum: "$total_value" },
-                count: { $sum: 1 },
+                losses: { $sum: 1 },
+                iskLost: { $sum: "$total_value" },
+                soloLosses: {
+                    $sum: {
+                        $cond: [{ $eq: ["$is_solo", true] }, 1, 0],
+                    },
+                },
+                npcLosses: {
+                    $sum: {
+                        $cond: [{ $eq: ["$is_npc", true] }, 1, 0],
+                    },
+                },
+                lastActive: { $max: "$kill_time" },
             },
         },
     ];
 
-    // Run all queries in parallel for better performance
-    const [
-        // Kill stats - individual optimized queries
-        kills,
-        iskKilledResult,
-        soloKillsCount,
-        lastActiveKill,
-
-        // Loss stats - individual optimized queries
-        losses,
-        iskLostResult,
-        soloLossesCount,
-        npcLossesCount,
-        lastActiveLoss,
-    ] = await Promise.all([
-        // Kills count - simple count operation
-        Killmails.countDocuments(killMatchCondition),
-
-        // ISK killed aggregation
-        Killmails.aggregate(iskKilledPipeline).allowDiskUse(true),
-
-        // Solo kills count
-        Killmails.countDocuments({
-            ...killMatchCondition,
-            is_solo: true,
-        }),
-
-        // Last active kill - single document query with sort
-        Killmails.findOne(killMatchCondition, { kill_time: 1, _id: 0 })
-            .sort({ kill_time: -1 })
-            .lean(),
-
-        // Losses count - simple count operation
-        Killmails.countDocuments(lossMatchCondition),
-
-        // ISK lost aggregation
-        Killmails.aggregate(iskLostPipeline).allowDiskUse(true),
-
-        // Solo losses count
-        Killmails.countDocuments({
-            ...lossMatchCondition,
-            is_solo: true,
-        }),
-
-        // NPC losses count
-        Killmails.countDocuments({ ...lossMatchCondition, is_npc: true }),
-
-        // Last active loss - single document query with sort
-        Killmails.findOne(lossMatchCondition, { kill_time: 1, _id: 0 })
-            .sort({ kill_time: -1 })
-            .lean(),
+    // Run only 2 comprehensive aggregation queries instead of 9 individual queries
+    const [killsResult, lossesResult] = await Promise.all([
+        Killmails.aggregate(killsAggregationPipeline).allowDiskUse(true),
+        Killmails.aggregate(lossesAggregationPipeline).allowDiskUse(true),
     ]);
 
-    // Process results directly (no sampling scaling needed)
-    let iskKilled = 0;
-    let iskLost = 0;
-    let soloKills = soloKillsCount;
-    let soloLosses = soloLossesCount;
-    let npcLosses = npcLossesCount;
+    // Extract results with defaults
+    const killsData = killsResult[0] || {
+        kills: 0,
+        iskKilled: 0,
+        soloKills: 0,
+        lastActive: null,
+    };
 
-    // Process ISK killed
-    if (iskKilledResult.length > 0) {
-        iskKilled = iskKilledResult[0].total;
-    }
-
-    // Process ISK lost
-    if (iskLostResult.length > 0) {
-        iskLost = iskLostResult[0].total;
-    }
+    const lossesData = lossesResult[0] || {
+        losses: 0,
+        iskLost: 0,
+        soloLosses: 0,
+        npcLosses: 0,
+        lastActive: null,
+    };
 
     // Determine last active time from both kills and losses
-    const lastActiveFromKills = lastActiveKill
-        ? lastActiveKill.kill_time
-        : null;
-    const lastActiveFromLosses = lastActiveLoss
-        ? lastActiveLoss.kill_time
-        : null;
-
     let lastActive = null;
-    if (lastActiveFromKills && lastActiveFromLosses) {
+    if (killsData.lastActive && lossesData.lastActive) {
         lastActive = new Date(
             Math.max(
-                lastActiveFromKills.getTime(),
-                lastActiveFromLosses.getTime()
+                killsData.lastActive.getTime(),
+                lossesData.lastActive.getTime()
             )
         );
-    } else if (lastActiveFromKills) {
-        lastActive = lastActiveFromKills;
-    } else if (lastActiveFromLosses) {
-        lastActive = lastActiveFromLosses;
+    } else if (killsData.lastActive) {
+        lastActive = killsData.lastActive;
+    } else if (lossesData.lastActive) {
+        lastActive = lossesData.lastActive;
     }
 
     return {
-        kills,
-        losses,
-        iskKilled,
-        iskLost,
-        soloKills,
-        soloLosses,
-        npcLosses,
+        kills: killsData.kills,
+        losses: lossesData.losses,
+        iskKilled: killsData.iskKilled,
+        iskLost: lossesData.iskLost,
+        soloKills: killsData.soloKills,
+        soloLosses: lossesData.soloLosses,
+        npcLosses: lossesData.npcLosses,
         lastActive,
     };
 }
