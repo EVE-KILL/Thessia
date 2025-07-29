@@ -13,7 +13,8 @@ const { t } = useI18n();
 useHead({
     link: [
         { rel: "preload", as: "image", href: backgroundUrl.value },
-        { rel: "icon", type: "image/png", href: "/favicon.svg" }
+        { rel: "icon", type: "image/png", href: "/favicon.svg" },
+        { rel: "search", type: "application/opensearchdescription+xml", href: "/search.xml" },
     ],
 });
 
