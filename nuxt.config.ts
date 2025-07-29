@@ -254,7 +254,7 @@ export default defineNuxtConfig({
                 href: "/",
             },
             link: [
-                { rel: "icon", type: "image/png", href: "/favicon.png" },
+                { rel: "icon", type: "image/png", href: "/favicon.svg" },
                 {
                     rel: "search",
                     type: "application/opensearchdescription+xml",

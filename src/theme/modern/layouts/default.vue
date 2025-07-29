@@ -13,7 +13,7 @@ const { t } = useI18n();
 useHead({
     link: [
         { rel: "preload", as: "image", href: backgroundUrl.value },
-        { rel: "icon", type: "image/png", href: "/favicon.png" }
+        { rel: "icon", type: "image/png", href: "/favicon.svg" }
     ],
 });
 
