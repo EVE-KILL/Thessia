@@ -146,6 +146,13 @@ const leftNavItems = computed(() => [
                 position: "left",
                 to: "/metenox",
                 icon: "lucide:mountain",
+            },
+            {
+                name: t('comments.list.title'),
+                label: t('comments.list.title'),
+                position: "left",
+                to: "/comments",
+                icon: "lucide:message-square",
             }
         ]
     },
