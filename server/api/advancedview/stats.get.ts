@@ -29,25 +29,25 @@ function hasKillTimeFilter(filter: any): boolean {
 }
 
 /**
- * Adds a default kill_time filter to limit results to last 30 days if no time constraint exists
+ * Adds a default kill_time filter to limit results to last 7 days if no time constraint exists
  */
 function addDefaultTimeFilter(filter: any): any {
     if (hasKillTimeFilter(filter)) {
         return filter; // Already has time constraint, don't modify
     }
 
-    // Calculate 30 days ago
-    const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
+    // Calculate 7 days ago to match frontpage default
+    const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
 
     // If filter is empty, just add kill_time constraint
     if (!filter || Object.keys(filter).length === 0) {
-        return { kill_time: { $gte: thirtyDaysAgo } };
+        return { kill_time: { $gte: sevenDaysAgo } };
     }
 
     // If filter exists but no time constraint, merge the time constraint directly
     // This avoids unnecessary $and wrapping for simple filters
     const mergedFilter = { ...filter };
-    mergedFilter.kill_time = { $gte: thirtyDaysAgo };
+    mergedFilter.kill_time = { $gte: sevenDaysAgo };
 
     return mergedFilter;
 }
@@ -300,20 +300,20 @@ function filtersToMongoQuery(filters: any): Record<string, any> {
         }
     }
 
-    // Ship category filters
+    // Ship group filters (ship_category_id doesn't exist in killmail structure)
     if (
-        filters.shipCategories &&
-        Array.isArray(filters.shipCategories) &&
-        filters.shipCategories.length > 0
+        filters.shipGroups &&
+        Array.isArray(filters.shipGroups) &&
+        filters.shipGroups.length > 0
     ) {
-        const categoryIds = filters.shipCategories
-            .map((cat: any) => parseInt(cat.id))
+        const groupIds = filters.shipGroups
+            .map((group: any) => parseInt(group.id))
             .filter(Boolean);
-        if (categoryIds.length > 0) {
+        if (groupIds.length > 0) {
             query.$or = query.$or || [];
             query.$or.push(
-                { "victim.ship_category_id": { $in: categoryIds } },
-                { "attackers.ship_category_id": { $in: categoryIds } }
+                { "victim.ship_group_id": { $in: groupIds } },
+                { "attackers.ship_group_id": { $in: groupIds } }
             );
         }
     }
@@ -373,17 +373,6 @@ export default defineCachedEventHandler(
             return stats;
         } catch (error: any) {
             console.error("Error generating advanced view stats:", error);
-
-            // Handle timeout errors specifically
-            if (error.code === 50 || error.message?.includes("MaxTimeMS")) {
-                throw createError({
-                    statusCode: 408,
-                    statusMessage:
-                        "Stats calculation timeout - please refine your search filters",
-                    message:
-                        "Statistics calculation took too long. Please try narrowing your search criteria (shorter time range, more specific filters).",
-                });
-            }
 
             // Forward HTTP errors
             if (error.statusCode) {

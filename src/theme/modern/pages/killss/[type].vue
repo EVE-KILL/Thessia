@@ -39,7 +39,7 @@
                         <h3 class="text-lg font-semibold text-zinc-100">Most Valuable Kills</h3>
                         <p class="text-zinc-400 text-sm mt-1">Highest value killmails (Last {{ selectedDays }} Days)</p>
                     </div>
-                    <KillsMostValuable :items="stats?.mostValuableKills || []" :loading="isStatsLoading" />
+                    <KillsMostValuable :items="stats?.mostValuableKills?.slice(0, 7) || []" :loading="isStatsLoading" />
                 </div>
 
                 <!-- Ship Statistics - only for broader categories -->
@@ -185,7 +185,7 @@ const isStatsLoading = ref(true);
 const stats = ref<any>(null);
 const currentType = ref('');
 const componentKey = ref(0);
-const selectedDays = ref(30);
+const selectedDays = ref(7);
 
 // Day options for the dropdown
 const dayOptions = [
@@ -207,17 +207,18 @@ const showMostValuableKills = computed(() => mostValuableKillsTypes.includes(cur
 
 // Lifecycle
 onMounted(async () => {
-    await initializePage();
+    // Initial setup is handled by the route watcher with immediate: true
+    // No need to call initializePage here to avoid duplicate API calls
 });
 
 // Watch for route changes to reload data when type changes
 watch(() => route.params.type, async (newType, oldType) => {
-    if (newType !== oldType && newType) {
+    if (newType) {
         currentType.value = newType.toString() || 'latest';
         componentKey.value++; // Force KillList remount
         await initializePage();
     }
-}, { immediate: true });
+}, { immediate: true }); // This handles both initial load and route changes
 
 // Watch for day selection changes to reload stats
 watch(selectedDays, () => {

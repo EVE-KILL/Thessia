@@ -25,7 +25,7 @@ interface IMostValuableKill {
 const props = defineProps({
     title: { type: String, default: 'Most Valuable Kills' },
     items: { type: Array as PropType<IMostValuableKill[]>, default: () => [] },
-    limit: { type: Number, default: 5 },
+    limit: { type: Number, default: 7 },
     loading: { type: Boolean, default: false },
 });
 
