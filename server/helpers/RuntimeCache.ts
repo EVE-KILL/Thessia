@@ -83,7 +83,8 @@ export const allianceCache = new LRUCache<string, IAlliance>({
 });
 
 // Helper functions for Redis cache
-const redisCacheKey = (namespace: string, id: string | number) => `cache:${namespace}:${id}`;
+const redisCacheKey = (namespace: string, id: string | number) =>
+    `cache:${namespace}:${id}`;
 const redisHitKey = (namespace: string) => `cache:hits:${namespace}`;
 const redisKeysSetKey = (namespace: string) => `cache:keys:${namespace}`;
 
@@ -91,18 +92,31 @@ const redisKeysSetKey = (namespace: string) => `cache:keys:${namespace}`;
 const trackCacheHit = (namespace: string) => {
     redis
         .incr(redisHitKey(namespace))
-        .catch((err) => cliLogger.error(`Failed to increment hit counter for ${namespace}:`, err));
+        .catch((err) =>
+            cliLogger.error(
+                `Failed to increment hit counter for ${namespace}:`,
+                err
+            )
+        );
 };
 
 // Track cached keys for size stats
 const trackCacheKey = (namespace: string, id: string | number) => {
     redis
         .sadd(redisKeysSetKey(namespace), id.toString())
-        .catch((err) => cliLogger.error(`Failed to track cache key for ${namespace}:${id}`, err));
+        .catch((err) =>
+            cliLogger.error(
+                `Failed to track cache key for ${namespace}:${id}`,
+                err
+            )
+        );
 };
 
 // Helper to get from Redis cache
-const getFromRedis = async <T>(namespace: string, id: string | number): Promise<T | null> => {
+const getFromRedis = async <T>(
+    namespace: string,
+    id: string | number
+): Promise<T | null> => {
     try {
         const key = redisCacheKey(namespace, id);
         const data = await redis.get(key);
@@ -118,7 +132,7 @@ const setInRedis = async <T>(
     namespace: string,
     id: string | number,
     value: T,
-    ttl = STATIC_DATA_TTL,
+    ttl = STATIC_DATA_TTL
 ): Promise<void> => {
     try {
         const key = redisCacheKey(namespace, id);
@@ -184,7 +198,9 @@ async function getCachedData<T>({
 }
 
 // Specialized cached lookup functions using the generic pattern
-export async function getCachedInvGroup(groupId: number): Promise<IInvGroup | null> {
+export async function getCachedInvGroup(
+    groupId: number
+): Promise<IInvGroup | null> {
     return getCachedData<IInvGroup>({
         namespace: CACHE_NAMESPACES.INV_GROUPS,
         id: groupId,
@@ -202,7 +218,9 @@ export async function getCachedItem(typeId: number): Promise<IInvType | null> {
     });
 }
 
-export async function getCachedInvFlag(flagId: number): Promise<IInvFlag | null> {
+export async function getCachedInvFlag(
+    flagId: number
+): Promise<IInvFlag | null> {
     return getCachedData<IInvFlag>({
         namespace: CACHE_NAMESPACES.INV_FLAGS,
         id: flagId,
@@ -211,7 +229,9 @@ export async function getCachedInvFlag(flagId: number): Promise<IInvFlag | null>
     });
 }
 
-export async function getCachedFaction(factionId: number): Promise<IFaction | null> {
+export async function getCachedFaction(
+    factionId: number
+): Promise<IFaction | null> {
     return getCachedData<IFaction>({
         namespace: CACHE_NAMESPACES.FACTIONS,
         id: factionId,
@@ -220,7 +240,9 @@ export async function getCachedFaction(factionId: number): Promise<IFaction | nu
     });
 }
 
-export async function getCachedRegion(regionId: number): Promise<IRegion | null> {
+export async function getCachedRegion(
+    regionId: number
+): Promise<IRegion | null> {
     return getCachedData<IRegion>({
         namespace: CACHE_NAMESPACES.REGIONS,
         id: regionId,
@@ -230,17 +252,20 @@ export async function getCachedRegion(regionId: number): Promise<IRegion | null>
 }
 
 export async function getCachedConstellation(
-    constellationId: number,
+    constellationId: number
 ): Promise<IConstellation | null> {
     return getCachedData<IConstellation>({
         namespace: CACHE_NAMESPACES.CONSTELLATIONS,
         id: constellationId,
         localCache: constellationsCache,
-        fetchData: () => Constellations.findOne({ constellation_id: constellationId }),
+        fetchData: () =>
+            Constellations.findOne({ constellation_id: constellationId }),
     });
 }
 
-export async function getCachedSolarSystem(solarSystemId: number): Promise<ISolarSystem | null> {
+export async function getCachedSolarSystem(
+    solarSystemId: number
+): Promise<ISolarSystem | null> {
     return getCachedData<ISolarSystem>({
         namespace: CACHE_NAMESPACES.SOLAR_SYSTEMS,
         id: solarSystemId,
@@ -249,7 +274,9 @@ export async function getCachedSolarSystem(solarSystemId: number): Promise<ISola
     });
 }
 
-export async function getCachedCustomPrice(typeId: number): Promise<ICustomPrice | null> {
+export async function getCachedCustomPrice(
+    typeId: number
+): Promise<ICustomPrice | null> {
     return getCachedData<ICustomPrice>({
         namespace: CACHE_NAMESPACES.CUSTOM_PRICES,
         id: typeId,
@@ -259,7 +286,9 @@ export async function getCachedCustomPrice(typeId: number): Promise<ICustomPrice
     });
 }
 
-export async function getCachedCharacter(characterId: number): Promise<ICharacter | null> {
+export async function getCachedCharacter(
+    characterId: number
+): Promise<ICharacter | null> {
     return getCachedData<ICharacter>({
         namespace: CACHE_NAMESPACES.CHARACTER,
         id: String(characterId),
@@ -269,7 +298,9 @@ export async function getCachedCharacter(characterId: number): Promise<ICharacte
     });
 }
 
-export async function getCachedCorporation(corporationId: number): Promise<ICorporation | null> {
+export async function getCachedCorporation(
+    corporationId: number
+): Promise<ICorporation | null> {
     return getCachedData<ICorporation>({
         namespace: CACHE_NAMESPACES.CORPORATION,
         id: String(corporationId),
@@ -279,7 +310,9 @@ export async function getCachedCorporation(corporationId: number): Promise<ICorp
     });
 }
 
-export async function getCachedAlliance(allianceId: number): Promise<IAlliance | null> {
+export async function getCachedAlliance(
+    allianceId: number
+): Promise<IAlliance | null> {
     return getCachedData<IAlliance>({
         namespace: CACHE_NAMESPACES.ALLIANCE,
         id: String(allianceId),
@@ -289,7 +322,10 @@ export async function getCachedAlliance(allianceId: number): Promise<IAlliance |
     });
 }
 
-export async function getCachedPrice(typeId: number, killTime: Date): Promise<number> {
+export async function getCachedPrice(
+    typeId: number,
+    killTime: Date
+): Promise<number> {
     const key = `${typeId}-${killTime.getTime()}`;
     return (
         getCachedData<number>({

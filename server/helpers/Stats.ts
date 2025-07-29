@@ -1,10 +1,7 @@
+import { LRUCache } from "lru-cache";
 import type {
     IFullStats,
-    IMostValuableKill,
-    IMostValuableShip,
-    IMostValuableStructure,
     IStatsDocument,
-    ITopEntity,
     StatsType,
 } from "~/server/interfaces/IStats";
 import { InvGroups } from "~/server/models/InvGroups";
@@ -12,6 +9,74 @@ import { InvTypes } from "~/server/models/InvTypes";
 import { Killmails } from "~/server/models/Killmails";
 import { Stats } from "~/server/models/Stats";
 import { IKillmail } from "../interfaces/IKillmail";
+
+// LRU cache for ship groups data (category_id: 6, published: true)
+const shipGroupsCache = new LRUCache<string, Set<number>>({
+    max: 100,
+    ttl: 1000 * 60 * 60 * 24, // 24 hours TTL
+    allowStale: true,
+});
+
+// LRU cache for ship types data (category_id: 6)
+const shipTypesCache = new LRUCache<string, number[]>({
+    max: 100,
+    ttl: 1000 * 60 * 60 * 24, // 24 hours TTL
+    allowStale: true,
+});
+
+/**
+ * Get valid ship group IDs from cache or database
+ * Uses LRU caching since this data rarely changes
+ */
+async function getCachedValidShipGroupIds(): Promise<Set<number>> {
+    const cacheKey = "ship_groups_category_6_published";
+
+    // Try to get from cache first
+    const cached = shipGroupsCache.get(cacheKey);
+    if (cached) {
+        return cached;
+    }
+
+    // Fetch from database
+    const shipGroups = await InvGroups.find(
+        { category_id: 6, published: true },
+        { group_id: 1 }
+    ).lean();
+
+    const result = new Set(shipGroups.map((group: any) => group.group_id));
+
+    // Cache the result
+    shipGroupsCache.set(cacheKey, result);
+
+    return result;
+}
+
+/**
+ * Get valid ship type IDs from cache or database
+ * Uses LRU caching since this data rarely changes
+ */
+async function getCachedValidShipTypeIds(): Promise<number[]> {
+    const cacheKey = "ship_types_category_6";
+
+    // Try to get from cache first
+    const cached = shipTypesCache.get(cacheKey);
+    if (cached) {
+        return cached;
+    }
+
+    // Fetch from database
+    const shipTypes = await InvTypes.find(
+        { category_id: 6 },
+        { type_id: 1 }
+    ).lean();
+
+    const result = shipTypes.map((item: any) => item.type_id);
+
+    // Cache the result
+    shipTypesCache.set(cacheKey, result);
+
+    return result;
+}
 
 /**
  * Validates that the entity type is a valid StatsType and entity ID is valid
@@ -45,18 +110,6 @@ function validateEntity(
     }
 
     return { valid: true, type, id };
-}
-
-/**
- * Get valid ship group IDs from InvGroups where category_id = 6 (Ships) and published = true
- */
-async function getValidShipGroupIds(): Promise<Set<number>> {
-    const shipGroups = await InvGroups.find(
-        { category_id: 6, published: true },
-        { group_id: 1 }
-    ).lean();
-
-    return new Set(shipGroups.map((group: any) => group.group_id));
 }
 
 export async function updateStatsOnKillmailProcessing(
@@ -508,36 +561,10 @@ export async function calculateAllStats(
     // Run base stats calculations in parallel for better performance
     const [
         basicStats,
-        shipGroupStats,
-        monthlyStats,
-        heatMapData,
-        mostUsedShips,
-        mostLostShips,
-        mostValuableKills,
-        mostValuableShips,
-        mostValuableStructures,
-        topCharacters,
-        topCorporations,
-        topShips,
-        topSystems,
-        topConstellations,
-        topRegions,
+        facetedStats, // Single faceted call replaces 14 individual queries (including heatMap, monthly, shipGroup)
     ] = await Promise.all([
         getBasicStats(type, id, timeFilter),
-        getShipGroupStats(type, id, timeFilter),
-        getMonthlyStats(type, id, timeFilter),
-        getHeatMapData(type, id, timeFilter),
-        getMostUsedShips(type, id, timeFilter),
-        getMostLostShips(type, id, timeFilter),
-        getMostValuableKills(type, id, timeFilter),
-        getMostValuableShips(type, id, timeFilter),
-        getMostValuableStructures(type, id, timeFilter),
-        getTopCharacters(type, id, timeFilter),
-        getTopCorporations(type, id, timeFilter),
-        getTopShips(type, id, timeFilter),
-        getTopSystems(type, id, timeFilter),
-        getTopConstellations(type, id, timeFilter),
-        getTopRegions(type, id, timeFilter),
+        getFacetedStats(type, id, timeFilter), // Replaces: getMostUsedShips, getMostLostShips, getMostValuableKills, getMostValuableShips, getMostValuableStructures, getTopCharacters, getTopCorporations, getTopShips, getTopSystems, getTopConstellations, getTopRegions, getHeatMapData, getMonthlyStats, getShipGroupStats
     ]);
 
     // Process character-specific stats only if needed
@@ -563,77 +590,99 @@ export async function calculateAllStats(
     const lastActive = basicStats.lastActive;
 
     // Process ship stats
-    if (shipGroupStats && shipGroupStats.length > 0) {
-        full.shipGroupStats = shipGroupStats;
+    if (facetedStats.shipGroupStats && facetedStats.shipGroupStats.length > 0) {
+        full.shipGroupStats = facetedStats.shipGroupStats;
     }
 
     // Process most used ships
-    if (mostUsedShips && Object.keys(mostUsedShips).length > 0) {
-        full.mostUsedShips = mostUsedShips;
+    if (
+        facetedStats.mostUsedShips &&
+        Object.keys(facetedStats.mostUsedShips).length > 0
+    ) {
+        full.mostUsedShips = facetedStats.mostUsedShips;
     }
 
     // Process most lost ships
-    if (mostLostShips && Object.keys(mostLostShips).length > 0) {
-        full.mostLostShips = mostLostShips;
+    if (
+        facetedStats.mostLostShips &&
+        Object.keys(facetedStats.mostLostShips).length > 0
+    ) {
+        full.mostLostShips = facetedStats.mostLostShips;
     }
 
     // Process most valuable kills
-    if (mostValuableKills && mostValuableKills.length > 0) {
-        full.mostValuableKills = mostValuableKills;
+    if (
+        facetedStats.mostValuableKills &&
+        facetedStats.mostValuableKills.length > 0
+    ) {
+        full.mostValuableKills = facetedStats.mostValuableKills;
     }
 
     // Process most valuable ships
-    if (mostValuableShips && mostValuableShips.length > 0) {
-        full.mostValuableShips = mostValuableShips;
+    if (
+        facetedStats.mostValuableShips &&
+        facetedStats.mostValuableShips.length > 0
+    ) {
+        full.mostValuableShips = facetedStats.mostValuableShips;
     }
 
     // Process most valuable structures
-    if (mostValuableStructures && mostValuableStructures.length > 0) {
-        full.mostValuableStructures = mostValuableStructures;
+    if (
+        facetedStats.mostValuableStructures &&
+        facetedStats.mostValuableStructures.length > 0
+    ) {
+        full.mostValuableStructures = facetedStats.mostValuableStructures;
     }
 
     // Process top characters (not applicable for character stats)
-    if (type !== "character_id" && topCharacters && topCharacters.length > 0) {
-        full.topCharacters = topCharacters;
+    if (
+        type !== "character_id" &&
+        facetedStats.topCharacters &&
+        facetedStats.topCharacters.length > 0
+    ) {
+        full.topCharacters = facetedStats.topCharacters;
     }
 
     // Process top corporations (only applicable for alliance stats)
     if (
         type === "alliance_id" &&
-        topCorporations &&
-        topCorporations.length > 0
+        facetedStats.topCorporations &&
+        facetedStats.topCorporations.length > 0
     ) {
-        full.topCorporations = topCorporations;
+        full.topCorporations = facetedStats.topCorporations;
     }
 
     // Process top ships
-    if (topShips && topShips.length > 0) {
-        full.topShips = topShips;
+    if (facetedStats.topShips && facetedStats.topShips.length > 0) {
+        full.topShips = facetedStats.topShips;
     }
 
     // Process top systems
-    if (topSystems && topSystems.length > 0) {
-        full.topSystems = topSystems;
+    if (facetedStats.topSystems && facetedStats.topSystems.length > 0) {
+        full.topSystems = facetedStats.topSystems;
     }
 
     // Process top constellations
-    if (topConstellations && topConstellations.length > 0) {
-        full.topConstellations = topConstellations;
+    if (
+        facetedStats.topConstellations &&
+        facetedStats.topConstellations.length > 0
+    ) {
+        full.topConstellations = facetedStats.topConstellations;
     }
 
     // Process top regions
-    if (topRegions && topRegions.length > 0) {
-        full.topRegions = topRegions;
+    if (facetedStats.topRegions && facetedStats.topRegions.length > 0) {
+        full.topRegions = facetedStats.topRegions;
     }
 
     // Process monthly stats
-    if (monthlyStats && monthlyStats.length > 0) {
-        full.monthlyStats = monthlyStats;
+    if (facetedStats.monthlyStats && facetedStats.monthlyStats.length > 0) {
+        full.monthlyStats = facetedStats.monthlyStats;
     }
 
     // Process heat map
-    if (heatMapData && heatMapData.length > 0) {
-        heatMapData.forEach((hourData) => {
+    if (facetedStats.heatMapData && facetedStats.heatMapData.length > 0) {
+        facetedStats.heatMapData.forEach((hourData: any) => {
             const hourKey = `h${hourData._id.toString().padStart(2, "0")}`;
             full.heatMap[hourKey] = hourData.count;
         });
@@ -789,49 +838,28 @@ async function getBasicStats(
         lossMatchCondition.kill_time = timeFilter;
     }
 
-    // Check if we need sampling by doing a quick count
-    const quickCountKills = await Killmails.countDocuments(
-        killMatchCondition
-    ).limit(1000);
-    const needsSampling = quickCountKills >= 1000;
-
-    // Define sample size and sampling threshold
-    const SAMPLE_SIZE = 100000;
-
-    // Create optimized queries for iskKilled and iskLost - the most expensive operations
-    const iskKilledPipeline = [];
-    const iskLostPipeline = [];
-
-    // Apply sampling for very large datasets (especially alliances)
-    if (needsSampling) {
-        iskKilledPipeline.push(
-            { $match: killMatchCondition },
-            { $sample: { size: SAMPLE_SIZE } }
-        );
-        iskLostPipeline.push(
-            { $match: lossMatchCondition },
-            { $sample: { size: SAMPLE_SIZE } }
-        );
-    } else {
-        iskKilledPipeline.push({ $match: killMatchCondition });
-        iskLostPipeline.push({ $match: lossMatchCondition });
-    }
-
-    // Complete the aggregation pipelines
-    iskKilledPipeline.push({
-        $group: {
-            _id: null,
-            total: { $sum: "$total_value" },
-            count: { $sum: 1 },
+    // Create aggregation pipelines for ISK calculations
+    const iskKilledPipeline = [
+        { $match: killMatchCondition },
+        {
+            $group: {
+                _id: null,
+                total: { $sum: "$total_value" },
+                count: { $sum: 1 },
+            },
         },
-    });
-    iskLostPipeline.push({
-        $group: {
-            _id: null,
-            total: { $sum: "$total_value" },
-            count: { $sum: 1 },
+    ];
+
+    const iskLostPipeline = [
+        { $match: lossMatchCondition },
+        {
+            $group: {
+                _id: null,
+                total: { $sum: "$total_value" },
+                count: { $sum: 1 },
+            },
         },
-    });
+    ];
 
     // Run all queries in parallel for better performance
     const [
@@ -851,21 +879,14 @@ async function getBasicStats(
         // Kills count - simple count operation
         Killmails.countDocuments(killMatchCondition),
 
-        // ISK killed - optimized with sampling when needed
+        // ISK killed aggregation
         Killmails.aggregate(iskKilledPipeline).allowDiskUse(true),
 
-        // Solo kills - use optimized pipeline for large datasets
-        needsSampling
-            ? getSampledCountWithCondition(
-                  killMatchCondition,
-                  "is_solo",
-                  true,
-                  SAMPLE_SIZE
-              )
-            : Killmails.countDocuments({
-                  ...killMatchCondition,
-                  is_solo: true,
-              }),
+        // Solo kills count
+        Killmails.countDocuments({
+            ...killMatchCondition,
+            is_solo: true,
+        }),
 
         // Last active kill - single document query with sort
         Killmails.findOne(killMatchCondition, { kill_time: 1, _id: 0 })
@@ -875,31 +896,17 @@ async function getBasicStats(
         // Losses count - simple count operation
         Killmails.countDocuments(lossMatchCondition),
 
-        // ISK lost - optimized with sampling when needed
+        // ISK lost aggregation
         Killmails.aggregate(iskLostPipeline).allowDiskUse(true),
 
-        // Solo losses - use optimized pipeline for large datasets
-        needsSampling
-            ? getSampledCountWithCondition(
-                  lossMatchCondition,
-                  "is_solo",
-                  true,
-                  SAMPLE_SIZE
-              )
-            : Killmails.countDocuments({
-                  ...lossMatchCondition,
-                  is_solo: true,
-              }),
+        // Solo losses count
+        Killmails.countDocuments({
+            ...lossMatchCondition,
+            is_solo: true,
+        }),
 
-        // NPC losses - use optimized pipeline for large datasets
-        needsSampling
-            ? getSampledCountWithCondition(
-                  lossMatchCondition,
-                  "is_npc",
-                  true,
-                  SAMPLE_SIZE
-              )
-            : Killmails.countDocuments({ ...lossMatchCondition, is_npc: true }),
+        // NPC losses count
+        Killmails.countDocuments({ ...lossMatchCondition, is_npc: true }),
 
         // Last active loss - single document query with sort
         Killmails.findOne(lossMatchCondition, { kill_time: 1, _id: 0 })
@@ -907,33 +914,21 @@ async function getBasicStats(
             .lean(),
     ]);
 
-    // Process results, handling sampled data appropriately
+    // Process results directly (no sampling scaling needed)
     let iskKilled = 0;
     let iskLost = 0;
     let soloKills = soloKillsCount;
     let soloLosses = soloLossesCount;
     let npcLosses = npcLossesCount;
 
-    // Process ISK killed with scaling if sampling was used
+    // Process ISK killed
     if (iskKilledResult.length > 0) {
-        if (needsSampling) {
-            // Scale the result based on the sampling ratio
-            const samplingRatio = kills / iskKilledResult[0].count;
-            iskKilled = iskKilledResult[0].total * samplingRatio;
-        } else {
-            iskKilled = iskKilledResult[0].total;
-        }
+        iskKilled = iskKilledResult[0].total;
     }
 
-    // Process ISK lost with scaling if sampling was used
+    // Process ISK lost
     if (iskLostResult.length > 0) {
-        if (needsSampling) {
-            // Scale the result based on the sampling ratio
-            const samplingRatio = losses / iskLostResult[0].count;
-            iskLost = iskLostResult[0].total * samplingRatio;
-        } else {
-            iskLost = iskLostResult[0].total;
-        }
+        iskLost = iskLostResult[0].total;
     }
 
     // Determine last active time from both kills and losses
@@ -971,130 +966,440 @@ async function getBasicStats(
 }
 
 /**
- * Helper function to get a count with a condition using sampling for large datasets
+ * Build faceted aggregation pipeline for attacker-based stats
+ * Combines multiple "top X" queries into a single database call
  */
-async function getSampledCountWithCondition(
-    baseCondition: any,
-    field: string,
-    value: any,
-    sampleSize: number
-): Promise<number> {
-    const pipeline = [
-        { $match: baseCondition },
-        { $sample: { size: sampleSize } },
-        { $match: { [field]: value } },
-        { $count: "count" },
-    ];
-
-    const [sampleResult, totalResult] = await Promise.all([
-        Killmails.aggregate(pipeline).allowDiskUse(true),
-        Killmails.countDocuments(baseCondition),
-    ]);
-
-    if (sampleResult.length === 0) return 0;
-
-    // Calculate the approximate total based on the sample ratio
-    const sampleCount = sampleResult[0].count;
-    const totalCount = totalResult;
-
-    // If we got fewer results than the sample size, the sample is the full dataset
-    if (totalCount <= sampleSize) {
-        return sampleCount;
-    }
-
-    // Scale up based on the ratio of total records to sampled records
-    const samplingRatio = totalCount / sampleSize;
-    return Math.round(sampleCount * samplingRatio);
-}
-
-/**
- * Get ship group statistics (like the API endpoints expect)
- * Returns kills, losses, and efficiency per ship group
- */
-async function getShipGroupStats(
+async function buildAttackerFacetedPipeline(
     type: StatsType,
     id: number,
     timeFilter?: { $gte: Date }
-) {
-    // Validate entity parameters to prevent attackers.undefined queries
-    const validation = validateEntity(type, id);
-    if (!validation.valid) {
-        console.error(
-            `Invalid entity for ship group stats: type=${type}, id=${id}`
-        );
-        return [];
+): Promise<any[]> {
+    // Get cached ship type IDs for filtering
+    const validShipIds = await getCachedValidShipTypeIds();
+
+    // Get cached ship group IDs for filtering
+    const validShipGroupIds = await getCachedValidShipGroupIds();
+    const validShipGroupIdsArray = Array.from(validShipGroupIds);
+
+    // Build base match condition for attacks
+    const baseMatch: any = { [`attackers.${type}`]: id };
+    if (timeFilter) {
+        baseMatch.kill_time = timeFilter;
     }
 
-    // Use validated values
-    type = validation.type;
-    id = validation.id;
+    // Define limits for each facet
+    const SHIP_LIMIT = 20;
+    const KILL_LIMIT = 10;
+    const CHARACTER_LIMIT = 10;
+    const CORPORATION_LIMIT = 10;
+    const SYSTEM_LIMIT = 10;
+    const CONSTELLATION_LIMIT = 10;
+    const REGION_LIMIT = 10;
 
-    // Map type to database field
-    const typeFieldMap: Record<string, string> = {
-        character_id: "victim.character_id",
-        corporation_id: "victim.corporation_id",
-        alliance_id: "victim.alliance_id",
-    };
+    // Ship group IDs for valuable ships (from TopLists.ts)
+    const shipGroupIDs = [
+        547, 485, 513, 902, 941, 30, 659, 419, 27, 29, 26, 420, 25, 28, 463,
+        237, 31, 324, 898, 906, 540, 830, 893, 543, 541, 833, 358, 894, 831,
+        832, 900, 834, 380, 963, 1305,
+    ];
 
-    const attackerTypeFieldMap: Record<string, string> = {
-        character_id: "attackers.character_id",
-        corporation_id: "attackers.corporation_id",
-        alliance_id: "attackers.alliance_id",
-    };
+    // Structure group IDs for valuable structures (from TopLists.ts)
+    const structureGroupIDs = [1657, 1406, 1404, 1408, 2017, 2016];
 
-    try {
-        // Get valid ship group IDs (category_id = 6, published = true)
-        const validShipGroupIds = await getValidShipGroupIds();
-
-        // Convert Set to Array for MongoDB $in operator
-        const validShipGroupIdsArray = Array.from(validShipGroupIds);
-
-        // Prepare match conditions
-        const killMatchCondition: any = { [attackerTypeFieldMap[type]]: id };
-        const lossMatchCondition: any = { [typeFieldMap[type]]: id };
-
-        if (timeFilter) {
-            killMatchCondition.kill_time = timeFilter;
-            lossMatchCondition.kill_time = timeFilter;
-        }
-
-        // Aggregate ship group usage from kills (where entity is attacker)
-        const killsAggregation = [
-            {
-                $match: killMatchCondition,
-            },
+    const facets: Record<string, any[]> = {
+        // Most Used Ships - attacks by entity, group by ship
+        mostUsedShips: [
             { $unwind: "$attackers" },
             {
                 $match: {
-                    [`attackers.${
-                        type === "character_id"
-                            ? "character_id"
-                            : type === "corporation_id"
-                            ? "corporation_id"
-                            : "alliance_id"
-                    }`]: id,
-                    "attackers.ship_group_id": {
-                        $in: validShipGroupIdsArray,
-                    },
+                    [`attackers.${type}`]: id,
+                    "attackers.ship_id": { $in: validShipIds },
                 },
             },
             {
                 $group: {
-                    _id: "$attackers.ship_group_id",
-                    kills: { $sum: 1 },
-                    groupName: { $first: "$attackers.ship_group_name" },
+                    _id: "$attackers.ship_id",
+                    count: { $sum: 1 },
+                    name: { $first: "$attackers.ship_name" },
+                },
+            },
+            { $match: { _id: { $ne: 0 } } },
+            { $sort: { count: -1 } },
+            { $limit: SHIP_LIMIT },
+        ],
+
+        // Most Valuable Kills - attacks by entity, sort by value
+        mostValuableKills: [
+            {
+                $project: {
+                    killmail_id: 1,
+                    total_value: 1,
+                    "victim.ship_id": 1,
+                    "victim.ship_name": 1,
+                    "victim.character_id": 1,
+                    "victim.character_name": 1,
+                    "victim.corporation_id": 1,
+                    "victim.corporation_name": 1,
+                    "victim.alliance_id": 1,
+                    "victim.alliance_name": 1,
+                    attackers: {
+                        $filter: {
+                            input: "$attackers",
+                            as: "attacker",
+                            cond: { $eq: ["$$attacker.final_blow", true] },
+                        },
+                    },
+                },
+            },
+            {
+                $addFields: {
+                    final_blow: { $arrayElemAt: ["$attackers", 0] },
+                },
+            },
+            {
+                $project: {
+                    killmail_id: 1,
+                    total_value: 1,
+                    victim: 1,
+                    "final_blow.character_id": 1,
+                    "final_blow.character_name": 1,
+                    "final_blow.ship_id": 1,
+                    "final_blow.ship_name": 1,
+                },
+            },
+            { $sort: { total_value: -1 } },
+            { $limit: KILL_LIMIT },
+        ],
+
+        // Most Valuable Ships - attacks by entity, group by ship, max value
+        mostValuableShips: [
+            {
+                $match: {
+                    "victim.ship_group_id": { $in: shipGroupIDs },
+                },
+            },
+            {
+                $group: {
+                    _id: "$victim.ship_id",
+                    ship_name: { $first: "$victim.ship_name" },
+                    max_value: { $max: "$total_value" },
+                    count: { $sum: 1 },
+                },
+            },
+            { $sort: { max_value: -1 } },
+            { $limit: SHIP_LIMIT },
+            {
+                $project: {
+                    _id: 0,
+                    ship_id: "$_id",
+                    ship_name: "$ship_name",
+                    total_value: "$max_value",
+                    count: 1,
+                },
+            },
+        ],
+
+        // Most Valuable Structures - attacks by entity, structures only
+        mostValuableStructures: [
+            {
+                $match: {
+                    "victim.ship_group_id": { $in: structureGroupIDs },
+                },
+            },
+            {
+                $group: {
+                    _id: "$victim.ship_id",
+                    type_name: { $first: "$victim.ship_name" },
+                    max_value: { $max: "$total_value" },
+                    count: { $sum: 1 },
+                    system_id: { $first: "$system_id" },
+                    system_name: { $first: "$system_name" },
+                },
+            },
+            { $sort: { max_value: -1 } },
+            { $limit: SHIP_LIMIT },
+            {
+                $project: {
+                    _id: 0,
+                    type_id: "$_id",
+                    type_name: "$type_name",
+                    total_value: "$max_value",
+                    count: 1,
+                    system_id: 1,
+                    system_name: 1,
+                },
+            },
+        ],
+    };
+
+    // Add character-specific facets (only for corporation and alliance)
+    if (type !== "character_id") {
+        facets.topCharacters = [
+            { $unwind: "$attackers" },
+            {
+                $match: {
+                    [`attackers.${type}`]: id,
+                    "attackers.character_id": { $ne: 0 },
+                },
+            },
+            {
+                $group: {
+                    _id: "$attackers.character_id",
+                    count: { $sum: 1 },
+                    name: { $first: "$attackers.character_name" },
+                },
+            },
+            { $match: { _id: { $ne: 0 } } },
+            { $sort: { count: -1 } },
+            { $limit: CHARACTER_LIMIT },
+            {
+                $project: {
+                    character_id: "$_id",
+                    id: "$_id",
+                    name: 1,
+                    count: 1,
+                    _id: 0,
                 },
             },
         ];
+    }
 
-        // Aggregate ship group losses (where entity is victim)
-        const lossesAggregation = [
+    // Add corporation-specific facets (only for alliance)
+    if (type === "alliance_id") {
+        facets.topCorporations = [
+            { $unwind: "$attackers" },
             {
                 $match: {
-                    ...lossMatchCondition,
-                    "victim.ship_group_id": {
-                        $in: validShipGroupIdsArray,
+                    "attackers.alliance_id": id,
+                    "attackers.corporation_id": { $ne: 0 },
+                },
+            },
+            {
+                $group: {
+                    _id: "$attackers.corporation_id",
+                    count: { $sum: 1 },
+                    name: { $first: "$attackers.corporation_name" },
+                },
+            },
+            { $match: { _id: { $ne: 0 } } },
+            { $sort: { count: -1 } },
+            { $limit: CORPORATION_LIMIT },
+            {
+                $project: {
+                    corporation_id: "$_id",
+                    id: "$_id",
+                    name: 1,
+                    count: 1,
+                    _id: 0,
+                },
+            },
+        ];
+    }
+
+    // Add universal facets (for all entity types)
+    facets.topShips = [
+        { $unwind: "$attackers" },
+        {
+            $match: {
+                [`attackers.${type}`]: id,
+                "attackers.ship_id": { $ne: 0 },
+            },
+        },
+        {
+            $group: {
+                _id: "$attackers.ship_id",
+                count: { $sum: 1 },
+                name: { $first: "$attackers.ship_name" },
+            },
+        },
+        { $match: { _id: { $ne: 0 } } },
+        { $sort: { count: -1 } },
+        { $limit: SHIP_LIMIT },
+        {
+            $project: {
+                ship_id: "$_id",
+                id: "$_id",
+                name: 1,
+                count: 1,
+                _id: 0,
+            },
+        },
+    ];
+
+    facets.topSystems = [
+        {
+            $group: {
+                _id: "$system_id",
+                count: { $sum: 1 },
+                name: { $first: "$system_name" },
+            },
+        },
+        { $match: { _id: { $ne: 0 } } },
+        { $sort: { count: -1 } },
+        { $limit: SYSTEM_LIMIT },
+        {
+            $project: {
+                system_id: "$_id",
+                id: "$_id",
+                name: 1,
+                count: 1,
+                _id: 0,
+            },
+        },
+    ];
+
+    facets.topConstellations = [
+        {
+            $group: {
+                _id: "$constellation_id",
+                count: { $sum: 1 },
+                name: { $first: "$constellation_name" },
+            },
+        },
+        { $match: { _id: { $ne: 0 } } },
+        { $sort: { count: -1 } },
+        { $limit: CONSTELLATION_LIMIT },
+        {
+            $project: {
+                constellation_id: "$_id",
+                id: "$_id",
+                name: 1,
+                count: 1,
+                _id: 0,
+            },
+        },
+    ];
+
+    facets.topRegions = [
+        {
+            $group: {
+                _id: "$region_id",
+                count: { $sum: 1 },
+                name: { $first: "$region_name" },
+            },
+        },
+        { $match: { _id: { $ne: 0 } } },
+        { $sort: { count: -1 } },
+        { $limit: REGION_LIMIT },
+        {
+            $project: {
+                region_id: "$_id",
+                id: "$_id",
+                name: 1,
+                count: 1,
+                _id: 0,
+            },
+        },
+    ];
+
+    // Heat Map - kills by hour (attacker perspective)
+    facets.heatMapData = [
+        {
+            $group: {
+                _id: { $hour: "$kill_time" },
+                count: { $sum: 1 },
+            },
+        },
+    ];
+
+    // Monthly Stats - kills by month (attacker perspective)
+    facets.monthlyKills = [
+        {
+            $group: {
+                _id: {
+                    year: { $year: "$kill_time" },
+                    month: { $month: "$kill_time" },
+                },
+                kills: { $sum: 1 },
+                iskKilled: { $sum: "$total_value" },
+            },
+        },
+    ];
+
+    // Ship Group Stats - kills by ship group (attacker perspective)
+    facets.shipGroupKills = [
+        { $unwind: "$attackers" },
+        {
+            $match: {
+                [`attackers.${type}`]: id,
+                "attackers.ship_group_id": { $in: validShipGroupIdsArray },
+            },
+        },
+        {
+            $group: {
+                _id: "$attackers.ship_group_id",
+                kills: { $sum: 1 },
+                groupName: { $first: "$attackers.ship_group_name" },
+            },
+        },
+    ];
+
+    return [{ $match: baseMatch }, { $facet: facets }];
+}
+
+/**
+ * Build faceted aggregation pipeline for victim-based stats
+ * Handles queries where the entity is the victim
+ */
+async function buildVictimFacetedPipeline(
+    type: StatsType,
+    id: number,
+    timeFilter?: { $gte: Date }
+): Promise<any[]> {
+    // Get cached ship type IDs for filtering
+    const validShipIds = await getCachedValidShipTypeIds();
+
+    // Get cached ship group IDs for filtering
+    const validShipGroupIds = await getCachedValidShipGroupIds();
+    const validShipGroupIdsArray = Array.from(validShipGroupIds);
+
+    // Build base match condition for losses
+    const baseMatch: any = { [`victim.${type}`]: id };
+    if (timeFilter) {
+        baseMatch.kill_time = timeFilter;
+    }
+
+    const SHIP_LIMIT = 20;
+
+    const facets: Record<string, any[]> = {
+        // Most Lost Ships - losses by entity, group by ship
+        mostLostShips: [
+            {
+                $match: {
+                    "victim.ship_id": { $in: validShipIds },
+                },
+            },
+            {
+                $group: {
+                    _id: "$victim.ship_id",
+                    count: { $sum: 1 },
+                    name: { $first: "$victim.ship_name" },
+                },
+            },
+            { $match: { _id: { $ne: 0 } } },
+            { $sort: { count: -1 } },
+            { $limit: SHIP_LIMIT },
+        ],
+
+        // Monthly Stats - losses by month (victim perspective)
+        monthlyLosses: [
+            {
+                $group: {
+                    _id: {
+                        year: { $year: "$kill_time" },
+                        month: { $month: "$kill_time" },
                     },
+                    losses: { $sum: 1 },
+                    iskLost: { $sum: "$total_value" },
+                },
+            },
+        ],
+
+        // Ship Group Stats - losses by ship group (victim perspective)
+        shipGroupLosses: [
+            {
+                $match: {
+                    "victim.ship_group_id": { $in: validShipGroupIdsArray },
                 },
             },
             {
@@ -1104,14 +1409,197 @@ async function getShipGroupStats(
                     groupName: { $first: "$victim.ship_group_name" },
                 },
             },
-        ];
+        ],
+    };
 
-        const [killResults, lossResults] = await Promise.all([
-            Killmails.aggregate(killsAggregation).allowDiskUse(true),
-            Killmails.aggregate(lossesAggregation).allowDiskUse(true),
+    return [{ $match: baseMatch }, { $facet: facets }];
+}
+
+/**
+ * Execute faceted aggregations and return combined results
+ * Replaces 11 individual database queries with 2 faceted queries
+ */
+async function getFacetedStats(
+    type: StatsType,
+    id: number,
+    timeFilter?: { $gte: Date }
+): Promise<{
+    mostUsedShips: Record<number, { count: number; name: any }>;
+    mostLostShips: Record<number, { count: number; name: any }>;
+    mostValuableKills: any[];
+    mostValuableShips: any[];
+    mostValuableStructures: any[];
+    topCharacters: any[];
+    topCorporations: any[];
+    topShips: any[];
+    topSystems: any[];
+    topConstellations: any[];
+    topRegions: any[];
+    heatMapData: any[];
+    monthlyStats: any[];
+    shipGroupStats: any[];
+}> {
+    // Validate entity parameters
+    const validation = validateEntity(type, id);
+    if (!validation.valid) {
+        return {
+            mostUsedShips: {},
+            mostLostShips: {},
+            mostValuableKills: [],
+            mostValuableShips: [],
+            mostValuableStructures: [],
+            topCharacters: [],
+            topCorporations: [],
+            topShips: [],
+            topSystems: [],
+            topConstellations: [],
+            topRegions: [],
+            heatMapData: [],
+            monthlyStats: [],
+            shipGroupStats: [],
+        };
+    }
+
+    try {
+        // Execute both faceted pipelines in parallel
+        const [attackerPipeline, victimPipeline] = await Promise.all([
+            buildAttackerFacetedPipeline(
+                validation.type,
+                validation.id,
+                timeFilter
+            ),
+            buildVictimFacetedPipeline(
+                validation.type,
+                validation.id,
+                timeFilter
+            ),
         ]);
 
-        // Combine results
+        const [attackerResults, victimResults] = await Promise.all([
+            Killmails.aggregate(attackerPipeline).allowDiskUse(true),
+            Killmails.aggregate(victimPipeline).allowDiskUse(true),
+        ]);
+
+        // Extract results from faceted aggregations
+        const attackerData = attackerResults[0] || {};
+        const victimData = victimResults[0] || {};
+
+        // Process most used ships (from attacker facet)
+        const mostUsedShips: Record<number, { count: number; name: any }> = {};
+        if (attackerData.mostUsedShips) {
+            attackerData.mostUsedShips.forEach((ship: any) => {
+                if (ship._id) {
+                    mostUsedShips[ship._id] = {
+                        count: ship.count,
+                        name: ship.name || { en: "" },
+                    };
+                }
+            });
+        }
+
+        // Process most lost ships (from victim facet)
+        const mostLostShips: Record<number, { count: number; name: any }> = {};
+        if (victimData.mostLostShips) {
+            victimData.mostLostShips.forEach((ship: any) => {
+                if (ship._id) {
+                    mostLostShips[ship._id] = {
+                        count: ship.count,
+                        name: ship.name || { en: "" },
+                    };
+                }
+            });
+        }
+
+        // Process monthly stats by combining kills and losses from both facets
+        const monthlyStatsMap = new Map<string, any>();
+        const monthNames = [
+            "January",
+            "February",
+            "March",
+            "April",
+            "May",
+            "June",
+            "July",
+            "August",
+            "September",
+            "October",
+            "November",
+            "December",
+        ];
+
+        // Process kills data from attacker facet
+        if (attackerData.monthlyKills) {
+            attackerData.monthlyKills.forEach((result: any) => {
+                if (!result._id) return;
+                const year = result._id.year;
+                const month = result._id.month;
+                const key = `${year}-${month}`;
+
+                if (!monthlyStatsMap.has(key)) {
+                    monthlyStatsMap.set(key, {
+                        year,
+                        month,
+                        monthLabel: `${monthNames[month - 1]} ${year}`,
+                        kills: 0,
+                        iskKilled: 0,
+                        losses: 0,
+                        iskLost: 0,
+                        efficiency: 0,
+                    });
+                }
+
+                const monthStat = monthlyStatsMap.get(key)!;
+                monthStat.kills = result.kills || 0;
+                monthStat.iskKilled = result.iskKilled || 0;
+            });
+        }
+
+        // Process losses data from victim facet
+        if (victimData.monthlyLosses) {
+            victimData.monthlyLosses.forEach((result: any) => {
+                if (!result._id) return;
+                const year = result._id.year;
+                const month = result._id.month;
+                const key = `${year}-${month}`;
+
+                if (!monthlyStatsMap.has(key)) {
+                    monthlyStatsMap.set(key, {
+                        year,
+                        month,
+                        monthLabel: `${monthNames[month - 1]} ${year}`,
+                        kills: 0,
+                        iskKilled: 0,
+                        losses: 0,
+                        iskLost: 0,
+                        efficiency: 0,
+                    });
+                }
+
+                const monthStat = monthlyStatsMap.get(key)!;
+                monthStat.losses = result.losses || 0;
+                monthStat.iskLost = result.iskLost || 0;
+            });
+        }
+
+        // Calculate efficiency and convert to array
+        const monthlyStats = Array.from(monthlyStatsMap.values()).map(
+            (stat) => {
+                const totalKills = stat.kills + stat.losses;
+                stat.efficiency =
+                    totalKills > 0
+                        ? Math.round((stat.kills / totalKills) * 100)
+                        : 0;
+                return stat;
+            }
+        );
+
+        // Sort by year and month (newest first)
+        monthlyStats.sort((a, b) => {
+            if (a.year !== b.year) return b.year - a.year;
+            return b.month - a.month;
+        });
+
+        // Process ship group stats by combining kills and losses from both facets
         const shipGroupStatsMap = new Map<
             number,
             {
@@ -1122,46 +1610,50 @@ async function getShipGroupStats(
             }
         >();
 
-        // Process kills
-        killResults.forEach((result) => {
-            const shipGroupId = result._id;
-            const groupName =
-                result.groupName?.en ||
-                result.groupName ||
-                "Unknown Ship Group";
+        // Process kills from attacker facet
+        if (attackerData.shipGroupKills) {
+            attackerData.shipGroupKills.forEach((result: any) => {
+                const shipGroupId = result._id;
+                const groupName =
+                    result.groupName?.en ||
+                    result.groupName ||
+                    "Unknown Ship Group";
 
-            if (shipGroupId) {
-                shipGroupStatsMap.set(shipGroupId, {
-                    groupName,
-                    kills: result.kills,
-                    losses: 0,
-                    efficiency: 0,
-                });
-            }
-        });
-
-        // Process losses
-        lossResults.forEach((result) => {
-            const shipGroupId = result._id;
-            const groupName =
-                result.groupName?.en ||
-                result.groupName ||
-                "Unknown Ship Group";
-
-            if (shipGroupId) {
-                const existing = shipGroupStatsMap.get(shipGroupId);
-                if (existing) {
-                    existing.losses = result.losses;
-                } else {
+                if (shipGroupId) {
                     shipGroupStatsMap.set(shipGroupId, {
                         groupName,
-                        kills: 0,
-                        losses: result.losses,
+                        kills: result.kills,
+                        losses: 0,
                         efficiency: 0,
                     });
                 }
-            }
-        });
+            });
+        }
+
+        // Process losses from victim facet
+        if (victimData.shipGroupLosses) {
+            victimData.shipGroupLosses.forEach((result: any) => {
+                const shipGroupId = result._id;
+                const groupName =
+                    result.groupName?.en ||
+                    result.groupName ||
+                    "Unknown Ship Group";
+
+                if (shipGroupId) {
+                    const existing = shipGroupStatsMap.get(shipGroupId);
+                    if (existing) {
+                        existing.losses = result.losses;
+                    } else {
+                        shipGroupStatsMap.set(shipGroupId, {
+                            groupName,
+                            kills: 0,
+                            losses: result.losses,
+                            efficiency: 0,
+                        });
+                    }
+                }
+            });
+        }
 
         // Calculate efficiency and convert to array
         const shipGroupStats = Array.from(shipGroupStatsMap.values()).map(
@@ -1178,273 +1670,44 @@ async function getShipGroupStats(
             (a, b) => b.kills + b.losses - (a.kills + a.losses)
         );
 
-        return shipGroupStats;
+        return {
+            mostUsedShips,
+            mostLostShips,
+            mostValuableKills: attackerData.mostValuableKills || [],
+            mostValuableShips: attackerData.mostValuableShips || [],
+            mostValuableStructures: attackerData.mostValuableStructures || [],
+            topCharacters: attackerData.topCharacters || [],
+            topCorporations: attackerData.topCorporations || [],
+            topShips: attackerData.topShips || [],
+            topSystems: attackerData.topSystems || [],
+            topConstellations: attackerData.topConstellations || [],
+            topRegions: attackerData.topRegions || [],
+            heatMapData: attackerData.heatMapData || [],
+            monthlyStats,
+            shipGroupStats,
+        };
     } catch (error) {
         console.error(
-            `Error calculating ship group stats for ${type} ${id}:`,
+            `Error executing faceted aggregation for ${type} ${id}:`,
             error
         );
-        return [];
+        return {
+            mostUsedShips: {},
+            mostLostShips: {},
+            mostValuableKills: [],
+            mostValuableShips: [],
+            mostValuableStructures: [],
+            topCharacters: [],
+            topCorporations: [],
+            topShips: [],
+            topSystems: [],
+            topConstellations: [],
+            topRegions: [],
+            heatMapData: [],
+            monthlyStats: [],
+            shipGroupStats: [],
+        };
     }
-}
-
-/**
- * Get monthly statistics for an entity
- */
-async function getMonthlyStats(
-    type: StatsType,
-    id: number,
-    timeFilter?: { $gte: Date }
-) {
-    // Validate entity parameters to prevent attackers.undefined queries
-    const validation = validateEntity(type, id);
-    if (!validation.valid) {
-        console.error(
-            `Invalid entity for monthly stats: type=${type}, id=${id}`
-        );
-        return [];
-    }
-
-    // Use validated values
-    type = validation.type;
-    id = validation.id;
-
-    // Map type to database field
-    const typeFieldMap: Record<string, string> = {
-        character_id: "victim.character_id",
-        corporation_id: "victim.corporation_id",
-        alliance_id: "victim.alliance_id",
-    };
-
-    const attackerTypeFieldMap: Record<string, string> = {
-        character_id: "attackers.character_id",
-        corporation_id: "attackers.corporation_id",
-        alliance_id: "attackers.alliance_id",
-    };
-
-    // Get the earliest killmail date for this entity to determine how far back to go
-    const [earliestLoss, earliestKill] = await Promise.all([
-        Killmails.findOne({ [typeFieldMap[type]]: id })
-            .sort({ kill_time: 1 })
-            .select("kill_time")
-            .lean(),
-        Killmails.findOne({ [attackerTypeFieldMap[type]]: id })
-            .sort({ kill_time: 1 })
-            .select("kill_time")
-            .lean(),
-    ]);
-
-    let earliestDate: Date | null = null;
-    if (earliestLoss && earliestKill) {
-        earliestDate = new Date(
-            Math.min(
-                earliestLoss.kill_time.getTime(),
-                earliestKill.kill_time.getTime()
-            )
-        );
-    } else if (earliestLoss) {
-        earliestDate = earliestLoss.kill_time;
-    } else if (earliestKill) {
-        earliestDate = earliestKill.kill_time;
-    }
-
-    if (!earliestDate) {
-        // No data found, return empty array
-        return [];
-    }
-
-    // Apply time filter if provided
-    const lossMatchCondition: any = { [typeFieldMap[type]]: id };
-    const killMatchCondition: any = { [attackerTypeFieldMap[type]]: id };
-
-    if (timeFilter) {
-        lossMatchCondition.kill_time = timeFilter;
-        killMatchCondition.kill_time = timeFilter;
-    }
-
-    // Aggregate losses (deaths) by month
-    const lossesAggregation = [
-        {
-            $match: lossMatchCondition,
-        },
-        {
-            $group: {
-                _id: {
-                    year: { $year: "$kill_time" },
-                    month: { $month: "$kill_time" },
-                },
-                losses: { $sum: 1 },
-                iskLost: { $sum: "$total_value" },
-            },
-        },
-    ];
-
-    // Aggregate kills (where entity is attacker) by month
-    const killsAggregation = [
-        {
-            $match: killMatchCondition,
-        },
-        {
-            $group: {
-                _id: {
-                    year: { $year: "$kill_time" },
-                    month: { $month: "$kill_time" },
-                },
-                kills: { $sum: 1 },
-                iskKilled: { $sum: "$total_value" },
-            },
-        },
-    ];
-
-    const [lossResults, killResults] = await Promise.all([
-        Killmails.aggregate(lossesAggregation).allowDiskUse(true),
-        Killmails.aggregate(killsAggregation).allowDiskUse(true),
-    ]);
-
-    // Create a map to combine results
-    const monthsMap = new Map<string, any>();
-
-    // Month names for display
-    const monthNames = [
-        "January",
-        "February",
-        "March",
-        "April",
-        "May",
-        "June",
-        "July",
-        "August",
-        "September",
-        "October",
-        "November",
-        "December",
-    ];
-
-    // Process losses
-    lossResults.forEach((result: any) => {
-        if (!result._id) return;
-
-        const year = result._id.year;
-        const month = result._id.month;
-        const key = `${year}-${month}`;
-
-        if (!monthsMap.has(key)) {
-            monthsMap.set(key, {
-                year,
-                month,
-                monthLabel: `${monthNames[month - 1]} ${year}`,
-                kills: 0,
-                iskKilled: 0,
-                losses: 0,
-                iskLost: 0,
-                efficiency: 0,
-            });
-        }
-
-        const monthStat = monthsMap.get(key)!;
-        monthStat.losses = result.losses || 0;
-        monthStat.iskLost = result.iskLost || 0;
-    });
-
-    // Process kills
-    killResults.forEach((result: any) => {
-        if (!result._id) return;
-
-        const year = result._id.year;
-        const month = result._id.month;
-        const key = `${year}-${month}`;
-
-        if (!monthsMap.has(key)) {
-            monthsMap.set(key, {
-                year,
-                month,
-                monthLabel: `${monthNames[month - 1]} ${year}`,
-                kills: 0,
-                iskKilled: 0,
-                losses: 0,
-                iskLost: 0,
-                efficiency: 0,
-            });
-        }
-
-        const monthStat = monthsMap.get(key)!;
-        monthStat.kills = result.kills || 0;
-        monthStat.iskKilled = result.iskKilled || 0;
-    });
-
-    // Calculate efficiency and convert to array
-    const monthlyStats = Array.from(monthsMap.values()).map((stat) => {
-        const totalKills = stat.kills + stat.losses;
-        stat.efficiency =
-            totalKills > 0 ? Math.round((stat.kills / totalKills) * 100) : 0;
-        return stat;
-    });
-
-    // Sort by year and month (newest first)
-    monthlyStats.sort((a, b) => {
-        if (a.year !== b.year) return b.year - a.year;
-        return b.month - a.month;
-    });
-
-    return monthlyStats;
-}
-
-/**
- * Get heat map data (kills by hour) with sampling for large datasets
- */
-async function getHeatMapData(
-    type: StatsType,
-    id: number,
-    timeFilter?: { $gte: Date }
-) {
-    // Validate entity parameters to prevent attackers.undefined queries
-    const validation = validateEntity(type, id);
-    if (!validation.valid) {
-        console.error(`Invalid entity for heat map: type=${type}, id=${id}`);
-        return [];
-    }
-
-    // Use validated values
-    type = validation.type;
-    id = validation.id;
-
-    const matchCondition: any = { [`attackers.${type}`]: id };
-
-    if (timeFilter) {
-        matchCondition.kill_time = timeFilter;
-    }
-
-    // Check if we need to sample (for extremely large datasets)
-    const totalCount = await Killmails.countDocuments(matchCondition).limit(
-        1000000
-    );
-
-    // Apply sampling for large datasets
-    const SAMPLE_THRESHOLD = 100000;
-    const useSampling = totalCount > SAMPLE_THRESHOLD;
-
-    const pipeline = [];
-
-    // Add sampling for large datasets
-    if (useSampling) {
-        const sampleSize = Math.min(
-            SAMPLE_THRESHOLD,
-            Math.max(10000, Math.floor(totalCount * 0.1))
-        );
-        pipeline.push({ $sample: { size: sampleSize } });
-    } else {
-        pipeline.push({ $match: matchCondition });
-    }
-
-    // Add the hour grouping stage
-    pipeline.push({
-        $group: {
-            _id: { $hour: "$kill_time" },
-            count: { $sum: 1 },
-        },
-    });
-
-    return Killmails.aggregate(pipeline).allowDiskUse(true);
 }
 
 /**
@@ -1472,30 +1735,8 @@ async function getBlobFactorData(
         matchCondition.kill_time = timeFilter;
     }
 
-    // Check if we need to sample (for extremely large datasets)
-    const totalCount = await Killmails.countDocuments(matchCondition).limit(
-        1000000
-    );
-
-    // Apply sampling for large datasets
-    const SAMPLE_THRESHOLD = 100000;
-    const useSampling = totalCount > SAMPLE_THRESHOLD;
-
-    const pipeline = [];
-
-    // Add sampling for large datasets
-    if (useSampling) {
-        const sampleSize = Math.min(
-            SAMPLE_THRESHOLD,
-            Math.max(10000, Math.floor(totalCount * 0.1))
-        );
-        pipeline.push({ $sample: { size: sampleSize } });
-    } else {
-        pipeline.push({ $match: matchCondition });
-    }
-
-    // Continue with the rest of the pipeline
-    pipeline.push(
+    const pipeline = [
+        { $match: matchCondition },
         {
             $project: {
                 attackersCount: { $size: "$attackers" },
@@ -1506,749 +1747,10 @@ async function getBlobFactorData(
         },
         {
             $count: "blobCount",
-        }
-    );
+        },
+    ];
 
     const result = await Killmails.aggregate(pipeline).allowDiskUse(true);
 
-    // Adjust the blob count if we used sampling
-    if (useSampling && result.length > 0) {
-        const samplingRatio =
-            totalCount /
-            Math.min(
-                SAMPLE_THRESHOLD,
-                Math.max(10000, Math.floor(totalCount * 0.1))
-            );
-        return { blobCount: Math.round(result[0].blobCount * samplingRatio) };
-    }
-
     return result[0] || { blobCount: 0 };
-}
-
-/**
- * Get most used ships statistics with sampling for large datasets
- */
-async function getMostUsedShips(
-    type: StatsType,
-    id: number,
-    timeFilter?: { $gte: Date }
-) {
-    // Validate entity parameters to prevent attackers.undefined queries
-    const validation = validateEntity(type, id);
-    if (!validation.valid) {
-        console.error(
-            `Invalid entity for most used ships: type=${type}, id=${id}`
-        );
-        return {};
-    }
-
-    // Use validated values
-    type = validation.type;
-    id = validation.id;
-
-    // Prepare match conditions
-    const killMatchCondition: any = { [`attackers.${type}`]: id };
-
-    if (timeFilter) {
-        killMatchCondition.kill_time = timeFilter;
-    }
-
-    // Get all valid ship type IDs upfront (category_id = 6)
-    const shipTypes = await InvTypes.find(
-        { category_id: 6 },
-        { type_id: 1, _id: 0 }
-    ).lean();
-
-    // Create an array of valid ship type IDs
-    const validShipIds = shipTypes.map((item) => item.type_id);
-
-    // Check if we need to sample (for extremely large datasets)
-    const totalKillCount = await Killmails.countDocuments(
-        killMatchCondition
-    ).limit(1000000);
-
-    // Define sampling rates based on data size
-    const SAMPLE_THRESHOLD = 100000;
-    const useSamplingForKills = totalKillCount > SAMPLE_THRESHOLD;
-
-    // Limit to top 20 ships (most common)
-    const SHIP_LIMIT = 20;
-
-    // Ship usage statistics from kills pipeline
-    const killsPipeline = [];
-
-    // Add sampling stage for large datasets
-    if (useSamplingForKills) {
-        const sampleSize = Math.min(
-            SAMPLE_THRESHOLD,
-            Math.max(10000, Math.floor(totalKillCount * 0.1))
-        );
-        killsPipeline.push({ $sample: { size: sampleSize } });
-    } else {
-        killsPipeline.push({ $match: killMatchCondition });
-    }
-
-    // Continue with the rest of the pipeline, now with early ship filtering
-    killsPipeline.push(
-        { $unwind: "$attackers" },
-        {
-            $match: {
-                [`attackers.${type}`]: id,
-                "attackers.ship_id": { $in: validShipIds }, // Early ship filtering
-            },
-        },
-        {
-            $group: {
-                _id: "$attackers.ship_id",
-                count: { $sum: 1 },
-                name: { $first: "$attackers.ship_name" },
-            },
-        },
-        { $match: { _id: { $ne: 0 } } },
-        { $sort: { count: -1 } },
-        { $limit: SHIP_LIMIT }
-    );
-
-    // Run aggregation
-    const mostUsedShipsAgg = await Killmails.aggregate(
-        killsPipeline
-    ).allowDiskUse(true);
-
-    // Process ship usage data
-    const mostUsedShips: Record<number, { count: number; name: any }> = {};
-    mostUsedShipsAgg.forEach((ship) => {
-        if (ship._id) {
-            mostUsedShips[ship._id] = {
-                count: ship.count,
-                name: ship.name || { en: "" },
-            };
-        }
-    });
-
-    return mostUsedShips;
-}
-
-/**
- * Get most lost ships statistics with sampling for large datasets
- */
-async function getMostLostShips(
-    type: StatsType,
-    id: number,
-    timeFilter?: { $gte: Date }
-) {
-    // Validate entity parameters to prevent attackers.undefined queries
-    const validation = validateEntity(type, id);
-    if (!validation.valid) {
-        console.error(
-            `Invalid entity for most lost ships: type=${type}, id=${id}`
-        );
-        return {};
-    }
-
-    // Use validated values
-    type = validation.type;
-    id = validation.id;
-
-    // Prepare match conditions
-    const lossMatchCondition: any = { [`victim.${type}`]: id };
-
-    if (timeFilter) {
-        lossMatchCondition.kill_time = timeFilter;
-    }
-
-    // Get all valid ship type IDs upfront (category_id = 6)
-    const shipTypes = await InvTypes.find(
-        { category_id: 6 },
-        { type_id: 1, _id: 0 }
-    ).lean();
-
-    // Create an array of valid ship type IDs
-    const validShipIds = shipTypes.map((item) => item.type_id);
-
-    // Check if we need to sample (for extremely large datasets)
-    const totalLossCount = await Killmails.countDocuments(
-        lossMatchCondition
-    ).limit(1000000);
-
-    // Define sampling rates based on data size
-    const SAMPLE_THRESHOLD = 100000;
-    const useSamplingForLosses = totalLossCount > SAMPLE_THRESHOLD;
-
-    // Limit to top 20 ships (most common)
-    const SHIP_LIMIT = 20;
-
-    // Ship loss statistics pipeline with early ship filtering
-    const lossesPipeline = [];
-
-    // Add sampling stage for large datasets
-    if (useSamplingForLosses) {
-        const sampleSize = Math.min(
-            SAMPLE_THRESHOLD,
-            Math.max(10000, Math.floor(totalLossCount * 0.1))
-        );
-        lossesPipeline.push({ $sample: { size: sampleSize } });
-    } else {
-        lossesPipeline.push({ $match: lossMatchCondition });
-    }
-
-    // Add early ship filtering to losses pipeline
-    lossesPipeline.push(
-        {
-            $match: {
-                "victim.ship_id": { $in: validShipIds }, // Early ship filtering
-            },
-        },
-        {
-            $group: {
-                _id: "$victim.ship_id",
-                count: { $sum: 1 },
-                name: { $first: "$victim.ship_name" },
-            },
-        },
-        { $match: { _id: { $ne: 0 } } },
-        { $sort: { count: -1 } },
-        { $limit: SHIP_LIMIT }
-    );
-
-    // Run aggregation
-    const mostLostShipsAgg = await Killmails.aggregate(
-        lossesPipeline
-    ).allowDiskUse(true);
-
-    // Process ship loss data
-    const mostLostShips: Record<number, { count: number; name: any }> = {};
-    mostLostShipsAgg.forEach((ship) => {
-        if (ship._id) {
-            mostLostShips[ship._id] = {
-                count: ship.count,
-                name: ship.name || { en: "" },
-            };
-        }
-    });
-
-    return mostLostShips;
-}
-
-/**
- * Get most valuable kills for an entity with sampling for large datasets
- */
-async function getMostValuableKills(
-    type: StatsType,
-    id: number,
-    timeFilter?: { $gte: Date }
-) {
-    const KILL_LIMIT = 10;
-
-    // Build match conditions
-    const matchCondition: any = {
-        [`attackers.${type}`]: id,
-    };
-
-    if (timeFilter) {
-        matchCondition.kill_time = timeFilter;
-    }
-
-    // Pipeline to get most valuable kills
-    const pipeline = [
-        { $match: matchCondition },
-        {
-            $project: {
-                killmail_id: 1,
-                total_value: 1,
-                "victim.ship_id": 1,
-                "victim.ship_name": 1,
-                "victim.character_id": 1,
-                "victim.character_name": 1,
-                "victim.corporation_id": 1,
-                "victim.corporation_name": 1,
-                "victim.alliance_id": 1,
-                "victim.alliance_name": 1,
-                attackers: {
-                    $filter: {
-                        input: "$attackers",
-                        as: "attacker",
-                        cond: { $eq: ["$$attacker.final_blow", true] },
-                    },
-                },
-            },
-        },
-        {
-            $addFields: {
-                final_blow: { $arrayElemAt: ["$attackers", 0] },
-            },
-        },
-        {
-            $project: {
-                killmail_id: 1,
-                total_value: 1,
-                victim: 1,
-                "final_blow.character_id": 1,
-                "final_blow.character_name": 1,
-                "final_blow.ship_id": 1,
-                "final_blow.ship_name": 1,
-            },
-        },
-        { $sort: { total_value: -1 } },
-        { $limit: KILL_LIMIT },
-    ];
-
-    // Run aggregation
-    const mostValuableKillsAgg = await Killmails.aggregate(
-        pipeline
-    ).allowDiskUse(true);
-
-    return mostValuableKillsAgg;
-}
-
-/**
- * Get most valuable ships killed by this entity
- */
-async function getMostValuableShips(
-    type: StatsType,
-    id: number,
-    timeFilter?: { $gte: Date }
-) {
-    const SHIP_LIMIT = 10;
-
-    // Ship group IDs from TopLists.ts
-    const shipGroupIDs = [
-        547, 485, 513, 902, 941, 30, 659, 419, 27, 29, 26, 420, 25, 28, 463,
-        237, 31, 324, 898, 906, 540, 830, 893, 543, 541, 833, 358, 894, 831,
-        832, 900, 834, 380, 963, 1305,
-    ];
-
-    // Build match conditions - look for ships killed BY this entity
-    const matchCondition: any = {
-        [`attackers.${type}`]: id,
-        "victim.ship_group_id": { $in: shipGroupIDs },
-    };
-
-    if (timeFilter) {
-        matchCondition.kill_time = timeFilter;
-    }
-
-    // Aggregate to get the highest value kill per ship type
-    const pipeline = [
-        { $match: matchCondition },
-        {
-            $group: {
-                _id: "$victim.ship_id",
-                ship_name: { $first: "$victim.ship_name" },
-                max_value: { $max: "$total_value" },
-                count: { $sum: 1 },
-            },
-        },
-        { $sort: { max_value: -1 } },
-        { $limit: SHIP_LIMIT },
-        {
-            $project: {
-                _id: 0,
-                ship_id: "$_id",
-                ship_name: "$ship_name",
-                total_value: "$max_value",
-                count: 1,
-            },
-        },
-    ];
-
-    const mostValuableShips = await Killmails.aggregate(pipeline);
-
-    return mostValuableShips;
-}
-
-/**
- * Get most valuable structures killed by this entity
- */
-async function getMostValuableStructures(
-    type: StatsType,
-    id: number,
-    timeFilter?: { $gte: Date }
-) {
-    const STRUCTURE_LIMIT = 10;
-
-    // Structure group IDs from TopLists.ts
-    const structureGroupIDs = [1657, 1406, 1404, 1408, 2017, 2016];
-
-    // Build match conditions - look for structures killed BY this entity
-    const matchCondition: any = {
-        [`attackers.${type}`]: id,
-        "victim.ship_group_id": { $in: structureGroupIDs },
-    };
-
-    if (timeFilter) {
-        matchCondition.kill_time = timeFilter;
-    }
-
-    // Aggregate to get the highest value kill per structure type
-    const pipeline = [
-        { $match: matchCondition },
-        {
-            $group: {
-                _id: "$victim.ship_id",
-                type_name: { $first: "$victim.ship_name" },
-                max_value: { $max: "$total_value" },
-                count: { $sum: 1 },
-                system_id: { $first: "$system_id" },
-                system_name: { $first: "$system_name" },
-            },
-        },
-        { $sort: { max_value: -1 } },
-        { $limit: STRUCTURE_LIMIT },
-        {
-            $project: {
-                _id: 0,
-                type_id: "$_id",
-                type_name: "$type_name",
-                total_value: "$max_value",
-                count: 1,
-                system_id: 1,
-                system_name: 1,
-            },
-        },
-    ];
-
-    const mostValuableStructures = await Killmails.aggregate(pipeline);
-
-    return mostValuableStructures;
-}
-
-/**
- * Get top characters for corporation/alliance
- */
-async function getTopCharacters(
-    type: StatsType,
-    id: number,
-    timeFilter?: { $gte: Date }
-) {
-    // Only applicable for corporation and alliance
-    if (type === "character_id") {
-        return [];
-    }
-
-    const CHARACTER_LIMIT = 10;
-
-    // Build match conditions
-    const matchCondition: any = {
-        [`attackers.${type}`]: id,
-        "attackers.character_id": { $ne: 0 },
-    };
-
-    if (timeFilter) {
-        matchCondition.kill_time = timeFilter;
-    }
-
-    // Pipeline to get top characters
-    const pipeline = [
-        { $match: matchCondition },
-        { $unwind: "$attackers" },
-        {
-            $match: {
-                [`attackers.${type}`]: id,
-                "attackers.character_id": { $ne: 0 },
-            },
-        },
-        {
-            $group: {
-                _id: "$attackers.character_id",
-                count: { $sum: 1 },
-                name: { $first: "$attackers.character_name" },
-            },
-        },
-        { $match: { _id: { $ne: 0 } } },
-        { $sort: { count: -1 } },
-        { $limit: CHARACTER_LIMIT },
-        {
-            $project: {
-                character_id: "$_id",
-                id: "$_id",
-                name: 1,
-                count: 1,
-                _id: 0,
-            },
-        },
-    ];
-
-    // Run aggregation
-    const topCharactersAgg = await Killmails.aggregate(pipeline).allowDiskUse(
-        true
-    );
-
-    return topCharactersAgg;
-}
-
-/**
- * Get top corporations for alliance
- */
-async function getTopCorporations(
-    type: StatsType,
-    id: number,
-    timeFilter?: { $gte: Date }
-) {
-    // Only applicable for alliance
-    if (type !== "alliance_id") {
-        return [];
-    }
-
-    const CORPORATION_LIMIT = 10;
-
-    // Build match conditions
-    const matchCondition: any = {
-        "attackers.alliance_id": id,
-        "attackers.corporation_id": { $ne: 0 },
-    };
-
-    if (timeFilter) {
-        matchCondition.kill_time = timeFilter;
-    }
-
-    // Pipeline to get top corporations
-    const pipeline = [
-        { $match: matchCondition },
-        { $unwind: "$attackers" },
-        {
-            $match: {
-                "attackers.alliance_id": id,
-                "attackers.corporation_id": { $ne: 0 },
-            },
-        },
-        {
-            $group: {
-                _id: "$attackers.corporation_id",
-                count: { $sum: 1 },
-                name: { $first: "$attackers.corporation_name" },
-            },
-        },
-        { $match: { _id: { $ne: 0 } } },
-        { $sort: { count: -1 } },
-        { $limit: CORPORATION_LIMIT },
-        {
-            $project: {
-                corporation_id: "$_id",
-                id: "$_id",
-                name: 1,
-                count: 1,
-                _id: 0,
-            },
-        },
-    ];
-
-    // Run aggregation
-    const topCorporationsAgg = await Killmails.aggregate(pipeline).allowDiskUse(
-        true
-    );
-
-    return topCorporationsAgg;
-}
-
-/**
- * Get top ships for an entity
- */
-async function getTopShips(
-    type: StatsType,
-    id: number,
-    timeFilter?: { $gte: Date }
-) {
-    const SHIP_LIMIT = 10;
-
-    // Build match conditions
-    const matchCondition: any = {
-        [`attackers.${type}`]: id,
-        "attackers.ship_id": { $ne: 0 },
-    };
-
-    if (timeFilter) {
-        matchCondition.kill_time = timeFilter;
-    }
-
-    // Pipeline to get top ships
-    const pipeline = [
-        { $match: matchCondition },
-        { $unwind: "$attackers" },
-        {
-            $match: {
-                [`attackers.${type}`]: id,
-                "attackers.ship_id": { $ne: 0 },
-            },
-        },
-        {
-            $group: {
-                _id: "$attackers.ship_id",
-                count: { $sum: 1 },
-                name: { $first: "$attackers.ship_name" },
-            },
-        },
-        { $match: { _id: { $ne: 0 } } },
-        { $sort: { count: -1 } },
-        { $limit: SHIP_LIMIT },
-        {
-            $project: {
-                type_id: "$_id",
-                id: "$_id",
-                name: 1,
-                count: 1,
-                _id: 0,
-            },
-        },
-    ];
-
-    // Run aggregation
-    const topShipsAgg = await Killmails.aggregate(pipeline).allowDiskUse(true);
-
-    return topShipsAgg;
-}
-
-/**
- * Get top systems for an entity
- */
-async function getTopSystems(
-    type: StatsType,
-    id: number,
-    timeFilter?: { $gte: Date }
-) {
-    const SYSTEM_LIMIT = 10;
-
-    // Build match conditions
-    const matchCondition: any = {
-        [`attackers.${type}`]: id,
-        system_id: { $ne: 0 },
-    };
-
-    if (timeFilter) {
-        matchCondition.kill_time = timeFilter;
-    }
-
-    // Pipeline to get top systems
-    const pipeline = [
-        { $match: matchCondition },
-        {
-            $group: {
-                _id: "$system_id",
-                count: { $sum: 1 },
-                name: { $first: "$system_name" },
-            },
-        },
-        { $match: { _id: { $ne: 0 } } },
-        { $sort: { count: -1 } },
-        { $limit: SYSTEM_LIMIT },
-        {
-            $project: {
-                system_id: "$_id",
-                id: "$_id",
-                name: 1,
-                count: 1,
-                _id: 0,
-            },
-        },
-    ];
-
-    // Run aggregation
-    const topSystemsAgg = await Killmails.aggregate(pipeline).allowDiskUse(
-        true
-    );
-
-    return topSystemsAgg;
-}
-
-/**
- * Get top constellations for an entity
- */
-async function getTopConstellations(
-    type: StatsType,
-    id: number,
-    timeFilter?: { $gte: Date }
-) {
-    const CONSTELLATION_LIMIT = 10;
-
-    // Build match conditions
-    const matchCondition: any = {
-        [`attackers.${type}`]: id,
-        constellation_id: { $ne: 0 },
-    };
-
-    if (timeFilter) {
-        matchCondition.kill_time = timeFilter;
-    }
-
-    // Pipeline to get top constellations
-    const pipeline = [
-        { $match: matchCondition },
-        {
-            $group: {
-                _id: "$constellation_id",
-                count: { $sum: 1 },
-                name: { $first: "$constellation_name" },
-            },
-        },
-        { $match: { _id: { $ne: 0 } } },
-        { $sort: { count: -1 } },
-        { $limit: CONSTELLATION_LIMIT },
-        {
-            $project: {
-                constellation_id: "$_id",
-                id: "$_id",
-                name: 1,
-                count: 1,
-                _id: 0,
-            },
-        },
-    ];
-
-    // Run aggregation
-    const topConstellationsAgg = await Killmails.aggregate(
-        pipeline
-    ).allowDiskUse(true);
-
-    return topConstellationsAgg;
-}
-
-/**
- * Get top regions for an entity
- */
-async function getTopRegions(
-    type: StatsType,
-    id: number,
-    timeFilter?: { $gte: Date }
-) {
-    const REGION_LIMIT = 10;
-
-    // Build match conditions
-    const matchCondition: any = {
-        [`attackers.${type}`]: id,
-        region_id: { $ne: 0 },
-    };
-
-    if (timeFilter) {
-        matchCondition.kill_time = timeFilter;
-    }
-
-    // Pipeline to get top regions
-    const pipeline = [
-        { $match: matchCondition },
-        {
-            $group: {
-                _id: "$region_id",
-                count: { $sum: 1 },
-                name: { $first: "$region_name" },
-            },
-        },
-        { $match: { _id: { $ne: 0 } } },
-        { $sort: { count: -1 } },
-        { $limit: REGION_LIMIT },
-        {
-            $project: {
-                region_id: "$_id",
-                id: "$_id",
-                name: 1,
-                count: 1,
-                _id: 0,
-            },
-        },
-    ];
-
-    // Run aggregation
-    const topRegionsAgg = await Killmails.aggregate(pipeline).allowDiskUse(
-        true
-    );
-
-    return topRegionsAgg;
 }
