@@ -251,6 +251,8 @@ async function loadStatsData() {
         // Add time filter based on selected days
         const daysAgo = new Date();
         daysAgo.setDate(daysAgo.getDate() - selectedDays.value);
+        // Normalize to YYYY-mm-dd format for consistency (without hours)
+        daysAgo.setHours(0, 0, 0, 0); // Set to start of day for cache consistency
 
         const filters = {
             ...baseFilter,

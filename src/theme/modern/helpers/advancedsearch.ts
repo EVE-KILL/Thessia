@@ -6,18 +6,17 @@ import type {
 } from "~/shared/helpers/queryAPIHelper";
 import {
     and,
-    createQuery,
-    field,
-    or,
     eq,
-    ne,
+    exists,
+    field,
     gt,
     gte,
+    inArray,
     lt,
     lte,
-    inArray,
+    ne,
     notInArray,
-    exists,
+    or,
 } from "~/shared/helpers/queryAPIHelper";
 
 // Types for advanced search filters
@@ -475,19 +474,24 @@ export function buildAdvancedSearchQuery(
                 );
                 break;
             case "last24h":
-                const last24h = new Date(now.getTime() - 24 * 60 * 60 * 1000);
+                // Normalize to 24 hours ago from start of current day for cache consistency
+                const last24h = new Date();
+                last24h.setUTCDate(last24h.getUTCDate() - 1);
+                last24h.setUTCHours(0, 0, 0, 0);
                 conditions.push(field("kill_time", gte(last24h.toISOString())));
                 break;
             case "last7d":
-                const last7d = new Date(
-                    now.getTime() - 7 * 24 * 60 * 60 * 1000
-                );
+                // Normalize to 7 days ago from start of current day for cache consistency
+                const last7d = new Date();
+                last7d.setUTCDate(last7d.getUTCDate() - 7);
+                last7d.setUTCHours(0, 0, 0, 0);
                 conditions.push(field("kill_time", gte(last7d.toISOString())));
                 break;
             case "last30d":
-                const last30d = new Date(
-                    now.getTime() - 30 * 24 * 60 * 60 * 1000
-                );
+                // Normalize to 30 days ago from start of current day for cache consistency
+                const last30d = new Date();
+                last30d.setUTCDate(last30d.getUTCDate() - 30);
+                last30d.setUTCHours(0, 0, 0, 0);
                 conditions.push(field("kill_time", gte(last30d.toISOString())));
                 break;
             case "thisWeek":
@@ -511,9 +515,10 @@ export function buildAdvancedSearchQuery(
                 );
                 break;
             case "last3m":
-                const last3m = new Date(
-                    now.getTime() - 90 * 24 * 60 * 60 * 1000
-                );
+                // Normalize to 90 days ago from start of current day for cache consistency
+                const last3m = new Date();
+                last3m.setUTCDate(last3m.getUTCDate() - 90);
+                last3m.setUTCHours(0, 0, 0, 0);
                 conditions.push(field("kill_time", gte(last3m.toISOString())));
                 break;
         }

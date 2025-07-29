@@ -303,8 +303,9 @@ export function addDefaultTimeFilter(filter: any): any {
         return filter; // Already has time constraint, don't modify
     }
 
-    // Calculate 30 days ago
+    // Calculate 30 days ago and normalize to start of day to make it cache-friendly
     const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
+    thirtyDaysAgo.setHours(0, 0, 0, 0); // Set to start of day
 
     // If filter is empty, just add kill_time constraint
     if (!filter || Object.keys(filter).length === 0) {

@@ -37,7 +37,9 @@ function addDefaultTimeFilter(filter: any): any {
     }
 
     // Calculate 7 days ago to match frontpage default
+    // Normalize to start of day to make it cache-friendly
     const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+    sevenDaysAgo.setHours(0, 0, 0, 0); // Set to start of day
 
     // If filter is empty, just add kill_time constraint
     if (!filter || Object.keys(filter).length === 0) {

@@ -311,11 +311,17 @@ const buildCampaignQueryObject = (): Record<string, any> | null => {
         }
 
         if (campaignStartTime.value) {
-            fieldConditions['kill_time']['$gte'] = new Date(campaignStartTime.value).toISOString();
+            const startDate = new Date(campaignStartTime.value);
+            // Normalize to start of day for cache consistency
+            startDate.setHours(0, 0, 0, 0);
+            fieldConditions['kill_time']['$gte'] = startDate.toISOString();
         }
 
         if (campaignEndTime.value) {
-            fieldConditions['kill_time']['$lte'] = new Date(campaignEndTime.value).toISOString();
+            const endDate = new Date(campaignEndTime.value);
+            // Normalize to end of day for cache consistency
+            endDate.setHours(23, 59, 59, 999);
+            fieldConditions['kill_time']['$lte'] = endDate.toISOString();
         }
     }
 
@@ -825,7 +831,7 @@ const submitButtonText = computed(() => {
                     <UCard class="bg-yellow-50 dark:bg-yellow-900/20 border-0">
                         <template #header>
                             <h2 class="text-xl font-semibold text-gray-800 dark:text-gray-100">{{ $t('campaignDetails')
-                            }}</h2>
+                                }}</h2>
                         </template>
                         <div class="space-y-4">
                             <div>
@@ -1058,7 +1064,7 @@ const submitButtonText = computed(() => {
                                         class="block text-sm font-medium text-gray-700 dark:text-gray-300">
                                         {{ $t('endTime') }}
                                         <span class="text-xs text-gray-500 ml-1">({{ $t('campaignCreator.optional')
-                                        }})</span>
+                                            }})</span>
                                     </label>
                                     <input type="datetime-local" id="campaignEndTime" class="custom-input"
                                         v-model="campaignEndTime">
@@ -1170,7 +1176,7 @@ const submitButtonText = computed(() => {
                                                 <div class="flex-1 min-w-0">
                                                     <div class="font-medium text-gray-800 dark:text-gray-200 truncate">
                                                         {{ formatSearchResultDisplayName(result,
-                                                        filterState.attackerCorporation.searchResults) }}
+                                                            filterState.attackerCorporation.searchResults) }}
                                                     </div>
                                                 </div>
                                             </a>
@@ -1224,7 +1230,7 @@ const submitButtonText = computed(() => {
                                                 <div class="flex-1 min-w-0">
                                                     <div class="font-medium text-gray-800 dark:text-gray-200 truncate">
                                                         {{ formatSearchResultDisplayName(result,
-                                                        filterState.attackerAlliance.searchResults)
+                                                            filterState.attackerAlliance.searchResults)
                                                         }}
                                                     </div>
                                                 </div>
@@ -1398,7 +1404,7 @@ const submitButtonText = computed(() => {
                                                 <div class="flex-1 min-w-0">
                                                     <div class="font-medium text-gray-800 dark:text-gray-200 truncate">
                                                         {{ formatSearchResultDisplayName(result,
-                                                        filterState.victimCorporation.searchResults) }}
+                                                            filterState.victimCorporation.searchResults) }}
                                                     </div>
                                                 </div>
                                             </a>
@@ -1452,7 +1458,7 @@ const submitButtonText = computed(() => {
                                                 <div class="flex-1 min-w-0">
                                                     <div class="font-medium text-gray-800 dark:text-gray-200 truncate">
                                                         {{ formatSearchResultDisplayName(result,
-                                                        filterState.victimAlliance.searchResults)
+                                                            filterState.victimAlliance.searchResults)
                                                         }}
                                                     </div>
                                                 </div>

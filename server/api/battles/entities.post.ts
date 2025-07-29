@@ -1,5 +1,5 @@
-import { createError, defineEventHandler, readBody } from 'h3';
-import { Killmails } from '~/server/models/Killmails';
+import { createError, defineEventHandler, readBody } from "h3";
+import { Killmails } from "~/server/models/Killmails";
 
 export default defineEventHandler(async (event) => {
     try {
@@ -7,19 +7,34 @@ export default defineEventHandler(async (event) => {
 
         // Validate required parameters
         if (!systemIds || !Array.isArray(systemIds) || systemIds.length === 0) {
-            throw createError({ statusCode: 400, statusMessage: 'apiErrors.customBattles.entities.systemIdRequired' });
+            throw createError({
+                statusCode: 400,
+                statusMessage:
+                    "apiErrors.customBattles.entities.systemIdRequired",
+            });
         }
 
         // Enforce maximum system limit
         if (systemIds.length > 5) {
-            throw createError({ statusCode: 400, statusMessage: 'apiErrors.customBattles.entities.maxSystems' });
+            throw createError({
+                statusCode: 400,
+                statusMessage: "apiErrors.customBattles.entities.maxSystems",
+            });
         }
 
         if (!startTime) {
-            throw createError({ statusCode: 400, statusMessage: 'apiErrors.customBattles.entities.startTimeRequired' });
+            throw createError({
+                statusCode: 400,
+                statusMessage:
+                    "apiErrors.customBattles.entities.startTimeRequired",
+            });
         }
         if (!endTime) {
-            throw createError({ statusCode: 400, statusMessage: 'apiErrors.customBattles.entities.endTimeRequired' });
+            throw createError({
+                statusCode: 400,
+                statusMessage:
+                    "apiErrors.customBattles.entities.endTimeRequired",
+            });
         }
 
         // Check if the timespan is within the allowed limit (36 hours)
@@ -31,7 +46,7 @@ export default defineEventHandler(async (event) => {
         if (timeDiffMs > maxTimespan) {
             throw createError({
                 statusCode: 400,
-                statusMessage: 'apiErrors.customBattles.entities.maxTimespan'
+                statusMessage: "apiErrors.customBattles.entities.maxTimespan",
             });
         }
 
@@ -40,8 +55,8 @@ export default defineEventHandler(async (event) => {
             system_id: { $in: systemIds }, // Use $in operator to match any of the provided system IDs
             kill_time: {
                 $gte: new Date(startTime),
-                $lte: new Date(endTime)
-            }
+                $lte: new Date(endTime),
+            },
         }).lean();
 
         // Aggregate unique alliances and corporations
@@ -53,20 +68,26 @@ export default defineEventHandler(async (event) => {
             // Process victim
             if (killmail.victim) {
                 // Add victim alliance if it exists
-                if (killmail.victim.alliance_id && killmail.victim.alliance_name) {
+                if (
+                    killmail.victim.alliance_id &&
+                    killmail.victim.alliance_name
+                ) {
                     alliances.set(killmail.victim.alliance_id, {
                         id: killmail.victim.alliance_id,
-                        name: killmail.victim.alliance_name
+                        name: killmail.victim.alliance_name,
                     });
                 }
 
                 // Add victim corporation if it exists
-                if (killmail.victim.corporation_id && killmail.victim.corporation_name) {
+                if (
+                    killmail.victim.corporation_id &&
+                    killmail.victim.corporation_name
+                ) {
                     corporations.set(killmail.victim.corporation_id, {
                         id: killmail.victim.corporation_id,
                         name: killmail.victim.corporation_name,
                         alliance_id: killmail.victim.alliance_id || null,
-                        alliance_name: killmail.victim.alliance_name || null
+                        alliance_name: killmail.victim.alliance_name || null,
                     });
                 }
             }
@@ -78,7 +99,7 @@ export default defineEventHandler(async (event) => {
                     if (attacker.alliance_id && attacker.alliance_name) {
                         alliances.set(attacker.alliance_id, {
                             id: attacker.alliance_id,
-                            name: attacker.alliance_name
+                            name: attacker.alliance_name,
                         });
                     }
 
@@ -88,7 +109,7 @@ export default defineEventHandler(async (event) => {
                             id: attacker.corporation_id,
                             name: attacker.corporation_name,
                             alliance_id: attacker.alliance_id || null,
-                            alliance_name: attacker.alliance_name || null
+                            alliance_name: attacker.alliance_name || null,
                         });
                     }
                 }
@@ -101,16 +122,20 @@ export default defineEventHandler(async (event) => {
 
         return {
             alliances: alliancesArray,
-            corporations: corporationsArray
+            corporations: corporationsArray,
         };
     } catch (error: any) {
-        console.error('Error in battles/entities endpoint:', error);
+        console.error("Error in battles/entities endpoint:", error);
         // If statusMessage is already a key (e.g. from a previous createError), use it.
         // Otherwise, use the generic internal server error key.
-        const messageIsKey = typeof error.statusMessage === 'string' && error.statusMessage.startsWith('apiErrors.');
+        const messageIsKey =
+            typeof error.statusMessage === "string" &&
+            error.statusMessage.startsWith("apiErrors.");
         throw createError({
             statusCode: error.statusCode || 500,
-            statusMessage: messageIsKey ? error.statusMessage : 'apiErrors.customBattles.entities.internalServerError'
+            statusMessage: messageIsKey
+                ? error.statusMessage
+                : "apiErrors.customBattles.entities.internalServerError",
         });
     }
 });
