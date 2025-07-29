@@ -222,8 +222,8 @@ watch(() => route.params.type, async (newType, oldType) => {
 
 // Watch for day selection changes to reload stats
 watch(selectedDays, () => {
-    // Only reload stats if we're showing stats for this type
-    if (showShipStats.value || showMostValuableKills.value) {
+    // Reload stats for all valid types since we always show top killers
+    if (isValidType.value) {
         loadStatsData();
     }
 });
@@ -236,12 +236,8 @@ async function initializePage() {
     // Page renders immediately for valid types
     // Stats load separately in the background
     if (isValidType.value) {
-        // Load stats in background if this type should show them
-        if (showShipStats.value || showMostValuableKills.value) {
-            loadStatsData(); // Don't await - let it load in background
-        } else {
-            isStatsLoading.value = false; // No stats needed for this type
-        }
+        // Load stats in background for all valid types (to get top killers)
+        loadStatsData(); // Don't await - let it load in background
     }
 }
 
@@ -261,8 +257,23 @@ async function loadStatsData() {
             kill_time: { $gte: daysAgo.toISOString() }
         };
 
+        // Determine which facets we need based on what we're showing
+        const requestedFacets: string[] = [];
+
+        if (showShipStats.value) {
+            requestedFacets.push('shipStats');
+        }
+
+        if (showMostValuableKills.value) {
+            requestedFacets.push('mostValuable');
+        }
+
+        // Always include top killers for all types to ensure they populate
+        requestedFacets.push('topKillersChar', 'topKillersCorp', 'topKillersAlliance');
+
         const filtersParam = JSON.stringify(filters);
-        const statsResponse = await $fetch(`/api/advancedview/stats?filters=${encodeURIComponent(filtersParam)}`);
+        const facetsParam = JSON.stringify(requestedFacets);
+        const statsResponse = await $fetch(`/api/advancedview/stats?filters=${encodeURIComponent(filtersParam)}&facets=${encodeURIComponent(facetsParam)}`);
         stats.value = statsResponse;
     } catch (err: any) {
         console.error('Error loading stats:', err);

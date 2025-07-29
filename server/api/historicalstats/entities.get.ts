@@ -1,4 +1,3 @@
-import url from "url";
 import { Alliances } from "~/server/models/Alliances";
 import { Corporations } from "~/server/models/Corporations";
 import { HistoricalStats } from "~/server/models/HistoricalStats";
@@ -14,7 +13,7 @@ interface QueryParams {
 
 export default defineCachedEventHandler(
     async (event) => {
-        const query = url.parse(event.node.req.url, true).query as QueryParams;
+        const query = getQuery(event) as QueryParams;
         const {
             entityType,
             listType,
@@ -406,8 +405,7 @@ export default defineCachedEventHandler(
             return process.env.NODE_ENV !== "production";
         },
         getKey: (event) => {
-            const query = url.parse(event.node.req.url, true)
-                .query as QueryParams;
+            const query = getQuery(event) as QueryParams;
             const { entityType, listType, period, limit, offset, sort } = query;
             return `historicalstats:entities:${entityType}:${listType}:${period}:${limit}:${offset}:${sort}`;
         },

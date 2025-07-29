@@ -1,8 +1,7 @@
-import url from "url";
+import { Alliances } from "~/server/models/Alliances";
 import { CharacterAchievements } from "~/server/models/CharacterAchievements";
 import { Characters } from "~/server/models/Characters";
 import { Corporations } from "~/server/models/Corporations";
-import { Alliances } from "~/server/models/Alliances";
 
 interface QueryParams {
     listType?: string;
@@ -37,7 +36,7 @@ interface AllianceResult {
 
 export default defineCachedEventHandler(
     async (event) => {
-        const query = url.parse(event.node.req.url!, true).query as QueryParams;
+        const query = getQuery(event) as QueryParams;
         const { listType, limit: limitStr, offset: offsetStr } = query;
 
         // Parameter Validation
@@ -215,8 +214,7 @@ export default defineCachedEventHandler(
             return process.env.NODE_ENV !== "production";
         },
         getKey: (event) => {
-            const query = url.parse(event.node.req.url!, true)
-                .query as QueryParams;
+            const query = getQuery(event) as QueryParams;
             const { listType, limit, offset } = query;
             return `historicalstats:achievements:${listType}:${limit}:${offset}`;
         },

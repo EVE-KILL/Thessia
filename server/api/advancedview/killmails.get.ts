@@ -1,5 +1,4 @@
 import { createError, getQuery } from "h3";
-import url from "url";
 import {
     addDefaultTimeFilter,
     determineOptimalIndexHint,
@@ -458,8 +457,7 @@ export default defineCachedEventHandler(
             return process.env.NODE_ENV !== "production";
         },
         getKey: (event) => {
-            const parsedUrl = url.parse(event.node.req.url || "", true);
-            const query = parsedUrl.query;
+            const query = getQuery(event);
             const filtersParam = query?.filters || query?.filter || "";
             const page = query?.page || "1";
             const limit = query?.limit || "25";

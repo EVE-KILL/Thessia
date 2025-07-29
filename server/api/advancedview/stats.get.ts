@@ -1,5 +1,4 @@
 import { createError, getQuery } from "h3";
-import url from "url";
 import { generateAdvancedViewStats } from "../../helpers/AdvancedViewHelper";
 
 /**
@@ -350,6 +349,27 @@ export default defineCachedEventHandler(
                 });
             }
 
+            // Parse facets parameter (optional - defaults to all facets)
+            const facetsParam = query.facets as string;
+            let requestedFacets: string[] | null = null;
+            if (facetsParam) {
+                try {
+                    requestedFacets = JSON.parse(facetsParam);
+                    if (!Array.isArray(requestedFacets)) {
+                        throw createError({
+                            statusCode: 400,
+                            statusMessage:
+                                "Facets parameter must be an array of strings",
+                        });
+                    }
+                } catch (e) {
+                    throw createError({
+                        statusCode: 400,
+                        statusMessage: "Invalid JSON in 'facets' parameter",
+                    });
+                }
+            }
+
             // Parse the filters JSON
             let parsedFilters;
             try {
@@ -368,7 +388,10 @@ export default defineCachedEventHandler(
             mongoQuery = addDefaultTimeFilter(mongoQuery);
 
             // Generate the advanced view statistics
-            const stats = await generateAdvancedViewStats(mongoQuery);
+            const stats = await generateAdvancedViewStats(
+                mongoQuery,
+                requestedFacets
+            );
 
             return stats;
         } catch (error: any) {
@@ -398,10 +421,10 @@ export default defineCachedEventHandler(
             return process.env.NODE_ENV !== "production";
         },
         getKey: (event) => {
-            const parsedUrl = url.parse(event.node.req.url || "", true);
-            const query = parsedUrl.query;
+            const query = getQuery(event);
             const filtersParam = query?.filters || query?.filter || "";
-            return `advancedview:stats:${filtersParam}`;
+            const facetsParam = query?.facets || "";
+            return `advancedview:stats:${filtersParam}:${facetsParam}`;
         },
     }
 );

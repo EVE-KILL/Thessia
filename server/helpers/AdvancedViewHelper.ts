@@ -131,10 +131,12 @@ function normalizeQueryDates(query: Record<string, any>): Record<string, any> {
  * Uses MongoDB aggregation pipelines for optimal performance.
  *
  * @param query - The MongoDB query object to filter killmails
+ * @param requestedFacets - Optional array of facet names to generate (defaults to all facets)
  * @returns An object containing the advanced view statistics
  */
 async function generateAdvancedViewStats(
-    query: Record<string, any>
+    query: Record<string, any>,
+    requestedFacets?: string[] | null
 ): Promise<IAdvancedViewOutput> {
     const startTime = Date.now();
 
@@ -163,262 +165,273 @@ async function generateAdvancedViewStats(
     // Create aggregation pipeline for efficient statistics generation
     const pipeline: any[] = [{ $match: normalizedQuery }];
 
-    // Use $facet to calculate multiple statistics in parallel
-    pipeline.push({
-        $facet: {
-            // Basic totals
-            totals: [
-                {
-                    $group: {
-                        _id: null,
-                        totalKills: { $sum: 1 },
-                        iskDestroyed: { $sum: "$total_value" },
-                    },
+    // Define available facets
+    const availableFacets: Record<string, any> = {
+        totals: [
+            {
+                $group: {
+                    _id: null,
+                    totalKills: { $sum: 1 },
+                    iskDestroyed: { $sum: "$total_value" },
                 },
-            ],
+            },
+        ],
 
-            // Ship group statistics (only valid ship groups)
-            shipStats: [
-                {
-                    $match: {
-                        "victim.ship_group_id": {
-                            $in: Array.from(validShipGroupIds),
-                        },
+        shipStats: [
+            {
+                $match: {
+                    "victim.ship_group_id": {
+                        $in: Array.from(validShipGroupIds),
                     },
                 },
-                {
-                    $group: {
-                        _id: "$victim.ship_group_id",
-                        ship_group_name: { $first: "$victim.ship_group_name" },
-                        killed: { $sum: 1 },
-                    },
+            },
+            {
+                $group: {
+                    _id: "$victim.ship_group_id",
+                    ship_group_name: { $first: "$victim.ship_group_name" },
+                    killed: { $sum: 1 },
                 },
-                { $sort: { killed: -1 } },
-                { $limit: 20 },
-                {
-                    $project: {
-                        _id: 0,
-                        ship_group_id: "$_id",
-                        ship_group_name: 1,
-                        killed: 1,
-                    },
+            },
+            { $sort: { killed: -1 } },
+            { $limit: 20 },
+            {
+                $project: {
+                    _id: 0,
+                    ship_group_id: "$_id",
+                    ship_group_name: 1,
+                    killed: 1,
                 },
-            ],
+            },
+        ],
 
-            // Top killers by character
-            topKillersChar: [
-                {
-                    $match: {
-                        "attackers.character_id": { $ne: 0 },
-                    },
+        topKillersChar: [
+            {
+                $match: {
+                    "attackers.character_id": { $ne: 0 },
                 },
-                { $unwind: "$attackers" },
-                {
-                    $match: {
-                        "attackers.character_id": { $ne: 0 },
-                    },
+            },
+            { $unwind: "$attackers" },
+            {
+                $match: {
+                    "attackers.character_id": { $ne: 0 },
                 },
-                {
-                    $group: {
-                        _id: "$attackers.character_id",
-                        character_name: { $first: "$attackers.character_name" },
-                        kills: { $sum: 1 },
-                    },
+            },
+            {
+                $group: {
+                    _id: "$attackers.character_id",
+                    character_name: { $first: "$attackers.character_name" },
+                    kills: { $sum: 1 },
                 },
-                { $sort: { kills: -1 } },
-                { $limit: 10 },
-                {
-                    $project: {
-                        _id: 0,
-                        character_id: "$_id",
-                        character_name: 1,
-                        kills: 1,
-                    },
+            },
+            { $sort: { kills: -1 } },
+            { $limit: 10 },
+            {
+                $project: {
+                    _id: 0,
+                    character_id: "$_id",
+                    character_name: 1,
+                    kills: 1,
                 },
-            ],
+            },
+        ],
 
-            // Top victims by character
-            topVictimsChar: [
-                {
-                    $match: {
-                        "victim.character_id": { $ne: 0 },
-                    },
+        topVictimsChar: [
+            {
+                $match: {
+                    "victim.character_id": { $ne: 0 },
                 },
-                {
-                    $group: {
-                        _id: "$victim.character_id",
-                        character_name: { $first: "$victim.character_name" },
-                        losses: { $sum: 1 },
-                    },
+            },
+            {
+                $group: {
+                    _id: "$victim.character_id",
+                    character_name: { $first: "$victim.character_name" },
+                    losses: { $sum: 1 },
                 },
-                { $sort: { losses: -1 } },
-                { $limit: 10 },
-                {
-                    $project: {
-                        _id: 0,
-                        character_id: "$_id",
-                        character_name: 1,
-                        losses: 1,
-                    },
+            },
+            { $sort: { losses: -1 } },
+            { $limit: 10 },
+            {
+                $project: {
+                    _id: 0,
+                    character_id: "$_id",
+                    character_name: 1,
+                    losses: 1,
                 },
-            ],
+            },
+        ],
 
-            // Top damage dealers by character (using total_value as proxy)
-            topDamageChar: [
-                {
-                    $match: {
-                        "attackers.character_id": { $ne: 0 },
+        topDamageChar: [
+            {
+                $match: {
+                    "attackers.character_id": { $ne: 0 },
+                },
+            },
+            { $unwind: "$attackers" },
+            {
+                $match: {
+                    "attackers.character_id": { $ne: 0 },
+                },
+            },
+            {
+                $group: {
+                    _id: "$attackers.character_id",
+                    character_name: { $first: "$attackers.character_name" },
+                    totalDamageValue: { $sum: "$total_value" },
+                    killCount: { $sum: 1 },
+                },
+            },
+            {
+                $addFields: {
+                    avgDamage: {
+                        $cond: [
+                            { $gt: ["$killCount", 0] },
+                            {
+                                $divide: ["$totalDamageValue", "$killCount"],
+                            },
+                            0,
+                        ],
                     },
                 },
-                { $unwind: "$attackers" },
-                {
-                    $match: {
-                        "attackers.character_id": { $ne: 0 },
-                    },
+            },
+            { $sort: { avgDamage: -1 } },
+            { $limit: 10 },
+            {
+                $project: {
+                    _id: 0,
+                    character_id: "$_id",
+                    character_name: 1,
+                    damageDone: { $round: ["$avgDamage"] },
                 },
-                {
-                    $group: {
-                        _id: "$attackers.character_id",
-                        character_name: { $first: "$attackers.character_name" },
-                        totalDamageValue: { $sum: "$total_value" },
-                        killCount: { $sum: 1 },
-                    },
-                },
-                {
-                    $addFields: {
-                        avgDamage: {
-                            $cond: [
-                                { $gt: ["$killCount", 0] },
-                                {
-                                    $divide: [
-                                        "$totalDamageValue",
-                                        "$killCount",
-                                    ],
-                                },
-                                0,
-                            ],
-                        },
-                    },
-                },
-                { $sort: { avgDamage: -1 } },
-                { $limit: 10 },
-                {
-                    $project: {
-                        _id: 0,
-                        character_id: "$_id",
-                        character_name: 1,
-                        damageDone: { $round: ["$avgDamage"] },
-                    },
-                },
-            ],
+            },
+        ],
 
-            // Top killers by corporation
-            topKillersCorp: [
-                {
-                    $match: {
-                        "attackers.corporation_id": { $ne: 0 },
+        topKillersCorp: [
+            {
+                $match: {
+                    "attackers.corporation_id": { $ne: 0 },
+                },
+            },
+            { $unwind: "$attackers" },
+            {
+                $match: {
+                    "attackers.corporation_id": { $ne: 0 },
+                },
+            },
+            {
+                $group: {
+                    _id: {
+                        killmail_id: "$killmail_id",
+                        corporation_id: "$attackers.corporation_id",
+                    },
+                    corporation_name: {
+                        $first: "$attackers.corporation_name",
                     },
                 },
-                { $unwind: "$attackers" },
-                {
-                    $match: {
-                        "attackers.corporation_id": { $ne: 0 },
-                    },
+            },
+            {
+                $group: {
+                    _id: "$_id.corporation_id",
+                    corporation_name: { $first: "$corporation_name" },
+                    kills: { $sum: 1 },
                 },
-                {
-                    $group: {
-                        _id: {
-                            killmail_id: "$killmail_id",
-                            corporation_id: "$attackers.corporation_id",
-                        },
-                        corporation_name: {
-                            $first: "$attackers.corporation_name",
-                        },
-                    },
+            },
+            { $sort: { kills: -1 } },
+            { $limit: 10 },
+            {
+                $project: {
+                    _id: 0,
+                    corporation_id: "$_id",
+                    corporation_name: 1,
+                    kills: 1,
                 },
-                {
-                    $group: {
-                        _id: "$_id.corporation_id",
-                        corporation_name: { $first: "$corporation_name" },
-                        kills: { $sum: 1 },
-                    },
-                },
-                { $sort: { kills: -1 } },
-                { $limit: 10 },
-                {
-                    $project: {
-                        _id: 0,
-                        corporation_id: "$_id",
-                        corporation_name: 1,
-                        kills: 1,
-                    },
-                },
-            ],
+            },
+        ],
 
-            // Top killers by alliance
-            topKillersAlliance: [
-                {
-                    $match: {
-                        "attackers.alliance_id": { $ne: 0 },
-                    },
+        topKillersAlliance: [
+            {
+                $match: {
+                    "attackers.alliance_id": { $ne: 0 },
                 },
-                { $unwind: "$attackers" },
-                {
-                    $match: {
-                        "attackers.alliance_id": { $ne: 0 },
-                    },
+            },
+            { $unwind: "$attackers" },
+            {
+                $match: {
+                    "attackers.alliance_id": { $ne: 0 },
                 },
-                {
-                    $group: {
-                        _id: {
-                            killmail_id: "$killmail_id",
-                            alliance_id: "$attackers.alliance_id",
-                        },
-                        alliance_name: { $first: "$attackers.alliance_name" },
+            },
+            {
+                $group: {
+                    _id: {
+                        killmail_id: "$killmail_id",
+                        alliance_id: "$attackers.alliance_id",
                     },
+                    alliance_name: { $first: "$attackers.alliance_name" },
                 },
-                {
-                    $group: {
-                        _id: "$_id.alliance_id",
-                        alliance_name: { $first: "$alliance_name" },
-                        kills: { $sum: 1 },
-                    },
+            },
+            {
+                $group: {
+                    _id: "$_id.alliance_id",
+                    alliance_name: { $first: "$alliance_name" },
+                    kills: { $sum: 1 },
                 },
-                { $sort: { kills: -1 } },
-                { $limit: 10 },
-                {
-                    $project: {
-                        _id: 0,
-                        alliance_id: "$_id",
-                        alliance_name: 1,
-                        kills: 1,
-                    },
+            },
+            { $sort: { kills: -1 } },
+            { $limit: 10 },
+            {
+                $project: {
+                    _id: 0,
+                    alliance_id: "$_id",
+                    alliance_name: 1,
+                    kills: 1,
                 },
-            ],
+            },
+        ],
 
-            // Most valuable kills
-            mostValuable: [
-                { $sort: { total_value: -1 } },
-                { $limit: 15 }, // Get a few extra to allow for filtering
-                {
-                    $addFields: {
-                        final_blow: {
-                            $arrayElemAt: [
-                                {
-                                    $filter: {
-                                        input: "$attackers",
-                                        cond: {
-                                            $eq: ["$$this.final_blow", true],
-                                        },
+        mostValuable: [
+            { $sort: { total_value: -1 } },
+            { $limit: 15 }, // Get a few extra to allow for filtering
+            {
+                $addFields: {
+                    final_blow: {
+                        $arrayElemAt: [
+                            {
+                                $filter: {
+                                    input: "$attackers",
+                                    cond: {
+                                        $eq: ["$$this.final_blow", true],
                                     },
                                 },
-                                0,
-                            ],
-                        },
+                            },
+                            0,
+                        ],
                     },
                 },
-            ],
-        },
+            },
+        ],
+    };
+
+    // Build facets object based on requested facets or use all facets
+    const facetsToGenerate: Record<string, any> = {};
+
+    if (requestedFacets && requestedFacets.length > 0) {
+        // Only generate requested facets
+        for (const facetName of requestedFacets) {
+            if (availableFacets[facetName]) {
+                facetsToGenerate[facetName] = availableFacets[facetName];
+            }
+        }
+        // Always include totals if not explicitly requested (needed for basic stats)
+        if (!facetsToGenerate.totals) {
+            facetsToGenerate.totals = availableFacets.totals;
+        }
+    } else {
+        // Generate all facets
+        Object.assign(facetsToGenerate, availableFacets);
+    }
+
+    // Use $facet to calculate multiple statistics in parallel
+    pipeline.push({
+        $facet: facetsToGenerate,
     });
 
     // Execute aggregation with extended timeout and disk usage for large datasets
@@ -434,7 +447,7 @@ async function generateAdvancedViewStats(
     const [aggregationResult] = result;
 
     // Extract totals
-    const totals = aggregationResult.totals[0] || {
+    const totals = aggregationResult.totals?.[0] || {
         totalKills: 0,
         iskDestroyed: 0,
     };
@@ -443,23 +456,23 @@ async function generateAdvancedViewStats(
     stats.iskDestroyed = totals.iskDestroyed;
 
     // Process ship group statistics
-    stats.shipGroupStats = aggregationResult.shipStats;
+    stats.shipGroupStats = aggregationResult.shipStats || [];
 
     // Process character statistics
-    stats.topKillersByCharacter = aggregationResult.topKillersChar;
+    stats.topKillersByCharacter = aggregationResult.topKillersChar || [];
 
-    stats.topVictimsByCharacter = aggregationResult.topVictimsChar;
+    stats.topVictimsByCharacter = aggregationResult.topVictimsChar || [];
 
-    stats.topDamageDealersByCharacter = aggregationResult.topDamageChar;
+    stats.topDamageDealersByCharacter = aggregationResult.topDamageChar || [];
 
     // Process corporation statistics
-    stats.topKillersByCorporation = aggregationResult.topKillersCorp;
+    stats.topKillersByCorporation = aggregationResult.topKillersCorp || [];
 
     // Process alliance statistics
-    stats.topKillersByAlliance = aggregationResult.topKillersAlliance;
+    stats.topKillersByAlliance = aggregationResult.topKillersAlliance || [];
 
     // Process most valuable kills
-    stats.mostValuableKills = aggregationResult.mostValuable.map(
+    stats.mostValuableKills = (aggregationResult.mostValuable || []).map(
         (killmail: any) => ({
             killmail_id: killmail.killmail_id,
             total_value: killmail.total_value,

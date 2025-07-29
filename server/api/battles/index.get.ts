@@ -1,5 +1,4 @@
 import { createError, getQuery } from "h3";
-import * as url from "url";
 import { Battles } from "~/server/models/Battles";
 import { determineOptimalIndexHint } from "~/server/utils/indexOptimizer";
 
@@ -136,9 +135,7 @@ export default defineCachedEventHandler(
             return process.env.NODE_ENV !== "production";
         },
         getKey: (event) => {
-            // Use url.parse to get query parameters
-            const parsedUrl = url.parse(event.node.req.url || "", true);
-            const query = parsedUrl.query;
+            const query = getQuery(event);
             const page = query?.page ? query.page.toString() : "1";
             const limit = query?.limit ? query.limit.toString() : "20";
             const search = query?.search ? query.search.toString() : "";
