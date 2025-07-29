@@ -379,7 +379,19 @@ async function getCharacterKillmails(
                 dataType: "character_killmails",
                 source: "killmailFetch",
                 killmailDelay,
-                scopes: ["esi-killmails.read_killmails.v1"],
+                extractDataIds: (data: any) => {
+                    // Extract killmail IDs and hashes for transparency
+                    if (Array.isArray(data)) {
+                        return data.map((km: any) => ({
+                            id: km.killmail_id,
+                            hash: km.killmail_hash,
+                            additionalInfo: {
+                                killmail_time: km.killmail_time,
+                            },
+                        }));
+                    }
+                    return [];
+                },
             }
         );
         return Array.isArray(killmails) ? killmails : [];
@@ -414,7 +426,19 @@ async function getCorporationKillmails(
                 dataType: "corporation_killmails",
                 source: "killmailFetch",
                 killmailDelay,
-                scopes: ["esi-killmails.read_corporation_killmails.v1"],
+                extractDataIds: (data: any) => {
+                    // Extract killmail IDs and hashes for transparency
+                    if (Array.isArray(data)) {
+                        return data.map((km: any) => ({
+                            id: km.killmail_id,
+                            hash: km.killmail_hash,
+                            additionalInfo: {
+                                killmail_time: km.killmail_time,
+                            },
+                        }));
+                    }
+                    return [];
+                },
             }
         );
         return Array.isArray(killmails) ? killmails : [];

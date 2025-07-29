@@ -133,12 +133,24 @@ async function esiFetcherWithLogging(
         dataType: string;
         source: string;
         killmailDelay?: number;
+        extractDataIds?: (data: any) => Array<{
+            id: number | string;
+            hash?: string;
+            additionalInfo?: Record<string, any>;
+        }>; // Function to extract IDs/identifiers from the fetched data
     }
 ): Promise<any> {
     const timestamp = new Date();
     let error = false;
     let errorMessage: string | undefined;
     let itemsReturned: number | undefined;
+    let fetchedData:
+        | Array<{
+              id: number | string;
+              hash?: string;
+              additionalInfo?: Record<string, any>;
+          }>
+        | undefined;
     let result: any;
 
     try {
@@ -149,6 +161,18 @@ async function esiFetcherWithLogging(
             itemsReturned = result.length;
         } else if (result && typeof result === "object") {
             itemsReturned = 1;
+        }
+
+        // Extract fetched data IDs if extractor function is provided
+        if (logContext?.extractDataIds && result) {
+            try {
+                fetchedData = logContext.extractDataIds(result);
+            } catch (extractError) {
+                console.warn(
+                    "Failed to extract data IDs for ESI log:",
+                    extractError
+                );
+            }
         }
     } catch (fetchError: any) {
         error = true;
@@ -165,6 +189,7 @@ async function esiFetcherWithLogging(
                     dataType: logContext.dataType,
                     itemsReturned,
                     killmailDelay: logContext.killmailDelay,
+                    fetchedData,
                     error,
                     errorMessage,
                     source: logContext.source,
