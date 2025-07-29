@@ -182,7 +182,7 @@ const {
     resume: resumeWs,
     sendMessage: wsSendMessage,
 } = useWebSocket({
-    url: "wss://eve-kill.com/killmails",
+    url: "/ws/killmails",
     initialMessage: props.wsFilter === "latest" ? "all" : props.wsFilter,
     autoConnect: !props.wsDisabled && !useExternalData.value,
     handleBfCache: true,

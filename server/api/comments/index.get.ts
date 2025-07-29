@@ -12,11 +12,17 @@ export default defineEventHandler(async (event) => {
         );
         const skip = (page - 1) * limit;
         const characterId = query.characterId as string;
+        const corporationId = query.corporationId as string;
+        const allianceId = query.allianceId as string;
+        const sortBy = (query.sortBy as string) || "createdAt";
+        const sortOrder = (query.sortOrder as string) || "desc";
 
         cliLogger.debug(
             `Fetching comments: characterId=${
                 characterId || "all"
-            }, page: ${page}, limit: ${limit}`
+            }, corporationId=${corporationId || "all"}, allianceId=${
+                allianceId || "all"
+            }, page: ${page}, limit: ${limit}, sortBy: ${sortBy}, sortOrder: ${sortOrder}`
         );
 
         // Build query - only show non-deleted comments
@@ -24,18 +30,39 @@ export default defineEventHandler(async (event) => {
             deleted: false,
         };
 
-        // Add characterId filter if provided
+        // Add filters if provided
         if (characterId) {
             commentQuery.characterId = parseInt(characterId);
+        }
+        if (corporationId) {
+            commentQuery.corporationId = parseInt(corporationId);
+        }
+        if (allianceId) {
+            commentQuery.allianceId = parseInt(allianceId);
         }
 
         // Get total count for pagination
         const total = await Comments.countDocuments(commentQuery);
         const totalPages = Math.ceil(total / limit);
 
-        // Fetch comments, sorted by createdAt in descending order
+        // Build sort object
+        const sortObject: any = {};
+
+        // Handle different sort fields
+        if (sortBy === "character") {
+            sortObject.characterName = sortOrder === "desc" ? -1 : 1;
+        } else if (sortBy === "corporation") {
+            sortObject.corporationName = sortOrder === "desc" ? -1 : 1;
+        } else if (sortBy === "alliance") {
+            sortObject.allianceName = sortOrder === "desc" ? -1 : 1;
+        } else {
+            // Default to createdAt
+            sortObject.createdAt = sortOrder === "desc" ? -1 : 1;
+        }
+
+        // Fetch comments with dynamic sorting
         const comments = await Comments.find(commentQuery)
-            .sort({ createdAt: -1 })
+            .sort(sortObject)
             .skip(skip)
             .limit(limit)
             .lean()
