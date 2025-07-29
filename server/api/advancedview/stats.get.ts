@@ -2,36 +2,6 @@ import { createError, getQuery } from "h3";
 import url from "url";
 import { generateAdvancedViewStats } from "../../helpers/AdvancedViewHelper";
 
-// List of fields that have optimized indexes in the database
-const INDEXED_FIELDS = [
-    "killmail_id",
-    "killmail_hash",
-    "kill_time",
-    "is_npc",
-    "is_solo",
-    "region_id",
-    "system_id",
-    "system_security",
-    "constellation_id",
-    "total_value",
-    "victim.character_id",
-    "victim.corporation_id",
-    "victim.alliance_id",
-    "victim.ship_id",
-    "victim.ship_group_id",
-    "victim.faction_id",
-    "victim.damage_taken",
-    "attackers.character_id",
-    "attackers.corporation_id",
-    "attackers.alliance_id",
-    "attackers.ship_id",
-    "attackers.ship_group_id",
-    "attackers.faction_id",
-    "attackers.weapon_type_id",
-    "items.type_id",
-    "items.group_id",
-];
-
 /**
  * Check if a filter contains any kill_time constraints
  */
