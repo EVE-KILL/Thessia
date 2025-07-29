@@ -195,6 +195,14 @@ async function generateAdvancedViewStats(
                 },
                 { $sort: { killed: -1 } },
                 { $limit: 20 },
+                {
+                    $project: {
+                        _id: 0,
+                        ship_group_id: "$_id",
+                        ship_group_name: 1,
+                        killed: 1,
+                    },
+                },
             ],
 
             // Top killers by character
@@ -219,6 +227,14 @@ async function generateAdvancedViewStats(
                 },
                 { $sort: { kills: -1 } },
                 { $limit: 10 },
+                {
+                    $project: {
+                        _id: 0,
+                        character_id: "$_id",
+                        character_name: 1,
+                        kills: 1,
+                    },
+                },
             ],
 
             // Top victims by character
@@ -237,6 +253,14 @@ async function generateAdvancedViewStats(
                 },
                 { $sort: { losses: -1 } },
                 { $limit: 10 },
+                {
+                    $project: {
+                        _id: 0,
+                        character_id: "$_id",
+                        character_name: 1,
+                        losses: 1,
+                    },
+                },
             ],
 
             // Top damage dealers by character (using total_value as proxy)
@@ -278,6 +302,14 @@ async function generateAdvancedViewStats(
                 },
                 { $sort: { avgDamage: -1 } },
                 { $limit: 10 },
+                {
+                    $project: {
+                        _id: 0,
+                        character_id: "$_id",
+                        character_name: 1,
+                        damageDone: { $round: ["$avgDamage"] },
+                    },
+                },
             ],
 
             // Top killers by corporation
@@ -313,6 +345,14 @@ async function generateAdvancedViewStats(
                 },
                 { $sort: { kills: -1 } },
                 { $limit: 10 },
+                {
+                    $project: {
+                        _id: 0,
+                        corporation_id: "$_id",
+                        corporation_name: 1,
+                        kills: 1,
+                    },
+                },
             ],
 
             // Top killers by alliance
@@ -346,6 +386,14 @@ async function generateAdvancedViewStats(
                 },
                 { $sort: { kills: -1 } },
                 { $limit: 10 },
+                {
+                    $project: {
+                        _id: 0,
+                        alliance_id: "$_id",
+                        alliance_name: 1,
+                        kills: 1,
+                    },
+                },
             ],
 
             // Most valuable kills
@@ -395,54 +443,20 @@ async function generateAdvancedViewStats(
     stats.iskDestroyed = totals.iskDestroyed;
 
     // Process ship group statistics
-    stats.shipGroupStats = aggregationResult.shipStats.map((item: any) => ({
-        ship_group_id: item._id,
-        ship_group_name: item.ship_group_name,
-        killed: item.killed,
-    }));
+    stats.shipGroupStats = aggregationResult.shipStats;
 
     // Process character statistics
-    stats.topKillersByCharacter = aggregationResult.topKillersChar.map(
-        (item: any) => ({
-            character_id: item._id,
-            character_name: item.character_name,
-            kills: item.kills,
-        })
-    );
+    stats.topKillersByCharacter = aggregationResult.topKillersChar;
 
-    stats.topVictimsByCharacter = aggregationResult.topVictimsChar.map(
-        (item: any) => ({
-            character_id: item._id,
-            character_name: item.character_name,
-            losses: item.losses,
-        })
-    );
+    stats.topVictimsByCharacter = aggregationResult.topVictimsChar;
 
-    stats.topDamageDealersByCharacter = aggregationResult.topDamageChar.map(
-        (item: any) => ({
-            character_id: item._id,
-            character_name: item.character_name,
-            damageDone: Math.round(item.avgDamage || 0),
-        })
-    );
+    stats.topDamageDealersByCharacter = aggregationResult.topDamageChar;
 
     // Process corporation statistics
-    stats.topKillersByCorporation = aggregationResult.topKillersCorp.map(
-        (item: any) => ({
-            corporation_id: item._id,
-            corporation_name: item.corporation_name,
-            kills: item.kills,
-        })
-    );
+    stats.topKillersByCorporation = aggregationResult.topKillersCorp;
 
     // Process alliance statistics
-    stats.topKillersByAlliance = aggregationResult.topKillersAlliance.map(
-        (item: any) => ({
-            alliance_id: item._id,
-            alliance_name: item.alliance_name,
-            kills: item.kills,
-        })
-    );
+    stats.topKillersByAlliance = aggregationResult.topKillersAlliance;
 
     // Process most valuable kills
     stats.mostValuableKills = aggregationResult.mostValuable.map(

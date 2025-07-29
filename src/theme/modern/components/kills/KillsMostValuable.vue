@@ -205,4 +205,12 @@ const isPriorityImage = (index: number): boolean => {
 .grid-cols-5 {
     --cols: 5;
 }
+
+.grid-cols-6 {
+    --cols: 6;
+}
+
+.grid-cols-7 {
+    --cols: 7;
+}
 </style>
