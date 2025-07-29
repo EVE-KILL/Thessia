@@ -172,6 +172,12 @@ const checkIfMobile = () => {
                         label: t('settings.tabs.esi', 'ESI'),
                         icon: 'lucide:key',
                         slot: 'esi'
+                    },
+                    {
+                        id: 'comments',
+                        label: t('settings.tabs.comments', 'Comments'),
+                        icon: 'lucide:message-circle',
+                        slot: 'comments'
                     }
                 ]" class="w-full">
                     <template #general>
@@ -185,6 +191,10 @@ const checkIfMobile = () => {
                             :is-updating-settings="isUpdatingSettings" :settings-success="settingsSuccess"
                             :settings-error="settingsError" @update-settings="updateSettings"
                             @update:user-settings="userSettings = $event" />
+                    </template>
+
+                    <template #comments>
+                        <CommentsSettings :profile-data="profileData" />
                     </template>
                 </Tabs>
             </div>
