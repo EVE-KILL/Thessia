@@ -1,3 +1,5 @@
+import { createHash } from "crypto";
+import { getQuery } from "h3";
 import { Alliances } from "~/server/models/Alliances";
 import { Corporations } from "~/server/models/Corporations";
 import { HistoricalStats } from "~/server/models/HistoricalStats";
@@ -407,7 +409,15 @@ export default defineCachedEventHandler(
         getKey: (event) => {
             const query = getQuery(event) as QueryParams;
             const { entityType, listType, period, limit, offset, sort } = query;
-            return `historicalstats:entities:${entityType}:${listType}:${period}:${limit}:${offset}:${sort}`;
+
+            // Create a hash of the parameters to avoid key length issues
+            const keyContent = `${entityType}:${listType}:${period}:${limit}:${offset}:${sort}`;
+            const hash = createHash("sha256")
+                .update(keyContent)
+                .digest("hex")
+                .substring(0, 16);
+
+            return `hs:e:${hash}`;
         },
     }
 );

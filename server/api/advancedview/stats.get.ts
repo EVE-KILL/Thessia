@@ -1,3 +1,4 @@
+import { createHash } from "crypto";
 import { createError, getQuery } from "h3";
 import { generateAdvancedViewStats } from "../../helpers/AdvancedViewHelper";
 
@@ -424,7 +425,15 @@ export default defineCachedEventHandler(
             const query = getQuery(event);
             const filtersParam = query?.filters || query?.filter || "";
             const facetsParam = query?.facets || "";
-            return `advancedview:stats:${filtersParam}:${facetsParam}`;
+
+            // Create a hash of the parameters to avoid key length issues
+            const keyContent = `${filtersParam}:${facetsParam}`;
+            const hash = createHash("sha256")
+                .update(keyContent)
+                .digest("hex")
+                .substring(0, 16);
+
+            return `av:s:${hash}`;
         },
     }
 );

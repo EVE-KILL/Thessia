@@ -1,3 +1,4 @@
+import { createHash } from "crypto";
 import { createError, getQuery } from "h3";
 import {
     addDefaultTimeFilter,
@@ -461,7 +462,15 @@ export default defineCachedEventHandler(
             const filtersParam = query?.filters || query?.filter || "";
             const page = query?.page || "1";
             const limit = query?.limit || "25";
-            return `advancedview:killmails:${filtersParam}:page:${page}:limit:${limit}`;
+
+            // Create a hash of the parameters to avoid key length issues
+            const keyContent = `${filtersParam}:page:${page}:limit:${limit}`;
+            const hash = createHash("sha256")
+                .update(keyContent)
+                .digest("hex")
+                .substring(0, 16);
+
+            return `av:k:${hash}`;
         },
     }
 );

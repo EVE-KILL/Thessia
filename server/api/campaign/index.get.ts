@@ -1,3 +1,4 @@
+import { createHash } from "crypto";
 import { createError, getQuery } from "h3";
 import { Campaigns } from "~/server/models/Campaigns";
 
@@ -260,8 +261,14 @@ export default defineCachedEventHandler(
             const status = query?.status ? query.status.toString() : "all";
             const search = query?.search ? query.search.toString() : "";
 
-            // Include search and status in the cache key
-            return `campaigns:index:page:${page}:limit:${limit}:status:${status}:search:${search}`;
+            // Create a hash of the parameters to avoid key length issues
+            const keyContent = `page:${page}:limit:${limit}:status:${status}:search:${search}`;
+            const hash = createHash("sha256")
+                .update(keyContent)
+                .digest("hex")
+                .substring(0, 16);
+
+            return `c:${hash}`;
         },
     }
 );

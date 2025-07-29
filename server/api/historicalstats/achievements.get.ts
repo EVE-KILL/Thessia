@@ -1,3 +1,5 @@
+import { createHash } from "crypto";
+import { getQuery } from "h3";
 import { Alliances } from "~/server/models/Alliances";
 import { CharacterAchievements } from "~/server/models/CharacterAchievements";
 import { Characters } from "~/server/models/Characters";
@@ -216,7 +218,15 @@ export default defineCachedEventHandler(
         getKey: (event) => {
             const query = getQuery(event) as QueryParams;
             const { listType, limit, offset } = query;
-            return `historicalstats:achievements:${listType}:${limit}:${offset}`;
+
+            // Create a hash of the parameters to avoid key length issues
+            const keyContent = `${listType}:${limit}:${offset}`;
+            const hash = createHash("sha256")
+                .update(keyContent)
+                .digest("hex")
+                .substring(0, 16);
+
+            return `hs:a:${hash}`;
         },
     }
 );
