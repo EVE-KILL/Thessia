@@ -1,7 +1,39 @@
+import { LRUCache } from "lru-cache";
 import type { PipelineStage } from "mongoose";
 import { CharacterAchievements } from "../models/CharacterAchievements";
-import { Killmails } from "../models/Killmails";
 import { InvGroups } from "../models/InvGroups";
+import { Killmails } from "../models/Killmails";
+
+// LRU cache for ship groups data (category_id: 6)
+const shipGroupsCache = new LRUCache<string, any[]>({
+    max: 10000,
+    ttl: 1000 * 60 * 60, // 1 hour TTL
+    allowStale: true,
+});
+
+/**
+ * Get ship groups from cache or database
+ */
+async function getShipGroups(): Promise<any[]> {
+    const cacheKey = "ship_groups_category_6";
+
+    // Try to get from cache first
+    const cached = shipGroupsCache.get(cacheKey);
+    if (cached) {
+        return cached;
+    }
+
+    // Fetch from database
+    const shipGroups = await InvGroups.find({
+        category_id: 6,
+        published: true,
+    }).lean();
+
+    // Cache the result
+    shipGroupsCache.set(cacheKey, shipGroups);
+
+    return shipGroups;
+}
 
 /**
  * Achievement definition interface
@@ -2160,11 +2192,8 @@ export class AchievementService {
         IAchievement[]
     > {
         try {
-            // Get all ship groups (category_id: 6 is for ships)
-            const shipGroups = await InvGroups.find({
-                category_id: 6,
-                published: true,
-            }).lean();
+            // Get all ship groups (category_id: 6 is for ships) from cache
+            const shipGroups = await getShipGroups();
             const generatedAchievements: IAchievement[] = [];
 
             for (const group of shipGroups) {
@@ -2518,124 +2547,212 @@ export class AchievementService {
         const updates: any = {};
         let hasUpdates = false;
 
-        // Process each active achievement
-        for (const achievement of allAchievements.filter((a) => a.isActive)) {
-            try {
-                let count = 0;
-                let killmailIds: number[] = [];
+        // Create achievement lookup map for efficient access
+        const achievementLookup = new Map<string, IAchievement>();
+        for (const achievement of allAchievements) {
+            achievementLookup.set(achievement.id, achievement);
+        }
 
-                // Handle achievements with custom functions (like temporal achievements)
+        // Separate achievements into regular and custom function achievements
+        const activeAchievements = allAchievements.filter((a) => a.isActive);
+        const regularAchievements = activeAchievements.filter(
+            (a) => !a.customFunction
+        );
+        const customFunctionAchievements = activeAchievements.filter(
+            (a) => a.customFunction
+        );
+
+        // Build achievement results map
+        const achievementResults: Record<
+            string,
+            { count: number; killmailIds: number[] }
+        > = {};
+
+        // First, process achievements with custom functions individually
+        for (const achievement of customFunctionAchievements) {
+            try {
                 if (achievement.customFunction) {
+                    console.log(
+                        `🔧 Processing custom function achievement: ${achievement.name}`
+                    );
                     const result = await achievement.customFunction(
                         characterId
                     );
                     if (typeof result === "number") {
-                        count = result;
+                        achievementResults[achievement.id] = {
+                            count: result,
+                            killmailIds: [],
+                        };
                     } else {
-                        count = result.count;
-                        killmailIds = result.killmailIds;
-                    }
-                } else {
-                    // Replace placeholder in query with actual character ID
-                    const query = this.replaceCharacterIdInQuery(
-                        achievement.query,
-                        characterId
-                    );
-
-                    // Execute the aggregation query
-                    const queryResult = await Killmails.aggregate(query);
-                    const resultKeys =
-                        queryResult.length > 0
-                            ? Object.keys(queryResult[0])
-                            : [];
-                    count =
-                        queryResult.length > 0 && resultKeys.length > 0
-                            ? queryResult[0][resultKeys[0]!] || 0
-                            : 0;
-
-                    // For achievements that track killmails but don't use custom functions,
-                    // we need to get the actual killmail IDs
-                    if (achievement.trackKillmails && count > 0) {
-                        const killmailQuery = this.replaceCharacterIdInQuery(
-                            achievement.query.slice(0, -1), // Remove the $count stage
-                            characterId
-                        );
-                        killmailQuery.push({ $project: { killmail_id: 1 } });
-                        const killmailResult = await Killmails.aggregate(
-                            killmailQuery
-                        );
-                        killmailIds = killmailResult.map(
-                            (doc) => doc.killmail_id
-                        );
-                    }
-                }
-
-                // Find existing achievement in character record
-                const existingAchievementIndex =
-                    characterRecord.achievements.findIndex(
-                        (a) => a.achievement_id === achievement.id
-                    );
-
-                if (existingAchievementIndex >= 0) {
-                    const existingAchievement =
-                        characterRecord.achievements[existingAchievementIndex];
-                    if (existingAchievement) {
-                        const wasCompleted = existingAchievement.is_completed;
-                        const isCompleted =
-                            count >= (achievement.threshold || 1);
-
-                        // Calculate completion tiers (how many times they've earned this achievement)
-                        const newCompletionTiers = Math.floor(
-                            count / (achievement.threshold || 1)
-                        );
-                        const oldCompletionTiers =
-                            existingAchievement.completion_tiers || 0;
-
-                        // Update if count changed or completion status changed
-                        if (
-                            existingAchievement.current_count !== count ||
-                            wasCompleted !== isCompleted ||
-                            oldCompletionTiers !== newCompletionTiers
-                        ) {
-                            updates[
-                                `achievements.${existingAchievementIndex}.current_count`
-                            ] = count;
-                            updates[
-                                `achievements.${existingAchievementIndex}.is_completed`
-                            ] = isCompleted;
-                            updates[
-                                `achievements.${existingAchievementIndex}.completion_tiers`
-                            ] = newCompletionTiers;
-                            updates[
-                                `achievements.${existingAchievementIndex}.last_updated`
-                            ] = new Date();
-
-                            // Update killmail IDs if this achievement tracks them
-                            if (
-                                achievement.trackKillmails &&
-                                killmailIds.length > 0
-                            ) {
-                                updates[
-                                    `achievements.${existingAchievementIndex}.killmailIds`
-                                ] = killmailIds;
-                            }
-
-                            // Set completion date if newly completed
-                            if (isCompleted && !wasCompleted) {
-                                updates[
-                                    `achievements.${existingAchievementIndex}.completed_at`
-                                ] = new Date();
-                            }
-
-                            hasUpdates = true;
-                        }
+                        achievementResults[achievement.id] = {
+                            count: result.count,
+                            killmailIds: result.killmailIds,
+                        };
                     }
                 }
             } catch (error) {
                 console.error(
-                    `Error calculating achievement ${achievement.id} for character ${characterId}:`,
+                    `Error calculating custom function achievement ${achievement.id} for character ${characterId}:`,
                     error
                 );
+                achievementResults[achievement.id] = {
+                    count: 0,
+                    killmailIds: [],
+                };
+            }
+        }
+
+        // Process regular achievements using faceted aggregation
+        if (regularAchievements.length > 0) {
+            const pipeline = this.buildFacetedAchievementPipeline(
+                regularAchievements,
+                characterId
+            );
+
+            try {
+                const facetResults = await Killmails.aggregate(pipeline, {
+                    allowDiskUse: true,
+                });
+                const [results] = facetResults;
+
+                // Process faceted results
+                for (const achievement of regularAchievements) {
+                    const facetKey = `achievement_${achievement.id}`;
+                    const facetResult = results[facetKey] || [];
+
+                    let count = 0;
+                    let killmailIds: number[] = [];
+
+                    // Extract count from facet result
+                    if (facetResult.length > 0) {
+                        const resultKeys = Object.keys(facetResult[0]);
+
+                        if (
+                            resultKeys.includes("count") &&
+                            resultKeys.includes("killmail_ids")
+                        ) {
+                            // New format for achievements with trackKillmails
+                            count = facetResult[0].count || 0;
+                            killmailIds = facetResult[0].killmail_ids || [];
+                        } else {
+                            // Default handling for regular count results
+                            count =
+                                resultKeys.length > 0
+                                    ? facetResult[0][resultKeys[0]!] || 0
+                                    : 0;
+                        }
+                    }
+
+                    achievementResults[achievement.id] = { count, killmailIds };
+                }
+            } catch (error) {
+                console.error(
+                    `Error executing faceted aggregation for character ${characterId}:`,
+                    error
+                );
+                // Fallback to individual queries if faceted aggregation fails
+                for (const achievement of regularAchievements) {
+                    try {
+                        const query = this.replaceCharacterIdInQuery(
+                            achievement.query,
+                            characterId
+                        );
+                        const queryResult = await Killmails.aggregate(query, {
+                            allowDiskUse: true,
+                        });
+                        const resultKeys =
+                            queryResult.length > 0
+                                ? Object.keys(queryResult[0])
+                                : [];
+                        const count =
+                            queryResult.length > 0 && resultKeys.length > 0
+                                ? queryResult[0][resultKeys[0]!] || 0
+                                : 0;
+
+                        achievementResults[achievement.id] = {
+                            count,
+                            killmailIds: [],
+                        };
+                    } catch (individualError) {
+                        console.error(
+                            `Error calculating achievement ${achievement.id} for character ${characterId}:`,
+                            individualError
+                        );
+                        achievementResults[achievement.id] = {
+                            count: 0,
+                            killmailIds: [],
+                        };
+                    }
+                }
+            }
+        }
+
+        // Apply updates based on calculated results
+        for (const achievement of activeAchievements) {
+            const result = achievementResults[achievement.id];
+            if (!result) continue;
+
+            const { count, killmailIds } = result;
+
+            // Find existing achievement in character record
+            const existingAchievementIndex =
+                characterRecord.achievements.findIndex(
+                    (a) => a.achievement_id === achievement.id
+                );
+
+            if (existingAchievementIndex >= 0) {
+                const existingAchievement =
+                    characterRecord.achievements[existingAchievementIndex];
+                if (existingAchievement) {
+                    const wasCompleted = existingAchievement.is_completed;
+                    const isCompleted = count >= (achievement.threshold || 1);
+
+                    // Calculate completion tiers (how many times they've earned this achievement)
+                    const newCompletionTiers = Math.floor(
+                        count / (achievement.threshold || 1)
+                    );
+                    const oldCompletionTiers =
+                        existingAchievement.completion_tiers || 0;
+
+                    // Update if count changed or completion status changed
+                    if (
+                        existingAchievement.current_count !== count ||
+                        wasCompleted !== isCompleted ||
+                        oldCompletionTiers !== newCompletionTiers
+                    ) {
+                        updates[
+                            `achievements.${existingAchievementIndex}.current_count`
+                        ] = count;
+                        updates[
+                            `achievements.${existingAchievementIndex}.is_completed`
+                        ] = isCompleted;
+                        updates[
+                            `achievements.${existingAchievementIndex}.completion_tiers`
+                        ] = newCompletionTiers;
+                        updates[
+                            `achievements.${existingAchievementIndex}.last_updated`
+                        ] = new Date();
+
+                        // Update killmail IDs if this achievement tracks them
+                        if (
+                            achievement.trackKillmails &&
+                            killmailIds.length > 0
+                        ) {
+                            updates[
+                                `achievements.${existingAchievementIndex}.killmailIds`
+                            ] = killmailIds;
+                        }
+
+                        // Set completion date if newly completed
+                        if (isCompleted && !wasCompleted) {
+                            updates[
+                                `achievements.${existingAchievementIndex}.completed_at`
+                            ] = new Date();
+                        }
+
+                        hasUpdates = true;
+                    }
+                }
             }
         }
 
@@ -2665,8 +2782,8 @@ export class AchievementService {
                             achievement.points *
                             (achievement.completion_tiers || 0);
                         // Find the achievement definition to get pointsModifier
-                        const achievementDef = allAchievements.find(
-                            (def) => def.id === achievement.achievement_id
+                        const achievementDef = achievementLookup.get(
+                            achievement.achievement_id
                         );
                         const modifier =
                             achievementDef?.pointsModifier || "positive";
@@ -2702,8 +2819,8 @@ export class AchievementService {
                         achievement.points *
                         (achievement.completion_tiers || 0);
                     // Find the achievement definition to get pointsModifier
-                    const achievementDef = allAchievements.find(
-                        (def) => def.id === achievement.achievement_id
+                    const achievementDef = achievementLookup.get(
+                        achievement.achievement_id
                     );
                     const modifier =
                         achievementDef?.pointsModifier || "positive";
@@ -2780,6 +2897,72 @@ export class AchievementService {
     }
 
     /**
+     * Build faceted aggregation pipeline for achievements
+     * Groups similar achievements to reduce database round trips
+     */
+    private static buildFacetedAchievementPipeline(
+        achievements: IAchievement[],
+        characterId: number
+    ): PipelineStage[] {
+        const facets: Record<string, any[]> = {};
+        const achievementMap: Record<string, string> = {}; // Maps facet keys back to achievement IDs
+
+        // Create facets for all achievements
+        for (const achievement of achievements) {
+            // Create a unique key for this achievement to identify it in results
+            const facetKey = `achievement_${achievement.id}`;
+            achievementMap[facetKey] = achievement.id;
+
+            // Replace placeholder and create the facet pipeline
+            let pipeline = this.replaceCharacterIdInQuery(
+                achievement.query,
+                characterId
+            );
+
+            // If this achievement tracks killmails, modify the pipeline to include them
+            if (achievement.trackKillmails) {
+                // For achievements that track killmails, we need both count and IDs
+                // Remove the final $count stage and add group + project stages
+                pipeline = pipeline.slice(0, -1); // Remove $count
+
+                // Add stages to collect both count and killmail IDs
+                pipeline.push(
+                    {
+                        $group: {
+                            _id: null,
+                            count: { $sum: 1 },
+                            killmail_ids: { $push: "$killmail_id" },
+                        },
+                    },
+                    {
+                        $project: {
+                            _id: 0,
+                            count: 1,
+                            killmail_ids: 1,
+                        },
+                    }
+                );
+            }
+
+            facets[facetKey] = pipeline;
+        }
+
+        return [
+            {
+                $match: {
+                    $or: [
+                        { "victim.character_id": characterId },
+                        { "attackers.character_id": characterId },
+                    ],
+                },
+            },
+            {
+                $facet: facets,
+            } as PipelineStage,
+        ];
+    }
+
+    /**
      * Test a single achievement for a character
      * Useful for debugging and testing specific achievements without running all of them
      */
@@ -2815,7 +2998,7 @@ export class AchievementService {
             // Handle achievements with custom functions (like temporal achievements)
             if (achievement.customFunction) {
                 console.log(
-                    `🔧 Running custom function for achievement: ${achievement.name}`
+                    `� Running custom function for achievement: ${achievement.name}`
                 );
                 const result = await achievement.customFunction(characterId);
                 if (typeof result === "number") {
@@ -2835,27 +3018,36 @@ export class AchievementService {
                 );
 
                 // Execute the aggregation query
-                const queryResult = await Killmails.aggregate(query);
+                const queryResult = await Killmails.aggregate(query, {
+                    allowDiskUse: true,
+                });
                 const resultKeys =
                     queryResult.length > 0 ? Object.keys(queryResult[0]) : [];
-                count =
-                    queryResult.length > 0 && resultKeys.length > 0
-                        ? queryResult[0][resultKeys[0]!] || 0
-                        : 0;
 
-                // For achievements that track killmails but don't use custom functions,
-                // we need to get the actual killmail IDs
-                if (achievement.trackKillmails && count > 0) {
-                    const killmailQuery = this.replaceCharacterIdInQuery(
-                        achievement.query.slice(0, -1), // Remove the $count stage
-                        characterId
-                    );
-                    killmailQuery.push({ $project: { killmail_id: 1 } });
-                    const killmailResult = await Killmails.aggregate(
-                        killmailQuery
-                    );
-                    killmailIds = killmailResult.map((doc) => doc.killmail_id);
+                // Default handling for regular count results
+                if (queryResult.length > 0) {
+                    const result = queryResult[0];
+                    count =
+                        resultKeys.length > 0 ? result[resultKeys[0]!] || 0 : 0;
                 }
+            }
+
+            // For achievements that track killmails but don't already have them
+            if (
+                achievement.trackKillmails &&
+                count > 0 &&
+                killmailIds.length === 0
+            ) {
+                const killmailQuery = this.replaceCharacterIdInQuery(
+                    achievement.query.slice(0, -1), // Remove the $count stage
+                    characterId
+                );
+                killmailQuery.push({ $project: { killmail_id: 1 } });
+                const killmailResult = await Killmails.aggregate(
+                    killmailQuery,
+                    { allowDiskUse: true }
+                );
+                killmailIds = killmailResult.map((doc) => doc.killmail_id);
             }
 
             console.log(
@@ -2902,5 +3094,13 @@ export class AchievementService {
                 max_completed: 0,
             }
         );
+    }
+
+    /**
+     * Clear the ship groups cache
+     * Useful for testing or when ship groups data needs to be refreshed
+     */
+    static clearCache(): void {
+        shipGroupsCache.clear();
     }
 }
