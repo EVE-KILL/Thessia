@@ -113,20 +113,6 @@ const handleDeleteAccount = async () => {
                             </span>
                         </NuxtLink>
                     </div>
-
-                    <!-- Additional character details -->
-                    <div v-if="characterData"
-                        class="flex flex-wrap items-center justify-center sm:justify-start gap-x-4 gap-y-1 text-xs text-gray-500 dark:text-gray-400">
-                        <span v-if="characterData.security_status !== undefined">
-                            Security: {{ characterData.security_status.toFixed(1) }}
-                        </span>
-                        <span v-if="characterData.birthday">
-                            Created: {{ new Date(characterData.birthday).toLocaleDateString() }}
-                        </span>
-                        <span v-if="characterData.race_name">
-                            {{ characterData.race_name }}
-                        </span>
-                    </div>
                 </div>
             </div>
 
