@@ -486,10 +486,6 @@ const indexes = [
         options: { sparse: true, name: "attackers_ship_group_kill_time" },
     },
     {
-        fields: { "attackers.faction_id": -1, kill_time: -1 },
-        options: { sparse: true, name: "attackers_faction_kill_time" },
-    },
-    {
         fields: { "attackers.weapon_type_id": -1, kill_time: -1 },
         options: { sparse: true, name: "attackers_weapon_kill_time" },
     },
