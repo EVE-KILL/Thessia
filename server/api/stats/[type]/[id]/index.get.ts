@@ -1,8 +1,7 @@
-import { calculateBasicStats } from "~/server/helpers/Stats";
-import { Stats } from "~/server/models/Stats";
-import { Killmails } from "~/server/models/Killmails";
-import { addStatsJob } from "~/server/queue/Stats";
+import { createPlaceholderStats } from "~/server/helpers/Stats";
 import type { StatsType } from "~/server/interfaces/IStats";
+import { Stats } from "~/server/models/Stats";
+import { addStatsJob } from "~/server/queue/Stats";
 
 export default defineCachedEventHandler(
     async (event) => {
@@ -53,18 +52,25 @@ export default defineCachedEventHandler(
                     `No stats found for ${type} ${id} days:${days} - creating placeholder and queuing`
                 );
 
-                const basicStats = await calculateBasicStats(type, id, days);
-                stats = {
-                    ...basicStats,
+                const placeholderStats = await createPlaceholderStats(
+                    type,
+                    id,
+                    days
+                );
+                const fullStats = {
+                    ...placeholderStats,
                     full: {} as any,
                     needsUpdate: true, // Mark for queue processing
-                } as any;
+                };
 
                 // Save placeholder to database
-                await Stats.findOneAndUpdate({ type, id, days }, stats, {
+                await Stats.findOneAndUpdate({ type, id, days }, fullStats, {
                     upsert: true,
                     setDefaultsOnInsert: true,
                 });
+
+                // Set stats to the created placeholder for return
+                stats = fullStats as any;
 
                 // Queue high-priority job for immediate processing
                 await addStatsJob(type, id, days, 1); // Priority 1 = highest priority
@@ -123,17 +129,17 @@ export default defineCachedEventHandler(
 
                 case "basic":
                     return {
-                        type: stats.type,
-                        id: stats.id,
-                        days: stats.days,
-                        kills: stats.kills || 0,
-                        losses: stats.losses || 0,
-                        iskKilled: stats.iskKilled || 0,
-                        iskLost: stats.iskLost || 0,
-                        npcLosses: stats.npcLosses || 0,
-                        soloKills: stats.soloKills || 0,
-                        soloLosses: stats.soloLosses || 0,
-                        lastActive: stats.lastActive,
+                        type: stats?.type || type,
+                        id: stats?.id || id,
+                        days: stats?.days || days,
+                        kills: stats?.kills || 0,
+                        losses: stats?.losses || 0,
+                        iskKilled: stats?.iskKilled || 0,
+                        iskLost: stats?.iskLost || 0,
+                        npcLosses: stats?.npcLosses || 0,
+                        soloKills: stats?.soloKills || 0,
+                        soloLosses: stats?.soloLosses || 0,
+                        lastActive: stats?.lastActive,
                     };
 
                 case "full":

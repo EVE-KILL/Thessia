@@ -269,9 +269,10 @@ export async function updateStatsOnKillmailProcessing(
 }
 
 /**
- * Calculate only basic stats for an entity (lightweight)
+ * Create placeholder basic stats for API when no cached stats exist
+ * This is a lightweight version used only for immediate API responses
  */
-export async function calculateBasicStats(
+export async function createPlaceholderStats(
     type: StatsType,
     id: number,
     days: number
@@ -294,124 +295,20 @@ export async function calculateBasicStats(
         };
     }
 
-    // Build date filter
-    const dateFilter: any = {};
-    if (days > 0) {
-        const startDate = new Date();
-        startDate.setDate(startDate.getDate() - days);
-        dateFilter.kill_time = { $gte: startDate };
-    }
-
-    // Build match filter for kills (where entity is attacker)
-    const killsMatchFilter = {
-        ...dateFilter,
-        attackers: {
-            $elemMatch: { [type]: id },
-        },
-    };
-
-    // Build match filter for losses (where entity is victim)
-    const lossesMatchFilter = {
-        ...dateFilter,
-        [`victim.${type}`]: id,
-    };
-
-    const [killsAgg, lossesAgg] = await Promise.all([
-        // Kills aggregation
-        Killmails.aggregate([
-            { $match: killsMatchFilter },
-            {
-                $group: {
-                    _id: null,
-                    count: { $sum: 1 },
-                    iskValue: { $sum: "$total_value" },
-                    soloKills: {
-                        $sum: {
-                            $cond: [
-                                { $eq: [{ $size: "$attackers" }, 1] },
-                                1,
-                                0,
-                            ],
-                        },
-                    },
-                    lastActive: { $max: "$kill_time" },
-                },
-            },
-        ]),
-        // Losses aggregation
-        Killmails.aggregate([
-            { $match: lossesMatchFilter },
-            {
-                $group: {
-                    _id: null,
-                    count: { $sum: 1 },
-                    iskValue: { $sum: "$total_value" },
-                    npcLosses: {
-                        $sum: {
-                            $cond: [
-                                {
-                                    $allElementsTrue: {
-                                        $map: {
-                                            input: "$attackers",
-                                            as: "attacker",
-                                            in: {
-                                                $eq: [
-                                                    "$$attacker.character_id",
-                                                    null,
-                                                ],
-                                            },
-                                        },
-                                    },
-                                },
-                                1,
-                                0,
-                            ],
-                        },
-                    },
-                    soloLosses: {
-                        $sum: {
-                            $cond: [
-                                { $eq: [{ $size: "$attackers" }, 1] },
-                                1,
-                                0,
-                            ],
-                        },
-                    },
-                    lastActive: { $max: "$kill_time" },
-                },
-            },
-        ]),
-    ]);
-
-    const kills = killsAgg[0] || {
-        count: 0,
-        iskValue: 0,
-        soloKills: 0,
-        lastActive: null,
-    };
-    const losses = lossesAgg[0] || {
-        count: 0,
-        iskValue: 0,
-        npcLosses: 0,
-        soloLosses: 0,
-        lastActive: null,
-    };
-
+    // For placeholder, just return basic structure with zero values
+    // Real stats will be calculated by queue and stored in database
     return {
         type: validation.type,
         id: validation.id,
         days,
-        kills: kills.count,
-        losses: losses.count,
-        iskKilled: kills.iskValue,
-        iskLost: losses.iskValue,
-        npcLosses: losses.npcLosses,
-        soloKills: kills.soloKills,
-        soloLosses: losses.soloLosses,
-        lastActive:
-            kills.lastActive > losses.lastActive
-                ? kills.lastActive
-                : losses.lastActive,
+        kills: 0,
+        losses: 0,
+        iskKilled: 0,
+        iskLost: 0,
+        npcLosses: 0,
+        soloKills: 0,
+        soloLosses: 0,
+        lastActive: null,
         updatedAt: new Date(),
     };
 }
@@ -558,36 +455,36 @@ export async function calculateAllStats(
         };
     }
 
-    // Run base stats calculations in parallel for better performance
+    // Run comprehensive faceted stats calculation that includes basic stats
     const [
-        basicStats,
-        facetedStats, // Single faceted call replaces 14 individual queries (including heatMap, monthly, shipGroup)
+        facetedStats, // Single faceted call replaces 14+ individual queries including basic stats
+        characterSpecificStats,
+        blobFactorData,
     ] = await Promise.all([
-        getBasicStats(type, id, timeFilter),
-        getFacetedStats(type, id, timeFilter), // Replaces: getMostUsedShips, getMostLostShips, getMostValuableKills, getMostValuableShips, getMostValuableStructures, getTopCharacters, getTopCorporations, getTopShips, getTopSystems, getTopConstellations, getTopRegions, getHeatMapData, getMonthlyStats, getShipGroupStats
+        getFacetedStats(type, id, timeFilter), // Now includes basic stats + all other stats
+        type === "character_id"
+            ? getCharacterSpecificStats(id, timeFilter, 0) // Will update with actual kills after faceted results
+            : Promise.resolve({ possibleFC: false, possibleCynoAlt: false }),
+        type === "character_id"
+            ? getBlobFactorData(type, id, timeFilter)
+            : Promise.resolve({ blobCount: 0 }),
     ]);
 
-    // Process character-specific stats only if needed
-    const characterSpecificStats =
-        type === "character_id"
-            ? await getCharacterSpecificStats(id, timeFilter, basicStats.kills)
-            : { possibleFC: false, possibleCynoAlt: false };
+    // Extract basic stats from faceted results
+    const kills = facetedStats.basicStats?.kills || 0;
+    const losses = facetedStats.basicStats?.losses || 0;
+    const iskKilled = facetedStats.basicStats?.iskKilled || 0;
+    const iskLost = facetedStats.basicStats?.iskLost || 0;
+    const soloKills = facetedStats.basicStats?.soloKills || 0;
+    const soloLosses = facetedStats.basicStats?.soloLosses || 0;
+    const npcLosses = facetedStats.basicStats?.npcLosses || 0;
+    const lastActive = facetedStats.basicStats?.lastActive;
 
-    // Only calculate these for characters
-    let blobFactorData = { blobCount: 0 };
-    if (type === "character_id") {
-        blobFactorData = await getBlobFactorData(type, id, timeFilter);
-    }
-
-    // Process basic stats
-    const kills = basicStats.kills || 0;
-    const losses = basicStats.losses || 0;
-    const iskKilled = basicStats.iskKilled || 0;
-    const iskLost = basicStats.iskLost || 0;
-    const soloKills = basicStats.soloKills || 0;
-    const soloLosses = basicStats.soloLosses || 0;
-    const npcLosses = basicStats.npcLosses || 0;
-    const lastActive = basicStats.lastActive;
+    // Update character-specific stats with actual kill count if needed
+    const finalCharacterStats =
+        type === "character_id" && kills < 25
+            ? await getCharacterSpecificStats(id, timeFilter, kills)
+            : characterSpecificStats;
 
     // Process ship stats
     if (facetedStats.shipGroupStats && facetedStats.shipGroupStats.length > 0) {
@@ -700,8 +597,8 @@ export async function calculateAllStats(
 
     // Apply character-specific checks
     if (type === "character_id") {
-        full.possibleFC = characterSpecificStats.possibleFC;
-        full.possibleCynoAlt = characterSpecificStats.possibleCynoAlt;
+        full.possibleFC = finalCharacterStats.possibleFC;
+        full.possibleCynoAlt = finalCharacterStats.possibleCynoAlt;
     }
 
     // Clean up unnecessary fields based on entity type
@@ -798,132 +695,6 @@ async function getCharacterSpecificStats(
     return {
         possibleFC: monitorLoss > 0,
         possibleCynoAlt,
-    };
-}
-
-/**
- * Get basic kill and loss statistics using individual optimized queries
- */
-async function getBasicStats(
-    type: StatsType,
-    id: number,
-    timeFilter?: { $gte: Date }
-) {
-    // Validate entity parameters to prevent attackers.undefined queries
-    const validation = validateEntity(type, id);
-    if (!validation.valid) {
-        console.error(`Invalid entity for basic stats: type=${type}, id=${id}`);
-        return {
-            kills: 0,
-            losses: 0,
-            iskKilled: 0,
-            iskLost: 0,
-            soloKills: 0,
-            soloLosses: 0,
-            npcLosses: 0,
-            lastActive: null,
-        };
-    }
-
-    // Use validated values
-    type = validation.type;
-    id = validation.id;
-
-    // Prepare match conditions
-    const killMatchCondition: any = { [`attackers.${type}`]: id };
-    const lossMatchCondition: any = { [`victim.${type}`]: id };
-
-    if (timeFilter) {
-        killMatchCondition.kill_time = timeFilter;
-        lossMatchCondition.kill_time = timeFilter;
-    }
-
-    // Create comprehensive aggregation pipelines that combine multiple stats in single queries
-    const killsAggregationPipeline = [
-        { $match: killMatchCondition },
-        {
-            $group: {
-                _id: null,
-                kills: { $sum: 1 },
-                iskKilled: { $sum: "$total_value" },
-                soloKills: {
-                    $sum: {
-                        $cond: [{ $eq: ["$is_solo", true] }, 1, 0],
-                    },
-                },
-                lastActive: { $max: "$kill_time" },
-            },
-        },
-    ];
-
-    const lossesAggregationPipeline = [
-        { $match: lossMatchCondition },
-        {
-            $group: {
-                _id: null,
-                losses: { $sum: 1 },
-                iskLost: { $sum: "$total_value" },
-                soloLosses: {
-                    $sum: {
-                        $cond: [{ $eq: ["$is_solo", true] }, 1, 0],
-                    },
-                },
-                npcLosses: {
-                    $sum: {
-                        $cond: [{ $eq: ["$is_npc", true] }, 1, 0],
-                    },
-                },
-                lastActive: { $max: "$kill_time" },
-            },
-        },
-    ];
-
-    // Run only 2 comprehensive aggregation queries instead of 9 individual queries
-    const [killsResult, lossesResult] = await Promise.all([
-        Killmails.aggregate(killsAggregationPipeline).allowDiskUse(true),
-        Killmails.aggregate(lossesAggregationPipeline).allowDiskUse(true),
-    ]);
-
-    // Extract results with defaults
-    const killsData = killsResult[0] || {
-        kills: 0,
-        iskKilled: 0,
-        soloKills: 0,
-        lastActive: null,
-    };
-
-    const lossesData = lossesResult[0] || {
-        losses: 0,
-        iskLost: 0,
-        soloLosses: 0,
-        npcLosses: 0,
-        lastActive: null,
-    };
-
-    // Determine last active time from both kills and losses
-    let lastActive = null;
-    if (killsData.lastActive && lossesData.lastActive) {
-        lastActive = new Date(
-            Math.max(
-                killsData.lastActive.getTime(),
-                lossesData.lastActive.getTime()
-            )
-        );
-    } else if (killsData.lastActive) {
-        lastActive = killsData.lastActive;
-    } else if (lossesData.lastActive) {
-        lastActive = lossesData.lastActive;
-    }
-
-    return {
-        kills: killsData.kills,
-        losses: lossesData.losses,
-        iskKilled: killsData.iskKilled,
-        iskLost: lossesData.iskLost,
-        soloKills: killsData.soloKills,
-        soloLosses: lossesData.soloLosses,
-        npcLosses: lossesData.npcLosses,
-        lastActive,
     };
 }
 
@@ -1296,6 +1067,29 @@ async function buildAttackerFacetedPipeline(
         },
     ];
 
+    // Basic stats - kills by this entity (attacker perspective)
+    facets.basicKillStats = [
+        { $unwind: "$attackers" },
+        {
+            $match: {
+                [`attackers.${type}`]: id,
+            },
+        },
+        {
+            $group: {
+                _id: null,
+                kills: { $sum: 1 },
+                iskKilled: { $sum: "$total_value" },
+                soloKills: {
+                    $sum: {
+                        $cond: [{ $eq: ["$is_solo", true] }, 1, 0],
+                    },
+                },
+                lastActive: { $max: "$kill_time" },
+            },
+        },
+    ];
+
     return [{ $match: baseMatch }, { $facet: facets }];
 }
 
@@ -1372,6 +1166,28 @@ async function buildVictimFacetedPipeline(
                 },
             },
         ],
+
+        // Basic stats - losses by this entity (victim perspective)
+        basicLossStats: [
+            {
+                $group: {
+                    _id: null,
+                    losses: { $sum: 1 },
+                    iskLost: { $sum: "$total_value" },
+                    soloLosses: {
+                        $sum: {
+                            $cond: [{ $eq: ["$is_solo", true] }, 1, 0],
+                        },
+                    },
+                    npcLosses: {
+                        $sum: {
+                            $cond: [{ $eq: ["$is_npc", true] }, 1, 0],
+                        },
+                    },
+                    lastActive: { $max: "$kill_time" },
+                },
+            },
+        ],
     };
 
     return [{ $match: baseMatch }, { $facet: facets }];
@@ -1400,6 +1216,16 @@ async function getFacetedStats(
     heatMapData: any[];
     monthlyStats: any[];
     shipGroupStats: any[];
+    basicStats: {
+        kills: number;
+        losses: number;
+        iskKilled: number;
+        iskLost: number;
+        soloKills: number;
+        soloLosses: number;
+        npcLosses: number;
+        lastActive: Date | null;
+    };
 }> {
     // Validate entity parameters
     const validation = validateEntity(type, id);
@@ -1419,6 +1245,16 @@ async function getFacetedStats(
             heatMapData: [],
             monthlyStats: [],
             shipGroupStats: [],
+            basicStats: {
+                kills: 0,
+                losses: 0,
+                iskKilled: 0,
+                iskLost: 0,
+                soloKills: 0,
+                soloLosses: 0,
+                npcLosses: 0,
+                lastActive: null,
+            },
         };
     }
 
@@ -1445,6 +1281,41 @@ async function getFacetedStats(
         // Extract results from faceted aggregations
         const attackerData = attackerResults[0] || {};
         const victimData = victimResults[0] || {};
+
+        // Process basic stats from both attacker and victim facets
+        const killStats = attackerData.basicKillStats?.[0] || {
+            kills: 0,
+            iskKilled: 0,
+            soloKills: 0,
+            lastActive: null,
+        };
+        const lossStats = victimData.basicLossStats?.[0] || {
+            losses: 0,
+            iskLost: 0,
+            soloLosses: 0,
+            npcLosses: 0,
+            lastActive: null,
+        };
+
+        // Combine basic stats
+        const basicStats = {
+            kills: killStats.kills,
+            losses: lossStats.losses,
+            iskKilled: killStats.iskKilled,
+            iskLost: lossStats.iskLost,
+            soloKills: killStats.soloKills,
+            soloLosses: lossStats.soloLosses,
+            npcLosses: lossStats.npcLosses,
+            lastActive:
+                killStats.lastActive && lossStats.lastActive
+                    ? new Date(
+                          Math.max(
+                              killStats.lastActive.getTime(),
+                              lossStats.lastActive.getTime()
+                          )
+                      )
+                    : killStats.lastActive || lossStats.lastActive,
+        };
 
         // Process most used ships (from attacker facet)
         const mostUsedShips: Record<number, { count: number; name: any }> = {};
@@ -1647,6 +1518,7 @@ async function getFacetedStats(
             heatMapData: attackerData.heatMapData || [],
             monthlyStats,
             shipGroupStats,
+            basicStats,
         };
     } catch (error) {
         console.error(
@@ -1668,6 +1540,16 @@ async function getFacetedStats(
             heatMapData: [],
             monthlyStats: [],
             shipGroupStats: [],
+            basicStats: {
+                kills: 0,
+                losses: 0,
+                iskKilled: 0,
+                iskLost: 0,
+                soloKills: 0,
+                soloLosses: 0,
+                npcLosses: 0,
+                lastActive: null,
+            },
         };
     }
 }
