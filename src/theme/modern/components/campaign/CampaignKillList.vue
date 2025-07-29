@@ -378,9 +378,9 @@ onUpdated(() => {
                     label: '',
                     disabled: page === 1
                 }" :next-button="{
-                        icon: 'i-lucide-chevron-right',
-                        label: ''
-                    }">
+                    icon: 'i-lucide-chevron-right',
+                    label: ''
+                }">
                     <template #default>
                         <span class="mx-2">{{ $t('common.page') }} {{ page }}</span>
                     </template>
@@ -488,6 +488,11 @@ onUpdated(() => {
                                 :ref="(el) => setElementRef(el, `fb-${item.killmail_id}`, finalBlowAllianceRefs)">
                                 {{ item.finalblow.alliance_name }}
                             </span>
+                            <!-- Faction Name (when no alliance) -->
+                            <span v-else-if="item.finalblow.faction_name"
+                                class="text-xs text-gray-500 dark:text-gray-500 truncate max-w-full">
+                                {{ item.finalblow.faction_name }}
+                            </span>
                         </div>
                     </template>
                     <template v-else>
@@ -588,7 +593,7 @@ onUpdated(() => {
                                 formatDate(item.kill_time) }}</span>
                             <div class="attacker-count flex items-center gap-1">
                                 <span class="text-xs text-gray-600 dark:text-gray-400">{{ item.attackerCount
-                                }}</span>
+                                    }}</span>
                                 <NuxtImg src="/images/involved.png" format="webp" quality="80" width="16" height="16"
                                     :alt="`${item.attackerCount} Involved`" class="h-3" />
                             </div>
@@ -706,9 +711,9 @@ onUpdated(() => {
                 label: '',
                 disabled: page === 1
             }" :next-button="{
-                    icon: 'i-lucide-chevron-right',
-                    label: ''
-                }">
+                icon: 'i-lucide-chevron-right',
+                label: ''
+            }">
                 <template #default>
                     <span class="mx-2">{{ $t('common.page') }} {{ page }}</span>
                 </template>
@@ -747,7 +752,7 @@ onUpdated(() => {
     /* Ensure full width */
 }
 
-.campaign-killlist > * {
+.campaign-killlist>* {
     width: 100% !important;
     max-width: 100% !important;
     margin: 0 !important;

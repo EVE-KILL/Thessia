@@ -825,7 +825,7 @@ const submitButtonText = computed(() => {
                     <UCard class="bg-yellow-50 dark:bg-yellow-900/20 border-0">
                         <template #header>
                             <h2 class="text-xl font-semibold text-gray-800 dark:text-gray-100">{{ $t('campaignDetails')
-                                }}</h2>
+                            }}</h2>
                         </template>
                         <div class="space-y-4">
                             <div>
@@ -848,7 +848,8 @@ const submitButtonText = computed(() => {
                                 <div class="flex items-center space-x-3">
                                     <input type="checkbox" id="campaignPublic" v-model="campaignPublic"
                                         class="h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded">
-                                    <label for="campaignPublic" class="text-sm font-medium text-gray-700 dark:text-gray-300">
+                                    <label for="campaignPublic"
+                                        class="text-sm font-medium text-gray-700 dark:text-gray-300">
                                         {{ $t('campaignCreator.public') }}
                                     </label>
                                 </div>
@@ -904,7 +905,8 @@ const submitButtonText = computed(() => {
                                                 class="search-result-item flex items-center px-4 py-2 text-sm cursor-pointer"
                                                 :class="{ 'search-result-selected': index === selectedResultIndex['region'] }">
                                                 <div class="flex-shrink-0 mr-3">
-                                                    <Image :type="result.type === 'ship' ? 'type-icon' : result.type" :id="result.id" :size="24" />
+                                                    <Image :type="result.type === 'ship' ? 'type-icon' : result.type"
+                                                        :id="result.id" :size="24" />
                                                 </div>
                                                 <div class="flex-1 min-w-0">
                                                     <div class="font-medium text-gray-800 dark:text-gray-200 truncate">
@@ -957,7 +959,8 @@ const submitButtonText = computed(() => {
                                                 class="search-result-item flex items-center px-4 py-2 text-sm cursor-pointer"
                                                 :class="{ 'search-result-selected': index === selectedResultIndex['system'] }">
                                                 <div class="flex-shrink-0 mr-3">
-                                                    <Image :type="result.type === 'ship' ? 'type-icon' : result.type" :id="result.id" :size="24" />
+                                                    <Image :type="result.type === 'ship' ? 'type-icon' : result.type"
+                                                        :id="result.id" :size="24" />
                                                 </div>
                                                 <div class="flex-1 min-w-0">
                                                     <div class="font-medium text-gray-800 dark:text-gray-200 truncate">
@@ -1012,7 +1015,8 @@ const submitButtonText = computed(() => {
                                                 class="search-result-item flex items-center px-4 py-2 text-sm cursor-pointer"
                                                 :class="{ 'search-result-selected': index === selectedResultIndex['constellation'] }">
                                                 <div class="flex-shrink-0 mr-3">
-                                                    <Image :type="result.type === 'ship' ? 'type-icon' : result.type" :id="result.id" :size="24" />
+                                                    <Image :type="result.type === 'ship' ? 'type-icon' : result.type"
+                                                        :id="result.id" :size="24" />
                                                 </div>
                                                 <div class="flex-1 min-w-0">
                                                     <div class="font-medium text-gray-800 dark:text-gray-200 truncate">
@@ -1054,7 +1058,7 @@ const submitButtonText = computed(() => {
                                         class="block text-sm font-medium text-gray-700 dark:text-gray-300">
                                         {{ $t('endTime') }}
                                         <span class="text-xs text-gray-500 ml-1">({{ $t('campaignCreator.optional')
-                                            }})</span>
+                                        }})</span>
                                     </label>
                                     <input type="datetime-local" id="campaignEndTime" class="custom-input"
                                         v-model="campaignEndTime">
@@ -1105,7 +1109,8 @@ const submitButtonText = computed(() => {
                                                 class="search-result-item flex items-center px-4 py-2 text-sm cursor-pointer"
                                                 :class="{ 'search-result-selected': index === selectedResultIndex['attackerCharacter'] }">
                                                 <div class="flex-shrink-0 mr-3">
-                                                    <Image :type="result.type === 'ship' ? 'type-icon' : result.type" :id="result.id" :size="24" />
+                                                    <Image :type="result.type === 'ship' ? 'type-icon' : result.type"
+                                                        :id="result.id" :size="24" />
                                                 </div>
                                                 <div class="flex-1 min-w-0">
                                                     <div class="font-medium text-gray-800 dark:text-gray-200 truncate">
@@ -1159,11 +1164,13 @@ const submitButtonText = computed(() => {
                                                 class="search-result-item flex items-center px-4 py-2 text-sm cursor-pointer"
                                                 :class="{ 'search-result-selected': index === selectedResultIndex['attackerCorporation'] }">
                                                 <div class="flex-shrink-0 mr-3">
-                                                    <Image :type="result.type === 'ship' ? 'type-icon' : result.type" :id="result.id" :size="24" />
+                                                    <Image :type="result.type === 'ship' ? 'type-icon' : result.type"
+                                                        :id="result.id" :size="24" />
                                                 </div>
                                                 <div class="flex-1 min-w-0">
                                                     <div class="font-medium text-gray-800 dark:text-gray-200 truncate">
-                                                        {{ formatSearchResultDisplayName(result, filterState.attackerCorporation.searchResults) }}
+                                                        {{ formatSearchResultDisplayName(result,
+                                                        filterState.attackerCorporation.searchResults) }}
                                                     </div>
                                                 </div>
                                             </a>
@@ -1211,11 +1218,14 @@ const submitButtonText = computed(() => {
                                                 class="search-result-item flex items-center px-4 py-2 text-sm cursor-pointer"
                                                 :class="{ 'search-result-selected': index === selectedResultIndex['attackerAlliance'] }">
                                                 <div class="flex-shrink-0 mr-3">
-                                                    <Image :type="result.type === 'ship' ? 'type-icon' : result.type" :id="result.id" :size="24" />
+                                                    <Image :type="result.type === 'ship' ? 'type-icon' : result.type"
+                                                        :id="result.id" :size="24" />
                                                 </div>
                                                 <div class="flex-1 min-w-0">
                                                     <div class="font-medium text-gray-800 dark:text-gray-200 truncate">
-                                                        {{ formatSearchResultDisplayName(result, filterState.attackerAlliance.searchResults) }}
+                                                        {{ formatSearchResultDisplayName(result,
+                                                        filterState.attackerAlliance.searchResults)
+                                                        }}
                                                     </div>
                                                 </div>
                                             </a>
@@ -1241,7 +1251,7 @@ const submitButtonText = computed(() => {
                                 <!-- Attacker Faction -->
                                 <div>
                                     <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                                        {{ $t('faction') }}
+                                        {{ $t('faction.title') }}
                                         <span class="text-xs text-gray-500 ml-1">
                                             ({{ filterState.attackerFaction.multipleValues.length }}/{{
                                                 filterState.attackerFaction.maxEntities }})
@@ -1263,7 +1273,8 @@ const submitButtonText = computed(() => {
                                                 class="search-result-item flex items-center px-4 py-2 text-sm cursor-pointer"
                                                 :class="{ 'search-result-selected': index === selectedResultIndex['attackerFaction'] }">
                                                 <div class="flex-shrink-0 mr-3">
-                                                    <Image :type="result.type === 'ship' ? 'type-icon' : result.type" :id="result.id" :size="24" />
+                                                    <Image :type="result.type === 'ship' ? 'type-icon' : result.type"
+                                                        :id="result.id" :size="24" />
                                                 </div>
                                                 <div class="flex-1 min-w-0">
                                                     <div class="font-medium text-gray-800 dark:text-gray-200 truncate">
@@ -1326,7 +1337,8 @@ const submitButtonText = computed(() => {
                                                 class="search-result-item flex items-center px-4 py-2 text-sm cursor-pointer"
                                                 :class="{ 'search-result-selected': index === selectedResultIndex['victimCharacter'] }">
                                                 <div class="flex-shrink-0 mr-3">
-                                                    <Image :type="result.type === 'ship' ? 'type-icon' : result.type" :id="result.id" :size="24" />
+                                                    <Image :type="result.type === 'ship' ? 'type-icon' : result.type"
+                                                        :id="result.id" :size="24" />
                                                 </div>
                                                 <div class="flex-1 min-w-0">
                                                     <div class="font-medium text-gray-800 dark:text-gray-200 truncate">
@@ -1380,11 +1392,13 @@ const submitButtonText = computed(() => {
                                                 class="search-result-item flex items-center px-4 py-2 text-sm cursor-pointer"
                                                 :class="{ 'search-result-selected': index === selectedResultIndex['victimCorporation'] }">
                                                 <div class="flex-shrink-0 mr-3">
-                                                    <Image :type="result.type === 'ship' ? 'type-icon' : result.type" :id="result.id" :size="24" />
+                                                    <Image :type="result.type === 'ship' ? 'type-icon' : result.type"
+                                                        :id="result.id" :size="24" />
                                                 </div>
                                                 <div class="flex-1 min-w-0">
                                                     <div class="font-medium text-gray-800 dark:text-gray-200 truncate">
-                                                        {{ formatSearchResultDisplayName(result, filterState.victimCorporation.searchResults) }}
+                                                        {{ formatSearchResultDisplayName(result,
+                                                        filterState.victimCorporation.searchResults) }}
                                                     </div>
                                                 </div>
                                             </a>
@@ -1432,11 +1446,14 @@ const submitButtonText = computed(() => {
                                                 class="search-result-item flex items-center px-4 py-2 text-sm cursor-pointer"
                                                 :class="{ 'search-result-selected': index === selectedResultIndex['victimAlliance'] }">
                                                 <div class="flex-shrink-0 mr-3">
-                                                    <Image :type="result.type === 'ship' ? 'type-icon' : result.type" :id="result.id" :size="24" />
+                                                    <Image :type="result.type === 'ship' ? 'type-icon' : result.type"
+                                                        :id="result.id" :size="24" />
                                                 </div>
                                                 <div class="flex-1 min-w-0">
                                                     <div class="font-medium text-gray-800 dark:text-gray-200 truncate">
-                                                        {{ formatSearchResultDisplayName(result, filterState.victimAlliance.searchResults) }}
+                                                        {{ formatSearchResultDisplayName(result,
+                                                        filterState.victimAlliance.searchResults)
+                                                        }}
                                                     </div>
                                                 </div>
                                             </a>
@@ -1462,7 +1479,7 @@ const submitButtonText = computed(() => {
                                 <!-- Victim Faction -->
                                 <div>
                                     <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                                        {{ $t('faction') }}
+                                        {{ $t('faction.title') }}
                                         <span class="text-xs text-gray-500 ml-1">
                                             ({{ filterState.victimFaction.multipleValues.length }}/{{
                                                 filterState.victimFaction.maxEntities
@@ -1485,7 +1502,8 @@ const submitButtonText = computed(() => {
                                                 class="search-result-item flex items-center px-4 py-2 text-sm cursor-pointer"
                                                 :class="{ 'search-result-selected': index === selectedResultIndex['victimFaction'] }">
                                                 <div class="flex-shrink-0 mr-3">
-                                                    <Image :type="result.type === 'ship' ? 'type-icon' : result.type" :id="result.id" :size="24" />
+                                                    <Image :type="result.type === 'ship' ? 'type-icon' : result.type"
+                                                        :id="result.id" :size="24" />
                                                 </div>
                                                 <div class="flex-1 min-w-0">
                                                     <div class="font-medium text-gray-800 dark:text-gray-200 truncate">
@@ -1689,7 +1707,8 @@ input[type="datetime-local"].custom-input {
 /* Better spacing for search results with images */
 .search-result-item.flex {
     align-items: center;
-    min-height: 40px; /* Ensure consistent height for image results */
+    min-height: 40px;
+    /* Ensure consistent height for image results */
 }
 
 .search-result-item .flex-shrink-0 {

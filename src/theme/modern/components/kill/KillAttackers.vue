@@ -63,7 +63,13 @@
                                 :to="`/alliance/${finalBlowAttacker.alliance_id}`" class="entity-link">
                                 {{ finalBlowAttacker.alliance_name }}
                             </NuxtLink>
-                            <span v-else>{{ finalBlowAttacker.alliance_name || '' }}</span>
+                            <NuxtLink v-else-if="finalBlowAttacker.faction_id"
+                                :to="`/faction/${finalBlowAttacker.faction_id}`" class="entity-link">
+                                {{ finalBlowAttacker.faction_name }}
+                            </NuxtLink>
+                            <span v-else-if="finalBlowAttacker.alliance_name">{{ finalBlowAttacker.alliance_name
+                                }}</span>
+                            <span v-else-if="finalBlowAttacker.faction_name">{{ finalBlowAttacker.faction_name }}</span>
                         </div>
                     </div>
                 </div>
@@ -183,7 +189,13 @@
                                 :to="`/alliance/${topDamageAttacker.alliance_id}`" class="entity-link">
                                 {{ topDamageAttacker.alliance_name }}
                             </NuxtLink>
-                            <span v-else>{{ topDamageAttacker.alliance_name || '' }}</span>
+                            <NuxtLink v-else-if="topDamageAttacker.faction_id"
+                                :to="`/faction/${topDamageAttacker.faction_id}`" class="entity-link">
+                                {{ topDamageAttacker.faction_name }}
+                            </NuxtLink>
+                            <span v-else-if="topDamageAttacker.alliance_name">{{ topDamageAttacker.alliance_name
+                                }}</span>
+                            <span v-else-if="topDamageAttacker.faction_name">{{ topDamageAttacker.faction_name }}</span>
                         </div>
                     </div>
                 </div>
@@ -389,7 +401,12 @@
                                     class="entity-link">
                                     {{ attacker.alliance_name }}
                                 </NuxtLink>
-                                <span v-else>{{ attacker.alliance_name || '' }}</span>
+                                <NuxtLink v-else-if="attacker.faction_id" :to="`/faction/${attacker.faction_id}`"
+                                    class="entity-link">
+                                    {{ attacker.faction_name }}
+                                </NuxtLink>
+                                <span v-else-if="attacker.alliance_name">{{ attacker.alliance_name }}</span>
+                                <span v-else-if="attacker.faction_name">{{ attacker.faction_name }}</span>
                             </div>
                         </div>
                     </div>

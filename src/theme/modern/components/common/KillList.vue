@@ -838,18 +838,36 @@ onUpdated(() => {
                         <!-- Character Name -->
                         <span class="text-sm text-black dark:text-white truncate max-w-full"
                             :ref="(el) => setElementRef(el, item.killmail_id, characterNameRefs)">
-                            {{ item.victim.character_name }}
+                            <NuxtLink v-if="item.victim.character_id" :to="`/character/${item.victim.character_id}`">
+                                {{ item.victim.character_name }}
+                            </NuxtLink>
+                            <span v-else>{{ item.victim.character_name }}</span>
                         </span>
                         <!-- Corporation Name (without ticker) -->
                         <span class="text-xs text-gray-600 dark:text-gray-400 truncate max-w-full"
                             :ref="(el) => setElementRef(el, item.killmail_id, corporationNameRefs)">
-                            {{ item.victim.corporation_name }}
+                            <NuxtLink v-if="item.victim.corporation_id"
+                                :to="`/corporation/${item.victim.corporation_id}`">
+                                {{ item.victim.corporation_name }}
+                            </NuxtLink>
+                            <span v-else>{{ item.victim.corporation_name }}</span>
                         </span>
                         <!-- Alliance Name (without ticker) -->
                         <span v-if="item.victim.alliance_name"
                             class="text-xs text-gray-500 dark:text-gray-500 truncate max-w-full"
                             :ref="(el) => setElementRef(el, item.killmail_id, allianceNameRefs)">
-                            {{ item.victim.alliance_name }}
+                            <NuxtLink v-if="item.victim.alliance_id" :to="`/alliance/${item.victim.alliance_id}`">
+                                {{ item.victim.alliance_name }}
+                            </NuxtLink>
+                            <span v-else>{{ item.victim.alliance_name }}</span>
+                        </span>
+                        <!-- Faction Name (when no alliance) -->
+                        <span v-else-if="item.victim.faction_name"
+                            class="text-xs text-gray-500 dark:text-gray-500 truncate max-w-full">
+                            <NuxtLink v-if="item.victim.faction_id" :to="`/faction/${item.victim.faction_id}`">
+                                {{ item.victim.faction_name }}
+                            </NuxtLink>
+                            <span v-else>{{ item.victim.faction_name }}</span>
                         </span>
                     </div>
                 </div>
@@ -867,18 +885,39 @@ onUpdated(() => {
                             <!-- Character Name -->
                             <span class="text-sm text-black dark:text-white truncate max-w-full"
                                 :ref="(el) => setElementRef(el, `fb-${item.killmail_id}`, finalBlowNameRefs)">
-                                {{ item.finalblow.character_name }}
+                                <NuxtLink v-if="item.finalblow.character_id"
+                                    :to="`/character/${item.finalblow.character_id}`">
+                                    {{ item.finalblow.character_name }}
+                                </NuxtLink>
+                                <span v-else>{{ item.finalblow.character_name }}</span>
                             </span>
                             <!-- Corporation Name (without ticker) -->
                             <span class="text-xs text-gray-600 dark:text-gray-400 truncate max-w-full"
                                 :ref="(el) => setElementRef(el, `fb-${item.killmail_id}`, finalBlowCorpRefs)">
-                                {{ item.finalblow.corporation_name }}
+                                <NuxtLink v-if="item.finalblow.corporation_id"
+                                    :to="`/corporation/${item.finalblow.corporation_id}`">
+                                    {{ item.finalblow.corporation_name }}
+                                </NuxtLink>
+                                <span v-else>{{ item.finalblow.corporation_name }}</span>
                             </span>
                             <!-- Alliance Name (without ticker) -->
                             <span v-if="item.finalblow.alliance_name"
                                 class="text-xs text-gray-500 dark:text-gray-500 truncate max-w-full"
                                 :ref="(el) => setElementRef(el, `fb-${item.killmail_id}`, finalBlowAllianceRefs)">
-                                {{ item.finalblow.alliance_name }}
+                                <NuxtLink v-if="item.finalblow.alliance_id"
+                                    :to="`/alliance/${item.finalblow.alliance_id}`">
+                                    {{ item.finalblow.alliance_name }}
+                                </NuxtLink>
+                                <span v-else>{{ item.finalblow.alliance_name }}</span>
+                            </span>
+                            <!-- Faction Name (when no alliance) -->
+                            <span v-else-if="item.finalblow.faction_name"
+                                class="text-xs text-gray-500 dark:text-gray-500 truncate max-w-full">
+                                <NuxtLink v-if="item.finalblow.faction_id"
+                                    :to="`/faction/${item.finalblow.faction_id}`">
+                                    {{ item.finalblow.faction_name }}
+                                </NuxtLink>
+                                <span v-else>{{ item.finalblow.faction_name }}</span>
                             </span>
                         </div>
                     </template>

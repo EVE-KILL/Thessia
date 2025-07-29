@@ -41,8 +41,13 @@
                                 <div class="info-items space-y-3">
                                     <div v-if="alliance.faction_id && alliance.faction_name"
                                         class="flex items-center gap-2 text-gray-800 dark:text-gray-200">
-                                        <UIcon name="i-lucide-flag" class="w-4 h-4" />
-                                        {{ $t('faction') }}: {{ alliance.faction_name }}
+                                        <Image type="corporation" :id="alliance.faction_id" class="w-4 h-4 rounded-full"
+                                            format="webp" size="64" />
+                                        <span>{{ $t('faction.title') }}:</span>
+                                        <NuxtLink :to="`/faction/${alliance.faction_id}`"
+                                            class="hover:text-blue-600 dark:hover:text-blue-400 transition-colors">
+                                            {{ alliance.faction_name }}
+                                        </NuxtLink>
                                     </div>
 
                                     <div v-if="!shortStatsLoading && validShortStats?.lastActive"
