@@ -38,24 +38,43 @@ export function siteBackground() {
     const setRedditBackground = async () => {
         try {
             const response = await $fetch<{
-                url: string;
-                title: string;
+                images: Array<{
+                    url: string;
+                    title: string;
+                    source: string;
+                    subreddit: string;
+                    width?: number;
+                    height?: number;
+                }>;
+                count: number;
                 source: string;
                 subreddit: string;
+                fetched_at: string;
             }>("/api/site/backgrounds/reddit");
 
-            currentBackground.value = response.url;
+            // Check if we have any images
+            if (!response.images || response.images.length === 0) {
+                throw new Error("No images available from Reddit");
+            }
+
+            // Pick a random image from the array on the frontend
+            const randomIndex = Math.floor(
+                Math.random() * response.images.length
+            );
+            const selectedImage = response.images[randomIndex]!; // Safe since we checked array length above
+
+            currentBackground.value = selectedImage.url;
             isRedditBackground.value = true;
             redditBackgroundMeta.value = {
-                title: response.title,
-                source: response.source,
-                subreddit: response.subreddit,
+                title: selectedImage.title,
+                source: selectedImage.source,
+                subreddit: selectedImage.subreddit,
             };
 
             // Store in cookie as well
-            cookie.value = response.url;
+            cookie.value = selectedImage.url;
 
-            return response;
+            return selectedImage;
         } catch (error) {
             console.error("Failed to fetch Reddit background:", error);
             throw error;
