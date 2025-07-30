@@ -349,9 +349,3 @@ export class RedisStorage {
         };
     }
 }
-
-// Define a constant for the killmail channel
-export const KILLMAIL_PUBSUB_CHANNEL = "killmail-broadcasts";
-
-// Add this constant to the file's exports:
-export const COMMENT_PUBSUB_CHANNEL = "comments:events";

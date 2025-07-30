@@ -18,6 +18,7 @@ export default defineNuxtPlugin(async (nuxtApp) => {
         dateExpiration: null,
         administrator: false,
         killmailDelay: 0,
+        uniqueIdentifier: null,
     }));
 
     try {
@@ -57,6 +58,8 @@ export default defineNuxtPlugin(async (nuxtApp) => {
                             dateExpiration: data.value.user.dateExpiration,
                             administrator: data.value.user.administrator,
                             killmailDelay: data.value.user.killmailDelay || 0,
+                            uniqueIdentifier:
+                                data.value.user.uniqueIdentifier || null,
                         };
                     }
                 }

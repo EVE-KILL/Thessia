@@ -207,21 +207,21 @@ export default defineEventHandler(async () => {
     // Get WebSocket stats
     let websocketStats = {};
     try {
-        const {
-            getKillmailClientCount,
-            getCommentClientCount,
-            getSubscriptionStatus,
-            getConnectionHealth,
-        } = await import("~/server/helpers/WSClientManager");
+        const { getClientCount, getSubscriptionStatus, getConnectionHealth } =
+            await import("~/server/helpers/WSClientManager");
 
         websocketStats = {
             killmail: {
-                clients: getKillmailClientCount(),
+                clients: getClientCount("killmail"),
                 health: getConnectionHealth("killmail"),
             },
             comment: {
-                clients: getCommentClientCount(),
+                clients: getClientCount("comment"),
                 health: getConnectionHealth("comment"),
+            },
+            site: {
+                clients: getClientCount("site"),
+                health: getConnectionHealth("site"),
             },
             subscriptions: getSubscriptionStatus(),
         };
@@ -246,7 +246,16 @@ export default defineEventHandler(async () => {
                     oldest_client: null,
                 },
             },
-            subscriptions: { killmail: false, comment: false },
+            site: {
+                clients: 0,
+                health: {
+                    alive_clients: 0,
+                    total_clients: 0,
+                    last_ping_sent: null,
+                    oldest_client: null,
+                },
+            },
+            subscriptions: { killmail: false, comment: false, site: false },
         };
     }
 

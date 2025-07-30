@@ -552,8 +552,8 @@
     "backToHome": "Back to Frontpage",
     "errors": {
         "titles": {
-            "404": "Page Not Found",
             "403": "Access Forbidden",
+            "404": "Page Not Found",
             "500": "Server Error",
             "503": "Service Unavailable",
             "generic": "Error"
@@ -1544,5 +1544,25 @@
     "valueInflicted": "Value Inflicted",
     "valueSuffered": "Value Suffered",
     "pochven": "Pochven",
-    "Advanced Search": "Advanced Search"
+    "Advanced Search": "Advanced Search",
+    "wsSiteClients": "WS Site",
+    "test": {
+        "notifications": {
+            "title": "Test Notifications",
+            "description": "Test the notification system by sending sample notifications",
+            "form": {
+                "title": "Title",
+                "titlePlaceholder": "Enter notification title",
+                "description": "Description",
+                "descriptionPlaceholder": "Enter notification description",
+                "color": "Color",
+                "icon": "Icon",
+                "iconPlaceholder": "e.g., i-heroicons-bell",
+                "type": "Type"
+            },
+            "sendButton": "Send Custom",
+            "presetButton": "Send Preset",
+            "lastResponse": "Last Response:"
+        }
+    }
 }

@@ -80,6 +80,7 @@ export default defineEventHandler(async (event) => {
                 dateExpiration: user.dateExpiration,
                 administrator: user.administrator,
                 killmailDelay: userSettings.killmailDelay,
+                uniqueIdentifier: user.uniqueIdentifier,
 
                 // Additional profile data
                 createdAt: user.createdAt,
@@ -108,6 +109,7 @@ export default defineEventHandler(async (event) => {
                 dateExpiration: user.dateExpiration,
                 administrator: user.administrator,
                 killmailDelay: userSettings.killmailDelay,
+                uniqueIdentifier: user.uniqueIdentifier,
                 createdAt: user.createdAt,
             },
         };

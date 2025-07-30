@@ -87,6 +87,9 @@ onMounted(() => {
 
         <!-- Self-contained Spooderman Easter Egg -->
         <SpoodermanEasterEgg />
+
+        <!-- Site WebSocket Manager - maintains global WebSocket connection -->
+        <SiteWebSocketManager />
     </div>
 </template>
 

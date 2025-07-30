@@ -9,12 +9,8 @@ import { RedisStorage } from "~/server/helpers/Storage";
 
 export default defineEventHandler(async (event) => {
     // Import the client manager to access connection info
-    const {
-        getKillmailClientCount,
-        getCommentClientCount,
-        getSubscriptionStatus,
-        getConnectionHealth,
-    } = await import("~/server/helpers/WSClientManager");
+    const { getClientCount, getSubscriptionStatus, getConnectionHealth } =
+        await import("~/server/helpers/WSClientManager");
 
     const redis = RedisStorage.getInstance();
     const [redisStats, redisHealth] = await Promise.all([
@@ -29,12 +25,16 @@ export default defineEventHandler(async (event) => {
         timestamp: new Date().toISOString(),
         websocket: {
             killmail: {
-                clients: getKillmailClientCount(),
+                clients: getClientCount("killmail"),
                 health: getConnectionHealth("killmail"),
             },
             comment: {
-                clients: getCommentClientCount(),
+                clients: getClientCount("comment"),
                 health: getConnectionHealth("comment"),
+            },
+            site: {
+                clients: getClientCount("site"),
+                health: getConnectionHealth("site"),
             },
             subscriptions: getSubscriptionStatus(),
         },

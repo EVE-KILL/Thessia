@@ -1,16 +1,46 @@
+import { RedisStorage } from "~/server/helpers/Storage";
 import {
-    addCommentClient,
-    handleCommentClientPong,
-    initializeCommentSubscription,
-    removeCommentClient,
+    addClient,
+    broadcastToCommentClients,
+    handleClientPong,
+    registerWSType,
+    removeClient,
 } from "~/server/helpers/WSClientManager";
 
-// Initialize the Redis subscription when this module loads
-initializeCommentSubscription();
+export const COMMENT_PUBSUB_CHANNEL = "comments:events";
+
+/**
+ * Broadcast a comment event to all subscribed clients
+ */
+export async function broadcastCommentEvent(
+    eventType: "new" | "deleted",
+    comment: any
+) {
+    try {
+        const redis = RedisStorage.getInstance();
+        const payload = {
+            eventType: eventType,
+            comment: comment,
+            killIdentifier: comment.killIdentifier,
+            timestamp: Date.now(),
+        };
+
+        await redis.publish(COMMENT_PUBSUB_CHANNEL, payload);
+    } catch (error) {
+        console.error("Error publishing comment event to Redis:", error);
+    }
+}
+
+// Register this WebSocket type
+registerWSType("comment", {
+    channel: COMMENT_PUBSUB_CHANNEL,
+    broadcastHandler: broadcastToCommentClients,
+    requiresTopics: false,
+});
 
 export default defineWebSocketHandler({
     open(peer) {
-        addCommentClient(peer);
+        addClient("comment", peer);
     },
 
     message(peer, message) {
@@ -19,7 +49,7 @@ export default defineWebSocketHandler({
 
             // Handle pong responses to keep connection alive
             if (data.type === "pong") {
-                handleCommentClientPong(peer);
+                handleClientPong("comment", peer);
             }
             // Add other message handling logic here if needed
         } catch (error) {
@@ -28,6 +58,6 @@ export default defineWebSocketHandler({
     },
 
     close(peer) {
-        removeCommentClient(peer);
+        removeClient("comment", peer);
     },
 });

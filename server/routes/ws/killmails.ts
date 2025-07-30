@@ -1,9 +1,35 @@
+import { RedisStorage } from "~/server/helpers/Storage";
 import {
     addClient,
-    handleKillmailClientPong,
-    initializeKillmailSubscription,
+    broadcastToKillmailClients,
+    handleClientPong,
+    registerWSType,
     removeClient,
 } from "~/server/helpers/WSClientManager";
+
+export const KILLMAIL_PUBSUB_CHANNEL = "killmail-broadcasts";
+
+/**
+ * Broadcast a killmail to all subscribed clients
+ */
+export async function broadcastKillmail(killmail: any, routingKeys: string[]) {
+    try {
+        const redis = RedisStorage.getInstance();
+        await redis.publish(KILLMAIL_PUBSUB_CHANNEL, {
+            killmail,
+            routingKeys,
+        });
+    } catch (error) {
+        console.error("Error publishing killmail to Redis:", error);
+    }
+}
+
+// Register this WebSocket type
+registerWSType("killmail", {
+    channel: KILLMAIL_PUBSUB_CHANNEL,
+    broadcastHandler: broadcastToKillmailClients,
+    requiresTopics: true,
+});
 
 const validTopics = [
     "all",
@@ -34,9 +60,6 @@ const validTopics = [
 
 const partialTopics = ["victim.", "attacker.", "system.", "region."];
 
-// Initialize the Redis subscription when this module loads
-initializeKillmailSubscription();
-
 export default defineWebSocketHandler({
     open(peer) {
         peer.send(
@@ -61,7 +84,7 @@ export default defineWebSocketHandler({
 
             // Handle pong responses
             if (data && data.type === "pong") {
-                handleKillmailClientPong(peer);
+                handleClientPong("killmail", peer);
                 return;
             }
 
@@ -101,7 +124,7 @@ export default defineWebSocketHandler({
             }
 
             peer.send(JSON.stringify({ type: "subscribed", topics: topics }));
-            addClient(peer, topics);
+            addClient("killmail", peer, topics);
         } catch (error) {
             peer.send(
                 JSON.stringify({
@@ -113,6 +136,6 @@ export default defineWebSocketHandler({
         }
     },
     close(peer) {
-        removeClient(peer);
+        removeClient("killmail", peer);
     },
 });

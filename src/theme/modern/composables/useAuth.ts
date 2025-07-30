@@ -12,6 +12,7 @@ export interface UserData {
     dateExpiration: string | null;
     administrator: boolean;
     killmailDelay: number;
+    uniqueIdentifier: string | null;
 }
 
 /**
@@ -45,6 +46,7 @@ export function useAuth() {
 
             if (data.value?.authenticated && data.value.user) {
                 authenticated.value = true;
+
                 user.value = {
                     characterId: data.value.user.characterId,
                     characterName: data.value.user.characterName,
@@ -58,6 +60,7 @@ export function useAuth() {
                     dateExpiration: data.value.user.dateExpiration,
                     administrator: data.value.user.administrator,
                     killmailDelay: data.value.user.killmailDelay || 0,
+                    uniqueIdentifier: data.value.user.uniqueIdentifier || null,
                 };
             } else {
                 authenticated.value = false;
@@ -133,6 +136,8 @@ export function useAuth() {
                 canFetchCorporationKillmails: false,
                 dateExpiration: null,
                 administrator: false,
+                killmailDelay: 0,
+                uniqueIdentifier: null,
             };
             authError.value = null;
 

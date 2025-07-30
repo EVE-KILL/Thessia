@@ -2,8 +2,8 @@ import DOMPurify from "isomorphic-dompurify";
 import { v4 as uuidv4 } from "uuid";
 import { DiscordWebhooks } from "~/server/helpers/DiscordWebhooks";
 import { cliLogger } from "~/server/helpers/Logger";
-import { broadcastCommentEvent } from "~/server/helpers/WSClientManager";
 import { Comments } from "~/server/models/Comments";
+import { broadcastCommentEvent } from "~/server/routes/ws/comments";
 
 // Configure sanitize options - these will be passed to DOMPurify internally
 const SANITIZE_CONFIG = {
@@ -26,8 +26,24 @@ const SANITIZE_CONFIG = {
         "type",
         "src",
     ],
-    FORBID_TAGS: ["script", "style", "form", "input", "button", "textarea", "select", "option"],
-    FORBID_ATTR: ["onerror", "onload", "onclick", "onmouseover", "onmouseout", "eval"],
+    FORBID_TAGS: [
+        "script",
+        "style",
+        "form",
+        "input",
+        "button",
+        "textarea",
+        "select",
+        "option",
+    ],
+    FORBID_ATTR: [
+        "onerror",
+        "onload",
+        "onclick",
+        "onmouseover",
+        "onmouseout",
+        "eval",
+    ],
     FORCE_HTTPS: true,
 };
 
@@ -43,11 +59,15 @@ DOMPurify.addHook("afterSanitizeAttributes", function (node) {
     if (node.tagName === "IFRAME") {
         const src = node.getAttribute("src") || "";
         const allowedDomains = [
-            "youtube.com", "www.youtube.com", "player.vimeo.com",
-            "tenor.com", "giphy.com", "imgur.com"
+            "youtube.com",
+            "www.youtube.com",
+            "player.vimeo.com",
+            "tenor.com",
+            "giphy.com",
+            "imgur.com",
         ];
 
-        if (!allowedDomains.some(domain => src.includes(domain))) {
+        if (!allowedDomains.some((domain) => src.includes(domain))) {
             // If not from allowed domains, remove the src attribute
             node.removeAttribute("src");
         }
@@ -108,7 +128,9 @@ function isFlagged(result: ModerationResponse["results"][0]): boolean {
  * @param text Comment text to moderate
  * @returns Object containing moderation result and possible error message
  */
-async function aiModeration(text: string): Promise<{ allowed: boolean; message?: string }> {
+async function aiModeration(
+    text: string
+): Promise<{ allowed: boolean; message?: string }> {
     const apiKey = process.env.OPENAI_API_KEY;
 
     if (!apiKey) {
@@ -128,7 +150,9 @@ async function aiModeration(text: string): Promise<{ allowed: boolean; message?:
 
         if (!response.ok) {
             const errorText = await response.text();
-            cliLogger.error(`Moderation API error: ${response.status} - ${errorText}`);
+            cliLogger.error(
+                `Moderation API error: ${response.status} - ${errorText}`
+            );
             // Fail open if the moderation service is unavailable
             return { allowed: true };
         }
@@ -147,13 +171,15 @@ async function aiModeration(text: string): Promise<{ allowed: boolean; message?:
                             (category === "self-harm" ||
                                 category === "sexual/minors" ||
                                 category === "self-harm/intent" ||
-                                category === "self-harm/instructions"),
+                                category === "self-harm/instructions")
                     )
                     .map(([category]) => category);
 
                 return {
                     allowed: false,
-                    message: `Comment contains potentially harmful content (${flaggedCategories.join(", ")}) and cannot be posted.`,
+                    message: `Comment contains potentially harmful content (${flaggedCategories.join(
+                        ", "
+                    )}) and cannot be posted.`,
                 };
             }
         }
@@ -225,7 +251,9 @@ export default defineEventHandler(async (event) => {
         if (!moderationResult.allowed) {
             return createError({
                 statusCode: 400,
-                statusMessage: moderationResult.message || "Comment did not pass content moderation",
+                statusMessage:
+                    moderationResult.message ||
+                    "Comment did not pass content moderation",
             });
         }
 
@@ -247,7 +275,9 @@ export default defineEventHandler(async (event) => {
 
         await newComment.save();
 
-        cliLogger.debug(`New comment saved for killIdentifier: ${killIdentifier}`);
+        cliLogger.debug(
+            `New comment saved for killIdentifier: ${killIdentifier}`
+        );
 
         // Broadcast the new comment via WebSocket
         await broadcastCommentEvent("new", newComment.toJSON());
