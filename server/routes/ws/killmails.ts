@@ -50,25 +50,28 @@ export default defineWebSocketHandler({
   },
   async message(peer, message) {
     try {
-      const data = JSON.parse(message.toString());
+      // First try to parse as JSON for ping/pong messages
+      let data;
+      try {
+        data = JSON.parse(message.toString());
+      } catch {
+        // If not JSON, treat as comma-separated topic list (original behavior)
+        data = null;
+      }
       
       // Handle pong responses
-      if (data.type === "pong") {
+      if (data && data.type === "pong") {
         handleKillmailClientPong(peer);
         return;
       }
 
-      // Handle topic subscription (backward compatibility)
+      // Handle topic subscription - support both JSON and plain text
       let topics: string[];
-      if (data.type === "subscribe" && Array.isArray(data.topics)) {
+      if (data && data.type === "subscribe" && Array.isArray(data.topics)) {
+        // New JSON format
         topics = data.topics;
-      } else if (typeof data === "string" || Array.isArray(data)) {
-        // Backward compatibility: direct topic list
-        topics = Array.isArray(data) ? data : data.split(",").map((topic: string) => topic.trim());
-      } else if (typeof data.topics === "string") {
-        topics = data.topics.split(",").map((topic: string) => topic.trim());
       } else {
-        // Fallback to parsing message as comma-separated string
+        // Original comma-separated string format (backward compatibility)
         topics = message
           .toString()
           .split(",")
@@ -96,7 +99,7 @@ export default defineWebSocketHandler({
       peer.send(
         JSON.stringify({
           type: "error",
-          message: "Invalid message format. Please send a JSON object with 'type' and 'topics' fields, or a comma-separated list of topics.",
+          message: "Invalid message format. Please reply with a comma-separated list of topics.",
         }),
       );
     }
