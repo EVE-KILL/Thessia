@@ -105,7 +105,6 @@ export default defineWebSocketHandler({
     }
   },
   close(peer) {
-    console.debug("Killmail WebSocket client disconnected");
     removeClient(peer);
   },
 });

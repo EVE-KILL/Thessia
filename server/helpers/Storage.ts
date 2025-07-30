@@ -27,15 +27,15 @@ export class RedisStorage {
 
     // Add connection event handlers
     this.client.on('connect', () => {
-      cliLogger.info('Redis main client connected');
+      // Connection established
     });
     
     this.client.on('error', (err) => {
-      cliLogger.error(`Redis main client error: ${err.message}`);
+      cliLogger.error(`Redis connection error: ${err}`);
     });
 
     this.client.on('close', () => {
-      cliLogger.info('Redis main client connection closed');
+      // Connection closed
     });
 
     // Setup graceful shutdown handlers
@@ -50,10 +50,8 @@ export class RedisStorage {
       if (this.isShuttingDown) return;
       this.isShuttingDown = true;
       
-      cliLogger.info(`Received ${signal}, gracefully shutting down Redis connections...`);
       try {
         await this.disconnect();
-        cliLogger.info('Redis connections closed successfully');
         process.exit(0);
       } catch (error) {
         cliLogger.error(`Error during Redis shutdown: ${error}`);
@@ -68,12 +66,12 @@ export class RedisStorage {
     
     // Handle uncaught exceptions
     process.on('uncaughtException', async (error) => {
-      cliLogger.error(`Uncaught Exception: ${error.message}`);
+      cliLogger.error(`Uncaught exception: ${error}`);
       await gracefulShutdown('uncaughtException');
     });
     
     process.on('unhandledRejection', async (reason) => {
-      cliLogger.error(`Unhandled Rejection: ${reason}`);
+      cliLogger.error(`Unhandled rejection: ${reason}`);
       await gracefulShutdown('unhandledRejection');
     });
   }
@@ -81,7 +79,6 @@ export class RedisStorage {
   // Static method to get the singleton instance
   public static getInstance(): RedisStorage {
     if (!RedisStorage.instance) {
-      cliLogger.info('Creating new Redis storage singleton instance');
       RedisStorage.instance = new RedisStorage();
     }
     return RedisStorage.instance;
@@ -95,7 +92,6 @@ export class RedisStorage {
   // Redis operations
   async set(key: string, value: any, ttl = 0): Promise<void> {
     if (ttl === 0) {
-      // Set the value without expiration
       await this.client.set(key, value);
       return;
     }
@@ -116,32 +112,28 @@ export class RedisStorage {
   async getRedisStats(): Promise<Record<string, any>> {
     try {
       const info = await this.client.info();
-      const parsedInfo: Record<string, any> = {};
-
-      // Parse the INFO command output which is formatted as string with sections
-      const sections = info.split("#");
-
-      sections.forEach((section) => {
-        const lines = section.split("\r\n").filter(Boolean);
-        if (lines.length > 0) {
-          const sectionName = lines[0].toLowerCase().trim();
-          parsedInfo[sectionName] = {};
-
-          for (let i = 1; i < lines.length; i++) {
-            const line = lines[i];
-            if (line?.includes(":")) {
-              const [key, value] = line.split(":");
-              // Convert numeric values to numbers
-              const numValue = Number(value);
-              parsedInfo[sectionName][key] = Number.isNaN(numValue) ? value : numValue;
-            }
+      const stats: Record<string, any> = {};
+      
+      const sections = info.split('\r\n\r\n');
+      for (const section of sections) {
+        const lines = section.split('\r\n');
+        if (lines.length === 0) continue;
+        
+        const sectionName = lines[0].replace('# ', '').toLowerCase();
+        stats[sectionName] = {};
+        
+        for (let i = 1; i < lines.length; i++) {
+          const line = lines[i];
+          if (line.includes(':')) {
+            const [key, value] = line.split(':');
+            stats[sectionName][key] = value;
           }
         }
-      });
-
-      return parsedInfo;
+      }
+      
+      return stats;
     } catch (err) {
-      cliLogger.error(`Failed to get Redis stats: ${err}`);
+      cliLogger.error(`Error getting Redis stats: ${err}`);
       return {};
     }
   }
@@ -168,7 +160,6 @@ export class RedisStorage {
   ): Promise<void> {
     // Create a duplicate client for subscriptions if one doesn't exist yet
     if (!this.subscribeClient) {
-      cliLogger.info('Creating Redis subscribe client for pub/sub operations');
       this.subscribeClient = new Redis({
         host: process.env.REDIS_URI ? process.env.REDIS_URI : "192.168.10.10",
         port: process.env.REDIS_PORT ? Number.parseInt(process.env.REDIS_PORT) : 6379,
@@ -179,27 +170,28 @@ export class RedisStorage {
 
       // Add connection event handlers for subscribe client
       this.subscribeClient.on('connect', () => {
-        cliLogger.info('Redis subscribe client connected');
+        // Subscribe client connected
       });
       
       this.subscribeClient.on('error', (err) => {
-        cliLogger.error(`Redis subscribe client error: ${err.message}`);
+        cliLogger.error(`Redis subscribe client error: ${err}`);
       });
 
       this.subscribeClient.on('close', () => {
-        cliLogger.info('Redis subscribe client connection closed');
+        // Subscribe client closed
       });
 
-      // Set up the message handler
-      this.subscribeClient.on("message", (channel, message) => {
-        // Find and execute the callback for this channel
-        const channelCallbacks = this.channelCallbacks.get(channel) || [];
-        for (const callback of channelCallbacks) {
-          try {
-            callback(message, channel);
-          } catch (error) {
-            cliLogger.error(`Error in Redis message callback for channel ${channel}: ${error}`);
-          }
+      // Handle message events
+      this.subscribeClient.on('message', (channel: string, message: string) => {
+        const callbacks = this.channelCallbacks.get(channel);
+        if (callbacks) {
+          callbacks.forEach(callback => {
+            try {
+              callback(message, channel);
+            } catch (error) {
+              cliLogger.error(`Error in subscription callback for channel ${channel}: ${error}`);
+            }
+          });
         }
       });
     }
@@ -212,7 +204,6 @@ export class RedisStorage {
     // Subscribe to the channel
     try {
       await this.subscribeClient.subscribe(channel);
-      cliLogger.info(`Subscribed to Redis channel: ${channel}`);
     } catch (error) {
       cliLogger.error(`Failed to subscribe to Redis channel ${channel}: ${error}`);
       throw error;
@@ -233,14 +224,13 @@ export class RedisStorage {
     if (callback) {
       // Remove specific callback
       const callbacks = this.channelCallbacks.get(channel) || [];
-      const updatedCallbacks = callbacks.filter((cb) => cb !== callback);
-
+      const updatedCallbacks = callbacks.filter(cb => cb !== callback);
+      
       if (updatedCallbacks.length === 0) {
-        // No more callbacks, unsubscribe from channel
+        // No more callbacks for this channel, unsubscribe completely
         try {
           await this.subscribeClient.unsubscribe(channel);
           this.channelCallbacks.delete(channel);
-          cliLogger.info(`Unsubscribed from Redis channel: ${channel}`);
         } catch (error) {
           cliLogger.error(`Failed to unsubscribe from Redis channel ${channel}: ${error}`);
         }
@@ -252,7 +242,6 @@ export class RedisStorage {
       try {
         await this.subscribeClient.unsubscribe(channel);
         this.channelCallbacks.delete(channel);
-        cliLogger.info(`Unsubscribed from Redis channel: ${channel}`);
       } catch (error) {
         cliLogger.error(`Failed to unsubscribe from Redis channel ${channel}: ${error}`);
       }
@@ -263,9 +252,8 @@ export class RedisStorage {
       try {
         await this.subscribeClient.quit();
         this.subscribeClient = null;
-        cliLogger.info('Redis subscribe client disconnected (no active subscriptions)');
       } catch (error) {
-        cliLogger.error(`Error closing Redis subscribe client: ${error}`);
+        cliLogger.error(`Error closing subscribe client: ${error}`);
       }
     }
   }
@@ -282,10 +270,9 @@ export class RedisStorage {
       disconnectPromises.push(
         this.subscribeClient.quit().catch((error) => {
           cliLogger.error(`Error disconnecting Redis subscribe client: ${error}`);
-        }).finally(() => {
-          this.subscribeClient = null;
         })
       );
+      this.subscribeClient = null;
     }
 
     // Disconnect main client
@@ -300,8 +287,6 @@ export class RedisStorage {
     
     // Clear callbacks
     this.channelCallbacks.clear();
-    
-    cliLogger.info('All Redis connections closed');
   }
 
   /**

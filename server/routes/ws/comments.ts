@@ -11,7 +11,6 @@ initializeCommentSubscription();
 export default defineWebSocketHandler({
   open(peer) {
     addCommentClient(peer);
-    console.debug("Comment WebSocket client connected");
   },
 
   message(peer, message) {
@@ -24,12 +23,11 @@ export default defineWebSocketHandler({
       }
       // Add other message handling logic here if needed
     } catch (error) {
-      console.debug("Received non-JSON message from comment client, ignoring");
+      // Ignore non-JSON messages (original behavior)
     }
   },
 
   close(peer) {
-    console.debug("Comment WebSocket client disconnected");
     removeCommentClient(peer);
   },
 });

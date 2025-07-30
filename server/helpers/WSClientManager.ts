@@ -9,7 +9,8 @@ interface WSClient {
 }
 
 interface ClientInfo {
-  lastPing: number;
+  lastPingSent: number;
+  lastPongReceived: number;
   isAlive: boolean;
   topics?: string[]; // For killmail clients
 }
@@ -21,7 +22,7 @@ const commentClients = new Map<WSClient, ClientInfo>();
 // Connection health configuration
 const PING_INTERVAL = 30000; // 30 seconds
 const PING_TIMEOUT = 5000; // 5 seconds to respond to ping
-const CLIENT_CLEANUP_INTERVAL = 60000; // 1 minute
+const HEALTH_CHECK_INTERVAL = 10000; // 10 seconds - check frequently for pings and cleanup
 
 // Global subscription state
 let isKillmailSubscribed = false;
@@ -62,7 +63,6 @@ export async function initializeKillmailSubscription() {
   };
 
   isKillmailSubscribed = true;
-  console.debug("Subscribed to killmail broadcasts via Redis");
 
   // Start health check for killmail clients
   startKillmailHealthCheck();
@@ -95,7 +95,6 @@ export async function initializeCommentSubscription() {
   };
 
   isCommentSubscribed = true;
-  console.debug("Subscribed to comment events via Redis");
 
   // Start health check for comment clients
   startCommentHealthCheck();
@@ -108,12 +107,11 @@ export function addKillmailClient(peer: WSClient, topics: string[]) {
   }
 
   killmailClients.set(peer, {
-    lastPing: Date.now(),
+    lastPingSent: Date.now(),
+    lastPongReceived: Date.now(),
     isAlive: true,
     topics: topics
   });
-  
-  console.debug(`Added killmail client with topics: ${topics.join(', ')}`);
 }
 
 export function addCommentClient(peer: WSClient) {
@@ -123,28 +121,23 @@ export function addCommentClient(peer: WSClient) {
   }
 
   commentClients.set(peer, {
-    lastPing: Date.now(),
+    lastPingSent: Date.now(),
+    lastPongReceived: Date.now(),
     isAlive: true
   });
-  
-  console.debug("Added comment client");
 }
 
 export async function removeKillmailClient(peer: WSClient) {
   killmailClients.delete(peer);
-  console.debug("Removed killmail client");
-  
-  // Clean up Redis subscription if no more clients
+
+  // Clean up Redis subscription if no clients remain
   if (killmailClients.size === 0) {
     await cleanupKillmailSubscription();
   }
-}
-
-export async function removeCommentClient(peer: WSClient) {
+}export async function removeCommentClient(peer: WSClient) {
   commentClients.delete(peer);
-  console.debug("Removed comment client");
-  
-  // Clean up Redis subscription if no more clients
+
+  // Clean up Redis subscription if no clients remain
   if (commentClients.size === 0) {
     await cleanupCommentSubscription();
   }
@@ -168,8 +161,6 @@ async function cleanupKillmailSubscription() {
     clearInterval(killmailHealthCheck);
     killmailHealthCheck = null;
   }
-  
-  console.debug("Cleaned up killmail Redis subscription");
 }
 
 async function cleanupCommentSubscription() {
@@ -183,8 +174,6 @@ async function cleanupCommentSubscription() {
     clearInterval(commentHealthCheck);
     commentHealthCheck = null;
   }
-  
-  console.debug("Cleaned up comment Redis subscription");
 }
 
 /**
@@ -198,19 +187,19 @@ function startKillmailHealthCheck() {
     const deadClients: WSClient[] = [];
     
     killmailClients.forEach((clientInfo, client) => {
-      // Check if client is responsive
-      if (now - clientInfo.lastPing > PING_INTERVAL + PING_TIMEOUT) {
+      // Check if client is responsive (no pong received within timeout after ping was sent)
+      if (!clientInfo.isAlive && (now - clientInfo.lastPingSent > PING_TIMEOUT)) {
         deadClients.push(client);
         return;
       }
       
       // Send ping if it's time
-      if (now - clientInfo.lastPing > PING_INTERVAL) {
+      if (now - clientInfo.lastPingSent > PING_INTERVAL) {
         try {
           client.send(JSON.stringify({ type: "ping", timestamp: now }));
+          clientInfo.lastPingSent = now;
           clientInfo.isAlive = false; // Will be set to true when pong is received
         } catch (error) {
-          console.debug("Failed to send ping to killmail client, marking for removal");
           deadClients.push(client);
         }
       }
@@ -218,11 +207,7 @@ function startKillmailHealthCheck() {
     
     // Remove dead clients
     deadClients.forEach(client => removeKillmailClient(client));
-    
-    if (deadClients.length > 0) {
-      console.debug(`Removed ${deadClients.length} dead killmail clients`);
-    }
-  }, CLIENT_CLEANUP_INTERVAL);
+  }, HEALTH_CHECK_INTERVAL);
 }
 
 function startCommentHealthCheck() {
@@ -233,19 +218,19 @@ function startCommentHealthCheck() {
     const deadClients: WSClient[] = [];
     
     commentClients.forEach((clientInfo, client) => {
-      // Check if client is responsive
-      if (now - clientInfo.lastPing > PING_INTERVAL + PING_TIMEOUT) {
+      // Check if client is responsive (no pong received within timeout after ping was sent)
+      if (!clientInfo.isAlive && (now - clientInfo.lastPingSent > PING_TIMEOUT)) {
         deadClients.push(client);
         return;
       }
       
       // Send ping if it's time
-      if (now - clientInfo.lastPing > PING_INTERVAL) {
+      if (now - clientInfo.lastPingSent > PING_INTERVAL) {
         try {
           client.send(JSON.stringify({ type: "ping", timestamp: now }));
+          clientInfo.lastPingSent = now;
           clientInfo.isAlive = false; // Will be set to true when pong is received
         } catch (error) {
-          console.debug("Failed to send ping to comment client, marking for removal");
           deadClients.push(client);
         }
       }
@@ -253,11 +238,7 @@ function startCommentHealthCheck() {
     
     // Remove dead clients
     deadClients.forEach(client => removeCommentClient(client));
-    
-    if (deadClients.length > 0) {
-      console.debug(`Removed ${deadClients.length} dead comment clients`);
-    }
-  }, CLIENT_CLEANUP_INTERVAL);
+  }, HEALTH_CHECK_INTERVAL);
 }
 
 /**
@@ -266,7 +247,7 @@ function startCommentHealthCheck() {
 export function handleKillmailClientPong(peer: WSClient) {
   const clientInfo = killmailClients.get(peer);
   if (clientInfo) {
-    clientInfo.lastPing = Date.now();
+    clientInfo.lastPongReceived = Date.now();
     clientInfo.isAlive = true;
   }
 }
@@ -274,7 +255,7 @@ export function handleKillmailClientPong(peer: WSClient) {
 export function handleCommentClientPong(peer: WSClient) {
   const clientInfo = commentClients.get(peer);
   if (clientInfo) {
-    clientInfo.lastPing = Date.now();
+    clientInfo.lastPongReceived = Date.now();
     clientInfo.isAlive = true;
   }
 }
@@ -347,9 +328,6 @@ export async function broadcastCommentEvent(eventType: "new" | "deleted", commen
     };
 
     await redis.publish(COMMENT_PUBSUB_CHANNEL, payload);
-    console.debug(
-      `Published ${eventType} comment event to Redis: ${comment.identifier} for kill ${comment.killIdentifier}`,
-    );
   } catch (error) {
     console.error("Error publishing comment event to Redis:", error);
   }
@@ -380,7 +358,7 @@ export function getConnectionHealth(type: 'killmail' | 'comment') {
   let unhealthy = 0;
   
   clients.forEach((clientInfo) => {
-    if (clientInfo.isAlive && (now - clientInfo.lastPing) < (PING_INTERVAL + PING_TIMEOUT)) {
+    if (clientInfo.isAlive && (now - clientInfo.lastPongReceived) < (PING_INTERVAL + PING_TIMEOUT)) {
       healthy++;
     } else {
       unhealthy++;

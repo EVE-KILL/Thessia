@@ -109,10 +109,7 @@ export default defineEventHandler(async (event) => {
 
         // Cache asynchronously without blocking the response
         storage.client.setex(redisKey, TTL, buffer)
-            .then(() => {
-                cliLogger.debug(`Cached IPX image: ${reqUrl} (${buffer.length} bytes)`);
-            })
-            .catch((err) => {
+            .catch((err: any) => {
                 cliLogger.error(`Failed to cache IPX image ${reqUrl}: ${err}`);
             });
         
