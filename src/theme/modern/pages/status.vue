@@ -456,7 +456,7 @@ const hasKeyspaceInfo = computed(() => {
                         <div class="flex items-center">
                             <USwitch v-model="autoRefresh" @change="toggleAutoRefresh" />
                             <span class="ml-2 text-xs sm:text-sm">{{ $t('autoRefresh', { seconds: autoRefreshInterval })
-                                }}</span>
+                            }}</span>
                         </div>
                         <UButton color="primary" variant="ghost" icon="lucide:refresh-cw" size="sm" @click="refresh"
                             :loading="loading" :disabled="loading" :title="$t('refreshNow')" />
@@ -567,11 +567,13 @@ const hasKeyspaceInfo = computed(() => {
                                             </div>
                                             <div class="flex justify-between">
                                                 <span>{{ $t('wsKillmailClients') }}:</span>
-                                                <span class="font-mono">{{ statusData?.websocket?.killmail?.clients || 0 }}</span>
+                                                <span class="font-mono">{{ statusData?.websocket?.killmail?.clients || 0
+                                                    }}</span>
                                             </div>
                                             <div class="flex justify-between">
                                                 <span>{{ $t('wsCommentClients') }}:</span>
-                                                <span class="font-mono">{{ statusData?.websocket?.comment?.clients || 0 }}</span>
+                                                <span class="font-mono">{{ statusData?.websocket?.comment?.clients || 0
+                                                    }}</span>
                                             </div>
                                         </div>
                                     </UCard>
@@ -650,7 +652,7 @@ const hasKeyspaceInfo = computed(() => {
                                                     <div v-for="cacheName in Object.keys(statusData.cacheSizes || {}).splice(0, 6)"
                                                         :key="cacheName" class="flex justify-between py-1">
                                                         <span class="truncate" :title="cacheName">{{ cacheName
-                                                            }}:</span>
+                                                        }}:</span>
                                                         <span class="font-mono">
                                                             {{ formatNumber(statusData.cacheSizes[cacheName]) }} /
                                                             <!-- cacheName below should have Cache stripped from the end of the string -->
@@ -670,7 +672,7 @@ const hasKeyspaceInfo = computed(() => {
                                                     <div v-for="cacheName in Object.keys(statusData.cacheSizes || {}).splice(6)"
                                                         :key="cacheName" class="flex justify-between py-1">
                                                         <span class="truncate" :title="cacheName">{{ cacheName
-                                                            }}:</span>
+                                                        }}:</span>
                                                         <span class="font-mono">
                                                             {{ formatNumber(statusData.cacheSizes[cacheName]) }} /
                                                             <!-- cacheName below should have Cache stripped from the end of the string -->
@@ -700,7 +702,7 @@ const hasKeyspaceInfo = computed(() => {
                                         <div class="flex items-center gap-2">
                                             <USwitch v-model="detailed" size="sm" />
                                             <span class="text-xs">{{ detailed ? $t('detailed') : $t('simplified')
-                                                }}</span>
+                                            }}</span>
                                         </div>
                                     </div>
                                 </template>
@@ -773,7 +775,7 @@ const hasKeyspaceInfo = computed(() => {
                                                 :class="{ 'bg-amber-100 dark:bg-amber-900/50': entry[0] === 'unprocessedCount' }">
                                                 <td class="py-1 capitalize text-sm">{{ entry[0] }}</td>
                                                 <td class="py-1 text-right font-mono text-sm">{{ formatNumber(entry[1])
-                                                    }}
+                                                }}
                                                 </td>
                                             </tr>
                                         </tbody>
@@ -806,7 +808,7 @@ const hasKeyspaceInfo = computed(() => {
                                                     class="border-t border-gray-200 dark:border-gray-700">
                                                     <td class="py-1 text-sm">{{ cache }}</td>
                                                     <td class="py-1 text-right font-mono text-sm">{{ formatNumber(size)
-                                                        }}</td>
+                                                    }}</td>
                                                 </tr>
                                             </tbody>
                                         </table>
@@ -835,7 +837,7 @@ const hasKeyspaceInfo = computed(() => {
                                                     class="border-t border-gray-200 dark:border-gray-700">
                                                     <td class="py-1 text-sm">{{ cache }}</td>
                                                     <td class="py-1 text-right font-mono text-sm">{{ formatNumber(hits)
-                                                        }}</td>
+                                                    }}</td>
                                                 </tr>
                                             </tbody>
                                         </table>
@@ -860,27 +862,33 @@ const hasKeyspaceInfo = computed(() => {
                                                 <div class="text-2xl font-bold text-blue-600 dark:text-blue-400">
                                                     {{ statusData?.websocket?.killmail?.clients || 0 }}
                                                 </div>
-                                                <div class="text-xs text-blue-700 dark:text-blue-300">{{ $t('killmailClients') }}</div>
+                                                <div class="text-xs text-blue-700 dark:text-blue-300">{{
+                                                    $t('killmailClients') }}</div>
                                             </div>
                                             <div class="text-center p-3 bg-green-50 dark:bg-green-900/30 rounded-lg">
                                                 <div class="text-2xl font-bold text-green-600 dark:text-green-400">
                                                     {{ statusData?.websocket?.comment?.clients || 0 }}
                                                 </div>
-                                                <div class="text-xs text-green-700 dark:text-green-300">{{ $t('commentClients') }}</div>
+                                                <div class="text-xs text-green-700 dark:text-green-300">{{
+                                                    $t('commentClients') }}</div>
                                             </div>
                                         </div>
-                                        
+
                                         <div class="space-y-2">
                                             <div class="flex justify-between">
                                                 <span class="text-sm">{{ $t('killmailSubscription') }}:</span>
-                                                <span :class="statusData?.websocket?.subscriptions?.killmail ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'">
-                                                    {{ statusData?.websocket?.subscriptions?.killmail ? $t('active') : $t('inactive') }}
+                                                <span
+                                                    :class="statusData?.websocket?.subscriptions?.killmail ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'">
+                                                    {{ statusData?.websocket?.subscriptions?.killmail ? $t('active') :
+                                                    $t('inactive') }}
                                                 </span>
                                             </div>
                                             <div class="flex justify-between">
                                                 <span class="text-sm">{{ $t('commentSubscription') }}:</span>
-                                                <span :class="statusData?.websocket?.subscriptions?.comment ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'">
-                                                    {{ statusData?.websocket?.subscriptions?.comment ? $t('active') : $t('inactive') }}
+                                                <span
+                                                    :class="statusData?.websocket?.subscriptions?.comment ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'">
+                                                    {{ statusData?.websocket?.subscriptions?.comment ? $t('active') :
+                                                    $t('inactive') }}
                                                 </span>
                                             </div>
                                         </div>
@@ -899,21 +907,21 @@ const hasKeyspaceInfo = computed(() => {
                                         <!-- Killmail Health -->
                                         <div class="border border-gray-200 dark:border-gray-700 rounded-lg p-3">
                                             <div class="font-medium mb-2">{{ $t('killmailWebSocket') }}</div>
-                                            <div class="grid grid-cols-2 gap-2 text-sm">
+                                            <div class="grid grid-cols-1 gap-2 text-sm">
                                                 <div class="flex justify-between">
                                                     <span>{{ $t('aliveClients') }}:</span>
-                                                    <span class="font-mono">{{ statusData?.websocket?.killmail?.health?.alive_clients || 0 }}</span>
+                                                    <span class="font-mono">{{
+                                                        statusData?.websocket?.killmail?.health?.alive_clients || 0
+                                                        }}</span>
                                                 </div>
                                                 <div class="flex justify-between">
-                                                    <span>{{ $t('totalClients') }}:</span>
-                                                    <span class="font-mono">{{ statusData?.websocket?.killmail?.health?.total_clients || 0 }}</span>
-                                                </div>
-                                                <div class="flex justify-between col-span-2">
                                                     <span>{{ $t('lastPing') }}:</span>
                                                     <span class="font-mono text-xs">
-                                                        {{ statusData?.websocket?.killmail?.health?.last_ping_sent ? 
-                                                           new Date(statusData.websocket.killmail.health.last_ping_sent).toLocaleTimeString() : 
-                                                           $t('never') }}
+                                                        {{ statusData?.websocket?.killmail?.health?.last_ping_sent ?
+                                                            new
+                                                                Date(statusData.websocket.killmail.health.last_ping_sent).toLocaleTimeString()
+                                                        :
+                                                        $t('never') }}
                                                     </span>
                                                 </div>
                                             </div>
@@ -922,21 +930,21 @@ const hasKeyspaceInfo = computed(() => {
                                         <!-- Comment Health -->
                                         <div class="border border-gray-200 dark:border-gray-700 rounded-lg p-3">
                                             <div class="font-medium mb-2">{{ $t('commentWebSocket') }}</div>
-                                            <div class="grid grid-cols-2 gap-2 text-sm">
+                                            <div class="grid grid-cols-1 gap-2 text-sm">
                                                 <div class="flex justify-between">
                                                     <span>{{ $t('aliveClients') }}:</span>
-                                                    <span class="font-mono">{{ statusData?.websocket?.comment?.health?.alive_clients || 0 }}</span>
+                                                    <span class="font-mono">{{
+                                                        statusData?.websocket?.comment?.health?.alive_clients || 0
+                                                        }}</span>
                                                 </div>
                                                 <div class="flex justify-between">
-                                                    <span>{{ $t('totalClients') }}:</span>
-                                                    <span class="font-mono">{{ statusData?.websocket?.comment?.health?.total_clients || 0 }}</span>
-                                                </div>
-                                                <div class="flex justify-between col-span-2">
                                                     <span>{{ $t('lastPing') }}:</span>
                                                     <span class="font-mono text-xs">
-                                                        {{ statusData?.websocket?.comment?.health?.last_ping_sent ? 
-                                                           new Date(statusData.websocket.comment.health.last_ping_sent).toLocaleTimeString() : 
-                                                           $t('never') }}
+                                                        {{ statusData?.websocket?.comment?.health?.last_ping_sent ?
+                                                            new
+                                                                Date(statusData.websocket.comment.health.last_ping_sent).toLocaleTimeString()
+                                                        :
+                                                        $t('never') }}
                                                     </span>
                                                 </div>
                                             </div>
@@ -970,7 +978,7 @@ const hasKeyspaceInfo = computed(() => {
                                                     <td class="py-1 text-sm">{{ $t('mode') }}</td>
                                                     <td class="py-1 text-right font-mono text-sm">{{
                                                         statusData.redis.server.redis_mode || 'N/A'
-                                                        }}</td>
+                                                    }}</td>
                                                 </tr>
                                                 <tr class="border-t border-gray-200 dark:border-gray-700">
                                                     <td class="py-1 text-sm">{{ $t('os') }}</td>
@@ -1014,7 +1022,7 @@ const hasKeyspaceInfo = computed(() => {
                                                     <td class="py-1 text-sm">{{ $t('memFragmentationRatio') }}</td>
                                                     <td class="py-1 text-right font-mono text-sm">{{
                                                         formatNumber(statusData.redis.memory.mem_fragmentation_ratio)
-                                                        }}</td>
+                                                    }}</td>
                                                 </tr>
                                             </tbody>
                                         </table>
@@ -1043,13 +1051,13 @@ const hasKeyspaceInfo = computed(() => {
                                                     <td class="py-1 text-sm">{{ $t('totalConnections') }}</td>
                                                     <td class="py-1 text-right font-mono text-sm">{{
                                                         formatNumber(statusData.redis.stats.total_connections_received)
-                                                        }}</td>
+                                                    }}</td>
                                                 </tr>
                                                 <tr class="border-t border-gray-200 dark:border-gray-700">
                                                     <td class="py-1 text-sm">{{ $t('totalCommands') }}</td>
                                                     <td class="py-1 text-right font-mono text-sm">{{
                                                         formatNumber(statusData.redis.stats.total_commands_processed)
-                                                        }}</td>
+                                                    }}</td>
                                                 </tr>
                                                 <tr class="border-t border-gray-200 dark:border-gray-700">
                                                     <td class="py-1 text-sm">{{ $t('keyspaceHits') }}</td>
@@ -1101,10 +1109,10 @@ const hasKeyspaceInfo = computed(() => {
                                                     </td>
                                                     <td class="py-1 text-right font-mono text-sm">{{
                                                         formatNumber(parseKeyspaceInfo(info).expires)
-                                                        }}</td>
+                                                    }}</td>
                                                     <td class="py-1 text-right font-mono text-sm">{{
                                                         formatTime(parseKeyspaceInfo(info).avg_ttl)
-                                                        }}</td>
+                                                    }}</td>
                                                 </tr>
                                             </tbody>
                                         </table>

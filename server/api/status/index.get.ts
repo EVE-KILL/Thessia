@@ -207,30 +207,46 @@ export default defineEventHandler(async () => {
     // Get WebSocket stats
     let websocketStats = {};
     try {
-        const { 
-            getKillmailClientCount, 
+        const {
+            getKillmailClientCount,
             getCommentClientCount,
             getSubscriptionStatus,
-            getConnectionHealth 
-        } = await import('~/server/helpers/WSClientManager');
+            getConnectionHealth,
+        } = await import("~/server/helpers/WSClientManager");
 
         websocketStats = {
             killmail: {
                 clients: getKillmailClientCount(),
-                health: getConnectionHealth('killmail')
+                health: getConnectionHealth("killmail"),
             },
             comment: {
                 clients: getCommentClientCount(),
-                health: getConnectionHealth('comment')
+                health: getConnectionHealth("comment"),
             },
-            subscriptions: getSubscriptionStatus()
+            subscriptions: getSubscriptionStatus(),
         };
     } catch (err) {
         console.error("Failed to get WebSocket stats:", err);
         websocketStats = {
-            killmail: { clients: 0, health: { alive_clients: 0, total_clients: 0, last_ping_sent: null, oldest_client: null } },
-            comment: { clients: 0, health: { alive_clients: 0, total_clients: 0, last_ping_sent: null, oldest_client: null } },
-            subscriptions: { killmail: false, comment: false }
+            killmail: {
+                clients: 0,
+                health: {
+                    alive_clients: 0,
+                    total_clients: 0,
+                    last_ping_sent: null,
+                    oldest_client: null,
+                },
+            },
+            comment: {
+                clients: 0,
+                health: {
+                    alive_clients: 0,
+                    total_clients: 0,
+                    last_ping_sent: null,
+                    oldest_client: null,
+                },
+            },
+            subscriptions: { killmail: false, comment: false },
         };
     }
 
@@ -241,7 +257,7 @@ export default defineEventHandler(async () => {
         const fullRedisStats = await redisStorage.getRedisStats();
         const [redisHealth, connectionDetails] = await Promise.all([
             redisStorage.healthCheck(),
-            redisStorage.getConnectionDetails()
+            redisStorage.getConnectionDetails(),
         ]);
 
         // Extract only the Redis stats we need for the UI
@@ -272,7 +288,7 @@ export default defineEventHandler(async () => {
             keyspace: fullRedisStats.keyspace || {},
             // Add health and connection details
             health: redisHealth,
-            connection_details: connectionDetails
+            connection_details: connectionDetails,
         };
     } catch (err) {
         cliLogger.error(`Failed to get Redis stats: ${err}`);

@@ -117,7 +117,7 @@ all,highsec,capitals
 
 **Dynamic Filters:**
 - `victim.{character_id}` - Kills where specific character is victim
-- `attacker.{character_id}` - Kills where specific character is attacker  
+- `attacker.{character_id}` - Kills where specific character is attacker
 - `system.{system_id}` - Kills in specific system
 - `region.{region_id}` - Kills in specific region
 
@@ -155,7 +155,7 @@ highsec,solo
   "eventType": "new",
   "comment": {
     "identifier": "comment_12345",
-    "killIdentifier": "killmail_67890", 
+    "killIdentifier": "killmail_67890",
     "content": "Great fight!",
     "character": {
       "id": 90000001,
@@ -186,16 +186,16 @@ killmailWs.onopen = () => {
 
 killmailWs.onmessage = (event) => {
   const data = JSON.parse(event.data);
-  
+
   // Handle ping/pong
   if (data.type === 'ping') {
     killmailWs.send(JSON.stringify({
-      type: 'pong', 
+      type: 'pong',
       timestamp: data.timestamp
     }));
     return;
   }
-  
+
   // Handle other message types
   switch (data.type) {
     case 'info':
@@ -213,21 +213,21 @@ killmailWs.onmessage = (event) => {
   }
 };
 
-// Comments WebSocket  
+// Comments WebSocket
 const commentsWs = new WebSocket('wss://your-domain.com/ws/comments');
 
 commentsWs.onmessage = (event) => {
   const data = JSON.parse(event.data);
-  
+
   // Handle ping/pong
   if (data.type === 'ping') {
     commentsWs.send(JSON.stringify({
       type: 'pong',
-      timestamp: data.timestamp  
+      timestamp: data.timestamp
     }));
     return;
   }
-  
+
   // Handle comment events
   if (data.eventType) {
     console.log(`Comment ${data.eventType}:`, data.comment);
@@ -239,7 +239,7 @@ commentsWs.onmessage = (event) => {
 
 ### Automatic Features
 - **Health monitoring**: Automatic ping/pong every 30 seconds
-- **Dead connection cleanup**: Unresponsive clients removed after 60 seconds  
+- **Dead connection cleanup**: Unresponsive clients removed after 60 seconds
 - **Resource management**: Redis subscriptions cleaned up when no clients remain
 - **Error handling**: Failed message sends trigger client removal
 

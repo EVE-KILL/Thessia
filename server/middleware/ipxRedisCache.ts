@@ -1,9 +1,9 @@
+import { defineEventHandler, sendStream } from "h3";
 import { Buffer } from "node:buffer";
 import type { ServerResponse } from "node:http";
 import { PassThrough, Readable, Writable } from "node:stream";
-import { defineEventHandler, sendStream } from "h3";
-import { RedisStorage } from "~/server/helpers/Storage";
 import { cliLogger } from "~/server/helpers/Logger";
+import { RedisStorage } from "~/server/helpers/Storage";
 
 // Cache duration constants in seconds
 const CACHE_MAX_AGE = 604800; // 7 days
@@ -108,11 +108,10 @@ export default defineEventHandler(async (event) => {
         const buffer = captureStream.getBuffer();
 
         // Cache asynchronously without blocking the response
-        storage.client.setex(redisKey, TTL, buffer)
-            .catch((err: any) => {
-                cliLogger.error(`Failed to cache IPX image ${reqUrl}: ${err}`);
-            });
-        
+        storage.client.setex(redisKey, TTL, buffer).catch((err: any) => {
+            cliLogger.error(`Failed to cache IPX image ${reqUrl}: ${err}`);
+        });
+
         return originalRes;
     };
 
