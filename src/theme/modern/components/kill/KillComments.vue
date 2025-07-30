@@ -516,7 +516,17 @@ function updateEditorHeight() {
 // Handler functions for WebSocket events
 function handleWebSocketMessage(data: any) {
     try {
-        // Process event based on type
+        // Handle ping/pong for connection health
+        if (data.type === "ping") {
+            // Respond to server ping with pong
+            sendMessage(JSON.stringify({
+                type: "pong",
+                timestamp: data.timestamp
+            }));
+            return;
+        }
+
+        // Process comment events based on type
         if (data.eventType === "new") {
             handleNewComment(data.comment);
         } else if (data.eventType === "deleted") {

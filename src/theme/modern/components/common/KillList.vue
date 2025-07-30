@@ -300,6 +300,16 @@ const clearMouseMoveTimer = () => {
 // Handle WebSocket messages
 function handleWebSocketMessage(data) {
     try {
+        // Handle ping/pong for connection health
+        if (data.type === "ping") {
+            // Respond to server ping with pong
+            sendMessage(JSON.stringify({
+                type: "pong",
+                timestamp: data.timestamp
+            }));
+            return;
+        }
+
         if (data.type !== "killmail") return;
 
         const killmail: IKillmail = data.data;
