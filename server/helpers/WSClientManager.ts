@@ -2,60 +2,103 @@ import { KILLMAIL_PUBSUB_CHANNEL, RedisStorage } from "./Storage";
 
 export const COMMENT_PUBSUB_CHANNEL = "comments:events";
 
-// Different types of clients
+// Different types of clients with enhanced tracking
 interface WSClient {
   send: (message: string) => void;
+  id?: string; // Add unique identifier for tracking
 }
 
-// We need separate maps for different types of clients
-const killmailClients = new Map<WSClient, string[]>();
-// Use null as value since we don't need to store anything specific per client
-const commentClients = new Map<WSClient, null>();
+interface ClientInfo {
+  lastPing: number;
+  isAlive: boolean;
+  topics?: string[]; // For killmail clients
+}
+
+// Enhanced client tracking with connection health monitoring
+const killmailClients = new Map<WSClient, ClientInfo>();
+const commentClients = new Map<WSClient, ClientInfo>();
+
+// Connection health configuration
+const PING_INTERVAL = 30000; // 30 seconds
+const PING_TIMEOUT = 5000; // 5 seconds to respond to ping
+const CLIENT_CLEANUP_INTERVAL = 60000; // 1 minute
+
+// Global subscription state
 let isKillmailSubscribed = false;
 let isCommentSubscribed = false;
+let killmailUnsubscribe: (() => Promise<void>) | null = null;
+let commentUnsubscribe: (() => Promise<void>) | null = null;
+
+// Health check intervals
+let killmailHealthCheck: NodeJS.Timeout | null = null;
+let commentHealthCheck: NodeJS.Timeout | null = null;
 
 /**
- * Initialize pub/sub subscription for killmail broadcasts
- * This should be called during app initialization
+ * Initialize pub/sub subscription for killmail broadcasts with proper cleanup
+ * Only creates one Redis subscription that's shared among all clients
  */
-export function initializeKillmailSubscription() {
+export async function initializeKillmailSubscription() {
   if (isKillmailSubscribed) return;
 
   const redis = RedisStorage.getInstance();
-  redis.subscribe(KILLMAIL_PUBSUB_CHANNEL, (message) => {
+  
+  // Create the subscription callback
+  const subscriptionCallback = (message: string) => {
     try {
       const data = JSON.parse(message);
       const { killmail, routingKeys } = data;
-
-      // Use the local broadcast function to send to WebSocket clients
       broadcastToKillmailClients(killmail, routingKeys);
     } catch (error) {
       console.error("Error processing killmail from Redis:", error);
     }
-  });
+  };
+
+  // Subscribe to Redis
+  await redis.subscribe(KILLMAIL_PUBSUB_CHANNEL, subscriptionCallback);
+  
+  // Store unsubscribe function for cleanup
+  killmailUnsubscribe = async () => {
+    await redis.unsubscribe(KILLMAIL_PUBSUB_CHANNEL, subscriptionCallback);
+  };
 
   isKillmailSubscribed = true;
   console.debug("Subscribed to killmail broadcasts via Redis");
+
+  // Start health check for killmail clients
+  startKillmailHealthCheck();
 }
 
 /**
- * Initialize pub/sub subscription for comment events
+ * Initialize pub/sub subscription for comment events with proper cleanup
  */
-export function initializeCommentSubscription() {
+export async function initializeCommentSubscription() {
   if (isCommentSubscribed) return;
 
   const redis = RedisStorage.getInstance();
-  redis.subscribe(COMMENT_PUBSUB_CHANNEL, (message) => {
+  
+  // Create the subscription callback
+  const subscriptionCallback = (message: string) => {
     try {
       const data = JSON.parse(message);
       broadcastToCommentClients(data);
     } catch (error) {
       console.error("Error processing comment event from Redis:", error);
     }
-  });
+  };
+
+  // Subscribe to Redis
+  await redis.subscribe(COMMENT_PUBSUB_CHANNEL, subscriptionCallback);
+  
+  // Store unsubscribe function for cleanup
+  commentUnsubscribe = async () => {
+    await redis.unsubscribe(COMMENT_PUBSUB_CHANNEL, subscriptionCallback);
+  };
 
   isCommentSubscribed = true;
   console.debug("Subscribed to comment events via Redis");
+
+  // Start health check for comment clients
+  startCommentHealthCheck();
 }
 
 export function addKillmailClient(peer: WSClient, topics: string[]) {
@@ -64,7 +107,13 @@ export function addKillmailClient(peer: WSClient, topics: string[]) {
     initializeKillmailSubscription();
   }
 
-  killmailClients.set(peer, topics);
+  killmailClients.set(peer, {
+    lastPing: Date.now(),
+    isAlive: true,
+    topics: topics
+  });
+  
+  console.debug(`Added killmail client with topics: ${topics.join(', ')}`);
 }
 
 export function addCommentClient(peer: WSClient) {
@@ -73,16 +122,32 @@ export function addCommentClient(peer: WSClient) {
     initializeCommentSubscription();
   }
 
-  // Store the client with null value - we just need the client in the Map
-  commentClients.set(peer, null);
+  commentClients.set(peer, {
+    lastPing: Date.now(),
+    isAlive: true
+  });
+  
+  console.debug("Added comment client");
 }
 
-export function removeKillmailClient(peer: WSClient) {
+export async function removeKillmailClient(peer: WSClient) {
   killmailClients.delete(peer);
+  console.debug("Removed killmail client");
+  
+  // Clean up Redis subscription if no more clients
+  if (killmailClients.size === 0) {
+    await cleanupKillmailSubscription();
+  }
 }
 
-export function removeCommentClient(peer: WSClient) {
+export async function removeCommentClient(peer: WSClient) {
   commentClients.delete(peer);
+  console.debug("Removed comment client");
+  
+  // Clean up Redis subscription if no more clients
+  if (commentClients.size === 0) {
+    await cleanupCommentSubscription();
+  }
 }
 
 // For backwards compatibility
@@ -90,11 +155,136 @@ export const addClient = addKillmailClient;
 export const removeClient = removeKillmailClient;
 
 /**
+ * Cleanup functions for Redis subscriptions
+ */
+async function cleanupKillmailSubscription() {
+  if (killmailUnsubscribe) {
+    await killmailUnsubscribe();
+    killmailUnsubscribe = null;
+  }
+  isKillmailSubscribed = false;
+  
+  if (killmailHealthCheck) {
+    clearInterval(killmailHealthCheck);
+    killmailHealthCheck = null;
+  }
+  
+  console.debug("Cleaned up killmail Redis subscription");
+}
+
+async function cleanupCommentSubscription() {
+  if (commentUnsubscribe) {
+    await commentUnsubscribe();
+    commentUnsubscribe = null;
+  }
+  isCommentSubscribed = false;
+  
+  if (commentHealthCheck) {
+    clearInterval(commentHealthCheck);
+    commentHealthCheck = null;
+  }
+  
+  console.debug("Cleaned up comment Redis subscription");
+}
+
+/**
+ * Health check functions to monitor client connections
+ */
+function startKillmailHealthCheck() {
+  if (killmailHealthCheck) return;
+  
+  killmailHealthCheck = setInterval(() => {
+    const now = Date.now();
+    const deadClients: WSClient[] = [];
+    
+    killmailClients.forEach((clientInfo, client) => {
+      // Check if client is responsive
+      if (now - clientInfo.lastPing > PING_INTERVAL + PING_TIMEOUT) {
+        deadClients.push(client);
+        return;
+      }
+      
+      // Send ping if it's time
+      if (now - clientInfo.lastPing > PING_INTERVAL) {
+        try {
+          client.send(JSON.stringify({ type: "ping", timestamp: now }));
+          clientInfo.isAlive = false; // Will be set to true when pong is received
+        } catch (error) {
+          console.debug("Failed to send ping to killmail client, marking for removal");
+          deadClients.push(client);
+        }
+      }
+    });
+    
+    // Remove dead clients
+    deadClients.forEach(client => removeKillmailClient(client));
+    
+    if (deadClients.length > 0) {
+      console.debug(`Removed ${deadClients.length} dead killmail clients`);
+    }
+  }, CLIENT_CLEANUP_INTERVAL);
+}
+
+function startCommentHealthCheck() {
+  if (commentHealthCheck) return;
+  
+  commentHealthCheck = setInterval(() => {
+    const now = Date.now();
+    const deadClients: WSClient[] = [];
+    
+    commentClients.forEach((clientInfo, client) => {
+      // Check if client is responsive
+      if (now - clientInfo.lastPing > PING_INTERVAL + PING_TIMEOUT) {
+        deadClients.push(client);
+        return;
+      }
+      
+      // Send ping if it's time
+      if (now - clientInfo.lastPing > PING_INTERVAL) {
+        try {
+          client.send(JSON.stringify({ type: "ping", timestamp: now }));
+          clientInfo.isAlive = false; // Will be set to true when pong is received
+        } catch (error) {
+          console.debug("Failed to send ping to comment client, marking for removal");
+          deadClients.push(client);
+        }
+      }
+    });
+    
+    // Remove dead clients
+    deadClients.forEach(client => removeCommentClient(client));
+    
+    if (deadClients.length > 0) {
+      console.debug(`Removed ${deadClients.length} dead comment clients`);
+    }
+  }, CLIENT_CLEANUP_INTERVAL);
+}
+
+/**
+ * Handle pong responses from clients
+ */
+export function handleKillmailClientPong(peer: WSClient) {
+  const clientInfo = killmailClients.get(peer);
+  if (clientInfo) {
+    clientInfo.lastPing = Date.now();
+    clientInfo.isAlive = true;
+  }
+}
+
+export function handleCommentClientPong(peer: WSClient) {
+  const clientInfo = commentClients.get(peer);
+  if (clientInfo) {
+    clientInfo.lastPing = Date.now();
+    clientInfo.isAlive = true;
+  }
+}
+
+/**
  * Local function to broadcast to connected killmail WebSocket clients
  */
 function broadcastToKillmailClients(killmail: any, routingKeys: string[]) {
-  killmailClients.forEach((subscribedTopics, client) => {
-    if (subscribedTopics.some((topic) => routingKeys.includes(topic))) {
+  killmailClients.forEach((clientInfo, client) => {
+    if (clientInfo.topics && clientInfo.topics.some((topic: string) => routingKeys.includes(topic))) {
       try {
         const message = JSON.stringify({
           type: "killmail",
@@ -102,7 +292,9 @@ function broadcastToKillmailClients(killmail: any, routingKeys: string[]) {
         });
         client.send(message);
       } catch (error) {
-        console.error("Error sending message to client:", error);
+        console.error("Error sending message to killmail client:", error);
+        // Mark client for removal on next health check
+        clientInfo.isAlive = false;
       }
     }
   });
@@ -113,11 +305,13 @@ function broadcastToKillmailClients(killmail: any, routingKeys: string[]) {
  * Broadcasts to all connected clients without any filtering
  */
 function broadcastToCommentClients(commentEvent: any) {
-  commentClients.forEach((_, client) => {
+  commentClients.forEach((clientInfo, client) => {
     try {
       client.send(commentEvent);
     } catch (error) {
       console.error("Error sending comment event to client:", error);
+      // Mark client for removal on next health check
+      clientInfo.isAlive = false;
     }
   });
 }
@@ -159,4 +353,39 @@ export async function broadcastCommentEvent(eventType: "new" | "deleted", commen
   } catch (error) {
     console.error("Error publishing comment event to Redis:", error);
   }
+}
+
+/**
+ * Statistics and monitoring functions
+ */
+export function getKillmailClientCount(): number {
+  return killmailClients.size;
+}
+
+export function getCommentClientCount(): number {
+  return commentClients.size;
+}
+
+export function getSubscriptionStatus() {
+  return {
+    killmail: isKillmailSubscribed,
+    comment: isCommentSubscribed
+  };
+}
+
+export function getConnectionHealth(type: 'killmail' | 'comment') {
+  const clients = type === 'killmail' ? killmailClients : commentClients;
+  const now = Date.now();
+  let healthy = 0;
+  let unhealthy = 0;
+  
+  clients.forEach((clientInfo) => {
+    if (clientInfo.isAlive && (now - clientInfo.lastPing) < (PING_INTERVAL + PING_TIMEOUT)) {
+      healthy++;
+    } else {
+      unhealthy++;
+    }
+  });
+  
+  return { healthy, unhealthy, total: clients.size };
 }

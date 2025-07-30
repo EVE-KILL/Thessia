@@ -3,6 +3,7 @@ import type { ServerResponse } from "node:http";
 import { PassThrough, Readable, Writable } from "node:stream";
 import { defineEventHandler, sendStream } from "h3";
 import { RedisStorage } from "~/server/helpers/Storage";
+import { cliLogger } from "~/server/helpers/Logger";
 
 // Cache duration constants in seconds
 const CACHE_MAX_AGE = 604800; // 7 days
@@ -29,7 +30,7 @@ export default defineEventHandler(async (event) => {
     const storage = RedisStorage.getInstance();
 
     try {
-        // Check if image exists in Redis cache
+        // Check if image exists in Redis cache using getBuffer for binary data
         const cachedImage = await storage.client.getBuffer(redisKey);
 
         if (cachedImage) {
@@ -44,7 +45,7 @@ export default defineEventHandler(async (event) => {
             return sendStream(event, stream);
         }
     } catch (err) {
-        console.error(`Redis cache error: ${err}`);
+        cliLogger.error(`Redis cache error for IPX image ${reqUrl}: ${err}`);
     }
 
     // If not cached, capture and store the response
@@ -103,11 +104,18 @@ export default defineEventHandler(async (event) => {
 
         if (originalRes.statusCode !== 200) return originalRes;
 
-        // Cache the image in Redis
+        // Cache the image in Redis using setex for binary data
         const buffer = captureStream.getBuffer();
 
-        // Use the storage instance to set the cache with TTL
-        storage.client.setex(redisKey, TTL, buffer);
+        // Cache asynchronously without blocking the response
+        storage.client.setex(redisKey, TTL, buffer)
+            .then(() => {
+                cliLogger.debug(`Cached IPX image: ${reqUrl} (${buffer.length} bytes)`);
+            })
+            .catch((err) => {
+                cliLogger.error(`Failed to cache IPX image ${reqUrl}: ${err}`);
+            });
+        
         return originalRes;
     };
 

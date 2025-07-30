@@ -5,9 +5,9 @@ import { cliLogger } from "~/server/helpers/Logger";
 export default defineNitroPlugin(() => {
     nitroApp.hooks.hook("request", (event) => {
         // If the request url starts with /_ipx we can ignore it (Stops all the image generation requests from showing in the log)
-        if (event.node.req.url?.startsWith("/_ipx/")) {
-            return;
-        }
+        //if (event.node.req.url?.startsWith("/_ipx/")) {
+        //    return;
+        //}
 
         const requestIp = getRequestIP(event, { xForwardedFor: true });
 

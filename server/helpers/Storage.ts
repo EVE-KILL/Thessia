@@ -1,5 +1,6 @@
 // src/helpers/Storage.ts
 import Redis from "ioredis";
+import { cliLogger } from "~/server/helpers/Logger";
 
 export class RedisStorage {
   // Static instance property
@@ -12,6 +13,7 @@ export class RedisStorage {
   private subscribeClient: Redis | null = null;
   private channelCallbacks: Map<string, Array<(message: string, channel: string) => void>> =
     new Map();
+  private isShuttingDown = false;
 
   // Private constructor to prevent direct instantiation
   public constructor() {
@@ -19,12 +21,67 @@ export class RedisStorage {
       host: process.env.REDIS_URI ? process.env.REDIS_URI : "192.168.10.10",
       port: process.env.REDIS_PORT ? Number.parseInt(process.env.REDIS_PORT) : 6379,
       db: process.env.REDIS_DB ? Number.parseInt(process.env.REDIS_DB) : 0,
+      lazyConnect: true,
+      maxRetriesPerRequest: 3,
+    });
+
+    // Add connection event handlers
+    this.client.on('connect', () => {
+      cliLogger.info('Redis main client connected');
+    });
+    
+    this.client.on('error', (err) => {
+      cliLogger.error(`Redis main client error: ${err.message}`);
+    });
+
+    this.client.on('close', () => {
+      cliLogger.info('Redis main client connection closed');
+    });
+
+    // Setup graceful shutdown handlers
+    this.setupGracefulShutdown();
+  }
+
+  /**
+   * Setup graceful shutdown handlers to properly close Redis connections
+   */
+  private setupGracefulShutdown(): void {
+    const gracefulShutdown = async (signal: string) => {
+      if (this.isShuttingDown) return;
+      this.isShuttingDown = true;
+      
+      cliLogger.info(`Received ${signal}, gracefully shutting down Redis connections...`);
+      try {
+        await this.disconnect();
+        cliLogger.info('Redis connections closed successfully');
+        process.exit(0);
+      } catch (error) {
+        cliLogger.error(`Error during Redis shutdown: ${error}`);
+        process.exit(1);
+      }
+    };
+
+    // Handle various shutdown signals
+    process.on('SIGINT', () => gracefulShutdown('SIGINT'));
+    process.on('SIGTERM', () => gracefulShutdown('SIGTERM'));
+    process.on('SIGQUIT', () => gracefulShutdown('SIGQUIT'));
+    
+    // Handle uncaught exceptions
+    process.on('uncaughtException', async (error) => {
+      cliLogger.error(`Uncaught Exception: ${error.message}`);
+      await gracefulShutdown('uncaughtException');
+    });
+    
+    process.on('unhandledRejection', async (reason) => {
+      cliLogger.error(`Unhandled Rejection: ${reason}`);
+      await gracefulShutdown('unhandledRejection');
     });
   }
 
   // Static method to get the singleton instance
   public static getInstance(): RedisStorage {
     if (!RedisStorage.instance) {
+      cliLogger.info('Creating new Redis storage singleton instance');
       RedisStorage.instance = new RedisStorage();
     }
     return RedisStorage.instance;
@@ -84,7 +141,7 @@ export class RedisStorage {
 
       return parsedInfo;
     } catch (err) {
-      cliLogger.error("Failed to get Redis stats:", err);
+      cliLogger.error(`Failed to get Redis stats: ${err}`);
       return {};
     }
   }
@@ -111,10 +168,26 @@ export class RedisStorage {
   ): Promise<void> {
     // Create a duplicate client for subscriptions if one doesn't exist yet
     if (!this.subscribeClient) {
+      cliLogger.info('Creating Redis subscribe client for pub/sub operations');
       this.subscribeClient = new Redis({
         host: process.env.REDIS_URI ? process.env.REDIS_URI : "192.168.10.10",
         port: process.env.REDIS_PORT ? Number.parseInt(process.env.REDIS_PORT) : 6379,
         db: process.env.REDIS_DB ? Number.parseInt(process.env.REDIS_DB) : 0,
+        lazyConnect: true,
+        maxRetriesPerRequest: 3,
+      });
+
+      // Add connection event handlers for subscribe client
+      this.subscribeClient.on('connect', () => {
+        cliLogger.info('Redis subscribe client connected');
+      });
+      
+      this.subscribeClient.on('error', (err) => {
+        cliLogger.error(`Redis subscribe client error: ${err.message}`);
+      });
+
+      this.subscribeClient.on('close', () => {
+        cliLogger.info('Redis subscribe client connection closed');
       });
 
       // Set up the message handler
@@ -122,7 +195,11 @@ export class RedisStorage {
         // Find and execute the callback for this channel
         const channelCallbacks = this.channelCallbacks.get(channel) || [];
         for (const callback of channelCallbacks) {
-          callback(message, channel);
+          try {
+            callback(message, channel);
+          } catch (error) {
+            cliLogger.error(`Error in Redis message callback for channel ${channel}: ${error}`);
+          }
         }
       });
     }
@@ -133,7 +210,13 @@ export class RedisStorage {
     this.channelCallbacks.set(channel, callbacks);
 
     // Subscribe to the channel
-    await this.subscribeClient.subscribe(channel);
+    try {
+      await this.subscribeClient.subscribe(channel);
+      cliLogger.info(`Subscribed to Redis channel: ${channel}`);
+    } catch (error) {
+      cliLogger.error(`Failed to subscribe to Redis channel ${channel}: ${error}`);
+      throw error;
+    }
   }
 
   /**
@@ -154,25 +237,98 @@ export class RedisStorage {
 
       if (updatedCallbacks.length === 0) {
         // No more callbacks, unsubscribe from channel
-        await this.subscribeClient.unsubscribe(channel);
-        this.channelCallbacks.delete(channel);
+        try {
+          await this.subscribeClient.unsubscribe(channel);
+          this.channelCallbacks.delete(channel);
+          cliLogger.info(`Unsubscribed from Redis channel: ${channel}`);
+        } catch (error) {
+          cliLogger.error(`Failed to unsubscribe from Redis channel ${channel}: ${error}`);
+        }
       } else {
         this.channelCallbacks.set(channel, updatedCallbacks);
       }
     } else {
       // Remove all callbacks for this channel
-      await this.subscribeClient.unsubscribe(channel);
-      this.channelCallbacks.delete(channel);
+      try {
+        await this.subscribeClient.unsubscribe(channel);
+        this.channelCallbacks.delete(channel);
+        cliLogger.info(`Unsubscribed from Redis channel: ${channel}`);
+      } catch (error) {
+        cliLogger.error(`Failed to unsubscribe from Redis channel ${channel}: ${error}`);
+      }
+    }
+
+    // If no more subscriptions, close the subscribe client
+    if (this.channelCallbacks.size === 0 && this.subscribeClient) {
+      try {
+        await this.subscribeClient.quit();
+        this.subscribeClient = null;
+        cliLogger.info('Redis subscribe client disconnected (no active subscriptions)');
+      } catch (error) {
+        cliLogger.error(`Error closing Redis subscribe client: ${error}`);
+      }
     }
   }
 
-  // Optional: Gracefully disconnect the Redis client
+  // Gracefully disconnect the Redis clients
   async disconnect(): Promise<void> {
+    if (this.isShuttingDown) return;
+    this.isShuttingDown = true;
+
+    const disconnectPromises: Promise<any>[] = [];
+
+    // Disconnect subscribe client first
     if (this.subscribeClient) {
-      await this.subscribeClient.quit();
-      this.subscribeClient = null;
+      disconnectPromises.push(
+        this.subscribeClient.quit().catch((error) => {
+          cliLogger.error(`Error disconnecting Redis subscribe client: ${error}`);
+        }).finally(() => {
+          this.subscribeClient = null;
+        })
+      );
     }
-    await this.client.quit();
+
+    // Disconnect main client
+    disconnectPromises.push(
+      this.client.quit().catch((error) => {
+        cliLogger.error(`Error disconnecting Redis main client: ${error}`);
+      })
+    );
+
+    // Wait for all disconnections to complete
+    await Promise.all(disconnectPromises);
+    
+    // Clear callbacks
+    this.channelCallbacks.clear();
+    
+    cliLogger.info('All Redis connections closed');
+  }
+
+  /**
+   * Check if Redis connections are healthy
+   */
+  async healthCheck(): Promise<{ main: boolean; subscribe: boolean }> {
+    const mainHealthy = this.client.status === 'ready';
+    const subscribeHealthy = this.subscribeClient ? this.subscribeClient.status === 'ready' : true;
+    
+    return {
+      main: mainHealthy,
+      subscribe: subscribeHealthy
+    };
+  }
+
+  /**
+   * Get detailed connection information for monitoring
+   */
+  getConnectionDetails() {
+    return {
+      main_client_status: this.client.status,
+      subscribe_client_status: this.subscribeClient?.status || 'not_created',
+      has_subscribe_client: !!this.subscribeClient,
+      active_subscriptions: this.channelCallbacks.size,
+      subscription_channels: Array.from(this.channelCallbacks.keys()),
+      is_shutting_down: this.isShuttingDown
+    };
   }
 }
 
