@@ -519,7 +519,7 @@ function handleWebSocketMessage(data: any) {
         // Handle ping/pong for connection health
         if (data.type === "ping") {
             // Respond to server ping with pong
-            sendMessage(JSON.stringify({
+            wsSendMessage(JSON.stringify({
                 type: "pong",
                 timestamp: data.timestamp
             }));

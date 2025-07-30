@@ -508,6 +508,7 @@ const hasKeyspaceInfo = computed(() => {
                         { id: 'processing', label: isMobile ? '' : $t('processing'), icon: 'lucide:bar-chart-2', slot: 'processing' },
                         { id: 'database', label: isMobile ? '' : $t('database'), icon: 'lucide:database', slot: 'database' },
                         { id: 'cache', label: isMobile ? '' : $t('cache'), icon: 'lucide:hard-drive', slot: 'cache' },
+                        { id: 'websocket', label: isMobile ? '' : $t('websocket'), icon: 'lucide:radio', slot: 'websocket' },
                         { id: 'redis', label: isMobile ? '' : $t('redis'), icon: 'lucide:database', slot: 'redis' },
                     ]" v-model="activeStatusTab" class="mb-6" color="neutral">
                         <template #overview>
@@ -563,6 +564,14 @@ const hasKeyspaceInfo = computed(() => {
                                                             info) => total +
                                                             parseKeyspaceInfo(info as string).keys, 0)) : 'N/A'
                                                 }}</span>
+                                            </div>
+                                            <div class="flex justify-between">
+                                                <span>{{ $t('wsKillmailClients') }}:</span>
+                                                <span class="font-mono">{{ statusData?.websocket?.killmail?.clients || 0 }}</span>
+                                            </div>
+                                            <div class="flex justify-between">
+                                                <span>{{ $t('wsCommentClients') }}:</span>
+                                                <span class="font-mono">{{ statusData?.websocket?.comment?.clients || 0 }}</span>
                                             </div>
                                         </div>
                                     </UCard>
@@ -830,6 +839,108 @@ const hasKeyspaceInfo = computed(() => {
                                                 </tr>
                                             </tbody>
                                         </table>
+                                    </div>
+                                </UCard>
+                            </div>
+                        </template>
+
+                        <template #websocket>
+                            <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                                <!-- WebSocket Client Information -->
+                                <UCard>
+                                    <template #header>
+                                        <div class="flex items-center">
+                                            <UIcon name="lucide:radio" class="mr-2" />
+                                            <h3 class="text-lg font-semibold">{{ $t('websocketClients') }}</h3>
+                                        </div>
+                                    </template>
+                                    <div class="space-y-3">
+                                        <div class="grid grid-cols-2 gap-4">
+                                            <div class="text-center p-3 bg-blue-50 dark:bg-blue-900/30 rounded-lg">
+                                                <div class="text-2xl font-bold text-blue-600 dark:text-blue-400">
+                                                    {{ statusData?.websocket?.killmail?.clients || 0 }}
+                                                </div>
+                                                <div class="text-xs text-blue-700 dark:text-blue-300">{{ $t('killmailClients') }}</div>
+                                            </div>
+                                            <div class="text-center p-3 bg-green-50 dark:bg-green-900/30 rounded-lg">
+                                                <div class="text-2xl font-bold text-green-600 dark:text-green-400">
+                                                    {{ statusData?.websocket?.comment?.clients || 0 }}
+                                                </div>
+                                                <div class="text-xs text-green-700 dark:text-green-300">{{ $t('commentClients') }}</div>
+                                            </div>
+                                        </div>
+                                        
+                                        <div class="space-y-2">
+                                            <div class="flex justify-between">
+                                                <span class="text-sm">{{ $t('killmailSubscription') }}:</span>
+                                                <span :class="statusData?.websocket?.subscriptions?.killmail ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'">
+                                                    {{ statusData?.websocket?.subscriptions?.killmail ? $t('active') : $t('inactive') }}
+                                                </span>
+                                            </div>
+                                            <div class="flex justify-between">
+                                                <span class="text-sm">{{ $t('commentSubscription') }}:</span>
+                                                <span :class="statusData?.websocket?.subscriptions?.comment ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'">
+                                                    {{ statusData?.websocket?.subscriptions?.comment ? $t('active') : $t('inactive') }}
+                                                </span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </UCard>
+
+                                <!-- WebSocket Health Information -->
+                                <UCard>
+                                    <template #header>
+                                        <div class="flex items-center">
+                                            <UIcon name="lucide:heart-pulse" class="mr-2" />
+                                            <h3 class="text-lg font-semibold">{{ $t('connectionHealth') }}</h3>
+                                        </div>
+                                    </template>
+                                    <div class="space-y-3">
+                                        <!-- Killmail Health -->
+                                        <div class="border border-gray-200 dark:border-gray-700 rounded-lg p-3">
+                                            <div class="font-medium mb-2">{{ $t('killmailWebSocket') }}</div>
+                                            <div class="grid grid-cols-2 gap-2 text-sm">
+                                                <div class="flex justify-between">
+                                                    <span>{{ $t('aliveClients') }}:</span>
+                                                    <span class="font-mono">{{ statusData?.websocket?.killmail?.health?.alive_clients || 0 }}</span>
+                                                </div>
+                                                <div class="flex justify-between">
+                                                    <span>{{ $t('totalClients') }}:</span>
+                                                    <span class="font-mono">{{ statusData?.websocket?.killmail?.health?.total_clients || 0 }}</span>
+                                                </div>
+                                                <div class="flex justify-between col-span-2">
+                                                    <span>{{ $t('lastPing') }}:</span>
+                                                    <span class="font-mono text-xs">
+                                                        {{ statusData?.websocket?.killmail?.health?.last_ping_sent ? 
+                                                           new Date(statusData.websocket.killmail.health.last_ping_sent).toLocaleTimeString() : 
+                                                           $t('never') }}
+                                                    </span>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <!-- Comment Health -->
+                                        <div class="border border-gray-200 dark:border-gray-700 rounded-lg p-3">
+                                            <div class="font-medium mb-2">{{ $t('commentWebSocket') }}</div>
+                                            <div class="grid grid-cols-2 gap-2 text-sm">
+                                                <div class="flex justify-between">
+                                                    <span>{{ $t('aliveClients') }}:</span>
+                                                    <span class="font-mono">{{ statusData?.websocket?.comment?.health?.alive_clients || 0 }}</span>
+                                                </div>
+                                                <div class="flex justify-between">
+                                                    <span>{{ $t('totalClients') }}:</span>
+                                                    <span class="font-mono">{{ statusData?.websocket?.comment?.health?.total_clients || 0 }}</span>
+                                                </div>
+                                                <div class="flex justify-between col-span-2">
+                                                    <span>{{ $t('lastPing') }}:</span>
+                                                    <span class="font-mono text-xs">
+                                                        {{ statusData?.websocket?.comment?.health?.last_ping_sent ? 
+                                                           new Date(statusData.websocket.comment.health.last_ping_sent).toLocaleTimeString() : 
+                                                           $t('never') }}
+                                                    </span>
+                                                </div>
+                                            </div>
+                                        </div>
                                     </div>
                                 </UCard>
                             </div>

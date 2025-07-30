@@ -204,11 +204,45 @@ export default defineEventHandler(async () => {
         alliance: cacheStats[22],
     };
 
+    // Get WebSocket stats
+    let websocketStats = {};
+    try {
+        const { 
+            getKillmailClientCount, 
+            getCommentClientCount,
+            getSubscriptionStatus,
+            getConnectionHealth 
+        } = await import('~/server/helpers/WSClientManager');
+
+        websocketStats = {
+            killmail: {
+                clients: getKillmailClientCount(),
+                health: getConnectionHealth('killmail')
+            },
+            comment: {
+                clients: getCommentClientCount(),
+                health: getConnectionHealth('comment')
+            },
+            subscriptions: getSubscriptionStatus()
+        };
+    } catch (err) {
+        console.error("Failed to get WebSocket stats:", err);
+        websocketStats = {
+            killmail: { clients: 0, health: { alive_clients: 0, total_clients: 0, last_ping_sent: null, oldest_client: null } },
+            comment: { clients: 0, health: { alive_clients: 0, total_clients: 0, last_ping_sent: null, oldest_client: null } },
+            subscriptions: { killmail: false, comment: false }
+        };
+    }
+
     // Get Redis stats
     let redisStats = {};
     try {
         const redisStorage = RedisStorage.getInstance();
         const fullRedisStats = await redisStorage.getRedisStats();
+        const [redisHealth, connectionDetails] = await Promise.all([
+            redisStorage.healthCheck(),
+            redisStorage.getConnectionDetails()
+        ]);
 
         // Extract only the Redis stats we need for the UI
         redisStats = {
@@ -236,6 +270,9 @@ export default defineEventHandler(async () => {
                 keyspace_misses: fullRedisStats.stats?.keyspace_misses,
             },
             keyspace: fullRedisStats.keyspace || {},
+            // Add health and connection details
+            health: redisHealth,
+            connection_details: connectionDetails
         };
     } catch (err) {
         cliLogger.error(`Failed to get Redis stats: ${err}`);
@@ -714,5 +751,6 @@ export default defineEventHandler(async () => {
         },
         cacheHits: formattedCacheHits,
         redis: redisStats,
+        websocket: websocketStats,
     };
 });
