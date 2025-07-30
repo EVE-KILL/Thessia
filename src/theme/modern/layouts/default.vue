@@ -78,6 +78,7 @@ onMounted(() => {
         </UContainer>
 
         <BackgroundViewer />
+        <BackgroundRandomizer />
         <!-- Global scroll-to-top button -->
         <ScrollTo targetSelector="#content" icon="lucide:arrow-up" title="Scroll to top" />
 

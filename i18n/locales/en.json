@@ -125,6 +125,11 @@
     "faq.items.contact.content": "Our support team is readily accessible through our active <a target='_blank' href='{discordLink}'>Discord community</a>, where you can engage directly with both our team and fellow users. For technical inquiries, feature requests, or bug reports, our <a target='_blank' href='{githubLink}'>GitHub repository</a> provides a structured platform for detailed discussions and issue tracking.",
     "aboutTitle": "About",
     "backgroundTitle": "Background",
+    "background": {
+        "loading": "Loading backgrounds...",
+        "randomReddit": "Random r/eveporn",
+        "randomize": "Get random background"
+    },
     "ships": "Ships",
     "structures": "Structures",
     "killsOverLastXDays": "Last {days} days",
