@@ -1,4 +1,4 @@
-import { RedisStorage } from "~/server/helpers/Storage";
+import { KILLMAIL_PUBSUB_CHANNEL } from "~/server/helpers/Websocket";
 import {
     addClient,
     broadcastToKillmailClients,
@@ -6,23 +6,6 @@ import {
     registerWSType,
     removeClient,
 } from "~/server/helpers/WSClientManager";
-
-export const KILLMAIL_PUBSUB_CHANNEL = "killmail-broadcasts";
-
-/**
- * Broadcast a killmail to all subscribed clients
- */
-export async function broadcastKillmail(killmail: any, routingKeys: string[]) {
-    try {
-        const redis = RedisStorage.getInstance();
-        await redis.publish(KILLMAIL_PUBSUB_CHANNEL, {
-            killmail,
-            routingKeys,
-        });
-    } catch (error) {
-        console.error("Error publishing killmail to Redis:", error);
-    }
-}
 
 // Register this WebSocket type
 registerWSType("killmail", {

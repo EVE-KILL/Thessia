@@ -45,7 +45,7 @@ import {
     broadcastSiteEvent,
     createNotification,
     createNotificationButton
-} from "~/server/routes/ws/site";
+} from "~/server/helpers/Websocket";
 ```
 
 ### Quick Examples

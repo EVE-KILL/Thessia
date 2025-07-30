@@ -1,6 +1,6 @@
 import { cliLogger } from "~/server/helpers/Logger";
+import { broadcastCommentEvent } from "~/server/helpers/Websocket";
 import { Comments } from "~/server/models/Comments";
-import { broadcastCommentEvent } from "~/server/routes/ws/comments";
 
 export default defineEventHandler(async (event) => {
     // Get the authentication cookie

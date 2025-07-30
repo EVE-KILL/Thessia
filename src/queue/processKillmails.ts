@@ -2,8 +2,8 @@ import type { Job } from "bullmq";
 import { determineRoutingKeys } from "~/server/helpers/DetermineRoutingKeys";
 import { cliLogger } from "~/server/helpers/Logger";
 import { createWorker } from "~/server/helpers/Queue";
+import { broadcastKillmail } from "~/server/helpers/Websocket";
 import { processKillmail } from "~/server/queue/Killmail";
-import { broadcastKillmail } from "~/server/routes/ws/killmails";
 
 export default {
     name: "process:killmails",
