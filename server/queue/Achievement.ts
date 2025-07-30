@@ -10,7 +10,7 @@ const achievementQueue = createQueue("achievement");
  * @param characterId - The character ID to process achievements for
  * @param priority - Job priority (default: 1, higher numbers = higher priority)
  */
-async function queueAchievementProcessing(characterId: number, priority = 1) {
+async function queueAchievementProcessing(characterId: number, priority = 10) {
     await achievementQueue.add(
         "achievement",
         { characterId: characterId },
@@ -133,8 +133,8 @@ async function reprocessAchievement(characterId: number, priority = 10) {
 }
 
 export {
+    processAchievement,
     queueAchievementProcessing,
     queueAchievementProcessingBulk,
-    processAchievement,
     reprocessAchievement,
 };
