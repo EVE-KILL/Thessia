@@ -2411,6 +2411,7 @@ export class AchievementService {
 
     /**
      * Combined achievements array including static and dynamically generated achievements
+     * Generates fresh achievements each time to prevent memory leaks
      */
     private static async getAllAchievements(): Promise<IAchievement[]> {
         const shipTypeAchievements = await this.generateShipTypeAchievements();
@@ -2418,11 +2419,14 @@ export class AchievementService {
     }
 
     /**
-     * Initialize achievements for a new character
+     * Initialize achievements for a new character with full achievement set
+     * This method generates the complete achievement list including ship types
+     * Should only be called when we know the character will be processed
      */
     static async initializeCharacter(
         characterId: number,
-        characterName?: string
+        characterName?: string,
+        allAchievements?: IAchievement[]
     ) {
         const existingRecord = await CharacterAchievements.findOne({
             character_id: characterId,
@@ -2431,8 +2435,10 @@ export class AchievementService {
             return existingRecord;
         }
 
-        const allAchievements = await this.getAllAchievements();
-        const activeAchievements = allAchievements.filter(
+        // Use provided achievements or generate them (but only when called from calculateAchievements)
+        const achievementList =
+            allAchievements || (await this.getAllAchievements());
+        const activeAchievements = achievementList.filter(
             (achievement) => achievement.isActive
         );
 
@@ -2523,6 +2529,13 @@ export class AchievementService {
         let characterRecord = await CharacterAchievements.findOne({
             character_id: characterId,
         });
+
+        // Generate achievements once for this character processing (only if we have activity)
+        let allAchievements: IAchievement[] | undefined;
+        if (hasActivity > 0) {
+            allAchievements = await this.getAllAchievements();
+        }
+
         if (!characterRecord) {
             // If no activity, just initialize with static achievements only
             if (hasActivity === 0) {
@@ -2533,7 +2546,8 @@ export class AchievementService {
             } else {
                 characterRecord = await this.initializeCharacter(
                     characterId,
-                    characterName
+                    characterName,
+                    allAchievements
                 );
             }
         }
@@ -2543,18 +2557,17 @@ export class AchievementService {
             return characterRecord;
         }
 
-        const allAchievements = await this.getAllAchievements();
         const updates: any = {};
         let hasUpdates = false;
 
         // Create achievement lookup map for efficient access
         const achievementLookup = new Map<string, IAchievement>();
-        for (const achievement of allAchievements) {
+        for (const achievement of allAchievements!) {
             achievementLookup.set(achievement.id, achievement);
         }
 
         // Separate achievements into regular and custom function achievements
-        const activeAchievements = allAchievements.filter((a) => a.isActive);
+        const activeAchievements = allAchievements!.filter((a) => a.isActive);
         const regularAchievements = activeAchievements.filter(
             (a) => !a.customFunction
         );
@@ -3094,13 +3107,5 @@ export class AchievementService {
                 max_completed: 0,
             }
         );
-    }
-
-    /**
-     * Clear the ship groups cache
-     * Useful for testing or when ship groups data needs to be refreshed
-     */
-    static clearCache(): void {
-        shipGroupsCache.clear();
     }
 }
