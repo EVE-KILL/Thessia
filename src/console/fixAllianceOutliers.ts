@@ -1,6 +1,6 @@
 import { cliLogger } from "~/server/helpers/Logger";
-import { getCachedCorporation } from "~/server/helpers/RuntimeCache";
 import { Characters } from "~/server/models/Characters";
+import { Corporations } from "~/server/models/Corporations";
 import { queueBulkUpdateAlliances } from "~/server/queue/Alliance";
 import { queueBulkUpdateCharacters } from "~/server/queue/Character";
 import { queueBulkUpdateCorporations } from "~/server/queue/Corporation";
@@ -10,6 +10,7 @@ interface ProcessingResult {
     missingCorporations: MissingCorporation[];
     outliers: OutlierData[];
     queued: number;
+    corporationsLoaded: number;
 }
 
 interface OutlierData {
@@ -26,47 +27,78 @@ interface MissingCorporation {
     character_count: number;
 }
 
+interface CorporationData {
+    corporation_id: number;
+    alliance_id: number;
+}
+
 export default {
     name: "fixAllianceOutliers",
     description:
-        "Finds and fixes characters with incorrect alliance data based on their corporation",
+        "Finds and fixes characters with incorrect alliance data based on their corporation. Use --skip <number> to resume processing from a specific character position.",
     longRunning: false,
-    run: async () => {
+    run: async (args?: string[]) => {
         cliLogger.info("Starting alliance outlier detection and fixing...");
         const startTime = Date.now();
 
-        try {
-            // Single pass processing: find missing corporations AND alliance outliers
-            cliLogger.info(
-                "Processing characters for missing corporations and alliance outliers..."
-            );
-            const result = await processCharactersForOutliers();
-
-            // Phase 1: Queue missing corporations first
-            if (result.missingCorporations.length > 0) {
-                cliLogger.info(
-                    `Found ${result.missingCorporations.length} missing corporations, queuing for fetching...`
-                );
-                await queueMissingCorporations(result.missingCorporations);
-
-                // Wait a bit for corporation data to be fetched before proceeding with outliers
-                if (result.outliers.length > 0) {
-                    cliLogger.info(
-                        "Waiting 30 seconds for corporation data to be fetched..."
-                    );
-                    await new Promise((resolve) => setTimeout(resolve, 30000));
+        // Parse command line arguments
+        let skipCount = 0;
+        if (args) {
+            const skipIndex = args.findIndex((arg) => arg === "--skip");
+            if (skipIndex !== -1 && skipIndex + 1 < args.length) {
+                const skipArg = args[skipIndex + 1];
+                if (skipArg) {
+                    const skipValue = parseInt(skipArg, 10);
+                    if (!isNaN(skipValue) && skipValue >= 0) {
+                        skipCount = skipValue;
+                        cliLogger.info(
+                            `Skipping first ${skipCount.toLocaleString()} characters`
+                        );
+                    } else {
+                        cliLogger.error(
+                            "Invalid skip value. Must be a non-negative integer."
+                        );
+                        return;
+                    }
                 }
             }
+        }
 
-            // Phase 2: Queue outliers for fixing
-            if (result.outliers.length > 0) {
-                cliLogger.info("Queuing alliance outliers for fixing...");
-                await queueOutliersForFixing(result.outliers);
-            }
+        try {
+            // Preload all corporations into memory for instant lookups
+            cliLogger.info("Preloading all corporations into memory...");
+            const corporationMap = await preloadCorporations();
+
+            // Single pass processing: find missing corporations AND alliance outliers
+            // Entities are queued immediately as they're found
+            cliLogger.info(
+                "Processing characters for missing corporations and alliance outliers (queuing immediately)..."
+            );
+            const result = await processCharactersForOutliers(
+                corporationMap,
+                skipCount
+            );
 
             const elapsed = (Date.now() - startTime) / 1000;
             cliLogger.info(`Completed in ${elapsed.toFixed(2)} seconds`);
-            cliLogger.info(`Processed ${result.processed} characters`);
+            cliLogger.info(
+                `Loaded ${result.corporationsLoaded} corporations into memory`
+            );
+            if (skipCount > 0) {
+                cliLogger.info(
+                    `Skipped first ${skipCount.toLocaleString()} characters`
+                );
+                cliLogger.info(
+                    `Processed ${result.processed} characters in this run`
+                );
+                cliLogger.info(
+                    `Total position reached: ${(
+                        skipCount + result.processed
+                    ).toLocaleString()}`
+                );
+            } else {
+                cliLogger.info(`Processed ${result.processed} characters`);
+            }
             cliLogger.info(
                 `Found ${result.missingCorporations.length} missing corporations`
             );
@@ -102,21 +134,80 @@ export default {
 };
 
 /**
- * Single pass processing: Find missing corporations AND alliance outliers simultaneously
+ * Preload all corporations into memory for instant lookups using cursor
+ * Returns a Map with corporation_id -> {corporation_id, alliance_id}
  */
-async function processCharactersForOutliers(): Promise<ProcessingResult> {
+async function preloadCorporations(): Promise<Map<number, CorporationData>> {
+    const startTime = Date.now();
+    cliLogger.info("Loading all corporations from database using cursor...");
+
+    const corporationMap = new Map<number, CorporationData>();
+    let count = 0;
+
+    // Use cursor to stream corporations directly into the Map
+    const cursor = Corporations.find(
+        { deleted: false },
+        {
+            corporation_id: 1,
+            alliance_id: 1,
+        }
+    )
+        .lean()
+        .cursor();
+
+    for (
+        let corp = await cursor.next();
+        corp != null;
+        corp = await cursor.next()
+    ) {
+        corporationMap.set(corp.corporation_id, {
+            corporation_id: corp.corporation_id,
+            alliance_id: corp.alliance_id || 0,
+        });
+        count++;
+
+        // Log progress every 100k corporations
+        if (count % 100000 === 0) {
+            cliLogger.info(`Loaded ${count} corporations...`);
+        }
+    }
+
+    const elapsed = (Date.now() - startTime) / 1000;
+    const memoryUsage = (corporationMap.size * 16) / 1024 / 1024; // Rough estimate: 16 bytes per entry
+
+    cliLogger.info(
+        `Loaded ${corporationMap.size} corporations in ${elapsed.toFixed(2)}s`
+    );
+    cliLogger.info(`Estimated memory usage: ${memoryUsage.toFixed(1)}MB`);
+
+    return corporationMap;
+}
+
+/**
+ * Single pass processing: Find missing corporations AND alliance outliers simultaneously
+ * Queue entities immediately as they're found
+ */
+async function processCharactersForOutliers(
+    corporationMap: Map<number, CorporationData>,
+    skipCount: number = 0
+): Promise<ProcessingResult> {
     cliLogger.info("Processing characters in single pass...");
 
-    const missingCorporations = new Map<number, number>(); // corporation_id -> character_count
+    const queuedCorporations = new Set<number>(); // Track already queued corporations
+    const missingCorporations: MissingCorporation[] = [];
     const outliers: OutlierData[] = [];
 
     let processed = 0;
-    let cacheHits = 0;
-    let cacheMisses = 0;
+    let lookups = 0;
+    let queuedCount = 0;
 
     // Process characters in larger batches for memory efficiency
-    const BATCH_SIZE = 1000; // 1k characters at a time
-    let skip = 0;
+    const BATCH_SIZE = 10000; // 10k characters at a time
+    let skip = skipCount; // Start from the specified skip count
+
+    cliLogger.info(
+        `Starting character processing from position ${skip.toLocaleString()}`
+    );
 
     while (true) {
         const characters = await Characters.find(
@@ -150,21 +241,40 @@ async function processCharactersForOutliers(): Promise<ProcessingResult> {
                 continue;
             }
 
-            // Get corporation data from RuntimeCache (handles LRU + Redis + DB automatically)
-            const corporationData = await getCachedCorporation(
+            // Get corporation data from preloaded map - instant lookup!
+            const corporationData = corporationMap.get(
                 character.corporation_id
             );
+            lookups++;
 
             if (!corporationData) {
-                // Corporation not found - mark as missing
-                const count =
-                    missingCorporations.get(character.corporation_id) || 0;
-                missingCorporations.set(character.corporation_id, count + 1);
-                cacheMisses++;
+                // Corporation not found - queue it immediately if not already queued
+                if (!queuedCorporations.has(character.corporation_id)) {
+                    cliLogger.debug(
+                        `MISSING CORP: Queuing corporation ${
+                            character.corporation_id
+                        } for character ${character.character_id} (position ${
+                            skip + processed
+                        })`
+                    );
+
+                    await queueBulkUpdateCorporations([
+                        {
+                            corporationId: character.corporation_id,
+                            priority: 5,
+                        },
+                    ]);
+
+                    queuedCorporations.add(character.corporation_id);
+                    queuedCount++;
+
+                    missingCorporations.push({
+                        corporation_id: character.corporation_id,
+                        character_count: 1,
+                    });
+                }
                 continue;
             }
-
-            cacheHits++;
 
             // Compare character data with expected corporation data
             const currentAllianceId = character.alliance_id || 0;
@@ -178,8 +288,22 @@ async function processCharactersForOutliers(): Promise<ProcessingResult> {
                         character.name || "Unknown"
                     }) has alliance ${currentAllianceId} but corporation ${
                         character.corporation_id
-                    } has alliance ${expectedAllianceId}`
+                    } has alliance ${expectedAllianceId} (position ${
+                        skip + processed
+                    })`
                 );
+
+                // Queue the outlier immediately
+                await queueOutlierImmediately({
+                    character_id: character.character_id,
+                    character_name: character.name || "Unknown",
+                    corporation_id: character.corporation_id,
+                    current_alliance_id: currentAllianceId,
+                    expected_alliance_id: expectedAllianceId,
+                    issue_type: "alliance_mismatch",
+                });
+
+                queuedCount += 3; // character + corporation + alliance(s)
 
                 outliers.push({
                     character_id: character.character_id,
@@ -194,144 +318,67 @@ async function processCharactersForOutliers(): Promise<ProcessingResult> {
 
         skip += BATCH_SIZE;
         cliLogger.info(
-            `Processed ${processed} characters so far, found ${missingCorporations.size} missing corporations and ${outliers.length} outliers`
+            `Processed ${
+                skipCount + processed
+            } characters total (${processed} in this run), found ${
+                queuedCorporations.size
+            } missing corporations and ${outliers.length} outliers`
         );
     }
 
-    const missingCorpsArray = Array.from(missingCorporations.entries()).map(
-        ([corporation_id, character_count]) => ({
-            corporation_id,
-            character_count,
-        })
-    );
-
     cliLogger.info(
-        `Cache efficiency: ${cacheHits} hits, ${cacheMisses} misses (${(
-            (cacheHits / (cacheHits + cacheMisses)) *
-            100
-        ).toFixed(2)}% hit rate)`
-    );
-    cliLogger.info(
-        `Found ${
-            missingCorpsArray.length
-        } missing corporations affecting ${missingCorpsArray.reduce(
-            (sum, c) => sum + c.character_count,
-            0
-        )} characters`
+        `Lookup efficiency: ${lookups} instant lookups from preloaded map`
     );
 
     return {
         processed,
-        missingCorporations: missingCorpsArray,
+        missingCorporations,
         outliers,
-        queued: 0, // Will be calculated when queuing
+        queued: queuedCount,
+        corporationsLoaded: corporationMap.size,
     };
 }
 
 /**
- * Queue outliers for fixing in bulk batches
+ * Queue a single outlier immediately for fixing
  */
-async function queueOutliersForFixing(outliers: OutlierData[]): Promise<void> {
-    const BATCH_SIZE = 1000; // 1k outliers at a time
-
-    // Collect unique entities to queue
-    const charactersToQueue = new Set<number>();
-    const corporationsToQueue = new Set<number>();
-    const alliancesToQueue = new Set<number>();
-
-    for (const outlier of outliers) {
-        charactersToQueue.add(outlier.character_id);
-        corporationsToQueue.add(outlier.corporation_id);
-
-        if (outlier.current_alliance_id > 0) {
-            alliancesToQueue.add(outlier.current_alliance_id);
-        }
-        if (
-            outlier.expected_alliance_id > 0 &&
-            outlier.expected_alliance_id !== outlier.current_alliance_id
-        ) {
-            alliancesToQueue.add(outlier.expected_alliance_id);
-        }
-    }
-
-    // Queue entities in batches
-    await queueEntitiesBatch(
-        charactersToQueue,
-        corporationsToQueue,
-        alliancesToQueue
-    );
-
-    cliLogger.info(
-        `Queued ${charactersToQueue.size} characters, ${corporationsToQueue.size} corporations, and ${alliancesToQueue.size} alliances for updates`
-    );
-}
-
-/**
- * Queue missing corporations for fetching in batches
- */
-async function queueMissingCorporations(
-    missingCorporations: MissingCorporation[]
-): Promise<void> {
-    const BATCH_SIZE = 10000;
-
-    // Sort by character count (descending) to prioritize corporations with more characters
-    const sortedCorps = missingCorporations.sort(
-        (a, b) => b.character_count - a.character_count
-    );
-
-    for (let i = 0; i < sortedCorps.length; i += BATCH_SIZE) {
-        const batch = sortedCorps.slice(i, i + BATCH_SIZE);
-        const corporationsToQueue = batch.map((corp) => ({
-            corporationId: corp.corporation_id,
-            priority: corp.character_count > 100 ? 10 : 5, // Higher priority for corps with many characters
-        }));
-
-        await queueBulkUpdateCorporations(corporationsToQueue);
-        cliLogger.info(
-            `Queued ${corporationsToQueue.length} corporations (batch ${
-                Math.floor(i / BATCH_SIZE) + 1
-            })`
-        );
-    }
-}
-
-/**
- * Queue entities in bulk batches
- */
-async function queueEntitiesBatch(
-    charactersToQueue: Set<number>,
-    corporationsToQueue: Set<number>,
-    alliancesToQueue: Set<number>
-): Promise<void> {
-    // Queue characters
-    if (charactersToQueue.size > 0) {
-        const characters = Array.from(charactersToQueue).map((characterId) => ({
-            characterId,
+async function queueOutlierImmediately(outlier: OutlierData): Promise<void> {
+    // Queue character
+    await queueBulkUpdateCharacters([
+        {
+            characterId: outlier.character_id,
             priority: 5,
-        }));
-        await queueBulkUpdateCharacters(characters);
-        cliLogger.info(`Queued ${characters.length} characters for update`);
-    }
+        },
+    ]);
 
-    // Queue corporations
-    if (corporationsToQueue.size > 0) {
-        const corporations = Array.from(corporationsToQueue).map(
-            (corporationId) => ({
-                corporationId,
-                priority: 5,
-            })
-        );
-        await queueBulkUpdateCorporations(corporations);
-        cliLogger.info(`Queued ${corporations.length} corporations for update`);
-    }
-
-    // Queue alliances
-    if (alliancesToQueue.size > 0) {
-        const alliances = Array.from(alliancesToQueue).map((allianceId) => ({
-            allianceId,
+    // Queue corporation
+    await queueBulkUpdateCorporations([
+        {
+            corporationId: outlier.corporation_id,
             priority: 5,
-        }));
-        await queueBulkUpdateAlliances(alliances);
-        cliLogger.info(`Queued ${alliances.length} alliances for update`);
+        },
+    ]);
+
+    // Queue alliances if they exist
+    const alliancesToQueue: { allianceId: number; priority: number }[] = [];
+
+    if (outlier.current_alliance_id > 0) {
+        alliancesToQueue.push({
+            allianceId: outlier.current_alliance_id,
+            priority: 5,
+        });
+    }
+    if (
+        outlier.expected_alliance_id > 0 &&
+        outlier.expected_alliance_id !== outlier.current_alliance_id
+    ) {
+        alliancesToQueue.push({
+            allianceId: outlier.expected_alliance_id,
+            priority: 5,
+        });
+    }
+
+    if (alliancesToQueue.length > 0) {
+        await queueBulkUpdateAlliances(alliancesToQueue);
     }
 }

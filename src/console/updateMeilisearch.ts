@@ -84,7 +84,7 @@ export default {
             flags: "-b, --batch-size <size>",
             description:
                 "Number of documents to process per batch (default: 500)",
-            defaultValue: "10000",
+            defaultValue: "100000",
         },
     ],
     examples: [
@@ -105,7 +105,7 @@ export default {
             "items",
         ];
 
-        const batchSize = parseInt(cmdOptions.batchSize || "10000", 10);
+        const batchSize = parseInt(cmdOptions.batchSize || "100000", 10);
 
         const entitiesToUpdate: EntityType[] = cmdOptions.update
             ? cmdOptions.update === "all"

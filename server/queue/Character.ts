@@ -1,6 +1,8 @@
 import { getCharacter, getCharacterHistory } from "~/server/helpers/ESIData";
 import { cliLogger } from "~/server/helpers/Logger";
 import { createQueue } from "~/server/helpers/Queue";
+import { Corporations } from "~/server/models/Corporations";
+import { queueUpdateCorporation } from "~/server/queue/Corporation";
 
 const characterQueue = createQueue("character");
 const characterHistoryQueue = createQueue("characterhistory");
@@ -60,9 +62,6 @@ async function queueBulkUpdateCharacters(
     }));
 
     await characterQueue.addBulk(bulkJobs);
-    cliLogger.info(
-        `Character queue: Added ${characters.length} character jobs in bulk`
-    );
 }
 
 async function queueUpdateCharacterHistory(characterId: number, priority = 1) {
@@ -82,7 +81,29 @@ async function queueUpdateCharacterHistory(characterId: number, priority = 1) {
 }
 
 async function updateCharacter(characterId: number) {
-    await getCharacter(characterId, true);
+    const characterData = await getCharacter(characterId, true);
+
+    // Check if the corporation exists, if not queue it for update
+    if (characterData.corporation_id && characterData.corporation_id > 0) {
+        try {
+            const corporation = await Corporations.findOne({
+                corporation_id: characterData.corporation_id,
+            });
+
+            if (!corporation) {
+                await queueUpdateCorporation(characterData.corporation_id, 2); // Higher priority
+                cliLogger.info(
+                    `Queued corporation ${characterData.corporation_id} for character ${characterId}`
+                );
+            }
+        } catch (error) {
+            cliLogger.error(
+                `Error checking/queuing corporation for character ${characterId}: ${
+                    error instanceof Error ? error.message : String(error)
+                }`
+            );
+        }
+    }
 }
 
 async function updateCharacterHistory(characterId: number) {

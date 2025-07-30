@@ -4,6 +4,8 @@ import {
 } from "~/server/helpers/ESIData";
 import { cliLogger } from "~/server/helpers/Logger";
 import { createQueue } from "~/server/helpers/Queue";
+import { Alliances } from "~/server/models/Alliances";
+import { queueUpdateAlliance } from "~/server/queue/Alliance";
 
 const corporationQueue = createQueue("corporation");
 const corporationHistoryQueue = createQueue("corporationhistory");
@@ -55,9 +57,6 @@ async function queueBulkUpdateCorporations(
     }));
 
     await corporationQueue.addBulk(bulkJobs);
-    cliLogger.info(
-        `Corporation queue: Added ${corporations.length} corporation jobs in bulk`
-    );
 }
 
 async function queueUpdateCorporationHistory(
@@ -80,7 +79,29 @@ async function queueUpdateCorporationHistory(
 }
 
 async function updateCorporation(corporationId: number) {
-    await getCorporation(corporationId, true);
+    const corporationData = await getCorporation(corporationId, true);
+
+    // Check if the alliance exists, if not queue it for update
+    if (corporationData.alliance_id && corporationData.alliance_id > 0) {
+        try {
+            const alliance = await Alliances.findOne({
+                alliance_id: corporationData.alliance_id,
+            });
+
+            if (!alliance) {
+                await queueUpdateAlliance(corporationData.alliance_id, 2); // Higher priority
+                cliLogger.info(
+                    `Queued alliance ${corporationData.alliance_id} for corporation ${corporationId}`
+                );
+            }
+        } catch (error) {
+            cliLogger.error(
+                `Error checking/queuing alliance for corporation ${corporationId}: ${
+                    error instanceof Error ? error.message : String(error)
+                }`
+            );
+        }
+    }
 }
 
 async function updateCorporationHistory(corporationId: number) {

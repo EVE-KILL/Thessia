@@ -51,9 +51,6 @@ async function queueBulkUpdateAlliances(
     }));
 
     await allianceQueue.addBulk(bulkJobs);
-    cliLogger.info(
-        `Alliance queue: Added ${alliances.length} alliance jobs in bulk`
-    );
 }
 
 async function updateAlliance(allianceId: number) {
