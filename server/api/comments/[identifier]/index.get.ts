@@ -13,18 +13,17 @@ export default defineEventHandler(async (event) => {
     }
 
     try {
-        cliLogger.debug(`Fetching comments for killIdentifier: ${identifier}`);
-
         // Always hide deleted comments from everyone
         const query = {
             killIdentifier: identifier,
             deleted: false,
         };
 
-        cliLogger.debug(`Comment query: ${JSON.stringify(query)}`);
-
         // Fetch comments for the given kill identifier, sorted by createdAt in descending order
-        const comments = await Comments.find(query).sort({ createdAt: -1 }).lean().exec();
+        const comments = await Comments.find(query)
+            .sort({ createdAt: -1 })
+            .lean()
+            .exec();
 
         return comments;
     } catch (error) {

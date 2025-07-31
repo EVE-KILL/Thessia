@@ -48,10 +48,6 @@ export default defineCachedEventHandler(
 
             // If no stats exist, create placeholder and queue for processing
             if (!stats) {
-                console.log(
-                    `No stats found for ${type} ${id} days:${days} - creating placeholder and queuing`
-                );
-
                 const placeholderStats = await createPlaceholderStats(
                     type,
                     id,
@@ -74,10 +70,6 @@ export default defineCachedEventHandler(
 
                 // Queue high-priority job for immediate processing
                 await addStatsJob(type, id, days, 1); // Priority 1 = highest priority
-
-                console.log(
-                    `Created placeholder and queued high-priority job for ${type} ${id} days:${days}`
-                );
             }
 
             // Return data based on requested type (from existing DB data only)
