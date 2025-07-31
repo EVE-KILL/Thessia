@@ -18,7 +18,6 @@
 *   [Prices API](./prices.md)
 *   [Proxy API](./proxy.md)
 *   [Query API](./query.md)
-*   [RedisQ API](./redisq.md)
 *   [Regions API](./regions.md)
 *   [Search API](./search.md)
 *   [Site API](./site.md)
