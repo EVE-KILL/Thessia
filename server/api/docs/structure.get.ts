@@ -156,6 +156,9 @@ export default defineCachedEventHandler(
     },
     {
         maxAge: 1000 * 60 * 10, // Cache for 10 minutes
+        shouldBypassCache: (event) => {
+            return process.env.NODE_ENV !== "production";
+        },
         getKey: () => "docs:structure",
     }
 );

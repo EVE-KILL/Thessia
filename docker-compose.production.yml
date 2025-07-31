@@ -1,0 +1,179 @@
+networks:
+    internet:
+        external: true
+
+services:
+    app:
+        image: ghcr.io/eve-kill/thessia:latest
+        container_name: app
+        build:
+            context: .
+            dockerfile: Dockerfile
+        restart: unless-stopped
+        ports:
+            - 3000:3000
+        networks:
+            - internet
+        environment:
+            MONGO_URI: "mongodb://mongodb:27017/thessia"
+            REDIS_URI: "redis"
+            REDIS_PORT: 6379
+            REDIS_DB: 0
+
+    redisq:
+        image: ghcr.io/eve-kill/thessia:latest
+        container_name: redisq
+        build:
+            context: .
+            dockerfile: Dockerfile
+        restart: unless-stopped
+        command: ["/bin/sh", "-c", "./bin/console redisq"]
+        networks:
+            - internet
+        environment:
+            MONGO_URI: "mongodb://mongodb:27017/thessia"
+            REDIS_URI: "redis"
+            REDIS_PORT: 6379
+            REDIS_DB: 0
+
+    processWars:
+        image: ghcr.io/eve-kill/thessia:latest
+        container_name: redisq
+        build:
+            context: .
+            dockerfile: Dockerfile
+        restart: unless-stopped
+        command: ["/bin/sh", "-c", "./bin/queue", "processWars"]
+        networks:
+            - internet
+        environment:
+            MONGO_URI: "mongodb://mongodb:27017/thessia"
+            REDIS_URI: "redis"
+            REDIS_PORT: 6379
+            REDIS_DB: 0
+    processStats:
+        image: ghcr.io/eve-kill/thessia:latest
+        container_name: redisq
+        build:
+            context: .
+            dockerfile: Dockerfile
+        restart: unless-stopped
+        command: ["/bin/sh", "-c", "./bin/queue", "processStats"]
+        networks:
+            - internet
+        environment:
+            MONGO_URI: "mongodb://mongodb:27017/thessia"
+            REDIS_URI: "redis"
+            REDIS_PORT: 6379
+            REDIS_DB: 0
+
+    processKillmails:
+        image: ghcr.io/eve-kill/thessia:latest
+        container_name: redisq
+        build:
+            context: .
+            dockerfile: Dockerfile
+        restart: unless-stopped
+        command: ["/bin/sh", "-c", "./bin/queue", "processKillmails"]
+        networks:
+            - internet
+        environment:
+            MONGO_URI: "mongodb://mongodb:27017/thessia"
+            REDIS_URI: "redis"
+            REDIS_PORT: 6379
+            REDIS_DB: 0
+
+    processHistoricalStats:
+        image: ghcr.io/eve-kill/thessia:latest
+        container_name: redisq
+        build:
+            context: .
+            dockerfile: Dockerfile
+        restart: unless-stopped
+        command: ["/bin/sh", "-c", "./bin/queue", "processHistoricalStats"]
+        networks:
+            - internet
+        environment:
+            MONGO_URI: "mongodb://mongodb:27017/thessia"
+            REDIS_URI: "redis"
+            REDIS_PORT: 6379
+            REDIS_DB: 0
+
+    processEntities:
+        image: ghcr.io/eve-kill/thessia:latest
+        container_name: redisq
+        build:
+            context: .
+            dockerfile: Dockerfile
+        restart: unless-stopped
+        command: ["/bin/sh", "-c", "./bin/queue", "processEntities"]
+        networks:
+            - internet
+        environment:
+            MONGO_URI: "mongodb://mongodb:27017/thessia"
+            REDIS_URI: "redis"
+            REDIS_PORT: 6379
+            REDIS_DB: 0
+
+    processCampaigns:
+        image: ghcr.io/eve-kill/thessia:latest
+        container_name: redisq
+        build:
+            context: .
+            dockerfile: Dockerfile
+        restart: unless-stopped
+        command: ["/bin/sh", "-c", "./bin/queue", "processCampaigns"]
+        networks:
+            - internet
+        environment:
+            MONGO_URI: "mongodb://mongodb:27017/thessia"
+            REDIS_URI: "redis"
+            REDIS_PORT: 6379
+            REDIS_DB: 0
+
+    processAchievements:
+        image: ghcr.io/eve-kill/thessia:latest
+        container_name: redisq
+        build:
+            context: .
+            dockerfile: Dockerfile
+        restart: unless-stopped
+        command: ["/bin/sh", "-c", "./bin/queue", "processAchievements"]
+        networks:
+            - internet
+        environment:
+            MONGO_URI: "mongodb://mongodb:27017/thessia"
+            REDIS_URI: "redis"
+            REDIS_PORT: 6379
+            REDIS_DB: 0
+
+    meilisearch:
+        image: getmeili/meilisearch:latest
+        container_name: meilisearch
+        volumes:
+            - ./.data/meilisearch:/meili_data
+        ports:
+            - 7700:7700
+
+    redis:
+        image: library/redis:latest
+        container_name: redis
+        volumes:
+            - ./.data/redis:/data
+        ports:
+            - 127.0.0.1:6379:6379
+        networks:
+            - internet
+        restart: unless-stopped
+
+    mongodb:
+        image: library/mongo:latest
+        container_name: mongodb
+        volumes:
+            - ./.data/mongo:/data/db
+        ports:
+            - 127.0.0.1:27017:27017
+        networks:
+            - internet
+        command: ["--directoryperdb"]
+        restart: unless-stopped

@@ -34,7 +34,7 @@
                     <!-- Navigation tree -->
                     <div v-else class="nav-tree">
                         <DocsNavItem v-for="item in docsStructure" :key="item.path" :item="item"
-                            :current-path="currentDocPath" @navigate="handleNavigation" />
+                            :current-path="currentPath" @navigate="handleNavigation" />
                     </div>
                 </nav>
             </aside>
@@ -133,48 +133,102 @@ useSeoMeta({
     ogDescription: t('docs.description'),
 });
 
-// Reactive state
-const currentDocPath = ref<string>('');
-const currentDoc = ref<DocContent | null>(null);
+// Initialize currentDocPath from route immediately
+const getCurrentDocPath = () => {
+    try {
+        if (route.params.path) {
+            if (Array.isArray(route.params.path)) {
+                const joined = route.params.path.join('/');
+                return joined || 'index';
+            } else if (typeof route.params.path === 'string') {
+                return route.params.path;
+            }
+        }
+    } catch (error) {
+        console.warn('Error getting current doc path:', error);
+    }
+    return 'index';
+};
 
-// Fetch documentation structure
+const currentDocPath = ref<string>(getCurrentDocPath());
+
+// Fetch documentation structure using useAsyncData to avoid caching issues
 const {
     data: structureData,
     pending: structurePending,
-    error: structureError
-} = await useFetch<{ structure: DocFile[]; error: string | null }>('/api/docs/structure');
+    error: structureError,
+    refresh: refreshStructure
+} = await useAsyncData<{ structure: DocFile[]; error: string | null }>(
+    'docs-structure',
+    async () => {
+        try {
+            // Add cache busting only in development
+            const isDev = process.env.NODE_ENV === 'development';
+            const url = isDev
+                ? `/api/docs/structure?_t=${Date.now()}`
+                : '/api/docs/structure';
+
+            const response = await $fetch<{ structure: DocFile[]; error: string | null }>(url);
+            return response;
+        } catch (error) {
+            console.error('Error fetching docs structure:', error);
+            return { structure: [], error: 'Failed to load documentation structure' };
+        }
+    },
+    {
+        server: true, // Ensure this runs on the server
+        lazy: false // Don't delay the initial render
+    }
+);
 
 const docsStructure = computed(() => structureData.value?.structure || []);
 
-// Fetch current document content
+// Computed current path for reactive navigation
+const currentPath = computed(() => currentDocPath.value || 'index');
+
+// Fetch current document content using useAsyncData like the kill page
 const {
-    data: contentData,
+    data: currentDoc,
     pending: contentPending,
     error: contentError,
     refresh: refreshContent
-} = await useFetch<DocContent>(() => `/api/docs/${currentDocPath.value || 'index'}`, {
-    key: () => `doc-content-${currentDocPath.value || 'index'}`,
-    watch: [currentDocPath]
-});
+} = await useAsyncData<DocContent | null>(
+    `doc-content-${currentDocPath.value || 'index'}`,
+    async () => {
+        const path = currentDocPath.value || 'index';
 
-// Update current doc when content changes
-watch(contentData, (newData) => {
-    if (newData) {
-        currentDoc.value = newData;
+        try {
+            // Add cache busting only in development
+            const isDev = process.env.NODE_ENV === 'development';
+            const url = isDev
+                ? `/api/docs/content/${path}?_t=${Date.now()}`
+                : `/api/docs/content/${path}`;
+
+            const response = await $fetch<DocContent>(url);
+            return response;
+        } catch (error) {
+            console.error('Error fetching content for:', path, error);
+            return null;
+        }
+    },
+    {
+        server: true, // Ensure this runs on the server
+        lazy: false, // Don't delay the initial render
+        watch: [currentDocPath] // Re-fetch when currentDocPath changes
     }
-}, { immediate: true });
+);
 
 // Computed properties
 const renderedContent = computed(() => {
-    if (!currentDoc.value?.content) return '';
+    if (!currentDoc.value?.content) {
+        return '';
+    }
 
     try {
         // Configure marked with better options (similar to Comment.vue)
         marked.setOptions({
             breaks: true,
-            gfm: true,
-            headerIds: true,
-            mangle: false
+            gfm: true
         });
 
         // Create custom renderer for links
@@ -226,9 +280,9 @@ const renderedContent = computed(() => {
                     transformedUrl = url.replace('.md', '');
                 }
 
-                // Create internal link to docs viewer
+                // Create internal link to docs viewer with special class for Vue Router handling
                 const docsUrl = `/docs/${transformedUrl}`;
-                return `<a href="${docsUrl}" title="${linkTitle}">${linkText}</a>`;
+                return `<a href="${docsUrl}" title="${linkTitle}" class="internal-docs-link" data-docs-path="${transformedUrl}">${linkText}</a>`;
             }
 
             // External links - open in new tab
@@ -275,15 +329,17 @@ const renderedContent = computed(() => {
         });
 
         const rawHTML = marked.parse(currentDoc.value.content);
-        return DOMPurify.sanitize(rawHTML, {
+        const sanitizedHTML = DOMPurify.sanitize(rawHTML, {
             ADD_TAGS: ['iframe', 'blockquote', 'table', 'thead', 'tbody', 'tr', 'th', 'td', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6'],
-            ADD_ATTR: ['target', 'rel', 'href', 'src', 'alt', 'title', 'id', 'class'],
+            ADD_ATTR: ['target', 'rel', 'href', 'src', 'alt', 'title', 'id', 'class', 'data-docs-path'],
             FORBID_TAGS: ['script', 'style', 'form', 'input', 'button', 'textarea', 'select', 'option'],
             FORBID_ATTR: ['onerror', 'onload', 'onclick', 'onmouseover', 'onmouseout', 'eval'],
         });
+
+        return sanitizedHTML;
     } catch (error) {
-        console.error('Error rendering markdown:', error);
-        return DOMPurify.sanitize(currentDoc.value.content);
+        console.error('Error rendering markdown for', currentDocPath.value, ':', error);
+        return `<div class="error">Failed to render content: ${error.message}</div>`;
     }
 });
 
@@ -307,34 +363,85 @@ const breadcrumbs = computed<BreadcrumbItem[]>(() => {
 });
 
 // Methods
-const handleNavigation = (path: string) => {
+const handleNavigation = async (path: string) => {
     if (path === currentDocPath.value) return;
 
-    router.push(`/docs/${path}`);
+    console.log('Navigation triggered to:', path);
+
+    // Update the path first
+    currentDocPath.value = path;
+
+    // Navigate to the new route
+    await router.push(`/docs/${path}`);
+
+    // The useAsyncData will automatically re-fetch due to the watch on currentDocPath
 };
 
-// Route watching
-watch(() => route.params.path, (newPath) => {
+// Handle clicks on internal docs links
+const handleInternalLinkClick = (event: Event) => {
+    const target = event.target as HTMLElement;
+    const link = target.closest('.internal-docs-link') as HTMLAnchorElement;
+
+    if (link) {
+        // Check for modifier keys (allow opening in new tab/window)
+        const mouseEvent = event as MouseEvent;
+        if (mouseEvent.ctrlKey || mouseEvent.metaKey || mouseEvent.shiftKey || mouseEvent.button === 1) {
+            return; // Let browser handle modified clicks
+        }
+
+        event.preventDefault();
+        const docsPath = link.dataset.docsPath;
+        if (docsPath) {
+            handleNavigation(docsPath);
+        }
+    }
+};// Route watching - update path when route changes
+watch(() => route.params.path, async (newPath) => {
+    let newDocPath = '';
     if (Array.isArray(newPath)) {
-        currentDocPath.value = newPath.join('/');
+        newDocPath = newPath.join('/');
     } else if (newPath) {
-        currentDocPath.value = newPath;
+        newDocPath = newPath;
     } else {
-        currentDocPath.value = 'index';
+        newDocPath = 'index';
+    }
+
+    // Only update if path actually changed
+    if (newDocPath !== currentDocPath.value) {
+        console.log('Route changed, updating path from:', currentDocPath.value, 'to:', newDocPath);
+        currentDocPath.value = newDocPath;
+
+        // The useAsyncData will automatically re-fetch due to the watch on currentDocPath
     }
 }, { immediate: true });
 
-// Initialize
-onMounted(() => {
-    if (route.params.path) {
-        if (Array.isArray(route.params.path)) {
-            currentDocPath.value = route.params.path.join('/');
-        } else {
-            currentDocPath.value = route.params.path;
+// Also watch the full route path to catch any changes
+watch(() => route.fullPath, (newPath) => {
+    // Extract the docs path from the full path
+    const docsMatch = newPath.match(/^\/docs\/(.+)$/);
+    if (docsMatch) {
+        const extractedPath = docsMatch[1];
+        if (extractedPath !== currentDocPath.value) {
+            console.log('Full path changed, updating currentDocPath to:', extractedPath);
+            currentDocPath.value = extractedPath;
         }
-    } else {
-        currentDocPath.value = 'index';
+    } else if (newPath === '/docs' || newPath === '/docs/') {
+        if (currentDocPath.value !== 'index') {
+            console.log('Navigation to docs root, setting to index');
+            currentDocPath.value = 'index';
+        }
     }
+});
+
+// Initialize - no longer needed since we initialize currentDocPath from route immediately
+onMounted(() => {
+    // Add click handler for internal docs links
+    document.addEventListener('click', handleInternalLinkClick);
+});
+
+// Cleanup
+onUnmounted(() => {
+    document.removeEventListener('click', handleInternalLinkClick);
 });
 </script>
 
@@ -564,6 +671,15 @@ onMounted(() => {
 .markdown-content a:hover {
     color: rgb(147, 197, 253);
     text-decoration: underline;
+}
+
+.markdown-content .internal-docs-link {
+    cursor: pointer;
+    transition: color 0.2s ease;
+}
+
+.markdown-content .internal-docs-link:hover {
+    color: rgb(147, 197, 253);
 }
 
 .markdown-content ul,

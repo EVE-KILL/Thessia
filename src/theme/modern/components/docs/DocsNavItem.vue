@@ -52,7 +52,7 @@ const isActive = computed(() => {
 });
 
 const isChildActive = computed(() => {
-    if (!props.item.children) return false;
+    if (!props.item.children || !props.currentPath) return false;
     return props.item.children.some(child =>
         props.currentPath.startsWith(child.path)
     );
@@ -75,7 +75,7 @@ const formatName = (name: string) => {
 
 // Auto-expand if child is active
 watch(() => props.currentPath, (newPath) => {
-    if (props.item.type === 'directory' && props.item.children) {
+    if (props.item.type === 'directory' && props.item.children && newPath) {
         const hasActiveChild = props.item.children.some(child =>
             newPath === child.path || newPath.startsWith(child.path + '/')
         );

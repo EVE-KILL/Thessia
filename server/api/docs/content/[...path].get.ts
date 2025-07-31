@@ -42,16 +42,13 @@ async function getDocsDirectory(): Promise<string | null> {
         for (const path of possiblePaths) {
             try {
                 await fs.access(path);
-                console.log(`Found docs directory at: ${path}`);
                 return path;
             } catch {
-                console.log(`Docs directory not found at: ${path}`);
                 continue;
             }
         }
     }
 
-    console.error("No docs directory found in any location");
     return null;
 }
 
@@ -134,7 +131,10 @@ export default defineCachedEventHandler(
         }
     },
     {
-        maxAge: 1000 * 60 * 5, // Cache for 5 minutes
+        maxAge: 60 * 5, // Cache for 5 minutes
+        shouldBypassCache: (event) => {
+            return process.env.NODE_ENV !== "production";
+        },
         getKey: (event) => {
             const params = getRouterParams(event);
             let path = params.path;
