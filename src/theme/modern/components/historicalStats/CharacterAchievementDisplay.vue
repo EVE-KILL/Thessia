@@ -37,7 +37,7 @@
                     <div class="w-[68%] flex items-center">
                         <NuxtLink :to="`/character/${item.character_id}`" class="flex items-center">
                             <Image type="character" :id="item.character_id" :alt="`${item.character_name}`"
-                                class="w-8 h-8 mr-3 rounded-full" size="64" format="webp" />
+                                class="w-8 h-8 mr-3 rounded-full" size="64" />
                             <span class="character-name truncate">{{ item.character_name }}</span>
                         </NuxtLink>
                     </div>
@@ -127,9 +127,12 @@ const formatNumber = (num: number): string => {
 }
 
 @keyframes pulse {
-    0%, 100% {
+
+    0%,
+    100% {
         opacity: 0.7;
     }
+
     50% {
         opacity: 0.4;
     }

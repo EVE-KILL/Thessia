@@ -25,8 +25,7 @@
                             @click="goToCharacter(character.character_id)">
                             <div class="relative portrait-container">
                                 <Image type="character" :id="character.character_id" :alt="character.name"
-                                    class="rounded-full w-16 h-16 sm:w-20 sm:h-20 portrait-image" format="webp"
-                                    size="128" />
+                                    class="rounded-full w-16 h-16 sm:w-20 sm:h-20 portrait-image" size="128" />
                             </div>
                             <div class="mt-2 text-center text-sm text-gray-300 truncate w-full">{{ character.name }}
                             </div>

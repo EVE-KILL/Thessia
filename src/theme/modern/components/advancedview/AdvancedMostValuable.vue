@@ -79,20 +79,20 @@ const isPriorityImage = (index: number): boolean => {
 <template>
     <div class="flex flex-col min-w-full rounded-lg overflow-hidden">
         <!-- Display error message if no items and not loading -->
-        <div v-if="!loading && displayItems.length === 0"
-            class="p-4 text-center text-gray-500 dark:text-gray-400">
+        <div v-if="!loading && displayItems.length === 0" class="p-4 text-center text-gray-500 dark:text-gray-400">
             {{ t('noData') }}
         </div>
 
         <!-- Use our custom Table component with horizontal layout -->
         <Table :columns="[]" :items="displayItems" :loading="loading" :skeleton-count="props.limit"
-            :empty-text="t('noData')" :empty-icon="'i-lucide-file-text'" horizontal :horizontal-items-per-row="isMobile ? 2 : props.limit"
-            :link-fn="generateKillLink" background="transparent" hover>
+            :empty-text="t('noData')" :empty-icon="'i-lucide-file-text'" horizontal
+            :horizontal-items-per-row="isMobile ? 2 : props.limit" :link-fn="generateKillLink" background="transparent"
+            hover>
             <!-- Custom horizontal item template -->
             <template #horizontal-item="{ item, index }">
                 <div class="flex flex-col items-center p-2">
                     <Image type="type-render" :id="item.victim.ship_id" :alt="`Ship: ${getShipName(item)}`"
-                        class="rounded w-20 h-20 md:w-24 md:h-24 object-contain mb-2" size="256" format="webp"
+                        class="rounded w-20 h-20 md:w-24 md:h-24 object-contain mb-2" size="256"
                         :loading="index < 7 ? 'eager' : 'lazy'" :priority="isPriorityImage(index)" />
                     <div class="text-center text-xs mt-1 max-w-full truncate text-gray-900 dark:text-white">
                         {{ getShipName(item) }}
@@ -101,7 +101,8 @@ const isPriorityImage = (index: number): boolean => {
                         {{ formatIsk(item.total_value) }} ISK
                     </div>
                     <!-- Show victim name if available -->
-                    <div v-if="item.victim.character_name" class="text-center text-xs mt-1 text-gray-400 dark:text-background-400 truncate max-w-full">
+                    <div v-if="item.victim.character_name"
+                        class="text-center text-xs mt-1 text-gray-400 dark:text-background-400 truncate max-w-full">
                         {{ item.victim.character_name }}
                     </div>
                 </div>

@@ -13,10 +13,14 @@
                     </div>
 
                     <!-- Change headers -->
-                    <div v-if="shouldShowColumnOnMobile.change1d" class="text-right">{{ t('historicalStats.change1d') }}</div>
-                    <div v-if="shouldShowColumnOnMobile.change7d" class="text-right">{{ t('historicalStats.change7d') }}</div>
-                    <div v-if="shouldShowColumnOnMobile.change14d" class="text-right">{{ t('historicalStats.change14d') }}</div>
-                    <div v-if="shouldShowColumnOnMobile.change30d" class="text-right">{{ t('historicalStats.change30d') }}</div>
+                    <div v-if="shouldShowColumnOnMobile.change1d" class="text-right">{{ t('historicalStats.change1d') }}
+                    </div>
+                    <div v-if="shouldShowColumnOnMobile.change7d" class="text-right">{{ t('historicalStats.change7d') }}
+                    </div>
+                    <div v-if="shouldShowColumnOnMobile.change14d" class="text-right">{{ t('historicalStats.change14d')
+                        }}</div>
+                    <div v-if="shouldShowColumnOnMobile.change30d" class="text-right">{{ t('historicalStats.change30d')
+                        }}</div>
 
                     <!-- Security status header -->
                     <div v-if="shouldShowColumnOnMobile.secStatus" class="text-right">
@@ -45,14 +49,22 @@
                         <div class="h-4 w-32 bg-gray-700 rounded animate-pulse"></div>
                     </div>
                     <div class="w-[50%] grid" :class="getColumnsClass()">
-                        <div v-if="shouldShowColumnOnMobile.memberCount" class="h-4 bg-gray-700 rounded animate-pulse"></div>
-                        <div v-if="shouldShowColumnOnMobile.change1d" class="h-4 bg-gray-700 rounded animate-pulse"></div>
-                        <div v-if="shouldShowColumnOnMobile.change7d" class="h-4 bg-gray-700 rounded animate-pulse"></div>
-                        <div v-if="shouldShowColumnOnMobile.change14d" class="h-4 bg-gray-700 rounded animate-pulse"></div>
-                        <div v-if="shouldShowColumnOnMobile.change30d" class="h-4 bg-gray-700 rounded animate-pulse"></div>
-                        <div v-if="shouldShowColumnOnMobile.secStatus" class="h-4 bg-gray-700 rounded animate-pulse"></div>
-                        <div v-if="shouldShowColumnOnMobile.dateFounded" class="h-4 bg-gray-700 rounded animate-pulse"></div>
-                        <div v-if="shouldShowColumnOnMobile.achievementPoints" class="h-4 bg-gray-700 rounded animate-pulse"></div>
+                        <div v-if="shouldShowColumnOnMobile.memberCount" class="h-4 bg-gray-700 rounded animate-pulse">
+                        </div>
+                        <div v-if="shouldShowColumnOnMobile.change1d" class="h-4 bg-gray-700 rounded animate-pulse">
+                        </div>
+                        <div v-if="shouldShowColumnOnMobile.change7d" class="h-4 bg-gray-700 rounded animate-pulse">
+                        </div>
+                        <div v-if="shouldShowColumnOnMobile.change14d" class="h-4 bg-gray-700 rounded animate-pulse">
+                        </div>
+                        <div v-if="shouldShowColumnOnMobile.change30d" class="h-4 bg-gray-700 rounded animate-pulse">
+                        </div>
+                        <div v-if="shouldShowColumnOnMobile.secStatus" class="h-4 bg-gray-700 rounded animate-pulse">
+                        </div>
+                        <div v-if="shouldShowColumnOnMobile.dateFounded" class="h-4 bg-gray-700 rounded animate-pulse">
+                        </div>
+                        <div v-if="shouldShowColumnOnMobile.achievementPoints"
+                            class="h-4 bg-gray-700 rounded animate-pulse"></div>
                     </div>
                 </div>
             </div>
@@ -75,7 +87,7 @@
                     <div class="w-[43%] flex items-center">
                         <NuxtLink :to="`/${props.entityType}/${item.id}`" class="flex items-center">
                             <Image :type="props.entityType" :id="item.id" :alt="`${item.name}`"
-                                class="w-8 h-8 mr-3 rounded-full" size="64" format="webp" />
+                                class="w-8 h-8 mr-3 rounded-full" size="64" />
                             <span class="entity-name truncate">{{ item.name }}</span>
                         </NuxtLink>
                     </div>
@@ -86,16 +98,20 @@
                         </div>
 
                         <!-- Changes -->
-                        <div v-if="shouldShowColumnOnMobile.change1d" :class="getChangeClass(item.change_1d)" class="text-right">
+                        <div v-if="shouldShowColumnOnMobile.change1d" :class="getChangeClass(item.change_1d)"
+                            class="text-right">
                             {{ formatChange(item.change_1d) }}
                         </div>
-                        <div v-if="shouldShowColumnOnMobile.change7d" :class="getChangeClass(item.change_7d)" class="text-right">
+                        <div v-if="shouldShowColumnOnMobile.change7d" :class="getChangeClass(item.change_7d)"
+                            class="text-right">
                             {{ formatChange(item.change_7d) }}
                         </div>
-                        <div v-if="shouldShowColumnOnMobile.change14d" :class="getChangeClass(item.change_14d)" class="text-right">
+                        <div v-if="shouldShowColumnOnMobile.change14d" :class="getChangeClass(item.change_14d)"
+                            class="text-right">
                             {{ formatChange(item.change_14d) }}
                         </div>
-                        <div v-if="shouldShowColumnOnMobile.change30d" :class="getChangeClass(item.change_30d)" class="text-right">
+                        <div v-if="shouldShowColumnOnMobile.change30d" :class="getChangeClass(item.change_30d)"
+                            class="text-right">
                             {{ formatChange(item.change_30d) }}
                         </div>
 

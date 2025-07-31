@@ -274,28 +274,17 @@ const getSystemsDisplay = (battle: IBattlesDocument) => {
         <div class="bg-background-800 p-4 rounded-lg shadow-lg border border-gray-700/30">
             <!-- Search Input -->
             <div class="mb-4">
-                <UInput
-                    v-model="searchQuery"
-                    :placeholder="t('battle.search.placeholder')"
-                    icon="lucide:search"
-                    size="lg"
-                    :ui="{
+                <UInput v-model="searchQuery" :placeholder="t('battle.search.placeholder')" icon="lucide:search"
+                    size="lg" :ui="{
                         icon: {
                             trailing: {
                                 pointer: '',
                             },
                         },
-                    }"
-                >
+                    }">
                     <template #trailing>
-                        <UButton
-                            v-show="searchQuery !== ''"
-                            color="gray"
-                            variant="link"
-                            icon="lucide:x"
-                            :padded="false"
-                            @click="searchQuery = ''"
-                        />
+                        <UButton v-show="searchQuery !== ''" color="gray" variant="link" icon="lucide:x" :padded="false"
+                            @click="searchQuery = ''" />
                     </template>
                 </UInput>
             </div>
@@ -303,34 +292,20 @@ const getSystemsDisplay = (battle: IBattlesDocument) => {
             <!-- Filter Buttons -->
             <div class="flex flex-col sm:flex-row gap-2">
                 <div class="flex gap-2 flex-wrap">
-                    <UButton
-                        :variant="filter === 'all' ? 'solid' : 'outline'"
-                        :color="filter === 'all' ? 'primary' : 'gray'"
-                        @click="setFilter('all')"
-                        size="sm"
-                    >
+                    <UButton :variant="filter === 'all' ? 'solid' : 'outline'"
+                        :color="filter === 'all' ? 'primary' : 'gray'" @click="setFilter('all')" size="sm">
                         {{ t('battle.filter.all') }}
                     </UButton>
-                    <UButton
-                        :variant="filter === 'custom' ? 'solid' : 'outline'"
-                        :color="filter === 'custom' ? 'primary' : 'gray'"
-                        @click="setFilter('custom')"
-                        size="sm"
-                    >
+                    <UButton :variant="filter === 'custom' ? 'solid' : 'outline'"
+                        :color="filter === 'custom' ? 'primary' : 'gray'" @click="setFilter('custom')" size="sm">
                         {{ t('battle.filter.custom') }}
                     </UButton>
                 </div>
 
                 <!-- Clear Filters Button -->
                 <div class="flex justify-end sm:ml-auto">
-                    <UButton
-                        v-if="hasActiveFilters"
-                        variant="outline"
-                        color="red"
-                        size="sm"
-                        icon="lucide:x"
-                        @click="clearAllFilters"
-                    >
+                    <UButton v-if="hasActiveFilters" variant="outline" color="red" size="sm" icon="lucide:x"
+                        @click="clearAllFilters">
                         {{ t('battle.filter.clear') }}
                     </UButton>
                 </div>
@@ -421,8 +396,7 @@ const getSystemsDisplay = (battle: IBattlesDocument) => {
                         <template v-for="(system, index) in getSystemsDisplay(item)"
                             :key="`system-${system.id}-${index}`">
                             <div class="flex items-center gap-2 cursor-pointer">
-                                <Image :id="system.id" type="system" size="24" format="webp"
-                                    class="w-6 h-6 rounded flex-shrink-0" />
+                                <Image :id="system.id" type="system" size="24" class="w-6 h-6 rounded flex-shrink-0" />
                                 <div class="text-sm">
                                     <span class="hover:underline">{{ system.name }} </span>
                                     <span class="text-gray-500"> ({{ system.security }})</span>
@@ -466,7 +440,7 @@ const getSystemsDisplay = (battle: IBattlesDocument) => {
                                         <div class="cursor-pointer">
                                             <Image :id="alliance.id" type="alliance"
                                                 :alt="getLocalizedString(alliance.name, currentLocale)" size="32"
-                                                format="webp" class="w-8 h-8" :showCount="true" :count="alliance.count"
+                                                class="w-8 h-8" :showCount="true" :count="alliance.count"
                                                 countPosition="bottom-right" />
                                         </div>
                                     </UTooltip>
@@ -480,7 +454,7 @@ const getSystemsDisplay = (battle: IBattlesDocument) => {
                                         <div class="cursor-pointer">
                                             <Image :id="corp.id" type="corporation"
                                                 :alt="getLocalizedString(corp.name, currentLocale)" size="32"
-                                                format="webp" class="w-8 h-8" :showCount="true" :count="corp.count"
+                                                class="w-8 h-8" :showCount="true" :count="corp.count"
                                                 countPosition="bottom-right" />
                                         </div>
                                     </UTooltip>
@@ -494,7 +468,7 @@ const getSystemsDisplay = (battle: IBattlesDocument) => {
                                     <div class="cursor-pointer">
                                         <Image :id="ship.id" type="item"
                                             :name="getLocalizedString(ship.name, currentLocale)"
-                                            :alt="getLocalizedString(ship.name, currentLocale)" size="32" format="webp"
+                                            :alt="getLocalizedString(ship.name, currentLocale)" size="32"
                                             class="w-8 h-8" :showCount="true" :count="ship.count"
                                             countPosition="bottom-right" />
                                     </div>
@@ -533,7 +507,7 @@ const getSystemsDisplay = (battle: IBattlesDocument) => {
                             <template v-for="(system, index) in getSystemsDisplay(item)"
                                 :key="`system-${system.id}-${index}`">
                                 <div class="flex items-center gap-2 cursor-pointer">
-                                    <Image :id="system.id" type="system" size="24" format="webp"
+                                    <Image :id="system.id" type="system" size="24"
                                         class="w-5 h-5 rounded flex-shrink-0" />
                                     <div class="text-xs">
                                         <span class="hover:underline">{{ system.name }}</span>
@@ -575,7 +549,7 @@ const getSystemsDisplay = (battle: IBattlesDocument) => {
                                         <div class="cursor-pointer">
                                             <Image :id="alliance.id" type="alliance"
                                                 :alt="getLocalizedString(alliance.name, currentLocale)" size="32"
-                                                format="webp" class="w-6 h-6" :showCount="true" :count="alliance.count"
+                                                class="w-6 h-6" :showCount="true" :count="alliance.count"
                                                 countPosition="bottom-right" />
                                         </div>
                                     </template>
@@ -586,7 +560,7 @@ const getSystemsDisplay = (battle: IBattlesDocument) => {
                                         <div class="cursor-pointer">
                                             <Image :id="corp.id" type="corporation"
                                                 :alt="getLocalizedString(corp.name, currentLocale)" size="32"
-                                                format="webp" class="w-6 h-6" :showCount="true" :count="corp.count"
+                                                class="w-6 h-6" :showCount="true" :count="corp.count"
                                                 countPosition="bottom-right" />
                                         </div>
                                     </template>
@@ -598,7 +572,7 @@ const getSystemsDisplay = (battle: IBattlesDocument) => {
                                     <div class="cursor-pointer">
                                         <Image :id="ship.id" type="item"
                                             :name="getLocalizedString(ship.name, currentLocale)"
-                                            :alt="getLocalizedString(ship.name, currentLocale)" size="32" format="webp"
+                                            :alt="getLocalizedString(ship.name, currentLocale)" size="32"
                                             class="w-6 h-6" :showCount="true" :count="ship.count"
                                             countPosition="bottom-right" />
                                     </div>

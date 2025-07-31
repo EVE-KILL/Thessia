@@ -816,7 +816,7 @@ onUpdated(() => {
             <!-- Ship column -->
             <template #cell-ship="{ item }">
                 <div class="flex items-center py-1">
-                    <Image type="type-render" :id="item.victim.ship_id" format="webp"
+                    <Image type="type-render" :id="item.victim.ship_id"
                         :alt="`Ship: ${getLocalizedString(item.victim.ship_name, currentLocale)}`"
                         class="rounded w-16 h-16 mx-2" size="64" />
                     <div class="flex flex-col items-start">
@@ -838,7 +838,7 @@ onUpdated(() => {
             <template #cell-victim="{ item }">
                 <div class="flex items-center py-1">
                     <template v-if="item.victim.character_id > 0">
-                        <Image type="character" :id="item.victim.character_id" format="webp"
+                        <Image type="character" :id="item.victim.character_id"
                             :alt="`Character: ${item.victim.character_name}`" class="rounded-full w-16 h-16 mx-2"
                             size="64" />
                     </template>
@@ -888,7 +888,7 @@ onUpdated(() => {
                 <div class="flex items-center py-1">
                     <!-- Character or placeholder when finalblow.character_id missing -->
                     <template v-if="item.finalblow.character_id > 0">
-                        <Image type="character" :id="item.finalblow.character_id" format="webp"
+                        <Image type="character" :id="item.finalblow.character_id"
                             :alt="`Character: ${item.finalblow.character_name}`" class="rounded-full w-16 h-16 mx-2"
                             size="64" />
                         <div class="flex flex-col items-start min-w-0 flex-1">
@@ -974,11 +974,11 @@ onUpdated(() => {
                     <div class="text-sm text-black dark:text-white">{{ formatDate(item.kill_time) }}</div>
                     <div class="flex gap-1 items-center">
                         <span class="text-xs text-gray-600 dark:text-gray-400">{{ item.attackerCount }}</span>
-                        <NuxtImg src="/images/involved.png" format="webp" quality="80" width="16" height="16"
+                        <NuxtImg src="/images/involved.png" quality="80" width="16" height="16"
                             :alt="`${item.attackerCount} Involved`" class="h-4" />
                         <span class="text-xs text-gray-600 dark:text-gray-400">{{ item.commentCount || 0 }}</span>
-                        <NuxtImg src="/images/comment.gif" format="webp" quality="80" width="16" height="16"
-                            alt="Comments" class="h-4" />
+                        <NuxtImg src="/images/comment.gif" quality="80" width="16" height="16" alt="Comments"
+                            class="h-4" />
                     </div>
                 </div>
             </template>
@@ -989,7 +989,7 @@ onUpdated(() => {
                     <!-- Top Section: Ship Image and Details -->
                     <div class="flex mb-2">
                         <!-- Ship Image -->
-                        <Image type="type-render" :id="item.victim.ship_id" format="webp"
+                        <Image type="type-render" :id="item.victim.ship_id"
                             :alt="`Ship: ${getLocalizedString(item.victim.ship_name, currentLocale)}`"
                             class="rounded w-16 h-16" size="64" />
 
@@ -1014,9 +1014,8 @@ onUpdated(() => {
                             <!-- Character Image -->
                             <div class="character-portrait">
                                 <Image v-if="item.victim.character_id > 0" type="character"
-                                    :id="item.victim.character_id" format="webp"
-                                    :alt="`Character: ${item.victim.character_name}`" class="rounded-full w-16 h-16"
-                                    size="64" />
+                                    :id="item.victim.character_id" :alt="`Character: ${item.victim.character_name}`"
+                                    class="rounded-full w-16 h-16" size="64" />
                                 <Image v-else type="character" :id="1" alt="Placeholder" class="rounded-full w-16 h-16"
                                     size="64" />
                             </div>
@@ -1053,7 +1052,7 @@ onUpdated(() => {
                         <!-- System/Region Info -->
                         <div class="text-xs">
                             <span>{{ item.system_name }} / {{ getLocalizedString(item.region_name, currentLocale)
-                            }}</span>
+                                }}</span>
                             <span class="ml-1">(</span>
                             <span :class="getSecurityColor(item.system_security)">
                                 {{ item.system_security.toFixed(1) }}

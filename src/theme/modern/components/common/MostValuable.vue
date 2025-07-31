@@ -208,13 +208,14 @@ const isPriorityImage = (index: number): boolean => {
 
                     <!-- Use our custom Table component with horizontal layout -->
                     <Table :columns="[]" :items="displayKills" :loading="killsPending" :skeleton-count="props.limit"
-                        :empty-text="t('noData')" :empty-icon="'i-lucide-file-text'" horizontal :horizontal-items-per-row="isMobile ? 2 : props.limit"
-                        :link-fn="generateKillLink" background="transparent" hover>
+                        :empty-text="t('noData')" :empty-icon="'i-lucide-file-text'" horizontal
+                        :horizontal-items-per-row="isMobile ? 2 : props.limit" :link-fn="generateKillLink"
+                        background="transparent" hover>
                         <!-- Custom horizontal item template for kills -->
                         <template #horizontal-item="{ item, index }">
                             <div class="flex flex-col items-center p-2">
                                 <Image type="type-render" :id="item.victim.ship_id" :alt="`Ship: ${getShipName(item)}`"
-                                    class="rounded w-20 h-20 md:w-24 md:h-24 object-contain mb-2" size="256" format="webp"
+                                    class="rounded w-20 h-20 md:w-24 md:h-24 object-contain mb-2" size="256"
                                     :loading="index < 7 ? 'eager' : 'lazy'" :priority="isPriorityImage(index)" />
                                 <div class="text-center text-xs mt-1 max-w-full truncate text-gray-900 dark:text-white">
                                     {{ getShipName(item) }}
@@ -223,7 +224,8 @@ const isPriorityImage = (index: number): boolean => {
                                     {{ formatIsk(item.total_value) }} ISK
                                 </div>
                                 <!-- Show victim name if available -->
-                                <div v-if="item.victim.character_name" class="text-center text-xs mt-1 text-gray-400 dark:text-background-400 truncate max-w-full">
+                                <div v-if="item.victim.character_name"
+                                    class="text-center text-xs mt-1 text-gray-400 dark:text-background-400 truncate max-w-full">
                                     {{ item.victim.character_name }}
                                 </div>
                             </div>
@@ -234,10 +236,15 @@ const isPriorityImage = (index: number): boolean => {
                             <div class="horizontal-grid" :class="[`grid-cols-${isMobile ? 2 : props.limit}`]">
                                 <div v-for="i in props.limit" :key="`skeleton-kills-${i}`" class="horizontal-item">
                                     <div class="flex flex-col items-center p-2">
-                                        <div class="rounded w-20 h-20 md:w-24 md:h-24 bg-gray-200 dark:bg-gray-700 animate-pulse mb-2"></div>
-                                        <div class="h-3 w-16 mt-1 bg-gray-200 dark:bg-gray-700 rounded animate-pulse"></div>
-                                        <div class="h-3 w-12 mt-1 bg-gray-200 dark:bg-gray-700 rounded animate-pulse"></div>
-                                        <div class="h-2 w-14 mt-1 bg-gray-200 dark:bg-gray-700 rounded animate-pulse"></div>
+                                        <div
+                                            class="rounded w-20 h-20 md:w-24 md:h-24 bg-gray-200 dark:bg-gray-700 animate-pulse mb-2">
+                                        </div>
+                                        <div class="h-3 w-16 mt-1 bg-gray-200 dark:bg-gray-700 rounded animate-pulse">
+                                        </div>
+                                        <div class="h-3 w-12 mt-1 bg-gray-200 dark:bg-gray-700 rounded animate-pulse">
+                                        </div>
+                                        <div class="h-2 w-14 mt-1 bg-gray-200 dark:bg-gray-700 rounded animate-pulse">
+                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -261,13 +268,14 @@ const isPriorityImage = (index: number): boolean => {
 
                     <!-- Use our custom Table component with horizontal layout -->
                     <Table :columns="[]" :items="displayShips" :loading="shipsPending" :skeleton-count="props.limit"
-                        :empty-text="t('noData')" :empty-icon="'i-lucide-rocket'" horizontal :horizontal-items-per-row="isMobile ? 2 : props.limit"
-                        :link-fn="generateShipLink" background="transparent" hover>
+                        :empty-text="t('noData')" :empty-icon="'i-lucide-rocket'" horizontal
+                        :horizontal-items-per-row="isMobile ? 2 : props.limit" :link-fn="generateShipLink"
+                        background="transparent" hover>
                         <!-- Custom horizontal item template for ships -->
                         <template #horizontal-item="{ item, index }">
                             <div class="flex flex-col items-center p-2">
                                 <Image type="type-render" :id="item.ship_id" :alt="`Ship: ${getShipNameFromShip(item)}`"
-                                    class="rounded w-20 h-20 md:w-24 md:h-24 object-contain mb-2" size="256" format="webp"
+                                    class="rounded w-20 h-20 md:w-24 md:h-24 object-contain mb-2" size="256"
                                     :loading="index < 7 ? 'eager' : 'lazy'" :priority="isPriorityImage(index)" />
                                 <div class="text-center text-xs mt-1 max-w-full truncate text-gray-900 dark:text-white">
                                     {{ getShipNameFromShip(item) }}
@@ -286,10 +294,15 @@ const isPriorityImage = (index: number): boolean => {
                             <div class="horizontal-grid" :class="[`grid-cols-${isMobile ? 2 : props.limit}`]">
                                 <div v-for="i in props.limit" :key="`skeleton-ships-${i}`" class="horizontal-item">
                                     <div class="flex flex-col items-center p-2">
-                                        <div class="rounded w-20 h-20 md:w-24 md:h-24 bg-gray-200 dark:bg-gray-700 animate-pulse mb-2"></div>
-                                        <div class="h-3 w-16 mt-1 bg-gray-200 dark:bg-gray-700 rounded animate-pulse"></div>
-                                        <div class="h-3 w-12 mt-1 bg-gray-200 dark:bg-gray-700 rounded animate-pulse"></div>
-                                        <div class="h-2 w-14 mt-1 bg-gray-200 dark:bg-gray-700 rounded animate-pulse"></div>
+                                        <div
+                                            class="rounded w-20 h-20 md:w-24 md:h-24 bg-gray-200 dark:bg-gray-700 animate-pulse mb-2">
+                                        </div>
+                                        <div class="h-3 w-16 mt-1 bg-gray-200 dark:bg-gray-700 rounded animate-pulse">
+                                        </div>
+                                        <div class="h-3 w-12 mt-1 bg-gray-200 dark:bg-gray-700 rounded animate-pulse">
+                                        </div>
+                                        <div class="h-2 w-14 mt-1 bg-gray-200 dark:bg-gray-700 rounded animate-pulse">
+                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -312,14 +325,16 @@ const isPriorityImage = (index: number): boolean => {
                     </div>
 
                     <!-- Use our custom Table component with horizontal layout -->
-                    <Table :columns="[]" :items="displayStructures" :loading="structuresPending" :skeleton-count="props.limit"
-                        :empty-text="t('noData')" :empty-icon="'i-lucide-building-2'" horizontal :horizontal-items-per-row="isMobile ? 2 : props.limit"
+                    <Table :columns="[]" :items="displayStructures" :loading="structuresPending"
+                        :skeleton-count="props.limit" :empty-text="t('noData')" :empty-icon="'i-lucide-building-2'"
+                        horizontal :horizontal-items-per-row="isMobile ? 2 : props.limit"
                         :link-fn="generateStructureLink" background="transparent" hover>
                         <!-- Custom horizontal item template for structures -->
                         <template #horizontal-item="{ item, index }">
                             <div class="flex flex-col items-center p-2">
-                                <Image type="type-render" :id="item.type_id" :alt="`Structure: ${getStructureName(item)}`"
-                                    class="rounded w-20 h-20 md:w-24 md:h-24 object-contain mb-2" size="256" format="webp"
+                                <Image type="type-render" :id="item.type_id"
+                                    :alt="`Structure: ${getStructureName(item)}`"
+                                    class="rounded w-20 h-20 md:w-24 md:h-24 object-contain mb-2" size="256"
                                     :loading="index < 7 ? 'eager' : 'lazy'" :priority="isPriorityImage(index)" />
                                 <div class="text-center text-xs mt-1 max-w-full truncate text-gray-900 dark:text-white">
                                     {{ getStructureName(item) }}
@@ -331,7 +346,8 @@ const isPriorityImage = (index: number): boolean => {
                                     {{ item.count }} {{ item.count === 1 ? t('kill') : t('kills') }}
                                 </div>
                                 <!-- Show system name if available -->
-                                <div v-if="item.system_name" class="text-center text-xs mt-1 text-gray-400 dark:text-background-400 truncate max-w-full">
+                                <div v-if="item.system_name"
+                                    class="text-center text-xs mt-1 text-gray-400 dark:text-background-400 truncate max-w-full">
                                     {{ item.system_name }}
                                 </div>
                             </div>
@@ -342,10 +358,15 @@ const isPriorityImage = (index: number): boolean => {
                             <div class="horizontal-grid" :class="[`grid-cols-${isMobile ? 2 : props.limit}`]">
                                 <div v-for="i in props.limit" :key="`skeleton-structures-${i}`" class="horizontal-item">
                                     <div class="flex flex-col items-center p-2">
-                                        <div class="rounded w-20 h-20 md:w-24 md:h-24 bg-gray-200 dark:bg-gray-700 animate-pulse mb-2"></div>
-                                        <div class="h-3 w-16 mt-1 bg-gray-200 dark:bg-gray-700 rounded animate-pulse"></div>
-                                        <div class="h-3 w-12 mt-1 bg-gray-200 dark:bg-gray-700 rounded animate-pulse"></div>
-                                        <div class="h-2 w-14 mt-1 bg-gray-200 dark:bg-gray-700 rounded animate-pulse"></div>
+                                        <div
+                                            class="rounded w-20 h-20 md:w-24 md:h-24 bg-gray-200 dark:bg-gray-700 animate-pulse mb-2">
+                                        </div>
+                                        <div class="h-3 w-16 mt-1 bg-gray-200 dark:bg-gray-700 rounded animate-pulse">
+                                        </div>
+                                        <div class="h-3 w-12 mt-1 bg-gray-200 dark:bg-gray-700 rounded animate-pulse">
+                                        </div>
+                                        <div class="h-2 w-14 mt-1 bg-gray-200 dark:bg-gray-700 rounded animate-pulse">
+                                        </div>
                                     </div>
                                 </div>
                             </div>

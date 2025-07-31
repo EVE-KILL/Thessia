@@ -198,8 +198,7 @@ const tableColumns = [
             <template #cell-entity="{ item }">
                 <div class="flex items-center py-1">
                     <Image v-if="!item.isLoading" :type="imageTypeMap[entityType]" :id="item.entityId"
-                        :alt="`${entityType}: ${item.displayName}`" class="w-7 flex-shrink-0 mr-2" size="32"
-                        format="webp" />
+                        :alt="`${entityType}: ${item.displayName}`" class="w-7 flex-shrink-0 mr-2" size="32" />
                     <div v-else class="w-7 h-7 flex-shrink-0 mr-2 rounded bg-gray-200 dark:bg-gray-700 animate-pulse">
                     </div>
 
@@ -224,8 +223,8 @@ const tableColumns = [
                         <!-- Entity image and name -->
                         <div class="flex items-center">
                             <Image v-if="!item.isLoading" :type="imageTypeMap[entityType]" :id="item.entityId"
-                                :alt="`${entityType}: ${item.displayName}`" class="w-7 h-7 flex-shrink-0 mr-2" size="32"
-                                format="webp" />
+                                :alt="`${entityType}: ${item.displayName}`" class="w-7 h-7 flex-shrink-0 mr-2"
+                                size="32" />
                             <div v-else
                                 class="w-7 h-7 flex-shrink-0 mr-2 rounded bg-gray-200 dark:bg-gray-700 animate-pulse">
                             </div>

@@ -11,7 +11,7 @@
                             <div class="relative">
                                 <Image type="corporation" :id="corporation.corporation_id"
                                     :alt="`Corporation: ${corporation.name}`"
-                                    class="corporation-logo rounded-lg shadow-lg" format="webp" size="256" />
+                                    class="corporation-logo rounded-lg shadow-lg" size="256" />
                             </div>
                         </div>
 
@@ -31,7 +31,7 @@
                                         :to="`/alliance/${corporation.alliance_id}`"
                                         class="flex items-center gap-2 text-gray-800 dark:text-gray-200 hover:text-blue-600 dark:hover:text-blue-400 transition-colors">
                                         <Image type="alliance" :id="corporation.alliance_id"
-                                            class="w-6 h-6 rounded-full" format="webp" size="64" />
+                                            class="w-6 h-6 rounded-full" size="64" />
                                         {{ corporation.alliance_name }}
                                     </NuxtLink>
 
@@ -39,7 +39,7 @@
                                         :to="`/faction/${corporation.faction_id}`"
                                         class="flex items-center gap-2 text-gray-800 dark:text-gray-200 hover:text-blue-600 dark:hover:text-blue-400 transition-colors">
                                         <Image type="corporation" :id="corporation.faction_id"
-                                            class="w-6 h-6 rounded-full" format="webp" size="64" />
+                                            class="w-6 h-6 rounded-full" size="64" />
                                         {{ corporation.faction_name }}
                                     </NuxtLink>
 
@@ -132,7 +132,7 @@
                                     </div>
                                     <div class="stat-row">
                                         <div class="stat-label text-gray-600 dark:text-gray-400">{{ $t('iskEfficiency')
-                                        }}</div>
+                                            }}</div>
                                         <div class="stat-value text-gray-900 dark:text-white">
                                             {{ calcIskEfficiency(validShortStats) }}%
                                         </div>
@@ -170,14 +170,14 @@
                                     </div>
                                     <div class="stat-row">
                                         <div class="stat-label text-gray-600 dark:text-gray-400">{{ $t('soloKillRatio')
-                                        }}</div>
+                                            }}</div>
                                         <div class="stat-value text-gray-900 dark:text-white">
                                             {{ calcSoloKillRatio(validShortStats) }}%
                                         </div>
                                     </div>
                                     <div class="stat-row">
                                         <div class="stat-label text-gray-600 dark:text-gray-400">{{ $t('soloEfficiency')
-                                        }}</div>
+                                            }}</div>
                                         <div class="stat-value text-gray-900 dark:text-white">
                                             {{ calcSoloEfficiency(validShortStats) }}%
                                         </div>
@@ -201,7 +201,7 @@
                                     </div>
                                     <div class="stat-row">
                                         <div class="stat-label text-gray-600 dark:text-gray-400">{{ $t('npcLossRatio')
-                                        }}</div>
+                                            }}</div>
                                         <div class="stat-value text-gray-900 dark:text-white">
                                             {{ validShortStats.losses > 0 ? ((validShortStats.npcLosses /
                                                 validShortStats.losses) * 100).toFixed(1) : "0" }}%

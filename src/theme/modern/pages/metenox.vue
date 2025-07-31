@@ -352,44 +352,29 @@ useSeoMeta({
         <div class="bg-background-800 p-4 rounded-lg shadow-lg border border-gray-700/30">
             <!-- Search Input with Autocomplete -->
             <div class="mb-4 relative">
-                <UInput
-                    v-model="searchQuery"
+                <UInput v-model="searchQuery"
                     :placeholder="t('metenoxMoons.search.placeholder', 'Search for systems, regions, or moon names...')"
-                    icon="lucide:search"
-                    size="lg"
-                    @keydown="handleLocationKeyDown"
-                    :ui="{
+                    icon="lucide:search" size="lg" @keydown="handleLocationKeyDown" :ui="{
                         icon: {
                             trailing: {
                                 pointer: '',
                             },
                         },
-                    }"
-                >
+                    }">
                     <template #trailing>
-                        <UButton
-                            v-show="searchQuery !== ''"
-                            color="gray"
-                            variant="link"
-                            icon="lucide:x"
-                            :padded="false"
-                            @click="searchQuery = ''; selectedSystemId = null; selectedRegionId = null; selectedLocationName = ''; locationSearchResults = [];"
-                        />
+                        <UButton v-show="searchQuery !== ''" color="gray" variant="link" icon="lucide:x" :padded="false"
+                            @click="searchQuery = ''; selectedSystemId = null; selectedRegionId = null; selectedLocationName = ''; locationSearchResults = [];" />
                     </template>
                 </UInput>
 
                 <!-- Location Search Results Dropdown -->
                 <div v-if="locationSearchResults.length > 0"
-                     class="absolute z-50 w-full mt-1 bg-background-800 border border-gray-700/30 rounded-lg shadow-lg max-h-48 overflow-y-auto">
-                    <div
-                        v-for="(location, index) in locationSearchResults"
-                        :key="`${location.type}-${location.id}`"
+                    class="absolute z-50 w-full mt-1 bg-background-800 border border-gray-700/30 rounded-lg shadow-lg max-h-48 overflow-y-auto">
+                    <div v-for="(location, index) in locationSearchResults" :key="`${location.type}-${location.id}`"
                         :class="[
                             'px-3 py-2 cursor-pointer text-sm hover:bg-background-700 flex items-center justify-between',
                             selectedLocationResultIndex === index ? 'bg-background-700' : ''
-                        ]"
-                        @click="selectLocation(location)"
-                    >
+                        ]" @click="selectLocation(location)">
                         <span>{{ location.name }}</span>
                         <UBadge :color="location.type === 'system' ? 'blue' : 'green'" variant="soft" size="xs">
                             {{ location.type }}
@@ -400,13 +385,7 @@ useSeoMeta({
 
             <!-- Clear Filters Button -->
             <div v-if="hasActiveFilters" class="flex justify-end mb-4">
-                <UButton
-                    variant="outline"
-                    color="red"
-                    size="sm"
-                    icon="lucide:x"
-                    @click="clearAllFilters"
-                >
+                <UButton variant="outline" color="red" size="sm" icon="lucide:x" @click="clearAllFilters">
                     {{ t('metenoxMoons.filter.clear', 'Clear Filters') }}
                 </UButton>
             </div>
@@ -414,18 +393,14 @@ useSeoMeta({
             <!-- Moon Goo Quality Filter -->
             <div class="mb-4">
                 <div class="mb-2">
-                    <span class="text-sm text-gray-300">{{ t('metenoxMoons.filter.moonGooTypes', 'Filter by Moon Goo Quality') }}:</span>
+                    <span class="text-sm text-gray-300">{{ t('metenoxMoons.filter.moonGooTypes')
+                        }}:</span>
                 </div>
                 <div class="flex gap-2 flex-wrap">
-                    <UButton
-                        v-for="gooType in availableMoonGooTypes"
-                        :key="gooType.value"
+                    <UButton v-for="gooType in availableMoonGooTypes" :key="gooType.value"
                         :variant="selectedMoonGooTypes.includes(gooType.value) ? 'solid' : 'outline'"
                         :color="selectedMoonGooTypes.includes(gooType.value) ? gooType.color : 'gray'"
-                        @click="toggleMoonGooType(gooType.value)"
-                        size="sm"
-                        class="font-mono"
-                    >
+                        @click="toggleMoonGooType(gooType.value)" size="sm" class="font-mono">
                         {{ gooType.label }}
                     </UButton>
                 </div>
@@ -435,7 +410,8 @@ useSeoMeta({
             <div v-if="hasActiveFilters" class="pt-3 border-t border-gray-700/30">
                 <div class="flex flex-wrap gap-2 items-center">
                     <span class="text-sm text-gray-300">{{ t('active_filters', 'Active filters') }}:</span>
-                    <UBadge v-if="searchQuery && !selectedSystemId && !selectedRegionId" color="green" variant="soft" size="sm">
+                    <UBadge v-if="searchQuery && !selectedSystemId && !selectedRegionId" color="green" variant="soft"
+                        size="sm">
                         {{ t('search', 'Search') }}: "{{ searchQuery }}"
                     </UBadge>
                     <UBadge v-if="selectedSystemId && selectedLocationName" color="blue" variant="soft" size="sm">
@@ -444,14 +420,8 @@ useSeoMeta({
                     <UBadge v-if="selectedRegionId && selectedLocationName" color="green" variant="soft" size="sm">
                         {{ t('metenoxMoons.region', 'Region') }}: {{ selectedLocationName }}
                     </UBadge>
-                    <UBadge
-                        v-for="gooType in selectedMoonGooTypes"
-                        :key="gooType"
-                        :color="getMoonGooColor(gooType)"
-                        variant="soft"
-                        size="sm"
-                        class="font-mono"
-                    >
+                    <UBadge v-for="gooType in selectedMoonGooTypes" :key="gooType" :color="getMoonGooColor(gooType)"
+                        variant="soft" size="sm" class="font-mono">
                         {{ gooType }}
                     </UBadge>
                 </div>
@@ -511,13 +481,13 @@ useSeoMeta({
                 :items="isLoading && !data ? skeletonRows : paginatedList" :loading="isLoading"
                 :skeleton-count="selectedPageSize" :link-fn="linkFn" :bordered="true" :striped="false" :hover="true"
                 density="normal" background="transparent" table-class="metenox-table"
-                :empty-text="t('metenoxMoons.noMoonsFound', 'No Metenox moons found.')" empty-icon="i-heroicons-circle-stack">
+                :empty-text="t('metenoxMoons.noMoonsFound', 'No Metenox moons found.')"
+                empty-icon="i-heroicons-circle-stack">
 
                 <!-- Custom Cell Rendering -->
                 <template #cell-moon="{ item }">
                     <div class="flex items-center gap-2">
-                        <Image :id="item.moon_id" type="system" size="32" format="webp"
-                            class="w-8 h-8 rounded flex-shrink-0" />
+                        <Image :id="item.moon_id" type="system" size="32" class="w-8 h-8 rounded flex-shrink-0" />
                         <div class="text-sm">
                             <div class="font-medium">{{ item.moon_name }}</div>
                             <div class="text-gray-500 text-xs">ID: {{ item.moon_id }}</div>
@@ -528,13 +498,11 @@ useSeoMeta({
                 <template #cell-location="{ item }">
                     <div class="text-sm space-y-1">
                         <div class="flex items-center gap-2">
-                            <Image :id="item.system_id" type="system" size="24" format="webp"
-                                class="w-6 h-6 rounded flex-shrink-0" />
+                            <Image :id="item.system_id" type="system" size="24" class="w-6 h-6 rounded flex-shrink-0" />
                             <span class="font-medium">{{ item.system_name }}</span>
                         </div>
                         <div class="flex items-center gap-2">
-                            <Image :id="item.region_id" type="region" size="24" format="webp"
-                                class="w-6 h-6 rounded flex-shrink-0" />
+                            <Image :id="item.region_id" type="region" size="24" class="w-6 h-6 rounded flex-shrink-0" />
                             <span class="text-gray-400">{{ item.region_name }}</span>
                         </div>
                     </div>
@@ -543,12 +511,7 @@ useSeoMeta({
                 <template #cell-moonType="{ item }">
                     <div class="flex flex-wrap gap-1">
                         <template v-for="goo in getMoonGooDisplay(item.moonType)" :key="goo.type">
-                            <UBadge
-                                :color="getMoonGooColor(goo.type)"
-                                variant="soft"
-                                size="sm"
-                                class="text-xs"
-                            >
+                            <UBadge :color="getMoonGooColor(goo.type)" variant="soft" size="sm" class="text-xs">
                                 {{ goo.type }} ({{ goo.count }})
                             </UBadge>
                         </template>
@@ -566,7 +529,7 @@ useSeoMeta({
                             <!-- Left side: Moon info -->
                             <div class="flex-1">
                                 <div class="flex items-center gap-2">
-                                    <Image :id="item.moon_id" type="system" size="24" format="webp"
+                                    <Image :id="item.moon_id" type="system" size="24"
                                         class="w-6 h-6 rounded flex-shrink-0" />
                                     <span class="font-medium text-sm">{{ item.moon_name }}</span>
                                 </div>
@@ -582,12 +545,12 @@ useSeoMeta({
                         <!-- Location section -->
                         <div class="flex flex-col space-y-1 text-sm">
                             <div class="flex items-center gap-2">
-                                <Image :id="item.system_id" type="system" size="20" format="webp"
+                                <Image :id="item.system_id" type="system" size="20"
                                     class="w-5 h-5 rounded flex-shrink-0" />
                                 <span>{{ item.system_name }}</span>
                             </div>
                             <div class="flex items-center gap-2">
-                                <Image :id="item.region_id" type="region" size="20" format="webp"
+                                <Image :id="item.region_id" type="region" size="20"
                                     class="w-5 h-5 rounded flex-shrink-0" />
                                 <span class="text-gray-400">{{ item.region_name }}</span>
                             </div>
@@ -598,12 +561,7 @@ useSeoMeta({
                             <div class="text-xs text-gray-500">{{ t('metenoxMoons.moonGoo', 'Moon Goo') }}:</div>
                             <div class="flex flex-wrap gap-1">
                                 <template v-for="goo in getMoonGooDisplay(item.moonType)" :key="goo.type">
-                                    <UBadge
-                                        :color="getMoonGooColor(goo.type)"
-                                        variant="soft"
-                                        size="sm"
-                                        class="text-xs"
-                                    >
+                                    <UBadge :color="getMoonGooColor(goo.type)" variant="soft" size="sm" class="text-xs">
                                         {{ goo.type }} ({{ goo.count }})
                                     </UBadge>
                                 </template>

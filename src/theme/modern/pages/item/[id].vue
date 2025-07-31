@@ -8,8 +8,8 @@
             <div class="flex flex-col sm:flex-row">
                 <div class="mr-4 flex-shrink-0 sm:mb-0">
                     <NuxtLink :to="`/item/${item.type_id}`">
-                        <Image type="item" :id="item.type_id" format="webp"
-                            :alt="getLocalizedString(item.name, currentLocale)" class="rounded w-16 h-16" size="64"
+                        <Image type="item" :id="item.type_id" :alt="getLocalizedString(item.name, currentLocale)"
+                            class="rounded w-16 h-16" size="64"
                             :variant="item.name?.en?.includes('Blueprint') ? 'bp' : 'icon'" />
                     </NuxtLink>
                 </div>

@@ -9,6 +9,7 @@ const { isMobile } = useResponsive();
  */
 type EveImageType =
     | "character"
+    | "faction"
     | "corporation"
     | "alliance"
     | "type-icon"
@@ -28,6 +29,7 @@ const props = defineProps({
         validator: (value: EveImageType) =>
             [
                 "character",
+                "faction",
                 "corporation",
                 "alliance",
                 "type-icon",
@@ -78,16 +80,6 @@ const props = defineProps({
     height: {
         type: Number,
         default: null,
-    },
-    // NuxtImg format
-    format: {
-        type: String,
-        default: "webp",
-    },
-    // NuxtImg quality - now properly typed as Number
-    quality: {
-        type: Number,
-        default: 80,
     },
     // Optional fit mode
     fit: {
@@ -200,6 +192,8 @@ const src = computed(() => {
     switch (props.type) {
         case "character":
             return eveImages.getCharacterPortrait(idAsNumber, eveSize.value);
+        case "faction":
+            return eveImages.getCorporationLogo(idAsNumber, eveSize.value);
         case "corporation":
             return eveImages.getCorporationLogo(idAsNumber, eveSize.value);
         case "alliance":
@@ -236,15 +230,6 @@ const imgWidth = computed(() => {
 const imgHeight = computed(() => {
     const height = props.height || props.size || eveSize.value;
     return typeof height === "string" ? Number.parseInt(height, 10) : height;
-});
-
-// Calculate image quality based on device
-const effectiveQuality = computed(() => {
-    // If mobile optimization is enabled and we're on mobile, reduce quality
-    if (props.mobileOptimize && isMobile.value) {
-        return Math.min(props.quality, 60); // Cap at 60% quality on mobile
-    }
-    return props.quality;
 });
 
 // Computed classes for the image
@@ -503,9 +488,12 @@ const countPositionClass = computed(() => {
 
 <template>
     <div class="relative inline-block">
-        <NuxtImg ref="imageRef" v-if="src" :src="src" :alt="alt" :class="imageClasses" :width="imgWidth"
+        <!-- plain image -->
+        <img v-if="src" ref="imageRef" :src="src" :alt="alt" :class="imageClasses" :width="imgWidth" :height="imgHeight"
+            :loading="effectiveLoading" :fetchpriority="effectivePriority" />
+        <!--<NuxtImg ref="imageRef" v-if="src" :src="src" :alt="alt" :class="imageClasses" :width="imgWidth"
             :height="imgHeight" :format="format" :quality="effectiveQuality" :loading="effectiveLoading"
-            :fetchpriority="effectivePriority" />
+            :fetchpriority="effectivePriority" />-->
         <div v-else :class="['bg-gray-200 dark:bg-gray-700 flex items-center justify-center', imageClasses]"
             :style="{ width: `${imgWidth}px`, height: `${imgHeight}px` }">
             <UIcon name="lucide:image" class="text-gray-400 dark:text-gray-500" />

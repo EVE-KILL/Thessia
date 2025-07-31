@@ -167,8 +167,8 @@ const tableColumns = [
             <template #cell-entity="{ item }">
                 <div class="flex items-center py-1">
                     <Image v-if="!item.isLoading" :type="entityImageTypeMap[props.dataType]" :id="getEntityId(item)"
-                        :alt="`${props.dataType}: ${getEntityDisplayName(item)}`" class="w-7 flex-shrink-0 mr-2" size="32"
-                        format="webp" />
+                        :alt="`${props.dataType}: ${getEntityDisplayName(item)}`" class="w-7 flex-shrink-0 mr-2"
+                        size="32" />
                     <div v-else class="w-7 h-7 flex-shrink-0 mr-2 rounded bg-gray-200 dark:bg-gray-700 animate-pulse">
                     </div>
 
@@ -189,7 +189,7 @@ const tableColumns = [
                     <div class="flex items-center py-1 flex-1 min-w-0">
                         <Image v-if="!item.isLoading" :type="entityImageTypeMap[props.dataType]" :id="getEntityId(item)"
                             :alt="`${props.dataType}: ${getEntityDisplayName(item)}`" class="w-7 flex-shrink-0 mr-2"
-                            size="32" format="webp" />
+                            size="32" />
                         <div v-else
                             class="w-7 h-7 flex-shrink-0 mr-2 rounded bg-gray-200 dark:bg-gray-700 animate-pulse">
                         </div>
@@ -250,8 +250,15 @@ const tableColumns = [
 }
 
 @keyframes pulse {
-    0%, 100% { opacity: 1; }
-    50% { opacity: 0.5; }
+
+    0%,
+    100% {
+        opacity: 1;
+    }
+
+    50% {
+        opacity: 0.5;
+    }
 }
 
 .animate-pulse {

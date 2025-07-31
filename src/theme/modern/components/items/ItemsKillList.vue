@@ -8,7 +8,7 @@
             <!-- Ship column -->
             <template #cell-ship="{ item }">
                 <div class="flex items-center">
-                    <Image type="type-render" :id="item.victim.ship_id" format="webp"
+                    <Image type="type-render" :id="item.victim.ship_id"
                         :alt="`Ship: ${getLocalizedString(item.victim.ship_name, currentLocale)}`"
                         class="rounded w-16 h-16 m-1" size="64" />
                 </div>
@@ -19,20 +19,20 @@
                 <div class="flex items-center">
                     <!-- Character image -->
                     <div class="flex-shrink-0">
-                        <Image type="character" :id="item.victim.character_id" format="webp"
+                        <Image type="character" :id="item.victim.character_id"
                             :alt="`Character: ${item.victim.character_name}`" class="rounded w-16 h-16 m-1" size="64" />
                     </div>
 
                     <!-- Corp/Alliance images stacked -->
                     <div class="flex flex-col mr-2">
                         <!-- Corporation -->
-                        <Image type="corporation" :id="item.victim.corporation_id" format="webp"
+                        <Image type="corporation" :id="item.victim.corporation_id"
                             :alt="`Corporation: ${item.victim.corporation_name}`" class="rounded w-10 h-10 mb-1"
                             size="64" />
 
                         <!-- Alliance (if available) -->
                         <Image v-if="item.victim.alliance_id && item.victim.alliance_id > 0" type="alliance"
-                            :id="item.victim.alliance_id" format="webp" :alt="`Alliance: ${item.victim.alliance_name}`"
+                            :id="item.victim.alliance_id" :alt="`Alliance: ${item.victim.alliance_name}`"
                             class="rounded w-10 h-10" size="64" />
                     </div>
 
@@ -63,7 +63,7 @@
             <template #mobile-row="{ item }">
                 <div class="flex items-center gap-3 w-full p-2">
                     <!-- Ship image -->
-                    <Image type="type-render" :id="item.victim.ship_id" format="webp"
+                    <Image type="type-render" :id="item.victim.ship_id"
                         :alt="`Ship: ${getLocalizedString(item.victim.ship_name, currentLocale)}`"
                         class="rounded w-14 h-14" size="64" />
 

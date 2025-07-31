@@ -64,7 +64,7 @@ const handleDeleteAccount = async () => {
                     <NuxtLink v-if="auth.user.value.characterId" :to="`/character/${auth.user.value.characterId}`"
                         class="block w-full h-full">
                         <Image type="character" :id="auth.user.value.characterId" :alt="auth.user.value.characterName"
-                            :size="128" class="w-full h-full" :quality="90" />
+                            :size="128" class="w-full h-full" />
                     </NuxtLink>
                 </div>
 

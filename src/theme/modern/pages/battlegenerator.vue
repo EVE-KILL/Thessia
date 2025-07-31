@@ -1142,7 +1142,7 @@ const previewBattle = async () => {
                         v-show="showCorpsInAlliances || entity.type === 'alliance' || !entity.alliance_id"
                         class="flex items-center justify-between p-2 bg-white dark:bg-gray-800 rounded">
                         <div class="flex items-center justify-start flex-1">
-                            <Image :id="entity.id" :type="entity.type" size="32" format="webp" class="w-8 h-8 mr-2" />
+                            <Image :id="entity.id" :type="entity.type" size="32" class="w-8 h-8 mr-2" />
                             <div class="flex flex-col items-start">
                                 <span>{{ entity.name }}</span>
                                 <span v-if="entity.type === 'corporation' && entity.alliance_id"
@@ -1176,7 +1176,7 @@ const previewBattle = async () => {
                         v-show="showCorpsInAlliances || entity.type === 'alliance' || !entity.alliance_id"
                         class="flex items-center justify-between p-2 bg-white dark:bg-gray-800 rounded">
                         <div class="flex items-center justify-start flex-1">
-                            <Image :id="entity.id" :type="entity.type" size="32" format="webp" class="w-8 h-8 mr-2" />
+                            <Image :id="entity.id" :type="entity.type" size="32" class="w-8 h-8 mr-2" />
                             <div class="flex flex-col items-start">
                                 <span>{{ entity.name }}</span>
                                 <span v-if="entity.type === 'corporation' && entity.alliance_id"
@@ -1209,7 +1209,7 @@ const previewBattle = async () => {
                         </div>
 
                         <div class="flex items-center flex-grow">
-                            <Image :id="entity.id" :type="entity.type" size="32" format="webp" class="w-8 h-8 mr-2" />
+                            <Image :id="entity.id" :type="entity.type" size="32" class="w-8 h-8 mr-2" />
                             <div class="flex flex-col">
                                 <span>{{ entity.name }}</span>
                                 <span v-if="entity.type === 'corporation' && entity.alliance_id"
@@ -1259,7 +1259,7 @@ const previewBattle = async () => {
                                     {{ t('battleGenerator.memberOf') }} {{ entity.alliance_name }}
                                 </span>
                             </div>
-                            <Image :id="entity.id" :type="entity.type" size="32" format="webp" class="w-8 h-8 ml-2" />
+                            <Image :id="entity.id" :type="entity.type" size="32" class="w-8 h-8 ml-2" />
                         </div>
                     </div>
                 </div>
@@ -1293,7 +1293,7 @@ const previewBattle = async () => {
                                     {{ t('battleGenerator.memberOf') }} {{ entity.alliance_name }}
                                 </span>
                             </div>
-                            <Image :id="entity.id" :type="entity.type" size="32" format="webp" class="w-8 h-8 ml-2" />
+                            <Image :id="entity.id" :type="entity.type" size="32" class="w-8 h-8 ml-2" />
                         </div>
                     </div>
                 </div>

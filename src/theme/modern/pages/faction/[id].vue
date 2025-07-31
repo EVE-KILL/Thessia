@@ -10,7 +10,7 @@
                         <div class="flex-shrink-0">
                             <div class="relative">
                                 <Image type="corporation" :id="faction.faction_id" :alt="`Faction: ${faction.name}`"
-                                    class="w-64 h-64 rounded-lg shadow-lg object-contain" format="webp" size="256" />
+                                    class="w-64 h-64 rounded-lg shadow-lg object-contain" size="256" />
                             </div>
                         </div>
 
@@ -32,9 +32,9 @@
                                     <div v-if="faction.faction_id"
                                         class="flex justify-between items-center p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
                                         <span class="font-medium text-gray-700 dark:text-gray-300">{{ $t('faction.id')
-                                            }}:</span>
+                                        }}:</span>
                                         <span class="text-gray-900 dark:text-white font-mono">{{ faction.faction_id
-                                            }}</span>
+                                        }}</span>
                                     </div>
                                     <div v-if="faction.solar_system_id"
                                         class="flex justify-between items-center p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">

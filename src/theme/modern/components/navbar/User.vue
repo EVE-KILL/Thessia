@@ -202,8 +202,7 @@ const ssoImageDimensions = computed(() => {
                         <div class="px-4 py-3 border-b border-gray-100 dark:border-gray-800">
                             <div class="flex flex-col items-center text-center">
                                 <Image type="character" :id="auth.user.value.characterId"
-                                    :alt="auth.user.value.characterName" :size="64" class="w-16 h-16 mb-2"
-                                    :quality="90" />
+                                    :alt="auth.user.value.characterName" :size="64" class="w-16 h-16 mb-2" />
 
                                 <div class="font-medium text-sm text-gray-900 dark:text-white mb-1">
                                     {{ auth.user.value.characterName }}
@@ -468,7 +467,7 @@ const ssoImageDimensions = computed(() => {
             <div
                 class="flex flex-col items-center text-center px-2 py-3 mb-3 border-b border-gray-100 dark:border-gray-800">
                 <Image type="character" :id="auth.user.value.characterId" :alt="auth.user.value.characterName"
-                    :size="64" class="w-16 h-16 mb-2" :quality="90" />
+                    :size="64" class="w-16 h-16 mb-2" />
 
                 <div class="font-medium text-base text-gray-900 dark:text-white">
                     {{ auth.user.value.characterName }}
