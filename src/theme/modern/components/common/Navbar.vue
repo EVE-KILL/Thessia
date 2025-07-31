@@ -207,6 +207,7 @@ const rightNavItems = computed(() => [
             { name: t("status"), label: t("status"), to: "/status" },
             { name: t("aboutTitle"), label: t("aboutTitle"), to: "/about" },
             { name: t("Donate"), label: t("Donate"), to: "/donate" },
+            { name: t("Documentation"), label: t("Documentation"), to: "/docs" },
         ],
     },
     {
