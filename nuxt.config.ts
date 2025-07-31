@@ -44,7 +44,6 @@ export default defineNuxtConfig({
         preset: "bun",
         srcDir: "server",
         minify: true,
-
         esbuild: {
             options: {
                 target: "esnext",
@@ -287,8 +286,46 @@ export default defineNuxtConfig({
         },
 
         // Process Cloudflare beacon during build
-        "nitro:build:public-assets": (nitro) => {
+        "nitro:build:public-assets": async (nitro) => {
             generateCloudflareBeacon(nitro);
+
+            // Also copy docs to server output directory for production
+            const fs = await import("fs");
+            const path = await import("path");
+
+            const sourceDocsDir = path.resolve(process.cwd(), "docs");
+            // Copy to the nitro server directory so APIs can access it
+            const targetDocsDir = path.resolve(
+                nitro.options.output.serverDir,
+                "docs"
+            );
+
+            try {
+                // Ensure source exists
+                await fs.promises.access(sourceDocsDir);
+
+                // Ensure target directory doesn't exist to avoid the copy error
+                try {
+                    await fs.promises.rm(targetDocsDir, {
+                        recursive: true,
+                        force: true,
+                    });
+                } catch {
+                    // Ignore if it doesn't exist
+                }
+
+                // Copy docs directory to output
+                await fs.promises.cp(sourceDocsDir, targetDocsDir, {
+                    recursive: true,
+                    force: true,
+                });
+
+                console.log(
+                    `✅ Copied docs from ${sourceDocsDir} to ${targetDocsDir}`
+                );
+            } catch (error) {
+                console.warn(`⚠️ Could not copy docs directory: ${error}`);
+            }
         },
     },
 });

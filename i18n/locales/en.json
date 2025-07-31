@@ -1564,5 +1564,17 @@
             "presetButton": "Send Preset",
             "lastResponse": "Last Response:"
         }
+    },
+    "docs": {
+        "title": "Documentation",
+        "description": "Browse the project documentation to learn about APIs, features, and implementation details.",
+        "navigation": "Navigation",
+        "navigationError": "Failed to load navigation",
+        "contentError": "Document not found",
+        "contentErrorMessage": "The requested documentation page could not be found.",
+        "retry": "Try again",
+        "welcome": "Welcome to Documentation",
+        "welcomeMessage": "Select a topic from the navigation menu to get started.",
+        "home": "Home"
     }
 }
