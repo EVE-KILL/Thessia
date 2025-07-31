@@ -39,49 +39,24 @@ export default defineEventHandler(async (event) => {
         if (lastPosition) {
             try {
                 lastObjectId = new ObjectId(lastPosition);
-                console.log(
-                    `[RedisQ] Existing client ${queueID}, resuming from position:`,
-                    lastPosition
-                );
             } catch {
                 // Invalid ObjectId, start fresh
                 lastObjectId = null;
-                console.log(
-                    `[RedisQ] Invalid position for ${queueID}, starting fresh`
-                );
             }
-        } else {
-            // New client, start fresh
-            console.log(`[RedisQ] New client ${queueID}, starting fresh`);
         }
 
         // Try to get the next killmail immediately
         let nextKillmail = await getNextKillmail(lastObjectId);
-        console.log(
-            `[RedisQ] Looking for killmails ${
-                lastObjectId
-                    ? `newer than ${lastObjectId.toString()}`
-                    : "starting from newest"
-            }, found:`,
-            nextKillmail ? nextKillmail.killmail_id : "none"
-        );
-
         if (nextKillmail) {
             // Update client position
             await redis.set(
                 positionKey,
                 (nextKillmail._id as ObjectId).toString()
             );
-            console.log(
-                `[RedisQ] Returning killmail ${nextKillmail.killmail_id} to ${queueID}`
-            );
             return formatRedisQResponse(nextKillmail);
         }
 
         // No killmail available, wait for new ones
-        console.log(
-            `[RedisQ] No killmails available for ${queueID}, starting long poll for ${ttw}s`
-        );
         const startTime = Date.now();
         const pollInterval = 500; // Poll every 500ms
         const maxWaitTime = ttw * 1000;
@@ -95,15 +70,10 @@ export default defineEventHandler(async (event) => {
                     positionKey,
                     (nextKillmail._id as ObjectId).toString()
                 );
-                console.log(
-                    `[RedisQ] Found new killmail ${nextKillmail.killmail_id} for ${queueID} during polling`
-                );
                 return await formatRedisQResponse(nextKillmail);
             }
         }
 
-        // Timeout reached, return null package
-        console.log(`[RedisQ] Timeout reached for ${queueID}, returning null`);
         return { package: null };
     } catch (error) {
         console.error("RedisQ error:", error);
