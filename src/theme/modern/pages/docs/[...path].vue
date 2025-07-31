@@ -403,6 +403,9 @@ onMounted(() => {
     border-radius: 0.5rem;
     padding: 2rem;
     min-height: 500px;
+    overflow-x: hidden;
+    word-wrap: break-word;
+    overflow-wrap: break-word;
 }
 
 .content-loading {
@@ -435,6 +438,9 @@ onMounted(() => {
 
 .content-container {
     max-width: none;
+    overflow-x: hidden;
+    word-wrap: break-word;
+    overflow-wrap: break-word;
 }
 
 /* Breadcrumb Styles */
@@ -500,6 +506,9 @@ onMounted(() => {
     color: white;
     max-width: none;
     line-height: 1.7;
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+    hyphens: auto;
 }
 
 .markdown-content h1 {
@@ -541,11 +550,15 @@ onMounted(() => {
 .markdown-content p {
     margin-bottom: 1rem;
     color: rgb(209, 213, 219);
+    word-wrap: break-word;
+    overflow-wrap: break-word;
 }
 
 .markdown-content a {
     color: rgb(96, 165, 250);
     text-decoration: none;
+    word-wrap: break-word;
+    overflow-wrap: break-word;
 }
 
 .markdown-content a:hover {
@@ -586,18 +599,29 @@ onMounted(() => {
     padding: 1rem;
     border-radius: 0.5rem;
     overflow-x: auto;
+    overflow-y: hidden;
     margin: 1rem 0;
+    max-width: 100%;
+    white-space: pre-wrap;
+    word-wrap: break-word;
+    overflow-wrap: break-word;
 }
 
 .markdown-content pre code {
     background: none;
     padding: 0;
+    white-space: pre-wrap;
+    word-wrap: break-word;
+    overflow-wrap: break-word;
 }
 
 .markdown-content table {
     width: 100%;
     border-collapse: collapse;
     margin: 1rem 0;
+    overflow-x: auto;
+    display: block;
+    white-space: nowrap;
 }
 
 .markdown-content th,
@@ -605,6 +629,10 @@ onMounted(() => {
     border: 1px solid rgb(75, 85, 99);
     padding: 0.5rem;
     text-align: left;
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+    white-space: normal;
+    max-width: 300px;
 }
 
 .markdown-content th {
