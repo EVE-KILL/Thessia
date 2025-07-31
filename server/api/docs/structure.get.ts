@@ -17,8 +17,10 @@ async function getDocsDirectory(): Promise<string | null> {
     if (process.env.NODE_ENV === "development") {
         const __filename = fileURLToPath(import.meta.url);
         const __dirname = dirname(__filename);
+        const projectRoot = resolve(__dirname, "../../../");
 
         const possiblePaths = [
+            resolve(projectRoot, "docs"),
             resolve(process.cwd(), "docs"),
             resolve(__dirname, "../../../docs"),
             resolve(__dirname, "../../../../docs"),
