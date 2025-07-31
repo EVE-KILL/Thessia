@@ -296,7 +296,7 @@ export default defineNuxtConfig({
             const sourceDocsDir = path.resolve(process.cwd(), "docs");
             // Copy to the nitro server directory so APIs can access it
             const targetDocsDir = path.resolve(
-                nitro.options.output.serverDir,
+                nitro.options.output.dir,
                 "docs"
             );
 
