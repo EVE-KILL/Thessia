@@ -393,6 +393,20 @@
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
+import { 
+  createDefaultFilters, 
+  buildAdvancedSearchQuery,
+  createQuickFilterFacet,
+  SECURITY_OPTIONS,
+  ATTACKER_COUNT_OPTIONS,
+  ATTACKER_TYPE_OPTIONS,
+  ISK_VALUE_OPTIONS,
+  SHIP_CATEGORY_OPTIONS,
+  TIME_FILTER_OPTIONS,
+  SORT_FIELD_OPTIONS,
+  type AdvancedSearchFilters, 
+  type SearchFacet 
+} from '../../server/helpers/AdvancedSearch'
 
 const router = useRouter()
 
@@ -502,11 +516,8 @@ const hasValidQuery = computed(() => {
 
 // Transform query results to match KillList expected format
 const transformedQueryResult = computed(() => {
-    if (!queryResult.value) {
-        return null
-    }
-
-    if (!Array.isArray(queryResult.value)) {
+    // Handle null, undefined, or non-array cases
+    if (!queryResult.value || !Array.isArray(queryResult.value)) {
         return null
     }
 
@@ -515,50 +526,53 @@ const transformedQueryResult = computed(() => {
     }
 
     return queryResult.value.map(kill => {
+        // Safely access attackers array with fallback
+        const attackers = kill?.attackers || []
+
         // Find final blow attacker - default to first attacker if none has final_blow=true
-        const finalBlowAttacker = kill.attackers?.find(a => a.final_blow) || kill.attackers?.[0] || {}
+        const finalBlowAttacker = attackers.find(a => a?.final_blow) || attackers[0] || {}
 
         // Format the killmail in the structure that KillList expects
         const transformed = {
-            killmail_id: kill.killmail_id,
-            total_value: kill.total_value || 0,
-            system_id: kill.system_id,
-            system_name: kill.system_name || "",
-            system_security: kill.system_security || 0,
-            region_id: kill.region_id,
-            region_name: kill.region_name || {},
-            kill_time: kill.kill_time,
-            attackerCount: kill.attackers?.length || 0,
+            killmail_id: kill?.killmail_id || 0,
+            total_value: kill?.total_value || 0,
+            system_id: kill?.system_id || 0,
+            system_name: kill?.system_name || "",
+            system_security: kill?.system_security || 0,
+            region_id: kill?.region_id || 0,
+            region_name: kill?.region_name || {},
+            kill_time: kill?.kill_time || "",
+            attackerCount: attackers.length,
             commentCount: 0,
-            is_npc: kill.is_npc || false,
-            is_solo: kill.is_solo || false,
+            is_npc: kill?.is_npc || false,
+            is_solo: kill?.is_solo || false,
 
             // Ensure victim object has all required properties
             victim: {
-                ship_id: kill.victim?.ship_id || 0,
-                ship_name: kill.victim?.ship_name || {},
-                character_id: kill.victim?.character_id || 0,
-                character_name: kill.victim?.character_name || "",
-                corporation_id: kill.victim?.corporation_id || 0,
-                corporation_name: kill.victim?.corporation_name || "",
-                alliance_id: kill.victim?.alliance_id || 0,
-                alliance_name: kill.victim?.alliance_name || "",
+                ship_id: kill?.victim?.ship_id || 0,
+                ship_name: kill?.victim?.ship_name || {},
+                character_id: kill?.victim?.character_id || 0,
+                character_name: kill?.victim?.character_name || "",
+                corporation_id: kill?.victim?.corporation_id || 0,
+                corporation_name: kill?.victim?.corporation_name || "",
+                alliance_id: kill?.victim?.alliance_id || 0,
+                alliance_name: kill?.victim?.alliance_name || "",
                 faction_id: kill.victim?.faction_id || 0,
                 faction_name: kill.victim?.faction_name || ""
             },
 
             // Create properly structured finalBlow object
             finalblow: {
-                character_id: finalBlowAttacker.character_id || 0,
-                character_name: finalBlowAttacker.character_name || "",
-                corporation_id: finalBlowAttacker.corporation_id || 0,
-                corporation_name: finalBlowAttacker.corporation_name || "",
-                alliance_id: finalBlowAttacker.alliance_id || 0,
-                alliance_name: finalBlowAttacker.alliance_name || "",
-                faction_id: finalBlowAttacker.faction_id || 0,
-                faction_name: finalBlowAttacker.faction_name || "",
-                ship_group_name: finalBlowAttacker.ship_group_name || "",
-                is_npc: finalBlowAttacker.npc || false
+                character_id: finalBlowAttacker?.character_id || 0,
+                character_name: finalBlowAttacker?.character_name || "",
+                corporation_id: finalBlowAttacker?.corporation_id || 0,
+                corporation_name: finalBlowAttacker?.corporation_name || "",
+                alliance_id: finalBlowAttacker?.alliance_id || 0,
+                alliance_name: finalBlowAttacker?.alliance_name || "",
+                faction_id: finalBlowAttacker?.faction_id || 0,
+                faction_name: finalBlowAttacker?.faction_name || "",
+                ship_group_name: finalBlowAttacker?.ship_group_name || "",
+                is_npc: finalBlowAttacker?.npc || false
             }
         }
 
