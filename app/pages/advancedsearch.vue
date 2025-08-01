@@ -393,20 +393,20 @@
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
-import { 
-  createDefaultFilters, 
-  buildAdvancedSearchQuery,
-  createQuickFilterFacet,
-  SECURITY_OPTIONS,
-  ATTACKER_COUNT_OPTIONS,
-  ATTACKER_TYPE_OPTIONS,
-  ISK_VALUE_OPTIONS,
-  SHIP_CATEGORY_OPTIONS,
-  TIME_FILTER_OPTIONS,
-  SORT_FIELD_OPTIONS,
-  type AdvancedSearchFilters, 
-  type SearchFacet 
-} from '../../server/helpers/AdvancedSearch'
+import {
+    ATTACKER_COUNT_OPTIONS,
+    ATTACKER_TYPE_OPTIONS,
+    buildAdvancedSearchQuery,
+    createDefaultFilters,
+    createQuickFilterFacet,
+    ISK_VALUE_OPTIONS,
+    SECURITY_OPTIONS,
+    SHIP_CATEGORY_OPTIONS,
+    SORT_FIELD_OPTIONS,
+    TIME_FILTER_OPTIONS,
+    type AdvancedSearchFilters,
+    type SearchFacet
+} from '../../server/helpers/asdf'
 
 const router = useRouter()
 
