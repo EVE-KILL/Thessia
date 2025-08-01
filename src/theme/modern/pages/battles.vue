@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import moment from 'moment';
-import { computed, onMounted, ref, watch } from 'vue';
+import { computed, ref, watch } from 'vue';
 import type { IBattlesDocument } from '~/server/interfaces/IBattles';
 
 const { t, locale } = useI18n();
@@ -254,19 +254,16 @@ const getSystemsDisplay = (battle: IBattlesDocument) => {
         <div class="bg-background-800 p-4 rounded-lg shadow-lg border border-gray-700/30">
             <!-- Search Input -->
             <div class="mb-4">
-                <UInput v-model="searchQuery" placeholder="Search battles..." icon="lucide:search"
-                    size="lg" :ui="{
-                        icon: {
-                            trailing: {
-                                pointer: '',
-                            },
+                <UInput v-model="searchQuery" placeholder="Search battles..." icon="lucide:search" size="lg" :ui="{
+                    icon: {
+                        trailing: {
+                            pointer: '',
                         },
-                    }">
+                    },
+                }">
                     <template #trailing>
-                        <button v-show="searchQuery !== ''" 
-                            class="text-gray-400 hover:text-gray-600 p-1 rounded"
-                            @click="searchQuery = ''"
-                            type="button">
+                        <button v-show="searchQuery !== ''" class="text-gray-400 hover:text-gray-600 p-1 rounded"
+                            @click="searchQuery = ''" type="button">
                             <UIcon name="lucide:x" class="w-4 h-4" />
                         </button>
                     </template>
@@ -373,7 +370,7 @@ const getSystemsDisplay = (battle: IBattlesDocument) => {
                         <div>{{ formatTimeRange(item.start_time, item.end_time) }}</div>
                         <div>{{ t('duration', 'Duration') }}: {{ formatDuration(item.duration_ms) }}</div>
                     </div>
-                </template>                <template #cell-system="{ item }">
+                </template> <template #cell-system="{ item }">
                     <div class="flex flex-col space-y-1">
                         <template v-for="(system, index) in getSystemsDisplay(item)"
                             :key="`system-${system.id}-${index}`">

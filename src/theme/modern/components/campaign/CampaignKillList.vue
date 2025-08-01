@@ -49,17 +49,21 @@ const queryParams = computed(() => ({
     limit: pageSize.value // Use the separate pageSize ref
 }));
 
-// Fetch kill list data from campaign-specific endpoint
+// Fetch kill list data from campaign-specific endpoint using useAsyncData for lazy loading
 const {
     data: fetchedData,
     pending,
     error,
     refresh
-} = useFetch<{ killmails: IKillList[], pagination: { page: number, limit: number, hasMore: boolean, total: number } }>(
-    () => `/api/campaign/${props.campaignId}/killmails`,
+} = useAsyncData<{ killmails: IKillList[], pagination: { page: number, limit: number, hasMore: boolean, total: number } }>(
+    `campaign-killmails-${props.campaignId}-${page.value}-${pageSize.value}`,
+    () => $fetch(`/api/campaign/${props.campaignId}/killmails`, {
+        query: queryParams.value
+    }),
     {
-        key: `campaign-killmails-${props.campaignId}-${page.value}-${pageSize.value}`,
-        query: queryParams
+        lazy: true,
+        default: () => ({ killmails: [], pagination: { page: 1, limit: props.limit, hasMore: false, total: 0 } }),
+        server: false
     }
 );
 
@@ -388,196 +392,146 @@ onUpdated(() => {
             </div>
         </div>
 
-        <!-- Loading state -->
-        <div v-if="pending && !killmails.length" class="flex flex-col items-center justify-center py-12">
-            <UIcon name="lucide:loader" class="w-12 h-12 animate-spin text-primary mb-4" />
-            <span class="text-xl font-medium">{{ t('campaign.loading_killmails') }}</span>
-        </div>
+        <!-- Main content area - always render to prevent hydration mismatch -->
+        <div class="campaign-content">
+            <!-- Loading state -->
+            <div v-show="pending && !killmails.length" class="flex flex-col items-center justify-center py-12">
+                <UIcon name="lucide:loader" class="w-12 h-12 animate-spin text-primary mb-4" />
+                <span class="text-xl font-medium">{{ t('campaign.loading_killmails') }}</span>
+            </div>
 
-        <!-- Error state -->
-        <div v-else-if="error" class="bg-red-50 dark:bg-red-900/20 rounded-lg text-center">
-            <UIcon name="lucide:alert-circle" class="w-12 h-12 text-red-500 mb-4 mx-auto" />
-            <p class="text-red-600 dark:text-red-400">{{ error.message || t('common.errorLoadingData') }}</p>
-            <UButton class="mt-4" icon="i-lucide-refresh-cw" @click="refresh">{{ t('retry') }}</UButton>
-        </div>
+            <!-- Error state -->
+            <div v-show="error" class="bg-red-50 dark:bg-red-900/20 rounded-lg text-center">
+                <UIcon name="lucide:alert-circle" class="w-12 h-12 text-red-500 mb-4 mx-auto" />
+                <p class="text-red-600 dark:text-red-400">{{ error?.message || t('common.errorLoadingData') }}</p>
+                <UButton class="mt-4" icon="i-lucide-refresh-cw" @click="() => refresh()">{{ t('retry') }}</UButton>
+            </div>
 
-        <!-- No data state -->
-        <div v-else-if="!killmails.length" class="bg-gray-50 dark:bg-gray-800 rounded-lg text-center">
-            <UIcon name="lucide:search" class="w-12 h-12 text-gray-400 mb-4 mx-auto" />
-            <p class="text-gray-600 dark:text-gray-400">{{ t('campaign.no_killmails_found') }}</p>
-        </div>
+            <!-- No data state -->
+            <div v-show="!killmails.length && !pending && !error"
+                class="bg-gray-50 dark:bg-gray-800 rounded-lg text-center">
+                <UIcon name="lucide:search" class="w-12 h-12 text-gray-400 mb-4 mx-auto" />
+                <p class="text-gray-600 dark:text-gray-400">{{ t('campaign.no_killmails_found') }}</p>
+            </div>
 
-        <!-- Killlist table -->
-        <Table v-else :columns="tableColumns" :items="killmails" :loading="pending && !killmails.length"
-            :skeleton-count="pagination.pageSize" :empty-text="t('campaign.no_killmails_found')" :special-header="true"
-            :bordered="true" :link-fn="generateKillLink" background="transparent" :row-class="getRowClass">
-            <!-- Ship column -->
-            <template #cell-ship="{ item }">
-                <div class="flex items-center py-1">
-                    <Image type="type-render" :id="item.victim.ship_id"
-                        :alt="`Ship: ${getLocalizedString(item.victim.ship_name, currentLocale)}`"
-                        class="rounded w-16 h-16 mx-2" size="64" />
-                    <div class="flex flex-col items-start">
-                        <span class="text-sm text-black dark:text-white truncate max-w-[150px]"
-                            :ref="(el) => setElementRef(el, item.killmail_id, shipNameRefs)">
-                            {{ getLocalizedString(item.victim.ship_name, currentLocale) }}
-                        </span>
-                        <span class="text-xs text-gray-500 dark:text-gray-400 truncate max-w-[150px]">
-                            {{ getLocalizedString(item.victim.ship_group_name || {}, currentLocale) }}
-                        </span>
-                        <span v-if="item.total_value > 50" class="text-xs text-gray-600 dark:text-gray-400">
-                            {{ formatIsk(item.total_value) }} ISK
-                        </span>
-                    </div>
-                </div>
-            </template>
-
-            <!-- Victim column -->
-            <template #cell-victim="{ item }">
-                <div class="flex items-center py-1">
-                    <template v-if="item.victim.character_id > 0">
-                        <Image type="character" :id="item.victim.character_id"
-                            :alt="`Character: ${item.victim.character_name}`" class="rounded-full w-16 h-16 mx-2"
-                            size="64" />
-                    </template>
-                    <Image v-else type="character" :id="1" alt="Placeholder" class="rounded-full w-16 h-16 mx-2"
-                        size="64" />
-                    <div class="flex flex-col items-start min-w-0 flex-1">
-                        <!-- Character Name -->
-                        <span class="text-sm text-black dark:text-white truncate max-w-full"
-                            :ref="(el) => setElementRef(el, item.killmail_id, characterNameRefs)">
-                            {{ item.victim.character_name || t('campaign.unknown_pilot') }}
-                        </span>
-                        <!-- Corporation Name (without ticker) -->
-                        <span class="text-xs text-gray-600 dark:text-gray-400 truncate max-w-full"
-                            :ref="(el) => setElementRef(el, item.killmail_id, corporationNameRefs)">
-                            {{ item.victim.corporation_name }}
-                        </span>
-                        <!-- Alliance Name (without ticker) -->
-                        <span v-if="item.victim.alliance_name"
-                            class="text-xs text-gray-500 dark:text-gray-500 truncate max-w-full"
-                            :ref="(el) => setElementRef(el, item.killmail_id, allianceNameRefs)">
-                            {{ item.victim.alliance_name }}
-                        </span>
-                    </div>
-                </div>
-            </template>
-
-            <!-- Final Blow column -->
-            <template #cell-finalBlow="{ item }">
-                <div class="flex items-center py-1">
-                    <!-- Character or placeholder when finalblow.character_id missing -->
-                    <template v-if="item.finalblow.character_id > 0">
-                        <Image type="character" :id="item.finalblow.character_id"
-                            :alt="`Character: ${item.finalblow.character_name}`" class="rounded-full w-16 h-16 mx-2"
-                            size="64" />
-                        <div class="flex flex-col items-start min-w-0 flex-1">
-                            <!-- Character Name -->
-                            <span class="text-sm text-black dark:text-white truncate max-w-full"
-                                :ref="(el) => setElementRef(el, `fb-${item.killmail_id}`, finalBlowNameRefs)">
-                                {{ item.finalblow.character_name }}
-                            </span>
-                            <!-- Corporation Name (without ticker) -->
-                            <span class="text-xs text-gray-600 dark:text-gray-400 truncate max-w-full"
-                                :ref="(el) => setElementRef(el, `fb-${item.killmail_id}`, finalBlowCorpRefs)">
-                                {{ item.finalblow.corporation_name }}
-                            </span>
-                            <!-- Alliance Name (without ticker) -->
-                            <span v-if="item.finalblow.alliance_name"
-                                class="text-xs text-gray-500 dark:text-gray-500 truncate max-w-full"
-                                :ref="(el) => setElementRef(el, `fb-${item.killmail_id}`, finalBlowAllianceRefs)">
-                                {{ item.finalblow.alliance_name }}
-                            </span>
-                            <!-- Faction Name (when no alliance) -->
-                            <span v-else-if="item.finalblow.faction_name"
-                                class="text-xs text-gray-500 dark:text-gray-500 truncate max-w-full">
-                                {{ item.finalblow.faction_name }}
-                            </span>
+            <!-- Killlist table -->
+            <div v-show="killmails.length > 0">
+                <Table :columns="tableColumns" :items="killmails" :loading="pending && !killmails.length"
+                    :skeleton-count="pagination.pageSize" :empty-text="t('campaign.no_killmails_found')"
+                    :special-header="true" :bordered="true" :link-fn="generateKillLink" background="transparent"
+                    :row-class="getRowClass">
+                    <!-- Ship column -->
+                    <template #cell-ship="{ item }">
+                        <div class="flex items-center py-1">
+                            <Image type="type-render" :id="item.victim.ship_id"
+                                :alt="`Ship: ${getLocalizedString(item.victim.ship_name, currentLocale)}`"
+                                class="rounded w-16 h-16 mx-2" size="64" />
+                            <div class="flex flex-col items-start">
+                                <span class="text-sm text-black dark:text-white truncate max-w-[150px]"
+                                    :ref="(el) => setElementRef(el, item.killmail_id, shipNameRefs)">
+                                    {{ getLocalizedString(item.victim.ship_name, currentLocale) }}
+                                </span>
+                                <span class="text-xs text-gray-500 dark:text-gray-400 truncate max-w-[150px]">
+                                    {{ getLocalizedString(item.victim.ship_group_name || {}, currentLocale) }}
+                                </span>
+                                <span v-if="item.total_value > 50" class="text-xs text-gray-600 dark:text-gray-400">
+                                    {{ formatIsk(item.total_value) }} ISK
+                                </span>
+                            </div>
                         </div>
                     </template>
-                    <template v-else>
-                        <Image type="character" :id="1" size="64" alt="NPC/Structure"
-                            class="rounded-full w-16 h-16 mx-2" />
-                        <div class="flex flex-col items-start min-w-0 flex-1">
-                            <span class="text-sm text-black dark:text-white truncate max-w-full">
-                                {{ item.finalblow.faction_name || item.finalblow.character_name ||
-                                    t('campaign.unknown_pilot') }}
-                            </span>
-                            <span v-if="item.finalblow.corporation_name"
-                                class="text-xs text-gray-600 dark:text-gray-400 truncate max-w-full">
-                                {{ item.finalblow.corporation_name }}
-                            </span>
-                            <span v-if="item.finalblow.ship_group_name"
-                                class="text-xs text-gray-500 dark:text-gray-500 truncate max-w-full">
-                                {{ getLocalizedString(item.finalblow.ship_group_name, currentLocale) }}
-                            </span>
+
+                    <!-- Victim column -->
+                    <template #cell-victim="{ item }">
+                        <div class="flex items-center py-1">
+                            <template v-if="item.victim.character_id > 0">
+                                <Image type="character" :id="item.victim.character_id"
+                                    :alt="`Character: ${item.victim.character_name}`"
+                                    class="rounded-full w-16 h-16 mx-2" size="64" />
+                            </template>
+                            <Image v-else type="character" :id="1" alt="Placeholder" class="rounded-full w-16 h-16 mx-2"
+                                size="64" />
+                            <div class="flex flex-col items-start min-w-0 flex-1">
+                                <!-- Character Name -->
+                                <span class="text-sm text-black dark:text-white truncate max-w-full"
+                                    :ref="(el) => setElementRef(el, item.killmail_id, characterNameRefs)">
+                                    {{ item.victim.character_name || t('campaign.unknown_pilot') }}
+                                </span>
+                                <!-- Corporation Name (without ticker) -->
+                                <span class="text-xs text-gray-600 dark:text-gray-400 truncate max-w-full"
+                                    :ref="(el) => setElementRef(el, item.killmail_id, corporationNameRefs)">
+                                    {{ item.victim.corporation_name }}
+                                </span>
+                                <!-- Alliance Name (without ticker) -->
+                                <span v-if="item.victim.alliance_name"
+                                    class="text-xs text-gray-500 dark:text-gray-500 truncate max-w-full"
+                                    :ref="(el) => setElementRef(el, item.killmail_id, allianceNameRefs)">
+                                    {{ item.victim.alliance_name }}
+                                </span>
+                            </div>
                         </div>
                     </template>
-                </div>
-            </template>
 
-            <!-- Location column -->
-            <template #cell-location="{ item }">
-                <div class="flex flex-col items-start py-1 text-sm px-2">
-                    <span class="text-sm text-black dark:text-white whitespace-nowrap">
-                        {{ getLocalizedString(item.region_name, currentLocale) }}
-                    </span>
-                    <div class="text-xs text-gray-600 dark:text-gray-400 whitespace-nowrap">
-                        <span>{{ item.system_name }}</span>
-                        <span> (</span>
-                        <span :class="getSecurityColor(item.system_security)">
-                            {{ item.system_security.toFixed(1) }}
-                        </span>
-                        <span>)</span>
-                    </div>
-                </div>
-            </template>
-
-            <!-- Details column -->
-            <template #cell-details="{ item }">
-                <div class="flex flex-col items-end w-full">
-                    <div class="text-sm text-black dark:text-white">{{ formatDate(item.kill_time) }}</div>
-                    <div class="flex gap-1 items-center">
-                        <span class="text-xs text-gray-600 dark:text-gray-400">{{ item.attackerCount }}</span>
-                        <NuxtImg src="/images/involved.png" quality="80" width="16" height="16"
-                            :alt="`${item.attackerCount} Involved`" class="h-4" />
-                    </div>
-                </div>
-            </template>
-
-            <!-- Mobile view -->
-            <template #mobile-row="{ item }">
-                <div class="mobile-container" :class="getRowClass(item)">
-                    <!-- Ship Image -->
-                    <Image type="type-render" :id="item.victim.ship_id"
-                        :alt="`Ship: ${getLocalizedString(item.victim.ship_name, currentLocale)}`"
-                        class="rounded w-16 h-16" size="64" />
-
-                    <!-- Victim Info -->
-                    <div class="mobile-content">
-                        <!-- Top Line: Victim Name + ISK Value -->
-                        <div class="mobile-header">
-                            <span class="victim-name truncate">{{ item.victim.character_name ||
-                                t('campaign.unknown_pilot') }}</span>
-                            <span v-if="item.total_value > 50"
-                                class="isk-value text-xs text-gray-600 dark:text-gray-400">
-                                {{ formatIsk(item.total_value) }} ISK
-                            </span>
+                    <!-- Final Blow column -->
+                    <template #cell-finalBlow="{ item }">
+                        <div class="flex items-center py-1">
+                            <!-- Character or placeholder when finalblow.character_id missing -->
+                            <template v-if="item.finalblow.character_id > 0">
+                                <Image type="character" :id="item.finalblow.character_id"
+                                    :alt="`Character: ${item.finalblow.character_name}`"
+                                    class="rounded-full w-16 h-16 mx-2" size="64" />
+                                <div class="flex flex-col items-start min-w-0 flex-1">
+                                    <!-- Character Name -->
+                                    <span class="text-sm text-black dark:text-white truncate max-w-full"
+                                        :ref="(el) => setElementRef(el, `fb-${item.killmail_id}`, finalBlowNameRefs)">
+                                        {{ item.finalblow.character_name }}
+                                    </span>
+                                    <!-- Corporation Name (without ticker) -->
+                                    <span class="text-xs text-gray-600 dark:text-gray-400 truncate max-w-full"
+                                        :ref="(el) => setElementRef(el, `fb-${item.killmail_id}`, finalBlowCorpRefs)">
+                                        {{ item.finalblow.corporation_name }}
+                                    </span>
+                                    <!-- Alliance Name (without ticker) -->
+                                    <span v-if="item.finalblow.alliance_name"
+                                        class="text-xs text-gray-500 dark:text-gray-500 truncate max-w-full"
+                                        :ref="(el) => setElementRef(el, `fb-${item.killmail_id}`, finalBlowAllianceRefs)">
+                                        {{ item.finalblow.alliance_name }}
+                                    </span>
+                                    <!-- Faction Name (when no alliance) -->
+                                    <span v-else-if="item.finalblow.faction_name"
+                                        class="text-xs text-gray-500 dark:text-gray-500 truncate max-w-full">
+                                        {{ item.finalblow.faction_name }}
+                                    </span>
+                                </div>
+                            </template>
+                            <template v-else>
+                                <Image type="character" :id="1" size="64" alt="NPC/Structure"
+                                    class="rounded-full w-16 h-16 mx-2" />
+                                <div class="flex flex-col items-start min-w-0 flex-1">
+                                    <span class="text-sm text-black dark:text-white truncate max-w-full">
+                                        {{ item.finalblow.faction_name || item.finalblow.character_name ||
+                                            t('campaign.unknown_pilot') }}
+                                    </span>
+                                    <span v-if="item.finalblow.corporation_name"
+                                        class="text-xs text-gray-600 dark:text-gray-400 truncate max-w-full">
+                                        {{ item.finalblow.corporation_name }}
+                                    </span>
+                                    <span v-if="item.finalblow.ship_group_name"
+                                        class="text-xs text-gray-500 dark:text-gray-500 truncate max-w-full">
+                                        {{ getLocalizedString(item.finalblow.ship_group_name, currentLocale) }}
+                                    </span>
+                                </div>
+                            </template>
                         </div>
+                    </template>
 
-                        <!-- Corporation -->
-                        <div class="mobile-corporation truncate text-xs text-gray-600 dark:text-gray-400">
-                            {{ item.victim.corporation_name }}
-                        </div>
-
-                        <!-- Final Blow + Location -->
-                        <div class="mobile-meta flex justify-between text-xs text-gray-600 dark:text-gray-400">
-                            <span class="final-blow truncate max-w-[50%]">
-                                {{ item.is_npc ?
-                                    item.finalblow.faction_name :
-                                    (item.finalblow.character_name || t('campaign.unknown_pilot')) }}
+                    <!-- Location column -->
+                    <template #cell-location="{ item }">
+                        <div class="flex flex-col items-start py-1 text-sm px-2">
+                            <span class="text-sm text-black dark:text-white whitespace-nowrap">
+                                {{ getLocalizedString(item.region_name, currentLocale) }}
                             </span>
-                            <div class="system-info flex whitespace-nowrap">
+                            <div class="text-xs text-gray-600 dark:text-gray-400 whitespace-nowrap">
                                 <span>{{ item.system_name }}</span>
                                 <span> (</span>
                                 <span :class="getSecurityColor(item.system_security)">
@@ -586,127 +540,183 @@ onUpdated(() => {
                                 <span>)</span>
                             </div>
                         </div>
+                    </template>
 
-                        <!-- Time + Attacker Count -->
-                        <div class="mobile-footer flex justify-between items-center mt-1">
-                            <span class="kill-time text-xs text-gray-600 dark:text-gray-400">{{
-                                formatDate(item.kill_time) }}</span>
-                            <div class="attacker-count flex items-center gap-1">
-                                <span class="text-xs text-gray-600 dark:text-gray-400">{{ item.attackerCount
-                                }}</span>
+                    <!-- Details column -->
+                    <template #cell-details="{ item }">
+                        <div class="flex flex-col items-end w-full">
+                            <div class="text-sm text-black dark:text-white">{{ formatDate(item.kill_time) }}</div>
+                            <div class="flex gap-1 items-center">
+                                <span class="text-xs text-gray-600 dark:text-gray-400">{{ item.attackerCount }}</span>
                                 <NuxtImg src="/images/involved.png" quality="80" width="16" height="16"
-                                    :alt="`${item.attackerCount} Involved`" class="h-3" />
+                                    :alt="`${item.attackerCount} Involved`" class="h-4" />
                             </div>
                         </div>
-                    </div>
-                </div>
-            </template>
+                    </template>
 
-            <!-- Loading skeleton customization -->
-            <template #loading="{ mobile }">
-                <template v-if="mobile">
-                    <!-- Mobile loading skeleton -->
-                    <div class="mobile-container">
-                        <div class="rounded-md w-16 h-16 bg-gray-200 dark:bg-gray-700 animate-pulse"></div>
-                        <div class="flex-1 space-y-2">
-                            <div class="flex justify-between">
-                                <div class="h-4 bg-gray-200 dark:bg-gray-700 rounded w-32 animate-pulse"></div>
-                                <div class="h-3 bg-gray-200 dark:bg-gray-700 rounded w-16 animate-pulse"></div>
-                            </div>
-                            <div class="h-3 bg-gray-200 dark:bg-gray-700 rounded w-40 animate-pulse"></div>
-                            <div class="flex justify-between">
-                                <div class="h-3 bg-gray-200 dark:bg-gray-700 rounded w-24 animate-pulse"></div>
-                                <div class="h-3 bg-gray-200 dark:bg-gray-700 rounded w-20 animate-pulse"></div>
-                            </div>
-                            <div class="h-3 bg-gray-200 dark:bg-gray-700 rounded w-16 animate-pulse"></div>
-                        </div>
-                    </div>
-                </template>
-            </template>
+                    <!-- Mobile view -->
+                    <template #mobile-row="{ item }">
+                        <div class="mobile-container" :class="getRowClass(item)">
+                            <!-- Ship Image -->
+                            <Image type="type-render" :id="item.victim.ship_id"
+                                :alt="`Ship: ${getLocalizedString(item.victim.ship_name, currentLocale)}`"
+                                class="rounded w-16 h-16" size="64" />
 
-            <!-- Custom skeleton rendering for consistent layout -->
-            <template #skeleton>
-                <div class="skeleton-container">
-                    <div v-for="i in pagination.pageSize" :key="`skeleton-${i}`" class="killlist-skeleton-row">
-                        <!-- Ship column -->
-                        <div class="killlist-skeleton-cell" style="width: 20%">
-                            <div class="flex items-center">
-                                <div class="killlist-skeleton-image"></div>
-                                <div class="flex flex-col">
-                                    <div class="killlist-skeleton-title"></div>
-                                    <div class="killlist-skeleton-subtitle"></div>
+                            <!-- Victim Info -->
+                            <div class="mobile-content">
+                                <!-- Top Line: Victim Name + ISK Value -->
+                                <div class="mobile-header">
+                                    <span class="victim-name truncate">{{ item.victim.character_name ||
+                                        t('campaign.unknown_pilot') }}</span>
+                                    <span v-if="item.total_value > 50"
+                                        class="isk-value text-xs text-gray-600 dark:text-gray-400">
+                                        {{ formatIsk(item.total_value) }} ISK
+                                    </span>
+                                </div>
+
+                                <!-- Corporation -->
+                                <div class="mobile-corporation truncate text-xs text-gray-600 dark:text-gray-400">
+                                    {{ item.victim.corporation_name }}
+                                </div>
+
+                                <!-- Final Blow + Location -->
+                                <div class="mobile-meta flex justify-between text-xs text-gray-600 dark:text-gray-400">
+                                    <span class="final-blow truncate max-w-[50%]">
+                                        {{ item.is_npc ?
+                                            item.finalblow.faction_name :
+                                            (item.finalblow.character_name || t('campaign.unknown_pilot')) }}
+                                    </span>
+                                    <div class="system-info flex whitespace-nowrap">
+                                        <span>{{ item.system_name }}</span>
+                                        <span> (</span>
+                                        <span :class="getSecurityColor(item.system_security)">
+                                            {{ item.system_security.toFixed(1) }}
+                                        </span>
+                                        <span>)</span>
+                                    </div>
+                                </div>
+
+                                <!-- Time + Attacker Count -->
+                                <div class="mobile-footer flex justify-between items-center mt-1">
+                                    <span class="kill-time text-xs text-gray-600 dark:text-gray-400">{{
+                                        formatDate(item.kill_time) }}</span>
+                                    <div class="attacker-count flex items-center gap-1">
+                                        <span class="text-xs text-gray-600 dark:text-gray-400">{{ item.attackerCount
+                                            }}</span>
+                                        <NuxtImg src="/images/involved.png" quality="80" width="16" height="16"
+                                            :alt="`${item.attackerCount} Involved`" class="h-3" />
+                                    </div>
                                 </div>
                             </div>
                         </div>
+                    </template>
 
-                        <!-- Victim column -->
-                        <div class="killlist-skeleton-cell" style="width: 25%">
-                            <div class="flex items-center">
-                                <div class="killlist-skeleton-image"></div>
-                                <div class="flex flex-col">
-                                    <div class="killlist-skeleton-title"></div>
-                                    <div class="killlist-skeleton-subtitle"></div>
+                    <!-- Loading skeleton customization -->
+                    <template #loading="{ mobile }">
+                        <template v-if="mobile">
+                            <!-- Mobile loading skeleton -->
+                            <div class="mobile-container">
+                                <div class="rounded-md w-16 h-16 bg-gray-200 dark:bg-gray-700 animate-pulse"></div>
+                                <div class="flex-1 space-y-2">
+                                    <div class="flex justify-between">
+                                        <div class="h-4 bg-gray-200 dark:bg-gray-700 rounded w-32 animate-pulse"></div>
+                                        <div class="h-3 bg-gray-200 dark:bg-gray-700 rounded w-16 animate-pulse"></div>
+                                    </div>
+                                    <div class="h-3 bg-gray-200 dark:bg-gray-700 rounded w-40 animate-pulse"></div>
+                                    <div class="flex justify-between">
+                                        <div class="h-3 bg-gray-200 dark:bg-gray-700 rounded w-24 animate-pulse"></div>
+                                        <div class="h-3 bg-gray-200 dark:bg-gray-700 rounded w-20 animate-pulse"></div>
+                                    </div>
+                                    <div class="h-3 bg-gray-200 dark:bg-gray-700 rounded w-16 animate-pulse"></div>
+                                </div>
+                            </div>
+                        </template>
+                    </template>
+
+                    <!-- Custom skeleton rendering for consistent layout -->
+                    <template #skeleton>
+                        <div class="skeleton-container">
+                            <div v-for="i in pagination.pageSize" :key="`skeleton-${i}`" class="killlist-skeleton-row">
+                                <!-- Ship column -->
+                                <div class="killlist-skeleton-cell" style="width: 20%">
+                                    <div class="flex items-center">
+                                        <div class="killlist-skeleton-image"></div>
+                                        <div class="flex flex-col">
+                                            <div class="killlist-skeleton-title"></div>
+                                            <div class="killlist-skeleton-subtitle"></div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Victim column -->
+                                <div class="killlist-skeleton-cell" style="width: 25%">
+                                    <div class="flex items-center">
+                                        <div class="killlist-skeleton-image"></div>
+                                        <div class="flex flex-col">
+                                            <div class="killlist-skeleton-title"></div>
+                                            <div class="killlist-skeleton-subtitle"></div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Final blow column -->
+                                <div class="killlist-skeleton-cell" style="width: 25%">
+                                    <div class="flex items-center">
+                                        <div class="killlist-skeleton-image"></div>
+                                        <div class="flex flex-col">
+                                            <div class="killlist-skeleton-title"></div>
+                                            <div class="killlist-skeleton-subtitle"></div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Location column -->
+                                <div class="killlist-skeleton-cell" style="width: 15%">
+                                    <div class="flex flex-col px-2">
+                                        <div class="killlist-skeleton-title"></div>
+                                        <div class="flex items-center gap-1 mt-1">
+                                            <div class="killlist-skeleton-system"></div>
+                                            <div class="killlist-skeleton-security"></div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Details column -->
+                                <div class="killlist-skeleton-cell" style="width: 15%; justify-content: flex-end;">
+                                    <div class="flex flex-col items-end w-full">
+                                        <div class="killlist-skeleton-title mb-1" style="width: 60px"></div>
+                                        <div class="flex items-center gap-1">
+                                            <div class="killlist-skeleton-count"></div>
+                                            <div class="killlist-skeleton-icon"></div>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                         </div>
-
-                        <!-- Final blow column -->
-                        <div class="killlist-skeleton-cell" style="width: 25%">
-                            <div class="flex items-center">
-                                <div class="killlist-skeleton-image"></div>
-                                <div class="flex flex-col">
-                                    <div class="killlist-skeleton-title"></div>
-                                    <div class="killlist-skeleton-subtitle"></div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Location column -->
-                        <div class="killlist-skeleton-cell" style="width: 15%">
-                            <div class="flex flex-col px-2">
-                                <div class="killlist-skeleton-title"></div>
-                                <div class="flex items-center gap-1 mt-1">
-                                    <div class="killlist-skeleton-system"></div>
-                                    <div class="killlist-skeleton-security"></div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Details column -->
-                        <div class="killlist-skeleton-cell" style="width: 15%; justify-content: flex-end;">
-                            <div class="flex flex-col items-end w-full">
-                                <div class="killlist-skeleton-title mb-1" style="width: 60px"></div>
-                                <div class="flex items-center gap-1">
-                                    <div class="killlist-skeleton-count"></div>
-                                    <div class="killlist-skeleton-icon"></div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </template>
-        </Table>
-
-        <!-- Bottom controls - stacked on mobile, side by side on desktop -->
-        <div class="flex flex-col sm:flex-row justify-between items-center gap-4 mt-4">
-            <!-- Result count -->
-            <div class="text-xs text-gray-500">
-                {{ t('resultCount', { count: pagination.total }) }}
+                    </template>
+                </Table>
             </div>
-        </div>
 
-        <!-- Bottom pagination - on its own line -->
-        <div v-if="pagination.total > pagination.pageSize" class="w-full flex justify-center mt-4">
-            <UPagination v-model:page="page" :page-count="totalPages" :total="pagination.total" :ui="{
-                wrapper: 'flex items-center justify-center',
-                rounded: 'rounded-md',
-                default: {
-                    base: 'text-sm border-y border-r first:border-l border-gray-200 dark:border-gray-800 focus:z-10 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500',
-                    inactive: 'bg-background-800 hover:bg-background-700',
-                    padding: 'px-3 py-2',
-                    disabled: 'opacity-50 cursor-not-allowed'
-                }
-            }" :prev-button="{
+            <!-- Bottom controls - stacked on mobile, side by side on desktop -->
+            <div class="flex flex-col sm:flex-row justify-between items-center gap-4 mt-4">
+                <!-- Result count -->
+                <div class="text-xs text-gray-500">
+                    {{ t('resultCount', { count: pagination.total }) }}
+                </div>
+            </div>
+
+            <!-- Bottom pagination - on its own line -->
+            <div v-if="pagination.total > pagination.pageSize" class="w-full flex justify-center mt-4">
+                <UPagination v-model:page="page" :page-count="totalPages" :total="pagination.total" :ui="{
+                    wrapper: 'flex items-center justify-center',
+                    rounded: 'rounded-md',
+                    default: {
+                        base: 'text-sm border-y border-r first:border-l border-gray-200 dark:border-gray-800 focus:z-10 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500',
+                        inactive: 'bg-background-800 hover:bg-background-700',
+                        padding: 'px-3 py-2',
+                        disabled: 'opacity-50 cursor-not-allowed'
+                    }
+                }" :prev-button="{
                 icon: 'i-lucide-chevron-left',
                 label: '',
                 disabled: page === 1
@@ -714,16 +724,17 @@ onUpdated(() => {
                 icon: 'i-lucide-chevron-right',
                 label: ''
             }">
-                <template #default>
-                    <span class="mx-2">{{ $t('common.page') }} {{ page }}</span>
-                </template>
-            </UPagination>
-        </div>
+                    <template #default>
+                        <span class="mx-2">{{ $t('common.page') }} {{ page }}</span>
+                    </template>
+                </UPagination>
+            </div>
 
-        <!-- No more killmails notification if there are killmails but no more pages -->
-        <div v-if="killmails.length > 0 && !hasMoreData && pagination.total <= pagination.pageSize"
-            class="mt-4 text-center text-gray-500">
-            {{ t('campaign.no_more_killmails') }}
+            <!-- No more killmails notification if there are killmails but no more pages -->
+            <div v-if="killmails.length > 0 && !hasMoreData && pagination.total <= pagination.pageSize"
+                class="mt-4 text-center text-gray-500">
+                {{ t('campaign.no_more_killmails') }}
+            </div>
         </div>
 
         <!-- Global tooltip that follows mouse cursor -->
