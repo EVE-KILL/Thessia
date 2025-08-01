@@ -115,8 +115,9 @@
 <script setup lang="ts">
 import { formatDistanceToNow } from "date-fns";
 import { de, enUS, es, fr, ja, ko, ru, zhCN } from "date-fns/locale";
-import { computed, onMounted, onUnmounted, ref, watchEffect } from "vue";
+import { computed, onMounted, onUnmounted, ref } from "vue";
 import { useI18n } from "vue-i18n";
+import formatIsk from "~/src/core/utils/formatIsk";
 
 const props = defineProps({
     alliance: {
@@ -266,7 +267,7 @@ const formattedStats = computed(() => {
 });
 
 // Fetch stats data
-const fetchStats = (period = "90") => {
+const fetchStats = async (period = "90") => {
     if (!props.alliance?.alliance_id) {
         stats.value = null;
         statsLoading.value = false;
@@ -274,35 +275,33 @@ const fetchStats = (period = "90") => {
         return;
     }
 
-    const url = `/api/stats/alliance_id/${props.alliance.alliance_id}${period === "all" ? "?days=0" : `?days=${period}`}`;
+    // Set loading state
+    statsLoading.value = true;
+    statsError.value = false;
 
-    const {
-        data: fetchedData,
-        pending: fetchPending,
-        error: fetchError
-    } = useFetch(url, {
-        key: `alliance-dashboard-stats-${props.alliance.alliance_id}-${period}`,
-    });
+    try {
+        const url = `/api/stats/alliance_id/${props.alliance.alliance_id}${period === "all" ? "?days=0" : `?days=${period}`}`;
 
-    // React to changes in the fetch state
-    watchEffect(() => {
-        statsLoading.value = fetchPending.value;
-        stats.value = fetchedData.value || null;
-        statsError.value = !!fetchError.value;
-        if (fetchError.value) {
-            console.error(`Failed to fetch alliance stats for ${props.alliance.alliance_id} (period: ${period}):`, fetchError.value);
-        }
-    });
+        const data = await $fetch(url);
+
+        stats.value = data;
+        statsError.value = false;
+    } catch (error) {
+        console.error(`Failed to fetch alliance stats for ${props.alliance.alliance_id} (period: ${period}):`, error);
+        statsError.value = true;
+        stats.value = null;
+    } finally {
+        statsLoading.value = false;
+    }
 };
 
 // Fetch data on component mount
 onMounted(() => {
-    console.log('[AllianceDashboard] Component Mounted. Initial activePeriod:', activePeriod.value);
     fetchStats(activePeriod.value);
 });
 
 onUnmounted(() => {
-    console.log('[AllianceDashboard] Component Unmounted');
+    // Component cleanup if needed
 });
 </script>
 

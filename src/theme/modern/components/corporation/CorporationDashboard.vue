@@ -1,18 +1,17 @@
 <template>
     <div class="corporation-dashboard">
         <div class="grid-container">
-            <!-- Corporation Description Section -->
+            <!-- Corporation Bio Section -->
             <UCard class="bg-black bg-opacity-30 dark:bg-gray-900 dark:bg-opacity-30">
                 <template #header>
                     <div class="header-container">
-                        <h3 class="header-title">{{ $t('description') }}</h3>
+                        <h3 class="header-title">{{ $t('bio') }}</h3>
                     </div>
                 </template>
 
-                <div v-if="corporationDescription" class="corporation-description" v-html="corporationDescription">
-                </div>
-                <div v-else class="empty-description">
-                    {{ $t('corporation.noDescription') }}
+                <div v-if="characterBio" class="corporation-bio" v-html="characterBio"></div>
+                <div v-else class="empty-bio">
+                    {{ $t('noBio') }}
                 </div>
             </UCard>
 
@@ -97,13 +96,73 @@
                             </template>
                         </Table>
                     </div>
+
+                    <!-- Dies To Corporations -->
+                    <div v-if="stats.full.diesToCorporations && Object.keys(stats.full.diesToCorporations).length > 0"
+                        class="stats-section">
+                        <h3 class="section-title">{{ $t('diesToCorporations') }}</h3>
+                        <Table :columns="corpColumns" :items="sortByCountDesc(stats.full.diesToCorporations)"
+                            background="transparent" density="compact" :bordered="false" :special-header="true">
+                            <template #cell-name="{ item }">
+                                <div class="text-white">{{ item.name }}</div>
+                            </template>
+                            <template #cell-count="{ item }">
+                                <div class="count-value">{{ formatNumber(item.count) }}</div>
+                            </template>
+                        </Table>
+                    </div>
+
+                    <!-- Dies To Alliances -->
+                    <div v-if="stats.full.diesToAlliances && Object.keys(stats.full.diesToAlliances).length > 0"
+                        class="stats-section">
+                        <h3 class="section-title">{{ $t('diesToAlliances') }}</h3>
+                        <Table :columns="allianceColumns" :items="sortByCountDesc(stats.full.diesToAlliances)"
+                            background="transparent" density="compact" :bordered="false" :special-header="true">
+                            <template #cell-name="{ item }">
+                                <div class="text-white">{{ item.name }}</div>
+                            </template>
+                            <template #cell-count="{ item }">
+                                <div class="count-value">{{ formatNumber(item.count) }}</div>
+                            </template>
+                        </Table>
+                    </div>
+
+                    <!-- Flies With Corporations -->
+                    <div v-if="stats.full.fliesWithCorporations && Object.keys(stats.full.fliesWithCorporations).length > 0"
+                        class="stats-section">
+                        <h3 class="section-title">{{ $t('fliesWithCorporations') }}</h3>
+                        <Table :columns="corpColumns" :items="sortByCountDesc(stats.full.fliesWithCorporations)"
+                            background="transparent" density="compact" :bordered="false" :special-header="true">
+                            <template #cell-name="{ item }">
+                                <div class="text-white">{{ item.name }}</div>
+                            </template>
+                            <template #cell-count="{ item }">
+                                <div class="count-value">{{ formatNumber(item.count) }}</div>
+                            </template>
+                        </Table>
+                    </div>
+
+                    <!-- Flies With Alliances -->
+                    <div v-if="stats.full.fliesWithAlliances && Object.keys(stats.full.fliesWithAlliances).length > 0"
+                        class="stats-section">
+                        <h3 class="section-title">{{ $t('fliesWithAlliances') }}</h3>
+                        <Table :columns="allianceColumns" :items="sortByCountDesc(stats.full.fliesWithAlliances)"
+                            background="transparent" density="compact" :bordered="false" :special-header="true">
+                            <template #cell-name="{ item }">
+                                <div class="text-white">{{ item.name }}</div>
+                            </template>
+                            <template #cell-count="{ item }">
+                                <div class="count-value">{{ formatNumber(item.count) }}</div>
+                            </template>
+                        </Table>
+                    </div>
                 </div>
 
                 <!-- Error message -->
                 <div v-else-if="statsError" class="error-container">
                     <UIcon name="i-lucide-alert-triangle" class="error-icon" size="lg" />
                     <p class="error-message">{{ $t('common.errorLoadingData') }}</p>
-                    <UButton size="sm" variant="ghost" class="retry-button" @click="fetchStats(activePeriod)">
+                    <UButton size="sm" variant="ghost" class="retry-button" @click="() => fetchStats(activePeriod)">
                         {{ $t('common.retry') }}
                     </UButton>
                 </div>
@@ -115,8 +174,9 @@
 <script setup lang="ts">
 import { formatDistanceToNow } from "date-fns";
 import { de, enUS, es, fr, ja, ko, ru, zhCN } from "date-fns/locale";
-import { computed, onMounted, onUnmounted, ref, watchEffect } from "vue";
+import { computed, onMounted, onUnmounted, ref } from "vue";
 import { useI18n } from "vue-i18n";
+import formatIsk from "~/src/core/utils/formatIsk";
 import { useEveHtmlParser } from "~/src/theme/modern/composables/useEveHtmlParser";
 
 const props = defineProps({
@@ -144,8 +204,8 @@ const activePeriodLabel = computed(() => {
     return `${activePeriod.value}d`;
 });
 
-// Corporation description
-const corporationDescription = computed(() => {
+// Corporation bio
+const characterBio = computed(() => {
     if (!props.corporation?.description) return "";
     return convertEveHtml(props.corporation.description);
 });
@@ -155,7 +215,7 @@ const stats = ref<any>(null);
 const statsLoading = ref(true);
 const statsError = ref(false);
 
-// Table columns
+// Table columns - adjusted with proper width alignment
 const statColumns = [
     { id: "name", header: t("name"), width: "50%" },
     { id: "value", header: t("value"), headerClass: "text-right", width: "50%" },
@@ -165,6 +225,50 @@ const shipColumns = [
     { id: "name", header: t("ship"), width: "75%" },
     { id: "count", header: t("count"), headerClass: "text-right", width: "25%" },
 ];
+
+const corpColumns = [
+    { id: "name", header: t("corporation"), width: "75%" },
+    { id: "count", header: t("count"), headerClass: "text-right", width: "25%" },
+];
+
+const allianceColumns = [
+    { id: "name", header: t("alliance"), width: "75%" },
+    { id: "count", header: t("count"), headerClass: "text-right", width: "25%" },
+];
+
+// Timezone data (evening playtimes)
+const timezones = {
+    "EUTZ Morning": [7, 12],
+    "EUTZ Afternoon": [12, 17],
+    "EUTZ Evening": [17, 22],
+    "USWTZ Morning": [14, 19],
+    "USWTZ Afternoon": [19, 0],
+    "USWTZ Evening": [0, 5],
+    "USETZ Morning": [11, 16],
+    "USETZ Afternoon": [16, 21],
+    "USETZ Evening": [21, 2],
+    "AUTZ Morning": [21, 2],
+    "AUTZ Afternoon": [2, 7],
+    "AUTZ Evening": [7, 12],
+    "CHTZ Morning": [23, 4],
+    "CHTZ Afternoon": [4, 9],
+    "CHTZ Evening": [9, 14],
+    "RUTZ Morning": [4, 9],
+    "RUTZ Afternoon": [9, 14],
+    "RUTZ Evening": [14, 19],
+};
+
+// Date locale mapping
+const dateLocales = {
+    en: enUS,
+    de: de,
+    es: es,
+    fr: fr,
+    ja: ja,
+    ko: ko,
+    ru: ru,
+    zh: zhCN,
+};
 
 /**
  * Gets localized string from an object containing translations
@@ -184,18 +288,6 @@ const formatDate = (dateString: string) => {
     });
 };
 
-// Date locale mapping
-const dateLocales = {
-    en: enUS,
-    de: de,
-    es: es,
-    fr: fr,
-    ja: ja,
-    ko: ko,
-    ru: ru,
-    zh: zhCN,
-};
-
 // Format numbers with commas
 const formatNumber = (value: number): string => {
     return new Intl.NumberFormat().format(value || 0);
@@ -213,6 +305,41 @@ const sortByCountDesc = (items: Record<string, any>) => {
 const changePeriod = (period: string) => {
     activePeriod.value = period;
     fetchStats(period);
+};
+
+// Function to determine the most active timezone based on the heatmap
+const determineActiveTimezone = (heatMap: Record<string, number> | undefined): string => {
+    if (!heatMap) return "Unknown";
+
+    const hours = Object.entries(heatMap).map(([hour, count]) => ({
+        hour: Number.parseInt(hour.replace("h", "")),
+        count,
+    }));
+
+    const sortedHours = hours.sort((a, b) => b.count - a.count);
+
+    if (sortedHours.length === 0) return "Unknown";
+
+    const activeHour = sortedHours[0]?.hour;
+    if (activeHour === undefined) return "Unknown";
+
+    for (const [timezone, range] of Object.entries(timezones)) {
+        const [start, end] = range;
+        if (start === undefined || end === undefined) continue;
+
+        // Handle the case where the timezone spans over midnight (e.g., USTZ)
+        if (start > end) {
+            if (activeHour >= start || activeHour <= end) {
+                return timezone;
+            }
+        } else {
+            if (activeHour >= start && activeHour <= end) {
+                return timezone;
+            }
+        }
+    }
+
+    return "Unknown";
 };
 
 // Get color for heatmap based on activity level
@@ -259,16 +386,24 @@ const getMaxHeatMapValue = (heatMap: Record<string, number>): number => {
 const formattedStats = computed(() => {
     if (!stats.value) return [];
 
+    const activeTimezone = determineActiveTimezone(stats.value.full.heatMap);
+
     return [
         { name: t("kills"), value: formatNumber(stats.value.kills) },
         { name: t("losses"), value: formatNumber(stats.value.losses) },
         { name: `${t("isk")} ${t("killed")}`, value: formatIsk(stats.value.iskKilled) },
         { name: `${t("isk")} ${t("lost")}`, value: formatIsk(stats.value.iskLost) },
+        { name: `${t("solo")} ${t("kills")}`, value: formatNumber(stats.value.soloKills) },
+        { name: `${t("solo")} ${t("losses")}`, value: formatNumber(stats.value.soloLosses) },
+        { name: `${t("npc")} ${t("losses")}`, value: formatNumber(stats.value.npcLosses) },
+        { name: t("blobFactor"), value: stats.value.full.blobFactor?.toFixed(2) || "0.00" },
+        { name: t("lastActive"), value: formatDate(stats.value.lastActive) },
+        { name: t("activeTimezone"), value: activeTimezone },
     ];
 });
 
 // Fetch stats data
-const fetchStats = (period = "90") => {
+const fetchStats = async (period = "90") => {
     if (!props.corporation?.corporation_id) {
         stats.value = null;
         statsLoading.value = false;
@@ -276,33 +411,31 @@ const fetchStats = (period = "90") => {
         return;
     }
 
-    const url = `/api/stats/corporation_id/${props.corporation.corporation_id}${period === "all" ? "?days=0" : `?days=${period}`}`;
+    // Set loading state
+    statsLoading.value = true;
+    statsError.value = false;
 
-    const {
-        data: fetchedData,
-        pending: fetchPending,
-        error: fetchError
-    } = useFetch(url, {
-        key: `corporation-dashboard-stats-${props.corporation.corporation_id}-${period}`,
-    });
+    try {
+        const url = `/api/stats/corporation_id/${props.corporation.corporation_id}${period === "all" ? "?days=0" : `?days=${period}`}`;
 
-    // React to changes in the fetch state
-    watchEffect(() => {
-        statsLoading.value = fetchPending.value;
-        stats.value = fetchedData.value || null;
-        statsError.value = !!fetchError.value;
-        if (fetchError.value) {
-            console.error(`Failed to fetch corporation stats for ${props.corporation.corporation_id} (period: ${period}):`, fetchError.value);
-        }
-    });
-};
+        const data = await $fetch(url);
 
-// Fetch data on component mount
+        stats.value = data;
+        statsError.value = false;
+    } catch (error) {
+        console.error(`Failed to fetch corporation stats for ${props.corporation.corporation_id} (period: ${period}):`, error);
+        statsError.value = true;
+        stats.value = null;
+    } finally {
+        statsLoading.value = false;
+    }
+};// Fetch data on component mount
 onMounted(() => {
     fetchStats(activePeriod.value);
 });
 
 onUnmounted(() => {
+    // Component cleanup if needed
 });
 </script>
 
@@ -339,26 +472,25 @@ onUnmounted(() => {
     gap: 0.5rem;
 }
 
-.corporation-description {
-    line-height: 1.6;
+.corporation-bio {
+    line-height: 1;
     font-family: monospace;
     word-break: break-word;
     font-size: 1.4rem;
     padding: 0.5rem;
     overflow-y: auto;
-    max-height: 600px;
 }
 
-.corporation-description :deep(a) {
+.corporation-bio a {
     color: rgb(99, 102, 241);
     text-decoration: none;
 }
 
-.corporation-description :deep(a:hover) {
+.corporation-bio a:hover {
     text-decoration: underline;
 }
 
-.empty-description {
+.empty-bio {
     text-align: center;
     padding: 1rem 0;
     color: rgb(156, 163, 175);

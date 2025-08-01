@@ -1,6 +1,16 @@
 <template>
     <div class="min-h-screen">
-        <div v-if="character" class="mx-auto p-4 text-gray-900 dark:text-white">
+        <!-- Always show loading until both hydrated AND data is ready -->
+        <div v-if="pending || !character" class="mx-auto p-4">
+            <USkeleton class="h-64 rounded-lg mb-4" />
+            <USkeleton class="h-8 w-64 mb-6" />
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <USkeleton v-for="i in 6" :key="i" class="h-32 rounded-lg" />
+            </div>
+        </div>
+
+        <!-- Main content - only show when data is ready -->
+        <div v-else-if="character && isClient" class="mx-auto p-4 text-gray-900 dark:text-white">
             <!-- Redesigned Character Profile Header -->
             <div
                 class="character-header rounded-lg overflow-hidden mb-6 bg-gray-100 bg-opacity-90 dark:bg-gray-900 dark:bg-opacity-30 border border-gray-300 dark:border-gray-800">
@@ -224,7 +234,7 @@
                                     </div>
                                     <div class="stat-row">
                                         <div class="stat-label text-gray-600 dark:text-gray-400">{{ $t('iskEfficiency')
-                                        }}</div>
+                                            }}</div>
                                         <div class="stat-value text-gray-900 dark:text-white">
                                             {{ calcIskEfficiency(validShortStats) }}%
                                         </div>
@@ -262,13 +272,13 @@
                                     </div>
                                     <div class="stat-row">
                                         <div class="stat-label text-gray-600 dark:text-gray-400">{{ $t('soloKillRatio')
-                                        }}</div>
+                                            }}</div>
                                         <div class="stat-value text-gray-900 dark:text-white">{{
                                             calcSoloKillRatio(validShortStats) }}%</div>
                                     </div>
                                     <div class="stat-row">
                                         <div class="stat-label text-gray-600 dark:text-gray-400">{{ $t('soloEfficiency')
-                                        }}
+                                            }}
                                         </div>
                                         <div class="stat-value text-gray-900 dark:text-white">{{
                                             calcSoloEfficiency(validShortStats) }}%</div>
@@ -292,13 +302,13 @@
                                     </div>
                                     <div class="stat-row">
                                         <div class="stat-label text-gray-600 dark:text-gray-400">{{ $t('npcLossRatio')
-                                        }}</div>
+                                            }}</div>
                                         <div class="stat-value text-gray-900 dark:text-white">{{
                                             calcNpcLossRatio(validShortStats) }}</div>
                                     </div>
                                     <div class="stat-row">
                                         <div class="stat-label text-gray-600 dark:text-gray-400">{{ $t('avgKillsPerDay')
-                                        }}
+                                            }}
                                         </div>
                                         <div class="stat-value text-gray-900 dark:text-white">{{
                                             calcAvgKillsPerDay(validShortStats, character.birthday) }}</div>
@@ -324,7 +334,7 @@
             <Tabs :items="tabItems" class="space-y-4" v-model="activeTabId">
                 <template #dashboard>
                     <div class="tab-content">
-                        <characterDashboard v-if="character" :character="character" />
+                        <CharacterDashboard v-if="character" :character="character" />
                     </div>
                 </template>
 
@@ -378,17 +388,8 @@
             </Tabs>
         </div>
 
-        <!-- Loading State -->
-        <div v-else-if="pending" class="mx-auto p-4">
-            <USkeleton class="h-64 rounded-lg mb-4" />
-            <USkeleton class="h-8 w-64 mb-6" />
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <USkeleton v-for="i in 6" :key="i" class="h-32 rounded-lg" />
-            </div>
-        </div>
-
         <!-- Error State -->
-        <UCard v-else
+        <UCard v-else-if="error || (characterData && 'error' in characterData)"
             class="mx-auto p-4 text-center bg-gray-100 bg-opacity-90 dark:bg-gray-900 dark:bg-opacity-30 text-gray-900 dark:text-white">
             <template #header>
                 <div class="flex justify-center mb-2">
@@ -412,7 +413,7 @@
 import type { TabsItem } from "@nuxt/ui";
 import { addYears, differenceInDays, format, formatDistanceToNow } from "date-fns";
 import { de, enUS, es, fr, ja, ko, ru, zhCN } from "date-fns/locale";
-import { computed, onMounted, ref, watch } from 'vue';
+import { computed, nextTick, onMounted, ref, watch } from 'vue';
 import { useI18n } from "vue-i18n";
 import type { ICharacter } from '~/server/interfaces/ICharacter';
 
@@ -422,6 +423,9 @@ const route = useRoute();
 const router = useRouter();
 const { id } = route.params;
 const { generateCharacterStructuredData } = useStructuredData();
+
+// For hydration safety
+const isClient = ref(false);
 
 const tabItems = [
     {
@@ -484,30 +488,38 @@ const tabItems = [
 // Hash-based initialization will happen after hydration
 const activeTabId = ref<string>(tabItems[0]?.id || '');
 
-// Only initialize from hash on client-side after hydration
+// Initialize from hash on client-side after hydration
 onMounted(() => {
-    const currentHash = route.hash.slice(1);
-    console.log('onMounted - currentHash:', currentHash);
+    isClient.value = true;
 
-    if (currentHash && tabItems.some(item => item.id === currentHash)) {
-        console.log('onMounted - setting activeTabId to hash:', currentHash);
-        activeTabId.value = currentHash;
-    }
+    nextTick(() => {
+        const currentHash = route.hash.slice(1);
+        console.log('onMounted - currentHash:', currentHash);
+
+        if (currentHash && tabItems.some(item => item.id === currentHash)) {
+            console.log('onMounted - setting activeTabId to hash:', currentHash);
+            activeTabId.value = currentHash;
+        }
+    });
 });
 
 // Watch for changes in route.hash to update activeTabId
 watch(() => route.hash, (newHash) => {
+    if (!isClient.value) return; // Don't run until hydrated
+
     const hashValue = newHash.slice(1);
     if (hashValue && tabItems.some(item => item.id === hashValue)) {
         activeTabId.value = hashValue;
     } else if (!hashValue && tabItems.length > 0) {
         // If hash is empty or invalid, just set the active tab without updating URL
-        activeTabId.value = tabItems[0].id;
+        activeTabId.value = tabItems[0]?.id || '';
     }
-});
+}, { immediate: false }); // Don't run immediately to avoid conflicts with onMounted
 
 // Update URL only when activeTabId changes due to user interaction
 watch(activeTabId, (newTabId, oldTabId) => {
+    if (!isClient.value) return; // Don't run until hydrated
+
     // Only update the URL if:
     // 1. This isn't the initial value (oldTabId exists)
     // 2. There was an actual change (newTabId !== oldTabId)
@@ -516,10 +528,14 @@ watch(activeTabId, (newTabId, oldTabId) => {
     if (oldTabId &&
         newTabId !== oldTabId &&
         route.hash !== `#${newTabId}` &&
-        (route.hash || newTabId !== tabItems[0].id)) {
-        router.push({ hash: `#${newTabId}` });
+        (route.hash || newTabId !== (tabItems[0]?.id || ''))) {
+        try {
+            router.push({ hash: `#${newTabId}` });
+        } catch (error) {
+            console.warn('Failed to update hash:', error);
+        }
     }
-});
+}, { flush: 'post' }); // Wait for DOM updates
 
 const dateLocales = {
     en: enUS,
@@ -541,16 +557,16 @@ const formatDate = (dateString: string) => {
 };
 
 // Format date with exact date format
-const formatExactDate = (dateString: string) => {
-    const date = new Date(dateString);
+const formatExactDate = (dateInput: string | Date) => {
+    const date = typeof dateInput === 'string' ? new Date(dateInput) : dateInput;
     return format(date, 'MMM d, yyyy', {
         locale: dateLocales[currentLocale.value] || enUS,
     });
 };
 
 // Calculate character age in years
-const calculateAge = (birthday: string) => {
-    const birthDate = new Date(birthday);
+const calculateAge = (birthdayInput: string | Date) => {
+    const birthDate = typeof birthdayInput === 'string' ? new Date(birthdayInput) : birthdayInput;
     const today = new Date();
 
     let age = today.getFullYear() - birthDate.getFullYear();
@@ -565,8 +581,8 @@ const calculateAge = (birthday: string) => {
 };
 
 // Format next birthday date
-const formatNextBirthday = (birthday: string) => {
-    const birthDate = new Date(birthday);
+const formatNextBirthday = (birthdayInput: string | Date) => {
+    const birthDate = typeof birthdayInput === 'string' ? new Date(birthdayInput) : birthdayInput;
     const today = new Date();
 
     // Get this year's birthday
@@ -587,8 +603,8 @@ const formatNextBirthday = (birthday: string) => {
 };
 
 // Calculate days until next birthday
-const getDaysUntilBirthday = (birthday: string) => {
-    const birthDate = new Date(birthday);
+const getDaysUntilBirthday = (birthdayInput: string | Date) => {
+    const birthDate = typeof birthdayInput === 'string' ? new Date(birthdayInput) : birthdayInput;
     const today = new Date();
 
     // Get this year's birthday
@@ -614,8 +630,10 @@ const {
     pending,
     error,
     refresh,
-} = await useFetch<ICharacter | { error: string } | null>(`/api/characters/${id}`, {
-    key: fetchKey.value,
+} = useAsyncData(fetchKey.value, () =>
+    $fetch<ICharacter | { error: string } | null>(`/api/characters/${id}`), {
+    lazy: true,
+    server: true,
     watch: [() => route.params.id],
 });
 
@@ -637,20 +655,14 @@ interface IShortStats {
     lastActive: string | null;
 }
 
-const shortStatsLoading = ref(true);
-const shortStatsData = ref<IShortStats | { error: string } | null>(null);
-
-onMounted(() => {
-    $fetch<IShortStats | { error: string } | null>(`/api/stats/character_id/${id}?dataType=basic&days=0`)
-        .then(data => {
-            shortStatsData.value = data;
-            shortStatsLoading.value = false;
-        })
-        .catch(error => {
-            console.error('Error fetching character short stats:', error);
-            shortStatsLoading.value = false;
-            shortStatsData.value = { error: 'Failed to fetch character stats' };
-        });
+const {
+    data: shortStatsData,
+    pending: shortStatsLoading,
+} = useAsyncData(`character-stats-${id}`, () =>
+    $fetch<IShortStats | { error: string } | null>(`/api/stats/character_id/${id}?dataType=basic&days=0`), {
+    lazy: true,
+    server: true,
+    watch: [() => route.params.id],
 });
 
 const validShortStats = computed(() => {
@@ -662,9 +674,15 @@ const validShortStats = computed(() => {
 
 // Generate structured data when character is loaded
 watch(character, (newCharacter) => {
+    if (!isClient.value) return; // Don't run until hydrated
+
     if (newCharacter) {
-        const characterUrl = `https://eve-kill.com${route.fullPath}`;
-        generateCharacterStructuredData(newCharacter, characterUrl, validShortStats.value);
+        try {
+            const characterUrl = `https://eve-kill.com${route.fullPath}`;
+            generateCharacterStructuredData(newCharacter, characterUrl, validShortStats.value);
+        } catch (error) {
+            console.warn('Failed to generate structured data:', error);
+        }
     }
 }, { immediate: true });
 
@@ -850,11 +868,11 @@ const calcNpcLossRatio = (stats: IShortStats | null): string => {
     return ((npcLosses / losses) * 100).toFixed(1);
 };
 
-const calcAvgKillsPerDay = (stats: IShortStats | null, birthday: Date): string => {
+const calcAvgKillsPerDay = (stats: IShortStats | null, birthdayInput: string | Date): string => {
     if (!stats || !stats.lastActive) return "0";
-    const characterAge = new Date(birthday).getTime();
-    //const characterAge = new Date().getTime() - new Date(stats.lastActive).getTime();
-    const daysActive = Math.max(1, Math.ceil(characterAge / (1000 * 60 * 60 * 24)));
+    const birthday = typeof birthdayInput === 'string' ? new Date(birthdayInput) : birthdayInput;
+    const characterAgeMs = new Date().getTime() - birthday.getTime();
+    const daysActive = Math.max(1, Math.ceil(characterAgeMs / (1000 * 60 * 60 * 24)));
     return (stats.kills / daysActive).toFixed(1);
 };
 

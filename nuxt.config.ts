@@ -186,15 +186,12 @@ export default defineNuxtConfig({
                 file: "zh.json",
             },
         ],
-        bundle: {
-            optimizeTranslationDirective: true,
-        },
+
         compilation: {
             strictMessage: false,
         },
         defaultLocale: "en",
         strategy: "no_prefix",
-        lazy: true,
         langDir: "locales/",
         detectBrowserLanguage: {
             useCookie: true,

@@ -7,13 +7,8 @@
                 {{ $t('stats') }} ({{ activePeriodLabel }})
             </h2>
             <div class="flex gap-2">
-                <UButton
-                    v-for="period in periods"
-                    :key="period.value"
-                    size="sm"
-                    :variant="activePeriod === period.value ? 'solid' : 'outline'"
-                    @click="changePeriod(period.value)"
-                >
+                <UButton v-for="period in periods" :key="period.value" size="sm"
+                    :variant="activePeriod === period.value ? 'solid' : 'outline'" @click="changePeriod(period.value)">
                     {{ period.label }}
                 </UButton>
             </div>
@@ -73,15 +68,19 @@ const changePeriod = async (period: string) => {
 };
 
 // Fetch ship stats - reactive to period changes
-const { data: shipStats, pending: shipStatsLoading, refresh: refreshShipStats } = await useFetch(() => `/api/stats/corporation_id/${corporationId}?dataType=shipGroupStats&days=${activeDays.value}`, {
-    key: () => `corporation-ship-stats-${corporationId}-${activePeriod.value}`,
+const { data: shipStats, pending: shipStatsLoading, refresh: refreshShipStats } = useAsyncData(() => `corporation-ship-stats-${corporationId}-${activePeriod.value}`, () =>
+    $fetch(`/api/stats/corporation_id/${corporationId}?dataType=shipGroupStats&days=${activeDays.value}`), {
+    lazy: true,
+    server: true,
     default: () => ({ shipGroupStats: [] }),
     watch: [activeDays]
 });
 
 // Fetch monthly stats - reactive to period changes
-const { data: monthlyStats, pending: monthlyStatsLoading, refresh: refreshMonthlyStats } = await useFetch(() => `/api/stats/corporation_id/${corporationId}?dataType=monthlyStats&days=${activeDays.value}`, {
-    key: () => `corporation-monthly-stats-${corporationId}-${activePeriod.value}`,
+const { data: monthlyStats, pending: monthlyStatsLoading, refresh: refreshMonthlyStats } = useAsyncData(() => `corporation-monthly-stats-${corporationId}-${activePeriod.value}`, () =>
+    $fetch(`/api/stats/corporation_id/${corporationId}?dataType=monthlyStats&days=${activeDays.value}`), {
+    lazy: true,
+    server: true,
     default: () => ({ monthlyStats: [] }),
     watch: [activeDays]
 });

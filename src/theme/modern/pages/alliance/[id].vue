@@ -1,6 +1,16 @@
 <template>
     <div class="min-h-screen">
-        <div v-if="alliance" class="mx-auto p-4 text-gray-900 dark:text-white">
+        <!-- Always show loading until both hydrated AND data is ready -->
+        <div v-if="pending || !alliance" class="mx-auto p-4">
+            <USkeleton class="h-64 rounded-lg mb-4" />
+            <USkeleton class="h-8 w-64 mb-6" />
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <USkeleton v-for="i in 6" :key="i" class="h-32 rounded-lg" />
+            </div>
+        </div>
+
+        <!-- Main content - only show when data is ready -->
+        <div v-else-if="alliance" class="mx-auto p-4 text-gray-900 dark:text-white">
             <!-- Alliance Profile Header -->
             <div
                 class="alliance-header rounded-lg overflow-hidden mb-6 bg-gray-100 bg-opacity-90 dark:bg-gray-900 dark:bg-opacity-30 border border-gray-300 dark:border-gray-800">
@@ -273,14 +283,10 @@
                 </template>
             </Tabs>
         </div>
-        <div v-else-if="pending" class="mx-auto p-4">
-            <USkeleton class="h-64 rounded-lg mb-4" />
-            <USkeleton class="h-8 w-64 mb-6" />
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <USkeleton v-for="i in 6" :key="i" class="h-32 rounded-lg" />
-            </div>
-        </div>
-        <UCard v-else class="mx-auto p-4 text-center bg-black bg-opacity-30 dark:bg-gray-900 dark:bg-opacity-30">
+
+        <!-- Error State -->
+        <UCard v-else-if="error || (alliance && 'error' in alliance)"
+            class="mx-auto p-4 text-center bg-gray-100 bg-opacity-90 dark:bg-gray-900 dark:bg-opacity-30 text-gray-900 dark:text-white">
             <template #header>
                 <div class="flex justify-center mb-2">
                     <UIcon name="i-lucide-alert-triangle" class="text-amber-500 h-8 w-8" />
@@ -302,7 +308,7 @@
 <script setup lang="ts">
 import { formatDistanceToNow } from "date-fns";
 import { de, enUS, es, fr, ja, ko, ru, zhCN } from "date-fns/locale";
-import { computed, onMounted, ref, watch } from 'vue'; // Added watch
+import { computed, nextTick, onMounted, ref, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useRoute, useRouter } from 'vue-router';
 
@@ -311,6 +317,23 @@ const route = useRoute()
 const router = useRouter()
 const allianceId = route.params.id
 const { generateAllianceStructuredData } = useStructuredData();
+
+// For hydration safety
+const isClient = ref(false);
+
+onMounted(() => {
+    isClient.value = true;
+
+    nextTick(() => {
+        const currentHash = route.hash.slice(1);
+        console.log('onMounted - currentHash:', currentHash);
+
+        if (currentHash && tabItems.value.some(item => item.id === currentHash)) {
+            console.log('onMounted - setting activeTabId to hash:', currentHash);
+            activeTabId.value = currentHash;
+        }
+    });
+});
 
 const dateLocales = {
     en: enUS,
@@ -335,13 +358,14 @@ const formatDate = (dateString: string) => {
     });
 };
 
-const { data: alliance, pending, error } = await useFetch(`/api/alliances/${allianceId}`, {
-    timeout: 10000, // 10 second timeout
-    onResponseError(context) {
-        console.error('Error fetching alliance data:', context.error)
-        return { error: 'Failed to fetch alliance data' }
-    }
-})
+const fetchKey = computed(() => `alliance-${allianceId}`);
+
+const { data: alliance, pending, error } = useAsyncData(fetchKey.value, () =>
+    $fetch(`/api/alliances/${allianceId}`), {
+    lazy: true,
+    server: true,
+    watch: [() => route.params.id],
+});
 
 // SEO meta for alliance page
 useSeoMeta({
@@ -408,33 +432,15 @@ interface IShortStats {
     lastActive: string | null;
 }
 
-// Initialize shortstats data - will be fetched only on client side
-const shortStatsLoading = ref(true)
-const shortStatsData = ref<IShortStats | { error: string } | null>(null)
-
-// Only fetch shortstats on client-side to prevent SSR bottleneck
-onMounted(() => {
-    // Use $fetch instead of useFetch to ensure it only runs on client
-    $fetch<IShortStats | { error: string } | null>(`/api/stats/alliance_id/${allianceId}?dataType=basic&days=0`)
-        .then(data => {
-            shortStatsData.value = data
-            shortStatsLoading.value = false
-        })
-        .catch(error => {
-            console.error('Error fetching alliance short stats:', error)
-            shortStatsLoading.value = false
-            shortStatsData.value = { error: 'Failed to fetch alliance stats' }
-        })
-
-    // Initialize activeTabId from hash or default without affecting URL
-    const hash = route.hash.slice(1);
-    const initialTab = tabItems.value.find(item => item.id === hash);
-    if (initialTab) {
-        activeTabId.value = initialTab.id;
-    } else if (tabItems.value.length > 0) {
-        activeTabId.value = tabItems.value[0].id;
-    }
-})
+const {
+    data: shortStatsData,
+    pending: shortStatsLoading,
+} = useAsyncData(`alliance-stats-${allianceId}`, () =>
+    $fetch<IShortStats | { error: string } | null>(`/api/stats/alliance_id/${allianceId}?dataType=basic&days=0`), {
+    lazy: true,
+    server: true,
+    watch: [() => route.params.id],
+});
 
 const validShortStats = computed(() => {
     if (shortStatsData.value && !('error' in shortStatsData.value)) {
@@ -445,9 +451,15 @@ const validShortStats = computed(() => {
 
 // Generate structured data when alliance is loaded
 watch(alliance, (newAlliance) => {
+    if (!isClient.value) return; // Don't run until hydrated
+
     if (newAlliance) {
-        const allianceUrl = `https://eve-kill.com${route.fullPath}`;
-        generateAllianceStructuredData(newAlliance, allianceUrl, validShortStats.value);
+        try {
+            const allianceUrl = `https://eve-kill.com${route.fullPath}`;
+            generateAllianceStructuredData(newAlliance, allianceUrl, validShortStats.value);
+        } catch (error) {
+            console.warn('Failed to generate structured data:', error);
+        }
     }
 }, { immediate: true });
 
@@ -508,33 +520,43 @@ const tabItems = computed(() => [
     },
 ]);
 
-const activeTabId = ref('');
+// For SSR compatibility, always start with the default tab
+// Hash-based initialization will happen after hydration
+const activeTabId = ref<string>(tabItems.value[0]?.id || '');
 
 // Watch for changes in route.hash to update activeTabId
 watch(() => route.hash, (newHash) => {
-    const tabId = newHash.slice(1);
-    if (tabItems.value.some(item => item.id === tabId)) {
-        activeTabId.value = tabId;
-    } else if (tabItems.value.length > 0 && !tabId) {
-        // If hash is empty or invalid, just set the active tab without updating URL
-        activeTabId.value = tabItems.value[0].id;
-    }
-});
+    if (!isClient.value) return; // Don't run until hydrated
 
-// Watch for changes in activeTabId to update URL hash, but only for user interactions
-watch(activeTabId, (newId, oldId) => {
+    const hashValue = newHash.slice(1);
+    if (hashValue && tabItems.value.some(item => item.id === hashValue)) {
+        activeTabId.value = hashValue;
+    } else if (!hashValue && tabItems.value.length > 0) {
+        // If hash is empty or invalid, just set the active tab without updating URL
+        activeTabId.value = tabItems.value[0]?.id || '';
+    }
+}, { immediate: false }); // Don't run immediately to avoid conflicts with onMounted
+
+// Update URL only when activeTabId changes due to user interaction
+watch(activeTabId, (newTabId, oldTabId) => {
+    if (!isClient.value) return; // Don't run until hydrated
+
     // Only update the URL if:
-    // 1. This isn't the initial value (oldId exists)
-    // 2. There was an actual change (newId !== oldId)
+    // 1. This isn't the initial value (oldTabId exists)
+    // 2. There was an actual change (newTabId !== oldTabId)
     // 3. The URL doesn't already have this hash
     // 4. Either: there's already a hash in the URL, OR the new tab isn't the default
-    if (oldId &&
-        newId !== oldId &&
-        route.hash !== `#${newId}` &&
-        (route.hash || newId !== tabItems.value[0].id)) {
-        router.push({ hash: `#${newId}` });
+    if (oldTabId &&
+        newTabId !== oldTabId &&
+        route.hash !== `#${newTabId}` &&
+        (route.hash || newTabId !== (tabItems.value[0]?.id || ''))) {
+        try {
+            router.push({ hash: `#${newTabId}` });
+        } catch (error) {
+            console.warn('Failed to update hash:', error);
+        }
     }
-});
+}, { flush: 'post' }); // Wait for DOM updates
 
 const formatNumber = (value: number): string => {
     return value?.toLocaleString() || "0";
