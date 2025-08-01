@@ -67,7 +67,7 @@ interface BattlesApiResponse {
 }
 
 // Add a separate loading state ref to track loading beyond what useFetch provides
-const isLoading = ref(true);
+const isLoading = ref(false);
 // Track if this is the initial data load for UI treatment
 const isInitialLoad = ref(true);
 
@@ -83,13 +83,13 @@ const initialData = ref<BattlesApiResponse>({
 const { data, pending, error, refresh } = useFetch<BattlesApiResponse>('/api/battles', {
     query: queryParams,
     key: 'battles-list',
-    // Use lazy to not block initial render
-    lazy: true,
+    server: true,
+    default: () => initialData.value,
 });
 
 // Use computed values that fall back to initial data when real data isn't loaded yet
-const battlesList = computed(() => data.value?.battles || initialData.value.battles);
-const totalItems = computed(() => data.value?.totalItems || initialData.value.totalItems);
+const battlesList = computed(() => data?.value?.battles || initialData.value.battles);
+const totalItems = computed(() => data?.value?.totalItems || initialData.value.totalItems);
 
 // Better loading state management with watch on pending
 watch(() => pending.value, (newPending) => {
@@ -104,36 +104,16 @@ watch(() => pending.value, (newPending) => {
 // Function to handle data refresh
 const loadData = async () => {
     try {
-        isLoading.value = true;
         await refresh();
     } catch (err) {
         console.error('Error refreshing battles data:', err);
-    } finally {
-        // Always update loading state regardless of success/failure
-        isLoading.value = pending.value;
-        isInitialLoad.value = false;
     }
 };
-
-// On component mount, trigger the data fetch
-onMounted(() => {
-    loadData();
-
-    // Safeguard against stuck loading state
-    const timeout = setTimeout(() => {
-        if (isLoading.value) {
-            isLoading.value = false;
-            isInitialLoad.value = false;
-            console.warn('Loading timeout reached, forcing loading state to complete');
-        }
-        clearTimeout(timeout);
-    }, 10000); // 10 second safety timeout
-});
 
 // Watch for changes to pagination params, search, filter, and locale, and refresh the data
 watch([currentPage, selectedPageSize, searchQuery, filter, currentLocale], () => {
     moment.locale(currentLocale.value);
-    loadData();
+    refresh();
 });
 
 const columns = [
@@ -274,7 +254,7 @@ const getSystemsDisplay = (battle: IBattlesDocument) => {
         <div class="bg-background-800 p-4 rounded-lg shadow-lg border border-gray-700/30">
             <!-- Search Input -->
             <div class="mb-4">
-                <UInput v-model="searchQuery" :placeholder="t('battle.search.placeholder')" icon="lucide:search"
+                <UInput v-model="searchQuery" placeholder="Search battles..." icon="lucide:search"
                     size="lg" :ui="{
                         icon: {
                             trailing: {
@@ -283,8 +263,12 @@ const getSystemsDisplay = (battle: IBattlesDocument) => {
                         },
                     }">
                     <template #trailing>
-                        <UButton v-show="searchQuery !== ''" color="gray" variant="link" icon="lucide:x" :padded="false"
-                            @click="searchQuery = ''" />
+                        <button v-show="searchQuery !== ''" 
+                            class="text-gray-400 hover:text-gray-600 p-1 rounded"
+                            @click="searchQuery = ''"
+                            type="button">
+                            <UIcon name="lucide:x" class="w-4 h-4" />
+                        </button>
                     </template>
                 </UInput>
             </div>
@@ -329,7 +313,7 @@ const getSystemsDisplay = (battle: IBattlesDocument) => {
             :title="t('errorFetchingData', 'Error Fetching Data')" :description="error.message" />
 
         <!-- Show loading spinner when data is initially loading -->
-        <div v-if="isLoading && isInitialLoad" class="flex flex-col items-center justify-center py-12">
+        <div v-if="pending && isInitialLoad" class="flex flex-col items-center justify-center py-12">
             <UIcon name="lucide:loader" class="w-12 h-12 animate-spin text-primary mb-4" />
             <span class="text-xl font-medium">{{ t('loading', 'Loading battles...') }}</span>
         </div>
@@ -361,11 +345,11 @@ const getSystemsDisplay = (battle: IBattlesDocument) => {
             <!-- Pagination on its own line - aligned to the right -->
             <div class="w-full flex justify-end">
                 <UPagination v-model:page="currentPage" :total="totalItems" :items-per-page="selectedPageSize"
-                    :disabled="isLoading" size="sm" />
+                    :disabled="pending" size="sm" />
             </div>
 
             <!-- Loading overlay for subsequent data fetches (not initial) -->
-            <div v-if="isLoading && !isInitialLoad" class="relative">
+            <div v-if="pending && !isInitialLoad" class="relative">
                 <div class="absolute inset-0 bg-background-900/50 flex items-center justify-center z-10 rounded-lg">
                     <div class="bg-background-800 p-4 rounded-lg shadow-lg flex items-center space-x-3">
                         <UIcon name="lucide:loader" class="w-6 h-6 animate-spin text-primary" />
@@ -374,8 +358,8 @@ const getSystemsDisplay = (battle: IBattlesDocument) => {
                 </div>
             </div>
 
-            <Table :key="`battles-table-${isLoading ? 'loading' : 'data'}`" :columns="columns"
-                :items="isLoading && !data.value ? skeletonRows : battlesList" :loading="isLoading"
+            <Table :key="`battles-table-${pending ? 'loading' : 'data'}`" :columns="columns"
+                :items="pending && !battlesList.length ? skeletonRows : battlesList" :loading="pending"
                 :skeleton-count="selectedPageSize" :link-fn="linkFn" :bordered="true" :striped="false" :hover="true"
                 density="normal" background="transparent" table-class="battles-table"
                 :empty-text="t('noBattlesFound', 'No battles found.')" empty-icon="i-heroicons-circle-stack">
@@ -389,9 +373,7 @@ const getSystemsDisplay = (battle: IBattlesDocument) => {
                         <div>{{ formatTimeRange(item.start_time, item.end_time) }}</div>
                         <div>{{ t('duration', 'Duration') }}: {{ formatDuration(item.duration_ms) }}</div>
                     </div>
-                </template>
-
-                <template #cell-system="{ item }">
+                </template>                <template #cell-system="{ item }">
                     <div class="flex flex-col space-y-1">
                         <template v-for="(system, index) in getSystemsDisplay(item)"
                             :key="`system-${system.id}-${index}`">
@@ -642,7 +624,7 @@ const getSystemsDisplay = (battle: IBattlesDocument) => {
             <!-- Bottom Pagination - keep as is for consistency -->
             <div class="w-full flex justify-end mt-4">
                 <UPagination v-model:page="currentPage" :total="totalItems" :items-per-page="selectedPageSize"
-                    :disabled="isLoading" size="sm" />
+                    :disabled="pending" size="sm" />
             </div>
         </div>
     </div>
