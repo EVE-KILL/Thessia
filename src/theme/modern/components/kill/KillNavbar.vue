@@ -254,7 +254,7 @@ const rightNavItems = computed<NavLink[]>(() => {
         items.push({
             name: 'Sibling Killmail',
             position: 'right',
-            to: `/kill/${sibs[0].killmail_id}`,
+            to: `/kill/${sibs[0]?.killmail_id}`,
             target: '',
         });
     } else if (sibs.length > 1) {
@@ -262,8 +262,8 @@ const rightNavItems = computed<NavLink[]>(() => {
             name: 'Sibling Killmails',
             position: 'right',
             children: sibs.map((s) => ({
-                name: s.victim.ship_name.en,
-                position: 'right',
+                name: s.victim.ship_name?.en || 'Unknown Ship',
+                position: 'right' as const,
                 to: `/kill/${s.killmail_id}`,
                 target: '',
             }))
@@ -304,7 +304,7 @@ const rightNavItems = computed<NavLink[]>(() => {
                                         {{ item.description }}
                                     </span>
                                 </div>
-                            </nuxtlink>
+                            </NuxtLink>
                         </div>
                     </div>
                 </Dropdown>

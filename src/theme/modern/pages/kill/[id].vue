@@ -11,7 +11,7 @@
                 <div id="information-area" class="flex flex-col md:flex-row justify-around">
                     <!-- Fitting Wheel - Increased size container -->
                     <div class="w-full flex justify-center items-center">
-                        <template v-if="!killmail || isLoading">
+                        <template v-if="!killmail || pending">
                             <div class="fitting-wheel-skeleton max-w-[650px]">
                                 <!-- Outer SVG ring -->
                                 <div class="skeleton-outer-ring">
@@ -110,7 +110,7 @@
 
                     <!-- Kill Information - Adjusted width -->
                     <div class="information-box ml-0 md:ml-4 md:mt-0 w-full md:w-3/5 lg:w-1/2 max-w-[325px]">
-                        <template v-if="!killmail || isLoading">
+                        <template v-if="!killmail || pending">
                             <div class="grid gap-4">
                                 <!-- Ship section skeleton -->
                                 <div class="section p-3 rounded-lg bg-background-800 bg-opacity-30">
@@ -189,7 +189,7 @@
 
             <!-- Body -->
             <div class="mt-4">
-                <template v-if="!killmail || isLoading">
+                <template v-if="!killmail || pending">
                     <div class="kill-items-skeleton">
                         <!-- Table header skeleton -->
                         <div class="skeleton-header">
@@ -323,7 +323,7 @@
         <!-- Right Container -->
         <div
             class="w-full md:w-2/5 lg:w-1/3 xl:max-w-md text-black dark:text-white bg-background-900 rounded-md overflow-hidden">
-            <template v-if="!killmail || isLoading">
+            <template v-if="!killmail || pending">
                 <!-- Skeleton content for attackers -->
                 <div class="p-4">
                     <div class="grid gap-4">
@@ -361,7 +361,7 @@
     <!-- Mobile Layout -->
     <div v-else class="mt-4">
         <div class="text-black dark:text-white bg-background-900 rounded-md overflow-hidden">
-            <template v-if="!killmail || isLoading">
+            <template v-if="!killmail || pending">
                 <!-- Skeleton tabs -->
                 <div class="border-b border-background-700">
                     <div class="flex gap-2 p-2 overflow-x-auto">
@@ -507,10 +507,7 @@ import ScrollTo from "~/src/theme/modern/components/common/ScrollTo.vue";
 const { t } = useI18n();
 const route = useRoute();
 const { generateKillmailDatasetStructuredData, addStructuredDataToHead } = useStructuredData();
-const killmail = ref<IKillmail | null>(null);
-const siblings = ref<Array<{ killmail_id: number; victim: { ship_id: number; ship_name: any } }>>([]);
 const commentCount = ref(0);
-const isLoading = ref(true);
 
 // Responsive layout
 const { isMobile } = useResponsive();
@@ -530,22 +527,25 @@ const tabsUi = {
 const mobileTabs = computed(() => [
     {
         id: "fitting",
+        label: "Fitting",
         slot: "fitting",
         icon: "i-lucide-circle",
     },
     {
         id: "items",
+        label: "Items",
         slot: "items",
         icon: "i-lucide-package",
     },
     {
         id: "info",
-
+        label: "Info",
         slot: "info",
         icon: "i-lucide-info",
     },
     {
         id: "attackers",
+        label: "Attackers",
         slot: "attackers",
         icon: "i-lucide-users",
         trailing: killmail.value?.attackers?.length
@@ -554,6 +554,7 @@ const mobileTabs = computed(() => [
     },
     {
         id: "comments",
+        label: "Comments",
         slot: "comments",
         icon: "i-lucide-message-square",
         trailing: commentCount.value ? `(${commentCount.value})` : undefined,
@@ -598,7 +599,32 @@ const { data: battleStatus } = useAsyncData<{ inBattle: boolean }>(
     },
 );
 
+// Fetch sibling killmails during SSR to prevent hydration mismatches
+const { data: fetchedSiblings } = useAsyncData<Array<{ killmail_id: number; victim: { ship_id: number; ship_name: any } }>>(
+    `siblings-${route.params.id || "none"}`,
+    async () => {
+        if (!route.params.id) return [];
+        try {
+            const siblingResponse = await $fetch<Array<{ killmail_id: number; victim: { ship_id: number; ship_name: any } }>>(
+                `/api/killmail/${route.params.id}/sibling`
+            );
+            return Array.isArray(siblingResponse) ? siblingResponse : [];
+        } catch (error) {
+            console.error("Error fetching sibling killmails:", error);
+            return [];
+        }
+    },
+    {
+        server: true,
+        lazy: false,
+    },
+);
+
 const battle = computed(() => battleStatus.value?.inBattle ?? false);
+const siblings = computed(() => fetchedSiblings.value || []);
+
+// Use the fetched killmail directly instead of a separate reactive ref
+const killmail = computed(() => fetchedKillmail.value || null);
 
 // Set up SEO meta tags using a computed property that handles null/undefined values safely
 const seoData = computed(() => {
@@ -647,23 +673,16 @@ useSeoMeta({
     twitterCreator: "@eve_kill",
 });
 
-// Track loading state
-watch(pending, (newPending) => {
-    isLoading.value = newPending;
-});
-
-// Watch for changes in the fetched killmail data and update our ref
+// Add structured data when killmail is available
 watch(
-    fetchedKillmail,
-    async (newData) => {
-        if (newData) {
-            killmail.value = newData as IKillmail;
-
+    () => killmail.value,
+    async (newKillmail) => {
+        if (newKillmail && import.meta.client) {
             // Generate and add dataset structured data
             try {
                 const killmailWithUrl = {
-                    ...killmail.value,
-                    url: `https://eve-kill.com/kill/${killmail.value.killmail_id}`
+                    ...newKillmail,
+                    url: `https://eve-kill.com/kill/${newKillmail.killmail_id}`
                 };
 
                 const datasetStructuredData = generateKillmailDatasetStructuredData(killmailWithUrl);
@@ -672,18 +691,10 @@ watch(
                 console.error("Error generating killmail structured data:", error);
             }
 
-            try {
-                // Fetch all sibling killmails
-                const siblingResponse = await $fetch<Array<{ killmail_id: number; victim: { ship_id: number; ship_name: any } }>>(
-                    `/api/killmail/${route.params.id}/sibling`
-                );
-                siblings.value = Array.isArray(siblingResponse) ? siblingResponse : [];
-            } catch (error) {
-                console.error("Error fetching sibling killmails:", error);
-                siblings.value = [];
-            } finally {
-                isLoading.value = false;
-            }
+            // Handle comment fragment navigation
+            nextTick(() => {
+                handleCommentFragment();
+            });
         }
     },
     { immediate: true },
@@ -747,9 +758,13 @@ function getSkeletonSlotPosition(
     const x = 50 + radius * Math.cos(rad);
     const y = 50 + radius * Math.sin(rad);
 
+    // Round to prevent hydration mismatches due to floating-point precision
+    const roundedX = Math.round(x * 1000) / 1000;
+    const roundedY = Math.round(y * 1000) / 1000;
+
     return {
-        left: `${x}%`,
-        top: `${y}%`,
+        left: `${roundedX}%`,
+        top: `${roundedY}%`,
         transform: "translate(-50%, -50%)",
     };
 }

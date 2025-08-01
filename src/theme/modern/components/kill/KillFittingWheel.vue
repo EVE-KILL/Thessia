@@ -1,218 +1,202 @@
 <template>
-    <div class="fitting-wheel-container" :style="containerStyle">
-        <div class="fitting-wheel">
-            <!-- Outer SVG Ring -->
-            <div class="outer-ring">
-                <svg viewBox="24 24 464 464" xmlns="http://www.w3.org/2000/svg">
-                    <g>
-                        <circle cx="256" cy="256" r="224" style="fill: none; stroke: rgb(0, 0, 0); stroke-width: 16;">
-                        </circle>
-                        <rect width="17" height="17" x="98" y="89" style="fill: rgb(0, 0, 0);"></rect>
-                        <rect width="17" height="17" x="401" y="93" style="fill: rgb(0, 0, 0);"></rect>
-                        <rect width="17" height="17" x="402" y="401" style="fill: rgb(0, 0, 0);"></rect>
-                        <rect width="17" height="17" x="94" y="402" style="fill: rgb(0, 0, 0);"></rect>
-                        <rect width="12" height="12" x="196" y="82" transform="rotate(56)" style="fill: rgb(0, 0, 0);">
-                        </rect>
-                    </g>
-                </svg>
-            </div>
+  <div class="fitting-wheel-container" :style="containerStyle">
+    <div class="fitting-wheel">
+      <!-- Outer SVG Ring -->
+      <div class="outer-ring">
+        <svg viewBox="24 24 464 464" xmlns="http://www.w3.org/2000/svg">
+          <g>
+            <circle cx="256" cy="256" r="224" style="fill: none; stroke: rgb(0, 0, 0); stroke-width: 16;">
+            </circle>
+            <rect width="17" height="17" x="98" y="89" style="fill: rgb(0, 0, 0);"></rect>
+            <rect width="17" height="17" x="401" y="93" style="fill: rgb(0, 0, 0);"></rect>
+            <rect width="17" height="17" x="402" y="401" style="fill: rgb(0, 0, 0);"></rect>
+            <rect width="17" height="17" x="94" y="402" style="fill: rgb(0, 0, 0);"></rect>
+            <rect width="12" height="12" x="196" y="82" transform="rotate(56)" style="fill: rgb(0, 0, 0);">
+            </rect>
+          </g>
+        </svg>
+      </div>
 
-            <!-- Inner SVG Ring -->
-            <div class="inner-ring">
-                <svg viewBox="24 24 464 464" xmlns="http://www.w3.org/2000/svg">
-                    <defs>
-                        <mask id="slot-corners">
-                            <rect width="512" height="512" x="0" y="0" style="fill: rgb(255, 255, 255);"></rect>
-                            <rect width="17" height="17" x="133" y="126" style="fill: rgb(0, 0, 0);"></rect>
-                            <rect width="17" height="17" x="366" y="129" style="fill: rgb(0, 0, 0);"></rect>
-                            <rect width="17" height="17" x="366" y="366" style="fill: rgb(0, 0, 0);"></rect>
-                            <rect width="17" height="17" x="132" y="369" style="fill: rgb(0, 0, 0);"></rect>
-                            <rect width="12" height="12" x="230" y="44" transform="rotate(56)"
-                                style="fill: rgb(0, 0, 0);"></rect>
-                        </mask>
-                    </defs>
-                    <g>
-                        <circle cx="256" cy="256" r="195" mask="url(#slot-corners)"
-                            style="fill: none; stroke: rgb(0, 0, 0); stroke-width: 46; stroke-opacity: 0.6;"></circle>
-                    </g>
-                </svg>
-            </div>
+      <!-- Inner SVG Ring -->
+      <div class="inner-ring">
+        <svg viewBox="24 24 464 464" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <mask id="slot-corners">
+              <rect width="512" height="512" x="0" y="0" style="fill: rgb(255, 255, 255);"></rect>
+              <rect width="17" height="17" x="133" y="126" style="fill: rgb(0, 0, 0);"></rect>
+              <rect width="17" height="17" x="366" y="129" style="fill: rgb(0, 0, 0);"></rect>
+              <rect width="17" height="17" x="366" y="366" style="fill: rgb(0, 0, 0);"></rect>
+              <rect width="17" height="17" x="132" y="369" style="fill: rgb(0, 0, 0);"></rect>
+              <rect width="12" height="12" x="230" y="44" transform="rotate(56)" style="fill: rgb(0, 0, 0);"></rect>
+            </mask>
+          </defs>
+          <g>
+            <circle cx="256" cy="256" r="195" mask="url(#slot-corners)"
+              style="fill: none; stroke: rgb(0, 0, 0); stroke-width: 46; stroke-opacity: 0.6;"></circle>
+          </g>
+        </svg>
+      </div>
 
-            <!-- Ship image -->
-            <div class="ship-container" :class="{ 'darkened': activeTooltip.visible }">
-                <Image v-if="killmail && killmail.victim" :type="'type-render'" :id="killmail.victim.ship_id"
-                    :size="1024" class="ship-image" />
-                <div v-else class="empty-ship"></div>
+      <!-- Ship image -->
+      <div class="ship-container" :class="{ 'darkened': activeTooltip.visible }">
+        <Image v-if="killmail && killmail.victim" :type="'type-render'" :id="killmail.victim.ship_id" :size="1024"
+          class="ship-image" />
+        <div v-else class="empty-ship"></div>
 
-                <!-- Center tooltip overlay -->
-                <div v-if="activeTooltip.visible" class="center-tooltip-overlay" @mouseenter="keepTooltipVisible"
-                    @mouseleave="prepareToHideTooltip">
-                    <div class="center-tooltip">
-                        <div class="tooltip-name">{{ activeTooltip.name }}</div>
-                        <div class="tooltip-value">{{ activeTooltip.value }} {{ $t('isk') }}</div>
-                        <div class="tooltip-status" v-if="activeTooltip.status" v-html="activeTooltip.status"></div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Module slots container -->
-            <div class="slots-container">
-                <!-- Slot indicators -->
-                <div class="slot-indicator high-indicator" :style="getIndicatorPosition('top')">
-                    <svg viewBox="0 0 12 12" xmlns="http://www.w3.org/2000/svg">
-                        <defs>
-                            <mask id="radial-menu-high">
-                                <rect width="12" height="12" x="0" y="0"
-                                    style="fill: rgb(255, 255, 255); fill-opacity: 0.5;"></rect>
-                                <rect width="12" height="3" x="0" y="0" style="fill: rgb(255, 255, 255);"></rect>
-                                <circle cx="6" cy="6" r="5" style="fill: rgb(0, 0, 0);"></circle>
-                                <rect width="3" height="3" x="0" y="0" style="fill: rgb(0, 0, 0);"></rect>
-                                <rect width="4" height="3" x="9" y="0" style="fill: rgb(0, 0, 0);"></rect>
-                                <rect width="3" height="4" x="0" y="9" style="fill: rgb(0, 0, 0);"></rect>
-                                <rect width="4" height="4" x="9" y="9" style="fill: rgb(0, 0, 0);"></rect>
-                            </mask>
-                        </defs>
-                        <g>
-                            <rect width="12" height="12" x="0" y="0" mask="url(#radial-menu-high)"
-                                style="fill: rgb(180, 60, 60);"></rect>
-                        </g>
-                    </svg>
-                </div>
-
-                <div class="slot-indicator mid-indicator" :style="getIndicatorPosition('right')">
-                    <svg viewBox="0 0 12 12" xmlns="http://www.w3.org/2000/svg">
-                        <defs>
-                            <mask id="radial-menu-mid">
-                                <rect width="12" height="12" x="0" y="0"
-                                    style="fill: rgb(255, 255, 255); fill-opacity: 0.5;"></rect>
-                                <rect width="12" height="3" x="0" y="0" style="fill: rgb(255, 255, 255);"></rect>
-                                <circle cx="6" cy="6" r="5" style="fill: rgb(0, 0, 0);"></circle>
-                                <rect width="3" height="3" x="0" y="0" style="fill: rgb(0, 0, 0);"></rect>
-                                <rect width="4" height="3" x="9" y="0" style="fill: rgb(0, 0, 0);"></rect>
-                                <rect width="3" height="4" x="0" y="9" style="fill: rgb(0, 0, 0);"></rect>
-                                <rect width="4" height="4" x="9" y="9" style="fill: rgb(0, 0, 0);"></rect>
-                            </mask>
-                        </defs>
-                        <g>
-                            <rect width="12" height="12" x="0" y="0" mask="url(#radial-menu-mid)"
-                                style="fill: rgb(60, 120, 180);"></rect>
-                        </g>
-                    </svg>
-                </div>
-
-                <div class="slot-indicator low-indicator" :style="getIndicatorPosition('bottom')">
-                    <svg viewBox="0 0 12 12" xmlns="http://www.w3.org/2000/svg">
-                        <defs>
-                            <mask id="radial-menu-low">
-                                <rect width="12" height="12" x="0" y="0"
-                                    style="fill: rgb(255, 255, 255); fill-opacity: 0.5;"></rect>
-                                <rect width="12" height="3" x="0" y="0" style="fill: rgb(255, 255, 255);"></rect>
-                                <circle cx="6" cy="6" r="5" style="fill: rgb(0, 0, 0);"></circle>
-                                <rect width="3" height="3" x="0" y="0" style="fill: rgb(0, 0, 0);"></rect>
-                                <rect width="4" height="3" x="9" y="0" style="fill: rgb(0, 0, 0);"></rect>
-                                <rect width="3" height="4" x="0" y="9" style="fill: rgb(0, 0, 0);"></rect>
-                                <rect width="4" height="4" x="9" y="9" style="fill: rgb(0, 0, 0);"></rect>
-                            </mask>
-                        </defs>
-                        <g>
-                            <rect width="12" height="12" x="0" y="0" mask="url(#radial-menu-low)"
-                                style="fill: rgb(180, 140, 60);"></rect>
-                        </g>
-                    </svg>
-                </div>
-
-                <!-- High slots -->
-                <div v-for="(item, index) in highSlots" :key="`high-${index}`" class="slot high-slot"
-                    :style="getSlotPosition(index, highSlots.length, 'top')" :class="{ 'empty-slot-container': !item }">
-                    <div v-if="item" class="module-container" @mouseenter="showTooltip(item)"
-                        @mouseleave="prepareToHideTooltip" @click="togglePinnedTooltip(item)">
-                        <Image :type="'item'" :id="item.type_id"
-                            :name="getLocalizedString(item.name, currentLocale.value)" :size="64"
-                            :alt="getLocalizedString(item.name, currentLocale.value)" class="module-icon" />
-                    </div>
-                    <div v-else class="empty-slot"></div>
-
-                    <!-- Ammo for high slots -->
-                    <div v-if="getAmmoForSlot(index, 'high')" class="ammo-container"
-                        @mouseenter="showTooltip(getAmmoForSlot(index, 'high'))" @mouseleave="prepareToHideTooltip">
-                        <Image :type="'item'" :id="getAmmoForSlot(index, 'high').type_id"
-                            :name="getLocalizedString(getAmmoForSlot(index, 'high').name, currentLocale.value)"
-                            :size="64"
-                            :alt="getLocalizedString(getAmmoForSlot(index, 'high').name, currentLocale.value)"
-                            class="ammo-icon" />
-                    </div>
-                </div>
-
-                <!-- Mid slots -->
-                <div v-for="(item, index) in midSlots" :key="`mid-${index}`" class="slot mid-slot"
-                    :style="getSlotPosition(index, midSlots.length, 'right')"
-                    :class="{ 'empty-slot-container': !item }">
-                    <div v-if="item" class="module-container" @mouseenter="showTooltip(item)"
-                        @mouseleave="prepareToHideTooltip" @click="togglePinnedTooltip(item)">
-                        <Image :type="'item'" :id="item.type_id"
-                            :name="getLocalizedString(item.name, currentLocale.value)" :size="64"
-                            :alt="getLocalizedString(item.name, currentLocale.value)" class="module-icon" />
-                    </div>
-                    <div v-else class="empty-slot"></div>
-
-                    <div v-if="getAmmoForSlot(index, 'mid')" class="ammo-container"
-                        @mouseenter="showTooltip(getAmmoForSlot(index, 'mid'))" @mouseleave="prepareToHideTooltip">
-                        <Image :type="'item'" :id="getAmmoForSlot(index, 'mid').type_id"
-                            :name="getLocalizedString(getAmmoForSlot(index, 'mid').name, currentLocale.value)"
-                            :size="64" :alt="getLocalizedString(getAmmoForSlot(index, 'mid').name, currentLocale.value)"
-                            class="ammo-icon" />
-                    </div>
-                </div>
-
-                <!-- Low slots -->
-                <div v-for="(item, index) in lowSlots" :key="`low-${index}`" class="slot low-slot"
-                    :style="getSlotPosition(index, lowSlots.length, 'bottom')"
-                    :class="{ 'empty-slot-container': !item }">
-                    <div v-if="item" class="module-container" @mouseenter="showTooltip(item)"
-                        @mouseleave="prepareToHideTooltip" @click="togglePinnedTooltip(item)">
-                        <Image :type="'item'" :id="item.type_id"
-                            :name="getLocalizedString(item.name, currentLocale.value)" :size="64"
-                            :alt="getLocalizedString(item.name, currentLocale.value)" class="module-icon" />
-                    </div>
-                    <div v-else class="empty-slot"></div>
-
-                    <div v-if="getAmmoForSlot(index, 'low')" class="ammo-container"
-                        @mouseenter="showTooltip(getAmmoForSlot(index, 'low'))" @mouseleave="prepareToHideTooltip">
-                        <Image :type="'item'" :id="getAmmoForSlot(index, 'low').type_id"
-                            :name="getLocalizedString(getAmmoForSlot(index, 'low').name, currentLocale.value)"
-                            :size="64" :alt="getLocalizedString(getAmmoForSlot(index, 'low').name, currentLocale.value)"
-                            class="ammo-icon" />
-                    </div>
-                </div>
-
-                <!-- Rig slots -->
-                <div v-for="(item, index) in rigSlots" :key="`rig-${index}`" class="slot rig-slot"
-                    :style="getSlotPosition(index, rigSlots.length, 'left')" :class="{ 'empty-slot-container': !item }">
-                    <div v-if="item" class="module-container" @mouseenter="showTooltip(item)"
-                        @mouseleave="prepareToHideTooltip" @click="togglePinnedTooltip(item)">
-                        <Image :type="'item'" :id="item.type_id"
-                            :name="getLocalizedString(item.name, currentLocale.value)" :size="64"
-                            :alt="getLocalizedString(item.name, currentLocale.value)" class="module-icon" />
-                    </div>
-                    <div v-else class="empty-slot"></div>
-                </div>
-
-                <!-- Subsystem slots for T3 Cruisers -->
-                <div v-if="hasSubsystems" v-for="(item, index) in subsystemSlots" :key="`subsystem-${index}`"
-                    class="slot subsystem-slot" :style="getSlotPosition(index, subsystemSlots.length, 'subsystem')"
-                    :class="{ 'empty-slot-container': !item }">
-                    <div v-if="item" class="module-container" @mouseenter="showTooltip(item)"
-                        @mouseleave="prepareToHideTooltip" @click="togglePinnedTooltip(item)">
-                        <Image :type="'item'" :id="item.type_id"
-                            :name="getLocalizedString(item.name, currentLocale.value)" :size="64"
-                            :alt="getLocalizedString(item.name, currentLocale.value)"
-                            class="module-icon subsystem-icon" />
-                    </div>
-                    <div v-else class="empty-slot"></div>
-                </div>
-            </div>
+        <!-- Center tooltip overlay -->
+        <div v-if="activeTooltip.visible" class="center-tooltip-overlay" @mouseenter="keepTooltipVisible"
+          @mouseleave="prepareToHideTooltip">
+          <div class="center-tooltip">
+            <div class="tooltip-name">{{ activeTooltip.name }}</div>
+            <div class="tooltip-value">{{ activeTooltip.value }} {{ $t('isk') }}</div>
+            <div class="tooltip-status" v-if="activeTooltip.status" v-html="activeTooltip.status"></div>
+          </div>
         </div>
+      </div>
+
+      <!-- Module slots container -->
+      <div class="slots-container">
+        <!-- Slot indicators -->
+        <div class="slot-indicator high-indicator" :style="getIndicatorPosition('top')">
+          <svg viewBox="0 0 12 12" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+              <mask id="radial-menu-high">
+                <rect width="12" height="12" x="0" y="0" style="fill: rgb(255, 255, 255); fill-opacity: 0.5;"></rect>
+                <rect width="12" height="3" x="0" y="0" style="fill: rgb(255, 255, 255);"></rect>
+                <circle cx="6" cy="6" r="5" style="fill: rgb(0, 0, 0);"></circle>
+                <rect width="3" height="3" x="0" y="0" style="fill: rgb(0, 0, 0);"></rect>
+                <rect width="4" height="3" x="9" y="0" style="fill: rgb(0, 0, 0);"></rect>
+                <rect width="3" height="4" x="0" y="9" style="fill: rgb(0, 0, 0);"></rect>
+                <rect width="4" height="4" x="9" y="9" style="fill: rgb(0, 0, 0);"></rect>
+              </mask>
+            </defs>
+            <g>
+              <rect width="12" height="12" x="0" y="0" mask="url(#radial-menu-high)" style="fill: rgb(180, 60, 60);">
+              </rect>
+            </g>
+          </svg>
+        </div>
+
+        <div class="slot-indicator mid-indicator" :style="getIndicatorPosition('right')">
+          <svg viewBox="0 0 12 12" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+              <mask id="radial-menu-mid">
+                <rect width="12" height="12" x="0" y="0" style="fill: rgb(255, 255, 255); fill-opacity: 0.5;"></rect>
+                <rect width="12" height="3" x="0" y="0" style="fill: rgb(255, 255, 255);"></rect>
+                <circle cx="6" cy="6" r="5" style="fill: rgb(0, 0, 0);"></circle>
+                <rect width="3" height="3" x="0" y="0" style="fill: rgb(0, 0, 0);"></rect>
+                <rect width="4" height="3" x="9" y="0" style="fill: rgb(0, 0, 0);"></rect>
+                <rect width="3" height="4" x="0" y="9" style="fill: rgb(0, 0, 0);"></rect>
+                <rect width="4" height="4" x="9" y="9" style="fill: rgb(0, 0, 0);"></rect>
+              </mask>
+            </defs>
+            <g>
+              <rect width="12" height="12" x="0" y="0" mask="url(#radial-menu-mid)" style="fill: rgb(60, 120, 180);">
+              </rect>
+            </g>
+          </svg>
+        </div>
+
+        <div class="slot-indicator low-indicator" :style="getIndicatorPosition('bottom')">
+          <svg viewBox="0 0 12 12" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+              <mask id="radial-menu-low">
+                <rect width="12" height="12" x="0" y="0" style="fill: rgb(255, 255, 255); fill-opacity: 0.5;"></rect>
+                <rect width="12" height="3" x="0" y="0" style="fill: rgb(255, 255, 255);"></rect>
+                <circle cx="6" cy="6" r="5" style="fill: rgb(0, 0, 0);"></circle>
+                <rect width="3" height="3" x="0" y="0" style="fill: rgb(0, 0, 0);"></rect>
+                <rect width="4" height="3" x="9" y="0" style="fill: rgb(0, 0, 0);"></rect>
+                <rect width="3" height="4" x="0" y="9" style="fill: rgb(0, 0, 0);"></rect>
+                <rect width="4" height="4" x="9" y="9" style="fill: rgb(0, 0, 0);"></rect>
+              </mask>
+            </defs>
+            <g>
+              <rect width="12" height="12" x="0" y="0" mask="url(#radial-menu-low)" style="fill: rgb(180, 140, 60);">
+              </rect>
+            </g>
+          </svg>
+        </div>
+
+        <!-- High slots -->
+        <div v-for="(item, index) in highSlots" :key="`high-${index}`" class="slot high-slot"
+          :style="getSlotPosition(index, highSlots.length, 'top')" :class="{ 'empty-slot-container': !item }">
+          <div v-if="item" class="module-container" @mouseenter="showTooltip(item)" @mouseleave="prepareToHideTooltip"
+            @click="togglePinnedTooltip(item)">
+            <Image :type="'item'" :id="item.type_id" :name="getLocalizedString(item.name, currentLocale.value)"
+              :size="64" :alt="getLocalizedString(item.name, currentLocale.value)" class="module-icon" />
+          </div>
+          <div v-else class="empty-slot"></div>
+
+          <!-- Ammo for high slots -->
+          <div v-if="getAmmoForSlot(index, 'high')" class="ammo-container"
+            @mouseenter="showTooltip(getAmmoForSlot(index, 'high'))" @mouseleave="prepareToHideTooltip">
+            <Image :type="'item'" :id="getAmmoForSlot(index, 'high').type_id"
+              :name="getLocalizedString(getAmmoForSlot(index, 'high').name, currentLocale.value)" :size="64"
+              :alt="getLocalizedString(getAmmoForSlot(index, 'high').name, currentLocale.value)" class="ammo-icon" />
+          </div>
+        </div>
+
+        <!-- Mid slots -->
+        <div v-for="(item, index) in midSlots" :key="`mid-${index}`" class="slot mid-slot"
+          :style="getSlotPosition(index, midSlots.length, 'right')" :class="{ 'empty-slot-container': !item }">
+          <div v-if="item" class="module-container" @mouseenter="showTooltip(item)" @mouseleave="prepareToHideTooltip"
+            @click="togglePinnedTooltip(item)">
+            <Image :type="'item'" :id="item.type_id" :name="getLocalizedString(item.name, currentLocale.value)"
+              :size="64" :alt="getLocalizedString(item.name, currentLocale.value)" class="module-icon" />
+          </div>
+          <div v-else class="empty-slot"></div>
+
+          <div v-if="getAmmoForSlot(index, 'mid')" class="ammo-container"
+            @mouseenter="showTooltip(getAmmoForSlot(index, 'mid'))" @mouseleave="prepareToHideTooltip">
+            <Image :type="'item'" :id="getAmmoForSlot(index, 'mid').type_id"
+              :name="getLocalizedString(getAmmoForSlot(index, 'mid').name, currentLocale.value)" :size="64"
+              :alt="getLocalizedString(getAmmoForSlot(index, 'mid').name, currentLocale.value)" class="ammo-icon" />
+          </div>
+        </div>
+
+        <!-- Low slots -->
+        <div v-for="(item, index) in lowSlots" :key="`low-${index}`" class="slot low-slot"
+          :style="getSlotPosition(index, lowSlots.length, 'bottom')" :class="{ 'empty-slot-container': !item }">
+          <div v-if="item" class="module-container" @mouseenter="showTooltip(item)" @mouseleave="prepareToHideTooltip"
+            @click="togglePinnedTooltip(item)">
+            <Image :type="'item'" :id="item.type_id" :name="getLocalizedString(item.name, currentLocale.value)"
+              :size="64" :alt="getLocalizedString(item.name, currentLocale.value)" class="module-icon" />
+          </div>
+          <div v-else class="empty-slot"></div>
+
+          <div v-if="getAmmoForSlot(index, 'low')" class="ammo-container"
+            @mouseenter="showTooltip(getAmmoForSlot(index, 'low'))" @mouseleave="prepareToHideTooltip">
+            <Image :type="'item'" :id="getAmmoForSlot(index, 'low').type_id"
+              :name="getLocalizedString(getAmmoForSlot(index, 'low').name, currentLocale.value)" :size="64"
+              :alt="getLocalizedString(getAmmoForSlot(index, 'low').name, currentLocale.value)" class="ammo-icon" />
+          </div>
+        </div>
+
+        <!-- Rig slots -->
+        <div v-for="(item, index) in rigSlots" :key="`rig-${index}`" class="slot rig-slot"
+          :style="getSlotPosition(index, rigSlots.length, 'left')" :class="{ 'empty-slot-container': !item }">
+          <div v-if="item" class="module-container" @mouseenter="showTooltip(item)" @mouseleave="prepareToHideTooltip"
+            @click="togglePinnedTooltip(item)">
+            <Image :type="'item'" :id="item.type_id" :name="getLocalizedString(item.name, currentLocale.value)"
+              :size="64" :alt="getLocalizedString(item.name, currentLocale.value)" class="module-icon" />
+          </div>
+          <div v-else class="empty-slot"></div>
+        </div>
+
+        <!-- Subsystem slots for T3 Cruisers -->
+        <div v-if="hasSubsystems" v-for="(item, index) in subsystemSlots" :key="`subsystem-${index}`"
+          class="slot subsystem-slot" :style="getSlotPosition(index, subsystemSlots.length, 'subsystem')"
+          :class="{ 'empty-slot-container': !item }">
+          <div v-if="item" class="module-container" @mouseenter="showTooltip(item)" @mouseleave="prepareToHideTooltip"
+            @click="togglePinnedTooltip(item)">
+            <Image :type="'item'" :id="item.type_id" :name="getLocalizedString(item.name, currentLocale.value)"
+              :size="64" :alt="getLocalizedString(item.name, currentLocale.value)" class="module-icon subsystem-icon" />
+          </div>
+          <div v-else class="empty-slot"></div>
+        </div>
+      </div>
     </div>
+  </div>
 </template>
 
 <script setup lang="ts">
@@ -359,9 +343,13 @@ function getSlotPosition(index: number, total: number, position: string): Record
   const x = 50 + radius * Math.cos(rad);
   const y = 50 + radius * Math.sin(rad);
 
+  // Round to prevent hydration mismatches due to floating-point precision
+  const roundedX = Math.round(x * 1000) / 1000;
+  const roundedY = Math.round(y * 1000) / 1000;
+
   return {
-    left: `${x}%`,
-    top: `${y}%`,
+    left: `${roundedX}%`,
+    top: `${roundedY}%`,
     transform: "translate(-50%, -50%)",
   };
 }
@@ -391,9 +379,13 @@ function getIndicatorPosition(position: string): Record<string, string> {
   const x = 50 + radius * Math.cos(rad);
   const y = 50 + radius * Math.sin(rad);
 
+  // Round to prevent hydration mismatches due to floating-point precision
+  const roundedX = Math.round(x * 1000) / 1000;
+  const roundedY = Math.round(y * 1000) / 1000;
+
   return {
-    left: `${x}%`,
-    top: `${y}%`,
+    left: `${roundedX}%`,
+    top: `${roundedY}%`,
     transform: "translate(-50%, -50%)",
   };
 }
@@ -566,452 +558,452 @@ onBeforeUnmount(() => {
 
   // Remove document click handler
   if (import.meta.client) {
-    document.removeEventListener("click", () => {});
+    document.removeEventListener("click", () => { });
   }
 });
 </script>
 
 <style scoped>
 .fitting-wheel-container {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    width: 100%;
-    margin: 0 auto;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+  margin: 0 auto;
 }
 
 .fitting-wheel {
-    position: relative;
-    width: 100%;
-    padding-bottom: 100%;
-    border-radius: 50%;
-    background-color: transparent;
-    border: none;
-    overflow: hidden;
+  position: relative;
+  width: 100%;
+  padding-bottom: 100%;
+  border-radius: 50%;
+  background-color: transparent;
+  border: none;
+  overflow: hidden;
 }
 
 .fitting-wheel::after {
-    content: '';
-    position: absolute;
-    top: 1px;
-    left: 1px;
-    right: 1px;
-    bottom: 1px;
-    border-radius: 50%;
-    border: 1px solid rgba(40, 40, 40, 0.8);
-    z-index: 2;
-    pointer-events: none;
+  content: '';
+  position: absolute;
+  top: 1px;
+  left: 1px;
+  right: 1px;
+  bottom: 1px;
+  border-radius: 50%;
+  border: 1px solid rgba(40, 40, 40, 0.8);
+  z-index: 2;
+  pointer-events: none;
 }
 
 /* Fix z-index values to be lower and ensure proper layering */
 .outer-ring {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    z-index: 4;
-    pointer-events: none;
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 4;
+  pointer-events: none;
 }
 
 .inner-ring {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    z-index: 3;
-    pointer-events: none;
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 3;
+  pointer-events: none;
 }
 
 .ship-container {
-    position: absolute;
-    top: 2px;
-    left: 2px;
-    width: calc(100% - 4px);
-    height: calc(100% - 4px);
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    z-index: 1;
-    border-radius: 50%;
-    overflow: hidden;
-    background-color: transparent;
-    transition: filter 0.2s ease-in-out;
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: calc(100% - 4px);
+  height: calc(100% - 4px);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1;
+  border-radius: 50%;
+  overflow: hidden;
+  background-color: transparent;
+  transition: filter 0.2s ease-in-out;
 }
 
 .ship-container.darkened .ship-image {
-    filter: brightness(0.4) blur(1px);
-    transition: filter 0.2s ease-in-out;
+  filter: brightness(0.4) blur(1px);
+  transition: filter 0.2s ease-in-out;
 }
 
 .ship-image {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    border-radius: 50%;
-    clip-path: circle(49%);
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 50%;
+  clip-path: circle(49%);
 }
 
 .empty-ship {
-    width: 80%;
-    height: 80%;
-    border-radius: 50%;
-    border: 2px dashed rgba(60, 60, 60, 0.5);
+  width: 80%;
+  height: 80%;
+  border-radius: 50%;
+  border: 2px dashed rgba(60, 60, 60, 0.5);
 }
 
 .slots-container {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    z-index: 5;
-    pointer-events: none;
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 5;
+  pointer-events: none;
 }
 
 .slot {
-    position: absolute;
-    width: 42px;
-    height: 42px;
-    background-color: rgba(20, 20, 20, 0.2);
-    border-radius: 50%;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    z-index: 6;
-    box-shadow: 0 0 5px rgba(0, 0, 0, 0.2);
-    pointer-events: auto;
+  position: absolute;
+  width: 42px;
+  height: 42px;
+  background-color: rgba(20, 20, 20, 0.2);
+  border-radius: 50%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 6;
+  box-shadow: 0 0 5px rgba(0, 0, 0, 0.2);
+  pointer-events: auto;
 }
 
 .module-container {
-    width: 100%;
-    height: 100%;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    cursor: pointer;
-    z-index: 7;
-    position: relative;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  cursor: pointer;
+  z-index: 7;
+  position: relative;
 }
 
 .module-icon {
-    width: 100%;
-    height: 100%;
-    object-fit: contain;
-    border-radius: 0% 50% 50% 50%;
-    transition: transform 0.1s ease-in-out;
-    position: relative;
-    z-index: 8;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  border-radius: 0% 50% 50% 50%;
+  transition: transform 0.1s ease-in-out;
+  position: relative;
+  z-index: 8;
 }
 
 .module-icon:hover {
-    transform: scale(1.05);
-    cursor: pointer;
+  transform: scale(1.05);
+  cursor: pointer;
 }
 
 /* Ammo styling */
 .ammo-container {
-    position: absolute;
-    width: 24px;
-    height: 24px;
-    background-color: rgba(20, 20, 20, 0.3);
-    border-radius: 50%;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    z-index: 9;
-    box-shadow: 0 0 3px rgba(0, 0, 0, 0.2);
-    cursor: pointer;
-    border: 1px solid rgba(80, 80, 80, 0.3);
-    transition: transform 0.1s ease-in-out;
+  position: absolute;
+  width: 24px;
+  height: 24px;
+  background-color: rgba(20, 20, 20, 0.3);
+  border-radius: 50%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 9;
+  box-shadow: 0 0 3px rgba(0, 0, 0, 0.2);
+  cursor: pointer;
+  border: 1px solid rgba(80, 80, 80, 0.3);
+  transition: transform 0.1s ease-in-out;
 }
 
 .ammo-icon {
-    width: 100%;
-    height: 100%;
-    object-fit: contain;
-    border-radius: 50%;
-    position: relative;
-    z-index: 10;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  border-radius: 50%;
+  position: relative;
+  z-index: 10;
 }
 
 .ammo-container:hover {
-    transform: scale(1.1);
+  transform: scale(1.1);
 }
 
 /* Position adjustments for different slot types */
 .high-slot .ammo-container {
-    bottom: -12px;
-    left: 50%;
-    transform: translateX(-80%);
+  bottom: -12px;
+  left: 50%;
+  transform: translateX(-80%);
 }
 
 .mid-slot .ammo-container {
-    left: -12px;
-    top: 50%;
-    transform: translateY(-80%);
+  left: -12px;
+  top: 50%;
+  transform: translateY(-80%);
 }
 
 .low-slot .ammo-container {
-    top: -12px;
-    left: 50%;
-    transform: translateX(-80%);
+  top: -12px;
+  left: 50%;
+  transform: translateX(-80%);
 }
 
 /* Position adjustments for ammo containers */
 .high-slot .ammo-container {
-    top: 28px;
-    left: 30px;
-    background-color: rgba(0, 0, 0, 0.3)
+  top: 28px;
+  left: 30px;
+  background-color: rgba(0, 0, 0, 0.3)
 }
 
 .mid-slot .ammo-container {
-    top: 35px;
-    left: -5px;
+  top: 35px;
+  left: -5px;
 }
 
 .low-slot .ammo-container {
-    top: 16px;
-    right: -16px;
+  top: 16px;
+  right: -16px;
 }
 
 .empty-slot {
-    width: 100%;
-    height: 100%;
-    border-radius: 50%;
-    background-color: rgba(10, 10, 10, 0.15);
-    border: 1px dashed rgba(60, 60, 60, 0.3);
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  background-color: rgba(10, 10, 10, 0.15);
+  border: 1px dashed rgba(60, 60, 60, 0.3);
 }
 
 .high-slot {
-    border-color: rgba(180, 60, 60, 0.4);
+  border-color: rgba(180, 60, 60, 0.4);
 }
 
 .mid-slot {
-    border-color: rgba(60, 120, 180, 0.4);
+  border-color: rgba(60, 120, 180, 0.4);
 }
 
 .low-slot {
-    border-color: rgba(180, 140, 60, 0.4);
+  border-color: rgba(180, 140, 60, 0.4);
 }
 
 .rig-slot {
-    border-color: rgba(150, 150, 150, 0.4);
-    background-color: rgba(40, 40, 40, 0.2);
-    box-shadow: 0 0 6px rgba(100, 100, 100, 0.3);
+  border-color: rgba(150, 150, 150, 0.4);
+  background-color: rgba(40, 40, 40, 0.2);
+  box-shadow: 0 0 6px rgba(100, 100, 100, 0.3);
 }
 
 .subsystem-slot {
-    border-color: rgba(140, 60, 140, 0.4);
-    background-color: rgba(40, 20, 40, 0.2);
-    box-shadow: 0 0 6px rgba(120, 40, 120, 0.3);
+  border-color: rgba(140, 60, 140, 0.4);
+  background-color: rgba(40, 20, 40, 0.2);
+  box-shadow: 0 0 6px rgba(120, 40, 120, 0.3);
 }
 
 .slot-indicator {
-    position: absolute;
-    width: 18px;
-    height: 18px;
-    z-index: 6;
-    transform-origin: center;
-    pointer-events: none;
+  position: absolute;
+  width: 18px;
+  height: 18px;
+  z-index: 6;
+  transform-origin: center;
+  pointer-events: none;
 }
 
 .high-indicator svg {
-    transform: rotate(-125deg);
+  transform: rotate(-125deg);
 }
 
 .mid-indicator svg {
-    transform: rotate(-35deg);
+  transform: rotate(-35deg);
 }
 
 .low-indicator svg {
-    transform: rotate(55deg);
+  transform: rotate(55deg);
 }
 
 .empty-slot-container {
-    opacity: 0;
-    pointer-events: none;
+  opacity: 0;
+  pointer-events: none;
 }
 
 /* Make sure tooltips appear above everything */
 :deep(.u-tooltip) {
-    z-index: 20;
-    /* Lower z-index for tooltips to stay below dropdowns */
+  z-index: 20;
+  /* Lower z-index for tooltips to stay below dropdowns */
 }
 
 /* Override button styles to preserve icon appearance */
 :deep(.u-button) {
-    background: transparent;
-    border: none;
-    padding: 0;
-    box-shadow: none;
+  background: transparent;
+  border: none;
+  padding: 0;
+  box-shadow: none;
 }
 
 :deep(.u-button):hover,
 :deep(.u-button):focus {
-    background: transparent;
-    transform: none;
+  background: transparent;
+  transform: none;
 }
 
 /* Center tooltip overlay */
 .center-tooltip-overlay {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    z-index: 10;
-    /* Lower z-index to not interfere with dropdowns */
-    background-color: rgba(0, 0, 0, 0.15);
-    border-radius: 50%;
-    backdrop-filter: blur(3px);
-    transition: all 0.2s ease-in-out;
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 10;
+  /* Lower z-index to not interfere with dropdowns */
+  background-color: rgba(0, 0, 0, 0.15);
+  border-radius: 50%;
+  backdrop-filter: blur(3px);
+  transition: all 0.2s ease-in-out;
 }
 
 /* Enhanced tooltip with sophisticated fade-to-transparent effect */
 .center-tooltip {
-    width: 80%;
-    max-width: 280px;
-    padding: 1.25rem;
-    background: radial-gradient(circle,
-            rgba(26, 32, 44, 0.85) 0%,
-            /* Dark center with high opacity */
-            rgba(22, 28, 40, 0.7) 50%,
-            /* Mid-fade */
-            rgba(15, 23, 42, 0.4) 80%,
-            /* More faded */
-            rgba(15, 23, 42, 0) 100%
-            /* Completely transparent at edges */
-        );
-    border: none;
-    border-radius: 10px;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-    text-align: center;
-    animation: fadeIn 0.15s ease-out;
-    color: #e2e8f0;
+  width: 80%;
+  max-width: 280px;
+  padding: 1.25rem;
+  background: radial-gradient(circle,
+      rgba(26, 32, 44, 0.85) 0%,
+      /* Dark center with high opacity */
+      rgba(22, 28, 40, 0.7) 50%,
+      /* Mid-fade */
+      rgba(15, 23, 42, 0.4) 80%,
+      /* More faded */
+      rgba(15, 23, 42, 0) 100%
+      /* Completely transparent at edges */
+    );
+  border: none;
+  border-radius: 10px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  text-align: center;
+  animation: fadeIn 0.15s ease-out;
+  color: #e2e8f0;
 }
 
 /* Add glow effect behind the tooltip text for better readability */
 .tooltip-name {
-    font-size: 1.1rem;
-    font-weight: bold;
-    margin-bottom: 8px;
-    text-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+  font-size: 1.1rem;
+  font-weight: bold;
+  margin-bottom: 8px;
+  text-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
 }
 
 .tooltip-value {
-    font-size: 1rem;
-    color: #4fc3f7;
-    margin-bottom: 10px;
-    text-shadow: 0 0 8px rgba(0, 0, 0, 0.4);
+  font-size: 1rem;
+  color: #4fc3f7;
+  margin-bottom: 10px;
+  text-shadow: 0 0 8px rgba(0, 0, 0, 0.4);
 }
 
 .tooltip-status {
-    font-size: 0.95rem;
-    text-shadow: 0 0 6px rgba(0, 0, 0, 0.4);
+  font-size: 0.95rem;
+  text-shadow: 0 0 6px rgba(0, 0, 0, 0.4);
 }
 
 /* Add subtle text outline to status colors for better visibility */
 .status-dropped,
 .status-destroyed {
-    font-weight: 500;
-    text-shadow: 0 0 3px rgba(0, 0, 0, 0.5);
+  font-weight: 500;
+  text-shadow: 0 0 3px rgba(0, 0, 0, 0.5);
 }
 
 .status-dropped {
-    color: #81c784;
+  color: #81c784;
 }
 
 .status-destroyed {
-    color: #e57373;
+  color: #e57373;
 }
 
 /* Override deep selectors for nested status spans */
 :deep(.tooltip-status .status-dropped),
 :deep(.tooltip-status .status-destroyed) {
-    font-weight: 500;
-    text-shadow: 0 0 3px rgba(0, 0, 0, 0.5);
+  font-weight: 500;
+  text-shadow: 0 0 3px rgba(0, 0, 0, 0.5);
 }
 
 :deep(.tooltip-status .status-dropped) {
-    color: #81c784;
+  color: #81c784;
 }
 
 :deep(.tooltip-status .status-destroyed) {
-    color: #e57373;
+  color: #e57373;
 }
 
 /* Fade-in animation for the tooltip */
 @keyframes fadeIn {
-    from {
-        opacity: 0;
-        transform: scale(0.95);
-    }
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
 
-    to {
-        opacity: 1;
-        transform: scale(1);
-    }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
 }
 
 /* Module and ammo hover effects */
 .module-container:hover .module-icon,
 .ammo-container:hover .ammo-icon {
-    transform: scale(1.1);
-    filter: brightness(1.1);
-    transition: all 0.1s ease;
+  transform: scale(1.1);
+  filter: brightness(1.1);
+  transition: all 0.1s ease;
 }
 
 /* Add a subtle pulsing effect to the active module */
 @keyframes subtlePulse {
-    0% {
-        filter: brightness(1);
-    }
+  0% {
+    filter: brightness(1);
+  }
 
-    50% {
-        filter: brightness(1.2);
-    }
+  50% {
+    filter: brightness(1.2);
+  }
 
-    100% {
-        filter: brightness(1);
-    }
+  100% {
+    filter: brightness(1);
+  }
 }
 
 .module-icon.active,
 .ammo-icon.active {
-    animation: subtlePulse 1.5s infinite;
-    box-shadow: 0 0 8px rgba(255, 255, 255, 0.4);
+  animation: subtlePulse 1.5s infinite;
+  box-shadow: 0 0 8px rgba(255, 255, 255, 0.4);
 }
 
 /* Mobile responsive adjustments */
 @media (max-width: 500px) {
-    .slot {
-        width: 36px;
-        height: 36px;
-    }
+  .slot {
+    width: 36px;
+    height: 36px;
+  }
 
-    .ammo-container {
-        width: 20px;
-        height: 20px;
-    }
+  .ammo-container {
+    width: 20px;
+    height: 20px;
+  }
 
-    .high-slot .ammo-container {
-        top: 25px;
-        right: -20px;
-    }
+  .high-slot .ammo-container {
+    top: 25px;
+    right: -20px;
+  }
 
-    .mid-slot .ammo-container {
-        top: 25px;
-        right: -20px;
-    }
+  .mid-slot .ammo-container {
+    top: 25px;
+    right: -20px;
+  }
 
-    .low-slot .ammo-container {
-        top: 14px;
-        right: -14px;
-    }
+  .low-slot .ammo-container {
+    top: 14px;
+    right: -14px;
+  }
 }
 </style>
