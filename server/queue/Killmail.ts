@@ -60,4 +60,4 @@ async function processKillmail(
     return processedKillmail;
 }
 
-export { addKillmail, processKillmail, fetchESIKillmail };
+export { addKillmail, processKillmail };

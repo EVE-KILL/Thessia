@@ -19,22 +19,6 @@ export default defineNuxtConfig({
         url: "https://eve-kill.com",
     },
     logLevel: process.env.NODE_ENV !== "production" ? "info" : "silent",
-    //vite: {
-    //    build: {
-    //        cssCodeSplit: true,
-    //        chunkSizeWarningLimit: 1000,
-    //        cssMinify: 'lightningcss',
-    //        sourcemap: process.env.NODE_ENV !== "production",
-    //        minify: "terser",
-    //    },
-    //    css: {
-    //        devSourcemap: process.env.NODE_ENV !== "production",
-    //        transformer: 'lightningcss',
-    //    },
-    //    optimizeDeps: {
-    //        include: ['vue', 'vue-router']
-    //    },
-    //},
     nitro: {
         preset: "bun",
         srcDir: "server",
@@ -60,6 +44,7 @@ export default defineNuxtConfig({
                 "server/interfaces/**",
                 "server/utils/**",
                 "server/plugins/**",
+                "server/queue/**",
             ],
         },
 
