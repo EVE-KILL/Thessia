@@ -54,7 +54,7 @@
                         <div class="card-id">
                             <Icon name="heroicons:document" class="id-icon" />
                             <span class="id-text">{{ formatCellValue(document._id || document.id || `Item ${index + 1}`)
-                            }}</span>
+                                }}</span>
                         </div>
                         <div class="card-actions">
                             <button @click="editDocument(document)" class="action-btn edit-btn"

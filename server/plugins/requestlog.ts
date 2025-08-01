@@ -5,7 +5,7 @@ import { nitroApp } from "nitropack/runtime/internal/app";
 // Access log buffer configuration
 const ACCESS_LOG_CONFIG = {
     bufferMaxSize: 1000,
-    flushInterval: 5000, // 5 seconds
+    flushInterval: 1000,
     enableDatabaseLogging: true,
 };
 
@@ -146,6 +146,7 @@ export default defineNitroPlugin(() => {
             referrer: referrer || undefined,
             isBot: detectBot(userAgent),
             isApiRequest: url.startsWith("/api"),
+            logType: "server",
         } as IAccessLog;
     });
 

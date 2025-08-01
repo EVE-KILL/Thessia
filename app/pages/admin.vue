@@ -31,15 +31,6 @@
                                         class="breadcrumb-separator" />
                                 </span>
                             </nav>
-                            <h1 class="text-2xl font-bold text-white">
-                                {{ currentPageTitle }}
-                            </h1>
-                        </div>
-                        <div class="header-actions">
-                            <button class="action-button">
-                                <Icon name="heroicons:arrow-path" class="action-icon" />
-                                {{ t('admin.actions.refresh') }}
-                            </button>
                         </div>
                     </div>
                 </div>

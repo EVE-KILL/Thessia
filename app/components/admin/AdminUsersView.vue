@@ -99,7 +99,7 @@
                             </div>
                             <div class="entity-details">
                                 <div class="entity-name">{{ userAlliances[user.characterId].name || 'Unknown Alliance'
-                                    }}</div>
+                                }}</div>
                                 <div class="entity-type">{{ t('admin.users.alliance') }}</div>
                             </div>
                         </div>

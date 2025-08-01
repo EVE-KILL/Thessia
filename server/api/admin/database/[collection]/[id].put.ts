@@ -6,14 +6,6 @@ export default defineEventHandler(async (event) => {
         Expires: "0",
     });
 
-    // Only allow PUT method
-    if (getMethod(event) !== "PUT") {
-        throw createError({
-            statusCode: 405,
-            statusMessage: "Method not allowed",
-        });
-    }
-
     // Get authentication cookie
     const cookieName = "evelogin";
     const cookie = getCookie(event, cookieName);

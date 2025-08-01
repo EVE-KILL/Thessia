@@ -1,13 +1,3 @@
-import {
-    createError,
-    defineEventHandler,
-    getCookie,
-    getMethod,
-    getRouterParam,
-    readBody,
-    setResponseHeaders,
-} from "h3";
-
 export default defineEventHandler(async (event) => {
     // Add cache-control headers to prevent caching
     setResponseHeaders(event, {
@@ -15,14 +5,6 @@ export default defineEventHandler(async (event) => {
         Pragma: "no-cache",
         Expires: "0",
     });
-
-    // Only allow PATCH method
-    if (getMethod(event) !== "PATCH") {
-        throw createError({
-            statusCode: 405,
-            statusMessage: "Method not allowed",
-        });
-    }
 
     // Get authentication cookie
     const cookieName = "evelogin";

@@ -18,6 +18,13 @@ const accessLogSchema = new Schema<IAccessLogDocument>(
         endpoint: { type: String }, // Normalized endpoint
         isBot: { type: Boolean, default: false },
         isApiRequest: { type: Boolean, default: false, index: true },
+        logType: {
+            type: String,
+            enum: ["server", "client"],
+            default: "server",
+            index: true,
+        },
+        sessionId: { type: String, index: true },
     },
     {
         collection: "accessLogs",
@@ -37,6 +44,8 @@ accessLogSchema.index({ timestamp: -1, endpoint: 1 }); // Recent logs by endpoin
 accessLogSchema.index({ timestamp: -1, clientIp: 1 }); // Recent logs by IP
 accessLogSchema.index({ timestamp: -1, isBot: 1 }); // Bot vs human traffic
 accessLogSchema.index({ timestamp: -1, statusCode: 1 }); // Error analysis
+accessLogSchema.index({ timestamp: -1, logType: 1 }); // Server vs client logs
+accessLogSchema.index({ sessionId: 1, timestamp: -1 }); // Session tracking
 
 // TTL index for automatic cleanup after 2 days
 accessLogSchema.index({ timestamp: 1 }, { expireAfterSeconds: 172800 }); // 2 days = 172800 seconds
