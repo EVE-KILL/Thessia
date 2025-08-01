@@ -1,12 +1,3 @@
-import { KILLMAIL_PUBSUB_CHANNEL } from "~/server/helpers/Websocket";
-import {
-    addClient,
-    broadcastToKillmailClients,
-    handleClientPong,
-    registerWSType,
-    removeClient,
-} from "~/server/helpers/WSClientManager";
-
 // Register this WebSocket type
 registerWSType("killmail", {
     channel: KILLMAIL_PUBSUB_CHANNEL,

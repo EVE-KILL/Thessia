@@ -1,7 +1,3 @@
-import { createError, defineEventHandler, readBody } from "h3";
-import type { IKillmail } from "~/server/interfaces/IKillmail";
-import { Killmails } from "~/server/models/Killmails";
-
 export default defineEventHandler(async (event) => {
     const body = await readBody(event);
     const { ids } = body;

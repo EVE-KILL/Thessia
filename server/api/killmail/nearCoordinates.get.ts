@@ -1,5 +1,3 @@
-import { Killmails } from "~/server/models/Killmails";
-
 interface NearCoordinatesResult {
     killmail_id: number;
     distance: number;
@@ -21,18 +19,30 @@ export default defineCachedEventHandler(
             const query = getQuery(event);
 
             // Validate required parameters
-            const requiredParams = ["system_id", "x", "y", "z", "distanceInMeters"];
-            const missingParams = requiredParams.filter((param) => !query[param]);
+            const requiredParams = [
+                "system_id",
+                "x",
+                "y",
+                "z",
+                "distanceInMeters",
+            ];
+            const missingParams = requiredParams.filter(
+                (param) => !query[param]
+            );
             if (missingParams.length > 0) {
                 throw createError({
                     statusCode: 400,
-                    statusMessage: `Missing required parameters: ${missingParams.join(", ")}`,
+                    statusMessage: `Missing required parameters: ${missingParams.join(
+                        ", "
+                    )}`,
                 });
             }
 
             // Parse and validate parameters
             const systemId = Number.parseInt(query.system_id as string);
-            const distanceInMeters = Number.parseInt(query.distanceInMeters as string);
+            const distanceInMeters = Number.parseInt(
+                query.distanceInMeters as string
+            );
             const x = Number.parseFloat(query.x as string);
             const y = Number.parseFloat(query.y as string);
             const z = Number.parseFloat(query.z as string);
@@ -48,7 +58,8 @@ export default defineCachedEventHandler(
             ) {
                 throw createError({
                     statusCode: 400,
-                    statusMessage: "Invalid parameter format. Numeric values expected.",
+                    statusMessage:
+                        "Invalid parameter format. Numeric values expected.",
                 });
             }
 
@@ -63,9 +74,18 @@ export default defineCachedEventHandler(
                         system_id: systemId,
                         kill_time: { $gte: timeThreshold },
                         // Use cube approximation for first filter (index-friendly)
-                        x: { $gt: x - distanceInMeters, $lt: x + distanceInMeters },
-                        y: { $gt: y - distanceInMeters, $lt: y + distanceInMeters },
-                        z: { $gt: z - distanceInMeters, $lt: z + distanceInMeters },
+                        x: {
+                            $gt: x - distanceInMeters,
+                            $lt: x + distanceInMeters,
+                        },
+                        y: {
+                            $gt: y - distanceInMeters,
+                            $lt: y + distanceInMeters,
+                        },
+                        z: {
+                            $gt: z - distanceInMeters,
+                            $lt: z + distanceInMeters,
+                        },
                     },
                 },
                 {
@@ -100,7 +120,8 @@ export default defineCachedEventHandler(
                 return {
                     results: [],
                     count: 0,
-                    message: "No killmails found near these coordinates within the specified distance.",
+                    message:
+                        "No killmails found near these coordinates within the specified distance.",
                 };
             }
 
@@ -130,14 +151,18 @@ export default defineCachedEventHandler(
         },
         getKey: (event) => {
             const query = getQuery(event);
-            const systemId = query?.system_id ? query.system_id.toString() : 'unknown';
-            const x = query?.x ? query.x.toString() : 'unknown';
-            const y = query?.y ? query.y.toString() : 'unknown';
-            const z = query?.z ? query.z.toString() : 'unknown';
-            const distanceInMeters = query?.distanceInMeters ? query.distanceInMeters.toString() : 'unknown';
-            const days = query?.days ? query.days.toString() : 'unknown';
-            const limit = query?.limit ? query.limit.toString() : 'unknown';
+            const systemId = query?.system_id
+                ? query.system_id.toString()
+                : "unknown";
+            const x = query?.x ? query.x.toString() : "unknown";
+            const y = query?.y ? query.y.toString() : "unknown";
+            const z = query?.z ? query.z.toString() : "unknown";
+            const distanceInMeters = query?.distanceInMeters
+                ? query.distanceInMeters.toString()
+                : "unknown";
+            const days = query?.days ? query.days.toString() : "unknown";
+            const limit = query?.limit ? query.limit.toString() : "unknown";
             return `killmail:nearCoordinates:systemId:${systemId}:x:${x}:y:${y}:z:${z}:distanceInMeters:${distanceInMeters}:days:${days}:limit:${limit}`;
-        }
-    },
+        },
+    }
 );

@@ -14,7 +14,7 @@ This project uses:
 
 -   **API:** `/server/api`
 -   **Nitro Routes:** `/server/routes`
--   **Vue Pages:** `/src/theme/modern/pages`
+-   **Vue Pages:** `/app/pages`
 -   **MongoDB Models:** `/server/models`
 -   **Queues:** `/src/queue`
 -   **Cron Jobs:** `/src/cron`
@@ -77,9 +77,9 @@ $fetch(apiEndpoint.value), { lazy: true, server: false, watch: [apiEndpoint] }
 ## Copilot-Specific Instructions
 
 -   Follow project structure and conventions.
--   Use `useFetch` or `useAsyncData` for API calls.
+-   Use `useFetch` or `useAsyncData` for API calls. (Prefer `useAsyncData` for SSR control)
 -   Handle errors with try-catch blocks.
--   Use `console.log` for logging.
+-   Use `cliLogger` for logging. (cliLogger.info('message') for example)
 -   Implement proper TypeScript typing for all functions and variables.
 -   Follow the single responsibility principle.
 -   Utilize existing composables and utilities before creating new ones.
@@ -87,12 +87,11 @@ $fetch(apiEndpoint.value), { lazy: true, server: false, watch: [apiEndpoint] }
 -   Include appropriate error handling for async operations.
 -   Consider performance implications, especially with MongoDB queries.
 -   Use proper index definitions when querying MongoDB.
--   As much as possible use the components located in the `/src/theme/modern/components` folder.
+-   As much as possible use the components located in the `/app/components` folder.
 -   Use the `useI18n` composable for translations.
 -   As much as possible, implement SEO using useSeoMeta
 -   Never omit code and leave behind `Existing Code` comments.
 -   Always use `async/await` for asynchronous operations.
+-   Components, utils, composables, helpers, models, interfaces and more are all automatically imported, so you can use them directly without needing to import them manually.
 -   If the folder exists, you can use it as reference - but DO NOT do so without permission, and ask permission first. The folder in question is called `/oldfrontend`.
 -   If you are unsure about a specific implementation, ask for clarification.
-
-use context7

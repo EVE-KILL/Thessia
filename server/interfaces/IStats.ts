@@ -57,7 +57,7 @@ export interface ITopEntity {
     character_id?: number;
     corporation_id?: number;
     alliance_id?: number;
-    name: string;
+    name: string | Record<string, string>; // Support both string and translation objects
     count: number;
 }
 

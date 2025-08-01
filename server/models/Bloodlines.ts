@@ -1,13 +1,10 @@
-// models/Bloodlines.ts
-
 import { type Document, type Model, Schema, model } from "mongoose";
-import type { IBloodlines } from "~/server/interfaces/IBloodlines";
 
-// Extend the IBloodlines interface with Mongoose's Document interface
-export interface IBloodlinesDocument extends IBloodlines, Document { }
+// Extend the IBloodline interface with Mongoose's Document interface
+export interface IBloodlineDocument extends IBloodline, Document {}
 
 // Define the Bloodlines schema
-const bloodlinesSchema = new Schema<IBloodlinesDocument>(
+const bloodlinesSchema = new Schema<IBloodlineDocument>(
     {
         bloodline_id: { type: Number, unique: true }, // Unique identifier for the bloodline
         bloodline_name: { type: String }, // Name of the bloodline
@@ -33,15 +30,15 @@ const bloodlinesSchema = new Schema<IBloodlinesDocument>(
         toJSON: {
             transform: (_doc, ret) => {
                 delete ret._id; // Removes _id from the JSON output
-                delete ret.__v; // Removes __v (version key) from the JSON output
+                delete (ret as any).__v; // Removes __v (version key) from the JSON output
             },
         },
-    },
+    }
 );
 
 // Create and export the Bloodlines model
-export const Bloodlines: Model<IBloodlinesDocument> = model<IBloodlinesDocument>(
+export const Bloodlines: Model<IBloodlineDocument> = model<IBloodlineDocument>(
     "bloodlines",
     bloodlinesSchema,
-    "bloodlines", // Explicitly specifying the collection name
+    "bloodlines" // Explicitly specifying the collection name
 );

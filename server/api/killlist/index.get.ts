@@ -1,6 +1,3 @@
-import { getQuery } from "h3";
-import { Killmails } from "~/server/models/Killmails";
-
 interface QueryConfig {
     find: Record<string, unknown>;
     sort?: Record<string, 1 | -1>;

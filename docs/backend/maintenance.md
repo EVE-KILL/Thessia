@@ -60,7 +60,7 @@ Intercepts all page requests to enforce maintenance mode.
 - Skips enforcement for maintenance page itself and API routes
 - Uses API call to check maintenance status (cached on server)
 
-### 3. Maintenance Page (`src/theme/modern/pages/maintenance.vue`)
+### 3. Maintenance Page (`app/pages/maintenance.vue`)
 
 User-facing maintenance page with professional design.
 
@@ -256,7 +256,7 @@ if (to.path.startsWith("/api/health/")) {
 ```
 
 ### Custom Maintenance Page
-The maintenance page template is fully customizable in `src/theme/modern/pages/maintenance.vue`.
+The maintenance page template is fully customizable in `app/pages/maintenance.vue`.
 
 ### Internationalization
 Add maintenance translations to locale files in `i18n/locales/`:

@@ -1,7 +1,4 @@
 import { ObjectId } from "mongodb";
-import { RedisStorage } from "~/server/helpers/Storage";
-import { Celestials } from "~/server/models/Celestials";
-import { Killmails, type IKillmailDocument } from "~/server/models/Killmails";
 
 /**
  * RedisQ-compatible endpoint for long-polling killmail delivery

@@ -1,9 +1,5 @@
 import DOMPurify from "isomorphic-dompurify";
 import { v4 as uuidv4 } from "uuid";
-import { DiscordWebhooks } from "~/server/helpers/DiscordWebhooks";
-import { cliLogger } from "~/server/helpers/Logger";
-import { broadcastCommentEvent } from "~/server/helpers/Websocket";
-import { Comments } from "~/server/models/Comments";
 
 // Configure sanitize options - these will be passed to DOMPurify internally
 const SANITIZE_CONFIG = {

@@ -1,5 +1,3 @@
-import { RedisStorage } from "~/server/helpers/Storage";
-
 // WebSocket channels
 export const SITE_PUBSUB_CHANNEL = "site:events";
 export const KILLMAIL_PUBSUB_CHANNEL = "killmail-broadcasts";

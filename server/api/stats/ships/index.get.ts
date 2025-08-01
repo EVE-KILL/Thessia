@@ -1,7 +1,3 @@
-import { InvTypes } from "~/server/models/InvTypes";
-import { Killmails } from "~/server/models/Killmails";
-import { determineOptimalAggregationHint } from "~/server/utils/indexOptimizer";
-
 /**
  * Returns a list of most lost ships (ships that were destroyed)
  * @param dateFrom - Start date for the query

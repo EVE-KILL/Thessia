@@ -1,10 +1,4 @@
 import { createHash } from "crypto";
-import { createError, getQuery } from "h3";
-import {
-    addDefaultTimeFilter,
-    determineOptimalIndexHint,
-} from "~/server/utils/indexOptimizer";
-import { Killmails } from "../../models/Killmails";
 
 /**
  * Handle filter parameter - either a MongoDB filter object or advanced search filters

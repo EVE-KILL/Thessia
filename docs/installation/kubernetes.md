@@ -325,7 +325,7 @@ Backup persistent volumes using your cloud provider's snapshot functionality or 
 
 - [Thessia Documentation](../index.md)
 - [API Documentation](../api/index.md)
-- [Development Guide](development-guide.md)
+- [Development Guide](../development/development-guide.md)
 - [Kubernetes Documentation](https://kubernetes.io/docs/)
 - [Helm Documentation](https://helm.sh/docs/)
 

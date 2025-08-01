@@ -1,6 +1,8 @@
-import mongoose from "mongoose";
+import mongoose, { type Document } from "mongoose";
 
-const SavedQuerySchema = new mongoose.Schema(
+export interface ISavedQueryDocument extends ISavedQuery, Document {}
+
+const SavedQuerySchema = new mongoose.Schema<ISavedQueryDocument>(
     {
         hash: { type: String, required: true, unique: true, index: true },
         title: { type: String, required: true },
@@ -11,5 +13,8 @@ const SavedQuerySchema = new mongoose.Schema(
     { collection: "saved_queries" }
 );
 
-export const SavedQuery =
-    mongoose.models.SavedQuery || mongoose.model("SavedQuery", SavedQuerySchema);
+export const SavedQuery = mongoose.model<ISavedQueryDocument>(
+    "SavedQuery",
+    SavedQuerySchema,
+    "saved_queries"
+);

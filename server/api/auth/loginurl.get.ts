@@ -1,6 +1,4 @@
-import { defineEventHandler } from "h3";
 import { v4 as uuidv4 } from "uuid";
-import { RedisStorage } from "~/server/helpers/Storage";
 
 export default defineEventHandler(async (event) => {
     const query = getQuery(event);

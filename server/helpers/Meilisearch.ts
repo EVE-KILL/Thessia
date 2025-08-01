@@ -1,4 +1,3 @@
-
 import MeiliSearch, { EnqueuedTaskPromise } from "meilisearch";
 
 /**
@@ -70,7 +69,7 @@ export class Meilisearch {
     async search(
         indexName: string,
         query: string,
-        options: MeilisearchSearchOptions = {},
+        options: MeilisearchSearchOptions = {}
     ): Promise<any> {
         const searchOptions: Record<string, any> = {
             limit: options.limit || 1000,
@@ -97,14 +96,19 @@ export class Meilisearch {
                     searchOptions.filter.push(options.filter);
                 }
             } else {
-                searchOptions.filter = Array.isArray(options.filter) ? options.filter : [options.filter];
+                searchOptions.filter = Array.isArray(options.filter)
+                    ? options.filter
+                    : [options.filter];
             }
         }
 
         return await this.client.index(indexName).search(query, searchOptions);
     }
 
-    async addDocuments(indexName: string, documents: any[]): Promise<EnqueuedTaskPromise> {
+    async addDocuments(
+        indexName: string,
+        documents: any[]
+    ): Promise<EnqueuedTaskPromise> {
         return await this.client.index(indexName).addDocuments(documents);
     }
 
@@ -113,11 +117,17 @@ export class Meilisearch {
         return await this.client.tasks.getTask(taskUid);
     }
 
-    async updateDocuments(indexName: string, documents: any[]): Promise<EnqueuedTaskPromise> {
+    async updateDocuments(
+        indexName: string,
+        documents: any[]
+    ): Promise<EnqueuedTaskPromise> {
         return await this.client.index(indexName).updateDocuments(documents);
     }
 
-    async deleteDocuments(indexName: string, documentIds: string[]): Promise<EnqueuedTaskPromise> {
+    async deleteDocuments(
+        indexName: string,
+        documentIds: string[]
+    ): Promise<EnqueuedTaskPromise> {
         return await this.client.index(indexName).deleteDocuments(documentIds);
     }
 
@@ -125,7 +135,10 @@ export class Meilisearch {
         return await this.client.index(indexName).getDocument(documentId);
     }
 
-    async updateRankingRules(indexName: string, rankingRules: string[]): Promise<void> {
+    async updateRankingRules(
+        indexName: string,
+        rankingRules: string[]
+    ): Promise<void> {
         await this.client.index(indexName).updateRankingRules(rankingRules);
     }
 
@@ -135,7 +148,12 @@ export class Meilisearch {
      * @param indexName - The name of the index to configure
      * @param attributes - Array of attribute names that should be filterable
      */
-    async updateFilterableAttributes(indexName: string, attributes: string[]): Promise<void> {
-        await this.client.index(indexName).updateFilterableAttributes(attributes);
+    async updateFilterableAttributes(
+        indexName: string,
+        attributes: string[]
+    ): Promise<void> {
+        await this.client
+            .index(indexName)
+            .updateFilterableAttributes(attributes);
     }
 }

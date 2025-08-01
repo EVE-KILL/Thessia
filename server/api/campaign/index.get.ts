@@ -1,6 +1,4 @@
 import { createHash } from "crypto";
-import { createError, getQuery } from "h3";
-import { Campaigns } from "~/server/models/Campaigns";
 
 /**
  * Helper function to count entities in a query field

@@ -3,7 +3,7 @@ import { Command } from "commander";
 import mongoose from "mongoose";
 import { initMongooseConnection } from "./server/helpers/Mongoose";
 // Use the generated loader file
-import { commands } from "./src/console/.loader";
+import { commands } from "./console/.loader";
 
 const program = new Command();
 

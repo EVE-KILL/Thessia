@@ -1,6 +1,3 @@
-import { Meilisearch } from "../../../helpers/Meilisearch";
-import { batchClassifyTypeIds } from "../../../helpers/ItemClassifier";
-
 interface SearchHit {
     id: any;
     originalId?: any;

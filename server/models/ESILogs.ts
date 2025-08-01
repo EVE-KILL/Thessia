@@ -1,5 +1,4 @@
 import { type Document, type Model, Schema, model } from "mongoose";
-import type { IESILog } from "~/server/interfaces/IESILog";
 
 export interface IESILogDocument extends IESILog, Document {}
 
@@ -38,7 +37,7 @@ const esiLogSchema = new Schema<IESILogDocument>(
         toJSON: {
             transform: (_doc: any, ret: any) => {
                 delete ret._id;
-                delete ret.__v;
+                delete (ret as any).__v;
             },
         },
     }

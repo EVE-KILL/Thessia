@@ -1,5 +1,3 @@
-import { Killmails } from "~/server/models/Killmails";
-
 export default defineCachedEventHandler(
     async (event: any) => {
         const query = getQuery(event);

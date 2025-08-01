@@ -1,7 +1,3 @@
-import { createError, getRouterParam } from "h3";
-import { processQueryForUI } from "~/server/helpers/CampaignsHelper";
-import { Campaigns } from "~/server/models/Campaigns";
-
 export default defineCachedEventHandler(
     async (event) => {
         const campaignId = getRouterParam(event, "id");

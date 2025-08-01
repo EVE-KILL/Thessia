@@ -566,5 +566,5 @@ sudo systemctl restart mongod
 - [Production Overview](./index.md)
 - [Docker Deployment](./docker.md)
 - [Kubernetes Deployment](./kubernetes.md)
-- [Development Guide](../development-guide.md)
+- [Development Guide](../development/development-guide.md)
 - [API Documentation](../api/index.md)

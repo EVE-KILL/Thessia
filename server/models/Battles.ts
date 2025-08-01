@@ -1,14 +1,4 @@
 import { type Document, type Model, Schema, model } from "mongoose";
-import type {
-    IBattles,
-    ICharacterShipManifestEntry,
-    IEntityItem,
-    IEntityStats,
-    ISideData,
-    ISystemInfo,
-    ITeamSummaryStats,
-    ITopEntity,
-} from "~/server/interfaces/IBattles"; // Adjust the path as necessary
 
 // Extend the IBattles interface with Mongoose's Document interface
 export interface IBattlesDocument extends IBattles, Document {}
@@ -158,7 +148,7 @@ const BattlesSchema = new Schema<IBattlesDocument>(
         toJSON: {
             transform: (_doc, ret) => {
                 delete ret._id;
-                delete ret.__v;
+                delete (ret as any).__v;
             },
         },
     }

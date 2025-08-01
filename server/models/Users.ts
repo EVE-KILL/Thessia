@@ -1,6 +1,4 @@
 import { type Document, type Model, Schema, model } from "mongoose";
-import type { IUser } from "~/server/interfaces/IUser";
-import type { IUserSetting } from "~/server/interfaces/IUserSettings";
 
 export interface IUserDocument extends IUser, Document {}
 
@@ -36,7 +34,7 @@ const userSchema = new Schema<IUserDocument>(
         toJSON: {
             transform: (_doc: any, ret: any) => {
                 delete ret._id;
-                delete ret.__v;
+                delete (ret as any).__v;
             },
         },
     }

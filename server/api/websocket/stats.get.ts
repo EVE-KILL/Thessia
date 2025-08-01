@@ -1,5 +1,3 @@
-import { RedisStorage } from "~/server/helpers/Storage";
-
 /**
  * WebSocket Statistics API Endpoint
  *
@@ -8,10 +6,6 @@ import { RedisStorage } from "~/server/helpers/Storage";
  */
 
 export default defineEventHandler(async (event) => {
-    // Import the client manager to access connection info
-    const { getClientCount, getSubscriptionStatus, getConnectionHealth } =
-        await import("~/server/helpers/WSClientManager");
-
     const redis = RedisStorage.getInstance();
     const [redisStats, redisHealth] = await Promise.all([
         redis.getRedisStats(),

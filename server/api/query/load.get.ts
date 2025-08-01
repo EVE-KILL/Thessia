@@ -1,6 +1,3 @@
-import type { H3Event } from "h3";
-import { SavedQuery } from "~/server/models/SavedQuery";
-
 export default defineEventHandler(async (event: H3Event) => {
     // Get the query ID from the URL query parameters
     const query = getQuery(event);
@@ -22,19 +19,19 @@ export default defineEventHandler(async (event: H3Event) => {
             // This is just for development and should be removed in production
             const sampleQuery = {
                 filter: {
-                    "victim.alliance_id": 99003581
+                    "victim.alliance_id": 99003581,
                 },
                 options: {
-                    sort: { "kill_time": -1 },
-                    limit: 50
-                }
+                    sort: { kill_time: -1 },
+                    limit: 50,
+                },
             };
 
             await SavedQuery.create({
                 hash: id,
                 title: "Sample Query",
                 description: "Automatically created sample query",
-                query: sampleQuery
+                query: sampleQuery,
             });
 
             // Return the sample data
@@ -42,7 +39,7 @@ export default defineEventHandler(async (event: H3Event) => {
                 title: "Sample Query",
                 description: "Automatically created sample query",
                 query: sampleQuery,
-                hash: id
+                hash: id,
             };
         }
 

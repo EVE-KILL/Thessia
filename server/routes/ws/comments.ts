@@ -1,12 +1,3 @@
-import { COMMENT_PUBSUB_CHANNEL } from "~/server/helpers/Websocket";
-import {
-    addClient,
-    broadcastToCommentClients,
-    handleClientPong,
-    registerWSType,
-    removeClient,
-} from "~/server/helpers/WSClientManager";
-
 // Register this WebSocket type
 registerWSType("comment", {
     channel: COMMENT_PUBSUB_CHANNEL,

@@ -1,7 +1,6 @@
 import { type Document, type Model, Schema, model } from "mongoose";
-import type { IDScan } from "~/server/interfaces/IDScan";
 
-export interface IDScanDocument extends IDScan, Document { }
+export interface IDScanDocument extends IDScan, Document {}
 
 const dScanSchema = new Schema<IDScanDocument>(
     {
@@ -14,7 +13,7 @@ const dScanSchema = new Schema<IDScanDocument>(
         toJSON: {
             transform: (_doc, ret) => {
                 delete ret._id;
-                delete ret.__v;
+                delete (ret as any).__v;
             },
         },
     }

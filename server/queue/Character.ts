@@ -1,8 +1,8 @@
-import { getCharacter, getCharacterHistory } from "~/server/helpers/ESIData";
-import { cliLogger } from "~/server/helpers/Logger";
-import { createQueue } from "~/server/helpers/Queue";
-import { Corporations } from "~/server/models/Corporations";
-import { queueUpdateCorporation } from "~/server/queue/Corporation";
+import { getCharacter, getCharacterHistory } from "../helpers/ESIData";
+import { cliLogger } from "../helpers/Logger";
+import { createQueue } from "../helpers/Queue";
+import { Corporations } from "../models/Corporations";
+import { queueUpdateCorporation } from "../queue/Corporation";
 
 const characterQueue = createQueue("character");
 const characterHistoryQueue = createQueue("characterhistory");

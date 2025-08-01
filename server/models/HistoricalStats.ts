@@ -1,14 +1,10 @@
-// models/HistoricalStats.ts
-
 import { type Document, type Model, Schema, model } from "mongoose";
-import { cliLogger } from "~/server/helpers/Logger";
-import type { IHistoricalStats } from "~/server/interfaces/IHistoricalStats"; // Adjust the path as necessary
 
-// Extend the IHistoricalStats interface with Mongoose's Document interface
-export interface IHistoricalStatsDocument extends IHistoricalStats, Document {}
+// Extend the IHistoricalStat interface with Mongoose's Document interface
+export interface IHistoricalStatDocument extends IHistoricalStat, Document {}
 
 // Define the Alliances schema
-const historicalStatsSchema = new Schema<IHistoricalStatsDocument>(
+const historicalStatsSchema = new Schema<IHistoricalStatDocument>(
     {
         alliance_id: { type: Number, required: true },
         corporation_id: { type: Number, required: true },
@@ -45,7 +41,7 @@ const historicalStatsSchema = new Schema<IHistoricalStatsDocument>(
         toJSON: {
             transform: (_doc, ret) => {
                 delete ret._id; // Removes _id from the JSON output
-                delete ret.__v; // Removes __v (version key) from the JSON output
+                delete (ret as any).__v; // Removes __v (version key) from the JSON output
             },
         },
     }
@@ -149,8 +145,8 @@ historicalStatsSchema.index(
 );
 
 // Create and export the Alliances model
-export const HistoricalStats: Model<IHistoricalStatsDocument> =
-    model<IHistoricalStatsDocument>(
+export const HistoricalStats: Model<IHistoricalStatDocument> =
+    model<IHistoricalStatDocument>(
         "historical_stats",
         historicalStatsSchema,
         "historical_stats"

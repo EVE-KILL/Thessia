@@ -1,10 +1,3 @@
-import { createError, getQuery, getRouterParam } from "h3";
-import { buildExpandedQuery } from "~/server/helpers/CampaignsHelper";
-import { type IKillList } from "~/server/interfaces/IKillList";
-import { Campaigns } from "~/server/models/Campaigns";
-import { Killmails } from "~/server/models/Killmails";
-import { determineOptimalIndexHint } from "~/server/utils/indexOptimizer";
-
 export default defineCachedEventHandler(
     async (event: any) => {
         const campaignId = getRouterParam(event, "id");

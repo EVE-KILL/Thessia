@@ -1,25 +1,23 @@
-import { createError, defineEventHandler, getRouterParam } from 'h3';
-import { reprocessCampaign } from '~/server/queue/Campaign';
-import { Campaigns } from '~/server/models/Campaigns';
-
 export default defineEventHandler(async (event) => {
-    const campaignId = getRouterParam(event, 'id');
+    const campaignId = getRouterParam(event, "id");
 
     if (!campaignId) {
         throw createError({
             statusCode: 400,
-            statusMessage: 'Campaign ID is required',
+            statusMessage: "Campaign ID is required",
         });
     }
 
     try {
         // Check if campaign exists
-        const campaign = await Campaigns.findOne({ campaign_id: campaignId }).lean();
+        const campaign = await Campaigns.findOne({
+            campaign_id: campaignId,
+        }).lean();
 
         if (!campaign) {
             throw createError({
                 statusCode: 404,
-                statusMessage: 'Campaign not found',
+                statusMessage: "Campaign not found",
             });
         }
 
@@ -28,11 +26,14 @@ export default defineEventHandler(async (event) => {
 
         return {
             success: true,
-            message: 'Campaign queued for reprocessing',
-            campaign_id: campaignId
+            message: "Campaign queued for reprocessing",
+            campaign_id: campaignId,
         };
     } catch (error: any) {
-        console.error(`Error queuing campaign ${campaignId} for reprocessing:`, error);
+        console.error(
+            `Error queuing campaign ${campaignId} for reprocessing:`,
+            error
+        );
 
         // Forward HTTP errors
         if (error.statusCode) {
@@ -42,8 +43,8 @@ export default defineEventHandler(async (event) => {
         // Otherwise, create a generic error
         throw createError({
             statusCode: 500,
-            statusMessage: 'Error queuing campaign for reprocessing',
-            message: error.message || 'Error queuing campaign for reprocessing',
+            statusMessage: "Error queuing campaign for reprocessing",
+            message: error.message || "Error queuing campaign for reprocessing",
         });
     }
 });

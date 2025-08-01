@@ -1,6 +1,3 @@
-import { getUserSettingsHelper } from "~/server/helpers/UserSettings";
-import { Users } from "~/server/models/Users";
-
 export default defineEventHandler(async (event) => {
     // Add cache-control headers to prevent caching
     setResponseHeaders(event, {

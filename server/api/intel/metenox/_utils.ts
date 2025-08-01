@@ -1,6 +1,3 @@
-import { Killmails } from "../../../models/Killmails";
-import { Celestials } from "../../../models/Celestials";
-
 export interface IMetenoxMoonResult {
     system_id: number;
     system_name: string;

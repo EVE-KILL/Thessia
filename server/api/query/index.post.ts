@@ -1,18 +1,4 @@
 import crypto from "crypto";
-import type { H3Event } from "h3";
-import { Killmails } from "~/server/models/Killmails";
-import {
-    addDefaultTimeFilter,
-    determineOptimalIndexHint,
-} from "~/server/utils/indexOptimizer";
-import {
-    DEFAULT_EXCLUSIONS,
-    DEFAULT_LIMIT,
-    MAX_LIMIT,
-    type QueryAPIRequest,
-    VALID_FIELDS,
-    VALID_OPERATORS,
-} from "~/shared/helpers/queryAPIHelper";
 
 /**
  * Query API - MongoDB-like query interface for killmail data

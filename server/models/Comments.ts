@@ -1,13 +1,10 @@
-// models/Comments.ts
-
 import { type Document, type Model, Schema, model } from "mongoose";
-import type { IComments } from "~/server/interfaces/IComments";
 
-// Extend the IComments interface with Mongoose's Document interface
-export interface ICommentsDocument extends IComments, Document {}
+// Extend the IComment interface with Mongoose's Document interface
+export interface ICommentDocument extends IComment, Document {}
 
 // Define the Comments schema
-const commentsSchema = new Schema<ICommentsDocument>(
+const commentsSchema = new Schema<ICommentDocument>(
     {
         identifier: {
             type: String,
@@ -45,7 +42,7 @@ const commentsSchema = new Schema<ICommentsDocument>(
         toJSON: {
             transform: (_doc, ret) => {
                 delete ret._id; // Removes _id from the JSON output
-                delete ret.__v; // Removes __v (version key) from the JSON output
+                delete (ret as any).__v; // Removes __v (version key) from the JSON output
             },
         },
     }
@@ -62,7 +59,7 @@ commentsSchema.index({
     allianceName: "text",
 });
 
-export const Comments: Model<ICommentsDocument> = model<ICommentsDocument>(
+export const Comments: Model<ICommentDocument> = model<ICommentDocument>(
     "comments",
     commentsSchema,
     "comments"

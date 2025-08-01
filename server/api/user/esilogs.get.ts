@@ -1,11 +1,3 @@
-/**
- * GET /api/user/esi-logs
- * Get ESI logs for the current user to show transparency
- */
-
-import { ESILogs } from "~/server/models/ESILogs";
-import { Users } from "~/server/models/Users";
-
 export default defineEventHandler(async (event) => {
     // Add cache-control headers to prevent caching
     setResponseHeaders(event, {

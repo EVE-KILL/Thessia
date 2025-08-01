@@ -1,7 +1,4 @@
 import { createHash } from "crypto";
-import { createError, getQuery } from "h3";
-import { Battles } from "~/server/models/Battles";
-import { determineOptimalIndexHint } from "~/server/utils/indexOptimizer";
 
 export default defineCachedEventHandler(
     async (event) => {

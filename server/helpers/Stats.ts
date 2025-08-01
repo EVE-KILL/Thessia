@@ -1,14 +1,4 @@
 import { LRUCache } from "lru-cache";
-import type {
-    IFullStats,
-    IStatsDocument,
-    StatsType,
-} from "~/server/interfaces/IStats";
-import { InvGroups } from "~/server/models/InvGroups";
-import { InvTypes } from "~/server/models/InvTypes";
-import { Killmails } from "~/server/models/Killmails";
-import { Stats } from "~/server/models/Stats";
-import { IKillmail } from "../interfaces/IKillmail";
 
 // LRU cache for ship groups data (category_id: 6, published: true)
 const shipGroupsCache = new LRUCache<string, Set<number>>({

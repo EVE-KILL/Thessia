@@ -1,13 +1,4 @@
-// models/Killmails.ts
-
 import { type Document, type Model, Schema, model } from "mongoose";
-import { cliLogger } from "~/server/helpers/Logger";
-import type {
-    IAttacker,
-    IItem,
-    IKillmail,
-    IVictim,
-} from "~/server/interfaces/IKillmail"; // Adjust the path as necessary
 
 export interface IKillmailDocument extends IKillmail, Document {}
 
@@ -106,7 +97,7 @@ const killmailsSchema = new Schema<IKillmailDocument>(
         toJSON: {
             transform: (_doc, ret: any) => {
                 delete ret._id;
-                delete ret.__v;
+                delete (ret as any).__v;
             },
         },
     }

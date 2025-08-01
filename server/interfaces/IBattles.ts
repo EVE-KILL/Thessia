@@ -67,11 +67,7 @@ export interface ISideData {
 }
 
 // Helper interface for top entities (alliances, corporations, ship types)
-export interface ITopEntity {
-    id: number;
-    name: string | ITranslation; // Name can be string or ITranslation (e.g., for ship types)
-    count: number;
-}
+// Uses ITopEntity from IStats.ts - defined there to avoid duplication
 
 // Main interface for Battles, reflecting the structure from compileFullBattleData
 export interface IBattles {
@@ -97,16 +93,8 @@ export interface IBattles {
     involved_characters_count?: number;
 
     // Top entities involved in the battle
-    top_alliances?: Array<{
-        id: number;
-        name: string; // Alliance names are typically strings
-        count: number; // e.g., number of members involved or killmails
-    }>;
-    top_corporations?: Array<{
-        id: number;
-        name: string; // Corporation names are typically strings
-        count: number;
-    }>;
+    top_alliances?: ITopEntity[]; // Alliance names are typically strings
+    top_corporations?: ITopEntity[]; // Corporation names are typically strings
     top_ship_types?: ITopEntity[]; // Ship types, name can be ITranslation
 
     killmail_ids?: number[]; // All killmail IDs included in this battle

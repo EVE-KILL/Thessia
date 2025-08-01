@@ -1,11 +1,3 @@
-import {
-    DEFAULT_USER_SETTINGS,
-    USER_SETTING_VALIDATION,
-    type IUserSettingsMap,
-    type UserSettingKey,
-} from "~/server/interfaces/IUserSettings";
-import { Users, type IUserDocument } from "~/server/models/Users";
-
 /**
  * Helper class for managing user settings
  */

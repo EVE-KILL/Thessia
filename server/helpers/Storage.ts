@@ -1,6 +1,4 @@
-// src/helpers/Storage.ts
 import Redis from "ioredis";
-import { cliLogger } from "~/server/helpers/Logger";
 
 export class RedisStorage {
     // Static instance property

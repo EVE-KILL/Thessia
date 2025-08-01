@@ -1,21 +1,3 @@
-import type { IAlliance } from "~/server/interfaces/IAlliance";
-import type { ICharacter } from "~/server/interfaces/ICharacter";
-import type { ICorporation } from "~/server/interfaces/ICorporation";
-import type { IESIKillmail } from "~/server/interfaces/IESIKillmail";
-import type { IFaction } from "~/server/interfaces/IFaction";
-import type { IItem } from "~/server/interfaces/IKillmail";
-import type { IWar } from "~/server/interfaces/IWar";
-import { Alliances } from "~/server/models/Alliances";
-import { Characters } from "~/server/models/Characters";
-import { Corporations } from "~/server/models/Corporations";
-import { Factions } from "~/server/models/Factions";
-import { InvTypes } from "~/server/models/InvTypes";
-import { KillmailsESI } from "~/server/models/KillmailsESI";
-import { Wars } from "~/server/models/Wars";
-import { queueUpdateCharacterHistory } from "~/server/queue/Character";
-import { queueUpdateCorporationHistory } from "~/server/queue/Corporation";
-import { esiFetcher } from "./ESIFetcher";
-
 async function fetchESIKillmail(
     killmailId: number,
     killmailHash: string

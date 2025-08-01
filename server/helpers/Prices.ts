@@ -1,9 +1,8 @@
-import type { IPrice } from "~/server/interfaces/IPrice";
-import { CustomPrices } from "~/server/models/CustomPrices";
-import { InvTypes } from "~/server/models/InvTypes";
-import { Prices } from "~/server/models/Prices";
-
-async function getPrice(typeId: number, date: Date, regionId = 10000002): Promise<number> {
+async function getPrice(
+    typeId: number,
+    date: Date,
+    regionId = 10000002
+): Promise<number> {
     // Check if a custom price exists
     const price = await customPrices(typeId, date);
     if (price > 0) {
@@ -19,7 +18,10 @@ async function getPrice(typeId: number, date: Date, regionId = 10000002): Promis
 
     // If no exact date match, get the closest (latest) price
     if (!priceRecord) {
-        priceRecord = await Prices.findOne({ type_id: typeId, region_id: regionId }).sort({ date: -1 });
+        priceRecord = await Prices.findOne({
+            type_id: typeId,
+            region_id: regionId,
+        }).sort({ date: -1 });
     }
 
     // Return the average price or default to 0.01 if no price is found
@@ -48,7 +50,11 @@ async function customPrices(typeId: number, date: Date): Promise<number> {
     return customPrice;
 }
 
-async function getPriceFromBlueprint(typeId: number, date: Date, regionId = 10000002): Promise<number> {
+async function getPriceFromBlueprint(
+    typeId: number,
+    date: Date,
+    regionId = 10000002
+): Promise<number> {
     const entity = await InvTypes.findOne({ type_id: typeId });
     const materials = entity?.type_materials;
 
@@ -67,4 +73,3 @@ async function getPriceFromBlueprint(typeId: number, date: Date, regionId = 1000
 }
 
 export { customPrices, getPrice, getPriceFromBlueprint };
-

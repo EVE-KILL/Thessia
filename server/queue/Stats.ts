@@ -1,8 +1,8 @@
-import { cliLogger } from "~/server/helpers/Logger";
-import { createQueue } from "~/server/helpers/Queue";
-import { calculateAllStats } from "~/server/helpers/Stats";
-import { IStatsDocument, StatsType } from "~/server/interfaces/IStats";
-import { Stats } from "~/server/models/Stats";
+import { cliLogger } from "../helpers/Logger";
+import { createQueue } from "../helpers/Queue";
+import { calculateAllStats } from "../helpers/Stats";
+import { IStatsDocument, StatsType } from "../interfaces/IStats";
+import { Stats } from "../models/Stats";
 
 const statsQueue = createQueue("stats");
 

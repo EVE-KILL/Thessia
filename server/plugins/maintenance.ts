@@ -1,4 +1,4 @@
-import type { IMaintenanceState } from "../interfaces/IMaintenance";
+import type { IMaintenanceState } from "../interfaces/IMaintenanceState";
 import { Config } from "../models/Config";
 
 // Global maintenance state cache

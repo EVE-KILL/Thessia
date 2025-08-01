@@ -1,10 +1,4 @@
 import { type Document, type Model, Schema, model } from "mongoose";
-import type {
-    IESIAttacker,
-    IESIKillmail,
-    IESIVictim,
-    IESIVictimItem,
-} from "~/server/interfaces/IESIKillmail";
 
 // Extend the IESIKillmail interface with Mongoose's Document interface
 export interface IESIKillmailDocument extends IESIKillmail, Document {}

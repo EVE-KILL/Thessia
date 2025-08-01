@@ -1,11 +1,8 @@
-import {
-    getCorporation,
-    getCorporationHistory,
-} from "~/server/helpers/ESIData";
-import { cliLogger } from "~/server/helpers/Logger";
-import { createQueue } from "~/server/helpers/Queue";
-import { Alliances } from "~/server/models/Alliances";
-import { queueUpdateAlliance } from "~/server/queue/Alliance";
+import { getCorporation, getCorporationHistory } from "../helpers/ESIData";
+import { cliLogger } from "../helpers/Logger";
+import { createQueue } from "../helpers/Queue";
+import { Alliances } from "../models/Alliances";
+import { queueUpdateAlliance } from "../queue/Alliance";
 
 const corporationQueue = createQueue("corporation");
 const corporationHistoryQueue = createQueue("corporationhistory");

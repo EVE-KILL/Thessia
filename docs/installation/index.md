@@ -67,7 +67,7 @@ You'll need to register an application with EVE Online:
 
 ## 🔗 Additional Resources
 
-- [Development Guide](../development-guide.md)
+- [Development Guide](../development/development-guide.md)
 - [API Documentation](../api/index.md)
 - [Websocket Client Guide](../websocket-client-guide.md)
 - [Main Documentation](../index.md)

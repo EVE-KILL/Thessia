@@ -6,11 +6,11 @@
 [![Translation Status](https://img.shields.io/badge/Translations-Transifex-blue)](https://app.transifex.com/eve-kill/thessia)
 [![Powered by Bun](https://img.shields.io/badge/Powered%20by-Bun-orange)](https://bun.sh)
 
-A modern application for EVE Online killmail tracking and analysis, built with Nuxt 3, MongoDB, Redis, and BullMQ.
+A modern application for EVE Online killmail tracking and analysis, built with Nuxt, MongoDB, Redis, and BullMQ.
 
 ## 🛠️ Tech Stack
 
-- **Frontend & Backend**: Nuxt 3 (Vue 3 & Nitro)
+- **Frontend & Backend**: Nuxt (Vue & Nitro)
 - **UI Components**: Nuxt/UI
 - **Database**: MongoDB (via Mongoose)
 - **Caching**: Redis (via ioredis)

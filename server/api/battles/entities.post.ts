@@ -1,6 +1,3 @@
-import { createError, defineEventHandler, readBody } from "h3";
-import { Killmails } from "~/server/models/Killmails";
-
 export default defineEventHandler(async (event) => {
     try {
         const { systemIds, startTime, endTime } = await readBody(event);

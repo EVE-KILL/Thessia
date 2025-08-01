@@ -26,15 +26,15 @@ Thessia is built with modern technologies for performance, scalability, and deve
 To get started with Thessia development:
 
 1. **Installation**: Follow our [Installation Guide](./installation/index.md) for detailed setup instructions
-2. **Development**: Check the [Development Guide](./development-guide.md) for development workflow and best practices
+2. **Development**: Check the [Development Guide](./development/development-guide.md) for development workflow and best practices
 
 ## 📚 Documentation Sections
 
 Explore the complete documentation:
 
 - **[Installation Guide](./install-guide.md)** - Complete setup instructions for development and production
-- **[Development Guide](./development-guide.md)** - Development workflow, coding standards, and best practices
-- **[Frontend Documentation](./frontend/index.md)** - Vue 3, Nuxt 3, and UI component documentation
+- **[Development Documentation](./development/index.md)** - Development workflow, build system, and best practices
+- **[Frontend Documentation](./frontend/index.md)** - Vue, Nuxt, and UI component documentation
 - **[Backend Documentation](./backend/index.md)** - Server-side APIs, database models, and services
 - **[API Documentation](./api/index.md)** - Complete API reference and usage examples
 
@@ -42,7 +42,8 @@ Explore the complete documentation:
 
 We welcome contributions! Please see our development documentation:
 
-- **[Development Guide](./development-guide.md)** - Setup and development workflow
+- **[Development Guide](./development/development-guide.md)** - Setup and development workflow
+- **[Build System](./development/build-system.md)** - Understanding the build infrastructure
 - **[Internationalization](https://app.transifex.com/eve-kill/thessia)** - Help translate Thessia
 - **Issues**: Report bugs and request features on [GitHub](https://github.com/eve-kill/Thessia/issues)
 

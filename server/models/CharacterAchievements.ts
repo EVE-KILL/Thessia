@@ -1,10 +1,4 @@
-// models/CharacterAchievements.ts
-
 import { type Document, type Model, Schema, model } from "mongoose";
-import type {
-    ICharacterAchievements,
-    ICharacterAchievement,
-} from "../interfaces/ICharacterAchievements";
 
 // Extend the ICharacterAchievements interface with Mongoose's Document interface
 export interface ICharacterAchievementsDocument

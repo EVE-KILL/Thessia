@@ -1,10 +1,3 @@
-import { esiFetcher } from "~/server/helpers/ESIFetcher";
-import { Characters } from "~/server/models/Characters";
-import { queueUpdateAlliance } from "~/server/queue/Alliance";
-import { queueUpdateCharacter } from "~/server/queue/Character";
-import { queueUpdateCorporation } from "~/server/queue/Corporation";
-import { cliLogger } from "./Logger";
-
 async function processChunk(
     characters: ICharacters[],
     attempt = 0

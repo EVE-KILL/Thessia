@@ -1,14 +1,5 @@
 import { MetricsTime } from "bullmq";
 import os from "node:os";
-import { cliLogger } from "~/server/helpers/Logger";
-import { createQueue } from "~/server/helpers/Queue";
-import {
-    CACHE_NAMESPACES,
-    getCacheHitCount,
-    getCacheSize,
-} from "~/server/helpers/RuntimeCache";
-import { RedisStorage } from "~/server/helpers/Storage";
-import { numberFormat } from "~/src/core/utils/numberFormat";
 
 const startTime = new Date();
 
@@ -195,9 +186,6 @@ export default defineEventHandler(async () => {
     // Get WebSocket stats
     let websocketStats = {};
     try {
-        const { getClientCount, getSubscriptionStatus, getConnectionHealth } =
-            await import("~/server/helpers/WSClientManager");
-
         websocketStats = {
             killmail: {
                 clients: getClientCount("killmail"),

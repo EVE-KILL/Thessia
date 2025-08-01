@@ -14,7 +14,7 @@ This section covers the backend services, server logic, database interactions, a
 - Nitro server-side rendering
 
 ### Architecture
-- Nuxt 3 server-side functionality
+- Nuxt server-side functionality
 - Plugin system for background services
 - Middleware for request processing
 - API route handling

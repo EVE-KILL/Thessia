@@ -12,7 +12,7 @@ Structured data helps search engines understand the content of web pages and can
 
 The `useStructuredData` composable provides reusable functions for generating structured data following Schema.org specifications.
 
-**Location:** `/src/theme/modern/composables/useStructuredData.ts`
+**Location:** `/app/composables/useStructuredData.ts`
 
 ### Available Functions
 

@@ -1,5 +1,4 @@
 import { type Document, type Model, Schema, model } from "mongoose";
-import type { ICampaign } from "~/server/interfaces/ICampaign";
 
 // Extend the ICampaign interface with Mongoose's Document interface
 export interface ICampaignDocument extends ICampaign, Document {}

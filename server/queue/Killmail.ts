@@ -1,9 +1,9 @@
-import { fetchESIKillmail } from "~/server/helpers/ESIData";
-import { parseKillmail } from "~/server/helpers/KillmailParser";
-import { createQueue } from "~/server/helpers/Queue";
-import type { IKillmail } from "~/server/interfaces/IKillmail";
-import { Killmails } from "~/server/models/Killmails";
-import { KillmailsESI } from "~/server/models/KillmailsESI";
+import { fetchESIKillmail } from "../helpers/ESIData";
+import { parseKillmail } from "../helpers/KillmailParser";
+import { createQueue } from "../helpers/Queue";
+import type { IKillmail } from "../interfaces/IKillmail";
+import { Killmails } from "../models/Killmails";
+import { KillmailsESI } from "../models/KillmailsESI";
 
 const killmailQueue = createQueue("killmail");
 

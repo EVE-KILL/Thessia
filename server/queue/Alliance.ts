@@ -1,6 +1,6 @@
-import { getAlliance } from "~/server/helpers/ESIData";
-import { cliLogger } from "~/server/helpers/Logger";
-import { createQueue } from "~/server/helpers/Queue";
+import { getAlliance } from "../helpers/ESIData";
+import { cliLogger } from "../helpers/Logger";
+import { createQueue } from "../helpers/Queue";
 
 const allianceQueue = createQueue("alliance");
 

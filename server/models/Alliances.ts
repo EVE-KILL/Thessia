@@ -1,9 +1,4 @@
-// models/Alliances.ts
-
 import { type Document, type Model, Schema, model } from "mongoose";
-import { cliLogger } from "~/server/helpers/Logger";
-import { Meilisearch } from "~/server/helpers/Meilisearch";
-import type { IAlliance } from "~/server/interfaces/IAlliance"; // Adjust the path as necessary
 
 // Extend the IAlliance interface with Mongoose's Document interface
 export interface IAllianceDocument extends IAlliance, Document {}
@@ -30,7 +25,7 @@ const alliancesSchema = new Schema<IAllianceDocument>(
         toJSON: {
             transform: (_doc, ret) => {
                 delete ret._id; // Removes _id from the JSON output
-                delete ret.__v; // Removes __v (version key) from the JSON output
+                delete (ret as any).__v; // Removes __v (version key) from the JSON output
             },
         },
     }

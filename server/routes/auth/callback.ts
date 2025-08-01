@@ -1,12 +1,4 @@
 import { v4 as uuidv4 } from "uuid";
-import { RedisStorage } from "~/server/helpers/Storage";
-import type { IAuthAccessToken } from "~/server/interfaces/IAuthAccessToken";
-import { Users } from "~/server/models/Users";
-import {
-    decodeState,
-    getAccessToken,
-    getUserData,
-} from "~/server/utils/eveAuthentication";
 
 export default defineEventHandler(async (event) => {
     const cookieName = "evelogin";

@@ -1,8 +1,3 @@
-import { createPlaceholderStats } from "~/server/helpers/Stats";
-import type { StatsType } from "~/server/interfaces/IStats";
-import { Stats } from "~/server/models/Stats";
-import { addStatsJob } from "~/server/queue/Stats";
-
 export default defineCachedEventHandler(
     async (event) => {
         const params = getRouterParams(event);

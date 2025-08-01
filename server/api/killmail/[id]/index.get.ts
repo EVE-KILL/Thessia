@@ -1,6 +1,3 @@
-import type { IKillmail } from "~/server/interfaces/IKillmail";
-import { Killmails } from "~/server/models/Killmails";
-
 /**
  * Get a single killmail by ID
  * Cache the response for 1 hour since killmails are immutable once processed

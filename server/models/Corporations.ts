@@ -1,12 +1,7 @@
-// models/Corporations.ts
-
 import { type Document, type Model, Schema, model } from "mongoose";
-import { cliLogger } from "~/server/helpers/Logger";
-import { Meilisearch } from "~/server/helpers/Meilisearch";
-import type { ICorporation, ICorporationHistory } from "~/server/interfaces/ICorporation"; // Adjust the path as necessary
 
 // Extend the ICorporation interface with Mongoose's Document interface
-export interface ICorporationDocument extends ICorporation, Document { }
+export interface ICorporationDocument extends ICorporation, Document {}
 
 // Define the schema for Corporation History
 const corporationHistorySchema = new Schema<ICorporationHistory>(
@@ -15,7 +10,7 @@ const corporationHistorySchema = new Schema<ICorporationHistory>(
         alliance_id: { type: Number },
         start_date: { type: Date },
     },
-    { _id: false }, // Prevents automatic creation of _id for subdocuments
+    { _id: false } // Prevents automatic creation of _id for subdocuments
 );
 
 // Define the main Corporations schema
@@ -48,10 +43,10 @@ const corporationsSchema = new Schema<ICorporationDocument>(
         toJSON: {
             transform: (_doc, ret) => {
                 delete ret._id; // Removes _id from the JSON output
-                delete ret.__v; // Removes __v (version key) from the JSON output
+                delete (ret as any).__v; // Removes __v (version key) from the JSON output
             },
         },
-    },
+    }
 );
 
 // Define indexes for the schema
@@ -63,7 +58,7 @@ corporationsSchema.index({ createdAt: 1 }, { sparse: true }); // Sparse index on
 corporationsSchema.index({ updatedAt: 1 }, { sparse: true }); // Sparse index on updatedAt
 
 // Hook to update Meilisearch on new document save
-corporationsSchema.post<ICorporationDocument>('save', async function (doc) {
+corporationsSchema.post<ICorporationDocument>("save", async function (doc) {
     if (this.isNew) {
         try {
             const meilisearch = new Meilisearch();
@@ -71,21 +66,26 @@ corporationsSchema.post<ICorporationDocument>('save', async function (doc) {
                 id: doc.corporation_id,
                 name: doc.name,
                 ticker: doc.ticker,
-                type: 'corporation',
+                type: "corporation",
                 rank: 6,
-                lang: 'all',
+                lang: "all",
             };
-            await meilisearch.addDocuments('nitro', [corporationDocument]);
-            cliLogger.info(`Indexed new corporation ${doc.corporation_id} in Meilisearch`);
+            await meilisearch.addDocuments("nitro", [corporationDocument]);
+            cliLogger.info(
+                `Indexed new corporation ${doc.corporation_id} in Meilisearch`
+            );
         } catch (error) {
-            cliLogger.error(`Error indexing new corporation ${doc.corporation_id} in Meilisearch: ${error}`);
+            cliLogger.error(
+                `Error indexing new corporation ${doc.corporation_id} in Meilisearch: ${error}`
+            );
         }
     }
 });
 
 // Create and export the Corporations model
-export const Corporations: Model<ICorporationDocument> = model<ICorporationDocument>(
-    "corporations",
-    corporationsSchema,
-    "corporations", // Explicitly specifying the collection name
-);
+export const Corporations: Model<ICorporationDocument> =
+    model<ICorporationDocument>(
+        "corporations",
+        corporationsSchema,
+        "corporations" // Explicitly specifying the collection name
+    );

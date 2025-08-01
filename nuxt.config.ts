@@ -1,25 +1,20 @@
-const theme = process.env.THEME || "modern";
-// Import CLI loader generators
-import { generateCliLoader } from "./build-cli";
-import { generateCloudflareBeacon } from "./build-cloudflare";
-import { generateCronLoader } from "./build-cron";
-import { generateQueueLoader } from "./build-queue";
+// Import build system
+import { generateAllLoaders, handleNitroBuildHooks } from "./build";
 
 // https://nuxt.com/docs/api/configuration/nuxt-config
 export default defineNuxtConfig({
-    extends: [`./src/theme/${theme}`],
-    dir: {
-        // core
-        modules: "src/core/modules",
-        middleware: "src/core/middleware",
-        plugins: "src/core/plugins",
+    css: [`~/assets/main.css`],
 
-        // site
-        assets: `src/theme/${theme}/assets`,
-        layouts: `src/theme/${theme}/layouts`,
-        pages: `src/theme/${theme}/pages`,
-        public: `src/theme/${theme}/public`,
-    },
+    components: [
+        {
+            path: "~/components",
+            pathPrefix: false,
+        },
+        {
+            path: "~/components/common",
+            pathPrefix: false,
+        },
+    ],
     site: {
         url: "https://eve-kill.com",
     },
@@ -59,7 +54,13 @@ export default defineNuxtConfig({
 
         imports: {
             autoImport: true,
-            dirs: ["server/models/**"],
+            dirs: [
+                "server/models/**",
+                "server/helpers/**",
+                "server/interfaces/**",
+                "server/utils/**",
+                "server/plugins/**",
+            ],
         },
 
         experimental: {
@@ -138,7 +139,7 @@ export default defineNuxtConfig({
         fallback: "dark",
     },
     imports: {
-        dirs: ["src/core/utils/**"],
+        dirs: ["utils/**"],
     },
 
     // i18n configuration
@@ -275,59 +276,17 @@ export default defineNuxtConfig({
     hooks: {
         // Generate loaders before build
         "build:before": async () => {
-            generateCliLoader();
-            generateCronLoader();
-            generateQueueLoader();
+            generateAllLoaders();
         },
 
         // Also generate loaders on dev server start
         "app:resolve": async () => {
-            generateCliLoader();
-            generateCronLoader();
-            generateQueueLoader();
+            generateAllLoaders();
         },
 
-        // Process Cloudflare beacon during build
+        // Process Cloudflare beacon and copy docs during build
         "nitro:build:public-assets": async (nitro) => {
-            generateCloudflareBeacon(nitro);
-
-            // Also copy docs to server output directory for production
-            const fs = await import("fs");
-            const path = await import("path");
-
-            const sourceDocsDir = path.resolve(process.cwd(), "docs");
-            // Copy to the nitro server directory so APIs can access it
-            const targetDocsDir = path.resolve(
-                nitro.options.output.dir,
-                "docs"
-            );
-
-            try {
-                // Ensure source exists
-                await fs.promises.access(sourceDocsDir);
-
-                // Ensure target directory doesn't exist to avoid the copy error
-                try {
-                    await fs.promises.rm(targetDocsDir, {
-                        recursive: true,
-                        force: true,
-                    });
-                } catch {
-                    // Ignore if it doesn't exist
-                }
-
-                // Copy docs directory to output
-                await fs.promises.cp(sourceDocsDir, targetDocsDir, {
-                    recursive: true,
-                    force: true,
-                });
-
-                console.log(
-                    `✅ Copied docs from ${sourceDocsDir} to ${targetDocsDir}`
-                );
-            } catch (error) {
-                console.warn(`⚠️ Could not copy docs directory: ${error}`);
-            }
+            await handleNitroBuildHooks(nitro);
         },
     },
 });

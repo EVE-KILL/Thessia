@@ -1,8 +1,8 @@
-import { writeFile, mkdir, readdir, stat } from "node:fs/promises";
-import { join } from "node:path";
 import { existsSync } from "node:fs";
-import { gzip } from "node:zlib";
+import { mkdir, readdir, stat, writeFile } from "node:fs/promises";
+import { join } from "node:path";
 import { promisify } from "node:util";
+import { gzip } from "node:zlib";
 
 const gzipAsync = promisify(gzip);
 
@@ -12,7 +12,7 @@ export const SITE_URL = "https://eve-kill.com";
 // Dynamically determine sitemaps directory based on environment
 export const SITEMAPS_DIR = process.env.THESSIA_CONTAINER
     ? join(process.cwd(), "public/sitemaps") // Container environment
-    : join(process.cwd(), "src/theme/modern/public/sitemaps"); // Development environment
+    : join(process.cwd(), "app/public/sitemaps"); // Development environment
 
 export interface SitemapUrl {
     loc: string;

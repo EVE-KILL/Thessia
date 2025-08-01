@@ -1,5 +1,3 @@
-import { Comments } from "~/server/models/Comments";
-
 export default defineEventHandler(async (event) => {
     try {
         const query = getQuery(event);

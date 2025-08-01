@@ -1,6 +1,4 @@
 import { createHash } from "crypto";
-import { createError, getQuery } from "h3";
-import { generateAdvancedViewStats } from "../../helpers/AdvancedViewHelper";
 
 /**
  * Check if a filter contains any kill_time constraints

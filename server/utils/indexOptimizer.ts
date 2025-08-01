@@ -1,6 +1,5 @@
 import { LRUCache } from "lru-cache";
 import type { IndexDescription } from "mongodb";
-import { cliLogger } from "~/server/helpers/Logger";
 
 /**
  * Cache for MongoDB indexes to avoid repeated queries

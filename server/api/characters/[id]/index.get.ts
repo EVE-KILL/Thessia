@@ -1,11 +1,3 @@
-import { getCharacter } from "~/server/helpers/ESIData";
-import { Alliances } from "~/server/models/Alliances";
-import { Bloodlines } from "~/server/models/Bloodlines";
-import { Corporations } from "~/server/models/Corporations";
-import { Factions } from "~/server/models/Factions";
-import { Races } from "~/server/models/Races";
-import { CharacterAchievements } from "~/server/models/CharacterAchievements";
-
 export default defineCachedEventHandler(
     async (event) => {
         const characterId: number | null = event.context.params?.id

@@ -1,6 +1,3 @@
-import { cliLogger } from "~/server/helpers/Logger";
-import { Comments } from "~/server/models/Comments";
-
 export default defineEventHandler(async (event) => {
     try {
         // Get query parameters

@@ -1,29 +1,4 @@
 import type { Model } from "mongoose";
-import { Alliances } from "../../models/Alliances";
-import { Battles } from "../../models/Battles";
-import { Bloodlines } from "../../models/Bloodlines";
-import { Campaigns } from "../../models/Campaigns";
-import { Celestials } from "../../models/Celestials";
-import { CharacterAchievements } from "../../models/CharacterAchievements";
-import { Characters } from "../../models/Characters";
-import { Comments } from "../../models/Comments";
-import { Constellations } from "../../models/Constellations";
-import { Corporations } from "../../models/Corporations";
-import { CustomPrices } from "../../models/CustomPrices";
-import { Factions } from "../../models/Factions";
-import { HistoricalStats } from "../../models/HistoricalStats";
-import { InvFlags } from "../../models/InvFlags";
-import { InvGroups } from "../../models/InvGroups";
-import { InvTypes } from "../../models/InvTypes";
-import { Killmails } from "../../models/Killmails";
-import { KillmailsESI } from "../../models/KillmailsESI";
-import { Prices } from "../../models/Prices";
-import { Races } from "../../models/Races";
-import { Regions } from "../../models/Regions";
-import { SolarSystems } from "../../models/SolarSystems";
-import { Stats } from "../../models/Stats";
-import { Wars } from "../../models/Wars";
-import { getRateLimitForRequestSize } from "../../utils/rateLimit";
 
 /**
  * Define which collections are allowed for export and their respective models

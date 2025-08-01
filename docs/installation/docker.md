@@ -394,5 +394,5 @@ docker compose -f docker-compose.production.yml exec mongodb mongo thessia --eva
 - [Production Overview](./index.md)
 - [Kubernetes Deployment](./kubernetes.md)
 - [Raw Installation](./raw.md)
-- [Development Guide](../development-guide.md)
+- [Development Guide](../development/development-guide.md)
 - [API Documentation](../api/index.md)

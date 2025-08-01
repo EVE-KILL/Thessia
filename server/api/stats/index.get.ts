@@ -1,19 +1,3 @@
-import {
-    killCount,
-    mostValuableKills,
-    mostValuableShips,
-    mostValuableStructures,
-    newCharacters,
-    topAlliances,
-    topCharacters,
-    topConstellations,
-    topCorporations,
-    topRegions,
-    topShips,
-    topSolo,
-    topSystems,
-} from "~/server/helpers/TopLists"; // Adjust path as needed
-
 export default defineCachedEventHandler(
     async (event) => {
         const query = getQuery(event);

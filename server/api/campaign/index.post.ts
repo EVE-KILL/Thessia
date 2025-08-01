@@ -1,10 +1,4 @@
-import { createError, defineEventHandler, parseCookies, readBody } from "h3";
 import { nanoid } from "nanoid";
-import { Campaigns } from "~/server/models/Campaigns";
-import {
-    queueCampaignProcessing,
-    reprocessCampaign,
-} from "~/server/queue/Campaign";
 
 // Define constants for entity limits
 const LOCATION_MAX_ENTITIES = 5;

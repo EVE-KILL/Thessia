@@ -1,6 +1,4 @@
 import crypto from "crypto";
-import type { H3Event } from "h3";
-import { SavedQuery } from "~/server/models/SavedQuery";
 
 export default defineEventHandler(async (event: H3Event) => {
     const body = await readBody(event);

@@ -1,21 +1,9 @@
 import { Schema, model, type Document } from "mongoose";
-import type { IFullStats, StatsType } from "~/server/interfaces/IStats";
 
-export interface IStatsDocument extends Document {
-    type: StatsType;
-    id: number;
-    days: number;
-    kills: number;
-    losses: number;
-    iskKilled: number;
-    iskLost: number;
-    npcLosses: number;
-    soloKills: number;
-    soloLosses: number;
-    lastActive: Date | null;
-    full: IFullStats;
-    updatedAt: Date;
-    needsUpdate?: boolean; // Added new field
+export interface IStatsMongooseDocument
+    extends Document,
+        Omit<IStatsDocument, "id"> {
+    id: number; // Our custom id field, overriding Document's string id
 }
 
 const FullStatsSchema = new Schema<IFullStats>(
@@ -143,7 +131,7 @@ const FullStatsSchema = new Schema<IFullStats>(
     { _id: false }
 );
 
-const StatsSchema = new Schema<IStatsDocument>(
+const StatsSchema = new Schema<IStatsMongooseDocument>(
     {
         type: {
             type: String,
@@ -169,8 +157,8 @@ const StatsSchema = new Schema<IStatsDocument>(
         timestamps: true,
         toJSON: {
             transform: (_doc, ret) => {
-                delete ret._id;
-                delete ret.__v;
+                delete (ret as any)._id;
+                delete (ret as any).__v;
             },
         },
     }
@@ -181,5 +169,5 @@ StatsSchema.index({ needsUpdate: 1, days: 1 });
 StatsSchema.index({ type: 1, id: 1, "full.possibleFC": 1 });
 StatsSchema.index({ type: 1, id: 1, "full.possibleCynoAlt": 1 });
 
-const StatsModel = model<IStatsDocument>("stats", StatsSchema, "stats");
+const StatsModel = model<IStatsMongooseDocument>("stats", StatsSchema, "stats");
 export { StatsModel as Stats };

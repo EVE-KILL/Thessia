@@ -1,7 +1,3 @@
-import { InvTypes } from "~/server/models/InvTypes";
-import { Killmails } from "~/server/models/Killmails";
-import { determineOptimalIndexHint } from "~/server/utils/indexOptimizer";
-
 /**
  * List of ship group IDs to identify ships vs. modules/items
  */

@@ -1,20 +1,3 @@
-import { cliLogger } from "~/server/helpers/Logger";
-import { Meilisearch } from "~/server/helpers/Meilisearch";
-import type { IAlliance } from "~/server/interfaces/IAlliance";
-import type { ICharacter } from "~/server/interfaces/ICharacter";
-import type { ICorporation } from "~/server/interfaces/ICorporation";
-import type { IFaction } from "~/server/interfaces/IFaction";
-import type { IInvType } from "~/server/interfaces/IInvType";
-import type { IRegion } from "~/server/interfaces/IRegion";
-import type { ISolarSystem } from "~/server/interfaces/ISolarSystem";
-import { Alliances } from "~/server/models/Alliances";
-import { Characters } from "~/server/models/Characters";
-import { Corporations } from "~/server/models/Corporations";
-import { Factions } from "~/server/models/Factions";
-import { InvTypes } from "~/server/models/InvTypes";
-import { Regions } from "~/server/models/Regions";
-import { SolarSystems } from "~/server/models/SolarSystems";
-
 // Default batch size, can be overridden in options
 const DEFAULT_BATCH_SIZE = 1000000;
 

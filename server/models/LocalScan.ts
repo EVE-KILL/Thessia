@@ -1,8 +1,7 @@
-import { model, Model, Schema } from "mongoose";
-import { ILocalScan } from "../interfaces/ILocalScan";
+import { model, Model, Schema, type Document } from "mongoose";
 
 // Define the LocalScan schema
-export interface ILocalScanDocument extends ILocalScan, Document { }
+export interface ILocalScanDocument extends ILocalScan, Document {}
 
 const localScanSchema = new Schema<ILocalScanDocument>(
     {
@@ -16,7 +15,7 @@ const localScanSchema = new Schema<ILocalScanDocument>(
         toJSON: {
             transform: (_doc, ret) => {
                 delete ret._id;
-                delete ret.__v;
+                delete (ret as any).__v;
             },
         },
     }

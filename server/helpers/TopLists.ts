@@ -1,12 +1,3 @@
-import { Alliances } from "~/server/models/Alliances";
-import { Characters } from "~/server/models/Characters";
-import { Constellations } from "~/server/models/Constellations";
-import { Corporations } from "~/server/models/Corporations";
-import { InvTypes } from "~/server/models/InvTypes";
-import { Killmails } from "~/server/models/Killmails";
-import { Regions } from "~/server/models/Regions";
-import { SolarSystems } from "~/server/models/SolarSystems";
-
 // Earliest known killmail is from 2007-12-05
 const timeSinceEarlyDays: Date = new Date("2007-12-05T00:00:00Z");
 
@@ -21,7 +12,7 @@ async function topCharacters(
     attackerType: string | null = null,
     typeId: number | null = null,
     days: number | null = 30,
-    limit = 10,
+    limit = 10
 ) {
     let calculatedTime = timeSinceEarlyDays;
     if (days) {
@@ -45,9 +36,9 @@ async function topCharacters(
     // Stage 2: Project relevant data
     query.push({
         $project: {
-            "attackers": 1,
-            killmail_id: 1
-        }
+            attackers: 1,
+            killmail_id: 1,
+        },
     });
 
     // Stage 3: Unwind attackers
@@ -55,7 +46,7 @@ async function topCharacters(
 
     // Stage 4: Filter to only include relevant attackers
     const secondMatchStage: any = {
-        "attackers.character_id": { $ne: 0 }
+        "attackers.character_id": { $ne: 0 },
     };
 
     // Key improvement: when filtering by entity, only count characters related to that entity
@@ -89,7 +80,7 @@ async function topCharacters(
     const characterIds = results.map((result) => result.id);
     const characters = await Characters.find(
         { character_id: { $in: characterIds } },
-        { character_id: 1, name: 1, _id: 0 },
+        { character_id: 1, name: 1, _id: 0 }
     ).lean();
 
     // Create a map for faster lookups
@@ -117,7 +108,7 @@ async function topCorporations(
     attackerType: string | null = null,
     typeId: number | null = null,
     days: number | null = 30,
-    limit = 10,
+    limit = 10
 ) {
     let calculatedTime = timeSinceEarlyDays;
     if (days) {
@@ -140,9 +131,9 @@ async function topCorporations(
     // Stage 2: Project relevant data
     query.push({
         $project: {
-            "attackers": 1,
-            killmail_id: 1
-        }
+            attackers: 1,
+            killmail_id: 1,
+        },
     });
 
     // Stage 3: Unwind attackers
@@ -150,7 +141,7 @@ async function topCorporations(
 
     // Stage 4: Filter to only include relevant attackers
     const secondMatchStage: any = {
-        "attackers.corporation_id": { $ne: 0 }
+        "attackers.corporation_id": { $ne: 0 },
     };
 
     // Key improvement: when filtering by entity, only count corporations related to that entity
@@ -184,7 +175,7 @@ async function topCorporations(
     const corporationIds = results.map((result) => result.id);
     const corporations = await Corporations.find(
         { corporation_id: { $in: corporationIds } },
-        { corporation_id: 1, name: 1, _id: 0 },
+        { corporation_id: 1, name: 1, _id: 0 }
     ).lean();
 
     // Create a map for faster lookups
@@ -212,7 +203,7 @@ async function topAlliances(
     attackerType: string | null = null,
     typeId: number | null = null,
     days: number | null = 30,
-    limit = 10,
+    limit = 10
 ) {
     let calculatedTime = timeSinceEarlyDays;
     if (days) {
@@ -235,9 +226,9 @@ async function topAlliances(
     // Stage 2: Project relevant data
     query.push({
         $project: {
-            "attackers": 1,
-            killmail_id: 1
-        }
+            attackers: 1,
+            killmail_id: 1,
+        },
     });
 
     // Stage 3: Unwind attackers
@@ -245,7 +236,7 @@ async function topAlliances(
 
     // Stage 4: Filter to only include relevant attackers
     const secondMatchStage: any = {
-        "attackers.alliance_id": { $ne: 0 }
+        "attackers.alliance_id": { $ne: 0 },
     };
 
     // Key improvement: when filtering by entity, only count alliances related to that entity
@@ -279,7 +270,7 @@ async function topAlliances(
     const allianceIds = results.map((result) => result.id);
     const alliances = await Alliances.find(
         { alliance_id: { $in: allianceIds } },
-        { alliance_id: 1, name: 1, _id: 0 },
+        { alliance_id: 1, name: 1, _id: 0 }
     ).lean();
 
     // Create a map for faster lookups
@@ -307,7 +298,7 @@ async function topSolo(
     attackerType: string | null = null,
     typeId: number | null = null,
     days: number | null = 30,
-    limit = 10,
+    limit = 10
 ) {
     let calculatedTime = timeSinceEarlyDays;
     if (days) {
@@ -332,8 +323,8 @@ async function topSolo(
     // Stage 2: Project only what we need
     query.push({
         $project: {
-            "attackers": 1
-        }
+            attackers: 1,
+        },
     });
 
     // Stage 3: Unwind attackers
@@ -341,7 +332,7 @@ async function topSolo(
 
     // Stage 4: Filter to only include relevant attackers with final blow
     const secondMatchStage: any = {
-        "attackers.final_blow": true
+        "attackers.final_blow": true,
     };
 
     // Key improvement: for entity filter, only count the entity's solo kills
@@ -375,7 +366,7 @@ async function topSolo(
     const characterIds = results.map((result) => result.id);
     const characters = await Characters.find(
         { character_id: { $in: characterIds } },
-        { character_id: 1, name: 1, _id: 0 },
+        { character_id: 1, name: 1, _id: 0 }
     ).lean();
 
     // Create a map for faster lookups
@@ -403,7 +394,7 @@ async function topSystems(
     attackerType: string | null = null,
     typeId: number | null = null,
     days: number | null = 30,
-    limit = 10,
+    limit = 10
 ) {
     let calculatedTime = timeSinceEarlyDays;
     if (days) {
@@ -445,7 +436,7 @@ async function topSystems(
     const systemIds = results.map((result) => result.id);
     const systems = await SolarSystems.find(
         { system_id: { $in: systemIds } },
-        { system_id: 1, system_name: 1, _id: 0 },
+        { system_id: 1, system_name: 1, _id: 0 }
     ).lean();
 
     // Create a map for faster lookups
@@ -473,7 +464,7 @@ async function topConstellations(
     attackerType: string | null = null,
     typeId: number | null = null,
     days: number | null = 30,
-    limit = 10,
+    limit = 10
 ) {
     let calculatedTime = timeSinceEarlyDays;
     if (days) {
@@ -518,13 +509,16 @@ async function topConstellations(
     const constellationIds = results.map((result) => result.id);
     const constellations = await Constellations.find(
         { constellation_id: { $in: constellationIds } },
-        { constellation_id: 1, constellation_name: 1, _id: 0 },
+        { constellation_id: 1, constellation_name: 1, _id: 0 }
     ).lean();
 
     // Create a map for faster lookups
     const constellationMap = new Map();
     constellations.forEach((constellation) => {
-        constellationMap.set(constellation.constellation_id, constellation.constellation_name);
+        constellationMap.set(
+            constellation.constellation_id,
+            constellation.constellation_name
+        );
     });
 
     // Map results with constellation names
@@ -546,7 +540,7 @@ async function topRegions(
     attackerType: string | null = null,
     typeId: number | null = null,
     days: number | null = 30,
-    limit = 10,
+    limit = 10
 ) {
     let calculatedTime = timeSinceEarlyDays;
     if (days) {
@@ -588,7 +582,7 @@ async function topRegions(
     const regionIds = results.map((result) => result.id);
     const regions = await Regions.find(
         { region_id: { $in: regionIds } },
-        { region_id: 1, name: 1, _id: 0 },
+        { region_id: 1, name: 1, _id: 0 }
     ).lean();
 
     // Create a map for faster lookups
@@ -616,7 +610,7 @@ async function topShips(
     attackerType: string | null = null,
     typeId: number | null = null,
     days: number | null = 30,
-    limit = 10,
+    limit = 10
 ) {
     let calculatedTime = timeSinceEarlyDays;
     if (days) {
@@ -691,7 +685,7 @@ async function topShips(
     const shipIds = results.map((result) => result.id);
     const ships = await InvTypes.find(
         { type_id: { $in: shipIds } },
-        { type_id: 1, name: 1, _id: 0 },
+        { type_id: 1, name: 1, _id: 0 }
     ).lean();
 
     // Create a map for faster lookups
@@ -729,7 +723,7 @@ async function mostValuableKills(days: number | null = 7, limit = 10) {
             total_value: 1,
             "victim.ship_id": 1,
             "victim.ship_name": 1,
-        },
+        }
     )
         .sort({ total_value: -1 })
         .limit(limit)
@@ -760,7 +754,7 @@ async function mostValuableStructures(days: number | null = 7, limit = 10) {
             total_value: 1,
             "victim.ship_id": 1,
             "victim.ship_name": 1,
-        },
+        }
     )
         .sort({ total_value: -1 })
         .limit(limit)
@@ -779,8 +773,9 @@ async function mostValuableShips(days: number | null = 7, limit = 10) {
     }
 
     const shipGroupIDs = [
-        547, 485, 513, 902, 941, 30, 659, 419, 27, 29, 26, 420, 25, 28, 463, 237, 31, 324, 898, 906,
-        540, 830, 893, 543, 541, 833, 358, 894, 831, 832, 900, 834, 380, 963, 1305,
+        547, 485, 513, 902, 941, 30, 659, 419, 27, 29, 26, 420, 25, 28, 463,
+        237, 31, 324, 898, 906, 540, 830, 893, 543, 541, 833, 358, 894, 831,
+        832, 900, 834, 380, 963, 1305,
     ];
 
     // Use explicit projection to only fetch the fields we need
@@ -796,7 +791,7 @@ async function mostValuableShips(days: number | null = 7, limit = 10) {
             total_value: 1,
             "victim.ship_id": 1,
             "victim.ship_name": 1,
-        },
+        }
     )
         .sort({ total_value: -1 })
         .limit(limit)
@@ -813,7 +808,10 @@ async function killCount(days: number | null = 7) {
         calculatedTime = new Date(Date.now() - days * 86400 * 1000);
     }
 
-    const query: any[] = [{ $match: { kill_time: { $gte: calculatedTime } } }, { $count: "count" }];
+    const query: any[] = [
+        { $match: { kill_time: { $gte: calculatedTime } } },
+        { $count: "count" },
+    ];
 
     // Use the optimized kill_time index
     return await Killmails.aggregate(query, {
@@ -848,8 +846,17 @@ async function newCharacters() {
 }
 
 export {
-    killCount, mostValuableKills, mostValuableShips, mostValuableStructures, newCharacters, topAlliances, topCharacters, topConstellations, topCorporations, topRegions,
+    killCount,
+    mostValuableKills,
+    mostValuableShips,
+    mostValuableStructures,
+    newCharacters,
+    topAlliances,
+    topCharacters,
+    topConstellations,
+    topCorporations,
+    topRegions,
     topShips,
-    topSolo, topSystems
+    topSolo,
+    topSystems,
 };
-
