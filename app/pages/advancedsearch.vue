@@ -406,7 +406,7 @@ import {
     TIME_FILTER_OPTIONS,
     type AdvancedSearchFilters,
     type SearchFacet
-} from '../../server/helpers/asdf'
+} from '../../server/helpers/AdvancedSearch'
 
 const router = useRouter()
 
