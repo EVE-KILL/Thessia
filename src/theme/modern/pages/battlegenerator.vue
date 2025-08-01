@@ -1317,30 +1317,29 @@ const previewBattle = async () => {
             <h2 class="text-xl font-bold mb-4">{{ t('battleGenerator.battlePreview') }}</h2>
 
             <!-- Teams Table -->
-            <CustomBattleTeams :previewData="previewData" :teamStats="teamStats" :teamAlliances="teamAlliances"
+            <BattleTeams :previewData="previewData" :teamStats="teamStats" :teamAlliances="teamAlliances"
                 :teamCorporations="teamCorporations" :teamCharacters="teamCharacters" />
 
             <!-- Tabs -->
             <div class="mb-4 mt-6">
                 <Tabs v-model="activeTabId" :items="tabs" :ui="tabsUi" color="neutral">
                     <template #overview>
-                        <CustomBattleOverview v-if="previewData" :battle="previewData" />
+                        <BattleOverview v-if="previewData" :battle="previewData" />
                     </template>
                     <template #kills>
-                        <CustomBattleKills :teamKills="teamKills" :sideIds="previewData.side_ids" />
+                        <BattleKills :teamKills="teamKills" :sideIds="previewData.side_ids" />
                     </template>
                     <template #alliances>
-                        <CustomBattleAlliances :teamAlliances="teamAlliances" :sideIds="previewData.side_ids" />
+                        <BattleAlliances :teamAlliances="teamAlliances" :sideIds="previewData.side_ids" />
                     </template>
                     <template #corporations>
-                        <CustomBattleCorporations :teamCorporations="teamCorporations"
-                            :sideIds="previewData.side_ids" />
+                        <BattleCorporations :teamCorporations="teamCorporations" :sideIds="previewData.side_ids" />
                     </template>
                     <template #characters>
-                        <CustomBattleCharacters :teamCharacters="teamCharacters" :sideIds="previewData.side_ids" />
+                        <BattleCharacters :teamCharacters="teamCharacters" :sideIds="previewData.side_ids" />
                     </template>
                     <template #timeline>
-                        <CustomBattleTimeline v-if="previewData" :killmails="previewKillmails" :battle="previewData" />
+                        <BattleTimeline v-if="previewData" :killmails="previewKillmails" :battle="previewData" />
                     </template>
                 </Tabs>
             </div>
