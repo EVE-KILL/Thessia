@@ -91,7 +91,7 @@ const accessLogStatsSchema = new Schema<IAccessLogStatsDocument>(
         rawLogCount: { type: Number, required: true, default: 0 },
     },
     {
-        collection: "access_log_stats",
+        collection: "accessLogStats",
         timestamps: false, // We manage timestamps ourselves
         toJSON: {
             transform: (_doc: any, ret: any) => {
@@ -107,21 +107,9 @@ accessLogStatsSchema.index({ aggregationType: 1, date: -1 }); // Recent stats by
 accessLogStatsSchema.index({ aggregationType: 1, date: -1, hour: 1 }); // Hourly stats
 accessLogStatsSchema.index({ date: -1, hour: 1 }, { sparse: true }); // Hourly lookups
 
-// TTL indexes for automatic cleanup
-accessLogStatsSchema.index(
-    { date: 1 },
-    {
-        expireAfterSeconds: 31536000, // 365 days for daily stats
-        partialFilterExpression: { aggregationType: "daily" },
-    }
-);
-accessLogStatsSchema.index(
-    { date: 1 },
-    {
-        expireAfterSeconds: 2592000, // 30 days for hourly stats
-        partialFilterExpression: { aggregationType: "hourly" },
-    }
-);
-
 export const AccessLogStats: Model<IAccessLogStatsDocument> =
-    model<IAccessLogStatsDocument>("AccessLogStats", accessLogStatsSchema);
+    model<IAccessLogStatsDocument>(
+        "accessLogStats",
+        accessLogStatsSchema,
+        "accessLogStats"
+    );
