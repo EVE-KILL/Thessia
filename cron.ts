@@ -2,7 +2,7 @@
 import { CronExpressionParser } from "cron-parser";
 import { cliLogger } from "./server/helpers/Logger";
 import { initMongooseConnection } from "./server/helpers/Mongoose";
-// Import the generated cron jobs
+// Import the generated cron jobs (includes auto-imports)
 import { cronJobs } from "./cron/.loader";
 
 interface CronJob {

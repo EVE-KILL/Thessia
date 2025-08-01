@@ -1,7 +1,7 @@
 #!/usr/bin/env bun
 import { Command } from "commander";
 import { initMongooseConnection } from "./server/helpers/Mongoose";
-// Use the generated loader file
+// Use the generated loader file (includes auto-imports)
 import { queueJobs } from "./queue/.loader";
 
 const program = new Command();

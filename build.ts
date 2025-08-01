@@ -99,8 +99,14 @@ export function generateCliLoader(targetFile = "console/.loader.ts"): number {
         commandEntries.push(`  ${varName},`);
     }
 
+    // Get auto-imports content
+    const autoImportsContent = generateAutoImportsContent();
+
     // Create the loader file content
     const loaderContent = `// Auto-generated CLI commands loader
+
+${autoImportsContent}
+
 ${importStatements.join("\n")}
 
 // Export all command modules
@@ -161,8 +167,14 @@ export function generateCronLoader(targetFile = "cron/.loader.ts"): number {
         cronEntries.push(`  ${varName},`);
     }
 
+    // Get auto-imports content
+    const autoImportsContent = generateAutoImportsContent();
+
     // Create the loader file content
     const loaderContent = `// Auto-generated cron jobs loader
+
+${autoImportsContent}
+
 ${importStatements.join("\n")}
 
 // Export all cron job modules
@@ -223,8 +235,14 @@ export function generateQueueLoader(targetFile = "queue/.loader.ts"): number {
         queueEntries.push(`  ${varName},`);
     }
 
+    // Get auto-imports content
+    const autoImportsContent = generateAutoImportsContent();
+
     // Create the loader file content
     const loaderContent = `// Auto-generated queue jobs loader
+
+${autoImportsContent}
+
 ${importStatements.join("\n")}
 
 // Export all queue job modules
@@ -320,6 +338,170 @@ export async function copyDocumentation(outputDir: string): Promise<void> {
     } catch (error) {
         console.warn(`⚠️ Could not copy docs directory: ${error}`);
     }
+}
+
+/**
+ * Generate auto-import content for standalone binaries
+ * This replicates Nuxt's auto-import functionality for CLI, Cron, and Queue
+ */
+function generateAutoImportsContent(): string {
+    console.log("Generating auto-imports content...");
+
+    // Define the directories to scan for auto-imports (matching Nuxt config)
+    const autoImportDirs = [
+        "server/models/**",
+        "server/helpers/**",
+        "server/interfaces/**",
+        "server/utils/**",
+        "server/queue/**",
+        // Note: server/plugins excluded as they contain Nitro-specific code
+    ];
+
+    const imports: string[] = [];
+    const globalDeclarations: string[] = [];
+    const globalAssignments: string[] = [];
+
+    // Scan each directory for TypeScript files
+    for (const dir of autoImportDirs) {
+        const files = glob.sync(dir.replace("**", "**/*.{ts,js}"), {
+            ignore: [
+                "**/.*",
+                "**/.*.*",
+                "**/.auto-imports.ts",
+                "**/*.d.ts",
+                "**/index.ts", // Usually re-exports
+                "**/_*.ts",
+                "**/_*.js",
+            ],
+        });
+
+        for (const file of files) {
+            // Skip the auto-imports file itself
+            if (file.includes(".auto-imports.ts")) continue;
+
+            // Calculate relative path from loader location (console, cron, queue are at root level)
+            const relativePath = file.startsWith("server/")
+                ? `../${file.replace(/\.ts$/, "")}`
+                : `../${file.replace(/\.ts$/, "")}`;
+
+            // Extract filename without extension
+            const baseName = path.basename(file, path.extname(file));
+
+            // Read file content to determine export type
+            try {
+                const fileContent = fs.readFileSync(file, "utf8");
+
+                // Check for default export
+                const hasDefaultExport = /export\s+default\s+/.test(
+                    fileContent
+                );
+
+                // Extract named exports from export { } statements
+                const namedExportMatches =
+                    fileContent.match(/export\s+{\s*([^}]+)\s*}/g) || [];
+                const namedExports: string[] = [];
+
+                for (const match of namedExportMatches) {
+                    const exports = match
+                        .replace(/export\s+{\s*/, "")
+                        .replace(/\s*}/, "");
+                    const exportList = exports
+                        .split(",")
+                        .map((exp) => {
+                            const parts = exp.trim().split(" as ");
+                            // If there's an 'as' alias, use the alias name, otherwise use the original
+                            if (parts.length > 1 && parts[1]) {
+                                return parts[1].trim();
+                            }
+                            return parts[0]?.trim();
+                        })
+                        .filter((exp): exp is string =>
+                            Boolean(exp && exp.length > 0)
+                        );
+                    namedExports.push(...exportList);
+                }
+
+                // Extract individual export statements (const, let, var, function, class, enum)
+                const exportMatches = [
+                    ...fileContent.matchAll(
+                        /export\s+(const|let|var)\s+(\w+)/g
+                    ),
+                    ...fileContent.matchAll(
+                        /export\s+(async\s+)?function\s+(\w+)/g
+                    ),
+                    ...fileContent.matchAll(/export\s+class\s+(\w+)/g),
+                    ...fileContent.matchAll(/export\s+enum\s+(\w+)/g),
+                ];
+
+                for (const match of exportMatches) {
+                    // Extract the identifier (always the last capture group)
+                    const identifier = match[match.length - 1];
+                    if (identifier && !namedExports.includes(identifier)) {
+                        namedExports.push(identifier);
+                    }
+                }
+
+                // Deduplicate namedExports
+                const uniqueNamedExports = [...new Set(namedExports)];
+
+                // Handle default export
+                if (hasDefaultExport) {
+                    const varName = baseName.replace(/[-.](.)/g, (_, c) =>
+                        c.toUpperCase()
+                    );
+                    imports.push(`import ${varName} from '${relativePath}';`);
+                    globalDeclarations.push(
+                        `  const ${varName}: typeof import('${relativePath}')['default']`
+                    );
+                    globalAssignments.push(`global.${varName} = ${varName};`);
+                }
+
+                // Handle named exports
+                if (uniqueNamedExports.length > 0) {
+                    const exportList = uniqueNamedExports.join(", ");
+                    imports.push(
+                        `import { ${exportList} } from '${relativePath}';`
+                    );
+
+                    for (const exportName of uniqueNamedExports) {
+                        globalDeclarations.push(
+                            `  const ${exportName}: typeof import('${relativePath}')['${exportName}']`
+                        );
+                        globalAssignments.push(
+                            `global.${exportName} = ${exportName};`
+                        );
+                    }
+                }
+            } catch (error) {
+                // Fallback to default import if file reading fails
+                const varName = baseName.replace(/[-.](.)/g, (_, c) =>
+                    c.toUpperCase()
+                );
+                imports.push(`import ${varName} from '${relativePath}';`);
+                globalDeclarations.push(
+                    `    var ${varName}: typeof ${varName};`
+                );
+                globalAssignments.push(`global.${varName} = ${varName};`);
+            }
+        }
+    }
+
+    // Generate the auto-imports content
+    return `// Auto-generated imports for standalone binaries
+// This file replicates Nuxt's auto-import functionality for CLI/Cron/Queue
+
+${imports.join("\n")}
+
+// Make imports available globally (similar to Nuxt auto-imports)
+declare global {
+${globalDeclarations.join("\n")}
+}
+
+// Set global references
+${globalAssignments.join("\n")}
+
+export {};
+`;
 }
 
 /**
@@ -572,7 +754,7 @@ if (process.argv[1] && process.argv[1].endsWith("build.ts")) {
             console.log("  cron    - Build Cron binary");
             console.log("  queue   - Build Queue binary");
             console.log("  all     - Build all binaries");
-            console.log("  loaders - Generate all loaders");
+            console.log("  loaders - Generate all loaders with auto-imports");
             break;
     }
 }

@@ -1,7 +1,13 @@
 import { LRUCache } from "lru-cache";
 
-// Get Redis client for the secondary cache
-const redis = RedisStorage.getInstance().getClient();
+// Lazy initialization for Redis client to avoid import issues
+let redis: any = null;
+function getRedisClient() {
+    if (!redis) {
+        redis = RedisStorage.getInstance().getClient();
+    }
+    return redis;
+}
 
 // Define TTLs for different cache types (in seconds)
 const STATIC_DATA_TTL = 86400 * 7; // 7 days for rarely changing data
@@ -96,7 +102,7 @@ const getFromRedis = async <T>(
 ): Promise<T | null> => {
     try {
         const key = redisCacheKey(namespace, id);
-        const data = await redis.get(key);
+        const data = await getRedisClient().get(key);
         return data ? JSON.parse(data) : null;
     } catch (err) {
         cliLogger.error(`Redis cache error for ${namespace}:${id}`, err);
@@ -113,7 +119,7 @@ const setInRedis = async <T>(
 ): Promise<void> => {
     try {
         const key = redisCacheKey(namespace, id);
-        await redis.set(key, JSON.stringify(value), "EX", ttl);
+        await getRedisClient().set(key, JSON.stringify(value), "EX", ttl);
         trackCacheKey(namespace, id);
     } catch (err) {
         cliLogger.error(`Failed to set in Redis cache ${namespace}:${id}`, err);
@@ -322,7 +328,7 @@ export async function getCachedPrice(
 export async function getCacheSize(namespace: string): Promise<number> {
     try {
         const keysSetKey = redisKeysSetKey(namespace);
-        return await redis.scard(keysSetKey);
+        return await getRedisClient().scard(keysSetKey);
     } catch (err) {
         cliLogger.error(`Failed to get cache size for ${namespace}:`, err);
         return 0;
@@ -332,7 +338,7 @@ export async function getCacheSize(namespace: string): Promise<number> {
 export async function getCacheHitCount(namespace: string): Promise<number> {
     try {
         const hitKey = redisHitKey(namespace);
-        const count = await redis.get(hitKey);
+        const count = await getRedisClient().get(hitKey);
         return count ? Number.parseInt(count, 10) : 0;
     } catch (err) {
         cliLogger.error(`Failed to get hit count for ${namespace}:`, err);
