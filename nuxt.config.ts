@@ -250,6 +250,11 @@ export default defineNuxtConfig({
                 href: "/",
             },
             link: [
+                {
+                    rel: "preconnect",
+                    href: "https://images.eve-kill.com",
+                    crossorigin: "anonymous",
+                },
                 { rel: "icon", type: "image/png", href: "/favicon.svg" },
                 {
                     rel: "search",
