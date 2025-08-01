@@ -14,7 +14,7 @@ const pageSizeItems = [
     { label: "50", value: 50 },
     { label: "100", value: 100 },
 ];
-const selectedPageSize = ref(pageSizeItems[0].value);
+const selectedPageSize = ref(pageSizeItems[0]?.value || 10);
 
 // Filter and search state
 const searchQuery = ref('');
@@ -34,13 +34,10 @@ const hasActiveFilters = computed(() => {
     return searchQuery.value !== '' || selectedSystemId.value || selectedRegionId.value || selectedMoonGooTypes.value.length > 0;
 });
 
-// Add a separate loading state ref to track loading beyond what useFetch provides
-const isLoading = ref(true);
 // Track if this is the initial data load for UI treatment
 const isInitialLoad = ref(true);
-
-// Initialize with empty data structure for immediate rendering
-const initialData = ref<IMetenoxMoonResult[]>([]);
+// Track if we're on the client side to avoid hydration mismatches
+const isClient = ref(false);
 
 // Computed API endpoint based on filter
 const apiEndpoint = computed(() => {
@@ -52,15 +49,17 @@ const apiEndpoint = computed(() => {
     return '/api/intel/metenox';
 });
 
-const { data, pending, error, refresh } = useFetch<IMetenoxMoonResult[]>(apiEndpoint, {
-    key: 'metenox-list',
+const { data, pending, error, refresh } = useAsyncData<IMetenoxMoonResult[]>('metenox-list', () => $fetch(apiEndpoint.value), {
     // Use lazy to not block initial render
     lazy: true,
+    server: false,
+    // Watch for changes to the endpoint
+    watch: [apiEndpoint],
 });
 
-// Use computed values that fall back to initial data when real data isn't loaded yet
+// Use computed values that fall back to empty array when real data isn't loaded yet
 const metenoxList = computed(() => {
-    let list = data.value || initialData.value;
+    let list = data.value || [];
 
     // Apply text search filter (only if no location filter is active)
     if (searchQuery.value && !selectedSystemId.value && !selectedRegionId.value) {
@@ -98,10 +97,8 @@ const paginatedList = computed(() => {
     return metenoxList.value.slice(start, end);
 });
 
-// Better loading state management with watch on pending
+// Watch for pending changes to track initial load state
 watch(() => pending.value, (newPending) => {
-    isLoading.value = newPending;
-
     // If we're no longer pending and it was the initial load, update that state
     if (!newPending && isInitialLoad.value) {
         isInitialLoad.value = false;
@@ -111,30 +108,17 @@ watch(() => pending.value, (newPending) => {
 // Function to handle data refresh
 const loadData = async () => {
     try {
-        isLoading.value = true;
         await refresh();
     } catch (err) {
         console.error('Error refreshing metenox data:', err);
-    } finally {
-        // Always update loading state regardless of success/failure
-        isLoading.value = pending.value;
-        isInitialLoad.value = false;
     }
 };
 
 // On component mount, trigger the data fetch
 onMounted(() => {
-    loadData();
-
-    // Safeguard against stuck loading state
-    const timeout = setTimeout(() => {
-        if (isLoading.value) {
-            isLoading.value = false;
-            isInitialLoad.value = false;
-            console.warn('Loading timeout reached, forcing loading state to complete');
-        }
-        clearTimeout(timeout);
-    }, 10000); // 10 second safety timeout
+    // useAsyncData will handle the initial load automatically with lazy: true
+    // No need for manual loading management
+    isClient.value = true;
 });
 
 // Watch for changes to system search query
@@ -150,10 +134,9 @@ watch(searchQuery, (newTerm) => {
     selectedLocationResultIndex.value = -1;
 });
 
-// Watch for changes to pagination params, search, filter, and locale, and refresh the data
-watch([currentPage, selectedPageSize, searchQuery, selectedSystemId, selectedRegionId, selectedMoonGooTypes, currentLocale], () => {
+// Watch for locale changes to update moment
+watch(currentLocale, () => {
     moment.locale(currentLocale.value);
-    loadData();
 });
 
 // Watch for search query changes and reset page
@@ -162,9 +145,9 @@ watch(searchQuery, () => {
 });
 
 const columns = [
-    { id: 'moon', header: computed(() => t('metenoxMoons.moon', 'Moon')), width: '30%' },
-    { id: 'location', header: computed(() => t('metenoxMoons.location', 'Location')), width: '35%' },
-    { id: 'moonType', header: computed(() => t('metenoxMoons.moonType', 'Moon Goo')), width: '35%' },
+    { id: 'moon', header: t('metenoxMoons.moon', 'Moon'), width: '30%' },
+    { id: 'location', header: t('metenoxMoons.location', 'Location'), width: '35%' },
+    { id: 'moonType', header: t('metenoxMoons.moonType', 'Moon Goo'), width: '35%' },
 ];
 
 moment.locale(currentLocale.value); // Set locale once
@@ -224,24 +207,24 @@ const getMoonGooDisplay = (moonType: Record<string, number>) => {
 };
 
 // Get color for moon goo type
-const getMoonGooColor = (type: string) => {
-    const colors = {
-        'R64': 'purple',
-        'R32': 'blue',
-        'R16': 'green',
-        'R8': 'yellow',
-        'R4': 'gray'
+const getMoonGooColor = (type: string): "primary" | "secondary" | "success" | "info" | "warning" | "neutral" => {
+    const colors: Record<string, "primary" | "secondary" | "success" | "info" | "warning" | "neutral"> = {
+        'R64': 'warning',    // purple -> warning (yellow/amber)
+        'R32': 'info',       // blue -> info
+        'R16': 'success',    // green -> success
+        'R8': 'secondary',   // yellow -> secondary
+        'R4': 'neutral'      // gray -> neutral
     };
-    return colors[type as keyof typeof colors] || 'gray';
+    return colors[type] || 'neutral';
 };
 
 // Available moon goo types for filtering
-const availableMoonGooTypes = [
-    { value: 'R64', label: 'R64', color: 'purple' },
-    { value: 'R32', label: 'R32', color: 'blue' },
-    { value: 'R16', label: 'R16', color: 'green' },
-    { value: 'R8', label: 'R8', color: 'yellow' },
-    { value: 'R4', label: 'R4', color: 'gray' }
+const availableMoonGooTypes: Array<{ value: string; label: string; color: "primary" | "secondary" | "success" | "info" | "warning" | "neutral" }> = [
+    { value: 'R64', label: 'R64', color: 'warning' },    // purple -> warning
+    { value: 'R32', label: 'R32', color: 'info' },       // blue -> info
+    { value: 'R16', label: 'R16', color: 'success' },    // green -> success
+    { value: 'R8', label: 'R8', color: 'secondary' },    // yellow -> secondary
+    { value: 'R4', label: 'R4', color: 'neutral' }       // gray -> neutral
 ];
 
 // Toggle moon goo type filter
@@ -266,10 +249,10 @@ const searchLocations = async (term: string) => {
 
     try {
         const encoded = encodeURIComponent(term);
-        const { data } = await useFetch(`/api/search/${encoded}`);
+        const data = await $fetch(`/api/search/${encoded}`);
 
-        if (data.value && data.value.hits) {
-            locationSearchResults.value = data.value.hits
+        if (data && data.hits) {
+            locationSearchResults.value = data.hits
                 .filter((hit: any) => hit.type === 'system' || hit.type === 'region')
                 .slice(0, 10)
                 .map((hit: any) => ({ id: hit.id, name: hit.name, type: hit.type }));
@@ -324,7 +307,7 @@ const handleLocationKeyDown = (e: KeyboardEvent) => {
             break;
         case 'Enter':
             e.preventDefault();
-            if (selectedLocationResultIndex.value >= 0) {
+            if (selectedLocationResultIndex.value >= 0 && locationSearchResults.value[selectedLocationResultIndex.value]) {
                 selectLocation(locationSearchResults.value[selectedLocationResultIndex.value]);
             }
             break;
@@ -354,16 +337,14 @@ useSeoMeta({
             <div class="mb-4 relative">
                 <UInput v-model="searchQuery"
                     :placeholder="t('metenoxMoons.search.placeholder', 'Search for systems, regions, or moon names...')"
-                    icon="lucide:search" size="lg" @keydown="handleLocationKeyDown" :ui="{
-                        icon: {
-                            trailing: {
-                                pointer: '',
-                            },
-                        },
-                    }">
+                    icon="lucide:search" size="lg" @keydown="handleLocationKeyDown">
                     <template #trailing>
-                        <UButton v-show="searchQuery !== ''" color="gray" variant="link" icon="lucide:x" :padded="false"
-                            @click="searchQuery = ''; selectedSystemId = null; selectedRegionId = null; selectedLocationName = ''; locationSearchResults = [];" />
+                        <div v-show="searchQuery !== ''" class="flex items-center">
+                            <button type="button" class="text-gray-400 hover:text-gray-200 p-1 rounded"
+                                @click="searchQuery = ''; selectedSystemId = null; selectedRegionId = null; selectedLocationName = ''; locationSearchResults = [];">
+                                <UIcon name="lucide:x" class="w-4 h-4" />
+                            </button>
+                        </div>
                     </template>
                 </UInput>
 
@@ -376,7 +357,7 @@ useSeoMeta({
                             selectedLocationResultIndex === index ? 'bg-background-700' : ''
                         ]" @click="selectLocation(location)">
                         <span>{{ location.name }}</span>
-                        <UBadge :color="location.type === 'system' ? 'blue' : 'green'" variant="soft" size="xs">
+                        <UBadge :color="location.type === 'system' ? 'info' : 'success'" variant="soft" size="xs">
                             {{ location.type }}
                         </UBadge>
                     </div>
@@ -385,7 +366,7 @@ useSeoMeta({
 
             <!-- Clear Filters Button -->
             <div v-if="hasActiveFilters" class="flex justify-end mb-4">
-                <UButton variant="outline" color="red" size="sm" icon="lucide:x" @click="clearAllFilters">
+                <UButton variant="outline" color="warning" size="sm" icon="lucide:x" @click="clearAllFilters">
                     {{ t('metenoxMoons.filter.clear', 'Clear Filters') }}
                 </UButton>
             </div>
@@ -399,7 +380,7 @@ useSeoMeta({
                 <div class="flex gap-2 flex-wrap">
                     <UButton v-for="gooType in availableMoonGooTypes" :key="gooType.value"
                         :variant="selectedMoonGooTypes.includes(gooType.value) ? 'solid' : 'outline'"
-                        :color="selectedMoonGooTypes.includes(gooType.value) ? gooType.color : 'gray'"
+                        :color="selectedMoonGooTypes.includes(gooType.value) ? gooType.color : 'neutral'"
                         @click="toggleMoonGooType(gooType.value)" size="sm" class="font-mono">
                         {{ gooType.label }}
                     </UButton>
@@ -410,14 +391,14 @@ useSeoMeta({
             <div v-if="hasActiveFilters" class="pt-3 border-t border-gray-700/30">
                 <div class="flex flex-wrap gap-2 items-center">
                     <span class="text-sm text-gray-300">{{ t('active_filters', 'Active filters') }}:</span>
-                    <UBadge v-if="searchQuery && !selectedSystemId && !selectedRegionId" color="green" variant="soft"
+                    <UBadge v-if="searchQuery && !selectedSystemId && !selectedRegionId" color="success" variant="soft"
                         size="sm">
                         {{ t('search', 'Search') }}: "{{ searchQuery }}"
                     </UBadge>
-                    <UBadge v-if="selectedSystemId && selectedLocationName" color="blue" variant="soft" size="sm">
+                    <UBadge v-if="selectedSystemId && selectedLocationName" color="info" variant="soft" size="sm">
                         {{ t('metenoxMoons.system', 'System') }}: {{ selectedLocationName }}
                     </UBadge>
-                    <UBadge v-if="selectedRegionId && selectedLocationName" color="green" variant="soft" size="sm">
+                    <UBadge v-if="selectedRegionId && selectedLocationName" color="success" variant="soft" size="sm">
                         {{ t('metenoxMoons.region', 'Region') }}: {{ selectedLocationName }}
                     </UBadge>
                     <UBadge v-for="gooType in selectedMoonGooTypes" :key="gooType" :color="getMoonGooColor(gooType)"
@@ -428,11 +409,11 @@ useSeoMeta({
             </div>
         </div>
 
-        <UAlert v-if="error" icon="i-heroicons-exclamation-triangle" color="red" variant="soft"
+        <UAlert v-if="error" icon="i-heroicons-exclamation-triangle" color="warning" variant="soft"
             :title="t('errorFetchingData', 'Error Fetching Data')" :description="error.message" />
 
         <!-- Show loading spinner when data is initially loading -->
-        <div v-if="isLoading && isInitialLoad" class="flex flex-col items-center justify-center py-12">
+        <div v-if="!isClient" class="flex flex-col items-center justify-center py-12">
             <UIcon name="lucide:loader" class="w-12 h-12 animate-spin text-primary mb-4" />
             <span class="text-xl font-medium">{{ t('metenoxMoons.loading', 'Loading Metenox locations...') }}</span>
         </div>
@@ -442,7 +423,7 @@ useSeoMeta({
             <div class="w-full flex justify-between items-center">
                 <!-- Item Count (Left) -->
                 <div class="flex justify-start">
-                    <span class="text-sm text-gray-500 dark:text-gray-400">
+                    <span v-if="isClient" class="text-sm text-gray-500 dark:text-gray-400">
                         {{ t('metenoxMoons.showingResults', {
                             start: totalItems > 0 ? (currentPage - 1) * selectedPageSize + 1 : 0,
                             end: Math.min(currentPage * selectedPageSize, totalItems),
@@ -463,12 +444,12 @@ useSeoMeta({
 
             <!-- Pagination on its own line - aligned to the right -->
             <div class="w-full flex justify-end">
-                <UPagination v-model:page="currentPage" :total="totalItems" :items-per-page="selectedPageSize"
-                    :disabled="isLoading" size="sm" />
+                <UPagination v-if="isClient && totalItems > 0" v-model:page="currentPage" :total="totalItems"
+                    :items-per-page="selectedPageSize" :disabled="pending" size="sm" />
             </div>
 
             <!-- Loading overlay for subsequent data fetches (not initial) -->
-            <div v-if="isLoading && !isInitialLoad" class="relative">
+            <div v-if="pending && !isInitialLoad" class="relative">
                 <div class="absolute inset-0 bg-background-900/50 flex items-center justify-center z-10 rounded-lg">
                     <div class="bg-background-800 p-4 rounded-lg shadow-lg flex items-center space-x-3">
                         <UIcon name="lucide:loader" class="w-6 h-6 animate-spin text-primary" />
@@ -477,8 +458,8 @@ useSeoMeta({
                 </div>
             </div>
 
-            <Table :key="`metenox-table-${isLoading ? 'loading' : 'data'}`" :columns="columns"
-                :items="isLoading && !data ? skeletonRows : paginatedList" :loading="isLoading"
+            <Table :key="`metenox-table-${pending ? 'loading' : 'data'}`" :columns="columns"
+                :items="pending && !data ? skeletonRows : paginatedList" :loading="pending"
                 :skeleton-count="selectedPageSize" :link-fn="linkFn" :bordered="true" :striped="false" :hover="true"
                 density="normal" background="transparent" table-class="metenox-table"
                 :empty-text="t('metenoxMoons.noMoonsFound', 'No Metenox moons found.')"
@@ -577,7 +558,7 @@ useSeoMeta({
                     <div class="metenox-skeleton-container">
                         <div v-for="i in selectedPageSize" :key="`skeleton-${i}`" class="metenox-skeleton-row">
                             <!-- Moon Column Skeleton -->
-                            <div class="metenox-skeleton-cell" :style="{ width: columns[0].width }">
+                            <div class="metenox-skeleton-cell" :style="{ width: columns[0]?.width || '30%' }">
                                 <div class="flex items-center gap-2">
                                     <div class="metenox-skeleton-avatar"></div>
                                     <div class="flex flex-col space-y-1">
@@ -587,7 +568,7 @@ useSeoMeta({
                                 </div>
                             </div>
                             <!-- Location Column Skeleton -->
-                            <div class="metenox-skeleton-cell" :style="{ width: columns[1].width }">
+                            <div class="metenox-skeleton-cell" :style="{ width: columns[1]?.width || '35%' }">
                                 <div class="flex flex-col space-y-2">
                                     <div class="flex items-center gap-2">
                                         <div class="metenox-skeleton-avatar"></div>
@@ -600,7 +581,7 @@ useSeoMeta({
                                 </div>
                             </div>
                             <!-- Moon Type Column Skeleton -->
-                            <div class="metenox-skeleton-cell" :style="{ width: columns[2].width }">
+                            <div class="metenox-skeleton-cell" :style="{ width: columns[2]?.width || '35%' }">
                                 <div class="flex flex-wrap gap-1">
                                     <div class="metenox-skeleton-badge"></div>
                                     <div class="metenox-skeleton-badge"></div>

@@ -53,6 +53,27 @@ This project uses:
 -   **Cache Keys**: In `defineCachedEventHandler`, use the `getKey: (event) => { ... }` function with `getQuery(event)` for query params and `event.context.params` for route params
 -   **Never** manually parse URLs with `url.parse(event.node.req.url)` - use the proper Nitro helpers instead
 
+## Data Fetching Best Practices
+
+-   **Prefer `useAsyncData` over `useFetch`** for better SSR control and loading state management
+-   **Always use `lazy: true`** in useAsyncData options to prevent blocking initial render
+-   **Set `server: false`** for client-side only data fetching (useful for filtered/search data)
+-   **Use `watch` property** to automatically refetch when dependencies change (e.g., `watch: [apiEndpoint]`)
+-   **Use the `pending` state** from useAsyncData instead of manual loading state management
+-   **Avoid manual timeout logic** - let useAsyncData handle loading states naturally
+-   **Structure for immediate rendering** with fallback data or skeleton states
+-   **Use computed API endpoints** that react to filter changes for dynamic data fetching
+-   **Handle errors** with the `error` state returned from useAsyncData
+-   **Use `refresh()` function** for manual data refetching instead of re-calling $fetch
+
+Example pattern:
+
+```vue
+const { data, pending, error, refresh } = useAsyncData('unique-key', () =>
+$fetch(apiEndpoint.value), { lazy: true, server: false, watch: [apiEndpoint] }
+);
+```
+
 ## Copilot-Specific Instructions
 
 -   Follow project structure and conventions.
