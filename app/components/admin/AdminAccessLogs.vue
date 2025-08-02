@@ -1,31 +1,21 @@
 <template>
-    <div class="access-logs-container">
-        <!-- Header with filters -->
-        <div class="access-logs-header">
+    <div class="admin-access-logs">
+        <div class="logs-header">
             <div class="header-content">
-                <div class="header-info">
-                    <h2 class="header-title">{{ t('admin.accessLogs.title') }}</h2>
-                    <p class="header-description">{{ t('admin.accessLogs.description') }}</p>
+                <div class="header-title">
+                    <Icon name="lucide:file-text" class="header-icon" />
+                    <h2>{{ t('admin.accessLogs.title') }}</h2>
                 </div>
-                <div class="header-actions">
-                    <button @click="handleRefresh" class="action-button" :disabled="pending">
-                        <Icon name="lucide:refresh-cw" class="action-icon" :class="{ 'animate-spin': pending }" />
-                        {{ t('admin.actions.refresh') }}
-                    </button>
-                </div>
-            </div>
 
-            <!-- Filters -->
-            <div class="filters-section">
-                <div class="filters-grid">
-                    <div class="filter-group">
-                        <label class="filter-label">{{ t('admin.accessLogs.search') }}</label>
+                <div class="header-controls">
+                    <div class="control-group">
+                        <label>{{ t('admin.accessLogs.search') }}:</label>
                         <input v-model="filters.search" type="text" class="filter-input"
                             :placeholder="t('admin.accessLogs.searchPlaceholder')" />
                     </div>
 
-                    <div class="filter-group">
-                        <label class="filter-label">{{ t('admin.accessLogs.method') }}</label>
+                    <div class="control-group">
+                        <label>{{ t('admin.accessLogs.method') }}:</label>
                         <select v-model="filters.method" class="filter-select">
                             <option value="">{{ t('admin.accessLogs.allMethods') }}</option>
                             <option value="GET">GET</option>
@@ -33,240 +23,123 @@
                             <option value="PUT">PUT</option>
                             <option value="DELETE">DELETE</option>
                             <option value="PATCH">PATCH</option>
-                            <option value="OPTIONS">OPTIONS</option>
                         </select>
                     </div>
 
-                    <div class="filter-group">
-                        <label class="filter-label">{{ t('admin.accessLogs.statusCode') }}</label>
+                    <div class="control-group">
+                        <label>{{ t('admin.accessLogs.statusCode') }}:</label>
                         <select v-model="filters.statusCode" class="filter-select">
                             <option value="">{{ t('admin.accessLogs.allStatus') }}</option>
-                            <option value="200">200 (OK)</option>
-                            <option value="201">201 (Created)</option>
-                            <option value="400">400 (Bad Request)</option>
-                            <option value="401">401 (Unauthorized)</option>
-                            <option value="403">403 (Forbidden)</option>
-                            <option value="404">404 (Not Found)</option>
-                            <option value="500">500 (Server Error)</option>
+                            <option value="2xx">2xx Success</option>
+                            <option value="3xx">3xx Redirect</option>
+                            <option value="4xx">4xx Client Error</option>
+                            <option value="5xx">5xx Server Error</option>
                         </select>
                     </div>
 
-                    <div class="filter-group">
-                        <label class="filter-label">{{ t('admin.accessLogs.apiFilter') }}</label>
-                        <select v-model="filters.apiFilter" class="filter-select">
-                            <option value="exclude">{{ t('admin.accessLogs.excludeApi') }}</option>
-                            <option value="include">{{ t('admin.accessLogs.includeApi') }}</option>
-                            <option value="only">{{ t('admin.accessLogs.onlyApi') }}</option>
-                        </select>
-                    </div>
-
-                    <div class="filter-group">
-                        <label class="filter-label">{{ t('admin.accessLogs.botFilter') }}</label>
-                        <select v-model="filters.isBot" class="filter-select">
-                            <option value="">{{ t('admin.accessLogs.allTraffic') }}</option>
-                            <option value="true">{{ t('admin.accessLogs.botTraffic') }}</option>
-                            <option value="false">{{ t('admin.accessLogs.humanTraffic') }}</option>
-                        </select>
-                    </div>
-
-                    <div class="filter-group">
-                        <label class="filter-label">{{ t('admin.accessLogs.systemUrls') }}</label>
-                        <select v-model="filters.hideUnderscoreUrls" class="filter-select">
-                            <option value="true">{{ t('admin.accessLogs.hideSystemUrls') }}</option>
-                            <option value="false">{{ t('admin.accessLogs.showSystemUrls') }}</option>
-                        </select>
-                    </div>
-
-                    <div class="filter-group">
-                        <label class="filter-label">{{ t('admin.accessLogs.logTypeFilter') }}</label>
+                    <div class="control-group">
+                        <label>{{ t('admin.accessLogs.logTypeFilter') }}:</label>
                         <select v-model="filters.logType" class="filter-select">
                             <option value="">{{ t('admin.accessLogs.allLogTypes') }}</option>
                             <option value="server">{{ t('admin.accessLogs.serverLogs') }}</option>
                             <option value="client">{{ t('admin.accessLogs.clientLogs') }}</option>
                         </select>
                     </div>
+
+                    <div class="control-group">
+                        <label>{{ t('admin.accessLogs.botFilter') }}:</label>
+                        <select v-model="filters.isBot" class="filter-select">
+                            <option value="">{{ t('admin.accessLogs.allTraffic') }}</option>
+                            <option value="false">{{ t('admin.accessLogs.humanTraffic') }}</option>
+                            <option value="true">{{ t('admin.accessLogs.botTraffic') }}</option>
+                        </select>
+                    </div>
+
+                    <div class="control-group">
+                        <label>{{ t('admin.logs.maxLogs') }}:</label>
+                        <input v-model.number="logLimit" type="number" min="100" max="10000" class="log-limit-input"
+                            @blur="validateLogLimit" />
+                    </div>
+
+                    <button @click="isPaused ? resumeLogs() : pauseLogs()" class="pause-button"
+                        :class="{ 'paused': isPaused }">
+                        <Icon v-if="!isPaused" name="lucide:pause" class="control-icon" />
+                        <Icon v-else name="lucide:play" class="control-icon" />
+                        {{ isPaused ? t('admin.logs.resume') : t('admin.logs.pause') }}
+                    </button>
                 </div>
             </div>
         </div>
 
-        <!-- Access Logs Table -->
-        <div class="access-logs-table">
-            <Table :columns="tableColumns" :items="accessLogs" :loading="pending && initialLoad" :skeleton-count="10"
-                :empty-text="t('admin.accessLogs.empty')" empty-icon="lucide:file-text" :row-class="getRowClass">
-                <!-- Custom cell content -->
-                <template #cell-timestamp="{ item }">
-                    <div class="timestamp-cell">
-                        <div class="timestamp-date">{{ formatDate((item as AccessLog).timestamp) }}</div>
-                        <div class="timestamp-time">{{ formatTime((item as AccessLog).timestamp) }}</div>
-                    </div>
-                </template>
-
-                <template #cell-method="{ item }">
-                    <span class="method-badge" :class="getMethodClass((item as AccessLog).method)">
-                        {{ (item as AccessLog).method }}
-                    </span>
-                </template>
-
-                <template #cell-statusCode="{ item }">
-                    <span class="status-badge" :class="getStatusClass((item as AccessLog).statusCode)">
-                        {{ (item as AccessLog).statusCode }}
-                    </span>
-                </template>
-
-                <template #cell-url="{ item }">
-                    <div class="url-cell">
-                        <div class="url-path" :title="(item as AccessLog).url">{{ (item as AccessLog).url }}</div>
-                        <div v-if="(item as AccessLog).endpoint" class="url-endpoint">{{ (item as AccessLog).endpoint }}
-                        </div>
-                    </div>
-                </template>
-
-                <template #cell-responseTime="{ item }">
-                    <span class="response-time" :class="getResponseTimeClass((item as AccessLog).responseTime)">
-                        {{ (item as AccessLog).responseTime }}ms
-                    </span>
-                </template>
-
-                <template #cell-clientIp="{ item }">
-                    <div class="ip-cell">
-                        <span class="ip-address">{{ (item as AccessLog).clientIp }}</span>
-                        <div class="ip-flags">
-                            <span v-if="(item as AccessLog).isBot" class="flag bot-flag">{{ t('admin.accessLogs.bot')
-                            }}</span>
-                            <span v-if="(item as AccessLog).isApiRequest" class="flag api-flag">{{
-                                t('admin.accessLogs.api') }}</span>
-                        </div>
-                    </div>
-                </template>
-
-                <template #cell-userAgent="{ item }">
-                    <div class="user-agent-cell" :title="(item as AccessLog).userAgent">
-                        {{ truncateUserAgent((item as AccessLog).userAgent) }}
-                    </div>
-                </template>
-
-                <!-- Mobile content -->
-                <template #mobile-content="{ item }">
-                    <div class="mobile-log-content">
-                        <div class="mobile-header">
-                            <div class="mobile-method-status">
-                                <span class="log-type-badge" :class="getLogTypeClass((item as AccessLog).logType)">{{
-                                    getLogTypeLabel((item as AccessLog).logType) }}</span>
-                                <span class="method-badge" :class="getMethodClass((item as AccessLog).method)">
-                                    {{ (item as AccessLog).method }}
-                                </span>
-                                <span class="status-badge" :class="getStatusClass((item as AccessLog).statusCode)">
-                                    {{ (item as AccessLog).statusCode }}
-                                </span>
-                            </div>
-                            <div class="mobile-timestamp">{{ formatDateTime((item as AccessLog).timestamp) }}</div>
-                        </div>
-
-                        <div class="mobile-url">{{ (item as AccessLog).url }}</div>
-
-                        <div class="mobile-details">
-                            <div class="mobile-detail">
-                                <span class="detail-label">{{ t('admin.accessLogs.ip') }}:</span>
-                                <span class="detail-value">{{ (item as AccessLog).clientIp }}</span>
-                            </div>
-                            <div class="mobile-detail">
-                                <span class="detail-label">{{ t('admin.accessLogs.responseTime') }}:</span>
-                                <span class="detail-value"
-                                    :class="getResponseTimeClass((item as AccessLog).responseTime)">{{ (item as
-                                        AccessLog).responseTime }}ms</span>
-                            </div>
-                            <div v-if="(item as AccessLog).isBot || (item as AccessLog).isApiRequest"
-                                class="mobile-flags">
-                                <span v-if="(item as AccessLog).isBot" class="flag bot-flag">{{
-                                    t('admin.accessLogs.bot') }}</span>
-                                <span v-if="(item as AccessLog).isApiRequest" class="flag api-flag">{{
-                                    t('admin.accessLogs.api') }}</span>
-                            </div>
-                        </div>
-                    </div>
-                </template>
-            </Table>
-        </div>
-
-        <!-- Pagination -->
-        <div v-if="paginationInfo && paginationInfo.totalPages > 1" class="pagination-section">
-            <div class="pagination-info">
-                {{ t('admin.accessLogs.showing', {
-                    start: (paginationInfo.page - 1) * paginationInfo.limit + 1,
-                    end: Math.min(paginationInfo.page * paginationInfo.limit, paginationInfo.total),
-                    total: paginationInfo.total
-                }) }}
-                <span v-if="accessLogs.length > paginationInfo.limit" class="live-count">
-                    ({{ t('admin.accessLogs.liveCount', { count: accessLogs.length }) }})
-                </span>
+        <div class="logs-content">
+            <!-- Loading State -->
+            <div v-if="connectionStatus === 'connecting'" class="loading-state">
+                <Icon name="lucide:loader-2" class="loading-icon spinning" />
+                <p class="loading-text">{{ t('admin.accessLogs.connecting') }}</p>
             </div>
 
-            <div class="pagination-controls">
-                <button @click="goToPage(1)" :disabled="!paginationInfo.hasPrevPage" class="pagination-button">
-                    {{ t('admin.accessLogs.first') }}
+            <!-- Error State -->
+            <div v-else-if="connectionStatus === 'error'" class="error-state">
+                <Icon name="lucide:alert-triangle" class="error-icon" />
+                <p class="error-text">{{ t('admin.accessLogs.connectionError') }}</p>
+                <button @click="connectToLogStream" class="retry-button">
+                    {{ t('admin.accessLogs.retry') }}
                 </button>
-                <button @click="goToPage(currentPage - 1)" :disabled="!paginationInfo.hasPrevPage"
-                    class="pagination-button">
-                    {{ t('admin.accessLogs.prev') }}
-                </button>
-                <span class="pagination-current">
-                    {{ t('admin.accessLogs.pageOf', { current: currentPage, total: paginationInfo.totalPages }) }}
-                </span>
-                <button @click="goToPage(currentPage + 1)" :disabled="!paginationInfo.hasNextPage"
-                    class="pagination-button">
-                    {{ t('admin.accessLogs.next') }}
-                </button>
-                <button @click="goToPage(paginationInfo.totalPages)" :disabled="!paginationInfo.hasNextPage"
-                    class="pagination-button">
-                    {{ t('admin.accessLogs.last') }}
-                </button>
+            </div>
+
+            <!-- Log Display -->
+            <div v-else class="logs-display">
+                <div class="logs-info">
+                    <div class="info-item">
+                        <Icon name="lucide:activity" class="info-icon" />
+                        <span>{{ t('admin.accessLogs.totalLogs', { count: totalLogLines }) }}</span>
+                    </div>
+                    <div class="info-item">
+                        <Icon name="lucide:clock" class="info-icon" />
+                        <span>{{ t('admin.accessLogs.lastUpdate', { time: formatTimestamp(lastUpdate) }) }}</span>
+                    </div>
+                    <div v-if="isPaused" class="info-item pause-indicator">
+                        <Icon name="lucide:pause" class="info-icon pause-icon" />
+                        <span>{{ t('admin.logs.paused') }}</span>
+                    </div>
+                </div>
+
+                <div class="unified-logs">
+                    <pre ref="logsContainer" class="log-content" v-html="combinedLogs"></pre>
+                </div>
             </div>
         </div>
     </div>
 </template>
 
+
 <script setup lang="ts">
+// Import icons (using Icon component instead)
 const { t } = useI18n();
 
-// Define types for the access log data
-interface AccessLog {
-    _id: string;
+// Reactive state for SSE connection
+const connectionStatus = ref<'connecting' | 'connected' | 'error'>('connecting');
+const eventSource = ref<EventSource | null>(null);
+const logsContainer = ref<HTMLElement>();
+const logLimit = ref(1000); // Default to 1000 logs
+const lastUpdate = ref(new Date().toISOString());
+
+// Log data
+const logLines = ref<Array<{
     timestamp: string;
-    method: string;
-    url: string;
-    endpoint?: string;
-    statusCode: number;
-    responseTime: number;
-    clientIp: string;
-    userAgent: string;
-    isBot: boolean;
-    isApiRequest: boolean;
-    logType?: 'server' | 'client';
-    sessionId?: string;
-}
+    content: string;
+    html?: string;
+}>>([]);
 
-interface PaginationInfo {
-    page: number;
-    limit: number;
-    total: number;
-    totalPages: number;
-    hasNextPage: boolean;
-    hasPrevPage: boolean;
-}
-
-interface AccessLogsResponse {
-    success: boolean;
-    data: AccessLog[];
-    pagination: PaginationInfo;
-}
-
-// Reactive state
-const currentPage = ref(1);
-const refreshInterval = ref<NodeJS.Timeout | null>(null);
-const accessLogs = ref<AccessLog[]>([]);
-const lastTimestamp = ref<string | null>(null);
-const initialLoad = ref(true);
-const maxLogs = 500; // Maximum logs to keep in memory
+// Pause functionality
+const isPaused = ref(false);
+const pauseBuffer = ref<Array<{
+    timestamp: string;
+    content: string;
+    html?: string;
+}>>([]);
+const resumeTimeout = ref<NodeJS.Timeout | null>(null);
+const smoothResumeInterval = ref<NodeJS.Timeout | null>(null);
 
 // Filters
 const filters = reactive({
@@ -279,12 +152,9 @@ const filters = reactive({
     logType: '' // 'server', 'client', or '' for all
 });
 
-// Computed API endpoint with filters
-const apiEndpoint = computed(() => {
-    const params = new URLSearchParams({
-        page: currentPage.value.toString(),
-        limit: '50'
-    });
+// Computed API endpoint for SSE streaming
+const streamEndpoint = computed(() => {
+    const params = new URLSearchParams();
 
     // Add filters
     if (filters.search) params.append('search', filters.search);
@@ -295,723 +165,674 @@ const apiEndpoint = computed(() => {
     if (filters.hideUnderscoreUrls) params.append('hideUnderscoreUrls', filters.hideUnderscoreUrls);
     if (filters.logType) params.append('logType', filters.logType);
 
-    return `/api/admin/access-logs?${params.toString()}`;
+    return `/adminlogs/access-stream?${params.toString()}`;
 });
 
-// Computed API endpoint for new entries (incremental updates)
-const newEntriesEndpoint = computed(() => {
-    if (!lastTimestamp.value || initialLoad.value) return null;
+// Log processing functions
+const colorizeAccessLogLine = (logLine: string): string => {
+    // Parse log format: [FLAGS] timestamp ip "method url" status response_time "user_agent"
+    const logPattern = /^(\[.*?\]\s*)?(\S+)\s+(\S+)\s+"(\w+)\s+([^"]+)"\s+(\d+)\s+(\d+)ms\s+"([^"]*)".*$/;
+    const match = logLine.match(logPattern);
 
-    const params = new URLSearchParams({
-        since: lastTimestamp.value,
-        limit: '100' // Get more for updates
-    });
+    if (match) {
+        const [, flags, timestamp, ip, method, url, status, responseTime, userAgent] = match;
 
-    // Apply same filters for consistency
-    if (filters.search) params.append('search', filters.search);
-    if (filters.method) params.append('method', filters.method);
-    if (filters.statusCode) params.append('statusCode', filters.statusCode);
-    if (filters.isBot) params.append('isBot', filters.isBot);
-    if (filters.apiFilter) params.append('apiFilter', filters.apiFilter);
-    if (filters.hideUnderscoreUrls) params.append('hideUnderscoreUrls', filters.hideUnderscoreUrls);
-    if (filters.logType) params.append('logType', filters.logType);
+        // Color classes based on status code
+        let statusClass = 'log-status-default';
+        const statusCode = parseInt(status || '0');
+        if (statusCode >= 200 && statusCode < 300) statusClass = 'log-status-success';
+        else if (statusCode >= 300 && statusCode < 400) statusClass = 'log-status-redirect';
+        else if (statusCode >= 400 && statusCode < 500) statusClass = 'log-status-client-error';
+        else if (statusCode >= 500) statusClass = 'log-status-server-error';
 
-    return `/api/admin/access-logs?${params.toString()}`;
-});
+        // Color class for method
+        const methodClass = `log-method-${(method || 'unknown').toLowerCase()}`;
 
-// Initial data fetching
-const { data: initialData, pending, error, refresh: refreshInitial } = useAsyncData<AccessLogsResponse>(
-    'admin-access-logs',
-    () => $fetch<AccessLogsResponse>(apiEndpoint.value),
-    {
-        lazy: true,
-        server: false,
-        watch: [apiEndpoint]
-    }
-);
+        // Color class for response time
+        let responseTimeClass = 'log-response-fast';
+        const responseMs = parseInt(responseTime || '0');
+        if (responseMs > 1000) responseTimeClass = 'log-response-slow';
+        else if (responseMs > 500) responseTimeClass = 'log-response-medium';
 
-// Computed pagination info from initial data
-const paginationInfo = computed(() => initialData.value?.pagination);
-
-// Watch initial data to update our local array
-watch(initialData, (newData) => {
-    if (newData?.data && newData.data.length > 0) {
-        accessLogs.value = [...newData.data];
-        lastTimestamp.value = newData.data[0]?.timestamp || null;
-        initialLoad.value = false;
-    }
-});
-
-// Function to fetch new entries incrementally
-const fetchNewEntries = async () => {
-    if (!newEntriesEndpoint.value || initialLoad.value) return;
-
-    try {
-        const response = await $fetch<AccessLogsResponse>(newEntriesEndpoint.value);
-        if (response.data && response.data.length > 0) {
-            // Add a temporary "new" flag to new entries for styling
-            const newEntries = response.data.map(entry => ({ ...entry, isNew: true }));
-
-            // Prepend new entries to the beginning of the array
-            accessLogs.value = [...newEntries, ...accessLogs.value];
-
-            // Update last timestamp
-            lastTimestamp.value = response.data[0]?.timestamp || lastTimestamp.value;
-
-            // Trim array if it gets too long
-            if (accessLogs.value.length > maxLogs) {
-                accessLogs.value = accessLogs.value.slice(0, maxLogs);
-            }
-
-            // Remove the "new" flag after a short delay
-            setTimeout(() => {
-                accessLogs.value = accessLogs.value.map(entry => {
-                    const { isNew, ...rest } = entry as any;
-                    return rest;
-                });
-            }, 2000);
+        // Process flags
+        let flagsHtml = '';
+        if (flags) {
+            const flagsText = flags.trim();
+            // Color different flag types
+            let coloredFlags = flagsText;
+            coloredFlags = coloredFlags.replace(/\[SERVER\]/g, '<span class="log-flag-server">[SERVER]</span>');
+            coloredFlags = coloredFlags.replace(/\[CLIENT\]/g, '<span class="log-flag-client">[CLIENT]</span>');
+            coloredFlags = coloredFlags.replace(/\[BOT\]/g, '<span class="log-flag-bot">[BOT]</span>');
+            coloredFlags = coloredFlags.replace(/\[API\]/g, '<span class="log-flag-api">[API]</span>');
+            flagsHtml = `${coloredFlags} `;
         }
-    } catch (err) {
-        console.error('Failed to fetch new entries:', err);
+
+        return `${flagsHtml}<span class="log-timestamp">${timestamp}</span> <span class="log-ip">${ip}</span> "<span class="${methodClass}">${method}</span> <span class="log-url">${url}</span>" <span class="${statusClass}">${status}</span> <span class="${responseTimeClass}">${responseTime}ms</span> "<span class="log-user-agent">${userAgent}</span>"`;
+    } else {
+        // Fallback for logs that don't match expected format
+        return `<span class="log-default">${logLine}</span>`;
     }
 };
 
-// Table columns configuration
-const tableColumns = [
-    {
-        id: 'timestamp',
-        header: t('admin.accessLogs.timestamp'),
-        width: '80px',
-        sortable: false
-    },
-    {
-        id: 'method',
-        header: t('admin.accessLogs.method'),
-        width: '80px',
-        sortable: false
-    },
-    {
-        id: 'statusCode',
-        header: t('admin.accessLogs.status'),
-        width: '80px',
-        sortable: false
-    },
-    {
-        id: 'url',
-        header: t('admin.accessLogs.url'),
-        width: '300px',
-        sortable: false
-    },
-    {
-        id: 'responseTime',
-        header: t('admin.accessLogs.responseTime'),
-        width: '100px',
-        sortable: false
-    },
-    {
-        id: 'clientIp',
-        header: t('admin.accessLogs.ip'),
-        width: '150px',
-        sortable: false
-    },
-    {
-        id: 'userAgent',
-        header: t('admin.accessLogs.userAgent'),
-        sortable: false
+const processLogLine = (rawLogLine: string) => {
+    const cleanedLine = rawLogLine.trim();
+    if (!cleanedLine) return null;
+
+    // Extract timestamp for sorting (use current time if none found)
+    const timestampMatch = cleanedLine.match(/^(\S+)/);
+    const timestamp = timestampMatch?.[1] || new Date().toISOString();
+
+    // Create colored HTML version
+    const html = colorizeAccessLogLine(cleanedLine);
+
+    return {
+        timestamp,
+        content: cleanedLine,
+        html
+    };
+};
+
+// Pause/Resume functionality
+const pauseLogs = () => {
+    isPaused.value = true;
+
+    // Clear any existing timers
+    if (resumeTimeout.value) {
+        clearTimeout(resumeTimeout.value);
+        resumeTimeout.value = null;
     }
-];
+    if (smoothResumeInterval.value) {
+        clearInterval(smoothResumeInterval.value);
+        smoothResumeInterval.value = null;
+    }
+};
 
-// Auto-refresh every second
-onMounted(() => {
-    // Initial load
-    refreshInitial();
+const scheduleResume = () => {
+    if (resumeTimeout.value) {
+        clearTimeout(resumeTimeout.value);
+    }
 
-    // Set up auto-refresh for new entries
-    refreshInterval.value = setInterval(() => {
-        fetchNewEntries();
-    }, 1000);
+    resumeTimeout.value = setTimeout(() => {
+        resumeLogs();
+    }, 2000);
+};
+
+const resumeLogs = () => {
+    isPaused.value = false;
+
+    // Start smooth resume if there are buffered logs
+    if (pauseBuffer.value.length > 0) {
+        startSmoothResume();
+    }
+
+    if (resumeTimeout.value) {
+        clearTimeout(resumeTimeout.value);
+        resumeTimeout.value = null;
+    }
+};
+
+const startSmoothResume = () => {
+    // Clear any existing smooth resume
+    if (smoothResumeInterval.value) {
+        clearInterval(smoothResumeInterval.value);
+        smoothResumeInterval.value = null;
+    }
+
+    // Add logs gradually - faster if more logs to catch up
+    const logsPerBatch = Math.max(1, Math.min(5, Math.floor(pauseBuffer.value.length / 10)));
+    const intervalSpeed = pauseBuffer.value.length > 20 ? 50 : 100; // Faster for lots of logs
+
+    smoothResumeInterval.value = setInterval(() => {
+        if (pauseBuffer.value.length === 0) {
+            clearInterval(smoothResumeInterval.value!);
+            smoothResumeInterval.value = null;
+            return;
+        }
+
+        // Move logs from buffer to main display in small batches (at the beginning)
+        const batch = pauseBuffer.value.splice(0, logsPerBatch);
+        logLines.value.unshift(...batch);
+
+        // Trim from the end if exceeded limit
+        if (logLines.value.length > logLimit.value) {
+            logLines.value.splice(logLimit.value);
+        }
+
+        // Keep scroll at top
+        nextTick(() => {
+            if (logsContainer.value) {
+                logsContainer.value.scrollTop = 0;
+            }
+        });
+    }, intervalSpeed);
+};
+
+// Computed properties for unified logs
+const combinedLogs = computed(() => {
+    if (!logLines.value.length) {
+        return '<span class="log-empty">No access logs yet...</span>';
+    }
+
+    // Return HTML formatted logs for v-html
+    return logLines.value
+        .map(log => log.html || log.content)
+        .join('\n');
 });
 
-onUnmounted(() => {
-    if (refreshInterval.value) {
-        clearInterval(refreshInterval.value);
-    }
+const totalLogLines = computed(() => {
+    return logLines.value.length;
 });
 
-// Watch filters to reset data when filters change
+// SSE connection management
+const connectToLogStream = async () => {
+    if (eventSource.value) {
+        eventSource.value.close();
+        eventSource.value = null;
+    }
+
+    connectionStatus.value = 'connecting';
+
+    try {
+        eventSource.value = new EventSource(streamEndpoint.value);
+
+        eventSource.value.onopen = () => {
+            connectionStatus.value = 'connected';
+            lastUpdate.value = new Date().toISOString();
+        };
+
+        eventSource.value.onmessage = (event) => {
+            const rawData = event.data;
+
+            // Handle JSON error messages
+            if (rawData.startsWith('{')) {
+                try {
+                    const errorData = JSON.parse(rawData);
+                    if (errorData.type === 'error') {
+                        console.error('SSE Error:', errorData.message);
+                        connectionStatus.value = 'error';
+                        return;
+                    }
+                } catch (e) {
+                    // Not JSON, treat as log line
+                }
+            }
+
+            // Process as log line
+            const processedLog = processLogLine(rawData);
+            if (!processedLog) return;
+
+            lastUpdate.value = new Date().toISOString();
+
+            if (isPaused.value) {
+                // Add to buffer instead of main display (at the beginning)
+                pauseBuffer.value.unshift(processedLog);
+                scheduleResume();
+            } else {
+                // Add to main display (at the beginning for newest first)
+                logLines.value.unshift(processedLog);
+
+                // Trim from the end if exceeded limit
+                if (logLines.value.length > logLimit.value) {
+                    logLines.value.splice(logLimit.value);
+                }
+
+                // Keep scroll position at top for new entries
+                nextTick(() => {
+                    if (logsContainer.value) {
+                        logsContainer.value.scrollTop = 0;
+                    }
+                });
+            }
+        };
+
+        eventSource.value.onerror = (error) => {
+            console.error('SSE connection error:', error);
+            connectionStatus.value = 'error';
+        };
+
+    } catch (error) {
+        console.error('Failed to connect to access log stream:', error);
+        connectionStatus.value = 'error';
+    }
+};
+
+// Watch for filter changes
 watch([filters], () => {
-    currentPage.value = 1;
-    initialLoad.value = true;
-    accessLogs.value = [];
-    lastTimestamp.value = null;
+    logLines.value = [];
+    pauseBuffer.value = [];
+    connectToLogStream();
 }, { deep: true });
 
-// Helper functions
-function handleRefresh() {
-    initialLoad.value = true;
-    accessLogs.value = [];
-    lastTimestamp.value = null;
-    refreshInitial();
-}
-
-function goToPage(page: number) {
-    currentPage.value = page;
-}
-
-function formatDate(timestamp: string) {
-    return new Date(timestamp).toLocaleDateString();
-}
-
-function formatTime(timestamp: string) {
-    return new Date(timestamp).toLocaleTimeString();
-}
-
-function formatDateTime(timestamp: string) {
-    return new Date(timestamp).toLocaleString();
-}
-
-function getLogTypeClass(logType?: string) {
-    const classes = {
-        server: 'log-type-server',
-        client: 'log-type-client'
-    };
-    return classes[logType as keyof typeof classes] || 'log-type-unknown';
-}
-
-function getLogTypeLabel(logType?: string) {
-    const labels = {
-        server: 'SRV',
-        client: 'CLI'
-    };
-    return labels[logType as keyof typeof labels] || 'UNK';
-}
-
-function getMethodClass(method: string) {
-    const classes = {
-        GET: 'method-get',
-        POST: 'method-post',
-        PUT: 'method-put',
-        DELETE: 'method-delete',
-        PATCH: 'method-patch',
-        OPTIONS: 'method-options'
-    };
-    return classes[method as keyof typeof classes] || 'method-other';
-}
-
-function getStatusClass(statusCode: number) {
-    if (statusCode >= 200 && statusCode < 300) return 'status-success';
-    if (statusCode >= 300 && statusCode < 400) return 'status-redirect';
-    if (statusCode >= 400 && statusCode < 500) return 'status-client-error';
-    if (statusCode >= 500) return 'status-server-error';
-    return 'status-other';
-}
-
-function getResponseTimeClass(responseTime: number) {
-    if (responseTime < 100) return 'response-fast';
-    if (responseTime < 500) return 'response-medium';
-    if (responseTime < 1000) return 'response-slow';
-    return 'response-very-slow';
-}
-
-function getRowClass(item: AccessLog) {
-    const classes = [];
-
-    if (item.statusCode >= 500) classes.push('row-error');
-    else if (item.statusCode >= 400) classes.push('row-warning');
-
-    // Add highlight for new entries
-    if ((item as any).isNew) classes.push('row-new');
-
-    return classes.join(' ');
-}
-
-function truncateUserAgent(userAgent: string) {
-    if (userAgent.length > 60) {
-        return userAgent.substring(0, 60) + '...';
+// Methods
+const validateLogLimit = () => {
+    // Enforce hard caps
+    if (logLimit.value < 100) {
+        logLimit.value = 100;
+    } else if (logLimit.value > 10000) {
+        logLimit.value = 10000;
     }
-    return userAgent;
-}
+
+    // Trim existing logs if they exceed the new limit (keep newest)
+    if (logLines.value.length > logLimit.value) {
+        logLines.value.splice(logLimit.value);
+    }
+};
+
+const formatTimestamp = (timestamp: string) => {
+    return new Date(timestamp).toLocaleString();
+};
+
+// Cleanup on unmount
+onUnmounted(() => {
+    if (eventSource.value) {
+        eventSource.value.close();
+        eventSource.value = null;
+    }
+    if (resumeTimeout.value) {
+        clearTimeout(resumeTimeout.value);
+        resumeTimeout.value = null;
+    }
+    if (smoothResumeInterval.value) {
+        clearInterval(smoothResumeInterval.value);
+        smoothResumeInterval.value = null;
+    }
+});
+
+// Initialize SSE connection on mount
+onMounted(() => {
+    connectToLogStream();
+});
 </script>
 
 <style scoped>
-.access-logs-container {
+.admin-access-logs {
     display: flex;
     flex-direction: column;
-    gap: 1.5rem;
-    height: 100%;
+    height: 100vh;
+    color: white;
 }
 
-/* Header Styles */
-.access-logs-header {
-    background: rgba(0, 0, 0, 0.2);
-    border-radius: 0.5rem;
-    padding: 1.5rem;
-    border: 1px solid rgb(55, 55, 55);
+.logs-header {
+    padding: 1rem;
+    flex-shrink: 0;
 }
 
 .header-content {
     display: flex;
     justify-content: space-between;
-    align-items: flex-start;
-    margin-bottom: 1.5rem;
-}
-
-.header-info {
-    flex: 1;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 1rem;
 }
 
 .header-title {
-    font-size: 1.5rem;
-    font-weight: 700;
-    color: white;
-    margin-bottom: 0.5rem;
-}
-
-.header-description {
-    color: rgb(156, 163, 175);
-    font-size: 0.875rem;
-}
-
-.header-actions {
-    flex-shrink: 0;
-}
-
-.action-button {
     display: flex;
     align-items: center;
     gap: 0.5rem;
-    padding: 0.75rem 1.5rem;
-    background-color: rgb(59, 130, 246);
+}
+
+.header-icon {
+    width: 1.5rem;
+    height: 1.5rem;
+    color: rgb(99, 102, 241);
+}
+
+.header-title h2 {
+    font-size: 1.25rem;
+    font-weight: 600;
+    margin: 0;
+}
+
+.header-controls {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    flex-wrap: wrap;
+}
+
+.control-group {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.control-group label {
+    font-size: 0.875rem;
+    color: rgb(156, 163, 175);
+}
+
+.filter-select,
+.filter-input,
+.log-limit-input {
+    background-color: rgb(55, 65, 81);
+    color: white;
+    border: 1px solid rgb(75, 85, 99);
+    border-radius: 0.375rem;
+    padding: 0.25rem 0.5rem;
+    font-size: 0.875rem;
+    min-width: 120px;
+}
+
+.log-limit-input {
+    min-width: 100px;
+    text-align: center;
+}
+
+.pause-button {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    background-color: rgb(99, 102, 241);
     color: white;
     border: none;
     border-radius: 0.375rem;
+    padding: 0.5rem 1rem;
     font-size: 0.875rem;
-    font-weight: 500;
     cursor: pointer;
     transition: background-color 0.15s ease-in-out;
 }
 
-.action-button:hover:not(:disabled) {
-    background-color: rgb(37, 99, 235);
+.pause-button:hover {
+    background-color: rgb(79, 70, 229);
 }
 
-.action-button:disabled {
-    opacity: 0.6;
-    cursor: not-allowed;
+.pause-button.paused {
+    background-color: rgb(251, 191, 36);
 }
 
-.action-icon {
+.pause-button.paused:hover {
+    background-color: rgb(245, 158, 11);
+}
+
+.control-icon {
     width: 1rem;
     height: 1rem;
 }
 
-/* Filters Styles */
-.filters-section {
-    border-top: 1px solid rgb(55, 55, 55);
-    padding-top: 1.5rem;
+.spinning {
+    animation: spin 1s linear infinite;
 }
 
-.filters-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-    gap: 1rem;
+@keyframes spin {
+    to {
+        transform: rotate(360deg);
+    }
 }
 
-.filter-group {
+.logs-content {
+    flex: 1;
+    overflow: hidden;
     display: flex;
     flex-direction: column;
-    gap: 0.5rem;
 }
 
-.filter-label {
-    font-size: 0.875rem;
-    font-weight: 500;
-    color: rgb(209, 213, 219);
+.loading-state,
+.error-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    padding: 2rem;
+    text-align: center;
 }
 
-.filter-input,
-.filter-select {
-    padding: 0.75rem;
-    background: rgba(0, 0, 0, 0.3);
-    border: 1px solid rgb(75, 85, 99);
-    border-radius: 0.375rem;
-    color: white;
-    font-size: 0.875rem;
+.loading-icon,
+.error-icon {
+    width: 3rem;
+    height: 3rem;
+    margin-bottom: 1rem;
 }
 
-.filter-input:focus,
-.filter-select:focus {
-    outline: none;
-    border-color: rgb(59, 130, 246);
-    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+.loading-icon {
+    color: rgb(99, 102, 241);
 }
 
-/* Table Styles */
-.access-logs-table {
-    background: rgba(0, 0, 0, 0.2);
-    border-radius: 0.5rem;
-    border: 1px solid rgb(55, 55, 55);
-    overflow: hidden;
-    flex: 1;
-}
-
-/* Custom cell styles */
-.timestamp-cell {
-    font-size: 0.75rem;
-}
-
-.timestamp-date {
-    font-weight: 500;
-    color: white;
-}
-
-.timestamp-time {
-    color: rgb(156, 163, 175);
-}
-
-.method-badge {
-    display: inline-block;
-    padding: 0.25rem 0.5rem;
-    border-radius: 0.25rem;
-    font-size: 0.75rem;
-    font-weight: 600;
-    text-transform: uppercase;
-}
-
-.log-type-badge {
-    display: inline-block;
-    padding: 0.25rem 0.4rem;
-    border-radius: 0.25rem;
-    font-size: 0.625rem;
-    font-weight: 700;
-    text-transform: uppercase;
-    margin-right: 0.25rem;
-}
-
-.log-type-server {
-    background: rgb(99, 102, 241);
-    color: white;
-}
-
-.log-type-client {
-    background: rgb(16, 185, 129);
-    color: white;
-}
-
-.log-type-unknown {
-    background: rgb(107, 114, 128);
-    color: white;
-}
-
-.method-get {
-    background: rgb(34, 197, 94);
-    color: white;
-}
-
-.method-post {
-    background: rgb(59, 130, 246);
-    color: white;
-}
-
-.method-put {
-    background: rgb(245, 158, 11);
-    color: white;
-}
-
-.method-delete {
-    background: rgb(239, 68, 68);
-    color: white;
-}
-
-.method-patch {
-    background: rgb(168, 85, 247);
-    color: white;
-}
-
-.method-options {
-    background: rgb(107, 114, 128);
-    color: white;
-}
-
-.method-other {
-    background: rgb(75, 85, 99);
-    color: white;
-}
-
-.status-badge {
-    display: inline-block;
-    padding: 0.25rem 0.5rem;
-    border-radius: 0.25rem;
-    font-size: 0.75rem;
-    font-weight: 600;
-}
-
-.status-success {
-    background: rgb(34, 197, 94);
-    color: white;
-}
-
-.status-redirect {
-    background: rgb(59, 130, 246);
-    color: white;
-}
-
-.status-client-error {
-    background: rgb(245, 158, 11);
-    color: white;
-}
-
-.status-server-error {
-    background: rgb(239, 68, 68);
-    color: white;
-}
-
-.status-other {
-    background: rgb(107, 114, 128);
-    color: white;
-}
-
-.url-cell {
-    font-size: 0.875rem;
-}
-
-.url-path {
-    color: white;
-    font-family: monospace;
-    word-break: break-all;
-}
-
-.url-endpoint {
-    color: rgb(156, 163, 175);
-    font-size: 0.75rem;
-    margin-top: 0.25rem;
-}
-
-.response-time {
-    font-weight: 500;
-    font-family: monospace;
-}
-
-.response-fast {
-    color: rgb(34, 197, 94);
-}
-
-.response-medium {
-    color: rgb(245, 158, 11);
-}
-
-.response-slow {
-    color: rgb(251, 146, 60);
-}
-
-.response-very-slow {
+.error-icon {
     color: rgb(239, 68, 68);
 }
 
-.ip-cell {
-    display: flex;
-    flex-direction: column;
-    gap: 0.25rem;
-}
-
-.ip-address {
-    font-family: monospace;
-    color: white;
-}
-
-.ip-flags {
-    display: flex;
-    gap: 0.25rem;
-}
-
-.flag {
-    padding: 0.125rem 0.375rem;
-    border-radius: 0.25rem;
-    font-size: 0.625rem;
-    font-weight: 600;
-    text-transform: uppercase;
-}
-
-.bot-flag {
-    background: rgb(239, 68, 68);
-    color: white;
-}
-
-.api-flag {
-    background: rgb(34, 197, 94);
-    color: white;
-}
-
-.user-agent-cell {
-    font-size: 0.75rem;
+.loading-text,
+.error-text {
     color: rgb(156, 163, 175);
-    font-family: monospace;
-    word-break: break-all;
+    margin-bottom: 1rem;
 }
 
-/* Row classes */
-.row-error {
-    background-color: rgba(239, 68, 68, 0.1);
-}
-
-.row-warning {
-    background-color: rgba(245, 158, 11, 0.1);
-}
-
-.row-new {
-    background-color: rgba(34, 197, 94, 0.15);
-    animation: highlightNew 2s ease-out;
-}
-
-@keyframes highlightNew {
-    0% {
-        background-color: rgba(34, 197, 94, 0.3);
-        transform: scale(1.01);
-    }
-
-    100% {
-        background-color: rgba(34, 197, 94, 0.15);
-        transform: scale(1);
-    }
-}
-
-/* Mobile styles */
-.mobile-log-content {
-    padding: 1rem;
-    border-radius: 0.5rem;
-    background: rgba(0, 0, 0, 0.2);
-}
-
-.mobile-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 0.75rem;
-}
-
-.mobile-method-status {
-    display: flex;
-    gap: 0.5rem;
-}
-
-.mobile-timestamp {
-    font-size: 0.75rem;
-    color: rgb(156, 163, 175);
-}
-
-.mobile-url {
-    font-family: monospace;
-    font-size: 0.875rem;
+.retry-button {
+    background-color: rgb(99, 102, 241);
     color: white;
-    word-break: break-all;
-    margin-bottom: 0.75rem;
-    padding: 0.5rem;
-    background: rgba(0, 0, 0, 0.3);
-    border-radius: 0.25rem;
-}
-
-.mobile-details {
-    display: flex;
-    flex-direction: column;
-    gap: 0.5rem;
-}
-
-.mobile-detail {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-}
-
-.detail-label {
-    font-size: 0.75rem;
-    color: rgb(156, 163, 175);
-    font-weight: 500;
-}
-
-.detail-value {
-    font-size: 0.75rem;
-    color: white;
-    font-family: monospace;
-}
-
-.mobile-flags {
-    display: flex;
-    gap: 0.25rem;
-    margin-top: 0.5rem;
-}
-
-/* Pagination Styles */
-.pagination-section {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 1rem 1.5rem;
-    background: rgba(0, 0, 0, 0.2);
-    border-radius: 0.5rem;
-    border: 1px solid rgb(55, 55, 55);
-}
-
-.pagination-info {
-    font-size: 0.875rem;
-    color: rgb(156, 163, 175);
-}
-
-.live-count {
-    color: rgb(34, 197, 94);
-    font-weight: 500;
-    margin-left: 0.5rem;
-}
-
-.pagination-controls {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-}
-
-.pagination-button {
-    padding: 0.5rem 1rem;
-    background: rgba(0, 0, 0, 0.3);
-    color: white;
-    border: 1px solid rgb(75, 85, 99);
+    border: none;
     border-radius: 0.375rem;
+    padding: 0.5rem 1rem;
     font-size: 0.875rem;
     cursor: pointer;
-    transition: background-color 0.15s ease-in-out;
 }
 
-.pagination-button:hover:not(:disabled) {
-    background: rgba(59, 130, 246, 0.2);
-    border-color: rgb(59, 130, 246);
+.retry-button:hover {
+    background-color: rgb(79, 70, 229);
 }
 
-.pagination-button:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
+.logs-display {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
 }
 
-.pagination-current {
-    padding: 0.5rem 1rem;
+.logs-info {
+    display: flex;
+    gap: 1.5rem;
+    padding: 1rem;
+    flex-shrink: 0;
+    flex-wrap: wrap;
+}
+
+.info-item {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
     font-size: 0.875rem;
-    color: rgb(209, 213, 219);
-    font-weight: 500;
+    color: rgb(156, 163, 175);
+}
+
+.info-icon {
+    width: 1rem;
+    height: 1rem;
+}
+
+.pause-indicator {
+    color: rgb(251, 191, 36) !important;
+    font-weight: 600;
+}
+
+.pause-icon {
+    color: rgb(251, 191, 36);
+    animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+
+    0%,
+    100% {
+        opacity: 1;
+    }
+
+    50% {
+        opacity: 0.5;
+    }
+}
+
+.unified-logs {
+    flex: 1;
+    overflow: hidden;
+}
+
+.log-content {
+    width: 100%;
+    height: 100%;
+    background-color: rgb(0, 0, 0);
+    color: rgb(229, 231, 235);
+    padding: 1rem;
+    font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+    font-size: 0.75rem;
+    line-height: 1.4;
+    overflow: auto;
+    white-space: pre-wrap;
+    word-break: break-word;
+    margin: 0;
+    border: none;
+
+    /* Custom scrollbar styling */
+    scrollbar-width: thin;
+    scrollbar-color: rgb(75, 85, 99) rgb(31, 41, 55);
+}
+
+.log-content::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+.log-content::-webkit-scrollbar-track {
+    background: rgb(31, 41, 55);
+}
+
+.log-content::-webkit-scrollbar-thumb {
+    background: rgb(75, 85, 99);
+    border-radius: 4px;
+}
+
+.log-content::-webkit-scrollbar-thumb:hover {
+    background: rgb(107, 114, 128);
+}
+
+/* Access log coloring styles */
+.log-content :deep(.log-flag-server) {
+    color: rgb(99, 102, 241);
+    font-weight: 600;
+}
+
+.log-content :deep(.log-flag-client) {
+    color: rgb(34, 197, 94);
+    font-weight: 600;
+}
+
+.log-content :deep(.log-flag-bot) {
+    color: rgb(251, 191, 36);
+    font-weight: 600;
+}
+
+.log-content :deep(.log-flag-api) {
+    color: rgb(168, 85, 247);
+    font-weight: 600;
+}
+
+.log-content :deep(.log-timestamp) {
+    color: rgb(156, 163, 175);
+}
+
+.log-content :deep(.log-ip) {
+    color: rgb(168, 85, 247);
+    font-weight: 600;
+}
+
+.log-content :deep(.log-method-get) {
+    color: rgb(34, 197, 94);
+}
+
+.log-content :deep(.log-method-post) {
+    color: rgb(59, 130, 246);
+}
+
+.log-content :deep(.log-method-put) {
+    color: rgb(251, 191, 36);
+}
+
+.log-content :deep(.log-method-delete) {
+    color: rgb(239, 68, 68);
+}
+
+.log-content :deep(.log-method-patch) {
+    color: rgb(168, 85, 247);
+}
+
+.log-content :deep(.log-url) {
+    color: rgb(229, 231, 235);
+}
+
+.log-content :deep(.log-status-success) {
+    color: rgb(34, 197, 94);
+    font-weight: 600;
+}
+
+.log-content :deep(.log-status-redirect) {
+    color: rgb(59, 130, 246);
+    font-weight: 600;
+}
+
+.log-content :deep(.log-status-client-error) {
+    color: rgb(251, 191, 36);
+    font-weight: 600;
+}
+
+.log-content :deep(.log-status-server-error) {
+    color: rgb(239, 68, 68);
+    font-weight: 600;
+}
+
+.log-content :deep(.log-response-fast) {
+    color: rgb(34, 197, 94);
+}
+
+.log-content :deep(.log-response-medium) {
+    color: rgb(251, 191, 36);
+}
+
+.log-content :deep(.log-response-slow) {
+    color: rgb(239, 68, 68);
+}
+
+.log-content :deep(.log-user-agent) {
+    color: rgb(156, 163, 175);
+    font-style: italic;
+}
+
+.log-content :deep(.log-flags) {
+    color: rgb(168, 85, 247);
+    font-weight: 600;
+}
+
+.log-content :deep(.log-default) {
+    color: rgb(156, 163, 175);
+}
+
+.log-content :deep(.log-empty) {
+    color: rgb(156, 163, 175);
+    font-style: italic;
+    text-align: center;
+    padding: 2rem;
 }
 
 /* Responsive adjustments */
 @media (max-width: 768px) {
-    .filters-grid {
-        grid-template-columns: 1fr;
+    .admin-access-logs {
+        height: 100vh;
     }
 
     .header-content {
         flex-direction: column;
         align-items: stretch;
-        gap: 1rem;
     }
 
-    .pagination-section {
+    .header-controls {
+        justify-content: center;
+    }
+
+    .logs-info {
         flex-direction: column;
-        gap: 1rem;
-        text-align: center;
+        gap: 0.5rem;
+    }
+
+    .log-content {
+        font-size: 0.625rem;
     }
 }
 </style>

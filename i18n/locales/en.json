@@ -1672,7 +1672,12 @@
             "prev": "Previous",
             "next": "Next",
             "last": "Last",
-            "pageOf": "Page {current} of {total}"
+            "pageOf": "Page {current} of {total}",
+            "connecting": "Connecting to log stream...",
+            "connectionError": "Failed to connect to log stream",
+            "retry": "Retry Connection",
+            "totalLogs": "{count} logs",
+            "lastUpdate": "Last update: {time}"
         },
         "database": {
             "overview": {
@@ -1890,7 +1895,11 @@
             "selectPod": "Select pod",
             "selectPods": "Select pods",
             "allPods": "All pods",
-            "lastUpdate": "Last updated"
+            "lastUpdate": "Last updated",
+            "maxLogs": "Max logs",
+            "pause": "Pause",
+            "resume": "Resume",
+            "paused": "Paused"
         },
         "kubernetes": {
             "title": "Kubernetes Management",

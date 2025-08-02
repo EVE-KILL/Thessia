@@ -1,6 +1,3 @@
-import { promises as fs } from "fs";
-import path from "path";
-
 /**
  * Format collection name for display
  */
@@ -49,11 +46,7 @@ export default defineEventHandler(async (event) => {
     }
 
     try {
-        // Read the models directory
-        const modelsPath = path.join(process.cwd(), "server", "models");
-        const files = await fs.readdir(modelsPath);
-
-        // Model name mapping to collection names
+        // Model name mapping to collection names (same as in data.get.ts)
         const modelToCollectionMap: Record<string, string> = {
             AccessLogs: "accesslogs",
             Alliances: "alliances",
@@ -88,13 +81,9 @@ export default defineEventHandler(async (event) => {
             Wars: "wars",
         };
 
-        // Filter TypeScript files and extract collection names
-        const collections = files
-            .filter((file) => file.endsWith(".ts"))
-            .map((file) => {
-                const modelName = file.replace(".ts", "");
-                const collectionName =
-                    modelToCollectionMap[modelName] || modelName.toLowerCase();
+        // Use the modelToCollectionMap directly instead of reading files
+        const collections = Object.entries(modelToCollectionMap)
+            .map(([modelName, collectionName]) => {
                 return {
                     name: collectionName,
                     displayName: formatCollectionName(modelName),
