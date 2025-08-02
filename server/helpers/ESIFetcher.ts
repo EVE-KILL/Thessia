@@ -135,11 +135,13 @@ async function esiFetcherWithLogging(
             hash?: string;
             additionalInfo?: Record<string, any>;
         }>; // Function to extract IDs/identifiers from the fetched data
-        checkNewItems?: (items: Array<{
-            id: number | string;
-            hash?: string;
-            additionalInfo?: Record<string, any>;
-        }>) => Promise<number>; // Function to check how many items are new
+        checkNewItems?: (
+            items: Array<{
+                id: number | string;
+                hash?: string;
+                additionalInfo?: Record<string, any>;
+            }>
+        ) => Promise<number>; // Function to check how many items are new
     }
 ): Promise<any> {
     const timestamp = new Date();
@@ -170,11 +172,13 @@ async function esiFetcherWithLogging(
         if (logContext?.extractDataIds && result) {
             try {
                 fetchedData = logContext.extractDataIds(result);
-                
+
                 // Check how many items are new if checker function is provided
                 if (logContext?.checkNewItems && fetchedData) {
                     try {
-                        newItemsCount = await logContext.checkNewItems(fetchedData);
+                        newItemsCount = await logContext.checkNewItems(
+                            fetchedData
+                        );
                     } catch (checkError) {
                         console.warn(
                             "Failed to check new items for ESI log:",
@@ -194,8 +198,11 @@ async function esiFetcherWithLogging(
         errorMessage = fetchError.message || String(fetchError);
         throw fetchError; // Re-throw the error
     } finally {
-        // Log the ESI call if context is provided
-        if (logContext) {
+        // Only log the ESI call if there are new items or if there was an error
+        if (
+            logContext &&
+            (error || (newItemsCount !== undefined && newItemsCount > 0))
+        ) {
             try {
                 const logEntry: Partial<IESILog> = {
                     characterId: logContext.characterId,

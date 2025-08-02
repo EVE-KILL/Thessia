@@ -72,7 +72,7 @@
                             <div class="stat-info">
                                 <div class="stat-label">{{ t('admin.analytics.esiLogs.uniqueCharacters') }}</div>
                                 <div class="stat-value">{{ data?.data?.summary?.uniqueCharacters?.toLocaleString() || 0
-                                    }}</div>
+                                }}</div>
                             </div>
                         </div>
                         <div class="stat-card">
@@ -91,7 +91,7 @@
                             <div class="stat-info">
                                 <div class="stat-label">{{ t('admin.analytics.esiLogs.totalItemsFetched') }}</div>
                                 <div class="stat-value">{{ data?.data?.summary?.totalItemsFetched?.toLocaleString() || 0
-                                    }}</div>
+                                }}</div>
                             </div>
                         </div>
                         <div class="stat-card">
@@ -101,7 +101,7 @@
                             <div class="stat-info">
                                 <div class="stat-label">{{ t('admin.analytics.esiLogs.totalNewItems') }}</div>
                                 <div class="stat-value">{{ data?.data?.summary?.totalNewItems?.toLocaleString() || 0
-                                    }}</div>
+                                }}</div>
                             </div>
                         </div>
                         <div class="stat-card">
@@ -271,9 +271,8 @@
                                         {{ log.itemsReturned || 0 }}
                                     </div>
                                     <div class="table-cell">
-                                        <span v-if="log.newItemsCount !== undefined && log.newItemsCount !== null" 
-                                              class="new-items-count"
-                                              :class="{ 'has-new-items': log.newItemsCount > 0 }">
+                                        <span v-if="log.newItemsCount !== undefined && log.newItemsCount !== null"
+                                            class="new-items-count" :class="{ 'has-new-items': log.newItemsCount > 0 }">
                                             {{ log.newItemsCount }}
                                         </span>
                                         <span v-else class="no-data">-</span>
@@ -283,7 +282,7 @@
                                             <Icon :name="log.error ? 'heroicons:x-circle' : 'heroicons:check-circle'"
                                                 class="status-icon" />
                                             {{ log.error ? t('admin.analytics.esiLogs.error') :
-                                            t('admin.analytics.esiLogs.success') }}
+                                                t('admin.analytics.esiLogs.success') }}
                                         </div>
                                     </div>
                                 </div>

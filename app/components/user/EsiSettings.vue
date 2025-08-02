@@ -549,13 +549,14 @@ const handleSaveSettings = async () => {
                                 <span class="font-medium text-gray-900 dark:text-white">
                                     {{ (item as any).itemsReturned || 0 }} items
                                 </span>
-                                <span v-if="(item as any).newItemsCount !== undefined && (item as any).newItemsCount !== null" 
-                                      :class="[
-                                          'text-sm font-medium px-2 py-1 rounded',
-                                          (item as any).newItemsCount > 0 
-                                              ? 'bg-green-100 dark:bg-green-900 text-green-700 dark:text-green-300'
-                                              : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400'
-                                      ]">
+                                <span
+                                    v-if="(item as any).newItemsCount !== undefined && (item as any).newItemsCount !== null"
+                                    :class="[
+                                        'text-sm font-medium px-2 py-1 rounded',
+                                        (item as any).newItemsCount > 0
+                                            ? 'bg-green-100 dark:bg-green-900 text-green-700 dark:text-green-300'
+                                            : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400'
+                                    ]">
                                     {{ (item as any).newItemsCount }} new
                                 </span>
                                 <UBadge color="gray" variant="soft" size="sm">
@@ -586,29 +587,31 @@ const handleSaveSettings = async () => {
                                 <div class="space-y-2 text-sm">
                                     <div class="flex justify-between">
                                         <span class="text-gray-600 dark:text-gray-400">Total Items:</span>
-                                        <span class="font-medium text-gray-900 dark:text-white">{{ (item as any).itemsReturned || 0 }}</span>
+                                        <span class="font-medium text-gray-900 dark:text-white">{{ (item as
+                                            any).itemsReturned || 0 }}</span>
                                     </div>
-                                    <div v-if="(item as any).newItemsCount !== undefined && (item as any).newItemsCount !== null" 
-                                         class="flex justify-between">
+                                    <div v-if="(item as any).newItemsCount !== undefined && (item as any).newItemsCount !== null"
+                                        class="flex justify-between">
                                         <span class="text-gray-600 dark:text-gray-400">New Items:</span>
                                         <span :class="[
                                             'font-medium',
-                                            (item as any).newItemsCount > 0 
-                                                ? 'text-green-600 dark:text-green-400' 
+                                            (item as any).newItemsCount > 0
+                                                ? 'text-green-600 dark:text-green-400'
                                                 : 'text-gray-500 dark:text-gray-400'
                                         ]">{{ (item as any).newItemsCount }}</span>
                                     </div>
                                     <div v-if="(item as any).newItemsCount !== undefined && (item as any).newItemsCount !== null && (item as any).itemsReturned > 0"
-                                         class="flex justify-between">
+                                        class="flex justify-between">
                                         <span class="text-gray-600 dark:text-gray-400">Efficiency:</span>
                                         <span class="font-medium text-gray-900 dark:text-white">
-                                            {{ Math.round(((item as any).newItemsCount / (item as any).itemsReturned) * 100) }}%
+                                            {{ Math.round(((item as any).newItemsCount / (item as any).itemsReturned) *
+                                            100) }}%
                                         </span>
                                     </div>
                                 </div>
-                                
+
                                 <div v-if="(item as any).fetchedData && (item as any).fetchedData.length > 0"
-                                     class="mt-3 pt-3 border-t border-gray-200 dark:border-gray-600">
+                                    class="mt-3 pt-3 border-t border-gray-200 dark:border-gray-600">
                                     <div class="font-medium text-gray-900 dark:text-white mb-2">
                                         {{ t('settings.esiLogs.fetchedItems', 'Fetched Items') }}
                                     </div>
@@ -626,7 +629,8 @@ const handleSaveSettings = async () => {
                                         </div>
                                     </div>
                                 </div>
-                                <div v-else class="mt-3 pt-3 border-t border-gray-200 dark:border-gray-600 text-sm text-gray-500 dark:text-gray-400">
+                                <div v-else
+                                    class="mt-3 pt-3 border-t border-gray-200 dark:border-gray-600 text-sm text-gray-500 dark:text-gray-400">
                                     {{ t('settings.esiLogs.noItemsTracked', 'No items tracked') }}
                                 </div>
                             </div>

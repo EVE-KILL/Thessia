@@ -896,7 +896,7 @@
     "settings.general.description": "Configure your general preferences",
     "settings.general.placeholder": "Additional general settings will be added here in future updates.",
     "settings.esiLogs.title": "ESI API Logs",
-    "settings.esiLogs.description": "View the ESI API calls we make on your behalf for transparency.",
+    "settings.esiLogs.description": "View the ESI API calls that found new data or encountered errors for transparency.",
     "settings.esiLogs.noLogs": "No ESI logs found.",
     "settings.esiLogs.timestamp": "Timestamp",
     "settings.esiLogs.endpoint": "Endpoint",
@@ -1812,7 +1812,7 @@
             },
             "esiLogs": {
                 "title": "ESI Logs",
-                "description": "View ESI API request logs and statistics for all users",
+                "description": "View ESI API requests that found new data or encountered errors",
                 "summary": "Summary Statistics",
                 "totalRequests": "Total Requests",
                 "successfulRequests": "Successful Requests",

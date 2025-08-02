@@ -66,13 +66,23 @@ export default defineEventHandler(async (event) => {
         filterConditions.characterId = parseInt(String(query.characterId), 10);
     }
 
-    // Date range filter (last 30 days by default)
+    // Date range filter (last 7 days by default, max 30 days to prevent heavy queries)
     const endDate = query.endDate
         ? new Date(String(query.endDate))
         : new Date();
-    const startDate = query.startDate
+    const requestedStartDate = query.startDate
         ? new Date(String(query.startDate))
-        : new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
+        : new Date(Date.now() - 7 * 24 * 60 * 60 * 1000); // Default to 7 days
+
+    // Enforce maximum range of 30 days to prevent performance issues
+    const maxDaysBack = 30;
+    const earliestAllowedDate = new Date(
+        endDate.getTime() - maxDaysBack * 24 * 60 * 60 * 1000
+    );
+    const startDate =
+        requestedStartDate < earliestAllowedDate
+            ? earliestAllowedDate
+            : requestedStartDate;
 
     filterConditions.timestamp = {
         $gte: startDate,
@@ -125,7 +135,7 @@ export default defineEventHandler(async (event) => {
         }),
     ]);
 
-    // Calculate summary statistics
+    // Calculate summary statistics with optimized aggregation
     const summaryStats = await ESILogs.aggregate([
         {
             $match: {
@@ -137,32 +147,17 @@ export default defineEventHandler(async (event) => {
                 _id: null,
                 totalRequests: { $sum: 1 },
                 successfulRequests: {
-                    $sum: { $cond: [{ $eq: ["$error", false] }, 1, 0] },
+                    $sum: { $cond: [{ $not: ["$error"] }, 1, 0] },
                 },
                 errorRequests: {
-                    $sum: { $cond: [{ $eq: ["$error", true] }, 1, 0] },
+                    $sum: { $cond: ["$error", 1, 0] },
                 },
                 uniqueCharacters: { $addToSet: "$characterId" },
                 totalItemsFetched: {
-                    $sum: {
-                        $cond: [
-                            { $isArray: "$fetchedData" },
-                            { $size: "$fetchedData" },
-                            0,
-                        ],
-                    },
+                    $sum: { $ifNull: ["$itemsReturned", 0] },
                 },
                 totalNewItems: {
-                    $sum: {
-                        $cond: [
-                            { $and: [
-                                { $ne: ["$newItemsCount", null] },
-                                { $ne: ["$newItemsCount", undefined] }
-                            ]},
-                            "$newItemsCount",
-                            0,
-                        ],
-                    },
+                    $sum: { $ifNull: ["$newItemsCount", 0] },
                 },
             },
         },
@@ -176,9 +171,20 @@ export default defineEventHandler(async (event) => {
                 totalItemsFetched: 1,
                 totalNewItems: 1,
                 successRate: {
-                    $multiply: [
-                        { $divide: ["$successfulRequests", "$totalRequests"] },
-                        100,
+                    $cond: [
+                        { $eq: ["$totalRequests", 0] },
+                        0,
+                        {
+                            $multiply: [
+                                {
+                                    $divide: [
+                                        "$successfulRequests",
+                                        "$totalRequests",
+                                    ],
+                                },
+                                100,
+                            ],
+                        },
                     ],
                 },
                 newItemsRate: {
@@ -187,7 +193,12 @@ export default defineEventHandler(async (event) => {
                         0,
                         {
                             $multiply: [
-                                { $divide: ["$totalNewItems", "$totalItemsFetched"] },
+                                {
+                                    $divide: [
+                                        "$totalNewItems",
+                                        "$totalItemsFetched",
+                                    ],
+                                },
                                 100,
                             ],
                         },
@@ -195,9 +206,11 @@ export default defineEventHandler(async (event) => {
                 },
             },
         },
-    ]);
+    ])
+        .hint({ timestamp: -1 })
+        .option({ maxTimeMS: 30000, allowDiskUse: false });
 
-    // Get most active data types
+    // Get most active data types with optimized query
     const topDataTypes = await ESILogs.aggregate([
         {
             $match: {
@@ -209,10 +222,10 @@ export default defineEventHandler(async (event) => {
                 _id: "$dataType",
                 count: { $sum: 1 },
                 successCount: {
-                    $sum: { $cond: [{ $eq: ["$error", false] }, 1, 0] },
+                    $sum: { $cond: [{ $not: ["$error"] }, 1, 0] },
                 },
                 errorCount: {
-                    $sum: { $cond: [{ $eq: ["$error", true] }, 1, 0] },
+                    $sum: { $cond: ["$error", 1, 0] },
                 },
             },
         },
@@ -223,13 +236,24 @@ export default defineEventHandler(async (event) => {
                 successCount: 1,
                 errorCount: 1,
                 successRate: {
-                    $multiply: [{ $divide: ["$successCount", "$count"] }, 100],
+                    $cond: [
+                        { $eq: ["$count", 0] },
+                        0,
+                        {
+                            $multiply: [
+                                { $divide: ["$successCount", "$count"] },
+                                100,
+                            ],
+                        },
+                    ],
                 },
             },
         },
         { $sort: { count: -1 } },
         { $limit: 10 },
-    ]);
+    ])
+        .hint({ timestamp: -1 })
+        .option({ maxTimeMS: 15000, allowDiskUse: false });
 
     return {
         success: true,
