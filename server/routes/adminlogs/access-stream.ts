@@ -161,10 +161,6 @@ export default defineEventHandler(async (event) => {
                         const logLine = formatAccessLogEntry(log);
                         await eventStream.push(`${logLine}\n\n`);
                     } catch (pushError) {
-                        // Connection closed
-                        console.log(
-                            "SSE: Connection closed during initial batch"
-                        );
                         isStreamClosed = true;
                         break;
                     }
@@ -208,10 +204,6 @@ export default defineEventHandler(async (event) => {
                                 const logLine = formatAccessLogEntry(log);
                                 await eventStream.push(`${logLine}\n\n`);
                             } catch (pushError) {
-                                // Connection closed, stop processing
-                                console.log(
-                                    "SSE: Connection closed, stopping log stream"
-                                );
                                 isStreamClosed = true;
                                 break;
                             }
@@ -236,7 +228,6 @@ export default defineEventHandler(async (event) => {
                                 error.message.includes("connection") ||
                                 error.message.includes("disconnected"))
                         ) {
-                            console.log("SSE: Database error, closing stream");
                             isStreamClosed = true;
                             try {
                                 await eventStream.push(
@@ -269,7 +260,6 @@ export default defineEventHandler(async (event) => {
                     })}\n\n`
                 );
             } catch (pushError) {
-                // Ignore push errors when connection is closed
                 console.log(
                     "SSE: Failed to send error message, connection likely closed"
                 );
@@ -279,7 +269,6 @@ export default defineEventHandler(async (event) => {
 
     // Handle cleanup on close
     eventStream.onClosed(async () => {
-        console.log("SSE: Access log stream closed, cleaning up...");
         isStreamClosed = true;
 
         if (intervalId) {
@@ -291,7 +280,6 @@ export default defineEventHandler(async (event) => {
             await eventStream.close();
         } catch (error) {
             // Ignore cleanup errors
-            console.log("SSE: Error during cleanup (expected):", error);
         }
     });
 
@@ -312,9 +300,6 @@ export default defineEventHandler(async (event) => {
             )
             .catch(() => {
                 // Ignore if we can't send the error
-                console.log(
-                    "SSE: Could not send fatal error to client, connection likely closed"
-                );
             });
     });
 

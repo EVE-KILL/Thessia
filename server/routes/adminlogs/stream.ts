@@ -47,11 +47,7 @@ export default defineEventHandler(async (event) => {
     // Start the setup asynchronously after the connection is established
     const setupLogStreaming = async () => {
         try {
-            console.log("SSE: Starting log streaming setup...");
-
-            // Get all pods first
             const pods = await kubernetesManager.getPods();
-            console.log(`SSE: Found ${pods?.length || 0} total pods`);
 
             // Filter to only running pods and exclude system pods
             const allRunningPods = pods.filter(
@@ -63,11 +59,6 @@ export default defineEventHandler(async (event) => {
                     !pod.metadata.name.includes("coredns") &&
                     !pod.metadata.name.startsWith("cron-") && // Exclude cron jobs
                     !pod.metadata.name.match(/^[a-z-]+-\d{8}-[a-z0-9]{5}$/) // Exclude job pods pattern
-            );
-            console.log(
-                `SSE: Found ${
-                    allRunningPods?.length || 0
-                } running pods after filtering`
             );
 
             if (!allRunningPods || allRunningPods.length === 0) {
@@ -84,9 +75,6 @@ export default defineEventHandler(async (event) => {
             // Filter pods based on selection
             let targetPods = allRunningPods;
             if (selectedPods && selectedPods !== "all") {
-                console.log(
-                    `SSE: Filtering pods for selection: ${selectedPods}`
-                );
                 const podNames = selectedPods
                     .split(",")
                     .map((name) => name.trim())
@@ -96,11 +84,6 @@ export default defineEventHandler(async (event) => {
                         podNames.includes(pod.metadata?.name || "")
                     );
                 }
-                console.log(
-                    `SSE: Selected ${
-                        targetPods?.length || 0
-                    } pods for streaming`
-                );
             }
 
             if (targetPods.length === 0) {
@@ -125,7 +108,6 @@ export default defineEventHandler(async (event) => {
 
                 // Validate pod data before processing
                 if (!podName) {
-                    console.warn("SSE: Skipping pod with no name:", pod);
                     return;
                 }
 
@@ -135,19 +117,12 @@ export default defineEventHandler(async (event) => {
 
                     // Validate container data before processing
                     if (!containerName) {
-                        console.warn(
-                            "SSE: Skipping container with no name in pod:",
-                            podName
-                        );
                         return;
                     }
 
                     streamPromises.push(
                         (async () => {
                             try {
-                                console.log(
-                                    `SSE: Creating log stream for ${podName}/${containerName}`
-                                );
                                 const logStream =
                                     await kubernetesManager.watchPodLogs(
                                         podName,
@@ -196,59 +171,22 @@ export default defineEventHandler(async (event) => {
                                                     `${logWithPrefix}\n\n`
                                                 );
                                             } catch (pushError) {
-                                                // Connection closed, stop processing
-                                                console.log(
-                                                    "SSE: Connection closed, stopping Kubernetes log stream"
-                                                );
                                                 isStreamClosed = true;
                                                 break;
                                             }
                                         }
                                     } catch (error) {
                                         // Silently handle log processing errors
-                                        console.error(
-                                            "SSE: Error processing log data:",
-                                            error
-                                        );
                                     }
                                 });
 
                                 logStream.on("error", async (error: Error) => {
-                                    // Only log non-404 errors (404 means pod disappeared, which is normal for jobs)
-                                    if (
-                                        !error.message.includes("404") &&
-                                        !error.message.includes("not found")
-                                    ) {
-                                        console.error(
-                                            "SSE: Kubernetes log stream error for",
-                                            podName,
-                                            containerName,
-                                            ":",
-                                            error
-                                        );
-                                    }
-                                    // Don't send 404 errors to client as they're expected for cron jobs
+                                    // Silently handle pod errors (404 means pod disappeared, normal for jobs)
                                 });
 
                                 return { podName, containerName, logStream };
                             } catch (error) {
-                                // Only log non-404 errors (404 means pod disappeared, which is normal for jobs)
-                                const errorMessage =
-                                    error instanceof Error
-                                        ? error.message
-                                        : String(error);
-                                if (
-                                    !errorMessage.includes("404") &&
-                                    !errorMessage.includes("not found")
-                                ) {
-                                    console.error(
-                                        "SSE: Failed to create stream for",
-                                        podName,
-                                        containerName,
-                                        ":",
-                                        error
-                                    );
-                                }
+                                // Silently handle stream creation errors
                                 return null;
                             }
                         })()
@@ -283,16 +221,12 @@ export default defineEventHandler(async (event) => {
                 );
             } catch (pushError) {
                 // Ignore push errors when connection is closed
-                console.log(
-                    "SSE: Failed to send error message, connection likely closed"
-                );
             }
         }
     };
 
     // Handle cleanup on close
     eventStream.onClosed(async () => {
-        console.log("SSE: Kubernetes log stream closed, cleaning up...");
         isStreamClosed = true;
 
         // Cleanup all log streams
@@ -305,10 +239,6 @@ export default defineEventHandler(async (event) => {
                     logStream.removeAllListeners();
                 } catch (error) {
                     // Ignore cleanup errors
-                    console.log(
-                        "SSE: Error during stream cleanup (expected):",
-                        error
-                    );
                 }
             }
         });
@@ -317,10 +247,6 @@ export default defineEventHandler(async (event) => {
             await eventStream.close();
         } catch (error) {
             // Ignore cleanup errors
-            console.log(
-                "SSE: Error during eventStream cleanup (expected):",
-                error
-            );
         }
     });
 

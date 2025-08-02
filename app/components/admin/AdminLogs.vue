@@ -242,7 +242,7 @@ const togglePause = () => {
     if (isPaused.value) {
         // Resume logs
         isPaused.value = false;
-        
+
         // Start smooth resume if there are buffered logs
         if (pauseBuffer.value.length > 0) {
             startSmoothResume();
@@ -250,14 +250,14 @@ const togglePause = () => {
     } else {
         // Pause logs
         isPaused.value = true;
-        
+
         // Clear any running smooth resume
         if (smoothResumeInterval.value) {
             clearInterval(smoothResumeInterval.value);
             smoothResumeInterval.value = null;
         }
     }
-    
+
     // Clear any leftover timers
     if (resumeTimeout.value) {
         clearTimeout(resumeTimeout.value);
