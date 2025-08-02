@@ -16,18 +16,17 @@
                 <AdminNavItem
                     :item="{ name: t('admin.nav.accessLogs'), path: 'access-logs', icon: 'heroicons:chart-bar' }"
                     :current-path="currentPath" @navigate="$emit('navigate', 'access-logs')" />
-                <AdminNavItem :item="{ name: t('admin.nav.traffic'), path: 'traffic', icon: 'heroicons:signal' }"
-                    :current-path="currentPath" @navigate="$emit('navigate', 'traffic')" />
                 <AdminNavItem
-                    :item="{ name: t('admin.nav.performance'), path: 'performance', icon: 'heroicons:cpu-chip' }"
-                    :current-path="currentPath" @navigate="$emit('navigate', 'performance')" />
+                    :item="{ name: t('admin.analytics.esi.title'), path: 'analytics/esi', icon: 'heroicons:key' }"
+                    :current-path="currentPath" @navigate="$emit('navigate', 'analytics/esi')" />
+                <AdminNavItem
+                    :item="{ name: t('admin.analytics.esiLogs.title'), path: 'analytics/esilogs', icon: 'heroicons:document-text' }"
+                    :current-path="currentPath" @navigate="$emit('navigate', 'analytics/esilogs')" />
             </div>
 
             <!-- System -->
             <div class="nav-section">
                 <h3 class="nav-section-title">{{ t('admin.sections.system') }}</h3>
-                <AdminNavItem :item="{ name: t('admin.nav.status'), path: 'status', icon: 'heroicons:heart' }"
-                    :current-path="currentPath" @navigate="$emit('navigate', 'status')" />
                 <AdminNavItem :item="{ name: t('admin.nav.queues'), path: 'queues', icon: 'heroicons:queue-list' }"
                     :current-path="currentPath" @navigate="$emit('navigate', 'queues')" />
                 <AdminNavItem :item="{ name: t('admin.nav.logs'), path: 'logs', icon: 'heroicons:document-text' }"

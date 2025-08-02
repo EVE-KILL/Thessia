@@ -60,7 +60,6 @@ export default defineEventHandler(async (event) => {
         // Get the model based on collection name
         // We need to map the lowercase collection name back to the proper model name
         const modelNameMap: Record<string, any> = {
-            accesslogstats: AccessLogStats,
             accesslogs: AccessLogs,
             alliances: Alliances,
             battles: Battles,

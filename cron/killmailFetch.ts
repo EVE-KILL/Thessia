@@ -164,7 +164,8 @@ export default {
                                             corporationId,
                                             page,
                                             characterName,
-                                            delayHours
+                                            delayHours,
+                                            characterId
                                         );
                                     killmails.push(...killmailsPage);
                                     page++;
@@ -406,7 +407,8 @@ async function getCorporationKillmails(
     corporationId: number,
     page = 1,
     characterName?: string,
-    killmailDelay?: number
+    killmailDelay?: number,
+    characterId?: number
 ): Promise<IKillmail[]> {
     try {
         const url = `${
@@ -421,7 +423,7 @@ async function getCorporationKillmails(
                 },
             },
             {
-                characterId: 0, // Corporation calls don't have a specific character
+                characterId: characterId || 0, // Use actual character ID if available
                 characterName: characterName || `Corporation ${corporationId}`,
                 dataType: "corporation_killmails",
                 source: "killmailFetch",

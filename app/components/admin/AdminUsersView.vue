@@ -18,8 +18,11 @@
         <div class="users-controls">
             <div class="search-container">
                 <Icon name="heroicons:magnifying-glass" class="search-icon" />
-                <input v-model="searchQuery" type="text" :placeholder="t('admin.users.search')" class="search-input"
-                    @input="debouncedSearch" />
+                <input v-model="searchQuery" type="text" :placeholder="t('admin.users.search')" class="search-input" />
+                <button v-if="searchQuery" @click="clearSearch" class="search-clear-btn"
+                    :title="t('admin.users.clearSearch')">
+                    <Icon name="heroicons:x-mark" class="clear-icon" />
+                </button>
             </div>
 
             <div class="controls-right">
@@ -66,7 +69,9 @@
                             </div>
                         </div>
                         <div class="user-info">
-                            <h4 class="character-name">{{ user.characterName }}</h4>
+                            <NuxtLink :to="`/character/${user.characterId}`" class="character-name-link">
+                                <h4 class="character-name">{{ user.characterName }}</h4>
+                            </NuxtLink>
                             <div class="character-id">ID: {{ user.characterId }}</div>
                             <div class="last-active">
                                 {{ t('admin.users.lastChecked') }}: {{ formatDate(user.lastChecked) }}
@@ -76,40 +81,12 @@
 
                     <!-- User Details -->
                     <div class="user-details">
-                        <!-- Corporation Info -->
-                        <div class="entity-info corporation-info" v-if="userCorporations[user.characterId]">
-                            <div class="entity-avatar">
-                                <img :src="`https://images.evetech.net/corporations/${userCorporations[user.characterId].corporation_id}/logo?size=32`"
-                                    :alt="userCorporations[user.characterId].name" class="corp-image"
-                                    @error="handleImageError" />
-                            </div>
-                            <div class="entity-details">
-                                <div class="entity-name">{{ userCorporations[user.characterId].name || 'Unknown Corp' }}
-                                </div>
-                                <div class="entity-type">{{ t('admin.users.corporation') }}</div>
-                            </div>
-                        </div>
-
-                        <!-- Alliance Info -->
-                        <div class="entity-info alliance-info" v-if="userAlliances[user.characterId]">
-                            <div class="entity-avatar">
-                                <img :src="`https://images.evetech.net/alliances/${userAlliances[user.characterId].alliance_id}/logo?size=32`"
-                                    :alt="userAlliances[user.characterId].name" class="alliance-image"
-                                    @error="handleImageError" />
-                            </div>
-                            <div class="entity-details">
-                                <div class="entity-name">{{ userAlliances[user.characterId].name || 'Unknown Alliance'
-                                }}</div>
-                                <div class="entity-type">{{ t('admin.users.alliance') }}</div>
-                            </div>
-                        </div>
-
                         <!-- User Stats -->
                         <div class="user-stats">
                             <div class="stat-item">
                                 <Icon name="heroicons:key" class="stat-icon" />
                                 <span class="stat-label">{{ t('admin.users.scopes') }}:</span>
-                                <span class="stat-value">{{ user.scopes.length }}</span>
+                                <span class="stat-value">{{ getUserScopesCount(user.scopes) }}</span>
                             </div>
                             <div class="stat-item">
                                 <Icon name="heroicons:calendar" class="stat-icon" />
@@ -167,26 +144,26 @@
 
         <!-- Pagination -->
         <div v-if="data && data.pagination.totalPages > 1" class="pagination">
-            <button @click="changePage(1)" :disabled="!data.pagination.hasPrev" class="pagination-btn">
+            <button @click="changePage(1)" :disabled="!data.pagination.hasPrevPage" class="pagination-btn">
                 {{ t('admin.users.first') }}
             </button>
-            <button @click="changePage(data.pagination.page - 1)" :disabled="!data.pagination.hasPrev"
+            <button @click="changePage(data.pagination.currentPage - 1)" :disabled="!data.pagination.hasPrevPage"
                 class="pagination-btn">
                 {{ t('admin.users.prev') }}
             </button>
 
             <span class="pagination-info">
                 {{ t('admin.users.pageInfo', {
-                    current: data.pagination.page,
+                    current: data.pagination.currentPage,
                     total: data.pagination.totalPages
                 }) }}
             </span>
 
-            <button @click="changePage(data.pagination.page + 1)" :disabled="!data.pagination.hasNext"
+            <button @click="changePage(data.pagination.currentPage + 1)" :disabled="!data.pagination.hasNextPage"
                 class="pagination-btn">
                 {{ t('admin.users.next') }}
             </button>
-            <button @click="changePage(data.pagination.totalPages)" :disabled="!data.pagination.hasNext"
+            <button @click="changePage(data.pagination.totalPages)" :disabled="!data.pagination.hasNextPage"
                 class="pagination-btn">
                 {{ t('admin.users.last') }}
             </button>
@@ -245,10 +222,12 @@
 
                         <!-- Scopes Section -->
                         <div class="detail-section">
-                            <h4 class="section-title">{{ t('admin.users.scopes') }} ({{ selectedUser.scopes.length }})
+                            <h4 class="section-title">{{ t('admin.users.scopes') }} ({{
+                                getUserScopesCount(selectedUser.scopes) }})
                             </h4>
                             <div class="scopes-list">
-                                <span v-for="scope in selectedUser.scopes" :key="scope" class="scope-tag">
+                                <span v-for="scope in getUserScopesArray(selectedUser.scopes)" :key="scope"
+                                    class="scope-tag">
                                     {{ scope }}
                                 </span>
                             </div>
@@ -278,18 +257,19 @@ interface UsersResponse {
     success: boolean;
     data: any[];
     pagination: {
-        page: number;
-        limit: number;
-        total: number;
+        currentPage: number;
         totalPages: number;
-        hasNext: boolean;
-        hasPrev: boolean;
+        totalCount: number;
+        hasNextPage: boolean;
+        hasPrevPage: boolean;
+        limit: number;
     };
     meta: {
-        collection: string;
+        searchTerm: string | null;
+        adminsOnly: boolean;
         sortField: string;
-        sortOrder: string;
-        searchQuery: string;
+        order: string;
+        timestamp: string;
     };
 }
 
@@ -297,6 +277,7 @@ const { t } = useI18n();
 
 // Reactive state
 const searchQuery = ref('');
+const debouncedSearchQuery = ref('');
 const pageSize = ref(25);
 const currentPage = ref(1);
 const sortField = ref('lastChecked');
@@ -307,77 +288,27 @@ const showAdminsOnly = ref(false);
 const showUserModal = ref(false);
 const selectedUser = ref<any>(null);
 
-// Reactive data for corporation and alliance info
-const userCorporations = ref<Record<number, any>>({});
-const userAlliances = ref<Record<number, any>>({});
-
-// Character/corp/alliance lookup cache
-const characterCache = ref(new Map());
-const corporationCache = ref(new Map());
-const allianceCache = ref(new Map());
-
-// Enhanced character/corp/alliance lookup functions
-const getCharacterInfo = async (characterId: number) => {
-    if (characterCache.value.has(characterId)) {
-        return characterCache.value.get(characterId);
+// Helper function to handle scopes data
+const getUserScopesCount = (scopes: any): number => {
+    if (!scopes) return 0;
+    if (typeof scopes === 'string') {
+        return scopes.trim() ? scopes.split(' ').length : 0;
     }
-
-    try {
-        const character = await $fetch(`/api/admin/database/characters/data?search=${characterId}&limit=1`);
-        const characterData = character.data?.[0];
-        if (characterData) {
-            characterCache.value.set(characterId, characterData);
-            return characterData;
-        }
-    } catch (error) {
-        console.error('Failed to fetch character data:', error);
+    if (Array.isArray(scopes)) {
+        return scopes.length;
     }
-
-    return null;
+    return 0;
 };
 
-const getCorporationInfo = async (user: any) => {
-    const character = await getCharacterInfo(user.characterId);
-    if (!character?.corporation_id) return null;
-
-    if (corporationCache.value.has(character.corporation_id)) {
-        return corporationCache.value.get(character.corporation_id);
+const getUserScopesArray = (scopes: any): string[] => {
+    if (!scopes) return [];
+    if (typeof scopes === 'string') {
+        return scopes.trim() ? scopes.split(' ') : [];
     }
-
-    try {
-        const corporation = await $fetch(`/api/admin/database/corporations/data?search=${character.corporation_id}&limit=1`);
-        const corpData = corporation.data?.[0];
-        if (corpData) {
-            corporationCache.value.set(character.corporation_id, corpData);
-            return corpData;
-        }
-    } catch (error) {
-        console.error('Failed to fetch corporation data:', error);
+    if (Array.isArray(scopes)) {
+        return scopes;
     }
-
-    return null;
-};
-
-const getAllianceInfo = async (user: any) => {
-    const character = await getCharacterInfo(user.characterId);
-    if (!character?.alliance_id) return null;
-
-    if (allianceCache.value.has(character.alliance_id)) {
-        return allianceCache.value.get(character.alliance_id);
-    }
-
-    try {
-        const alliance = await $fetch(`/api/admin/database/alliances/data?search=${character.alliance_id}&limit=1`);
-        const allianceData = alliance.data?.[0];
-        if (allianceData) {
-            allianceCache.value.set(character.alliance_id, allianceData);
-            return allianceData;
-        }
-    } catch (error) {
-        console.error('Failed to fetch alliance data:', error);
-    }
-
-    return null;
+    return [];
 };
 
 // Computed API endpoint
@@ -385,15 +316,19 @@ const apiEndpoint = computed(() => {
     const params = new URLSearchParams({
         page: currentPage.value.toString(),
         limit: pageSize.value.toString(),
-        sort: sortField.value,
+        sortField: sortField.value,
         order: sortOrder.value,
     });
 
-    if (searchQuery.value.trim()) {
-        params.set('search', searchQuery.value.trim());
+    if (debouncedSearchQuery.value.trim()) {
+        params.set('search', debouncedSearchQuery.value.trim());
     }
 
-    return `/api/admin/database/users/data?${params.toString()}`;
+    if (showAdminsOnly.value) {
+        params.set('adminsOnly', 'true');
+    }
+
+    return `/api/admin/users?${params.toString()}`;
 });
 
 // Fetch data
@@ -403,68 +338,44 @@ const { data, pending, error, refresh: refreshData } = useAsyncData(
     {
         lazy: true,
         server: false,
-        watch: [apiEndpoint],
+        watch: [currentPage, pageSize, sortField, sortOrder, showAdminsOnly],
     }
 );
 
-// Load corporation and alliance data when users change
-watch(data, async (newData) => {
-    if (newData?.data) {
-        await loadEntityData(newData.data);
-    }
-}, { immediate: true });
+// Debounced search functionality similar to navbar search
+// Create a debounced function that updates the search query used by the API
+const updateDebouncedSearch = debounce(() => {
+    debouncedSearchQuery.value = searchQuery.value;
+    currentPage.value = 1; // Reset to first page on search
+}, 500);
 
-// Function to load corporation and alliance data for users
-const loadEntityData = async (users: any[]) => {
-    const corporationPromises = [];
-    const alliancePromises = [];
+// Watch the immediate search input and debounce the actual API search
+watch(searchQuery, () => {
+    updateDebouncedSearch();
+});
 
-    for (const user of users) {
-        // Load corporation data
-        corporationPromises.push(
-            getCorporationInfo(user).then(corp => {
-                if (corp) {
-                    userCorporations.value[user.characterId] = corp;
-                }
-            })
-        );
+// Watch the debounced search query to trigger API calls
+watch(debouncedSearchQuery, () => {
+    refreshData();
+});
 
-        // Load alliance data
-        alliancePromises.push(
-            getAllianceInfo(user).then(alliance => {
-                if (alliance) {
-                    userAlliances.value[user.characterId] = alliance;
-                }
-            })
-        );
-    }
-
-    await Promise.allSettled([...corporationPromises, ...alliancePromises]);
-};
-
-// Filtered users based on admin toggle
+// Filtered users - now handled server-side via API
 const filteredUsers = computed(() => {
-    if (!data.value?.data) return [];
-
-    let users = [...data.value.data];
-
-    if (showAdminsOnly.value) {
-        users = users.filter(user => user.administrator);
-    }
-
-    return users;
+    return data.value?.data || [];
 });
 
 // Helper functions
-const debouncedSearch = debounce(() => {
-    currentPage.value = 1;
-}, 500);
-
 const changePage = (page: number) => {
     currentPage.value = page;
 };
 
 const handlePageSizeChange = () => {
+    currentPage.value = 1;
+};
+
+const clearSearch = () => {
+    searchQuery.value = '';
+    debouncedSearchQuery.value = '';
     currentPage.value = 1;
 };
 
@@ -641,6 +552,33 @@ function debounce<T extends (...args: any[]) => any>(func: T, wait: number): (..
     color: rgb(156, 163, 175);
 }
 
+.search-clear-btn {
+    position: absolute;
+    right: 0.75rem;
+    top: 50%;
+    transform: translateY(-50%);
+    background: none;
+    border: none;
+    color: rgb(156, 163, 175);
+    cursor: pointer;
+    padding: 0.25rem;
+    border-radius: 0.25rem;
+    transition: color 0.15s ease-in-out;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.search-clear-btn:hover {
+    color: white;
+    background: rgba(255, 255, 255, 0.1);
+}
+
+.clear-icon {
+    width: 1rem;
+    height: 1rem;
+}
+
 .controls-right {
     display: flex;
     align-items: center;
@@ -806,6 +744,16 @@ function debounce<T extends (...args: any[]) => any>(func: T, wait: number): (..
     white-space: nowrap;
 }
 
+.character-name-link {
+    text-decoration: none;
+    color: inherit;
+    transition: color 0.15s ease-in-out;
+}
+
+.character-name-link:hover .character-name {
+    color: rgb(96, 165, 250);
+}
+
 .character-id,
 .last-active {
     font-size: 0.75rem;
@@ -815,49 +763,6 @@ function debounce<T extends (...args: any[]) => any>(func: T, wait: number): (..
 
 .user-details {
     padding: 1rem;
-}
-
-.entity-info {
-    display: flex;
-    align-items: center;
-    gap: 0.75rem;
-    margin-bottom: 0.75rem;
-    padding: 0.5rem;
-    background: rgba(0, 0, 0, 0.2);
-    border-radius: 0.375rem;
-}
-
-.entity-avatar {
-    flex-shrink: 0;
-}
-
-.corp-image,
-.alliance-image {
-    width: 32px;
-    height: 32px;
-    border-radius: 0.25rem;
-    border: 1px solid rgb(55, 55, 55);
-}
-
-.entity-details {
-    flex: 1;
-    min-width: 0;
-}
-
-.entity-name {
-    font-weight: 500;
-    color: white;
-    font-size: 0.875rem;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-}
-
-.entity-type {
-    font-size: 0.75rem;
-    color: rgb(156, 163, 175);
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
 }
 
 .user-stats {

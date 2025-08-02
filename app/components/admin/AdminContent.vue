@@ -6,12 +6,11 @@
         <!-- Other admin views can be added here -->
         <AdminOverview v-else-if="currentPath === 'overview'" />
         <AdminAccessLogs v-else-if="currentPath === 'access-logs'" />
-        <AdminTraffic v-else-if="currentPath === 'traffic'" />
-        <AdminPerformance v-else-if="currentPath === 'performance'" />
-        <AdminStatus v-else-if="currentPath === 'status'" />
         <AdminQueues v-else-if="currentPath === 'queues'" />
         <AdminLogs v-else-if="currentPath === 'logs'" />
         <AdminUsersView v-else-if="currentPath === 'users'" />
+        <AdminAnalyticsESI v-else-if="currentPath === 'analytics/esi'" />
+        <AdminAnalyticsESILogs v-else-if="currentPath === 'analytics/esilogs'" />
         <AdminSettings v-else-if="currentPath === 'settings'" />
 
         <!-- Default placeholder for unimplemented sections -->
@@ -59,6 +58,7 @@ const currentPageTitle = computed(() => {
         'queues': t('admin.pages.queues'),
         'logs': t('admin.pages.logs'),
         'users': t('admin.pages.users'),
+        'analytics/esi': t('admin.analytics.esi.title'),
         'settings': t('admin.pages.settings'),
         'database': t('admin.pages.database'),
     };

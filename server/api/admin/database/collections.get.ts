@@ -55,7 +55,6 @@ export default defineEventHandler(async (event) => {
 
         // Model name mapping to collection names
         const modelToCollectionMap: Record<string, string> = {
-            AccessLogStats: "accesslogstats",
             AccessLogs: "accesslogs",
             Alliances: "alliances",
             Battles: "battles",

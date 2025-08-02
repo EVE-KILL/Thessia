@@ -42,6 +42,12 @@ const userSchema = new Schema<IUserDocument>(
 
 // Primary indexes
 userSchema.index({ characterId: 1 }, { unique: true });
+userSchema.index({ uniqueIdentifier: 1 });
+userSchema.index({ administrator: 1 });
+userSchema.index({ lastChecked: -1 });
+
+// Text index for searching by character name
+userSchema.index({ characterName: "text" });
 
 export const Users: Model<IUserDocument> = model<IUserDocument>(
     "users",

@@ -152,7 +152,6 @@ const handleNavigation = (path: string) => {
     align-items: center;
     justify-content: center;
     min-height: 100vh;
-    background: rgba(0, 0, 0, 0.4);
     border-radius: 0.5rem;
 }
 
@@ -183,7 +182,6 @@ const handleNavigation = (path: string) => {
 
 /* Sidebar Styles */
 .admin-sidebar {
-    background: rgba(0, 0, 0, 0.4);
     border-radius: 0.5rem;
     padding: 1.5rem;
     height: fit-content;
@@ -193,7 +191,6 @@ const handleNavigation = (path: string) => {
 
 /* Main Content Area Styles */
 .admin-main {
-    background: rgba(0, 0, 0, 0.4);
     border-radius: 0.5rem;
     display: flex;
     flex-direction: column;

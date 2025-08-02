@@ -65,7 +65,6 @@ export default defineEventHandler(async (event) => {
 
         // Get the model based on collection name using the same mapping as data.get.ts
         const modelNameMap: Record<string, any> = {
-            accesslogstats: AccessLogStats,
             accesslogs: AccessLogs,
             alliances: Alliances,
             battles: Battles,
