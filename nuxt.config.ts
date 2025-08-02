@@ -122,6 +122,41 @@ export default defineNuxtConfig({
         config: "lightningcss.config.ts", // Use our custom config file
     },
 
+    // Vite configuration for bundle optimization
+    vite: {
+        build: {
+            rollupOptions: {
+                output: {
+                    manualChunks: {
+                        // Separate vendor chunks for better caching (client-safe only)
+                        "vue-vendor": ["vue", "vue-router"],
+                        charts: ["echarts", "vue-echarts"],
+                        utils: ["date-fns", "marked", "dompurify"],
+                        "eve-specific": ["moment", "moment-timezone"], // EVE-specific utilities
+                    },
+                },
+            },
+        },
+        // Optimize dependencies (exclude server-side only packages)
+        optimizeDeps: {
+            include: ["vue", "vue-router", "echarts"],
+            exclude: [
+                // Exclude Node.js/server-side packages that caused issues before
+                "mongoose",
+                "ioredis",
+                "bullmq",
+                "amqplib",
+                "neo4j-driver",
+                "jsonwebtoken",
+                "discord.js",
+                "commander",
+                "chalk",
+                "@nuxt/ui", // Exclude Nuxt UI as it has server-side dependencies
+                "@nuxt/kit", // Exclude Nuxt kit modules
+            ],
+        },
+    },
+
     colorMode: {
         classSuffix: "",
         storage: "localStorage",
