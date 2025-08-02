@@ -7,8 +7,6 @@
 
         <!-- Cluster Overview -->
         <div class="overview-section">
-            <h2 class="section-title">{{ $t('admin.kubernetes.overview.title') }}</h2>
-
             <div v-if="overviewLoading" class="loading-spinner">
                 <UIcon name="heroicons:arrow-path" class="animate-spin" />
                 {{ $t('admin.kubernetes.loading') }}
@@ -153,7 +151,7 @@ const fetchOverview = async () => {
         overviewLoading.value = true;
         overviewError.value = null;
 
-        const { data } = await $fetch<ClusterOverview>('/api/admin/kubernetes/overview');
+        const data = await $fetch<ClusterOverview>('/api/admin/kubernetes/overview');
         overview.value = data;
     } catch (error) {
         console.error('Failed to fetch cluster overview:', error);
@@ -264,26 +262,26 @@ onMounted(() => {
 }
 
 .overview-card {
-    background-color: #ffffff;
+    background: rgba(0, 0, 0, 0.3);
+    border: 1px solid rgb(55, 55, 55);
     border-radius: 0.5rem;
-    border: 1px solid #e5e7eb;
     padding: 1.5rem;
 }
 
 .dark .overview-card {
-    background-color: #1f2937;
-    border-color: #374151;
+    background: rgba(0, 0, 0, 0.3);
+    border-color: rgb(55, 55, 55);
 }
 
 .overview-card h3 {
     font-size: 1rem;
     font-weight: 500;
-    color: #111827;
+    color: #6b7280;
     margin-bottom: 1rem;
 }
 
 .dark .overview-card h3 {
-    color: #ffffff;
+    color: white;
 }
 
 .stats-grid {
@@ -299,22 +297,22 @@ onMounted(() => {
 .stat-label {
     display: block;
     font-size: 0.875rem;
-    color: #6b7280;
+    color: rgb(156, 163, 175);
 }
 
 .dark .stat-label {
-    color: #9ca3af;
+    color: rgb(156, 163, 175);
 }
 
 .stat-value {
     display: block;
     font-size: 1.5rem;
-    font-weight: 700;
-    color: #111827;
+    font-weight: 600;
+    color: #6b7280;
 }
 
 .dark .stat-value {
-    color: #ffffff;
+    color: white;
 }
 
 .status-grid,
@@ -331,66 +329,80 @@ onMounted(() => {
     align-items: center;
     padding: 0.5rem;
     border-radius: 0.375rem;
+    background: rgba(0, 0, 0, 0.3);
+    border: 1px solid rgb(55, 55, 55);
 }
 
 .status-running {
-    background-color: #dcfce7;
-    color: #166534;
+    background: rgba(34, 197, 94, 0.2);
+    border-color: rgba(34, 197, 94, 0.3);
+    color: rgb(34, 197, 94);
 }
 
 .dark .status-running {
-    background-color: rgba(21, 128, 61, 0.2);
-    color: #4ade80;
+    background: rgba(34, 197, 94, 0.2);
+    border-color: rgba(34, 197, 94, 0.3);
+    color: rgb(34, 197, 94);
 }
 
 .status-pending {
-    background-color: #fef3c7;
-    color: #92400e;
+    background: rgba(234, 179, 8, 0.2);
+    border-color: rgba(234, 179, 8, 0.3);
+    color: rgb(234, 179, 8);
 }
 
 .dark .status-pending {
-    background-color: rgba(180, 83, 9, 0.2);
-    color: #fbbf24;
+    background: rgba(234, 179, 8, 0.2);
+    border-color: rgba(234, 179, 8, 0.3);
+    color: rgb(234, 179, 8);
 }
 
 .status-failed {
-    background-color: #fee2e2;
-    color: #991b1b;
+    background: rgba(239, 68, 68, 0.2);
+    border-color: rgba(239, 68, 68, 0.3);
+    color: rgb(239, 68, 68);
 }
 
 .dark .status-failed {
-    background-color: rgba(127, 29, 29, 0.2);
-    color: #f87171;
+    background: rgba(239, 68, 68, 0.2);
+    border-color: rgba(239, 68, 68, 0.3);
+    color: rgb(239, 68, 68);
 }
 
 .status-unknown {
-    background-color: #f3f4f6;
-    color: #1f2937;
+    background: rgba(156, 163, 175, 0.2);
+    border-color: rgba(156, 163, 175, 0.3);
+    color: rgb(156, 163, 175);
 }
 
 .dark .status-unknown {
-    background-color: #374151;
-    color: #9ca3af;
+    background: rgba(156, 163, 175, 0.2);
+    border-color: rgba(156, 163, 175, 0.3);
+    color: rgb(156, 163, 175);
 }
 
 .health-healthy {
-    background-color: #dcfce7;
-    color: #166534;
+    background: rgba(34, 197, 94, 0.2);
+    border-color: rgba(34, 197, 94, 0.3);
+    color: rgb(34, 197, 94);
 }
 
 .dark .health-healthy {
-    background-color: rgba(21, 128, 61, 0.2);
-    color: #4ade80;
+    background: rgba(34, 197, 94, 0.2);
+    border-color: rgba(34, 197, 94, 0.3);
+    color: rgb(34, 197, 94);
 }
 
 .health-unhealthy {
-    background-color: #fee2e2;
-    color: #991b1b;
+    background: rgba(239, 68, 68, 0.2);
+    border-color: rgba(239, 68, 68, 0.3);
+    color: rgb(239, 68, 68);
 }
 
 .dark .health-unhealthy {
-    background-color: rgba(127, 29, 29, 0.2);
-    color: #f87171;
+    background: rgba(239, 68, 68, 0.2);
+    border-color: rgba(239, 68, 68, 0.3);
+    color: rgb(239, 68, 68);
 }
 
 .resources-section {

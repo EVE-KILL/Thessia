@@ -21,25 +21,29 @@ export class KubernetesManager {
 
         this.kc = new k8s.KubeConfig();
 
-        // Load configuration from cluster (when running in-cluster) or local kubeconfig
-        // For development, try local kubeconfig first
+        // Try loading configuration - prefer in-cluster if available, fallback to local
         try {
-            this.kc.loadFromDefault();
-            cliLogger.info("Loaded Kubernetes config from default location");
-        } catch (defaultError) {
-            cliLogger.warn(
-                `Failed to load from default kubeconfig: ${defaultError}`
-            );
-            // Only try in-cluster if local config failed
-            try {
+            // Check if we're in a Kubernetes cluster
+            if (process.env.KUBERNETES_SERVICE_HOST) {
+                cliLogger.info(
+                    "Detected in-cluster environment, loading in-cluster config"
+                );
                 this.kc.loadFromCluster();
                 cliLogger.info("Loaded Kubernetes config from cluster");
-            } catch (clusterError) {
-                cliLogger.error(
-                    `Failed to load Kubernetes configuration from any source. Default: ${defaultError}, Cluster: ${clusterError}`
+            } else {
+                cliLogger.info(
+                    "Detected local environment, loading from default location"
                 );
-                throw new Error("Unable to load Kubernetes configuration");
+                this.kc.loadFromDefault();
+                cliLogger.info(
+                    "Loaded Kubernetes config from default location"
+                );
             }
+        } catch (error) {
+            cliLogger.error(
+                `Failed to load Kubernetes configuration: ${error}`
+            );
+            throw new Error("Unable to load Kubernetes configuration");
         }
 
         // Debug information about the loaded config
@@ -116,47 +120,31 @@ export class KubernetesManager {
             cliLogger.info(`Testing with context: ${currentContext}`);
             cliLogger.info(`Testing server: ${cluster?.server}`);
 
-            // Test API client creation and basic call step by step
-            cliLogger.info("Testing CoreV1Api client...");
+            // Test API connectivity with a simple call
+            const response = await this.coreV1Api.listNamespace();
+            cliLogger.info(
+                `Cluster connectivity test successful. Found ${response.items.length} namespaces`
+            );
 
-            // Try a very simple API call first
+            // Test namespace access
             try {
-                const response = await this.coreV1Api.listNamespace();
+                await this.coreV1Api.readNamespace({
+                    name: this.namespace,
+                });
                 cliLogger.info(
-                    `Cluster connectivity test successful. Found ${response.items.length} namespaces`
+                    `Namespace '${this.namespace}' exists and is accessible`
                 );
-
-                // Test namespace access
-                try {
-                    await this.coreV1Api.readNamespace({
-                        name: this.namespace,
-                    });
-                    cliLogger.info(
-                        `Namespace '${this.namespace}' exists and is accessible`
-                    );
-                } catch (nsError) {
-                    cliLogger.warn(
-                        `Namespace '${this.namespace}' may not exist or is not accessible: ${nsError}`
-                    );
-                }
-
-                return { success: true, message: "Connection successful" };
-            } catch (apiError) {
-                cliLogger.error(`API call failed: ${apiError}`);
-                if (apiError instanceof Error) {
-                    cliLogger.error(`API error message: ${apiError.message}`);
-                    cliLogger.error(`API error stack: ${apiError.stack}`);
-                }
-                throw apiError;
+            } catch (nsError) {
+                cliLogger.warn(
+                    `Namespace '${this.namespace}' may not exist or is not accessible: ${nsError}`
+                );
             }
+
+            return { success: true, message: "Connection successful" };
         } catch (error) {
             cliLogger.error(
                 `Kubernetes cluster connectivity test failed: ${error}`
             );
-            if (error instanceof Error) {
-                cliLogger.error(`Error details: ${error.message}`);
-                cliLogger.error(`Error stack: ${error.stack}`);
-            }
             return {
                 success: false,
                 error: error instanceof Error ? error.message : String(error),
