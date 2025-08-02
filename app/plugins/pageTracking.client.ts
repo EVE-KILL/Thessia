@@ -152,13 +152,5 @@ export default defineNuxtPlugin(() => {
 
         window.addEventListener("beforeunload", beforeUnloadHandler);
         window.addEventListener("pagehide", beforeUnloadHandler);
-
-        // Cleanup on unmount
-        onBeforeUnmount(() => {
-            clearInterval(flushInterval);
-            if (flushTimer) clearTimeout(flushTimer);
-            window.removeEventListener("beforeunload", beforeUnloadHandler);
-            window.removeEventListener("pagehide", beforeUnloadHandler);
-        });
     }
 });

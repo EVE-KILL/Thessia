@@ -1,61 +1,117 @@
 <template>
     <div class="ship-stats-container">
         <!-- Loading state with skeleton -->
-        <div v-if="loading" class="ship-stats-grid">
-            <!-- Column 1 skeleton -->
-            <div class="ship-stats-column">
-                <div class="skeleton-table">
-                    <div class="skeleton-header bg-gray-200 dark:bg-gray-700 animate-pulse h-10 rounded-t"></div>
-                    <div v-for="i in 8" :key="`skeleton-1-${i}`"
-                        class="skeleton-row flex items-center p-2 border-b border-gray-200 dark:border-gray-600">
-                        <div class="flex-1">
-                            <div class="h-4 bg-gray-200 dark:bg-gray-700 rounded animate-pulse"
-                                :style="`width: ${60 + Math.random() * 30}%`"></div>
+        <ClientOnly>
+            <div v-if="loading" class="ship-stats-grid">
+                <!-- Column 1 skeleton -->
+                <div class="ship-stats-column">
+                    <div class="skeleton-table">
+                        <div class="skeleton-header bg-gray-200 dark:bg-gray-700 animate-pulse h-10 rounded-t"></div>
+                        <div v-for="i in 8" :key="`skeleton-1-${i}`"
+                            class="skeleton-row flex items-center p-2 border-b border-gray-200 dark:border-gray-600">
+                            <div class="flex-1">
+                                <div class="h-4 bg-gray-200 dark:bg-gray-700 rounded animate-pulse"
+                                    :style="`width: ${60 + Math.random() * 30}%`"></div>
+                            </div>
+                            <div class="w-12 text-right">
+                                <div class="h-4 w-8 bg-gray-200 dark:bg-gray-700 rounded animate-pulse ml-auto"></div>
+                            </div>
                         </div>
-                        <div class="w-12 text-right">
-                            <div class="h-4 w-8 bg-gray-200 dark:bg-gray-700 rounded animate-pulse ml-auto"></div>
+                    </div>
+                </div>
+
+                <!-- Column 2 skeleton -->
+                <div class="ship-stats-column">
+                    <div class="skeleton-table">
+                        <div class="skeleton-header bg-gray-200 dark:bg-gray-700 animate-pulse h-10 rounded-t"></div>
+                        <div v-for="i in 8" :key="`skeleton-2-${i}`"
+                            class="skeleton-row flex items-center p-2 border-b border-gray-200 dark:border-gray-600">
+                            <div class="flex-1">
+                                <div class="h-4 bg-gray-200 dark:bg-gray-700 rounded animate-pulse"
+                                    :style="`width: ${60 + Math.random() * 30}%`"></div>
+                            </div>
+                            <div class="w-12 text-right">
+                                <div class="h-4 w-8 bg-gray-200 dark:bg-gray-700 rounded animate-pulse ml-auto"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Column 3 skeleton -->
+                <div class="ship-stats-column">
+                    <div class="skeleton-table">
+                        <div class="skeleton-header bg-gray-200 dark:bg-gray-700 animate-pulse h-10 rounded-t"></div>
+                        <div v-for="i in 8" :key="`skeleton-3-${i}`"
+                            class="skeleton-row flex items-center p-2 border-b border-gray-200 dark:border-gray-600">
+                            <div class="flex-1">
+                                <div class="h-4 bg-gray-200 dark:bg-gray-700 rounded animate-pulse"
+                                    :style="`width: ${60 + Math.random() * 30}%`"></div>
+                            </div>
+                            <div class="w-12 text-right">
+                                <div class="h-4 w-8 bg-gray-200 dark:bg-gray-700 rounded animate-pulse ml-auto"></div>
+                            </div>
                         </div>
                     </div>
                 </div>
             </div>
 
-            <!-- Column 2 skeleton -->
-            <div class="ship-stats-column">
-                <div class="skeleton-table">
-                    <div class="skeleton-header bg-gray-200 dark:bg-gray-700 animate-pulse h-10 rounded-t"></div>
-                    <div v-for="i in 8" :key="`skeleton-2-${i}`"
-                        class="skeleton-row flex items-center p-2 border-b border-gray-200 dark:border-gray-600">
-                        <div class="flex-1">
-                            <div class="h-4 bg-gray-200 dark:bg-gray-700 rounded animate-pulse"
-                                :style="`width: ${60 + Math.random() * 30}%`"></div>
+            <template #fallback>
+                <!-- Fallback skeleton with fixed widths to prevent hydration mismatch -->
+                <div v-if="loading" class="ship-stats-grid">
+                    <div class="ship-stats-column">
+                        <div class="skeleton-table">
+                            <div class="skeleton-header bg-gray-200 dark:bg-gray-700 animate-pulse h-10 rounded-t">
+                            </div>
+                            <div v-for="i in 8" :key="`fallback-skeleton-1-${i}`"
+                                class="skeleton-row flex items-center p-2 border-b border-gray-200 dark:border-gray-600">
+                                <div class="flex-1">
+                                    <div class="h-4 bg-gray-200 dark:bg-gray-700 rounded animate-pulse w-3/4"></div>
+                                </div>
+                                <div class="w-12 text-right">
+                                    <div class="h-4 w-8 bg-gray-200 dark:bg-gray-700 rounded animate-pulse ml-auto">
+                                    </div>
+                                </div>
+                            </div>
                         </div>
-                        <div class="w-12 text-right">
-                            <div class="h-4 w-8 bg-gray-200 dark:bg-gray-700 rounded animate-pulse ml-auto"></div>
+                    </div>
+                    <div class="ship-stats-column">
+                        <div class="skeleton-table">
+                            <div class="skeleton-header bg-gray-200 dark:bg-gray-700 animate-pulse h-10 rounded-t">
+                            </div>
+                            <div v-for="i in 8" :key="`fallback-skeleton-2-${i}`"
+                                class="skeleton-row flex items-center p-2 border-b border-gray-200 dark:border-gray-600">
+                                <div class="flex-1">
+                                    <div class="h-4 bg-gray-200 dark:bg-gray-700 rounded animate-pulse w-3/4"></div>
+                                </div>
+                                <div class="w-12 text-right">
+                                    <div class="h-4 w-8 bg-gray-200 dark:bg-gray-700 rounded animate-pulse ml-auto">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="ship-stats-column">
+                        <div class="skeleton-table">
+                            <div class="skeleton-header bg-gray-200 dark:bg-gray-700 animate-pulse h-10 rounded-t">
+                            </div>
+                            <div v-for="i in 8" :key="`fallback-skeleton-3-${i}`"
+                                class="skeleton-row flex items-center p-2 border-b border-gray-200 dark:border-gray-600">
+                                <div class="flex-1">
+                                    <div class="h-4 bg-gray-200 dark:bg-gray-700 rounded animate-pulse w-3/4"></div>
+                                </div>
+                                <div class="w-12 text-right">
+                                    <div class="h-4 w-8 bg-gray-200 dark:bg-gray-700 rounded animate-pulse ml-auto">
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
-            </div>
-
-            <!-- Column 3 skeleton -->
-            <div class="ship-stats-column">
-                <div class="skeleton-table">
-                    <div class="skeleton-header bg-gray-200 dark:bg-gray-700 animate-pulse h-10 rounded-t"></div>
-                    <div v-for="i in 8" :key="`skeleton-3-${i}`"
-                        class="skeleton-row flex items-center p-2 border-b border-gray-200 dark:border-gray-600">
-                        <div class="flex-1">
-                            <div class="h-4 bg-gray-200 dark:bg-gray-700 rounded animate-pulse"
-                                :style="`width: ${60 + Math.random() * 30}%`"></div>
-                        </div>
-                        <div class="w-12 text-right">
-                            <div class="h-4 w-8 bg-gray-200 dark:bg-gray-700 rounded animate-pulse ml-auto"></div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
+            </template>
+        </ClientOnly>
 
         <!-- Actual data -->
-        <div v-else-if="stats.shipGroupStats && stats.shipGroupStats.length > 0" class="ship-stats-grid">
+        <div v-if="!loading && stats.shipGroupStats && stats.shipGroupStats.length > 0" class="ship-stats-grid">
             <!-- Column 1 -->
             <div class="ship-stats-column">
                 <Table :columns="tableColumns" :items="shipGroups[0]" :density="'compact'" :striped="false"
@@ -151,7 +207,7 @@
         </div>
 
         <!-- Empty state -->
-        <div v-else-if="!loading" class="empty-state">
+        <div v-if="!loading && (!stats.shipGroupStats || stats.shipGroupStats.length === 0)" class="empty-state">
             {{ t('advancedview.no_ship_stats') }}
         </div>
     </div>

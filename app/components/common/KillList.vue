@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import moment from "moment";
-import { computed } from 'vue';
+import { computed, getCurrentInstance, onBeforeUnmount } from 'vue';
 
 const { t, locale } = useI18n();
 const currentLocale = computed(() => locale.value);
@@ -688,6 +688,9 @@ onMounted(() => {
 });
 
 onBeforeUnmount(() => {
+    // Check if we're actually in a Vue component context
+    if (!getCurrentInstance()) return;
+
     window.removeEventListener('resize', updateAllFades);
 
     // Clean up tooltip event listeners
@@ -1048,7 +1051,7 @@ onUpdated(() => {
                         <!-- System/Region Info -->
                         <div class="text-xs">
                             <span>{{ item.system_name }} / {{ getLocalizedString(item.region_name, currentLocale)
-                                }}</span>
+                            }}</span>
                             <span class="ml-1">(</span>
                             <span :class="getSecurityColor(item.system_security)">
                                 {{ item.system_security.toFixed(1) }}
