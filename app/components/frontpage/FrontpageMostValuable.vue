@@ -143,7 +143,7 @@ const isPriorityImage = (index: number): boolean => {
 </script>
 
 <template>
-    <div class="flex flex-col min-w-full rounded-lg overflow-hidden min-h-[350px] bg-white dark:bg-background-900">
+    <div class="flex flex-col min-w-full rounded-lg overflow-hidden min-h-[350px] bg-transparent">
         <Tabs v-model="activeTabId" :items="tabItemsForTabsComponent" :ui="tabsUi" class="w-full" color="neutral"
             :keepAliveContent="true" />
 
