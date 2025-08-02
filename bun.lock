@@ -34,6 +34,7 @@
         "node-gyp": "^11.3.0",
         "nuxt": "^4.0.2",
         "nuxt-security": "2.3.0",
+        "ofetch": "^1.4.1",
         "server-health": "^6.0.2",
         "sharp": "^0.34.3",
         "stream-json": "^1.9.1",
