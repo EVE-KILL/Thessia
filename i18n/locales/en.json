@@ -1867,6 +1867,31 @@
                 }
             }
         },
+        "logs": {
+            "title": "System Logs",
+            "description": "View real-time logs from all Kubernetes pods",
+            "loading": "Loading system logs...",
+            "error": "Failed to load system logs",
+            "retry": "Retry",
+            "refresh": "Refresh",
+            "noData": "No log data available",
+            "noLogs": "No logs available for this pod",
+            "linesPerPod": "Lines per pod",
+            "autoRefresh": "Auto-refresh",
+            "autoScroll": "Auto-scroll to top",
+            "refreshInterval": "Refresh interval",
+            "second": "second",
+            "seconds": "seconds",
+            "minute": "minute",
+            "minutes": "minutes",
+            "totalPods": "Total pods",
+            "selectedPod": "Selected pod",
+            "selectedPods": "Selected pods",
+            "selectPod": "Select pod",
+            "selectPods": "Select pods",
+            "allPods": "All pods",
+            "lastUpdate": "Last updated"
+        },
         "kubernetes": {
             "title": "Kubernetes Management",
             "description": "Manage Kubernetes resources in the eve-kill namespace",

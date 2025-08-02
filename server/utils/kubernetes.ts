@@ -105,6 +105,133 @@ export class KubernetesManager {
     }
 
     /**
+     * Get pod logs with timestamps
+     */
+    async getPodLogsWithTimestamps(
+        podName: string,
+        lines: number = 100,
+        follow: boolean = false,
+        container?: string
+    ) {
+        try {
+            const logParams: any = {
+                name: podName,
+                namespace: this.namespace,
+                follow,
+                tailLines: lines,
+                timestamps: true, // This is the key - get Kubernetes timestamps
+            };
+
+            // Add container parameter if specified
+            if (container) {
+                logParams.container = container;
+            }
+
+            const response = await this.coreV1Api.readNamespacedPodLog(
+                logParams
+            );
+            return response;
+        } catch (error) {
+            cliLogger.error(
+                `Failed to get pod logs with timestamps for ${podName}: ${error}`
+            );
+            throw error;
+        }
+    }
+
+    /**
+     * Watch pod logs in real-time with streaming (simplified approach using polling)
+     */
+    async watchPodLogs(
+        podName: string,
+        namespace?: string,
+        options: {
+            follow?: boolean;
+            tailLines?: number;
+            timestamps?: boolean;
+            container?: string;
+            signal?: AbortSignal;
+        } = {}
+    ) {
+        const {
+            follow = true,
+            tailLines = 10, // Use smaller chunks for frequent polling
+            timestamps = true,
+            container,
+            signal,
+        } = options;
+
+        const targetNamespace = namespace || this.namespace;
+
+        // For now, we'll create a simple EventEmitter-like object that polls
+        // In the future, this could be enhanced to use true Kubernetes watch streams
+        const { EventEmitter } = await import("events");
+        const emitter = new EventEmitter();
+        let intervalId: NodeJS.Timeout | null = null;
+        let lastLogLines: string[] = [];
+
+        const pollLogs = async () => {
+            try {
+                const logs = await this.getPodLogsWithTimestamps(
+                    podName,
+                    tailLines,
+                    false,
+                    container
+                );
+
+                const currentLines = logs
+                    .split("\n")
+                    .filter((line) => line.trim());
+
+                // Find new lines by comparing with previous fetch
+                const newLines = currentLines.filter(
+                    (line) => !lastLogLines.includes(line)
+                );
+
+                if (newLines.length > 0) {
+                    // Emit new log data
+                    emitter.emit(
+                        "data",
+                        Buffer.from(newLines.join("\n") + "\n")
+                    );
+                }
+
+                lastLogLines = currentLines;
+            } catch (error) {
+                emitter.emit("error", error);
+            }
+        };
+
+        if (follow) {
+            // Start polling every 2 seconds
+            intervalId = setInterval(pollLogs, 2000);
+
+            // Initial poll
+            pollLogs();
+        }
+
+        // Handle abort signal
+        if (signal) {
+            signal.addEventListener("abort", () => {
+                if (intervalId) {
+                    clearInterval(intervalId);
+                }
+                emitter.emit("close");
+            });
+        }
+
+        // Add cleanup method
+        (emitter as any).destroy = () => {
+            if (intervalId) {
+                clearInterval(intervalId);
+            }
+            emitter.emit("close");
+        };
+
+        return emitter;
+    }
+
+    /**
      * Get pod logs
      */
     async getPodLogs(
