@@ -42,6 +42,9 @@
                     :current-path="currentPath" @navigate="$emit('navigate', 'users')" />
                 <AdminNavItem :item="{ name: t('admin.nav.apiKeys'), path: 'api-keys', icon: 'heroicons:key' }"
                     :current-path="currentPath" @navigate="$emit('navigate', 'api-keys')" />
+                <AdminNavItem
+                    :item="{ name: t('admin.nav.customPrices'), path: 'custom-prices', icon: 'heroicons:currency-dollar' }"
+                    :current-path="currentPath" @navigate="$emit('navigate', 'custom-prices')" />
 
                 <!-- Database Management with dropdown -->
                 <div class="nav-item-container">

@@ -424,3 +424,96 @@ Always use the standard styling classes defined in the Styling Guidelines sectio
 1. Increase `debounceMs` for slower networks
 2. Increase `minLength` to reduce unnecessary API calls
 3. Consider implementing result caching in your API
+
+### Styling Issues with Vue Component Scoping
+
+When using the Search component within other Vue components with scoped styles, you may encounter issues where custom styling doesn't apply properly due to Vue's scoped CSS isolation. Here's how to resolve this:
+
+#### Problem
+
+The Search component uses its own scoped styles, which prevents parent component styles from affecting the input and dropdown elements, even when using `input-class` and `dropdown-class` props.
+
+#### Solution: Using `:deep()` Selectors
+
+Use Vue's `:deep()` pseudo-class to penetrate component scoping and style child component elements:
+
+```vue
+<template>
+  <Search
+    v-model="searchQuery"
+    :placeholder="t('searchItemPlaceholder')"
+    :api-url="(query) => `/api/search/${encodeURIComponent(query)}`"
+    :transform-response="transformResponse"
+    :result-name="(result) => result.name"
+    wrapper-class="w-full"
+    input-class="w-full"
+    dropdown-class="search-dropdown w-full"
+    @select="handleSelection"
+  />
+</template>
+
+<style scoped>
+/* Override Search component input styling */
+:deep(.search-component input) {
+    padding: 0.75rem !important;
+    background-color: rgb(23, 23, 23) !important;
+    border: 1px solid rgb(55, 55, 55) !important;
+    border-radius: 0.375rem !important;
+    color: white !important;
+    font-size: 0.875rem !important;
+}
+
+:deep(.search-component input:focus) {
+    outline: none !important;
+    border-color: rgb(59, 130, 246) !important;
+}
+
+/* Override Search component dropdown styling */
+:deep(.search-dropdown) {
+    background-color: rgb(23, 23, 23) !important;
+    border: 1px solid rgb(55, 55, 55) !important;
+    border-radius: 0.375rem !important;
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3), 0 4px 6px -2px rgba(0, 0, 0, 0.1) !important;
+}
+
+:deep(.search-dropdown a) {
+    color: rgb(243, 244, 246) !important;
+    background-color: transparent !important;
+}
+
+:deep(.search-dropdown a:hover) {
+    background-color: rgb(55, 55, 55) !important;
+    color: white !important;
+}
+</style>
+```
+
+#### Key Points for `:deep()` Usage
+
+1. **Use `!important`**: Required to override component's internal styles
+2. **Target specific classes**: Use `.search-component` or your custom `dropdown-class` to target elements
+3. **Include all states**: Don't forget `:focus`, `:hover`, and other pseudo-states
+4. **Match existing theme**: Use consistent colors and spacing from your design system
+
+#### Alternative: CSS Custom Properties
+
+For more maintainable theming, consider using CSS custom properties:
+
+```vue
+<style scoped>
+:deep(.search-component) {
+    --search-bg-color: rgb(23, 23, 23);
+    --search-border-color: rgb(55, 55, 55);
+    --search-text-color: white;
+    --search-focus-color: rgb(59, 130, 246);
+}
+
+:deep(.search-component input) {
+    background-color: var(--search-bg-color) !important;
+    border-color: var(--search-border-color) !important;
+    color: var(--search-text-color) !important;
+}
+</style>
+```
+
+This approach allows for easier theme customization and better maintainability across different components.

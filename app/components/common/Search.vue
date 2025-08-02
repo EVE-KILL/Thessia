@@ -4,8 +4,8 @@
             <!-- Default input implementation -->
             <div class="relative">
                 <input :value="modelValue" @input="handleInput" @keydown="handleKeyDown" @focus="handleFocus"
-                    @blur="handleBlur" :placeholder="placeholder" :disabled="disabled" :class="inputClass"
-                    class="w-full" />
+                    @blur="handleBlur" :placeholder="placeholder" :disabled="disabled"
+                    :class="inputClass || 'w-full'" />
                 <div v-if="showClearButton && modelValue" @click="clearSearch"
                     class="absolute right-2 top-1/2 transform -translate-y-1/2 cursor-pointer text-gray-400 hover:text-gray-600">
                     <UIcon name="lucide:x" class="w-4 h-4" />
@@ -14,8 +14,10 @@
         </slot>
 
         <!-- Dropdown -->
-        <div v-if="showDropdown && (hasResults || isLoading || hasError)" :class="dropdownClass"
-            class="absolute z-50 mt-1">
+        <div v-if="showDropdown && (hasResults || isLoading || hasError)" :class="[
+            'absolute z-50 mt-1',
+            dropdownClass || 'bg-white border border-gray-300 rounded-md shadow-lg'
+        ]">
 
             <!-- Loading State -->
             <slot name="loading" v-bind="slotProps" v-if="isLoading">
@@ -148,6 +150,7 @@ const error = ref<any>(null)
 const showDropdown = ref(false)
 const highlightedIndex = ref(-1)
 const debounceTimeout = ref<NodeJS.Timeout>()
+const isUserTyping = ref(false)
 
 // Computed
 const hasResults = computed(() => results.value.length > 0)
@@ -185,7 +188,10 @@ const slotProps = computed(() => ({
 
 // Watchers
 watch(() => props.modelValue, (newValue) => {
-    searchValue.value = newValue
+    if (searchValue.value !== newValue) {
+        isUserTyping.value = false // Reset when value is set programmatically
+        searchValue.value = newValue
+    }
 })
 
 watch(searchValue, (newValue) => {
@@ -200,6 +206,7 @@ watch(showDropdown, (visible) => {
 // Methods
 const handleInput = (event: Event) => {
     const target = event.target as HTMLInputElement
+    isUserTyping.value = true
     searchValue.value = target.value
 }
 
@@ -229,9 +236,8 @@ const handleKeyDown = (event: KeyboardEvent) => {
 }
 
 const handleFocus = () => {
-    if (searchValue.value && hasResults.value) {
-        showDropdown.value = true
-    }
+    // Don't automatically show dropdown on focus
+    // Only show when user starts typing
     emit('focus')
 }
 
@@ -319,7 +325,7 @@ const performSearch = async (query: string = searchValue.value) => {
         }
 
         results.value = searchResults
-        showDropdown.value = searchResults.length > 0
+        showDropdown.value = searchResults.length > 0 && isUserTyping.value
         highlightedIndex.value = -1
 
     } catch (err) {
@@ -333,6 +339,7 @@ const performSearch = async (query: string = searchValue.value) => {
 }
 
 const selectResult = (result: any) => {
+    isUserTyping.value = false
     emit('select', result)
 
     if (props.closeOnSelect) {

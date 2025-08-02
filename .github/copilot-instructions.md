@@ -45,6 +45,20 @@ This project uses:
 
 -   Use **Lucide Icons** for all icons.
 -   Use **Simple Icons** for SVG icons.
+-   Use the **common Image component** for EVE Online related images (character portraits, corporation logos, alliance logos, item icons, ship renders, etc.)
+    -   Use `type="character"` for character portraits
+    -   Use `type="corporation"` for corporation logos
+    -   Use `type="alliance"` for alliance logos
+    -   Use `type="type-icon"` for item/ship icons
+    -   Use `type="type-render"` for ship renders
+    -   Pass the appropriate ID and size props
+
+## Currency and ISK Formatting
+
+-   Use the **formatIsk utility** for displaying ISK values in the UI
+-   The utility automatically formats large numbers with B/M/K suffixes
+-   Import is automatic due to auto-imports configuration
+-   Use regular number inputs for form fields, but display formatted values in tables and readonly contexts
 
 ## CSS and Styling
 
