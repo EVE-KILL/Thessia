@@ -160,7 +160,7 @@ export default defineNuxtConfig({
 
     // Modules with automatic TypeScript support
     modules: [
-        "nuxt-lightningcss",
+        // "nuxt-lightningcss", // Disabled: Rust module causing x86 build issues
         "nuxt-security",
         "@nuxt/ui",
         "@nuxt/icon",
@@ -173,11 +173,11 @@ export default defineNuxtConfig({
         "@vueuse/nuxt",
     ],
 
-    // LightningCSS module configuration
-    lightningcss: {
-        minify: true, // Enable minification in production
-        config: "lightningcss.config.ts", // Use our custom config file
-    },
+    // LightningCSS module configuration - DISABLED
+    // lightningcss: {
+    //     minify: true, // Enable minification in production
+    //     config: "lightningcss.config.ts", // Use our custom config file
+    // },
 
     // Security module configuration
     security: {
