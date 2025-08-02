@@ -316,18 +316,21 @@ export default defineEventHandler(async (event) => {
             $match: {
                 timestamp: { $gte: thirtyDaysAgo },
                 dataType: { $in: ["killmails", "corporation_killmails"] },
-                newItemsCount: { $gt: 0 }
-            }
+                newItemsCount: { $gt: 0 },
+            },
         },
         {
             $group: {
                 _id: null,
-                totalNewKillmails: { $sum: "$newItemsCount" }
-            }
-        }
+                totalNewKillmails: { $sum: "$newItemsCount" },
+            },
+        },
     ]);
 
-    const newKillmailsLast30Days = newKillmailsResult.length > 0 ? newKillmailsResult[0].totalNewKillmails : 0;
+    const newKillmailsLast30Days =
+        newKillmailsResult.length > 0
+            ? newKillmailsResult[0].totalNewKillmails
+            : 0;
 
     // Calculate summary statistics
     const summary = {

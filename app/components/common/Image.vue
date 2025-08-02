@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onBeforeUnmount, onMounted, ref } from "vue";
+import { computed, getCurrentInstance, onBeforeUnmount, onMounted, ref } from "vue";
 
 const eveImages = useEveImages();
 const { isMobile } = useResponsive();
@@ -439,6 +439,9 @@ onMounted(() => {
 });
 
 onBeforeUnmount(() => {
+    // Check if we're actually in a Vue component context
+    if (!getCurrentInstance()) return;
+
     if (import.meta.client) {
         // Clean up observer with better error handling
         if (observer) {
@@ -466,7 +469,6 @@ onBeforeUnmount(() => {
             window.removeEventListener("scroll", checkVisibility);
             window.removeEventListener("resize", checkVisibility);
         }
-        window.removeEventListener("resize", checkVisibility);
     }
 });
 

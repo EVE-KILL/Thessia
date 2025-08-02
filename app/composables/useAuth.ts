@@ -19,11 +19,24 @@ export interface UserData {
  * Composable for handling EVE Online authentication
  */
 export function useAuth() {
-    // Access global auth state
-    const authenticated = useState<boolean>("auth.authenticated");
-    const loading = useState<boolean>("auth.loading");
-    const user = useState<UserData>("auth.user");
-    const authError = useState<string | null>("auth.error");
+    // Access global auth state with proper defaults
+    const authenticated = useState<boolean>("auth.authenticated", () => false);
+    const loading = useState<boolean>("auth.loading", () => false);
+    const user = useState<UserData>("auth.user", () => ({
+        characterId: null,
+        characterName: null,
+        corporationName: null,
+        corporationId: null,
+        allianceName: null,
+        allianceId: null,
+        scopes: [],
+        canFetchCorporationKillmails: false,
+        dateExpiration: null,
+        administrator: false,
+        killmailDelay: 0,
+        uniqueIdentifier: null,
+    }));
+    const authError = useState<string | null>("auth.error", () => null);
 
     /**
      * Check/refresh the user's authentication status

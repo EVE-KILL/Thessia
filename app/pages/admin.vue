@@ -1,46 +1,57 @@
 <template>
     <div class="admin-layout">
         <!-- Loading state while checking authentication -->
-        <div v-if="!isAuthenticated || !isAdministrator" class="admin-loading">
-            <div class="loading-container">
-                <Icon name="lucide:loader-2" class="loading-icon animate-spin" />
-                <p class="loading-text">{{ t('admin.authentication.checking') }}</p>
+        <ClientOnly>
+            <div v-if="!isAuthenticated || !isAdministrator" class="admin-loading">
+                <div class="loading-container">
+                    <Icon name="lucide:loader-2" class="loading-icon animate-spin" />
+                    <p class="loading-text">{{ t('admin.authentication.checking') }}</p>
+                </div>
             </div>
-        </div>
 
-        <!-- Main Content Area - Only show when authenticated and admin -->
-        <div v-else class="admin-content">
-            <!-- Sidebar Navigation (20%) -->
-            <aside class="admin-sidebar">
-                <AdminNavigation :current-path="currentPath" @navigate="handleNavigation" />
-            </aside>
+            <!-- Main Content Area - Only show when authenticated and admin -->
+            <div v-else class="admin-content">
+                <!-- Sidebar Navigation (20%) -->
+                <aside class="admin-sidebar">
+                    <AdminNavigation :current-path="currentPath" @navigate="handleNavigation" />
+                </aside>
 
-            <!-- Content Area (80%) -->
-            <main class="admin-main">
-                <!-- Content Header -->
-                <div class="admin-header">
-                    <div class="header-content">
-                        <div class="header-info">
-                            <nav class="breadcrumb">
-                                <span class="breadcrumb-item">{{ t('admin.navigation') }}</span>
-                                <Icon name="heroicons:chevron-right" class="breadcrumb-separator" />
-                                <span v-for="(crumb, index) in breadcrumbs" :key="index" class="breadcrumb-item"
-                                    :class="{ 'breadcrumb-current': index === breadcrumbs.length - 1 }">
-                                    {{ crumb }}
-                                    <Icon v-if="index < breadcrumbs.length - 1" name="heroicons:chevron-right"
-                                        class="breadcrumb-separator" />
-                                </span>
-                            </nav>
+                <!-- Content Area (80%) -->
+                <main class="admin-main">
+                    <!-- Content Header -->
+                    <div class="admin-header">
+                        <div class="header-content">
+                            <div class="header-info">
+                                <nav class="breadcrumb">
+                                    <span class="breadcrumb-item">{{ t('admin.navigation') }}</span>
+                                    <Icon name="heroicons:chevron-right" class="breadcrumb-separator" />
+                                    <span v-for="(crumb, index) in breadcrumbs" :key="index" class="breadcrumb-item"
+                                        :class="{ 'breadcrumb-current': index === breadcrumbs.length - 1 }">
+                                        {{ crumb }}
+                                        <Icon v-if="index < breadcrumbs.length - 1" name="heroicons:chevron-right"
+                                            class="breadcrumb-separator" />
+                                    </span>
+                                </nav>
+                            </div>
                         </div>
                     </div>
-                </div>
 
-                <!-- Content Body -->
-                <div class="admin-body">
-                    <AdminContent :current-path="currentPath" />
+                    <!-- Content Body -->
+                    <div class="admin-body">
+                        <AdminContent :current-path="currentPath" />
+                    </div>
+                </main>
+            </div>
+
+            <template #fallback>
+                <div class="admin-loading">
+                    <div class="loading-container">
+                        <Icon name="lucide:loader-2" class="loading-icon animate-spin" />
+                        <p class="loading-text">{{ t('admin.authentication.checking') }}</p>
+                    </div>
                 </div>
-            </main>
-        </div>
+            </template>
+        </ClientOnly>
     </div>
 </template>
 
