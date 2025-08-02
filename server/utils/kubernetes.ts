@@ -46,16 +46,8 @@ export class KubernetesManager {
             throw new Error("Unable to load Kubernetes configuration");
         }
 
-        // Debug information about the loaded config
-        const currentContext = this.kc.getCurrentContext();
-        const cluster = this.kc.getCurrentCluster();
-        const user = this.kc.getCurrentUser();
-
-        cliLogger.info(`Current context: ${currentContext}`);
-        cliLogger.info(`Cluster server: ${cluster?.server}`);
-        cliLogger.info(`User name: ${user?.name}`);
-
         // Validate that we have the necessary configuration
+        const cluster = this.kc.getCurrentCluster();
         if (!cluster?.server) {
             throw new Error("No cluster server found in kubeconfig");
         }
@@ -63,7 +55,6 @@ export class KubernetesManager {
         // Validate URL format
         try {
             new URL(cluster.server);
-            cliLogger.info(`Cluster server URL is valid: ${cluster.server}`);
         } catch (urlError) {
             cliLogger.error(
                 `Cluster server URL is invalid: ${cluster.server} - ${urlError}`
@@ -76,7 +67,6 @@ export class KubernetesManager {
             if (process.env.KUBERNETES_SERVICE_HOST) {
                 // Set reject unauthorized to false for in-cluster connections
                 process.env.NODE_TLS_REJECT_UNAUTHORIZED = "0";
-                cliLogger.info("Disabled SSL verification for in-cluster connection");
             }
 
             // Initialize API clients
@@ -88,20 +78,6 @@ export class KubernetesManager {
             this.batchV1Api = this.kc.makeApiClient(k8s.BatchV1Api);
 
             cliLogger.info("Kubernetes API clients initialized successfully");
-
-            // Test the API client configuration immediately
-            const cluster = this.kc.getCurrentCluster();
-            if (cluster?.server) {
-                cliLogger.info(
-                    `API clients configured for server: ${cluster.server}`
-                );
-
-                // Log some internal client details for debugging
-                const coreApiBase = (this.coreV1Api as any).basePath;
-                if (coreApiBase) {
-                    cliLogger.info(`CoreV1Api base path: ${coreApiBase}`);
-                }
-            }
         } catch (error) {
             cliLogger.error(
                 `Failed to initialize Kubernetes API clients: ${error}`
@@ -114,72 +90,16 @@ export class KubernetesManager {
     }
 
     /**
-     * Test connectivity to the Kubernetes cluster
-     */
-    async testConnection() {
-        try {
-            cliLogger.info("Testing Kubernetes cluster connectivity...");
-
-            // Get configuration details
-            const currentContext = this.kc.getCurrentContext();
-            const cluster = this.kc.getCurrentCluster();
-
-            cliLogger.info(`Testing with context: ${currentContext}`);
-            cliLogger.info(`Testing server: ${cluster?.server}`);
-
-            // Test API connectivity with a simple call
-            const response = await this.coreV1Api.listNamespace();
-            cliLogger.info(
-                `Cluster connectivity test successful. Found ${response.items.length} namespaces`
-            );
-
-            // Test namespace access
-            try {
-                await this.coreV1Api.readNamespace({
-                    name: this.namespace,
-                });
-                cliLogger.info(
-                    `Namespace '${this.namespace}' exists and is accessible`
-                );
-            } catch (nsError) {
-                cliLogger.warn(
-                    `Namespace '${this.namespace}' may not exist or is not accessible: ${nsError}`
-                );
-            }
-
-            return { success: true, message: "Connection successful" };
-        } catch (error) {
-            cliLogger.error(
-                `Kubernetes cluster connectivity test failed: ${error}`
-            );
-            return {
-                success: false,
-                error: error instanceof Error ? error.message : String(error),
-            };
-        }
-    }
-
-    /**
      * Get all pods in the namespace
      */
     async getPods() {
         try {
-            cliLogger.debug(
-                `Attempting to get pods from namespace: ${this.namespace}`
-            );
             const response = await this.coreV1Api.listNamespacedPod({
                 namespace: this.namespace,
             });
-            cliLogger.debug(
-                `Successfully retrieved ${response.items.length} pods`
-            );
             return response.items;
         } catch (error) {
             cliLogger.error(`Failed to get pods: ${error}`);
-            if (error instanceof Error) {
-                cliLogger.error(`Error details: ${error.message}`);
-                cliLogger.error(`Error stack: ${error.stack}`);
-            }
             throw error;
         }
     }
