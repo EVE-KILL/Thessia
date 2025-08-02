@@ -10,27 +10,18 @@
             <!-- Basic Search Input -->
             <div class="bg-zinc-900 border border-zinc-700 rounded-lg p-6 mb-6">
                 <div class="mb-4">
-                    <Search 
-                        v-model="searchTerm"
-                        :api-url="(query) => `/api/search/${encodeURIComponent(query)}`"
-                        :api-params="{ limit: 10 }"
-                        :transform-response="(response) => response?.hits || []"
+                    <Search v-model="searchTerm" :api-url="(query) => `/api/search/${encodeURIComponent(query)}`"
+                        :api-params="{ limit: 10 }" :transform-response="(response) => response?.hits || []"
                         :result-key="(result) => `${result.type}-${result.id}`"
                         placeholder="Search for pilots, corporations, alliances, or ships..."
-                        loading-text="Searching..."
-                        no-results-text="No results found"
-                        :close-on-select="false"
+                        loading-text="Searching..." no-results-text="No results found" :close-on-select="false"
                         wrapper-class="relative"
                         dropdown-class="bg-zinc-800 border border-zinc-600 rounded-lg shadow-lg max-h-64 overflow-y-auto w-full"
                         @select="handleSearchSelect">
-                        
+
                         <!-- Custom input slot -->
                         <template #input="{ modelValue, updateQuery }">
-                            <input 
-                                :value="modelValue" 
-                                @input="updateQuery"
-                                @focus="() => {}"
-                                type="text"
+                            <input :value="modelValue" @input="updateQuery" @focus="() => { }" type="text"
                                 placeholder="Search for pilots, corporations, alliances, or ships..."
                                 class="w-full px-4 py-3 bg-zinc-800 border border-zinc-600 rounded-lg text-zinc-100 placeholder-zinc-400 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none" />
                         </template>
@@ -62,16 +53,18 @@
                                         <div class="flex items-center gap-3">
                                             <!-- Image for different types -->
                                             <div class="flex-shrink-0">
-                                                <Image v-if="result.type === 'character'" type="character" :id="result.id"
-                                                    :alt="result.name" size="32" class="w-8 h-8" :rounded="true" />
+                                                <Image v-if="result.type === 'character'" type="character"
+                                                    :id="result.id" :alt="result.name" size="32" class="w-8 h-8"
+                                                    :rounded="true" />
                                                 <Image v-else-if="result.type === 'corporation'" type="corporation"
                                                     :id="result.id" :alt="result.name" size="32" class="w-8 h-8"
                                                     :rounded="true" />
                                                 <Image v-else-if="result.type === 'alliance'" type="alliance"
                                                     :id="result.id" :alt="result.name" size="32" class="w-8 h-8"
                                                     :rounded="true" />
-                                                <Image v-else-if="result.type === 'ship'" type="type-icon" :id="result.id"
-                                                    :alt="result.name" size="32" class="w-8 h-8" :rounded="true" />
+                                                <Image v-else-if="result.type === 'ship'" type="type-icon"
+                                                    :id="result.id" :alt="result.name" size="32" class="w-8 h-8"
+                                                    :rounded="true" />
                                                 <Image v-else-if="result.type === 'item'" type="item" :id="result.id"
                                                     :name="result.name" :alt="result.name" size="32" class="w-8 h-8"
                                                     :rounded="true" />
@@ -166,8 +159,8 @@
                     <div class="lg:col-span-1">
                         <h4 class="text-sm font-semibold text-zinc-300 mb-3">Active Filters</h4>
                         <div class="bg-zinc-800 border border-zinc-600 rounded-lg p-3 max-h-72 overflow-y-auto">
-                            <pre
-                                class="text-xs text-zinc-200 font-mono whitespace-pre-wrap">{{ formattedQueryWithoutProjection }}</pre>
+                            <pre class="text-xs text-zinc-200 font-mono whitespace-pre-wrap">{{ formattedQueryWithoutProjection }}
+                </pre>
                         </div>
                     </div>
 
@@ -398,8 +391,8 @@
                     <!-- Results Container -->
                     <div v-if="queryResult && queryResult.length > 0"
                         class="bg-zinc-800 border border-zinc-600 rounded-lg p-4">
-                        <KillList :externalKilllistData="transformedQueryResult || []" :limit="25" :enablePagination="false"
-                            wsDisabled />
+                        <KillList :externalKilllistData="transformedQueryResult || []" :limit="25"
+                            :enablePagination="false" wsDisabled />
                     </div>
 
                     <!-- No results message -->

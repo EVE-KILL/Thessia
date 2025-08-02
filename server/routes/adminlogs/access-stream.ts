@@ -36,6 +36,7 @@ export default defineEventHandler(async (event) => {
     // Set up variables for cleanup
     let intervalId: NodeJS.Timeout | null = null;
     let lastObjectId: any = null;
+    let isStreamClosed = false;
 
     // Extract filters from query parameters
     const filters: any = {};
@@ -137,76 +138,185 @@ export default defineEventHandler(async (event) => {
     // Start the access log streaming
     const setupAccessLogStreaming = async () => {
         try {
-            // Send initial batch of recent logs (last 50)
+            // Check if stream is already closed
+            if (isStreamClosed) return;
+
+            // Send initial batch of recent logs (last 50) with timeout
             const recentLogs = await AccessLogs.find()
                 .sort({ _id: -1 }) // Sort by _id descending (newest first)
                 .limit(50)
-                .lean();
+                .maxTimeMS(10000) // 10 second timeout for initial load
+                .lean()
+                .exec();
 
-            if (recentLogs.length > 0) {
+            if (recentLogs.length > 0 && !isStreamClosed) {
                 // Send logs in chronological order (oldest first)
                 const chronologicalLogs = recentLogs.reverse();
 
                 for (const log of chronologicalLogs) {
-                    const logLine = formatAccessLogEntry(log);
-                    await eventStream.push(`${logLine}\n\n`);
+                    // Check if stream is closed before each push
+                    if (isStreamClosed) break;
+
+                    try {
+                        const logLine = formatAccessLogEntry(log);
+                        await eventStream.push(`${logLine}\n\n`);
+                    } catch (pushError) {
+                        // Connection closed
+                        console.log(
+                            "SSE: Connection closed during initial batch"
+                        );
+                        isStreamClosed = true;
+                        break;
+                    }
                 }
 
                 // Update last _id to the most recent log (last in chronological array)
-                lastObjectId =
-                    chronologicalLogs[chronologicalLogs.length - 1]._id;
+                if (!isStreamClosed) {
+                    lastObjectId =
+                        chronologicalLogs[chronologicalLogs.length - 1]._id;
+                }
             }
 
             // Set up interval to check for new logs
             intervalId = setInterval(async () => {
+                // Check if stream is closed to prevent unnecessary work
+                if (isStreamClosed) {
+                    if (intervalId) {
+                        clearInterval(intervalId);
+                        intervalId = null;
+                    }
+                    return;
+                }
+
                 try {
                     const mongoFilter = buildMongoFilter();
 
+                    // Add timeout to MongoDB query to prevent hanging
                     const newLogs = await AccessLogs.find(mongoFilter)
                         .sort({ _id: 1 }) // Ascending order by _id for new logs
                         .limit(100) // Limit to prevent overwhelming
-                        .lean();
+                        .maxTimeMS(5000) // 5 second timeout
+                        .lean()
+                        .exec();
 
-                    if (newLogs.length > 0) {
+                    if (newLogs.length > 0 && !isStreamClosed) {
                         for (const log of newLogs) {
-                            const logLine = formatAccessLogEntry(log);
-                            await eventStream.push(`${logLine}\n\n`);
+                            // Check if stream is still open before pushing
+                            if (isStreamClosed) break;
+
+                            try {
+                                const logLine = formatAccessLogEntry(log);
+                                await eventStream.push(`${logLine}\n\n`);
+                            } catch (pushError) {
+                                // Connection closed, stop processing
+                                console.log(
+                                    "SSE: Connection closed, stopping log stream"
+                                );
+                                isStreamClosed = true;
+                                break;
+                            }
                         }
 
                         // Update last _id to the newest log processed
-                        lastObjectId = newLogs[newLogs.length - 1]._id;
+                        if (!isStreamClosed) {
+                            lastObjectId = newLogs[newLogs.length - 1]._id;
+                        }
                     }
                 } catch (error) {
-                    console.error(
-                        "SSE: Error fetching new access logs:",
-                        error
-                    );
+                    if (!isStreamClosed) {
+                        console.error(
+                            "SSE: Error fetching new access logs:",
+                            error
+                        );
+
+                        // If it's a serious database error, close the stream
+                        if (
+                            error instanceof Error &&
+                            (error.message.includes("timeout") ||
+                                error.message.includes("connection") ||
+                                error.message.includes("disconnected"))
+                        ) {
+                            console.log("SSE: Database error, closing stream");
+                            isStreamClosed = true;
+                            try {
+                                await eventStream.push(
+                                    `data: ${JSON.stringify({
+                                        type: "error",
+                                        message:
+                                            "Database connection error, please refresh",
+                                    })}\n\n`
+                                );
+                            } catch (pushError) {
+                                // Ignore push errors when connection is closed
+                            }
+                        }
+                    }
                 }
             }, 1000); // Check every second
         } catch (error) {
             console.error("SSE: Error setting up access log streaming:", error);
-            await eventStream.push(
-                `data: ${JSON.stringify({
-                    type: "error",
-                    message: `Failed to set up access log streaming: ${
-                        error instanceof Error ? error.message : "Unknown error"
-                    }`,
-                })}\n\n`
-            );
+            isStreamClosed = true;
+
+            try {
+                await eventStream.push(
+                    `data: ${JSON.stringify({
+                        type: "error",
+                        message: `Failed to set up access log streaming: ${
+                            error instanceof Error
+                                ? error.message
+                                : "Unknown error"
+                        }`,
+                    })}\n\n`
+                );
+            } catch (pushError) {
+                // Ignore push errors when connection is closed
+                console.log(
+                    "SSE: Failed to send error message, connection likely closed"
+                );
+            }
         }
     };
 
     // Handle cleanup on close
     eventStream.onClosed(async () => {
+        console.log("SSE: Access log stream closed, cleaning up...");
+        isStreamClosed = true;
+
         if (intervalId) {
             clearInterval(intervalId);
             intervalId = null;
         }
-        await eventStream.close();
+
+        try {
+            await eventStream.close();
+        } catch (error) {
+            // Ignore cleanup errors
+            console.log("SSE: Error during cleanup (expected):", error);
+        }
     });
 
-    // Start the access log streaming setup
-    setupAccessLogStreaming();
+    // Start the access log streaming setup with error handling
+    setupAccessLogStreaming().catch((error) => {
+        console.error("SSE: Fatal error in setupAccessLogStreaming:", error);
+        isStreamClosed = true;
+
+        // Try to send error to client
+        eventStream
+            .push(
+                `data: ${JSON.stringify({
+                    type: "error",
+                    message: `Fatal streaming error: ${
+                        error instanceof Error ? error.message : "Unknown error"
+                    }`,
+                })}\n\n`
+            )
+            .catch(() => {
+                // Ignore if we can't send the error
+                console.log(
+                    "SSE: Could not send fatal error to client, connection likely closed"
+                );
+            });
+    });
 
     return eventStream.send();
 });

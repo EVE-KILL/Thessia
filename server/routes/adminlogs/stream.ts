@@ -42,6 +42,7 @@ export default defineEventHandler(async (event) => {
 
     // Set up variables for cleanup
     let logStreams: any[] = [];
+    let isStreamClosed = false;
 
     // Start the setup asynchronously after the connection is established
     const setupLogStreaming = async () => {
@@ -161,6 +162,9 @@ export default defineEventHandler(async (event) => {
 
                                 // Set up event handlers for this stream
                                 logStream.on("data", async (chunk: Buffer) => {
+                                    // Check if stream is closed before processing
+                                    if (isStreamClosed) return;
+
                                     try {
                                         const logText = chunk.toString();
                                         const lines = logText
@@ -168,6 +172,9 @@ export default defineEventHandler(async (event) => {
                                             .filter((line) => line.trim());
 
                                         for (const line of lines) {
+                                            // Check again for each line to prevent processing after close
+                                            if (isStreamClosed) break;
+
                                             // Extract deployment name from pod name (remove replica set hash and random suffix)
                                             const podName =
                                                 pod.metadata?.name || "";
@@ -189,11 +196,12 @@ export default defineEventHandler(async (event) => {
                                                     `${logWithPrefix}\n\n`
                                                 );
                                             } catch (pushError) {
-                                                // Connection may be closed, ignore push errors
-                                                console.error(
-                                                    "SSE: Failed to push log data:",
-                                                    pushError
+                                                // Connection closed, stop processing
+                                                console.log(
+                                                    "SSE: Connection closed, stopping Kubernetes log stream"
                                                 );
+                                                isStreamClosed = true;
+                                                break;
                                             }
                                         }
                                     } catch (error) {
@@ -260,34 +268,67 @@ export default defineEventHandler(async (event) => {
             // Send ready signal - removed, just start streaming logs directly
         } catch (error) {
             console.error("SSE: Error setting up log streaming:", error);
-            await eventStream.push(
-                `data: ${JSON.stringify({
-                    type: "error",
-                    message: `Failed to set up log streaming: ${
-                        error instanceof Error ? error.message : "Unknown error"
-                    }`,
-                })}\n\n`
-            );
+            isStreamClosed = true;
+
+            try {
+                await eventStream.push(
+                    `data: ${JSON.stringify({
+                        type: "error",
+                        message: `Failed to set up log streaming: ${
+                            error instanceof Error
+                                ? error.message
+                                : "Unknown error"
+                        }`,
+                    })}\n\n`
+                );
+            } catch (pushError) {
+                // Ignore push errors when connection is closed
+                console.log(
+                    "SSE: Failed to send error message, connection likely closed"
+                );
+            }
         }
     };
 
     // Handle cleanup on close
     eventStream.onClosed(async () => {
+        console.log("SSE: Kubernetes log stream closed, cleaning up...");
+        isStreamClosed = true;
+
+        // Cleanup all log streams
         logStreams.forEach(({ logStream }) => {
             if (
                 logStream &&
                 typeof logStream.removeAllListeners === "function"
             ) {
-                logStream.removeAllListeners();
+                try {
+                    logStream.removeAllListeners();
+                } catch (error) {
+                    // Ignore cleanup errors
+                    console.log(
+                        "SSE: Error during stream cleanup (expected):",
+                        error
+                    );
+                }
             }
         });
 
-        await eventStream.close();
+        try {
+            await eventStream.close();
+        } catch (error) {
+            // Ignore cleanup errors
+            console.log(
+                "SSE: Error during eventStream cleanup (expected):",
+                error
+            );
+        }
     });
 
     // Start the Kubernetes log streaming setup asynchronously with proper error handling
     setupLogStreaming().catch(async (error) => {
         console.error("SSE: Fatal error in setupLogStreaming:", error);
+        isStreamClosed = true;
+
         try {
             await eventStream.push(
                 `data: ${JSON.stringify({

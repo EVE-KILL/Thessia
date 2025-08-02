@@ -46,6 +46,27 @@ This project uses:
 -   Use **Lucide Icons** for all icons.
 -   Use **Simple Icons** for SVG icons.
 
+## Documentation
+
+The project includes comprehensive documentation in the `/docs` folder that should be referenced for implementation guidance:
+
+-   **Frontend Documentation**: `/docs/frontend/` - Contains implementation examples and patterns
+    -   **Search Components**: `/docs/frontend/search-component-examples.md` - Complete implementation guide for search functionality with standardized styling and API patterns
+    -   Component usage examples, styling guidelines, and best practices
+-   **Backend Documentation**: `/docs/backend/` - API design patterns and database schemas
+-   **Installation & Development**: `/docs/installation/` and `/docs/development/` - Setup and development workflows
+-   **API Documentation**: `/docs/api/` - Endpoint specifications and usage examples
+
+**Always check the documentation before implementing new features** - it contains:
+
+-   Proven implementation patterns
+-   Standardized styling guidelines
+-   API integration examples
+-   Troubleshooting guides
+-   Best practices and conventions
+
+When implementing components like search functionality, data tables, forms, or other common patterns, reference the relevant documentation to ensure consistency with established patterns and avoid reinventing solutions.
+
 ## Nitro API Best Practices
 
 -   **Query Parameters**: Use `getQuery(event)` to access URL query parameters (e.g., `?filters=...&page=1`)

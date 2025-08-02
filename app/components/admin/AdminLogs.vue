@@ -167,10 +167,10 @@ const colorizeLogLine = (logLine: string): string => {
 
     if (podPrefixMatch) {
         const [, podInfo, actualLog] = podPrefixMatch;
-        const podName = podInfo.trim();
+        const podName = (podInfo || '').trim();
 
         // Remove Kubernetes timestamp from the actual log part
-        const cleanActualLog = actualLog.replace(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d+[+-]\d{2}:\d{2}\s*/, '');
+        const cleanActualLog = (actualLog || '').replace(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d+[+-]\d{2}:\d{2}\s*/, '');
 
         // Now colorize the cleaned content
         const logPattern = /^(\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2})\s+\[([^\]]+)\]\s+(.*)$/;
@@ -178,7 +178,7 @@ const colorizeLogLine = (logLine: string): string => {
 
         if (match) {
             const [, timestamp, logType, message] = match;
-            const typeClass = `log-${logType.toLowerCase()}`;
+            const typeClass = `log-${(logType || 'default').toLowerCase()}`;
 
             return `<span class="log-pod">${podName}</span> | <span class="log-timestamp">${timestamp}</span> <span class="${typeClass}">[${logType}]</span> <span class="log-message">${message}</span>`;
         } else {
@@ -191,16 +191,22 @@ const colorizeLogLine = (logLine: string): string => {
     }
 };
 
-const processLogLine = (rawLogLine: string) => {
+const processLogLine = (rawLogLine: string): {
+    timestamp: string;
+    pod: string;
+    message: string;
+    container?: string;
+    html: string;
+} => {
     // Don't remove Kubernetes timestamp here - do it in colorizeLogLine instead
     const cleanedLine = rawLogLine;
 
     // Extract application timestamp for sorting (look for it after removing K8s timestamp)
     const podMatch = rawLogLine.match(/^([^|]+)\|\s*(.*)$/);
     if (podMatch) {
-        const actualLog = podMatch[2].replace(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d+[+-]\d{2}:\d{2}\s*/, '');
+        const actualLog = (podMatch[2] || '').replace(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d+[+-]\d{2}:\d{2}\s*/, '');
         const timestampMatch = actualLog.match(/^(\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2})/);
-        const timestamp = timestampMatch ? timestampMatch[1] : new Date().toISOString();
+        const timestamp: string = timestampMatch?.[1] || new Date().toISOString();
 
         // Create colored HTML version
         const html = colorizeLogLine(cleanedLine);
@@ -314,9 +320,16 @@ const totalLogLines = computed(() => {
 
 // SSE connection management
 const connectToLogStream = async () => {
+    // Always close existing connection first
     if (eventSource.value) {
+        console.log('Closing existing SSE connection...');
         eventSource.value.close();
+        eventSource.value = null;
+        // Small delay to ensure cleanup
+        await new Promise(resolve => setTimeout(resolve, 100));
     }
+
+    connectionStatus.value = 'connecting';
 
     // First fetch available pods if we don't have them
     if (availablePods.value.length === 0) {
@@ -344,64 +357,103 @@ const connectToLogStream = async () => {
             totalPods.value = runningPods.length;
         } catch (error) {
             console.error('Error fetching available pods:', error);
+            connectionStatus.value = 'error';
+            return;
         }
     }
 
-    const url = `/adminlogs/stream?pods=${selectedPods.value.join(',')}`;
-    eventSource.value = new EventSource(url);
+    try {
+        const url = `/adminlogs/stream?pods=${selectedPods.value.join(',')}`;
+        console.log('Connecting to SSE endpoint:', url);
+        eventSource.value = new EventSource(url);
 
-    eventSource.value.onopen = () => {
-        connectionStatus.value = 'connected';
-        lastUpdate.value = new Date().toISOString();
-    };
+        eventSource.value.onopen = () => {
+            console.log('SSE connection opened');
+            connectionStatus.value = 'connected';
+            lastUpdate.value = new Date().toISOString();
+        };
 
-    eventSource.value.onmessage = (event) => {
-        try {
-            const rawLogLine = event.data.trim();
+        eventSource.value.onmessage = (event) => {
+            try {
+                const rawLogLine = event.data.trim();
 
-            if (rawLogLine) {
-                const processedLog = processLogLine(rawLogLine);
-                lastUpdate.value = new Date().toISOString();
+                if (rawLogLine) {
+                    const processedLog = processLogLine(rawLogLine);
+                    lastUpdate.value = new Date().toISOString();
 
-                if (isPaused.value) {
-                    // Add to buffer when paused
-                    pauseBuffer.value.unshift(processedLog);
+                    if (isPaused.value) {
+                        // Add to buffer when paused
+                        pauseBuffer.value.unshift(processedLog);
 
-                    // Keep buffer reasonable size
-                    if (pauseBuffer.value.length > 100) {
-                        pauseBuffer.value = pauseBuffer.value.slice(0, 100);
-                    }
-                } else {
-                    // Add directly when not paused
-                    logLines.value.unshift(processedLog);
+                        // Keep buffer reasonable size
+                        if (pauseBuffer.value.length > 1000) {
+                            pauseBuffer.value.splice(1000);
+                        }
 
-                    // Keep only the configured number of logs to prevent memory issues
-                    if (logLines.value.length > logLimit.value) {
-                        logLines.value = logLines.value.slice(0, logLimit.value);
+                        scheduleResume();
+                    } else {
+                        // Add to main logs
+                        logLines.value.unshift(processedLog);
+
+                        // Trim if over limit
+                        if (logLines.value.length > logLimit.value) {
+                            logLines.value.splice(logLimit.value);
+                        }
+
+                        // Auto-scroll to bottom for new logs
+                        nextTick(() => {
+                            if (logsContainer.value) {
+                                logsContainer.value.scrollTop = logsContainer.value.scrollHeight;
+                            }
+                        });
                     }
                 }
+            } catch (error) {
+                console.error('Error processing log message:', error);
             }
-        } catch (error) {
-            console.error('Error processing SSE message:', error);
-        }
-    };
+        };
 
-    eventSource.value.onerror = (error) => {
-        console.error('SSE connection error:', error);
+        eventSource.value.onerror = (error) => {
+            console.error('SSE connection error:', error);
+            connectionStatus.value = 'error';
+
+            // Close the connection to prevent reconnection loops
+            if (eventSource.value) {
+                eventSource.value.close();
+                eventSource.value = null;
+            }
+        };
+
+    } catch (error) {
+        console.error('Failed to connect to log stream:', error);
         connectionStatus.value = 'error';
 
-        // Attempt to reconnect after a delay
-        setTimeout(() => {
-            if (connectionStatus.value === 'error') {
-                connectToLogStream();
-            }
-        }, 5000);
-    };
+        // Ensure connection is cleaned up
+        if (eventSource.value) {
+            eventSource.value.close();
+            eventSource.value = null;
+        }
+    }
 };
 
-// Watch for pod selection changes
+// Debounced pod selection change handler
+const podChangeTimeout = ref<NodeJS.Timeout | null>(null);
+
+// Watch for pod selection changes with debouncing
 watch(selectedPods, () => {
-    connectToLogStream();
+    // Clear existing timeout
+    if (podChangeTimeout.value) {
+        clearTimeout(podChangeTimeout.value);
+        podChangeTimeout.value = null;
+    }
+
+    // Debounce pod changes to prevent rapid reconnections
+    podChangeTimeout.value = setTimeout(() => {
+        logLines.value = [];
+        pauseBuffer.value = [];
+        connectToLogStream();
+        podChangeTimeout.value = null;
+    }, 300); // 300ms debounce
 });
 
 // Methods
@@ -425,14 +477,29 @@ const formatTimestamp = (timestamp: string) => {
 
 // Cleanup on unmount
 onUnmounted(() => {
-    if (eventSource.value) {
-        eventSource.value.close();
+    console.log('Cleaning up AdminLogs component...');
+
+    // Clear pod change timeout
+    if (podChangeTimeout.value) {
+        clearTimeout(podChangeTimeout.value);
+        podChangeTimeout.value = null;
     }
+
+    // Close SSE connection
+    if (eventSource.value) {
+        console.log('Closing SSE connection on unmount...');
+        eventSource.value.close();
+        eventSource.value = null;
+    }
+
+    // Clear all timers
     if (resumeTimeout.value) {
         clearTimeout(resumeTimeout.value);
+        resumeTimeout.value = null;
     }
     if (smoothResumeInterval.value) {
         clearInterval(smoothResumeInterval.value);
+        smoothResumeInterval.value = null;
     }
 });
 

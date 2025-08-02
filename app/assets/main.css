@@ -23,25 +23,10 @@ html {
     background-size: cover !important;
 }
 
-/* Transparent backgrounds */
-.bg-white,
-.bg-gray-50,
-.bg-gray-100,
-.dark .bg-gray-900,
-.dark .bg-gray-950,
-.dark .bg-black {
-    background-color: transparent !important;
-}
-
 /* Ensure content expands properly */
 .nuxt-page {
     min-height: 100%;
 }
-
-/* Prevent layout shift */
-html {
-}
-
 /* Reset body overflow settings */
 body {
     padding-right: 0 !important;

@@ -54,17 +54,16 @@ function createFilterField(field: string, entityType: string, maxEntities: numbe
         field,
         entityType,
         value: "",
-        multipleValues: [],
-        searchTerm: "",
-        searchResults: [],
+        multipleValues: [] as Array<{ id: number; name: string }>,
         valueLabel: "",
         error: "",
-        maxEntities
+        maxEntities,
+        searchQuery: ""
     };
 }
 
 // Check if limit is reached for a specific filter
-function isLimitReached(filterId: string): boolean {
+function isLimitReached(filterId: keyof typeof filterState.value): boolean {
     const filter = filterState.value[filterId];
     return filter?.multipleValues.length >= filter?.maxEntities;
 }
@@ -72,23 +71,16 @@ function isLimitReached(filterId: string): boolean {
 const campaignQuery = ref<Record<string, any> | null>(null);
 const generatedQueryString = ref<string>("");
 
-// Additional state management
-const selectedResultIndex = ref<Record<string, number>>({});
-const lastSearchTerms = ref<Record<string, string>>({});
-
 // Add the missing isLoading ref
 const isLoading = ref(false);
 
 // Handle selection of a search result
-const selectSearchResult = (filterId: string, result: any) => {
+const selectSearchResult = (filterId: keyof typeof filterState.value, result: any) => {
     const filter = filterState.value[filterId];
     if (!filter) return;
 
-    // Create a clean display name for storage using the new function
-    const cleanDisplayName = formatSearchResultDisplayName(result, filter.searchResults);
-
     // Check if this is already in multipleValues
-    if (filter.multipleValues.some(item => item.id === result.id)) {
+    if (filter.multipleValues.some((item: any) => item.id === result.id)) {
         return; // Skip if already added
     }
 
@@ -100,6 +92,9 @@ const selectSearchResult = (filterId: string, result: any) => {
 
     // Clear any previous error
     filter.error = '';
+
+    // Create a clean display name for storage
+    const cleanDisplayName = formatSearchResultDisplayName(result);
 
     // Add to multipleValues array
     filter.multipleValues.push({
@@ -117,18 +112,17 @@ const selectSearchResult = (filterId: string, result: any) => {
         filter.valueLabel = "";
     }
 
-    // Clear search term and results
-    filter.searchTerm = '';
-    filter.searchResults = [];
+    // Clear the search query after selection
+    filter.searchQuery = "";
 };
 
 // Remove a selected entity
-const removeSelectedEntity = (filterId: string, entityId: number) => {
+const removeSelectedEntity = (filterId: keyof typeof filterState.value, entityId: number) => {
     const filter = filterState.value[filterId];
     if (!filter) return;
 
     // Remove from multipleValues array
-    filter.multipleValues = filter.multipleValues.filter(item => item.id !== entityId);
+    filter.multipleValues = filter.multipleValues.filter((item: any) => item.id !== entityId);
 
     // Update single value if needed
     if (filter.multipleValues.length === 1) {
@@ -147,109 +141,8 @@ const removeSelectedEntity = (filterId: string, entityId: number) => {
     }
 };
 
-// Handle keyboard navigation in search dropdowns
-const handleKeyDown = (filterId: string, e: KeyboardEvent) => {
-    const filter = filterState.value[filterId];
-    if (!filter || !filter.searchResults || filter.searchResults.length === 0) return;
-
-    if (selectedResultIndex.value[filterId] === undefined) {
-        selectedResultIndex.value[filterId] = -1;
-    }
-
-    switch (e.key) {
-        case 'ArrowDown':
-            e.preventDefault();
-            selectedResultIndex.value[filterId] = Math.min(
-                (selectedResultIndex.value[filterId] + 1),
-                filter.searchResults.length - 1
-            );
-            break;
-        case 'ArrowUp':
-            e.preventDefault();
-            selectedResultIndex.value[filterId] = Math.max(
-                (selectedResultIndex.value[filterId] - 1),
-                0
-            );
-            break;
-        case 'Enter':
-            e.preventDefault();
-            if (selectedResultIndex.value[filterId] >= 0) {
-                selectSearchResult(filterId, filter.searchResults[selectedResultIndex.value[filterId]]);
-            }
-            break;
-        case 'Escape':
-            filter.searchResults = [];
-            selectedResultIndex.value[filterId] = -1;
-            break;
-    }
-};
-
-// Reset index when search term changes
-watch(filterState, (newState) => {
-    Object.entries(newState).forEach(([filterId, filter]) => {
-        if (filter.searchTerm !== lastSearchTerms.value[filterId]) {
-            selectedResultIndex.value[filterId] = -1;
-        }
-    });
-}, { deep: true });
-
-// Search entities function
-const searchEntities = async (filterId: string, searchTerm: string) => {
-    const filter = filterState.value[filterId];
-    if (!filter) return;
-
-    // Don't search if we've already reached the limit for this filter
-    if (isLimitReached(filterId)) {
-        filter.searchResults = [];
-        return;
-    }
-
-    if (!searchTerm || searchTerm.length < 2) {
-        filter.searchResults = [];
-        return;
-    }
-
-    if (lastSearchTerms.value[filterId] === searchTerm) return;
-
-    lastSearchTerms.value[filterId] = searchTerm;
-
-    try {
-        const encoded = encodeURIComponent(searchTerm);
-        const { data } = await useFetch(`/api/search/${encoded}`);
-
-        if (data.value && data.value.hits) {
-            let results = data.value.hits
-                .filter((hit) => hit.type === filter.entityType);
-
-            // Sort results by date_founded (newest first) to help with duplicate names
-            if (results.length > 0 && results[0].date_founded) {
-                results.sort((a, b) => {
-                    const dateA = new Date(a.date_founded || '1900-01-01');
-                    const dateB = new Date(b.date_founded || '1900-01-01');
-                    return dateB.getTime() - dateA.getTime(); // Newest first
-                });
-            }
-
-            filter.searchResults = results.slice(0, 10);
-        } else {
-            console.log(`Searching for ${filter.entityType}: ${searchTerm}`);
-            const mockResults = [
-                { id: 1, name: `${filter.entityType} Result 1 for ${searchTerm}` },
-                { id: 2, name: `${filter.entityType} Result 2 for ${searchTerm}` },
-            ];
-            filter.searchResults = mockResults;
-        }
-    } catch (error) {
-        console.error("Search error:", error);
-        filter.searchResults = [];
-    }
-};
-
-// Create the debounced search function
-const debouncedSearch = useDebounceFn(searchEntities, 300);
-
 // Helper function to format search result display name
-const formatSearchResultDisplayName = (result: any, allResults: any[] = []) => {
+const formatSearchResultDisplayName = (result: any) => {
     let displayName = result.name;
 
     // Add ticker for alliances and corporations
@@ -257,12 +150,8 @@ const formatSearchResultDisplayName = (result: any, allResults: any[] = []) => {
         displayName = `${result.name} [${result.ticker}]`;
     }
 
-    // Check if there are duplicate names in the results
-    const duplicateNames = allResults.filter(r => r.name === result.name);
-    const hasDuplicates = duplicateNames.length > 1;
-
-    // Add founded date if there are duplicates or if it's available for context
-    if (result.date_founded && (hasDuplicates || result.type === 'alliance' || result.type === 'corporation')) {
+    // Add founded date for context
+    if (result.date_founded && (result.type === 'alliance' || result.type === 'corporation')) {
         const foundedDate = new Date(result.date_founded);
         const year = foundedDate.getFullYear();
         displayName += ` (${year})`;
@@ -284,14 +173,14 @@ const buildCampaignQueryObject = (): Record<string, any> | null => {
         // Determine operator based on number of values
         if (filter.multipleValues.length > 1) {
             // Multiple values - use $in operator
-            const processedIds = filter.multipleValues.map(item => item.id);
+            const processedIds = filter.multipleValues.map((item: any) => item.id);
             fieldConditions[filter.field] = { $in: processedIds };
         } else if (filter.multipleValues.length === 1) {
             // Single value - use direct equality
-            fieldConditions[filter.field] = filter.multipleValues[0].id;
+            fieldConditions[filter.field] = filter.multipleValues[0]?.id;
         } else if (filter.value !== "") {
             // Direct value (for non-search fields)
-            let processedValue = filter.value;
+            let processedValue: any = filter.value;
 
             if (typeof filter.value === 'string' && (filter.field.includes("_id") || filter.field.includes("security"))) {
                 const numVal = parseFloat(filter.value);
@@ -485,14 +374,13 @@ function populateFormFields(campaignData: any) {
     }
 
     // Reset all filter values
-    Object.keys(filterState.value).forEach(key => {
-        const filter = filterState.value[key];
+    Object.keys(filterState.value).forEach((key) => {
+        const filter = filterState.value[key as keyof typeof filterState.value];
         filter.value = '';
         filter.multipleValues = [];
-        filter.searchTerm = '';
-        filter.searchResults = [];
         filter.valueLabel = '';
         filter.error = '';
+        filter.searchQuery = '';
     });
 
     // Populate filters from campaign query
@@ -831,7 +719,7 @@ const submitButtonText = computed(() => {
                     <UCard class="bg-yellow-50 dark:bg-yellow-900/20 border-0">
                         <template #header>
                             <h2 class="text-xl font-semibold text-gray-800 dark:text-gray-100">{{ $t('campaignDetails')
-                                }}</h2>
+                            }}</h2>
                         </template>
                         <div class="space-y-4">
                             <div>
@@ -896,32 +784,41 @@ const submitButtonText = computed(() => {
                                             ({{ $t('campaignCreator.optional') }})
                                         </span>
                                     </label>
-                                    <div class="relative">
-                                        <input type="text" class="custom-input w-full"
-                                            v-model="filterState.region.searchTerm" :placeholder="t('search.region')"
-                                            @input="debouncedSearch('region', filterState.region.searchTerm)"
-                                            @keydown="(e) => handleKeyDown('region', e)"
-                                            :disabled="isLimitReached('region')" />
 
-                                        <!-- Search results dropdown -->
-                                        <div v-if="filterState.region.searchResults && filterState.region.searchResults.length > 0"
-                                            class="absolute z-10 mt-1 w-full system-search-dropdown rounded-md shadow-lg max-h-48 overflow-y-auto">
-                                            <a v-for="(result, index) in filterState.region.searchResults"
-                                                :key="result.id" @click="selectSearchResult('region', result)"
-                                                class="search-result-item flex items-center px-4 py-2 text-sm cursor-pointer"
-                                                :class="{ 'search-result-selected': index === selectedResultIndex['region'] }">
+                                    <Search v-model="filterState.region.searchQuery"
+                                        :api-url="(query) => `/api/search/${encodeURIComponent(query)}`"
+                                        :transform-response="(data: any) => data?.hits?.filter((hit: any) => hit.type === 'region') || []"
+                                        :result-name="(result: any) => formatSearchResultDisplayName(result)"
+                                        :min-length="2" :disabled="isLimitReached('region')"
+                                        :placeholder="t('search.region')"
+                                        input-class="w-full px-3 py-2 border border-gray-300 dark:border-gray-300 rounded-md shadow-sm bg-gray-300 dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                                        dropdown-class="absolute z-50 mt-1 w-full bg-gray-300 dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-md shadow-lg max-h-48 overflow-y-auto"
+                                        @select="(result: any) => selectSearchResult('region', result)">
+                                        <template #results="{ results, selectResult }">
+                                            <a v-for="result in results" :key="result.id" @click="selectResult(result)"
+                                                class="flex items-center px-4 py-2 text-sm cursor-pointer text-gray-900 dark:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-700 border-b border-gray-200 dark:border-gray-600 last:border-b-0">
                                                 <div class="flex-shrink-0 mr-3">
                                                     <Image :type="result.type === 'ship' ? 'type-icon' : result.type"
                                                         :id="result.id" :size="24" />
                                                 </div>
                                                 <div class="flex-1 min-w-0">
-                                                    <div class="font-medium text-gray-800 dark:text-gray-200 truncate">
-                                                        {{ result.name }}
-                                                    </div>
+                                                    <div class="font-medium truncate">{{ result.name }}</div>
                                                 </div>
                                             </a>
-                                        </div>
-                                    </div>
+                                        </template>
+
+                                        <template #loading>
+                                            <div class="px-4 py-2 text-sm text-gray-500 dark:text-gray-400">
+                                                {{ $t('search.searching') }}...
+                                            </div>
+                                        </template>
+
+                                        <template #no-results>
+                                            <div class="px-4 py-2 text-sm text-gray-500 dark:text-gray-400">
+                                                {{ $t('search.noResults') }}
+                                            </div>
+                                        </template>
+                                    </Search>
 
                                     <!-- Selected values -->
                                     <div v-if="filterState.region.multipleValues.length > 0"
@@ -950,32 +847,41 @@ const submitButtonText = computed(() => {
                                             ({{ $t('campaignCreator.optional') }})
                                         </span>
                                     </label>
-                                    <div class="relative">
-                                        <input type="text" class="custom-input w-full"
-                                            v-model="filterState.system.searchTerm" :placeholder="t('search.system')"
-                                            @input="debouncedSearch('system', filterState.system.searchTerm)"
-                                            @keydown="(e) => handleKeyDown('system', e)"
-                                            :disabled="isLimitReached('system')" />
 
-                                        <!-- Search results dropdown -->
-                                        <div v-if="filterState.system.searchResults && filterState.system.searchResults.length > 0"
-                                            class="absolute z-10 mt-1 w-full system-search-dropdown rounded-md shadow-lg max-h-48 overflow-y-auto">
-                                            <a v-for="(result, index) in filterState.system.searchResults"
-                                                :key="result.id" @click="selectSearchResult('system', result)"
-                                                class="search-result-item flex items-center px-4 py-2 text-sm cursor-pointer"
-                                                :class="{ 'search-result-selected': index === selectedResultIndex['system'] }">
+                                    <Search v-model="filterState.system.searchQuery"
+                                        :api-url="(query) => `/api/search/${encodeURIComponent(query)}`"
+                                        :transform-response="(data: any) => data?.hits?.filter((hit: any) => hit.type === 'system') || []"
+                                        :result-name="(result: any) => formatSearchResultDisplayName(result)"
+                                        :min-length="2" :disabled="isLimitReached('system')"
+                                        :placeholder="t('search.system')"
+                                        input-class="w-full px-3 py-2 border border-gray-300 dark:border-gray-300 rounded-md shadow-sm bg-gray-300 dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                                        dropdown-class="absolute z-50 mt-1 w-full bg-gray-300 dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-md shadow-lg max-h-48 overflow-y-auto"
+                                        @select="(result: any) => selectSearchResult('system', result)">
+                                        <template #results="{ results, selectResult }">
+                                            <a v-for="result in results" :key="result.id" @click="selectResult(result)"
+                                                class="flex items-center px-4 py-2 text-sm cursor-pointer text-gray-900 dark:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-700 border-b border-gray-200 dark:border-gray-600 last:border-b-0">
                                                 <div class="flex-shrink-0 mr-3">
                                                     <Image :type="result.type === 'ship' ? 'type-icon' : result.type"
                                                         :id="result.id" :size="24" />
                                                 </div>
                                                 <div class="flex-1 min-w-0">
-                                                    <div class="font-medium text-gray-800 dark:text-gray-200 truncate">
-                                                        {{ result.name }}
-                                                    </div>
+                                                    <div class="font-medium truncate">{{ result.name }}</div>
                                                 </div>
                                             </a>
-                                        </div>
-                                    </div>
+                                        </template>
+
+                                        <template #loading>
+                                            <div class="px-4 py-2 text-sm text-gray-500 dark:text-gray-400">
+                                                {{ $t('search.searching') }}...
+                                            </div>
+                                        </template>
+
+                                        <template #no-results>
+                                            <div class="px-4 py-2 text-sm text-gray-500 dark:text-gray-400">
+                                                {{ $t('search.noResults') }}
+                                            </div>
+                                        </template>
+                                    </Search>
 
                                     <!-- Selected values -->
                                     <div v-if="filterState.system.multipleValues.length > 0"
@@ -1005,33 +911,41 @@ const submitButtonText = computed(() => {
                                             ({{ $t('campaignCreator.optional') }})
                                         </span>
                                     </label>
-                                    <div class="relative">
-                                        <input type="text" class="custom-input w-full"
-                                            v-model="filterState.constellation.searchTerm"
-                                            :placeholder="t('search.constellation')"
-                                            @input="debouncedSearch('constellation', filterState.constellation.searchTerm)"
-                                            @keydown="(e) => handleKeyDown('constellation', e)"
-                                            :disabled="isLimitReached('constellation')" />
 
-                                        <!-- Search results dropdown -->
-                                        <div v-if="filterState.constellation.searchResults && filterState.constellation.searchResults.length > 0"
-                                            class="absolute z-10 mt-1 w-full system-search-dropdown rounded-md shadow-lg max-h-48 overflow-y-auto">
-                                            <a v-for="(result, index) in filterState.constellation.searchResults"
-                                                :key="result.id" @click="selectSearchResult('constellation', result)"
-                                                class="search-result-item flex items-center px-4 py-2 text-sm cursor-pointer"
-                                                :class="{ 'search-result-selected': index === selectedResultIndex['constellation'] }">
+                                    <Search v-model="filterState.constellation.searchQuery"
+                                        :api-url="(query) => `/api/search/${encodeURIComponent(query)}`"
+                                        :transform-response="(data: any) => data?.hits?.filter((hit: any) => hit.type === 'constellation') || []"
+                                        :result-name="(result: any) => formatSearchResultDisplayName(result)"
+                                        :min-length="2" :disabled="isLimitReached('constellation')"
+                                        :placeholder="t('search.constellation')"
+                                        input-class="w-full px-3 py-2 border border-gray-300 dark:border-gray-300 rounded-md shadow-sm bg-gray-300 dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                                        dropdown-class="absolute z-50 mt-1 w-full bg-gray-300 dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-md shadow-lg max-h-48 overflow-y-auto"
+                                        @select="(result: any) => selectSearchResult('constellation', result)">
+                                        <template #results="{ results, selectResult }">
+                                            <a v-for="result in results" :key="result.id" @click="selectResult(result)"
+                                                class="flex items-center px-4 py-2 text-sm cursor-pointer text-gray-900 dark:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-700 border-b border-gray-200 dark:border-gray-600 last:border-b-0">
                                                 <div class="flex-shrink-0 mr-3">
                                                     <Image :type="result.type === 'ship' ? 'type-icon' : result.type"
                                                         :id="result.id" :size="24" />
                                                 </div>
                                                 <div class="flex-1 min-w-0">
-                                                    <div class="font-medium text-gray-800 dark:text-gray-200 truncate">
-                                                        {{ result.name }}
-                                                    </div>
+                                                    <div class="font-medium truncate">{{ result.name }}</div>
                                                 </div>
                                             </a>
-                                        </div>
-                                    </div>
+                                        </template>
+
+                                        <template #loading>
+                                            <div class="px-4 py-2 text-sm text-gray-500 dark:text-gray-400">
+                                                {{ $t('search.searching') }}...
+                                            </div>
+                                        </template>
+
+                                        <template #no-results>
+                                            <div class="px-4 py-2 text-sm text-gray-500 dark:text-gray-400">
+                                                {{ $t('search.noResults') }}
+                                            </div>
+                                        </template>
+                                    </Search>
 
                                     <!-- Selected values -->
                                     <div v-if="filterState.constellation.multipleValues.length > 0"
@@ -1064,7 +978,7 @@ const submitButtonText = computed(() => {
                                         class="block text-sm font-medium text-gray-700 dark:text-gray-300">
                                         {{ $t('endTime') }}
                                         <span class="text-xs text-gray-500 ml-1">({{ $t('campaignCreator.optional')
-                                            }})</span>
+                                        }})</span>
                                     </label>
                                     <input type="datetime-local" id="campaignEndTime" class="custom-input"
                                         v-model="campaignEndTime">
@@ -1098,34 +1012,41 @@ const submitButtonText = computed(() => {
                                                 filterState.attackerCharacter.maxEntities }})
                                         </span>
                                     </label>
-                                    <div class="relative">
-                                        <input type="text" class="custom-input w-full"
-                                            v-model="filterState.attackerCharacter.searchTerm"
-                                            :placeholder="t('search.character')"
-                                            @input="debouncedSearch('attackerCharacter', filterState.attackerCharacter.searchTerm)"
-                                            @keydown="(e) => handleKeyDown('attackerCharacter', e)"
-                                            :disabled="isLimitReached('attackerCharacter')" />
 
-                                        <!-- Search results dropdown -->
-                                        <div v-if="filterState.attackerCharacter.searchResults && filterState.attackerCharacter.searchResults.length > 0"
-                                            class="absolute z-10 mt-1 w-full system-search-dropdown rounded-md shadow-lg max-h-48 overflow-y-auto">
-                                            <a v-for="(result, index) in filterState.attackerCharacter.searchResults"
-                                                :key="result.id"
-                                                @click="selectSearchResult('attackerCharacter', result)"
-                                                class="search-result-item flex items-center px-4 py-2 text-sm cursor-pointer"
-                                                :class="{ 'search-result-selected': index === selectedResultIndex['attackerCharacter'] }">
+                                    <Search v-model="filterState.attackerCharacter.searchQuery"
+                                        :api-url="(query) => `/api/search/${encodeURIComponent(query)}`"
+                                        :transform-response="(data) => data?.hits?.filter(hit => hit.type === 'character') || []"
+                                        :result-name="(result) => formatSearchResultDisplayName(result)" :min-length="2"
+                                        :disabled="isLimitReached('attackerCharacter')"
+                                        :placeholder="t('search.character')"
+                                        input-class="w-full px-3 py-2 border border-gray-300 dark:border-gray-300 rounded-md shadow-sm bg-gray-300 dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                                        dropdown-class="absolute z-50 mt-1 w-full bg-gray-300 dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-md shadow-lg max-h-48 overflow-y-auto"
+                                        @select="(result) => selectSearchResult('attackerCharacter', result)">
+                                        <template #results="{ results, selectResult }">
+                                            <a v-for="result in results" :key="result.id" @click="selectResult(result)"
+                                                class="flex items-center px-4 py-2 text-sm cursor-pointer text-gray-900 dark:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-700 border-b border-gray-200 dark:border-gray-600 last:border-b-0">
                                                 <div class="flex-shrink-0 mr-3">
                                                     <Image :type="result.type === 'ship' ? 'type-icon' : result.type"
                                                         :id="result.id" :size="24" />
                                                 </div>
                                                 <div class="flex-1 min-w-0">
-                                                    <div class="font-medium text-gray-800 dark:text-gray-200 truncate">
-                                                        {{ result.name }}
-                                                    </div>
+                                                    <div class="font-medium truncate">{{ result.name }}</div>
                                                 </div>
                                             </a>
-                                        </div>
-                                    </div>
+                                        </template>
+
+                                        <template #loading>
+                                            <div class="px-4 py-2 text-sm text-gray-500 dark:text-gray-400">
+                                                {{ $t('search.searching') }}...
+                                            </div>
+                                        </template>
+
+                                        <template #no-results>
+                                            <div class="px-4 py-2 text-sm text-gray-500 dark:text-gray-400">
+                                                {{ $t('search.noResults') }}
+                                            </div>
+                                        </template>
+                                    </Search>
 
                                     <!-- Selected values -->
                                     <div v-if="filterState.attackerCharacter.multipleValues.length > 0"
@@ -1153,35 +1074,42 @@ const submitButtonText = computed(() => {
                                                 filterState.attackerCorporation.maxEntities }})
                                         </span>
                                     </label>
-                                    <div class="relative">
-                                        <input type="text" class="custom-input w-full"
-                                            v-model="filterState.attackerCorporation.searchTerm"
-                                            :placeholder="t('search.corporation')"
-                                            @input="debouncedSearch('attackerCorporation', filterState.attackerCorporation.searchTerm)"
-                                            @keydown="(e) => handleKeyDown('attackerCorporation', e)"
-                                            :disabled="isLimitReached('attackerCorporation')" />
 
-                                        <!-- Search results dropdown -->
-                                        <div v-if="filterState.attackerCorporation.searchResults && filterState.attackerCorporation.searchResults.length > 0"
-                                            class="absolute z-10 mt-1 w-full system-search-dropdown rounded-md shadow-lg max-h-48 overflow-y-auto">
-                                            <a v-for="(result, index) in filterState.attackerCorporation.searchResults"
-                                                :key="result.id"
-                                                @click="selectSearchResult('attackerCorporation', result)"
-                                                class="search-result-item flex items-center px-4 py-2 text-sm cursor-pointer"
-                                                :class="{ 'search-result-selected': index === selectedResultIndex['attackerCorporation'] }">
+                                    <Search v-model="filterState.attackerCorporation.searchQuery"
+                                        :api-url="(query) => `/api/search/${encodeURIComponent(query)}`"
+                                        :transform-response="(data) => data?.hits?.filter(hit => hit.type === 'corporation') || []"
+                                        :result-name="(result) => formatSearchResultDisplayName(result)" :min-length="2"
+                                        :disabled="isLimitReached('attackerCorporation')"
+                                        :placeholder="t('search.corporation')"
+                                        input-class="w-full px-3 py-2 border border-gray-300 dark:border-gray-300 rounded-md shadow-sm bg-gray-300 dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                                        dropdown-class="absolute z-50 mt-1 w-full bg-gray-300 dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-md shadow-lg max-h-48 overflow-y-auto"
+                                        @select="(result) => selectSearchResult('attackerCorporation', result)">
+                                        <template #results="{ results, selectResult }">
+                                            <a v-for="result in results" :key="result.id" @click="selectResult(result)"
+                                                class="flex items-center px-4 py-2 text-sm cursor-pointer text-gray-900 dark:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-700 border-b border-gray-200 dark:border-gray-600 last:border-b-0">
                                                 <div class="flex-shrink-0 mr-3">
                                                     <Image :type="result.type === 'ship' ? 'type-icon' : result.type"
                                                         :id="result.id" :size="24" />
                                                 </div>
                                                 <div class="flex-1 min-w-0">
-                                                    <div class="font-medium text-gray-800 dark:text-gray-200 truncate">
-                                                        {{ formatSearchResultDisplayName(result,
-                                                            filterState.attackerCorporation.searchResults) }}
-                                                    </div>
+                                                    <div class="font-medium truncate">{{
+                                                        formatSearchResultDisplayName(result) }}</div>
                                                 </div>
                                             </a>
-                                        </div>
-                                    </div>
+                                        </template>
+
+                                        <template #loading>
+                                            <div class="px-4 py-2 text-sm text-gray-500 dark:text-gray-400">
+                                                {{ $t('search.searching') }}...
+                                            </div>
+                                        </template>
+
+                                        <template #no-results>
+                                            <div class="px-4 py-2 text-sm text-gray-500 dark:text-gray-400">
+                                                {{ $t('search.noResults') }}
+                                            </div>
+                                        </template>
+                                    </Search>
 
                                     <!-- Selected values -->
                                     <div v-if="filterState.attackerCorporation.multipleValues.length > 0"
@@ -1208,35 +1136,42 @@ const submitButtonText = computed(() => {
                                                 filterState.attackerAlliance.maxEntities }})
                                         </span>
                                     </label>
-                                    <div class="relative">
-                                        <input type="text" class="custom-input w-full"
-                                            v-model="filterState.attackerAlliance.searchTerm"
-                                            :placeholder="t('search.alliance')"
-                                            @input="debouncedSearch('attackerAlliance', filterState.attackerAlliance.searchTerm)"
-                                            @keydown="(e) => handleKeyDown('attackerAlliance', e)"
-                                            :disabled="isLimitReached('attackerAlliance')" />
 
-                                        <!-- Search results dropdown -->
-                                        <div v-if="filterState.attackerAlliance.searchResults && filterState.attackerAlliance.searchResults.length > 0"
-                                            class="absolute z-10 mt-1 w-full system-search-dropdown rounded-md shadow-lg max-h-48 overflow-y-auto">
-                                            <a v-for="(result, index) in filterState.attackerAlliance.searchResults"
-                                                :key="result.id" @click="selectSearchResult('attackerAlliance', result)"
-                                                class="search-result-item flex items-center px-4 py-2 text-sm cursor-pointer"
-                                                :class="{ 'search-result-selected': index === selectedResultIndex['attackerAlliance'] }">
+                                    <Search v-model="filterState.attackerAlliance.searchQuery"
+                                        :api-url="(query) => `/api/search/${encodeURIComponent(query)}`"
+                                        :transform-response="(data) => data?.hits?.filter(hit => hit.type === 'alliance') || []"
+                                        :result-name="(result) => formatSearchResultDisplayName(result)" :min-length="2"
+                                        :disabled="isLimitReached('attackerAlliance')"
+                                        :placeholder="t('search.alliance')"
+                                        input-class="w-full px-3 py-2 border border-gray-300 dark:border-gray-300 rounded-md shadow-sm bg-gray-300 dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                                        dropdown-class="absolute z-50 mt-1 w-full bg-gray-300 dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-md shadow-lg max-h-48 overflow-y-auto"
+                                        @select="(result) => selectSearchResult('attackerAlliance', result)">
+                                        <template #results="{ results, selectResult }">
+                                            <a v-for="result in results" :key="result.id" @click="selectResult(result)"
+                                                class="flex items-center px-4 py-2 text-sm cursor-pointer text-gray-900 dark:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-700 border-b border-gray-200 dark:border-gray-600 last:border-b-0">
                                                 <div class="flex-shrink-0 mr-3">
                                                     <Image :type="result.type === 'ship' ? 'type-icon' : result.type"
                                                         :id="result.id" :size="24" />
                                                 </div>
                                                 <div class="flex-1 min-w-0">
-                                                    <div class="font-medium text-gray-800 dark:text-gray-200 truncate">
-                                                        {{ formatSearchResultDisplayName(result,
-                                                            filterState.attackerAlliance.searchResults)
-                                                        }}
-                                                    </div>
+                                                    <div class="font-medium truncate">{{
+                                                        formatSearchResultDisplayName(result) }}</div>
                                                 </div>
                                             </a>
-                                        </div>
-                                    </div>
+                                        </template>
+
+                                        <template #loading>
+                                            <div class="px-4 py-2 text-sm text-gray-500 dark:text-gray-400">
+                                                {{ $t('search.searching') }}...
+                                            </div>
+                                        </template>
+
+                                        <template #no-results>
+                                            <div class="px-4 py-2 text-sm text-gray-500 dark:text-gray-400">
+                                                {{ $t('search.noResults') }}
+                                            </div>
+                                        </template>
+                                    </Search>
 
                                     <!-- Selected values -->
                                     <div v-if="filterState.attackerAlliance.multipleValues.length > 0"
@@ -1263,33 +1198,40 @@ const submitButtonText = computed(() => {
                                                 filterState.attackerFaction.maxEntities }})
                                         </span>
                                     </label>
-                                    <div class="relative">
-                                        <input type="text" class="custom-input w-full"
-                                            v-model="filterState.attackerFaction.searchTerm"
-                                            :placeholder="t('search.faction')"
-                                            @input="debouncedSearch('attackerFaction', filterState.attackerFaction.searchTerm)"
-                                            @keydown="(e) => handleKeyDown('attackerFaction', e)"
-                                            :disabled="isLimitReached('attackerFaction')" />
 
-                                        <!-- Search results dropdown -->
-                                        <div v-if="filterState.attackerFaction.searchResults && filterState.attackerFaction.searchResults.length > 0"
-                                            class="absolute z-10 mt-1 w-full system-search-dropdown rounded-md shadow-lg max-h-48 overflow-y-auto">
-                                            <a v-for="(result, index) in filterState.attackerFaction.searchResults"
-                                                :key="result.id" @click="selectSearchResult('attackerFaction', result)"
-                                                class="search-result-item flex items-center px-4 py-2 text-sm cursor-pointer"
-                                                :class="{ 'search-result-selected': index === selectedResultIndex['attackerFaction'] }">
+                                    <Search v-model="filterState.attackerFaction.searchQuery"
+                                        :api-url="(query) => `/api/search/${encodeURIComponent(query)}`"
+                                        :transform-response="(data) => data?.hits?.filter(hit => hit.type === 'faction') || []"
+                                        :result-name="(result) => formatSearchResultDisplayName(result)" :min-length="2"
+                                        :disabled="isLimitReached('attackerFaction')" :placeholder="t('search.faction')"
+                                        input-class="w-full px-3 py-2 border border-gray-300 dark:border-gray-300 rounded-md shadow-sm bg-gray-300 dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                                        dropdown-class="absolute z-50 mt-1 w-full bg-gray-300 dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-md shadow-lg max-h-48 overflow-y-auto"
+                                        @select="(result) => selectSearchResult('attackerFaction', result)">
+                                        <template #results="{ results, selectResult }">
+                                            <a v-for="result in results" :key="result.id" @click="selectResult(result)"
+                                                class="flex items-center px-4 py-2 text-sm cursor-pointer text-gray-900 dark:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-700 border-b border-gray-200 dark:border-gray-600 last:border-b-0">
                                                 <div class="flex-shrink-0 mr-3">
                                                     <Image :type="result.type === 'ship' ? 'type-icon' : result.type"
                                                         :id="result.id" :size="24" />
                                                 </div>
                                                 <div class="flex-1 min-w-0">
-                                                    <div class="font-medium text-gray-800 dark:text-gray-200 truncate">
-                                                        {{ result.name }}
-                                                    </div>
+                                                    <div class="font-medium truncate">{{ result.name }}</div>
                                                 </div>
                                             </a>
-                                        </div>
-                                    </div>
+                                        </template>
+
+                                        <template #loading>
+                                            <div class="px-4 py-2 text-sm text-gray-500 dark:text-gray-400">
+                                                {{ $t('search.searching') }}...
+                                            </div>
+                                        </template>
+
+                                        <template #no-results>
+                                            <div class="px-4 py-2 text-sm text-gray-500 dark:text-gray-400">
+                                                {{ $t('search.noResults') }}
+                                            </div>
+                                        </template>
+                                    </Search>
 
                                     <!-- Selected values -->
                                     <div v-if="filterState.attackerFaction.multipleValues.length > 0"
@@ -1327,33 +1269,41 @@ const submitButtonText = computed(() => {
                                                 filterState.victimCharacter.maxEntities }})
                                         </span>
                                     </label>
-                                    <div class="relative">
-                                        <input type="text" class="custom-input w-full"
-                                            v-model="filterState.victimCharacter.searchTerm"
-                                            :placeholder="t('search.character')"
-                                            @input="debouncedSearch('victimCharacter', filterState.victimCharacter.searchTerm)"
-                                            @keydown="(e) => handleKeyDown('victimCharacter', e)"
-                                            :disabled="isLimitReached('victimCharacter')" />
 
-                                        <!-- Search results dropdown -->
-                                        <div v-if="filterState.victimCharacter.searchResults && filterState.victimCharacter.searchResults.length > 0"
-                                            class="absolute z-10 mt-1 w-full system-search-dropdown rounded-md shadow-lg max-h-48 overflow-y-auto">
-                                            <a v-for="(result, index) in filterState.victimCharacter.searchResults"
-                                                :key="result.id" @click="selectSearchResult('victimCharacter', result)"
-                                                class="search-result-item flex items-center px-4 py-2 text-sm cursor-pointer"
-                                                :class="{ 'search-result-selected': index === selectedResultIndex['victimCharacter'] }">
+                                    <Search v-model="filterState.victimCharacter.searchQuery"
+                                        :api-url="(query) => `/api/search/${encodeURIComponent(query)}`"
+                                        :transform-response="(data) => data?.hits?.filter(hit => hit.type === 'character') || []"
+                                        :result-name="(result) => formatSearchResultDisplayName(result)" :min-length="2"
+                                        :disabled="isLimitReached('victimCharacter')"
+                                        :placeholder="t('search.character')"
+                                        input-class="w-full px-3 py-2 border border-gray-300 dark:border-gray-300 rounded-md shadow-sm bg-gray-300 dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                                        dropdown-class="absolute z-50 mt-1 w-full bg-gray-300 dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-md shadow-lg max-h-48 overflow-y-auto"
+                                        @select="(result) => selectSearchResult('victimCharacter', result)">
+                                        <template #results="{ results, selectResult }">
+                                            <a v-for="result in results" :key="result.id" @click="selectResult(result)"
+                                                class="flex items-center px-4 py-2 text-sm cursor-pointer text-gray-900 dark:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-700 border-b border-gray-200 dark:border-gray-600 last:border-b-0">
                                                 <div class="flex-shrink-0 mr-3">
                                                     <Image :type="result.type === 'ship' ? 'type-icon' : result.type"
                                                         :id="result.id" :size="24" />
                                                 </div>
                                                 <div class="flex-1 min-w-0">
-                                                    <div class="font-medium text-gray-800 dark:text-gray-200 truncate">
-                                                        {{ result.name }}
-                                                    </div>
+                                                    <div class="font-medium truncate">{{ result.name }}</div>
                                                 </div>
                                             </a>
-                                        </div>
-                                    </div>
+                                        </template>
+
+                                        <template #loading>
+                                            <div class="px-4 py-2 text-sm text-gray-500 dark:text-gray-400">
+                                                {{ $t('search.searching') }}...
+                                            </div>
+                                        </template>
+
+                                        <template #no-results>
+                                            <div class="px-4 py-2 text-sm text-gray-500 dark:text-gray-400">
+                                                {{ $t('search.noResults') }}
+                                            </div>
+                                        </template>
+                                    </Search>
 
                                     <!-- Selected values -->
                                     <div v-if="filterState.victimCharacter.multipleValues.length > 0"
@@ -1381,35 +1331,42 @@ const submitButtonText = computed(() => {
                                                 filterState.victimCorporation.maxEntities }})
                                         </span>
                                     </label>
-                                    <div class="relative">
-                                        <input type="text" class="custom-input w-full"
-                                            v-model="filterState.victimCorporation.searchTerm"
-                                            :placeholder="t('search.corporation')"
-                                            @input="debouncedSearch('victimCorporation', filterState.victimCorporation.searchTerm)"
-                                            @keydown="(e) => handleKeyDown('victimCorporation', e)"
-                                            :disabled="isLimitReached('victimCorporation')" />
 
-                                        <!-- Search results dropdown -->
-                                        <div v-if="filterState.victimCorporation.searchResults && filterState.victimCorporation.searchResults.length > 0"
-                                            class="absolute z-10 mt-1 w-full system-search-dropdown rounded-md shadow-lg max-h-48 overflow-y-auto">
-                                            <a v-for="(result, index) in filterState.victimCorporation.searchResults"
-                                                :key="result.id"
-                                                @click="selectSearchResult('victimCorporation', result)"
-                                                class="search-result-item flex items-center px-4 py-2 text-sm cursor-pointer"
-                                                :class="{ 'search-result-selected': index === selectedResultIndex['victimCorporation'] }">
+                                    <Search v-model="filterState.victimCorporation.searchQuery"
+                                        :api-url="(query) => `/api/search/${encodeURIComponent(query)}`"
+                                        :transform-response="(data) => data?.hits?.filter(hit => hit.type === 'corporation') || []"
+                                        :result-name="(result) => formatSearchResultDisplayName(result)" :min-length="2"
+                                        :disabled="isLimitReached('victimCorporation')"
+                                        :placeholder="t('search.corporation')"
+                                        input-class="w-full px-3 py-2 border border-gray-300 dark:border-gray-300 rounded-md shadow-sm bg-gray-300 dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                                        dropdown-class="absolute z-50 mt-1 w-full bg-gray-300 dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-md shadow-lg max-h-48 overflow-y-auto"
+                                        @select="(result) => selectSearchResult('victimCorporation', result)">
+                                        <template #results="{ results, selectResult }">
+                                            <a v-for="result in results" :key="result.id" @click="selectResult(result)"
+                                                class="flex items-center px-4 py-2 text-sm cursor-pointer text-gray-900 dark:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-700 border-b border-gray-200 dark:border-gray-600 last:border-b-0">
                                                 <div class="flex-shrink-0 mr-3">
                                                     <Image :type="result.type === 'ship' ? 'type-icon' : result.type"
                                                         :id="result.id" :size="24" />
                                                 </div>
                                                 <div class="flex-1 min-w-0">
-                                                    <div class="font-medium text-gray-800 dark:text-gray-200 truncate">
-                                                        {{ formatSearchResultDisplayName(result,
-                                                            filterState.victimCorporation.searchResults) }}
-                                                    </div>
+                                                    <div class="font-medium truncate">{{
+                                                        formatSearchResultDisplayName(result) }}</div>
                                                 </div>
                                             </a>
-                                        </div>
-                                    </div>
+                                        </template>
+
+                                        <template #loading>
+                                            <div class="px-4 py-2 text-sm text-gray-500 dark:text-gray-400">
+                                                {{ $t('search.searching') }}...
+                                            </div>
+                                        </template>
+
+                                        <template #no-results>
+                                            <div class="px-4 py-2 text-sm text-gray-500 dark:text-gray-400">
+                                                {{ $t('search.noResults') }}
+                                            </div>
+                                        </template>
+                                    </Search>
 
                                     <!-- Selected values -->
                                     <div v-if="filterState.victimCorporation.multipleValues.length > 0"
@@ -1436,35 +1393,41 @@ const submitButtonText = computed(() => {
                                                 filterState.victimAlliance.maxEntities }})
                                         </span>
                                     </label>
-                                    <div class="relative">
-                                        <input type="text" class="custom-input w-full"
-                                            v-model="filterState.victimAlliance.searchTerm"
-                                            :placeholder="t('search.alliance')"
-                                            @input="debouncedSearch('victimAlliance', filterState.victimAlliance.searchTerm)"
-                                            @keydown="(e) => handleKeyDown('victimAlliance', e)"
-                                            :disabled="isLimitReached('victimAlliance')" />
 
-                                        <!-- Search results dropdown -->
-                                        <div v-if="filterState.victimAlliance.searchResults && filterState.victimAlliance.searchResults.length > 0"
-                                            class="absolute z-10 mt-1 w-full system-search-dropdown rounded-md shadow-lg max-h-48 overflow-y-auto">
-                                            <a v-for="(result, index) in filterState.victimAlliance.searchResults"
-                                                :key="result.id" @click="selectSearchResult('victimAlliance', result)"
-                                                class="search-result-item flex items-center px-4 py-2 text-sm cursor-pointer"
-                                                :class="{ 'search-result-selected': index === selectedResultIndex['victimAlliance'] }">
+                                    <Search v-model="filterState.victimAlliance.searchQuery"
+                                        :api-url="(query) => `/api/search/${encodeURIComponent(query)}`"
+                                        :transform-response="(data) => data?.hits?.filter(hit => hit.type === 'alliance') || []"
+                                        :result-name="(result) => formatSearchResultDisplayName(result)" :min-length="2"
+                                        :disabled="isLimitReached('victimAlliance')" :placeholder="t('search.alliance')"
+                                        input-class="w-full px-3 py-2 border border-gray-300 dark:border-gray-300 rounded-md shadow-sm bg-gray-300 dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                                        dropdown-class="absolute z-50 mt-1 w-full bg-gray-300 dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-md shadow-lg max-h-48 overflow-y-auto"
+                                        @select="(result) => selectSearchResult('victimAlliance', result)">
+                                        <template #results="{ results, selectResult }">
+                                            <a v-for="result in results" :key="result.id" @click="selectResult(result)"
+                                                class="flex items-center px-4 py-2 text-sm cursor-pointer text-gray-900 dark:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-700 border-b border-gray-200 dark:border-gray-600 last:border-b-0">
                                                 <div class="flex-shrink-0 mr-3">
                                                     <Image :type="result.type === 'ship' ? 'type-icon' : result.type"
                                                         :id="result.id" :size="24" />
                                                 </div>
                                                 <div class="flex-1 min-w-0">
-                                                    <div class="font-medium text-gray-800 dark:text-gray-200 truncate">
-                                                        {{ formatSearchResultDisplayName(result,
-                                                            filterState.victimAlliance.searchResults)
-                                                        }}
-                                                    </div>
+                                                    <div class="font-medium truncate">{{
+                                                        formatSearchResultDisplayName(result) }}</div>
                                                 </div>
                                             </a>
-                                        </div>
-                                    </div>
+                                        </template>
+
+                                        <template #loading>
+                                            <div class="px-4 py-2 text-sm text-gray-500 dark:text-gray-400">
+                                                {{ $t('search.searching') }}...
+                                            </div>
+                                        </template>
+
+                                        <template #no-results>
+                                            <div class="px-4 py-2 text-sm text-gray-500 dark:text-gray-400">
+                                                {{ $t('search.noResults') }}
+                                            </div>
+                                        </template>
+                                    </Search>
 
                                     <!-- Selected values -->
                                     <div v-if="filterState.victimAlliance.multipleValues.length > 0"
@@ -1492,33 +1455,40 @@ const submitButtonText = computed(() => {
                                             }})
                                         </span>
                                     </label>
-                                    <div class="relative">
-                                        <input type="text" class="custom-input w-full"
-                                            v-model="filterState.victimFaction.searchTerm"
-                                            :placeholder="t('search.faction')"
-                                            @input="debouncedSearch('victimFaction', filterState.victimFaction.searchTerm)"
-                                            @keydown="(e) => handleKeyDown('victimFaction', e)"
-                                            :disabled="isLimitReached('victimFaction')" />
 
-                                        <!-- Search results dropdown -->
-                                        <div v-if="filterState.victimFaction.searchResults && filterState.victimFaction.searchResults.length > 0"
-                                            class="absolute z-10 mt-1 w-full system-search-dropdown rounded-md shadow-lg max-h-48 overflow-y-auto">
-                                            <a v-for="(result, index) in filterState.victimFaction.searchResults"
-                                                :key="result.id" @click="selectSearchResult('victimFaction', result)"
-                                                class="search-result-item flex items-center px-4 py-2 text-sm cursor-pointer"
-                                                :class="{ 'search-result-selected': index === selectedResultIndex['victimFaction'] }">
+                                    <Search v-model="filterState.victimFaction.searchQuery"
+                                        :api-url="(query) => `/api/search/${encodeURIComponent(query)}`"
+                                        :transform-response="(data) => data?.hits?.filter(hit => hit.type === 'faction') || []"
+                                        :result-name="(result) => formatSearchResultDisplayName(result)" :min-length="2"
+                                        :disabled="isLimitReached('victimFaction')" :placeholder="t('search.faction')"
+                                        input-class="w-full px-3 py-2 border border-gray-300 dark:border-gray-300 rounded-md shadow-sm bg-gray-300 dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                                        dropdown-class="absolute z-50 mt-1 w-full bg-gray-300 dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-md shadow-lg max-h-48 overflow-y-auto"
+                                        @select="(result) => selectSearchResult('victimFaction', result)">
+                                        <template #results="{ results, selectResult }">
+                                            <a v-for="result in results" :key="result.id" @click="selectResult(result)"
+                                                class="flex items-center px-4 py-2 text-sm cursor-pointer text-gray-900 dark:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-700 border-b border-gray-200 dark:border-gray-600 last:border-b-0">
                                                 <div class="flex-shrink-0 mr-3">
                                                     <Image :type="result.type === 'ship' ? 'type-icon' : result.type"
                                                         :id="result.id" :size="24" />
                                                 </div>
                                                 <div class="flex-1 min-w-0">
-                                                    <div class="font-medium text-gray-800 dark:text-gray-200 truncate">
-                                                        {{ result.name }}
-                                                    </div>
+                                                    <div class="font-medium truncate">{{ result.name }}</div>
                                                 </div>
                                             </a>
-                                        </div>
-                                    </div>
+                                        </template>
+
+                                        <template #loading>
+                                            <div class="px-4 py-2 text-sm text-gray-500 dark:text-gray-400">
+                                                {{ $t('search.searching') }}...
+                                            </div>
+                                        </template>
+
+                                        <template #no-results>
+                                            <div class="px-4 py-2 text-sm text-gray-500 dark:text-gray-400">
+                                                {{ $t('search.noResults') }}
+                                            </div>
+                                        </template>
+                                    </Search>
 
                                     <!-- Selected values -->
                                     <div v-if="filterState.victimFaction.multipleValues.length > 0"
@@ -1683,95 +1653,6 @@ input[type="datetime-local"].custom-input {
 
 .dark .custom-input:disabled {
     background-color: #374151;
-}
-
-/* Solid background for dropdown menus */
-.system-search-dropdown {
-    border: 2px solid #ccc;
-    background-color: white !important;
-    /* Force solid background */
-    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
-}
-
-.dark .system-search-dropdown {
-    border-color: #4b5563;
-    background-color: #1f2937 !important;
-    /* Force solid background */
-}
-
-.search-result-item {
-    color: #111827;
-    transition: all 0.15s ease;
-}
-
-.search-result-item:hover {
-    background-color: #f3f4f6 !important;
-    /* Force hover color */
-    transform: translateX(2px);
-}
-
-/* Better spacing for search results with images */
-.search-result-item.flex {
-    align-items: center;
-    min-height: 40px;
-    /* Ensure consistent height for image results */
-}
-
-.search-result-item .flex-shrink-0 {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-.dark .search-result-item {
-    color: #f9fafb;
-}
-
-.dark .search-result-item:hover {
-    background-color: #374151 !important;
-    /* Force hover color */
-}
-
-.search-result-selected {
-    background-color: #e0f2fe !important;
-    color: #0369a1 !important;
-}
-
-.dark .search-result-selected {
-    background-color: #0c4a6e !important;
-    color: #7dd3fc !important;
-}
-
-/* Add styling for dropdown menus */
-.dropdown-menu {
-    background-color: #ffffff !important;
-    /* Force solid background */
-    border: 2px solid #ccc;
-    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
-}
-
-.dark .dropdown-menu {
-    background-color: #1f2937 !important;
-    /* Force solid background */
-    border-color: #4b5563;
-}
-
-.dropdown-item {
-    color: #111827;
-}
-
-.dropdown-item:hover {
-    background-color: #f3f4f6 !important;
-    /* Force hover color */
-}
-
-.dark .dropdown-item {
-    color: #f9fafb;
-}
-
-.dark .dropdown-item:hover {
-    background-color: #374151 !important;
-    /* Force hover color */
 }
 
 /* Campaign Header Styling */

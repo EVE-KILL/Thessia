@@ -325,17 +325,23 @@ const totalLogLines = computed(() => {
 
 // SSE connection management
 const connectToLogStream = async () => {
+    // Always close existing connection first
     if (eventSource.value) {
+        console.log('Closing existing SSE connection...');
         eventSource.value.close();
         eventSource.value = null;
+        // Small delay to ensure cleanup
+        await new Promise(resolve => setTimeout(resolve, 100));
     }
 
     connectionStatus.value = 'connecting';
 
     try {
+        console.log('Connecting to SSE endpoint:', streamEndpoint.value);
         eventSource.value = new EventSource(streamEndpoint.value);
 
         eventSource.value.onopen = () => {
+            console.log('SSE connection opened');
             connectionStatus.value = 'connected';
             lastUpdate.value = new Date().toISOString();
         };
@@ -388,19 +394,44 @@ const connectToLogStream = async () => {
         eventSource.value.onerror = (error) => {
             console.error('SSE connection error:', error);
             connectionStatus.value = 'error';
+
+            // Close the connection to prevent reconnection loops
+            if (eventSource.value) {
+                eventSource.value.close();
+                eventSource.value = null;
+            }
         };
 
     } catch (error) {
         console.error('Failed to connect to access log stream:', error);
         connectionStatus.value = 'error';
+
+        // Ensure connection is cleaned up
+        if (eventSource.value) {
+            eventSource.value.close();
+            eventSource.value = null;
+        }
     }
 };
 
-// Watch for filter changes
+// Debounced filter change handler
+const filterChangeTimeout = ref<NodeJS.Timeout | null>(null);
+
+// Watch for filter changes with debouncing
 watch([filters], () => {
-    logLines.value = [];
-    pauseBuffer.value = [];
-    connectToLogStream();
+    // Clear existing timeout
+    if (filterChangeTimeout.value) {
+        clearTimeout(filterChangeTimeout.value);
+        filterChangeTimeout.value = null;
+    }
+
+    // Debounce filter changes to prevent rapid reconnections
+    filterChangeTimeout.value = setTimeout(() => {
+        logLines.value = [];
+        pauseBuffer.value = [];
+        connectToLogStream();
+        filterChangeTimeout.value = null;
+    }, 300); // 300ms debounce
 }, { deep: true });
 
 // Methods
@@ -424,10 +455,22 @@ const formatTimestamp = (timestamp: string) => {
 
 // Cleanup on unmount
 onUnmounted(() => {
+    console.log('Cleaning up AdminAccessLogs component...');
+
+    // Clear filter change timeout
+    if (filterChangeTimeout.value) {
+        clearTimeout(filterChangeTimeout.value);
+        filterChangeTimeout.value = null;
+    }
+
+    // Close SSE connection
     if (eventSource.value) {
+        console.log('Closing SSE connection on unmount...');
         eventSource.value.close();
         eventSource.value = null;
     }
+
+    // Clear all timers
     if (resumeTimeout.value) {
         clearTimeout(resumeTimeout.value);
         resumeTimeout.value = null;

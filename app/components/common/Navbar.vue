@@ -247,8 +247,7 @@ const closeMobileMenu = () => {
 
 <template>
     <!-- Desktop Navbar -->
-    <nav
-        class="hidden md:flex h-16 sticky top-0 z-50 bg-white bg-opacity-90 dark:bg-black dark:bg-opacity-90 backdrop-blur-sm shadow-sm">
+    <nav class="hidden md:flex h-16 sticky top-0 z-50 bg-transparent backdrop-blur-sm shadow-sm">
         <!-- Three-section layout with flexbox -->
         <div class="container mx-auto px-4 flex items-center justify-between w-full h-full">
             <!-- Left items - natural width -->

@@ -974,29 +974,20 @@ const previewBattle = async () => {
                         {{ t('battleGenerator.systems') }} ({{ selectedSystems.length }}/{{ MAX_SYSTEMS }})
                     </label>
                     <div class="relative">
-                        <Search 
-                            v-model="systemSearchTerm"
+                        <Search v-model="systemSearchTerm"
                             :api-url="(query) => `/api/search/${encodeURIComponent(query)}`"
                             :transform-response="(response) => (response?.hits || []).filter((hit: any) => hit.type === 'system').slice(0, 10)"
-                            :result-key="(result) => result.id"
-                            :result-name="(result) => result.name"
-                            :placeholder="t('battleGenerator.searchForSystem')"
-                            :disabled="systemLimitReached"
-                            loading-text="Searching systems..."
-                            no-results-text="No systems found"
-                            :close-on-select="true"
-                            wrapper-class="relative"
+                            :result-key="(result) => result.id" :result-name="(result) => result.name"
+                            :placeholder="t('battleGenerator.searchForSystem')" :disabled="systemLimitReached"
+                            loading-text="Searching systems..." no-results-text="No systems found"
+                            :close-on-select="true" wrapper-class="relative"
                             dropdown-class="system-search-dropdown absolute z-10 w-full rounded-md mt-1 max-h-60 overflow-y-auto bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 shadow-lg"
                             @select="handleSystemSearchSelect">
-                            
+
                             <!-- Custom input slot -->
                             <template #input="{ modelValue, updateQuery }">
-                                <input 
-                                    id="systemSearch"
-                                    :value="modelValue" 
-                                    @input="updateQuery"
-                                    :placeholder="t('battleGenerator.searchForSystem')" 
-                                    class="custom-input"
+                                <input id="systemSearch" :value="modelValue" @input="updateQuery"
+                                    :placeholder="t('battleGenerator.searchForSystem')" class="custom-input"
                                     :disabled="systemLimitReached" />
                             </template>
 
