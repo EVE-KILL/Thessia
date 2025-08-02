@@ -1,39 +1,7 @@
 export default defineEventHandler(async (event) => {
-    // Add cache-control headers to prevent caching
-    setResponseHeaders(event, {
-        "Cache-Control": "no-cache, no-store, must-revalidate",
-        Pragma: "no-cache",
-        Expires: "0",
-    });
+    // Authenticate and verify admin privileges
+    await requireAdminAuth(event);
 
-    // Get authentication cookie
-    const cookieName = "evelogin";
-    const cookie = getCookie(event, cookieName);
-    console.log("Cookie:", cookie);
-
-    if (!cookie) {
-        throw createError({
-            statusCode: 401,
-            statusMessage: "Authentication required",
-        });
-    }
-
-    // Find user by cookie value
-    const user = await Users.findOne({ uniqueIdentifier: cookie });
-    if (!user) {
-        throw createError({
-            statusCode: 401,
-            statusMessage: "Invalid session",
-        });
-    }
-
-    // Check if user is administrator
-    if (!user.administrator) {
-        throw createError({
-            statusCode: 403,
-            statusMessage: "Administrator access required",
-        });
-    }
     const query = getQuery(event);
     const searchTerm = (query.search as string) || "";
 

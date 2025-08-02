@@ -46,6 +46,38 @@ This project uses:
 -   Use **Lucide Icons** for all icons.
 -   Use **Simple Icons** for SVG icons.
 
+## CSS and Styling
+
+-   **NEVER use Tailwind CSS `@apply` directives** - they are not supported in this project
+-   Use regular CSS properties instead of `@apply` directives
+-   Use `:global(.dark)` selectors for dark mode styling instead of `dark:` prefixes
+-   Structure CSS with proper classes and regular CSS syntax
+-   Use CSS custom properties for theming when needed
+-   Prefer scoped styles with `<style scoped>` in Vue components
+
+Example of **INCORRECT** styling:
+
+```css
+.my-class {
+    @apply flex items-center gap-2 px-4 py-2; /* ❌ DON'T DO THIS */
+}
+```
+
+Example of **CORRECT** styling:
+
+```css
+.my-class {
+    display: flex; /* ✅ Use regular CSS */
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 1rem;
+}
+
+:global(.dark) .my-class {
+    background-color: #374151; /* ✅ Dark mode with :global */
+}
+```
+
 ## Documentation
 
 The project includes comprehensive documentation in the `/docs` folder that should be referenced for implementation guidance:

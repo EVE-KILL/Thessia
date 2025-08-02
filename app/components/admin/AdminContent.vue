@@ -9,6 +9,7 @@
         <AdminQueues v-else-if="currentPath === 'queues'" />
         <AdminLogs v-else-if="currentPath === 'logs'" />
         <AdminUsersView v-else-if="currentPath === 'users'" />
+        <AdminApiKeys v-else-if="currentPath === 'api-keys'" />
         <AdminAnalyticsESI v-else-if="currentPath === 'analytics/esi'" />
         <AdminAnalyticsESILogs v-else-if="currentPath === 'analytics/esilogs'" />
         <AdminSettings v-else-if="currentPath === 'settings'" />

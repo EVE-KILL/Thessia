@@ -1603,6 +1603,7 @@
             "queues": "Queue Management",
             "logs": "System Logs",
             "users": "User Management",
+            "apiKeys": "API Keys",
             "database": "Database Management",
             "settings": "Settings",
             "kubernetes": "Kubernetes"
@@ -1616,6 +1617,7 @@
             "queues": "Queue Management",
             "logs": "System Logs",
             "users": "User Management",
+            "apiKeys": "API Key Management",
             "settings": "Application Settings",
             "database": "Database Management",
             "kubernetes": "Kubernetes Management",
@@ -1944,6 +1946,69 @@
                     "paths": "Paths",
                     "age": "Age"
                 }
+            }
+        },
+        "apiKeys": {
+            "title": "API Key Management",
+            "description": "Manage API keys for secure access to protected endpoints",
+            "loading": "Loading API keys...",
+            "refresh": "Refresh",
+            "createNew": "Create New Key",
+            "createFirst": "Create Your First API Key",
+            "search": "Search API keys...",
+            "clearSearch": "Clear search",
+            "activeOnly": "Active Only",
+            "perPage": "per page",
+            "error": "Failed to load API keys",
+            "retry": "Retry",
+            "empty": {
+                "title": "No API Keys Found",
+                "description": "Create your first API key to start protecting your endpoints with secure authentication."
+            },
+            "status": {
+                "active": "Active",
+                "inactive": "Inactive"
+            },
+            "createdBy": "Created by",
+            "created": "Created",
+            "lastUsed": "Last used",
+            "neverUsed": "Never used",
+            "activate": "Activate",
+            "deactivate": "Deactivate",
+            "editAction": "Edit",
+            "deleteAction": "Delete",
+            "pagination": {
+                "page": "Page",
+                "of": "of",
+                "total": "total"
+            },
+            "create": {
+                "title": "Create New API Key",
+                "name": "Name",
+                "namePlaceholder": "Enter a descriptive name for this API key",
+                "description": "Description",
+                "descriptionPlaceholder": "Optional description of what this key is used for",
+                "cancel": "Cancel",
+                "submit": "Create API Key"
+            },
+            "edit": {
+                "title": "Edit API Key",
+                "name": "Name",
+                "description": "Description",
+                "active": "Active",
+                "cancel": "Cancel",
+                "submit": "Update"
+            },
+            "success": {
+                "title": "API Key Created Successfully",
+                "message": "Your new API key has been created. Please copy it now as it will not be shown again.",
+                "apiKey": "API Key",
+                "copy": "Copy to clipboard",
+                "warning": "⚠️ Important: Store this API key securely. You will not be able to see it again after closing this dialog.",
+                "close": "I've Copied the Key"
+            },
+            "delete": {
+                "confirm": "Are you sure you want to delete the API key '{name}'? This action cannot be undone."
             }
         },
         "error": "Error",

@@ -40,6 +40,8 @@
                 <h3 class="nav-section-title">{{ t('admin.sections.management') }}</h3>
                 <AdminNavItem :item="{ name: t('admin.nav.users'), path: 'users', icon: 'heroicons:users' }"
                     :current-path="currentPath" @navigate="$emit('navigate', 'users')" />
+                <AdminNavItem :item="{ name: t('admin.nav.apiKeys'), path: 'api-keys', icon: 'heroicons:key' }"
+                    :current-path="currentPath" @navigate="$emit('navigate', 'api-keys')" />
 
                 <!-- Database Management with dropdown -->
                 <div class="nav-item-container">
