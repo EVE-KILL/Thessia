@@ -1,5 +1,4 @@
 export function siteBackground() {
-    const image = useImage();
     const cookie = useCookie("siteBackground");
 
     const currentBackground = useState<string>(
@@ -81,21 +80,7 @@ export function siteBackground() {
         }
     };
 
-    const getOptimizedImageUrl = (path: string): string => {
-        // If it's an external URL (like Reddit), return as-is
-        if (path.startsWith("http://") || path.startsWith("https://")) {
-            return path;
-        }
-
-        // Otherwise, use Nuxt's image optimization
-        return image(path, {
-            format: "webp",
-            quality: 80,
-        });
-    };
-
     return {
-        getOptimizedImageUrl,
         getSiteBackground,
         setSiteBackground,
         setRedditBackground,

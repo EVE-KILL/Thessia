@@ -2,10 +2,10 @@
 import { computed, onMounted } from "vue";
 import { useI18n } from "vue-i18n";
 
-const { getOptimizedImageUrl, getSiteBackground } = siteBackground();
+const { getSiteBackground } = siteBackground();
 const backgroundRef = getSiteBackground();
 const backgroundUrl = computed(() => {
-    return getOptimizedImageUrl(backgroundRef.value);
+    return backgroundRef.value;
 });
 const { t } = useI18n();
 
