@@ -104,6 +104,7 @@ export default defineNuxtConfig({
 
     // Modules with automatic TypeScript support
     modules: [
+        "nuxt-lightningcss",
         "@nuxt/ui",
         "@nuxt/icon",
         "@nuxtjs/i18n",
@@ -114,6 +115,12 @@ export default defineNuxtConfig({
         "@nuxtjs/partytown",
         "@vueuse/nuxt",
     ],
+
+    // LightningCSS module configuration
+    lightningcss: {
+        minify: true, // Enable minification in production
+        config: "lightningcss.config.ts", // Use our custom config file
+    },
 
     colorMode: {
         classSuffix: "",
