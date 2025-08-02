@@ -307,6 +307,28 @@ export default defineEventHandler(async (event) => {
         );
     }
 
+    // Calculate new killmails from ESI in the last 30 days
+    const thirtyDaysAgo = new Date();
+    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+
+    const newKillmailsResult = await ESILogs.aggregate([
+        {
+            $match: {
+                timestamp: { $gte: thirtyDaysAgo },
+                dataType: { $in: ["killmails", "corporation_killmails"] },
+                newItemsCount: { $gt: 0 }
+            }
+        },
+        {
+            $group: {
+                _id: null,
+                totalNewKillmails: { $sum: "$newItemsCount" }
+            }
+        }
+    ]);
+
+    const newKillmailsLast30Days = newKillmailsResult.length > 0 ? newKillmailsResult[0].totalNewKillmails : 0;
+
     // Calculate summary statistics
     const summary = {
         totalKeys: users.length,
@@ -324,6 +346,7 @@ export default defineEventHandler(async (event) => {
         membersCovered: corporationsList
             .filter((corp) => corp.hasCorpKeys)
             .reduce((total, corp) => total + (corp.memberCount || 0), 0),
+        newKillmailsLast30Days: newKillmailsLast30Days,
     };
 
     return {

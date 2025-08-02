@@ -97,6 +97,16 @@
                                 </div>
                             </div>
                         </div>
+                        <div class="stat-card">
+                            <div class="stat-icon killmails-icon">
+                                <Icon name="heroicons:bolt" class="icon" />
+                            </div>
+                            <div class="stat-info">
+                                <div class="stat-label">{{ t('admin.analytics.esi.newKillmailsLast30Days') }}</div>
+                                <div class="stat-value">{{ data?.data?.summary?.newKillmailsLast30Days?.toLocaleString() || 0 }}
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
 
@@ -270,6 +280,7 @@ interface ESIAnalyticsResponse {
             corporationsWithKeys: number;
             alliancesWithKeys: number;
             membersCovered: number;
+            newKillmailsLast30Days: number;
         };
         corporations: any[];
         alliances: any[];
@@ -621,6 +632,10 @@ function debounce<T extends (...args: any[]) => any>(func: T, wait: number): (..
     background: rgba(99, 102, 241, 0.2);
 }
 
+.stat-icon.killmails-icon {
+    background: rgba(245, 158, 11, 0.2);
+}
+
 .stat-icon .icon {
     width: 1.5rem;
     height: 1.5rem;
@@ -637,6 +652,10 @@ function debounce<T extends (...args: any[]) => any>(func: T, wait: number): (..
 
 .members-icon .icon {
     color: rgb(99, 102, 241);
+}
+
+.killmails-icon .icon {
+    color: rgb(245, 158, 11);
 }
 
 .stat-info {
