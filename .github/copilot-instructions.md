@@ -141,6 +141,23 @@ $fetch(apiEndpoint.value), { lazy: true, server: false, watch: [apiEndpoint] }
 );
 ```
 
+## Security and CSP Compliance
+
+-   **Content Security Policy**: The project has strict CSP headers configured in `nuxt.config.ts`
+-   **External Website Calls**: When adding external API calls, image sources, or script sources to frontend code (`/app`), verify they are allowed in the CSP configuration
+-   **Image Sources**: The CSP `img-src` policy allows:
+    -   EVE Online assets: `images.evetech.net`, `images.eve-kill.com`
+    -   Reddit images: `i.redd.it`, `preview.redd.it`
+    -   Imgur images: `i.imgur.com`
+    -   **All HTTPS images**: `https:` - This allows user-generated content from Imgur, Giphy, Tenor, and any other HTTPS image hosting service
+-   **User-Generated Content**: The KillComments component allows users to post images from various sources (Imgur, Giphy, Tenor, or any HTTPS URL), which is supported by the current CSP policy
+-   **Allowed Domains**: Currently approved domains include:
+    -   Images: `images.evetech.net`, `images.eve-kill.com`, `i.redd.it`, `i.imgur.com`, `preview.redd.it`, and **all HTTPS sources**
+    -   Connections: `images.evetech.net`, WebSocket connections to `eve-kill.com`
+    -   Scripts: Cloudflare challenges, blob URLs for web workers
+-   **Adding New Domains**: If new external domains are needed for non-image resources, update the CSP configuration in `nuxt.config.ts` under `security.headers.contentSecurityPolicy`
+-   **CSP Violations**: Any external resource not in the CSP will be blocked by the browser in production
+
 ## Copilot-Specific Instructions
 
 -   Follow project structure and conventions.
