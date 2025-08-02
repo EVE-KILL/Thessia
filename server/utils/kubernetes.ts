@@ -72,6 +72,13 @@ export class KubernetesManager {
         }
 
         try {
+            // For in-cluster connections, disable SSL verification to handle self-signed certs
+            if (process.env.KUBERNETES_SERVICE_HOST) {
+                // Set reject unauthorized to false for in-cluster connections
+                process.env.NODE_TLS_REJECT_UNAUTHORIZED = "0";
+                cliLogger.info("Disabled SSL verification for in-cluster connection");
+            }
+
             // Initialize API clients
             this.coreV1Api = this.kc.makeApiClient(k8s.CoreV1Api);
             this.appsV1Api = this.kc.makeApiClient(k8s.AppsV1Api);
