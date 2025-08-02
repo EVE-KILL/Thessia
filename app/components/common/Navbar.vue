@@ -3,10 +3,10 @@ import { markRaw } from "vue";
 const { t } = useI18n();
 const colorMode = useColorMode();
 
-import BackgroundSwitcher from "../navbar/BackgroundSwitcher.vue";
-import LanguageSelector from "../navbar/LanguageSelector.vue";
-import SearchComponent from "../navbar/Search.vue";
-import NavbarUser from "../navbar/User.vue";
+import NavbarBackgroundSwitcher from "../navbar/NavbarBackgroundSwitcher.vue";
+import NavbarLanguageSelector from "../navbar/NavbarLanguageSelector.vue";
+import SearchComponent from "../navbar/NavbarSearch.vue";
+import NavbarUser from "../navbar/NavbarUser.vue";
 
 const Search = markRaw(SearchComponent);
 
@@ -181,7 +181,7 @@ const rightNavItems = computed(() => [
     },
     {
         position: "right",
-        component: LanguageSelector,
+        component: NavbarLanguageSelector,
         mobile: true,
     },
     {
@@ -194,7 +194,7 @@ const rightNavItems = computed(() => [
     },
     {
         icon: "lucide:book-image",
-        component: BackgroundSwitcher,
+        component: NavbarBackgroundSwitcher,
         position: "right",
         mobile: true,
     },

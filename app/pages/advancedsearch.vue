@@ -9,103 +9,127 @@
 
             <!-- Basic Search Input -->
             <div class="bg-zinc-900 border border-zinc-700 rounded-lg p-6 mb-6">
-                <div class="mb-4 relative">
-                    <input v-model="searchTerm" @input="onSearchInput" @focus="showSearchResults = true"
-                        @blur="hideSearchResults" type="text"
+                <div class="mb-4">
+                    <Search 
+                        v-model="searchTerm"
+                        :api-url="(query) => `/api/search/${encodeURIComponent(query)}`"
+                        :api-params="{ limit: 10 }"
+                        :transform-response="(response) => response?.hits || []"
+                        :result-key="(result) => `${result.type}-${result.id}`"
                         placeholder="Search for pilots, corporations, alliances, or ships..."
-                        class="w-full px-4 py-3 bg-zinc-800 border border-zinc-600 rounded-lg text-zinc-100 placeholder-zinc-400 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none" />
+                        loading-text="Searching..."
+                        no-results-text="No results found"
+                        :close-on-select="false"
+                        wrapper-class="relative"
+                        dropdown-class="bg-zinc-800 border border-zinc-600 rounded-lg shadow-lg max-h-64 overflow-y-auto w-full"
+                        @select="handleSearchSelect">
+                        
+                        <!-- Custom input slot -->
+                        <template #input="{ modelValue, updateQuery }">
+                            <input 
+                                :value="modelValue" 
+                                @input="updateQuery"
+                                @focus="() => {}"
+                                type="text"
+                                placeholder="Search for pilots, corporations, alliances, or ships..."
+                                class="w-full px-4 py-3 bg-zinc-800 border border-zinc-600 rounded-lg text-zinc-100 placeholder-zinc-400 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none" />
+                        </template>
 
-                    <!-- Search Results Dropdown -->
-                    <div v-if="showSearchResults && (searchResults.length > 0 || searchLoading)"
-                        class="absolute top-full left-0 right-0 z-10 mt-1 bg-zinc-800 border border-zinc-600 rounded-lg shadow-lg max-h-64 overflow-y-auto">
-                        <!-- Loading state -->
-                        <div v-if="searchLoading" class="p-3 text-center text-zinc-400">
-                            Searching...
-                        </div>
+                        <!-- Custom loading slot -->
+                        <template #loading>
+                            <div class="p-3 text-center text-zinc-400">
+                                <Icon name="lucide:loader-2" class="w-4 h-4 animate-spin inline mr-2" />
+                                Searching...
+                            </div>
+                        </template>
 
-                        <!-- Search results -->
-                        <div v-for="result in searchResults" :key="`${result.type}-${result.id}`"
-                            class="border-b border-zinc-700 last:border-b-0">
-                            <div class="p-3 hover:bg-zinc-700"
-                                :class="{ 'cursor-pointer': !isEntityType(result.type) && !isItemType(result.type) }"
-                                @click="!isEntityType(result.type) && !isItemType(result.type) ? selectSearchResult(result) : null">
-                                <div class="flex items-center justify-between mb-2">
-                                    <div class="flex items-center gap-3">
-                                        <!-- Image for different types -->
-                                        <div class="flex-shrink-0">
-                                            <Image v-if="result.type === 'character'" type="character" :id="result.id"
-                                                :alt="result.name" size="32" class="w-8 h-8" :rounded="true" />
-                                            <Image v-else-if="result.type === 'corporation'" type="corporation"
-                                                :id="result.id" :alt="result.name" size="32" class="w-8 h-8"
-                                                :rounded="true" />
-                                            <Image v-else-if="result.type === 'alliance'" type="alliance"
-                                                :id="result.id" :alt="result.name" size="32" class="w-8 h-8"
-                                                :rounded="true" />
-                                            <Image v-else-if="result.type === 'ship'" type="type-icon" :id="result.id"
-                                                :alt="result.name" size="32" class="w-8 h-8" :rounded="true" />
-                                            <Image v-else-if="result.type === 'item'" type="item" :id="result.id"
-                                                :name="result.name" :alt="result.name" size="32" class="w-8 h-8"
-                                                :rounded="true" />
-                                            <div v-else
-                                                class="w-8 h-8 bg-zinc-600 rounded flex items-center justify-center">
-                                                <Icon name="lucide:map-pin" class="w-4 h-4 text-zinc-400" />
+                        <!-- Custom no results slot -->
+                        <template #no-results>
+                            <div class="p-3 text-center text-zinc-400">
+                                <Icon name="lucide:search" class="w-4 h-4 inline mr-2" />
+                                No results found
+                            </div>
+                        </template>
+
+                        <!-- Custom results slot -->
+                        <template #results="{ results }">
+                            <div v-for="result in results" :key="`${result.type}-${result.id}`"
+                                class="border-b border-zinc-700 last:border-b-0">
+                                <div class="p-3 hover:bg-zinc-700"
+                                    :class="{ 'cursor-pointer': !isEntityType(result.type) && !isItemType(result.type) }"
+                                    @click="!isEntityType(result.type) && !isItemType(result.type) ? selectSearchResult(result) : null">
+                                    <div class="flex items-center justify-between mb-2">
+                                        <div class="flex items-center gap-3">
+                                            <!-- Image for different types -->
+                                            <div class="flex-shrink-0">
+                                                <Image v-if="result.type === 'character'" type="character" :id="result.id"
+                                                    :alt="result.name" size="32" class="w-8 h-8" :rounded="true" />
+                                                <Image v-else-if="result.type === 'corporation'" type="corporation"
+                                                    :id="result.id" :alt="result.name" size="32" class="w-8 h-8"
+                                                    :rounded="true" />
+                                                <Image v-else-if="result.type === 'alliance'" type="alliance"
+                                                    :id="result.id" :alt="result.name" size="32" class="w-8 h-8"
+                                                    :rounded="true" />
+                                                <Image v-else-if="result.type === 'ship'" type="type-icon" :id="result.id"
+                                                    :alt="result.name" size="32" class="w-8 h-8" :rounded="true" />
+                                                <Image v-else-if="result.type === 'item'" type="item" :id="result.id"
+                                                    :name="result.name" :alt="result.name" size="32" class="w-8 h-8"
+                                                    :rounded="true" />
+                                                <div v-else
+                                                    class="w-8 h-8 bg-zinc-600 rounded flex items-center justify-center">
+                                                    <Icon name="lucide:map-pin" class="w-4 h-4 text-zinc-400" />
+                                                </div>
+                                            </div>
+                                            <div>
+                                                <div class="text-zinc-100 font-medium">{{ result.name }}</div>
+                                                <div class="text-zinc-400 text-sm flex items-center gap-2">
+                                                    <span class="capitalize">{{ result.type }}</span>
+                                                    <!-- Show ticker for corporations and alliances -->
+                                                    <span
+                                                        v-if="(result.type === 'corporation' || result.type === 'alliance') && result.ticker"
+                                                        class="text-zinc-500 text-xs font-mono bg-zinc-800 px-1 rounded">
+                                                        [{{ result.ticker }}]
+                                                    </span>
+                                                </div>
                                             </div>
                                         </div>
-                                        <div>
-                                            <div class="text-zinc-100 font-medium">{{ result.name }}</div>
-                                            <div class="text-zinc-400 text-sm flex items-center gap-2">
-                                                <span class="capitalize">{{ result.type }}</span>
-                                                <!-- Show ticker for corporations and alliances -->
-                                                <span
-                                                    v-if="(result.type === 'corporation' || result.type === 'alliance') && result.ticker"
-                                                    class="text-zinc-500 text-xs font-mono bg-zinc-800 px-1 rounded">
-                                                    [{{ result.ticker }}]
-                                                </span>
-                                            </div>
+                                        <div class="text-zinc-500 text-xs">
+                                            {{ result.type === 'character' ? 'Pilot' :
+                                                result.type === 'corporation' ? 'Corp' :
+                                                    result.type === 'alliance' ? 'Alliance' :
+                                                        result.type === 'system' ? 'System' :
+                                                            result.type === 'region' ? 'Region' :
+                                                                result.type === 'constellation' ? 'Constellation' :
+                                                                    result.type === 'ship' ? 'Ship' :
+                                                                        'Item' }}
                                         </div>
                                     </div>
-                                    <div class="text-zinc-500 text-xs">
-                                        {{ result.type === 'character' ? 'Pilot' :
-                                            result.type === 'corporation' ? 'Corp' :
-                                                result.type === 'alliance' ? 'Alliance' :
-                                                    result.type === 'system' ? 'System' :
-                                                        result.type === 'region' ? 'Region' :
-                                                            result.type === 'constellation' ? 'Constellation' :
-                                                                result.type === 'ship' ? 'Ship' :
-                                                                    'Item' }}
+
+                                    <!-- Role assignment buttons for entities (not locations or items) -->
+                                    <div v-if="isEntityType(result.type)" class="flex gap-1" @click.stop>
+                                        <button @click="addEntityToFilter(result, 'victim')"
+                                            class="flex-1 px-2 py-1 text-xs bg-red-600 text-white rounded hover:bg-red-700 transition-colors">
+                                            Victim
+                                        </button>
+                                        <button @click="addEntityToFilter(result, 'both')"
+                                            class="flex-1 px-2 py-1 text-xs bg-green-600 text-white rounded hover:bg-green-700 transition-colors">
+                                            Both
+                                        </button>
+                                        <button @click="addEntityToFilter(result, 'attacker')"
+                                            class="flex-1 px-2 py-1 text-xs bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors">
+                                            Attacker
+                                        </button>
                                     </div>
-                                </div>
 
-                                <!-- Role assignment buttons for entities (not locations or items) -->
-                                <div v-if="isEntityType(result.type)" class="flex gap-1" @click.stop>
-                                    <button @click="addEntityToFilter(result, 'victim')"
-                                        class="flex-1 px-2 py-1 text-xs bg-red-600 text-white rounded hover:bg-red-700 transition-colors">
-                                        Victim
-                                    </button>
-                                    <button @click="addEntityToFilter(result, 'both')"
-                                        class="flex-1 px-2 py-1 text-xs bg-green-600 text-white rounded hover:bg-green-700 transition-colors">
-                                        Both
-                                    </button>
-                                    <button @click="addEntityToFilter(result, 'attacker')"
-                                        class="flex-1 px-2 py-1 text-xs bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors">
-                                        Attacker
-                                    </button>
-                                </div>
-
-                                <!-- For items, add as item filter -->
-                                <div v-else-if="isItemType(result.type)" @click.stop="addItemToFilter(result)"
-                                    class="cursor-pointer px-2 py-1 text-xs bg-purple-600 text-white rounded hover:bg-purple-700 transition-colors text-center">
-                                    Add as Item Filter
+                                    <!-- For items, add as item filter -->
+                                    <div v-else-if="isItemType(result.type)" @click.stop="addItemToFilter(result)"
+                                        class="cursor-pointer px-2 py-1 text-xs bg-purple-600 text-white rounded hover:bg-purple-700 transition-colors text-center">
+                                        Add as Item Filter
+                                    </div>
                                 </div>
                             </div>
-                        </div>
-
-                        <!-- No results -->
-                        <div v-if="!searchLoading && searchResults.length === 0 && searchTerm.length > 2"
-                            class="p-3 text-center text-zinc-400">
-                            No results found
-                        </div>
-                    </div>
+                        </template>
+                    </Search>
                 </div>
 
                 <!-- Selected Facets Display -->
@@ -278,7 +302,7 @@
                         <label class="block text-sm font-medium text-zinc-300 mb-2">Sort By</label>
                         <div class="flex flex-wrap gap-2">
                             <button v-for="option in sortFieldOptions" :key="option.value"
-                                @click="sortField = option.value"
+                                @click="sortField = option.value as typeof sortField"
                                 :class="getFilterButtonClass(sortField === option.value)" class="text-sm px-3 py-2">
                                 {{ option.label }}
                             </button>
@@ -374,7 +398,7 @@
                     <!-- Results Container -->
                     <div v-if="queryResult && queryResult.length > 0"
                         class="bg-zinc-800 border border-zinc-600 rounded-lg p-4">
-                        <KillList :externalKilllistData="transformedQueryResult" :limit="25" :enablePagination="false"
+                        <KillList :externalKilllistData="transformedQueryResult || []" :limit="25" :enablePagination="false"
                             wsDisabled />
                     </div>
 
@@ -414,9 +438,6 @@ const router = useRouter()
 const filters = ref<AdvancedSearchFilters>(createDefaultFilters())
 const facets = ref<SearchFacet[]>([])
 const searchTerm = ref('')
-const searchResults = ref<any[]>([])
-const showSearchResults = ref(false)
-const searchLoading = ref(false)
 const entityFilterRef = ref()
 
 // Query execution and results
@@ -530,7 +551,7 @@ const transformedQueryResult = computed(() => {
         const attackers = kill?.attackers || []
 
         // Find final blow attacker - default to first attacker if none has final_blow=true
-        const finalBlowAttacker = attackers.find(a => a?.final_blow) || attackers[0] || {}
+        const finalBlowAttacker = attackers.find((a: any) => a?.final_blow) || attackers[0] || {}
 
         // Format the killmail in the structure that KillList expects
         const transformed = {
@@ -592,15 +613,9 @@ const getFilterButtonClass = (isSelected: boolean) => {
 }
 
 const toggleFilter = (filterType: keyof AdvancedSearchFilters, value: string) => {
-    if (filterType === 'location') return // Handle location differently
-
-    const filterArray = filters.value[filterType] as string[]
-    const index = filterArray.indexOf(value)
-    if (index > -1) {
-        filterArray.splice(index, 1)
-    } else {
-        filterArray.push(value)
-    }
+    // This function is deprecated but kept for compatibility
+    // Most filters now use dedicated methods like setSingleFilter or toggleSecurityFilter
+    console.warn('toggleFilter is deprecated, use specific filter methods instead')
 }
 
 // Update filters method for EntityFilter component
@@ -655,52 +670,19 @@ const removeFacet = (index: number) => {
 }
 
 // Search functionality
-let searchTimeout: NodeJS.Timeout | null = null
-
-const onSearchInput = () => {
-    if (searchTimeout) {
-        clearTimeout(searchTimeout)
-    }
-
-    if (searchTerm.value.length < 3) {
-        searchResults.value = []
-        showSearchResults.value = false
+const handleSearchSelect = (result: any) => {
+    // Don't clear search for entities or items - they need further action
+    if (isEntityType(result.type) || isItemType(result.type)) {
         return
     }
 
-    searchTimeout = setTimeout(() => {
-        performSearch()
-    }, 300) // 300ms debounce
-}
-
-const performSearch = async () => {
-    if (searchTerm.value.length < 3) return
-
-    searchLoading.value = true
-    showSearchResults.value = true
-
-    try {
-        // Use the existing search API
-        const data = await $fetch(`/api/search/${encodeURIComponent(searchTerm.value)}`, {
-            query: {
-                limit: 10
-            }
-        })
-
-        searchResults.value = data?.hits || []
-    } catch (error) {
-        console.error('Search error:', error)
-        searchResults.value = []
-    } finally {
-        searchLoading.value = false
-    }
+    // For locations, handle directly
+    selectSearchResult(result)
 }
 
 const selectSearchResult = (result: any) => {
     // Clear the search
     searchTerm.value = ''
-    searchResults.value = []
-    showSearchResults.value = false
 
     // Create a facet based on the result type
     let facet: any = null
@@ -773,13 +755,6 @@ const selectSearchResult = (result: any) => {
     }
 }
 
-const hideSearchResults = () => {
-    // Use setTimeout to allow click events to fire first
-    setTimeout(() => {
-        showSearchResults.value = false
-    }, 150)
-}
-
 // Quick filters
 const quickFilters = [
     { key: 'today', label: 'Today' },
@@ -816,7 +791,7 @@ const addEntityToFilter = (searchResult: any, role: 'victim' | 'attacker' | 'bot
         const entity = {
             id: searchResult.id.toString(),
             name: searchResult.name,
-            type: searchResult.type
+            role: role
         }
 
         // Check if entity already exists in the role-based arrays
@@ -834,8 +809,6 @@ const addEntityToFilter = (searchResult: any, role: 'victim' | 'attacker' | 'bot
 
     // Clear search
     searchTerm.value = ''
-    searchResults.value = []
-    showSearchResults.value = false
 }
 
 // Add item to the items filter (separate from entities)
@@ -843,7 +816,7 @@ const addItemToFilter = (searchResult: any) => {
     const item = {
         id: searchResult.id.toString(),
         name: searchResult.name,
-        type: 'items'
+        role: 'both' as const // Items don't have a role concept but the type requires it
     }
 
     // Check if item already exists
@@ -856,8 +829,6 @@ const addItemToFilter = (searchResult: any) => {
 
     // Clear search
     searchTerm.value = ''
-    searchResults.value = []
-    showSearchResults.value = false
 }
 
 const clearAllFilters = () => {
@@ -901,8 +872,6 @@ const executeSearch = async () => {
             queryResult.value = response
         } else if (response?.data && Array.isArray(response.data)) {
             queryResult.value = response.data
-        } else if (response?.results && Array.isArray(response.results)) {
-            queryResult.value = response.results
         } else {
             console.warn('Unexpected response structure:', response)
             queryResult.value = []

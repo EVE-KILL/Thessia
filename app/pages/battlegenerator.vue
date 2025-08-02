@@ -43,20 +43,14 @@ const editingSideD = ref(false);
 
 // Define reactive state
 const systemSearchTerm = ref('');
-const systemSearchResults = ref<{ id: number; name: string }[]>([]);
 const selectedSystems = ref<SelectedSystem[]>([]);
-const lastSystemSearchTerm = ref('');
 const startTime = ref();
 const endTime = ref();
 const loading = ref(false);
 const error = ref('');
-const justSelected = ref(false); // New flag to prevent immediate search after selection
 const showGeneratedData = ref(false); // Hide generated data by default
 const generatedData = ref<string>(''); // Keep this ref as it's used by other functions
 const MAX_SYSTEMS = 5;
-
-// Add a ref to track the currently selected result in the dropdown
-const selectedResultIndex = ref(-1);
 
 // Define the columns of entities
 const sideA = ref<Entity[]>([]);
@@ -126,95 +120,28 @@ const inputClass = "w-full font-sans text-sm";
 // Add a ref to control corporation visibility
 const showCorpsInAlliances = ref(false);
 
-// Search for systems
-async function searchSystems(term: string) {
-    // Don't search for short terms
-    if (term.length < 2) {
-        systemSearchResults.value = [];
+// System search functionality
+const handleSystemSearchSelect = (result: any) => {
+    // Don't allow selection if we've reached the limit
+    if (systemLimitReached.value) {
+        error.value = t('battleGenerator.errors.maxSystemsReached', { max: MAX_SYSTEMS });
         return;
     }
 
-    // Don't repeat the same search
-    if (lastSystemSearchTerm.value === term) return;
-
-    try {
-        const encoded = encodeURIComponent(term);
-        const { data } = await useFetch(`/api/search/${encoded}`);
-
-        if (data.value && data.value.hits) {
-            // Filter results to only include systems
-            systemSearchResults.value = data.value.hits
-                .filter((hit) => hit.type === 'system')
-                .slice(0, 10); // Limit to 10 results
-        }
-
-        // Update last search term
-        lastSystemSearchTerm.value = term;
-    } catch (err) {
-        console.error("System search error:", err);
-    }
+    selectSystem(result);
 }
-
-// Create a debounced version of the search function
-const debouncedSearch = useDebounceFn(searchSystems, 300);
-
-// Handle keyboard navigation
-const handleKeyDown = (e: KeyboardEvent) => {
-    // Only process if we have results and not at system limit
-    if (systemSearchResults.value.length === 0 || systemLimitReached.value) return;
-
-    switch (e.key) {
-        case 'ArrowDown':
-            e.preventDefault(); // Prevent cursor movement
-            selectedResultIndex.value = Math.min(selectedResultIndex.value + 1, systemSearchResults.value.length - 1);
-            break;
-        case 'ArrowUp':
-            e.preventDefault(); // Prevent cursor movement
-            selectedResultIndex.value = Math.max(selectedResultIndex.value - 1, 0);
-            break;
-        case 'Enter':
-            e.preventDefault(); // Prevent form submission
-            if (selectedResultIndex.value >= 0) {
-                selectSystem(systemSearchResults.value[selectedResultIndex.value]);
-            }
-            break;
-        case 'Escape':
-            systemSearchResults.value = []; // Clear results
-            break;
-    }
-};
-
-// Watch for changes to the search term
-watch(systemSearchTerm, (newTerm) => {
-    // Skip search if we just selected an item
-    if (justSelected.value) return;
-
-    if (newTerm && newTerm.length >= 2) {
-        debouncedSearch(newTerm);
-    } else {
-        systemSearchResults.value = [];
-    }
-
-    // Reset the selected index whenever search term changes
-    selectedResultIndex.value = -1;
-});
 
 // Select a system from search results
 function selectSystem(system: { id: number; name: string }) {
-    // Set the flag to prevent search
-    justSelected.value = true;
-
     // Check if system is already selected
     const alreadySelected = selectedSystems.value.some(s => s.id === system.id);
     if (alreadySelected) {
-        justSelected.value = false;
         return;
     }
 
     // Check if we've reached the maximum number of systems
     if (selectedSystems.value.length >= MAX_SYSTEMS) {
         error.value = t('battleGenerator.errors.maxSystemsReached', { max: MAX_SYSTEMS });
-        justSelected.value = false;
         return;
     }
 
@@ -224,14 +151,8 @@ function selectSystem(system: { id: number; name: string }) {
         name: system.name
     });
 
-    // Clear search term and results
+    // Clear search term
     systemSearchTerm.value = '';
-    systemSearchResults.value = [];
-
-    // Reset the flag after a short delay
-    setTimeout(() => {
-        justSelected.value = false;
-    }, 500);
 }
 
 // Remove a system from selected systems
@@ -1053,20 +974,55 @@ const previewBattle = async () => {
                         {{ t('battleGenerator.systems') }} ({{ selectedSystems.length }}/{{ MAX_SYSTEMS }})
                     </label>
                     <div class="relative">
-                        <input id="systemSearch" v-model="systemSearchTerm"
-                            :placeholder="t('battleGenerator.searchForSystem')" class="custom-input"
-                            :disabled="systemLimitReached" @keydown="handleKeyDown" />
+                        <Search 
+                            v-model="systemSearchTerm"
+                            :api-url="(query) => `/api/search/${encodeURIComponent(query)}`"
+                            :transform-response="(response) => (response?.hits || []).filter((hit: any) => hit.type === 'system').slice(0, 10)"
+                            :result-key="(result) => result.id"
+                            :result-name="(result) => result.name"
+                            :placeholder="t('battleGenerator.searchForSystem')"
+                            :disabled="systemLimitReached"
+                            loading-text="Searching systems..."
+                            no-results-text="No systems found"
+                            :close-on-select="true"
+                            wrapper-class="relative"
+                            dropdown-class="system-search-dropdown absolute z-10 w-full rounded-md mt-1 max-h-60 overflow-y-auto bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 shadow-lg"
+                            @select="handleSystemSearchSelect">
+                            
+                            <!-- Custom input slot -->
+                            <template #input="{ modelValue, updateQuery }">
+                                <input 
+                                    id="systemSearch"
+                                    :value="modelValue" 
+                                    @input="updateQuery"
+                                    :placeholder="t('battleGenerator.searchForSystem')" 
+                                    class="custom-input"
+                                    :disabled="systemLimitReached" />
+                            </template>
 
-                        <!-- Search results dropdown with specific class name -->
-                        <div v-if="systemSearchResults.length > 0 && !systemLimitReached"
-                            class="system-search-dropdown absolute z-10 w-full rounded-md mt-1 max-h-60 overflow-y-auto">
-                            <div v-for="(result, index) in systemSearchResults" :key="result.id"
-                                class="search-result-item p-2 cursor-pointer"
-                                :class="{ 'search-result-selected': index === selectedResultIndex }"
-                                @click="selectSystem(result)">
-                                {{ result.name }}
-                            </div>
-                        </div>
+                            <!-- Custom results slot -->
+                            <template #results="{ results }">
+                                <div v-for="result in results" :key="result.id"
+                                    class="search-result-item p-2 cursor-pointer text-gray-900 dark:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-700 border-b border-gray-200 dark:border-gray-600 last:border-b-0"
+                                    @click="selectSystem(result)">
+                                    {{ result.name }}
+                                </div>
+                            </template>
+
+                            <!-- Custom loading slot -->
+                            <template #loading>
+                                <div class="p-2 text-center text-gray-500 dark:text-gray-400">
+                                    Searching systems...
+                                </div>
+                            </template>
+
+                            <!-- Custom no results slot -->
+                            <template #no-results>
+                                <div class="p-2 text-center text-gray-500 dark:text-gray-400">
+                                    No systems found
+                                </div>
+                            </template>
+                        </Search>
 
                         <!-- Selected systems display -->
                         <div v-if="selectedSystems.length > 0" class="mt-2 flex flex-wrap gap-2">
