@@ -1,24 +1,10 @@
-import {
-    createError,
-    defineEventHandler,
-    getMethod,
-    getRequestIP,
-    readBody,
-} from "h3";
+import { createError, defineEventHandler, getRequestIP, readBody } from "h3";
 import { isbot } from "isbot";
 import { cliLogger } from "../../helpers/Logger";
 import type { IAccessLog } from "../../interfaces/IAccessLog";
 import { AccessLogs } from "../../models/AccessLogs";
 
 export default defineEventHandler(async (event) => {
-    // Only allow POST method
-    if (getMethod(event) !== "POST") {
-        throw createError({
-            statusCode: 405,
-            statusMessage: "Method not allowed",
-        });
-    }
-
     try {
         const body = await readBody(event);
         const { url, referrer, sessionId, timestamp } = body;

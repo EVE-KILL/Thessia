@@ -20,7 +20,7 @@ export default defineNuxtConfig({
     },
     logLevel: process.env.NODE_ENV !== "production" ? "info" : "silent",
     nitro: {
-        preset: "bun",
+        preset: "node-server", // https://github.com/nitrojs/nitro/issues/2719
         srcDir: "server",
         minify: true,
         esbuild: {

@@ -81,3 +81,11 @@ export async function checkAdminAuth(event: H3Event) {
         return { isAdmin: false };
     }
 }
+
+/**
+ * Default export containing all admin authentication utilities
+ */
+export default {
+    requireAdminAuth,
+    checkAdminAuth,
+};

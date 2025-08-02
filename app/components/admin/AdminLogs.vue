@@ -23,6 +23,12 @@
                             class="log-limit-input" @blur="validateLogLimit" />
                     </div>
                     <div class="control-group">
+                        <button @click="togglePause" class="pause-toggle-btn" :class="{ 'paused': isPaused }">
+                            <Icon :name="isPaused ? 'heroicons:play' : 'heroicons:pause'" class="btn-icon" />
+                            {{ isPaused ? 'Resume' : 'Pause' }}
+                        </button>
+                    </div>
+                    <div class="control-group">
                         <label class="connection-status">
                             <Icon
                                 :name="connectionStatus === 'connected' ? 'heroicons:signal' : connectionStatus === 'error' ? 'heroicons:x-circle' : 'heroicons:ellipsis-horizontal-circle'"
@@ -72,7 +78,7 @@
                     </span>
                 </div>
 
-                <div class="unified-logs" @mouseenter="pauseLogs" @mouseleave="scheduleResume">
+                <div class="unified-logs">
                     <pre ref="logsContainer" class="log-content" v-html="combinedLogs"></pre>
                 </div>
             </div>
@@ -232,38 +238,27 @@ const processLogLine = (rawLogLine: string): {
 };
 
 // Pause/Resume functionality
-const pauseLogs = () => {
-    isPaused.value = true;
-
-    // Clear any existing timers
-    if (resumeTimeout.value) {
-        clearTimeout(resumeTimeout.value);
-        resumeTimeout.value = null;
+const togglePause = () => {
+    if (isPaused.value) {
+        // Resume logs
+        isPaused.value = false;
+        
+        // Start smooth resume if there are buffered logs
+        if (pauseBuffer.value.length > 0) {
+            startSmoothResume();
+        }
+    } else {
+        // Pause logs
+        isPaused.value = true;
+        
+        // Clear any running smooth resume
+        if (smoothResumeInterval.value) {
+            clearInterval(smoothResumeInterval.value);
+            smoothResumeInterval.value = null;
+        }
     }
-    if (smoothResumeInterval.value) {
-        clearInterval(smoothResumeInterval.value);
-        smoothResumeInterval.value = null;
-    }
-};
-
-const scheduleResume = () => {
-    if (resumeTimeout.value) {
-        clearTimeout(resumeTimeout.value);
-    }
-
-    resumeTimeout.value = setTimeout(() => {
-        resumeLogs();
-    }, 2000);
-};
-
-const resumeLogs = () => {
-    isPaused.value = false;
-
-    // Start smooth resume if there are buffered logs
-    if (pauseBuffer.value.length > 0) {
-        startSmoothResume();
-    }
-
+    
+    // Clear any leftover timers
     if (resumeTimeout.value) {
         clearTimeout(resumeTimeout.value);
         resumeTimeout.value = null;
@@ -291,13 +286,13 @@ const startSmoothResume = () => {
             return;
         }
 
-        // Move logs from buffer to main display in small batches
+        // Move logs from buffer to main display in small batches (at beginning for newest first)
         const batch = pauseBuffer.value.splice(0, logsPerBatch);
         logLines.value.unshift(...batch);
 
-        // Keep only the configured number of logs
+        // Keep only the configured number of logs (remove from end)
         if (logLines.value.length > logLimit.value) {
-            logLines.value = logLines.value.slice(0, logLimit.value);
+            logLines.value.splice(logLimit.value);
         }
     }, intervalSpeed);
 };
@@ -382,28 +377,26 @@ const connectToLogStream = async () => {
                     lastUpdate.value = new Date().toISOString();
 
                     if (isPaused.value) {
-                        // Add to buffer when paused
+                        // Add to buffer when paused (at the beginning for newest first)
                         pauseBuffer.value.unshift(processedLog);
 
                         // Keep buffer reasonable size
                         if (pauseBuffer.value.length > 1000) {
                             pauseBuffer.value.splice(1000);
                         }
-
-                        scheduleResume();
                     } else {
-                        // Add to main logs
+                        // Add to main logs (at the beginning for newest first)
                         logLines.value.unshift(processedLog);
 
-                        // Trim if over limit
+                        // Trim if over limit (remove from end)
                         if (logLines.value.length > logLimit.value) {
                             logLines.value.splice(logLimit.value);
                         }
 
-                        // Auto-scroll to bottom for new logs
+                        // Keep scroll at top for new logs
                         nextTick(() => {
                             if (logsContainer.value) {
-                                logsContainer.value.scrollTop = logsContainer.value.scrollHeight;
+                                logsContainer.value.scrollTop = 0;
                             }
                         });
                     }
@@ -465,9 +458,9 @@ const validateLogLimit = () => {
         logLimit.value = 1000000;
     }
 
-    // Trim existing logs if they exceed the new limit
+    // Trim existing logs if they exceed the new limit (keep newest at top)
     if (logLines.value.length > logLimit.value) {
-        logLines.value = logLines.value.slice(0, logLimit.value);
+        logLines.value.splice(logLimit.value);
     }
 };
 
@@ -582,6 +575,41 @@ onMounted(() => {
 .log-limit-input {
     min-width: 100px;
     text-align: center;
+}
+
+.pause-toggle-btn {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    background-color: rgb(55, 65, 81);
+    color: white;
+    border: 1px solid rgb(75, 85, 99);
+    border-radius: 0.375rem;
+    padding: 0.5rem 1rem;
+    font-size: 0.875rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.pause-toggle-btn:hover {
+    background-color: rgb(75, 85, 99);
+    border-color: rgb(107, 114, 128);
+}
+
+.pause-toggle-btn.paused {
+    background-color: rgb(251, 191, 36);
+    border-color: rgb(245, 158, 11);
+    color: rgb(0, 0, 0);
+}
+
+.pause-toggle-btn.paused:hover {
+    background-color: rgb(245, 158, 11);
+    border-color: rgb(217, 119, 6);
+}
+
+.btn-icon {
+    width: 1rem;
+    height: 1rem;
 }
 
 .pod-select.multi-select {

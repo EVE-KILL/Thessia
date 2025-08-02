@@ -107,3 +107,12 @@ export function createApiKeyError(error: string, statusCode: number = 401) {
         },
     });
 }
+
+/**
+ * Default export containing all API key authentication utilities
+ */
+export default {
+    validateApiKey,
+    requireApiKey,
+    createApiKeyError,
+};
