@@ -72,6 +72,7 @@ export default defineEventHandler(async (event) => {
                 endpoint: 1,
                 dataType: 1,
                 itemsReturned: 1,
+                newItemsCount: 1,
                 killmailDelay: 1,
                 error: 1,
                 errorMessage: 1,

@@ -152,6 +152,18 @@ export default defineEventHandler(async (event) => {
                         ],
                     },
                 },
+                totalNewItems: {
+                    $sum: {
+                        $cond: [
+                            { $and: [
+                                { $ne: ["$newItemsCount", null] },
+                                { $ne: ["$newItemsCount", undefined] }
+                            ]},
+                            "$newItemsCount",
+                            0,
+                        ],
+                    },
+                },
             },
         },
         {
@@ -162,10 +174,23 @@ export default defineEventHandler(async (event) => {
                 errorRequests: 1,
                 uniqueCharacters: { $size: "$uniqueCharacters" },
                 totalItemsFetched: 1,
+                totalNewItems: 1,
                 successRate: {
                     $multiply: [
                         { $divide: ["$successfulRequests", "$totalRequests"] },
                         100,
+                    ],
+                },
+                newItemsRate: {
+                    $cond: [
+                        { $eq: ["$totalItemsFetched", 0] },
+                        0,
+                        {
+                            $multiply: [
+                                { $divide: ["$totalNewItems", "$totalItemsFetched"] },
+                                100,
+                            ],
+                        },
                     ],
                 },
             },
@@ -226,7 +251,9 @@ export default defineEventHandler(async (event) => {
                 errorRequests: 0,
                 uniqueCharacters: 0,
                 totalItemsFetched: 0,
+                totalNewItems: 0,
                 successRate: 0,
+                newItemsRate: 0,
             },
             topDataTypes,
             dateRange: {

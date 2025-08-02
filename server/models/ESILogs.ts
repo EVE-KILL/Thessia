@@ -14,6 +14,7 @@ const esiLogSchema = new Schema<IESILogDocument>(
         // Data transparency
         dataType: { type: String, required: true, index: true },
         itemsReturned: { type: Number },
+        newItemsCount: { type: Number },
         killmailDelay: { type: Number }, // hours
         fetchedData: [
             {

@@ -94,6 +94,25 @@
                                     }}</div>
                             </div>
                         </div>
+                        <div class="stat-card">
+                            <div class="stat-icon new-items-icon">
+                                <Icon name="heroicons:plus-circle" class="icon" />
+                            </div>
+                            <div class="stat-info">
+                                <div class="stat-label">{{ t('admin.analytics.esiLogs.totalNewItems') }}</div>
+                                <div class="stat-value">{{ data?.data?.summary?.totalNewItems?.toLocaleString() || 0
+                                    }}</div>
+                            </div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-icon efficiency-icon">
+                                <Icon name="heroicons:chart-bar-square" class="icon" />
+                            </div>
+                            <div class="stat-info">
+                                <div class="stat-label">{{ t('admin.analytics.esiLogs.newItemsRate') }}</div>
+                                <div class="stat-value">{{ (data?.data?.summary?.newItemsRate || 0).toFixed(1) }}%</div>
+                            </div>
+                        </div>
                     </div>
                 </div>
 
@@ -212,6 +231,7 @@
                                 <div class="header-cell">{{ t('admin.analytics.esiLogs.dataType') }}</div>
                                 <div class="header-cell">{{ t('admin.analytics.esiLogs.source') }}</div>
                                 <div class="header-cell">{{ t('admin.analytics.esiLogs.items') }}</div>
+                                <div class="header-cell">{{ t('admin.analytics.esiLogs.newItems') }}</div>
                                 <div class="header-cell">{{ t('admin.analytics.esiLogs.status') }}</div>
                             </div>
                             <div class="table-body">
@@ -249,6 +269,14 @@
                                     </div>
                                     <div class="table-cell">
                                         {{ log.itemsReturned || 0 }}
+                                    </div>
+                                    <div class="table-cell">
+                                        <span v-if="log.newItemsCount !== undefined && log.newItemsCount !== null" 
+                                              class="new-items-count"
+                                              :class="{ 'has-new-items': log.newItemsCount > 0 }">
+                                            {{ log.newItemsCount }}
+                                        </span>
+                                        <span v-else class="no-data">-</span>
                                     </div>
                                     <div class="table-cell">
                                         <div class="status-badge" :class="log.error ? 'error' : 'success'">
@@ -313,7 +341,9 @@ interface ESILogsResponse {
             errorRequests: number;
             uniqueCharacters: number;
             totalItemsFetched: number;
+            totalNewItems: number;
             successRate: number;
+            newItemsRate: number;
         };
         topDataTypes: Array<{
             dataType: string;
@@ -602,6 +632,14 @@ function debounce<T extends (...args: any[]) => any>(func: T, wait: number): (..
     background: rgba(234, 179, 8, 0.2);
 }
 
+.stat-icon.new-items-icon {
+    background: rgba(16, 185, 129, 0.2);
+}
+
+.stat-icon.efficiency-icon {
+    background: rgba(139, 92, 246, 0.2);
+}
+
 .stat-icon .icon {
     width: 1.5rem;
     height: 1.5rem;
@@ -622,6 +660,14 @@ function debounce<T extends (...args: any[]) => any>(func: T, wait: number): (..
 
 .items-icon .icon {
     color: rgb(234, 179, 8);
+}
+
+.new-items-icon .icon {
+    color: rgb(16, 185, 129);
+}
+
+.efficiency-icon .icon {
+    color: rgb(139, 92, 246);
 }
 
 .stat-info {
@@ -825,7 +871,7 @@ function debounce<T extends (...args: any[]) => any>(func: T, wait: number): (..
 
 .table-header {
     display: grid;
-    grid-template-columns: 150px 200px 150px 120px 80px 120px;
+    grid-template-columns: 150px 200px 150px 120px 80px 80px 120px;
     gap: 1rem;
     padding: 1rem;
     background: rgba(0, 0, 0, 0.5);
@@ -842,7 +888,7 @@ function debounce<T extends (...args: any[]) => any>(func: T, wait: number): (..
 
 .table-row {
     display: grid;
-    grid-template-columns: 150px 200px 150px 120px 80px 120px;
+    grid-template-columns: 150px 200px 150px 120px 80px 80px 120px;
     gap: 1rem;
     padding: 1rem;
     border-bottom: 1px solid rgba(55, 55, 55, 0.5);
@@ -891,6 +937,20 @@ function debounce<T extends (...args: any[]) => any>(func: T, wait: number): (..
 }
 
 .character-unknown {
+    color: rgb(156, 163, 175);
+    font-style: italic;
+}
+
+.new-items-count {
+    font-weight: 600;
+    color: rgb(156, 163, 175);
+}
+
+.new-items-count.has-new-items {
+    color: rgb(34, 197, 94);
+}
+
+.no-data {
     color: rgb(156, 163, 175);
     font-style: italic;
 }

@@ -13,6 +13,7 @@ export interface IESILog {
     // Data transparency
     dataType: string; // e.g., "killmails", "corporation_killmails", "character_info"
     itemsReturned?: number; // Number of items returned (e.g., number of killmails)
+    newItemsCount?: number; // Number of items that were actually new (not already in database)
     killmailDelay?: number; // Delay setting applied to this fetch (in hours)
     fetchedData?: Array<{
         id: number | string; // The ID/identifier of the fetched item (e.g., killmail ID, character ID, etc.)

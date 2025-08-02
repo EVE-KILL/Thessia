@@ -206,7 +206,7 @@ export default {
                             const killmailHash = killmail.killmail_hash;
                             if (!killmailId || !killmailHash) continue;
 
-                            const killmailExists = await Killmails.exists({
+                            const killmailExists = await KillmailsESI.exists({
                                 killmail_id: killmailId,
                                 killmail_hash: killmailHash,
                             });
@@ -393,6 +393,20 @@ async function getCharacterKillmails(
                     }
                     return [];
                 },
+                checkNewItems: async (items) => {
+                    // Check how many of the killmails are actually new
+                    let newCount = 0;
+                    for (const item of items) {
+                        const exists = await KillmailsESI.exists({
+                            killmail_id: item.id,
+                            killmail_hash: item.hash,
+                        });
+                        if (!exists) {
+                            newCount++;
+                        }
+                    }
+                    return newCount;
+                },
             }
         );
         return Array.isArray(killmails) ? killmails : [];
@@ -440,6 +454,20 @@ async function getCorporationKillmails(
                         }));
                     }
                     return [];
+                },
+                checkNewItems: async (items) => {
+                    // Check how many of the killmails are actually new
+                    let newCount = 0;
+                    for (const item of items) {
+                        const exists = await Killmails.exists({
+                            killmail_id: item.id,
+                            killmail_hash: item.hash,
+                        });
+                        if (!exists) {
+                            newCount++;
+                        }
+                    }
+                    return newCount;
                 },
             }
         );

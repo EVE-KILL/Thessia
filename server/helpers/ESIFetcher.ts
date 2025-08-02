@@ -135,12 +135,18 @@ async function esiFetcherWithLogging(
             hash?: string;
             additionalInfo?: Record<string, any>;
         }>; // Function to extract IDs/identifiers from the fetched data
+        checkNewItems?: (items: Array<{
+            id: number | string;
+            hash?: string;
+            additionalInfo?: Record<string, any>;
+        }>) => Promise<number>; // Function to check how many items are new
     }
 ): Promise<any> {
     const timestamp = new Date();
     let error = false;
     let errorMessage: string | undefined;
     let itemsReturned: number | undefined;
+    let newItemsCount: number | undefined;
     let fetchedData:
         | Array<{
               id: number | string;
@@ -164,6 +170,18 @@ async function esiFetcherWithLogging(
         if (logContext?.extractDataIds && result) {
             try {
                 fetchedData = logContext.extractDataIds(result);
+                
+                // Check how many items are new if checker function is provided
+                if (logContext?.checkNewItems && fetchedData) {
+                    try {
+                        newItemsCount = await logContext.checkNewItems(fetchedData);
+                    } catch (checkError) {
+                        console.warn(
+                            "Failed to check new items for ESI log:",
+                            checkError
+                        );
+                    }
+                }
             } catch (extractError) {
                 console.warn(
                     "Failed to extract data IDs for ESI log:",
@@ -185,6 +203,7 @@ async function esiFetcherWithLogging(
                     endpoint: getEndpointFromUrl(url),
                     dataType: logContext.dataType,
                     itemsReturned,
+                    newItemsCount,
                     killmailDelay: logContext.killmailDelay,
                     fetchedData,
                     error,
