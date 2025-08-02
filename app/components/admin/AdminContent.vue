@@ -12,6 +12,7 @@
         <AdminAnalyticsESI v-else-if="currentPath === 'analytics/esi'" />
         <AdminAnalyticsESILogs v-else-if="currentPath === 'analytics/esilogs'" />
         <AdminSettings v-else-if="currentPath === 'settings'" />
+        <AdminKubernetes v-else-if="currentPath === 'kubernetes'" />
 
         <!-- Default placeholder for unimplemented sections -->
         <div v-else class="content-placeholder">

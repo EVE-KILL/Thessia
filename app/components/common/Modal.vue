@@ -8,7 +8,7 @@
                 <!-- Scale/fade content -->
                 <Transition name="content-scale">
                     <div v-show="isOpen" ref="dialog"
-                        class="modal-content relative w-full max-w-lg transform rounded-xl bg-white dark:bg-gray-800 shadow-2xl border border-gray-200 dark:border-gray-700 pb-4"
+                        :class="['modal-content relative w-full transform rounded-xl bg-white dark:bg-gray-800 shadow-2xl border border-gray-200 dark:border-gray-700 pb-4 flex flex-col', modalSizeClasses]"
                         role="dialog" aria-modal="true" :aria-labelledby="title ? 'modal-title' : undefined"
                         tabindex="-1" @click.stop>
                         <!-- Header -->
@@ -28,7 +28,7 @@
                         </header>
 
                         <!-- Body -->
-                        <section class="px-6 pt-6 pb-6 bg-white dark:bg-gray-800">
+                        <section class="px-6 pt-6 pb-6 bg-white dark:bg-gray-800 flex-1 overflow-auto">
                             <slot />
                         </section>
 
@@ -59,10 +59,30 @@ const props = withDefaults(defineProps<{
     isOpen: boolean;
     title?: string;
     closeOnBackdrop?: boolean;
-}>(), { closeOnBackdrop: true });
+    size?: 'sm' | 'md' | 'lg' | 'xl' | '2xl' | '3xl' | '4xl' | '5xl' | '6xl' | 'full';
+}>(), {
+    closeOnBackdrop: true,
+    size: 'md'
+});
 
 const emit = defineEmits();
 const dialog = ref<HTMLElement | null>(null);
+
+const modalSizeClasses = computed(() => {
+    const sizeMap = {
+        'sm': 'max-w-sm max-h-[50vh]',
+        'md': 'max-w-md max-h-[60vh]',
+        'lg': 'max-w-lg max-h-[70vh]',
+        'xl': 'max-w-xl max-h-[75vh]',
+        '2xl': 'max-w-2xl max-h-[80vh]',
+        '3xl': 'max-w-3xl max-h-[85vh]',
+        '4xl': 'max-w-4xl max-h-[90vh]',
+        '5xl': 'max-w-5xl max-h-[90vh]',
+        '6xl': 'max-w-6xl max-h-[95vh]',
+        'full': 'max-w-full max-h-[95vh] mx-4'
+    };
+    return sizeMap[props.size];
+});
 
 function close() {
     emit('close');

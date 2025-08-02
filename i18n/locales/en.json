@@ -1604,7 +1604,8 @@
             "logs": "System Logs",
             "users": "User Management",
             "database": "Database Management",
-            "settings": "Settings"
+            "settings": "Settings",
+            "kubernetes": "Kubernetes"
         },
         "pages": {
             "overview": "Dashboard Overview",
@@ -1617,6 +1618,7 @@
             "users": "User Management",
             "settings": "Application Settings",
             "database": "Database Management",
+            "kubernetes": "Kubernetes Management",
             "models": "Data Models",
             "killmails": "Killmails",
             "characters": "Characters",
@@ -1862,6 +1864,51 @@
                     "killmailFetch": "Killmail Fetch",
                     "characterUpdate": "Character Update",
                     "corporationUpdate": "Corporation Update"
+                }
+            }
+        },
+        "kubernetes": {
+            "title": "Kubernetes Management",
+            "description": "Manage Kubernetes resources in the eve-kill namespace",
+            "loading": "Loading...",
+            "refresh": "Refresh",
+            "cancel": "Cancel",
+            "overview": {
+                "title": "Cluster Overview",
+                "resources": "Resource Counts",
+                "podStatus": "Pod Status",
+                "deploymentHealth": "Deployment Health"
+            },
+            "pods": {
+                "title": "Pods",
+                "empty": "No pods found",
+                "logs": "Logs",
+                "restart": "Restart",
+                "logsFor": "Logs for {podName}",
+                "loadingLogs": "Loading logs...",
+                "container": "Container"
+            },
+            "deployments": {
+                "title": "Deployments",
+                "empty": "No deployments found",
+                "scale": "Scale",
+                "scaleTitle": "Scale {deploymentName}",
+                "currentReplicas": "Current Replicas",
+                "newReplicas": "New Replicas"
+            },
+            "services": {
+                "title": "Services",
+                "empty": "No services found"
+            },
+            "ingresses": {
+                "title": "Ingresses",
+                "empty": "No ingresses found",
+                "columns": {
+                    "name": "Name",
+                    "class": "Class",
+                    "hosts": "Hosts",
+                    "paths": "Paths",
+                    "age": "Age"
                 }
             }
         },

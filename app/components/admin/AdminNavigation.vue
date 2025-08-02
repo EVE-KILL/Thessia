@@ -31,6 +31,8 @@
                     :current-path="currentPath" @navigate="$emit('navigate', 'queues')" />
                 <AdminNavItem :item="{ name: t('admin.nav.logs'), path: 'logs', icon: 'heroicons:document-text' }"
                     :current-path="currentPath" @navigate="$emit('navigate', 'logs')" />
+                <AdminNavItem :item="{ name: t('admin.nav.kubernetes'), path: 'kubernetes', icon: 'heroicons:cube' }"
+                    :current-path="currentPath" @navigate="$emit('navigate', 'kubernetes')" />
             </div>
 
             <!-- Management -->

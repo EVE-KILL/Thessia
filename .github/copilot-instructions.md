@@ -5,7 +5,7 @@
 This project uses:
 
 -   **Nuxt (Vue 3 & Nitro)** for frontend and backend.
--   **Nuxt/UI** for UI components.
+-   **Nuxt/UI** for UI components. (AVOID Using Nuxt/UI components as much as possible, use the components located in the `/app/components` folder instead (like instead of `UTable` use `Table`from `/app/components/common/Table.vue`))
 -   **MongoDB (via Mongoose)** for data storage.
 -   **Redis (via ioredis)** for caching.
 -   **BullMQ** for job processing.
