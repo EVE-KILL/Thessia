@@ -493,9 +493,6 @@ const countPositionClass = computed(() => {
         <!-- plain image -->
         <img v-if="src" ref="imageRef" :src="src" :alt="alt" :class="imageClasses" :width="imgWidth" :height="imgHeight"
             :loading="effectiveLoading" :fetchpriority="effectivePriority" />
-        <!--<NuxtImg ref="imageRef" v-if="src" :src="src" :alt="alt" :class="imageClasses" :width="imgWidth"
-            :height="imgHeight" :format="format" :quality="effectiveQuality" :loading="effectiveLoading"
-            :fetchpriority="effectivePriority" />-->
         <div v-else :class="['bg-gray-200 dark:bg-gray-700 flex items-center justify-center', imageClasses]"
             :style="{ width: `${imgWidth}px`, height: `${imgHeight}px` }">
             <UIcon name="lucide:image" class="text-gray-400 dark:text-gray-500" />

@@ -973,11 +973,10 @@ onUpdated(() => {
                     <div class="text-sm text-black dark:text-white">{{ formatDate(item.kill_time) }}</div>
                     <div class="flex gap-1 items-center">
                         <span class="text-xs text-gray-600 dark:text-gray-400">{{ item.attackerCount }}</span>
-                        <NuxtImg src="/images/involved.png" quality="80" width="16" height="16"
-                            :alt="`${item.attackerCount} Involved`" class="h-4" />
-                        <span class="text-xs text-gray-600 dark:text-gray-400">{{ item.commentCount || 0 }}</span>
-                        <NuxtImg src="/images/comment.gif" quality="80" width="16" height="16" alt="Comments"
+                        <img src="/images/involved.png" width="16" height="16" :alt="`${item.attackerCount} Involved`"
                             class="h-4" />
+                        <span class="text-xs text-gray-600 dark:text-gray-400">{{ item.commentCount || 0 }}</span>
+                        <img src="/images/comment.gif" width="16" height="16" alt="Comments" class="h-4" />
                     </div>
                 </div>
             </template>

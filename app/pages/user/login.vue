@@ -213,8 +213,8 @@ onBeforeUnmount(() => {
                                     <UIcon name="lucide:loader" class="animate-spin mr-2" />
                                     {{ $t('auth.loading') }}
                                 </div>
-                                <NuxtImg v-else :src="ssoImageSrc" alt="Login with EVE Online" class="max-w-full h-auto"
-                                    width="270" height="45" format="webp" quality="95" />
+                                <img v-else :src="ssoImageSrc" alt="Login with EVE Online" class="max-w-full h-auto"
+                                    width="270" height="45" />
                             </button>
 
                             <div class="w-full pt-4 text-center">

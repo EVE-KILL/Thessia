@@ -214,8 +214,8 @@ onUnmounted(() => {
                             :class="{ 'ring-2 ring-(--ui-focus-ring)': isCurrentBackground(bg.path) }">
                             <!-- Image Thumbnail -->
                             <div class="aspect-video bg-(--ui-bg-muted) overflow-hidden">
-                                <NuxtImg :src="bg.path" width="180" height="101" loading="lazy" format="webp"
-                                    fit="cover" quality="80" class="w-full h-full object-cover" />
+                                <img :src="bg.path" width="180" height="101" loading="lazy"
+                                    class="w-full h-full object-cover" />
                             </div>
 
                             <!-- Image Name Overlay -->
@@ -272,8 +272,8 @@ onUnmounted(() => {
                     :class="{ 'ring-2 ring-primary-500': isCurrentBackground(bg.path) }">
                     <!-- Image Thumbnail -->
                     <div class="aspect-video bg-(--ui-bg-muted) overflow-hidden">
-                        <NuxtImg :src="bg.path" width="180" height="101" loading="lazy" format="webp" fit="cover"
-                            quality="80" class="w-full h-full object-cover" />
+                        <img :src="bg.path" width="180" height="101" loading="lazy"
+                            class="w-full h-full object-cover" />
                     </div>
 
                     <!-- Image Name Overlay -->

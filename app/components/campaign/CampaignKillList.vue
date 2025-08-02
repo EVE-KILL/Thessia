@@ -547,7 +547,7 @@ onUpdated(() => {
                             <div class="text-sm text-black dark:text-white">{{ formatDate(item.kill_time) }}</div>
                             <div class="flex gap-1 items-center">
                                 <span class="text-xs text-gray-600 dark:text-gray-400">{{ item.attackerCount }}</span>
-                                <NuxtImg src="/images/involved.png" quality="80" width="16" height="16"
+                                <img src="/images/involved.png" width="16" height="16"
                                     :alt="`${item.attackerCount} Involved`" class="h-4" />
                             </div>
                         </div>
@@ -601,8 +601,8 @@ onUpdated(() => {
                                         formatDate(item.kill_time) }}</span>
                                     <div class="attacker-count flex items-center gap-1">
                                         <span class="text-xs text-gray-600 dark:text-gray-400">{{ item.attackerCount
-                                        }}</span>
-                                        <NuxtImg src="/images/involved.png" quality="80" width="16" height="16"
+                                            }}</span>
+                                        <img src="/images/involved.png" width="16" height="16"
                                             :alt="`${item.attackerCount} Involved`" class="h-3" />
                                     </div>
                                 </div>
@@ -720,9 +720,9 @@ onUpdated(() => {
                     label: '',
                     disabled: page === 1
                 }" :next-button="{
-                icon: 'i-lucide-chevron-right',
-                label: ''
-            }">
+                    icon: 'i-lucide-chevron-right',
+                    label: ''
+                }">
                     <template #default>
                         <span class="mx-2">{{ $t('common.page') }} {{ page }}</span>
                     </template>

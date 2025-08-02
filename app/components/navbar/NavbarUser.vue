@@ -119,9 +119,9 @@ const ssoImageDimensions = computed(() => {
                                         <UIcon name="lucide:loader" class="animate-spin mr-2" />
                                         {{ t('auth.loading', 'Loading...') }}
                                     </div>
-                                    <NuxtImg v-else :src="ssoImageSrc" alt="Basic Login with EVE Online"
+                                    <img v-else :src="ssoImageSrc" alt="Basic Login with EVE Online"
                                         class="sso-image w-full h-auto" :width="ssoImageDimensions.width"
-                                        :height="ssoImageDimensions.height" format="webp" quality="95" />
+                                        :height="ssoImageDimensions.height" />
                                 </button>
                                 <div class="text-xs text-gray-500 dark:text-gray-400 text-center mt-1">
                                     {{ t('auth.basicLoginInfo', 'Basic login with publicData only') }}
@@ -143,9 +143,9 @@ const ssoImageDimensions = computed(() => {
                                         <UIcon name="lucide:loader" class="animate-spin mr-2" />
                                         {{ t('auth.loading', 'Loading...') }}
                                     </div>
-                                    <NuxtImg v-else :src="ssoImageSrc" alt="Killmail Login with EVE Online"
+                                    <img v-else :src="ssoImageSrc" alt="Killmail Login with EVE Online"
                                         class="sso-image w-full h-auto" :width="ssoImageDimensions.width"
-                                        :height="ssoImageDimensions.height" format="webp" quality="95" />
+                                        :height="ssoImageDimensions.height" />
                                 </button>
                                 <div class="text-xs text-gray-500 dark:text-gray-400 text-center mt-1">
                                     {{ t('auth.killmailLoginInfo', 'For accessing private and corporation killmails') }}
@@ -288,9 +288,9 @@ const ssoImageDimensions = computed(() => {
                                     <UIcon name="lucide:loader" class="animate-spin mr-2" />
                                     {{ t('auth.loading', 'Loading...') }}
                                 </div>
-                                <NuxtImg v-else :src="ssoImageSrc" alt="Basic Login with EVE Online"
+                                <img v-else :src="ssoImageSrc" alt="Basic Login with EVE Online"
                                     class="sso-image w-full h-auto" :width="ssoImageDimensions.width"
-                                    :height="ssoImageDimensions.height" format="webp" quality="95" />
+                                    :height="ssoImageDimensions.height" />
                             </button>
                             <div class="text-xs text-gray-500 dark:text-gray-400 text-center mt-1">
                                 {{ t('auth.basicLoginInfo', 'Basic login with publicData only') }}
@@ -312,9 +312,9 @@ const ssoImageDimensions = computed(() => {
                                     <UIcon name="lucide:loader" class="animate-spin mr-2" />
                                     {{ t('auth.loading', 'Loading...') }}
                                 </div>
-                                <NuxtImg v-else :src="ssoImageSrc" alt="Killmail Login with EVE Online"
+                                <img v-else :src="ssoImageSrc" alt="Killmail Login with EVE Online"
                                     class="sso-image w-full h-auto" :width="ssoImageDimensions.width"
-                                    :height="ssoImageDimensions.height" format="webp" quality="95" />
+                                    :height="ssoImageDimensions.height" />
                             </button>
                             <div class="text-xs text-gray-500 dark:text-gray-400 text-center mt-1">
                                 {{ t('auth.killmailLoginInfo', 'For private and corporation killmails') }}
@@ -387,9 +387,8 @@ const ssoImageDimensions = computed(() => {
                             <UIcon name="lucide:loader" class="animate-spin mr-2" />
                             {{ t('auth.loading', 'Loading...') }}
                         </div>
-                        <NuxtImg v-else :src="ssoImageSrc" alt="Basic Login with EVE Online"
-                            class="sso-image w-full h-auto" :width="ssoImageDimensions.width"
-                            :height="ssoImageDimensions.height" format="webp" quality="95" />
+                        <img v-else :src="ssoImageSrc" alt="Basic Login with EVE Online" class="sso-image w-full h-auto"
+                            :width="ssoImageDimensions.width" :height="ssoImageDimensions.height" />
                     </button>
                     <div class="text-xs text-gray-500 dark:text-gray-400 text-center">
                         {{ t('auth.basicLoginInfo', 'Basic login with publicData only') }}
@@ -411,9 +410,9 @@ const ssoImageDimensions = computed(() => {
                             <UIcon name="lucide:loader" class="animate-spin mr-2" />
                             {{ t('auth.loading', 'Loading...') }}
                         </div>
-                        <NuxtImg v-else :src="ssoImageSrc" alt="Killmail Login with EVE Online"
+                        <img v-else :src="ssoImageSrc" alt="Killmail Login with EVE Online"
                             class="sso-image w-full h-auto" :width="ssoImageDimensions.width"
-                            :height="ssoImageDimensions.height" format="webp" quality="95" />
+                            :height="ssoImageDimensions.height" />
                     </button>
                     <div class="text-xs text-gray-500 dark:text-gray-400 text-center">
                         {{ t('auth.killmailLoginInfo', 'For accessing private and corporation killmails') }}

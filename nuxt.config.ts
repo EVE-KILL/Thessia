@@ -106,7 +106,6 @@ export default defineNuxtConfig({
     modules: [
         "@nuxt/ui",
         "@nuxt/icon",
-        "@nuxt/image",
         "@nuxtjs/i18n",
         "@nuxtjs/sitemap",
         "@nuxtjs/seo",
@@ -184,44 +183,6 @@ export default defineNuxtConfig({
             cookieKey: "i18n_locale",
             redirectOn: "root",
             alwaysRedirect: false,
-        },
-    },
-
-    // Image optimization settings - Fixed configuration
-    image: {
-        format: ["webp"],
-        quality: 80,
-        screens: {
-            xs: 320,
-            sm: 640,
-            md: 768,
-            lg: 1024,
-            xl: 1280,
-            xxl: 1536,
-            "2xl": 1536,
-        },
-        // Updated providers configuration
-        domains: [
-            "i.redd.it",
-            "i.imgur.com",
-            "preview.redd.it",
-            "images.evetech.net",
-        ],
-        // Use ipx as default provider - it handles both local and remote images
-        provider: "ipx",
-        providers: {
-            // Remove the custom proxy provider and use ipx's built-in remote image handling
-        },
-        presets: {
-            background: {
-                modifiers: {
-                    format: "webp",
-                    width: 1920,
-                    height: 1080,
-                    fit: "cover",
-                    quality: 80,
-                },
-            },
         },
     },
 
