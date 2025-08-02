@@ -46,8 +46,11 @@ export default defineEventHandler(async (event) => {
     // Start the setup asynchronously after the connection is established
     const setupLogStreaming = async () => {
         try {
+            console.log("SSE: Starting log streaming setup...");
+
             // Get all pods first
             const pods = await kubernetesManager.getPods();
+            console.log(`SSE: Found ${pods?.length || 0} total pods`);
 
             // Filter to only running pods and exclude system pods
             const allRunningPods = pods.filter(
@@ -59,6 +62,11 @@ export default defineEventHandler(async (event) => {
                     !pod.metadata.name.includes("coredns") &&
                     !pod.metadata.name.startsWith("cron-") && // Exclude cron jobs
                     !pod.metadata.name.match(/^[a-z-]+-\d{8}-[a-z0-9]{5}$/) // Exclude job pods pattern
+            );
+            console.log(
+                `SSE: Found ${
+                    allRunningPods?.length || 0
+                } running pods after filtering`
             );
 
             if (!allRunningPods || allRunningPods.length === 0) {
@@ -75,6 +83,9 @@ export default defineEventHandler(async (event) => {
             // Filter pods based on selection
             let targetPods = allRunningPods;
             if (selectedPods && selectedPods !== "all") {
+                console.log(
+                    `SSE: Filtering pods for selection: ${selectedPods}`
+                );
                 const podNames = selectedPods
                     .split(",")
                     .map((name) => name.trim())
@@ -84,6 +95,11 @@ export default defineEventHandler(async (event) => {
                         podNames.includes(pod.metadata?.name || "")
                     );
                 }
+                console.log(
+                    `SSE: Selected ${
+                        targetPods?.length || 0
+                    } pods for streaming`
+                );
             }
 
             if (targetPods.length === 0) {
@@ -106,13 +122,31 @@ export default defineEventHandler(async (event) => {
                 const podName = pod.metadata?.name || "";
                 const containers = pod.spec?.containers || [];
 
+                // Validate pod data before processing
+                if (!podName) {
+                    console.warn("SSE: Skipping pod with no name:", pod);
+                    return;
+                }
+
                 // Create a stream for each container in the pod
                 containers.forEach((container: any) => {
-                    const containerName = container.name;
+                    const containerName = container?.name;
+
+                    // Validate container data before processing
+                    if (!containerName) {
+                        console.warn(
+                            "SSE: Skipping container with no name in pod:",
+                            podName
+                        );
+                        return;
+                    }
 
                     streamPromises.push(
                         (async () => {
                             try {
+                                console.log(
+                                    `SSE: Creating log stream for ${podName}/${containerName}`
+                                );
                                 const logStream =
                                     await kubernetesManager.watchPodLogs(
                                         podName,
@@ -150,12 +184,24 @@ export default defineEventHandler(async (event) => {
                                                     ? deploymentName
                                                     : `${deploymentName}/${container.name}`;
                                             const logWithPrefix = `${prefix} | ${line}`;
-                                            await eventStream.push(
-                                                `${logWithPrefix}\n\n`
-                                            );
+                                            try {
+                                                await eventStream.push(
+                                                    `${logWithPrefix}\n\n`
+                                                );
+                                            } catch (pushError) {
+                                                // Connection may be closed, ignore push errors
+                                                console.error(
+                                                    "SSE: Failed to push log data:",
+                                                    pushError
+                                                );
+                                            }
                                         }
                                     } catch (error) {
                                         // Silently handle log processing errors
+                                        console.error(
+                                            "SSE: Error processing log data:",
+                                            error
+                                        );
                                     }
                                 });
 
@@ -239,8 +285,25 @@ export default defineEventHandler(async (event) => {
         await eventStream.close();
     });
 
-    // Start the Kubernetes log streaming setup asynchronously
-    setupLogStreaming();
+    // Start the Kubernetes log streaming setup asynchronously with proper error handling
+    setupLogStreaming().catch(async (error) => {
+        console.error("SSE: Fatal error in setupLogStreaming:", error);
+        try {
+            await eventStream.push(
+                `data: ${JSON.stringify({
+                    type: "error",
+                    message: `Fatal streaming error: ${
+                        error instanceof Error ? error.message : "Unknown error"
+                    }`,
+                })}\n\n`
+            );
+        } catch (pushError) {
+            console.error(
+                "SSE: Failed to send error message to client:",
+                pushError
+            );
+        }
+    });
 
     return eventStream.send();
 });
