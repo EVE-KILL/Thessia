@@ -16,11 +16,8 @@ export default {
                     const killmailId = data.package.killID;
                     const killmailHash = data.package.zkb.hash;
 
-                    console.log(
-                        "ℹ️  New killmail:",
-                        killmailId,
-                        "-",
-                        killmailHash
+                    cliLogger.info(
+                        `ℹ️  New killmail: ${killmailId} - ${killmailHash}`
                     );
                     await addKillmail(killmailId, killmailHash, 0, 1);
                 }

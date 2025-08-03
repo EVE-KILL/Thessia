@@ -24,6 +24,11 @@ const REDIS_DB = parseInt(process.env.REDIS_DB || "0");
 const REDIS_KEY_PREFIX = process.env.REDIS_KEY_PREFIX || "thessia:";
 const FRONTEND_URL = process.env.FRONTEND_URL || "http://localhost:3000";
 
+// Ping/Pong configuration
+const PING_INTERVAL = parseInt(process.env.WS_PING_INTERVAL || "30000"); // 30 seconds
+const PING_TIMEOUT = parseInt(process.env.WS_PING_TIMEOUT || "10000"); // 10 seconds
+const CONNECTION_CLEANUP_INTERVAL = parseInt(process.env.WS_CLEANUP_INTERVAL || "60000"); // 1 minute
+
 // WebSocket type configuration
 interface WebSocketTypeConfig {
     name: string;
@@ -67,6 +72,8 @@ const websocketTypes: WebSocketTypeConfig[] = [
 // Global state for all WebSocket types
 const clientsByType = new Map<string, Map<any, ClientData>>();
 let redisSubscriber: Redis | null = null;
+let pingInterval: Timer | null = null;
+let cleanupInterval: Timer | null = null;
 
 // Initialize client maps for each type
 for (const wsType of websocketTypes) {
@@ -121,6 +128,122 @@ async function setupRedisSubscriber(): Promise<void> {
             console.error(`Error parsing ${channel} broadcast:`, error);
         }
     });
+}
+
+/**
+ * Send ping messages to all connected clients
+ */
+function sendPingToAllClients(): void {
+    let totalPingsSent = 0;
+    const now = new Date();
+
+    for (const [path, clients] of clientsByType.entries()) {
+        let pingsSentForType = 0;
+        
+        for (const [ws, clientData] of clients.entries()) {
+            try {
+                ws.send(JSON.stringify({ type: "ping", timestamp: now.toISOString() }));
+                clientData.lastPing = now;
+                pingsSentForType++;
+                totalPingsSent++;
+            } catch (error) {
+                console.error(`Error sending ping to client on ${path}:`, error);
+                // Remove disconnected client
+                clients.delete(ws);
+            }
+        }
+
+        if (pingsSentForType > 0) {
+            const wsType = getWebSocketTypeByPath(path);
+            console.log(`🏓 Sent ping to ${pingsSentForType} client(s) on ${wsType?.name || path}`);
+        }
+    }
+
+    if (totalPingsSent > 0) {
+        console.log(`🏓 Total pings sent: ${totalPingsSent}`);
+    }
+}
+
+/**
+ * Cleanup unresponsive clients
+ */
+function cleanupUnresponsiveClients(): void {
+    const now = new Date();
+    let totalRemovedClients = 0;
+
+    for (const [path, clients] of clientsByType.entries()) {
+        const clientsToRemove: any[] = [];
+        
+        for (const [ws, clientData] of clients.entries()) {
+            // Check if client has been pinged but hasn't responded
+            if (clientData.lastPing) {
+                const timeSincePing = now.getTime() - clientData.lastPing.getTime();
+                
+                // If we sent a ping but no pong response within timeout
+                if (!clientData.lastPong || clientData.lastPong < clientData.lastPing) {
+                    if (timeSincePing > PING_TIMEOUT) {
+                        clientsToRemove.push(ws);
+                    }
+                } else {
+                    // Check if pong is too old compared to ping
+                    const pongAge = now.getTime() - clientData.lastPong.getTime();
+                    if (pongAge > PING_TIMEOUT && timeSincePing > PING_TIMEOUT) {
+                        clientsToRemove.push(ws);
+                    }
+                }
+            }
+        }
+
+        // Remove unresponsive clients
+        for (const ws of clientsToRemove) {
+            try {
+                ws.close(1000, "Unresponsive to ping");
+            } catch (error) {
+                // Ignore errors when closing
+            }
+            clients.delete(ws);
+            totalRemovedClients++;
+        }
+
+        if (clientsToRemove.length > 0) {
+            const wsType = getWebSocketTypeByPath(path);
+            console.log(`🧹 Cleaned up ${clientsToRemove.length} unresponsive client(s) on ${wsType?.name || path}`);
+        }
+    }
+
+    if (totalRemovedClients > 0) {
+        console.log(`🧹 Total unresponsive clients removed: ${totalRemovedClients}`);
+    }
+}
+
+/**
+ * Start ping/pong monitoring
+ */
+function startPingPongMonitoring(): void {
+    // Send periodic pings
+    pingInterval = setInterval(sendPingToAllClients, PING_INTERVAL);
+    
+    // Cleanup unresponsive clients
+    cleanupInterval = setInterval(cleanupUnresponsiveClients, CONNECTION_CLEANUP_INTERVAL);
+    
+    console.log(`🏓 Started ping/pong monitoring - Ping interval: ${PING_INTERVAL}ms, Timeout: ${PING_TIMEOUT}ms`);
+}
+
+/**
+ * Stop ping/pong monitoring
+ */
+function stopPingPongMonitoring(): void {
+    if (pingInterval) {
+        clearInterval(pingInterval);
+        pingInterval = null;
+    }
+    
+    if (cleanupInterval) {
+        clearInterval(cleanupInterval);
+        cleanupInterval = null;
+    }
+    
+    console.log("🏓 Stopped ping/pong monitoring");
 }
 
 /**
@@ -343,11 +466,16 @@ function handleClientMessage(
 
             case "ping":
                 clientData.lastPing = new Date();
-                ws.send(JSON.stringify({ type: "pong" }));
+                // Respond to client ping with pong (including timestamp if provided)
+                ws.send(JSON.stringify({ 
+                    type: "pong", 
+                    timestamp: parsedMessage.timestamp || new Date().toISOString()
+                }));
                 break;
 
             case "pong":
                 clientData.lastPong = new Date();
+                // Client responded to our ping - connection is healthy
                 break;
 
             default:
@@ -555,6 +683,8 @@ async function startServer(): Promise<void> {
                 const clientData: ClientData = {
                     topics: data.topics,
                     connectedAt: data.connectedAt,
+                    lastPing: undefined,
+                    lastPong: undefined,
                 };
 
                 const clients = clientsByType.get(wsType.path);
@@ -621,6 +751,9 @@ async function startServer(): Promise<void> {
         console.log(`   ${wsType.name}: ws://${HOST}:${PORT}${wsType.path}`);
     }
 
+    // Start ping/pong monitoring
+    startPingPongMonitoring();
+
     // Start periodic statistics logging
     setInterval(() => {
         const stats = getServerStats();
@@ -634,6 +767,9 @@ async function startServer(): Promise<void> {
     // Graceful shutdown
     const shutdown = async (signal: string) => {
         console.log(`\n📡 Received ${signal}, shutting down gracefully...`);
+
+        // Stop ping/pong monitoring
+        stopPingPongMonitoring();
 
         // Close all client connections
         for (const [path, clients] of clientsByType.entries()) {
