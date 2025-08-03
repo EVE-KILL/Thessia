@@ -1,9 +1,3 @@
 {
-    "servers": {
-        "Context7": {
-            "type": "stdio",
-            "command": "bunx",
-            "args": ["-y", "@upstash/context7-mcp@latest"]
-        }
-    }
+	"servers": {}
 }
