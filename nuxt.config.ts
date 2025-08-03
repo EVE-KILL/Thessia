@@ -36,7 +36,9 @@ export default defineNuxtConfig({
     logLevel: process.env.NODE_ENV !== "production" ? "info" : "silent",
 
     nitro: {
-        preset: "node-server", // https://github.com/nitrojs/nitro/issues/2719
+        // use preset: node-server to get working SSE, but broken WS https://github.com/nitrojs/nitro/issues/2719
+        // use preset: bun to get working WS, but broken SSE https://github.com/nitrojs/nitro/issues/2171
+        preset: "bun",
         srcDir: "server",
         minify: true,
         esbuild: {
