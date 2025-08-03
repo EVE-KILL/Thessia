@@ -196,7 +196,7 @@ onBeforeUnmount(() => {
 
         <!-- Loading State -->
         <div v-if="pending" class="flex items-center justify-center py-8">
-            <div class="text-gray-600 dark:text-gray-400">{{ t("common.loading") }}</div>
+            <div class="text-gray-600 dark:text-gray-400">{{ t("loading") }}</div>
         </div>
 
         <!-- Error State -->

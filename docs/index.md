@@ -35,6 +35,9 @@ Explore the complete documentation:
 - **[Installation Guide](./install-guide.md)** - Complete setup instructions for development and production
 - **[Development Documentation](./development/index.md)** - Development workflow, build system, and best practices
 - **[Frontend Documentation](./frontend/index.md)** - Vue, Nuxt, and UI component documentation
+  - **[State Management](./frontend/state-management.md)** - Pinia stores, authentication, and user settings
+  - **[Auth Quick Reference](./frontend/auth-quick-reference.md)** - Quick guide for authentication and user settings
+  - **[WebSocket System](./frontend/websocket-system.md)** - Real-time communication and notifications
 - **[Backend Documentation](./backend/index.md)** - Server-side APIs, database models, and services
 - **[API Documentation](./api/index.md)** - Complete API reference and usage examples
 

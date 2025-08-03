@@ -1,19 +1,11 @@
 import { computed, onUnmounted, readonly, ref } from "vue";
+import type { SiteEvent } from "~/stores/websocket";
 
 export interface SiteWebSocketOptions {
     autoConnect?: boolean;
     reconnectInterval?: number;
     maxReconnectAttempts?: number;
     connectionType?: string;
-}
-
-export interface SiteEvent {
-    eventType: string;
-    data: any;
-    timestamp: number;
-    targetUserId?: string;
-    targetComponent?: string;
-    notificationType?: string;
 }
 
 /**

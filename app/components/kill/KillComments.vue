@@ -168,88 +168,18 @@
                         </span>
                     </div>
                 </div>
-
-                <!-- Tab switcher in the top right -->
-                <div class="ml-auto">
-                    <div class="flex border border-light-dark-border rounded-md overflow-hidden">
-                        <button @click="activeTab = 'write'" class="px-3 py-1 text-xs"
-                            :class="activeTab === 'write' ? 'bg-primary-500 text-white' : 'bg-light-dark-tab text-light-dark-secondary'">
-                            {{ $t('write') }}
-                        </button>
-                        <button @click="activeTab = 'preview'" class="px-3 py-1 text-xs"
-                            :class="activeTab === 'preview' ? 'bg-primary-500 text-white' : 'bg-light-dark-tab text-light-dark-secondary'">
-                            {{ $t('preview') }}
-                        </button>
-                    </div>
-                </div>
             </div>
 
-            <!-- Editor container -->
-            <div class="w-full">
-                <!-- Write tab -->
-                <div v-show="activeTab === 'write'" class="editor-container">
-                    <UTextarea v-model="newComment" :rows="6"
-                        class="w-full mb-2 font-mono bg-light-dark-input border-light-dark-border"
-                        :disabled="isSubmitting" :placeholder="$t('placeholder')" @input="updateEditorHeight" />
-
-                    <div class="editor-toolbar flex flex-wrap gap-2 mb-2">
-                        <UButton size="xs" @click="insertMarkdown('**', '**')" color="neutral">
-                            <Icon name="lucide:bold" class="w-4 h-4 mr-1" />
-                            {{ $t('bold') }}
-                        </UButton>
-                        <UButton size="xs" @click="insertMarkdown('*', '*')" color="neutral">
-                            <Icon name="lucide:italic" class="w-4 h-4 mr-1" />
-                            {{ $t('italic') }}
-                        </UButton>
-                        <UButton size="xs" @click="insertMarkdown('[', '](url)')" color="neutral">
-                            <Icon name="lucide:link" class="w-4 h-4 mr-1" />
-                            {{ $t('link') }}
-                        </UButton>
-                        <UButton size="xs" @click="insertMarkdown('\n```\n', '\n```')" color="neutral">
-                            <Icon name="lucide:code" class="w-4 h-4 mr-1" />
-                            {{ $t('code') }}
-                        </UButton>
-                        <UButton size="xs" @click="insertImage" color="neutral">
-                            <Icon name="lucide:image" class="w-4 h-4 mr-1" />
-                            {{ $t('image') }}
-                        </UButton>
-                        <UButton size="xs" @click="insertYoutube" color="neutral">
-                            <Icon name="lucide:video" class="w-4 h-4 mr-1" />
-                            {{ $t('youtube') }}
-                        </UButton>
-                        <UButton size="xs" @click="insertImgur" color="neutral">
-                            <Icon name="simple-icons:imgur" class="w-4 h-4 mr-1" />
-                            {{ $t('imgur') }}
-                        </UButton>
-                        <UButton size="xs" @click="insertGiphy" color="neutral">
-                            <Icon name="simple-icons:giphy" class="w-4 h-4 mr-1" />
-                            {{ $t('giphy') }}
-                        </UButton>
-                        <UButton size="xs" @click="insertTenor" color="neutral">
-                            <Icon name="simple-icons:tenor" class="w-4 h-4 mr-1" />
-                            {{ $t('tenor') }}
-                        </UButton>
-                    </div>
-                </div>
-
-                <!-- Preview tab -->
-                <div v-show="activeTab === 'preview'"
-                    class="preview-container border rounded-md p-3 mb-3 prose prose-sm dark:prose-invert bg-light-dark-input"
-                    ref="previewContainerRef">
-                    <Comment v-if="newComment.trim()" :comment="newComment" />
-                    <div v-else class="text-light-dark-secondary text-sm italic">{{ $t('preview_empty') }}</div>
-                </div>
-            </div>
-
-            <div class="flex justify-between mt-3">
-                <p class="text-xs text-light-dark-secondary" :class="{ 'text-red-500': charactersRemaining < 0 }">
-                    {{ charactersRemaining }} {{ $t('charactersRemaining') }}
-                </p>
-                <UButton :loading="isSubmitting" :disabled="isSubmittingDisabled" @click="postComment" color="primary"
-                    size="sm">
-                    {{ $t('postComment') }}
-                </UButton>
-            </div>
+            <!-- Use our new CommentInput component -->
+            <CommentInput 
+                v-model="newComment"
+                :loading="isSubmitting"
+                :disabled="isSubmitting"
+                :placeholder="$t('placeholder')"
+                :submit-button-text="$t('postComment')"
+                :last-posted-comment="lastPostedComment"
+                @submit="postComment"
+            />
 
             <p v-if="errorMessage" class="text-red-500 text-sm mt-2">{{ errorMessage }}</p>
         </div>
@@ -285,7 +215,7 @@ const isSubmitting = ref(false);
 const errorMessage = ref("");
 const lastPostedComment = ref("");
 const commentLimit = 1000;
-const activeTab = ref("write"); // 'write' or 'preview'
+const activeTab = ref("write"); // 'write' or 'preview' - kept for compatibility
 const charactersRemaining = computed(() => commentLimit - newComment.value.length);
 const killIdentifier = computed(() => `kill:${props.killId}`);
 
@@ -309,8 +239,6 @@ const {
 
 // Fix layout juddering
 const editorContainerHeight = ref<number | null>(null);
-const textareaHeight = ref<number | null>(null);
-const previewContainerRef = ref<HTMLElement | null>(null);
 
 // Modal state
 const activeModal = ref<"report" | "delete" | null>(null);
@@ -342,73 +270,6 @@ function formatDate(dateString: string) {
         hour: "2-digit",
         minute: "2-digit",
     }).format(date);
-}
-
-function insertMarkdown(prefix: string, suffix: string) {
-    const textarea = document.querySelector("textarea");
-    if (!textarea) return;
-
-    const start = textarea.selectionStart;
-    const end = textarea.selectionEnd;
-    const selection = newComment.value.substring(start, end);
-
-    newComment.value =
-        newComment.value.substring(0, start) +
-        prefix +
-        selection +
-        suffix +
-        newComment.value.substring(end);
-
-    // Set cursor position to right after the inserted text
-    nextTick(() => {
-        textarea.focus();
-        textarea.selectionStart = textarea.selectionEnd = start + prefix.length + selection.length;
-    });
-}
-
-function insertImage() {
-    const url = prompt(t("markdown_editor.image_url_prompt"), "https://");
-    if (url) {
-        const markdown = `![Image](${url})`;
-        insertTextAtCursor(markdown);
-    }
-}
-
-function insertYoutube() {
-    const url = prompt(t("markdown_editor.youtube_url_prompt"), "https://www.youtube.com/watch?v=");
-    if (url) {
-        insertTextAtCursor(url);
-    }
-}
-
-function insertImgur() {
-    const url = prompt(t("markdown_editor.imgur_url_prompt"), "https://imgur.com/");
-    if (url) {
-        insertTextAtCursor(url);
-    }
-}
-
-function insertGiphy() {
-    const url = prompt(t("markdown_editor.giphy_url_prompt"), "https://giphy.com/gifs/");
-    if (url) {
-        insertTextAtCursor(url);
-    }
-}
-
-function insertTenor() {
-    const url = prompt(t("markdown_editor.tenor_url_prompt"), "https://tenor.com/view/");
-    if (url) {
-        insertTextAtCursor(url);
-    }
-}
-
-function insertTextAtCursor(text: string) {
-    const textarea = document.querySelector("textarea");
-    if (!textarea) return;
-
-    const start = textarea.selectionStart;
-    newComment.value =
-        newComment.value.substring(0, start) + text + newComment.value.substring(start);
 }
 
 async function fetchComments() {
@@ -481,35 +342,11 @@ async function postComment() {
         // as the WebSocket will send us the update
         lastPostedComment.value = newComment.value.trim();
         newComment.value = "";
-        activeTab.value = "write"; // Reset to write tab after posting
     } catch (err) {
         errorMessage.value = t("comment_post_error");
     } finally {
         isSubmitting.value = false;
     }
-}
-
-// Fix layout juddering when typing
-function updateEditorHeight() {
-    nextTick(() => {
-        const textarea = document.querySelector(".editor-container textarea");
-
-        if (textarea && !textareaHeight.value) {
-            // Save initial height when first loaded
-            textareaHeight.value = textarea.clientHeight;
-
-            // Also save the container height
-            const container = document.querySelector(".editor-container");
-            if (container) {
-                editorContainerHeight.value = container.clientHeight;
-            }
-        }
-
-        // Apply fixed height to preview container to match editor
-        if (previewContainerRef.value && editorContainerHeight.value) {
-            previewContainerRef.value.style.minHeight = `${editorContainerHeight.value}px`;
-        }
-    });
 }
 
 // Handler functions for WebSocket events

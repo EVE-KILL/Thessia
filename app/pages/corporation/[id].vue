@@ -206,7 +206,7 @@
                                     </div>
                                     <div class="stat-row">
                                         <div class="stat-label text-gray-600 dark:text-gray-400">{{ $t('iskEfficiency')
-                                            }}</div>
+                                        }}</div>
                                         <div class="stat-value text-gray-900 dark:text-white">
                                             {{ calcIskEfficiency(validShortStats) }}%
                                         </div>
@@ -244,13 +244,13 @@
                                     </div>
                                     <div class="stat-row">
                                         <div class="stat-label text-gray-600 dark:text-gray-400">{{ $t('soloKillRatio')
-                                            }}</div>
+                                        }}</div>
                                         <div class="stat-value text-gray-900 dark:text-white">{{
                                             calcSoloKillRatio(validShortStats) }}%</div>
                                     </div>
                                     <div class="stat-row">
                                         <div class="stat-label text-gray-600 dark:text-gray-400">{{ $t('soloEfficiency')
-                                            }}
+                                        }}
                                         </div>
                                         <div class="stat-value text-gray-900 dark:text-white">{{
                                             calcSoloEfficiency(validShortStats) }}%</div>
@@ -274,13 +274,13 @@
                                     </div>
                                     <div class="stat-row">
                                         <div class="stat-label text-gray-600 dark:text-gray-400">{{ $t('npcLossRatio')
-                                            }}</div>
+                                        }}</div>
                                         <div class="stat-value text-gray-900 dark:text-white">{{
                                             calcNpcLossRatio(validShortStats) }}</div>
                                     </div>
                                     <div class="stat-row">
                                         <div class="stat-label text-gray-600 dark:text-gray-400">{{ $t('avgKillsPerDay')
-                                            }}
+                                        }}
                                         </div>
                                         <div class="stat-value text-gray-900 dark:text-white">{{
                                             calcAvgKillsPerDay(validShortStats, corporation.date_founded) }}</div>

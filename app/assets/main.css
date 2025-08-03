@@ -341,3 +341,32 @@ html.dark {
 * {
     scrollbar-color: var(--scrollbar-thumb-color) transparent !important;
 }
+
+/* Emoji styles for inline emoji images */
+.emoji-inline {
+    display: inline !important;
+    width: 1.2em !important;
+    height: 1.2em !important;
+    margin: 0 0.1em !important;
+    vertical-align: -0.1em !important;
+    object-fit: contain !important;
+    user-select: none !important;
+    pointer-events: none !important;
+}
+
+/* Emoji in different contexts */
+.markdown-content .emoji-inline,
+.prose .emoji-inline {
+    /* Ensure emojis work well in markdown content */
+    display: inline !important;
+    max-width: 1.2em !important;
+    max-height: 1.2em !important;
+    margin: 0 0.1em !important;
+    vertical-align: -0.1em !important;
+}
+
+/* Hover effect for emojis (optional) */
+.emoji-inline:hover {
+    transform: scale(1.1);
+    transition: transform 0.1s ease;
+}

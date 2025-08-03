@@ -1,6 +1,7 @@
 {
   "cancel": "Cancel",
   "apply": "Apply",
+  "insert": "Insert",
   "menuTitle": "Home",
   "home": "Home",
   "kills": "Kills",
@@ -709,6 +710,10 @@
   "imgur": "Imgur",
   "giphy": "Giphy",
   "tenor": "Tenor",
+  "emoji": "Emoji",
+  "search_emoji": "Search emojis...",
+  "no_emojis_found": "No emojis found",
+  "addComment": "Add Comment",
   "postComment": "Post Comment",
   "charactersRemaining": "Characters remaining",
   "showQuery": "Show Raw Query",
@@ -1494,7 +1499,13 @@
     "youtube_url_prompt": "Enter YouTube video URL",
     "imgur_url_prompt": "Enter Imgur image or album URL",
     "giphy_url_prompt": "Enter Giphy URL",
-    "tenor_url_prompt": "Enter Tenor GIF URL"
+    "tenor_url_prompt": "Enter Tenor GIF URL",
+    "add_image": "Add Image",
+    "add_youtube": "Add YouTube Video", 
+    "add_imgur": "Add Imgur Image",
+    "add_giphy": "Add Giphy GIF",
+    "add_tenor": "Add Tenor GIF",
+    "url_label": "URL"
   },
   "duplicate_comment_error": "You've already posted this exact comment",
   "comment_post_error": "Error posting comment. Please try again.",

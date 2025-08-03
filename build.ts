@@ -341,6 +341,72 @@ export async function copyDocumentation(outputDir: string): Promise<void> {
 }
 
 /**
+ * Generate emoji manifest from available emoji files
+ * Creates a JSON file mapping emoji names to their file paths and metadata
+ */
+export async function generateEmojiManifest(): Promise<void> {
+    try {
+        console.log("🎭 Generating emoji manifest...");
+
+        const emojiDir = resolve(buildConfig.projectRoot, "public/images/emojis");
+        const outputFile = resolve(buildConfig.projectRoot, "public/emoji.json");
+
+        // Check if emoji directory exists
+        try {
+            await fs.promises.access(emojiDir);
+        } catch {
+            console.warn("⚠️ Emoji directory not found, skipping emoji manifest generation");
+            return;
+        }
+
+        // Read all emoji files
+        const files = await fs.promises.readdir(emojiDir);
+        const emojiFiles = files.filter(file => 
+            file.endsWith('.png') || file.endsWith('.gif')
+        );
+
+        // Parse emoji files and extract names
+        const emojiManifest: Record<string, {
+            name: string;
+            filename: string;
+            url: string;
+            type: 'png' | 'gif';
+            animated: boolean;
+        }> = {};
+
+        for (const filename of emojiFiles) {
+            // Extract name from filename pattern: <id>-<name>.png/gif
+            const match = filename.match(/^\d+-(.+)\.(png|gif)$/);
+            if (match && match[1] && match[2]) {
+                const name = match[1];
+                const extension = match[2];
+                const emojiName = name.toLowerCase();
+                
+                emojiManifest[emojiName] = {
+                    name: emojiName,
+                    filename,
+                    url: `/images/emojis/${filename}`,
+                    type: extension as 'png' | 'gif',
+                    animated: extension === 'gif'
+                };
+            }
+        }
+
+        // Write the manifest file
+        await fs.promises.writeFile(
+            outputFile, 
+            JSON.stringify(emojiManifest, null, 2),
+            'utf8'
+        );
+
+        console.log(`✅ Generated emoji manifest with ${Object.keys(emojiManifest).length} emojis at ${outputFile}`);
+    } catch (error) {
+        console.error(`❌ Error generating emoji manifest: ${error}`);
+        throw error;
+    }
+}
+
+/**
  * Generate auto-import content for standalone binaries
  * This replicates Nuxt's auto-import functionality for CLI, Cron, and Queue
  */
@@ -512,6 +578,7 @@ export function generateAllLoaders(): void {
     generateCliLoader();
     generateCronLoader();
     generateQueueLoader();
+    generateEmojiManifest().catch(console.error);
     console.log("✅ All loaders generated successfully");
 }
 
@@ -791,6 +858,9 @@ export async function buildAll(): Promise<void> {
 export async function handleNitroBuildHooks(nitro: any): Promise<void> {
     console.log("🔧 Running Nitro build hooks...");
 
+    // Generate emoji manifest
+    await generateEmojiManifest();
+
     // Generate Cloudflare beacon
     await generateCloudflareBeacon(nitro.options.output.publicDir);
 
@@ -823,6 +893,9 @@ if (process.argv[1] && process.argv[1].endsWith("build.ts")) {
         case "loaders":
             generateAllLoaders();
             break;
+        case "emoji":
+            generateEmojiManifest();
+            break;
         default:
             console.log("Available commands:");
             console.log("  cli       - Build CLI binary");
@@ -831,6 +904,7 @@ if (process.argv[1] && process.argv[1].endsWith("build.ts")) {
             console.log("  websocket - Build WebSocket server");
             console.log("  all       - Build all binaries");
             console.log("  loaders   - Generate all loaders with auto-imports");
+            console.log("  emoji     - Generate emoji manifest");
             break;
     }
 }

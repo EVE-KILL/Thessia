@@ -162,7 +162,7 @@ const checkIfMobile = () => {
     <div class="mx-auto px-4 pb-8 sm:px-6 lg:px-8">
         <ClientOnly>
             <div v-if="pending" class="flex items-center justify-center py-8">
-                <div class="text-gray-600 dark:text-gray-400">{{ t("common.loading") }}</div>
+                <div class="text-gray-600 dark:text-gray-400">{{ t("loading") }}</div>
             </div>
 
             <div v-else-if="error" class="rounded-md bg-red-50 p-4 dark:bg-red-900/20">
@@ -220,7 +220,7 @@ const checkIfMobile = () => {
 
             <template #fallback>
                 <div class="flex items-center justify-center py-8">
-                    <div class="text-gray-600 dark:text-gray-400">{{ t("common.loading") }}</div>
+                    <div class="text-gray-600 dark:text-gray-400">{{ t("loading") }}</div>
                 </div>
             </template>
         </ClientOnly>

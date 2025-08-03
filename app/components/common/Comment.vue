@@ -8,12 +8,20 @@ import DOMPurify from 'isomorphic-dompurify';
 import { marked } from 'marked';
 import { nextTick, ref } from 'vue';
 
+// Composables
+const { replaceEmojis, loadEmojiManifest } = useEmoji();
+
 // Props
 const props = defineProps({
     comment: {
         type: String,
         required: true
     }
+});
+
+// Load emoji manifest when component mounts
+onMounted(() => {
+    loadEmojiManifest();
 });
 
 // Markdown rendering - exact copy from KillComments
@@ -413,8 +421,12 @@ const renderMarkdown = (text: string) => {
     try {
         // Convert markdown to HTML and sanitize
         const rawHTML = marked.parse(text) as string;
-        return DOMPurify.sanitize(rawHTML, {
-            ADD_TAGS: ["iframe", "blockquote", "video", "source"],
+        
+        // Process emojis in the HTML
+        const htmlWithEmojis = replaceEmojis(rawHTML);
+        
+        return DOMPurify.sanitize(htmlWithEmojis, {
+            ADD_TAGS: ["iframe", "blockquote", "video", "source", "img"],
             ADD_ATTR: [
                 "allow",
                 "allowfullscreen",
@@ -432,6 +444,10 @@ const renderMarkdown = (text: string) => {
                 "playsinline",
                 "type",
                 "src",
+                "alt",
+                "title",
+                "class",
+                "loading",
             ],
             FORBID_TAGS: ["script", "style", "form", "input", "button", "textarea", "select", "option"],
             FORBID_ATTR: ["onerror", "onload", "onclick", "onmouseover", "onmouseout", "eval"],
