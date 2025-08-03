@@ -209,6 +209,7 @@ export default defineNuxtConfig({
                 "connect-src": [
                     "'self'",
                     "https://images.evetech.net",
+                    "https://api.iconify.design",
                     "wss://ws.eve-kill.com",
                     "ws://localhost:*",
                     "wss://localhost:*",

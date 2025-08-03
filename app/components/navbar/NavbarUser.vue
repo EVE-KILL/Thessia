@@ -163,7 +163,7 @@ const ssoImageDimensions = computed(() => {
                                         <div class="flex justify-between text-xs text-gray-500 dark:text-gray-400">
                                             <span>0h</span>
                                             <span class="font-medium text-gray-700 dark:text-gray-300">{{ delayText
-                                                }}</span>
+                                            }}</span>
                                             <span>72h</span>
                                         </div>
                                     </div>
@@ -205,26 +205,36 @@ const ssoImageDimensions = computed(() => {
                             <!-- User Profile -->
                             <div class="px-4 py-3 border-b border-gray-100 dark:border-gray-800">
                                 <div class="flex flex-col items-center text-center">
-                                    <Image type="character" :id="currentUser.characterId!"
-                                        :alt="currentUser.characterName!" :size="64" class="w-16 h-16 mb-2" />
+                                    <NuxtLink :to="`/character/${currentUser.characterId}`"
+                                        @click="isDropdownOpen = false">
+                                        <Image type="character" :id="currentUser.characterId!"
+                                            :alt="currentUser.characterName!" :size="64"
+                                            class="w-16 h-16 mb-2 hover:opacity-80 transition-opacity" />
+                                    </NuxtLink>
 
-                                    <div class="font-medium text-sm text-gray-900 dark:text-white mb-1">
+                                    <NuxtLink :to="`/character/${currentUser.characterId}`"
+                                        class="font-medium text-sm text-gray-900 dark:text-white mb-1 hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
+                                        @click="isDropdownOpen = false">
                                         {{ currentUser.characterName }}
-                                    </div>
+                                    </NuxtLink>
 
-                                    <div v-if="currentUser.corporationName"
-                                        class="text-xs text-gray-500 dark:text-gray-400 flex items-center mt-1 w-full justify-center">
+                                    <NuxtLink v-if="currentUser.corporationName"
+                                        :to="`/corporation/${currentUser.corporationId}`"
+                                        class="text-xs text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 flex items-center mt-1 w-full justify-center transition-colors"
+                                        @click="isDropdownOpen = false">
                                         <Image type="corporation" :id="currentUser.corporationId!"
                                             :alt="currentUser.corporationName!" :size="20" class="w-5 h-5 mr-1" />
                                         {{ currentUser.corporationName }}
-                                    </div>
+                                    </NuxtLink>
 
-                                    <div v-if="currentUser.allianceName"
-                                        class="text-xs text-gray-500 dark:text-gray-400 flex items-center mt-1 w-full justify-center">
+                                    <NuxtLink v-if="currentUser.allianceName"
+                                        :to="`/alliance/${currentUser.allianceId}`"
+                                        class="text-xs text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 flex items-center mt-1 w-full justify-center transition-colors"
+                                        @click="isDropdownOpen = false">
                                         <Image type="alliance" :id="currentUser.allianceId!"
                                             :alt="currentUser.allianceName!" :size="20" class="w-5 h-5 mr-1" />
                                         {{ currentUser.allianceName }}
-                                    </div>
+                                    </NuxtLink>
                                 </div>
                             </div>
 
@@ -332,7 +342,7 @@ const ssoImageDimensions = computed(() => {
                                     <div class="flex justify-between text-xs text-gray-500 dark:text-gray-400">
                                         <span>0h</span>
                                         <span class="font-medium text-gray-700 dark:text-gray-300">{{ delayText
-                                            }}</span>
+                                        }}</span>
                                         <span>72h</span>
                                     </div>
                                 </div>
@@ -470,26 +480,29 @@ const ssoImageDimensions = computed(() => {
                 <!-- User Profile -->
                 <div
                     class="flex flex-col items-center text-center px-2 py-3 mb-3 border-b border-gray-100 dark:border-gray-800">
-                    <Image type="character" :id="currentUser.characterId!" :alt="currentUser.characterName!" :size="64"
-                        class="w-16 h-16 mb-2" />
+                    <NuxtLink :to="`/character/${currentUser.characterId}`">
+                        <Image type="character" :id="currentUser.characterId!" :alt="currentUser.characterName!"
+                            :size="64" class="w-16 h-16 mb-2 hover:opacity-80 transition-opacity" />
+                    </NuxtLink>
 
-                    <div class="font-medium text-base text-gray-900 dark:text-white">
+                    <NuxtLink :to="`/character/${currentUser.characterId}`"
+                        class="font-medium text-base text-gray-900 dark:text-white hover:text-blue-600 dark:hover:text-blue-400 transition-colors">
                         {{ currentUser.characterName }}
-                    </div>
+                    </NuxtLink>
 
-                    <div v-if="currentUser.corporationName"
-                        class="text-sm text-gray-500 dark:text-gray-400 flex items-center mt-1 w-full justify-center">
+                    <NuxtLink v-if="currentUser.corporationName" :to="`/corporation/${currentUser.corporationId}`"
+                        class="text-sm text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 flex items-center mt-1 w-full justify-center transition-colors">
                         <Image type="corporation" :id="currentUser.corporationId!" :alt="currentUser.corporationName!"
                             :size="20" class="w-5 h-5 mr-1" />
                         {{ currentUser.corporationName }}
-                    </div>
+                    </NuxtLink>
 
-                    <div v-if="currentUser.allianceName"
-                        class="text-sm text-gray-500 dark:text-gray-400 flex items-center mt-1 w-full justify-center">
+                    <NuxtLink v-if="currentUser.allianceName" :to="`/alliance/${currentUser.allianceId}`"
+                        class="text-sm text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 flex items-center mt-1 w-full justify-center transition-colors">
                         <Image type="alliance" :id="currentUser.allianceId!" :alt="currentUser.allianceName!" :size="20"
                             class="w-5 h-5 mr-1" />
                         {{ currentUser.allianceName }}
-                    </div>
+                    </NuxtLink>
                 </div>
 
                 <!-- Navigation Links -->

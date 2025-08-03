@@ -546,10 +546,9 @@ export const useStructuredData = () => {
     function generateCorporationStructuredData(
         corporation: any,
         corporationUrl: string,
-        stats?: any
+        stats?: any,
+        t?: Function
     ) {
-        const { t } = useI18n();
-
         const foundingDate = corporation.date_founded
             ? new Date(corporation.date_founded)
             : null;

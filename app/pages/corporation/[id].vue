@@ -80,15 +80,15 @@
                                     </div>
 
                                     <!-- Founded date info -->
-                                    <div class="activity-item mb-3">
+                                    <div v-if="corporation.date_founded" class="activity-item mb-3">
                                         <div class="flex items-center gap-1 text-gray-600 dark:text-gray-400">
                                             <UIcon name="i-lucide-calendar" class="flex-shrink-0 w-4 h-4" />
-                                            <span>{{ $t('founded') }}:</span>
+                                            <span>{{ t('founded') }}:</span>
                                         </div>
                                         <div class="font-medium text-gray-900 dark:text-gray-300 ml-2">
                                             {{ formatExactDate(corporation.date_founded) }}
                                             <span class="text-xs">({{ calculateAge(corporation.date_founded) }} {{
-                                                $t('yearsOld') }})</span>
+                                                t('yearsOld') }})</span>
                                         </div>
                                     </div>
 
@@ -206,7 +206,7 @@
                                     </div>
                                     <div class="stat-row">
                                         <div class="stat-label text-gray-600 dark:text-gray-400">{{ $t('iskEfficiency')
-                                        }}</div>
+                                            }}</div>
                                         <div class="stat-value text-gray-900 dark:text-white">
                                             {{ calcIskEfficiency(validShortStats) }}%
                                         </div>
@@ -244,13 +244,13 @@
                                     </div>
                                     <div class="stat-row">
                                         <div class="stat-label text-gray-600 dark:text-gray-400">{{ $t('soloKillRatio')
-                                        }}</div>
+                                            }}</div>
                                         <div class="stat-value text-gray-900 dark:text-white">{{
                                             calcSoloKillRatio(validShortStats) }}%</div>
                                     </div>
                                     <div class="stat-row">
                                         <div class="stat-label text-gray-600 dark:text-gray-400">{{ $t('soloEfficiency')
-                                        }}
+                                            }}
                                         </div>
                                         <div class="stat-value text-gray-900 dark:text-white">{{
                                             calcSoloEfficiency(validShortStats) }}%</div>
@@ -274,13 +274,13 @@
                                     </div>
                                     <div class="stat-row">
                                         <div class="stat-label text-gray-600 dark:text-gray-400">{{ $t('npcLossRatio')
-                                        }}</div>
+                                            }}</div>
                                         <div class="stat-value text-gray-900 dark:text-white">{{
                                             calcNpcLossRatio(validShortStats) }}</div>
                                     </div>
                                     <div class="stat-row">
                                         <div class="stat-label text-gray-600 dark:text-gray-400">{{ $t('avgKillsPerDay')
-                                        }}
+                                            }}
                                         </div>
                                         <div class="stat-value text-gray-900 dark:text-white">{{
                                             calcAvgKillsPerDay(validShortStats, corporation.date_founded) }}</div>
@@ -431,7 +431,7 @@ const tabItems = [
     },
     {
         id: "members",
-        label: t("Characters"),
+        label: t("characters"),
         icon: "i-lucide-users",
         slot: "members" as const,
     },
@@ -538,26 +538,42 @@ const formatDate = (dateString: string) => {
 
 // Format date with exact date format
 const formatExactDate = (dateInput: string | Date) => {
-    const date = typeof dateInput === 'string' ? new Date(dateInput) : dateInput;
-    return format(date, 'MMM d, yyyy', {
-        locale: dateLocales[currentLocale.value] || enUS,
-    });
+    try {
+        const date = typeof dateInput === 'string' ? new Date(dateInput) : dateInput;
+        if (isNaN(date.getTime())) {
+            return t('unknown');
+        }
+        return format(date, 'MMM d, yyyy', {
+            locale: dateLocales[currentLocale.value] || enUS,
+        });
+    } catch (error) {
+        console.warn('Date formatting error:', error);
+        return t('unknown');
+    }
 };
 
 // Calculate corporation age in years
 const calculateAge = (birthdayInput: string | Date) => {
-    const birthDate = typeof birthdayInput === 'string' ? new Date(birthdayInput) : birthdayInput;
-    const today = new Date();
+    try {
+        const birthDate = typeof birthdayInput === 'string' ? new Date(birthdayInput) : birthdayInput;
+        if (isNaN(birthDate.getTime())) {
+            return 0;
+        }
+        const today = new Date();
 
-    let age = today.getFullYear() - birthDate.getFullYear();
-    const monthDiff = today.getMonth() - birthDate.getMonth();
+        let age = today.getFullYear() - birthDate.getFullYear();
+        const monthDiff = today.getMonth() - birthDate.getMonth();
 
-    // Adjust age if birthday hasn't occurred yet this year
-    if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
-        age--;
+        // Adjust age if birthday hasn't occurred yet this year
+        if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
+            age--;
+        }
+
+        return age;
+    } catch (error) {
+        console.warn('Age calculation error:', error);
+        return 0;
     }
-
-    return age;
 };
 
 const fetchKey = computed(() => `corporation-${id}`);
@@ -616,7 +632,7 @@ watch(corporation, (newcorporation) => {
     if (newcorporation) {
         try {
             const corporationUrl = `https://eve-kill.com${route.fullPath}`;
-            generateCorporationStructuredData(newcorporation, corporationUrl, validShortStats.value);
+            generateCorporationStructuredData(newcorporation, corporationUrl, validShortStats.value, t);
         } catch (error) {
             console.warn('Failed to generate structured data:', error);
         }
@@ -780,11 +796,17 @@ const calcNpcLossRatio = (stats: IShortStats | null): string => {
 };
 
 const calcAvgKillsPerDay = (stats: IShortStats | null, foundedInput: string | Date): string => {
-    if (!stats || !stats.lastActive) return "0";
-    const founded = typeof foundedInput === 'string' ? new Date(foundedInput) : foundedInput;
-    const corporationAgeMs = new Date().getTime() - founded.getTime();
-    const daysActive = Math.max(1, Math.ceil(corporationAgeMs / (1000 * 60 * 60 * 24)));
-    return (stats.kills / daysActive).toFixed(1);
+    if (!stats || !stats.lastActive || !foundedInput) return "0";
+    try {
+        const founded = typeof foundedInput === 'string' ? new Date(foundedInput) : foundedInput;
+        if (isNaN(founded.getTime())) return "0";
+        const corporationAgeMs = new Date().getTime() - founded.getTime();
+        const daysActive = Math.max(1, Math.ceil(corporationAgeMs / (1000 * 60 * 60 * 24)));
+        return (stats.kills / daysActive).toFixed(1);
+    } catch (error) {
+        console.warn('Average kills per day calculation error:', error);
+        return "0";
+    }
 };
 
 /**
