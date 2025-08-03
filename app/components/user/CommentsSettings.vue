@@ -36,7 +36,8 @@ const props = defineProps<Props>();
 
 // Composables
 const { t } = useI18n();
-const auth = useAuth();
+const authStore = useAuthStore();
+const { isAuthenticated, currentUser } = storeToRefs(authStore);
 const toast = useToast();
 
 // State

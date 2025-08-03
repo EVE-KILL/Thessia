@@ -160,9 +160,6 @@ export default defineNuxtConfig({
         timeline: {
             enabled: true,
         },
-        vscode: {
-            enabled: false,
-        },
     },
 
     // Modules with automatic TypeScript support
@@ -177,6 +174,7 @@ export default defineNuxtConfig({
         "@nuxtjs/device",
         "@nuxtjs/partytown",
         "@vueuse/nuxt",
+        "@pinia/nuxt",
     ],
 
     // Security module configuration
@@ -287,6 +285,10 @@ export default defineNuxtConfig({
 
     imports: {
         dirs: ["utils/**"],
+    },
+
+    pinia: {
+        // Let Nuxt auto-discover stores in the stores/ directory
     },
 
     // i18n configuration

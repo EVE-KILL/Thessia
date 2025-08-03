@@ -25,8 +25,10 @@ interface NotificationData {
  */
 export const useSiteNotificationHandler = () => {
     const toast = useToast();
-    const { addEventListener, removeEventListener } = useSiteWebSocket({
-        connectionType: "notifications",
+    const { addEventListener, removeEventListener } = useSiteNotifications({
+        autoConnect: true,
+        reconnectInterval: 5000,
+        maxReconnectAttempts: 10,
     });
 
     /**

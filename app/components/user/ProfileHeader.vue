@@ -8,7 +8,8 @@ const props = defineProps<Props>();
 
 // Composables
 const { t } = useI18n();
-const auth = useAuth();
+const authStore = useAuthStore();
+const { isAuthenticated, currentUser } = storeToRefs(authStore);
 
 // State for delete confirmation modal
 const isDeleteModalOpen = ref(false);
@@ -17,7 +18,7 @@ const deleteError = ref("");
 
 // Handle logout
 const handleLogout = async () => {
-    await auth.logout();
+    await authStore.logout();
     navigateTo("/");
 };
 
@@ -38,7 +39,7 @@ const handleDeleteAccount = async () => {
         }
 
         // Reset auth state
-        await auth.logout();
+        await authStore.logout();
 
         // Close modal first
         isDeleteModalOpen.value = false;
@@ -61,15 +62,15 @@ const handleDeleteAccount = async () => {
             <!-- Character Avatar -->
             <div class="relative">
                 <div class="w-20 h-20 sm:w-24 sm:h-24 rounded-lg overflow-hidden shadow-lg">
-                    <NuxtLink v-if="auth.user.value.characterId" :to="`/character/${auth.user.value.characterId}`"
+                    <NuxtLink v-if="currentUser.characterId" :to="`/character/${currentUser.characterId}`"
                         class="block w-full h-full">
-                        <Image type="character" :id="auth.user.value.characterId" :alt="auth.user.value.characterName"
+                        <Image type="character" :id="currentUser.characterId" :alt="currentUser.characterName"
                             :size="128" class="w-full h-full" />
                     </NuxtLink>
                 </div>
 
                 <!-- Admin badge for admin users -->
-                <UBadge v-if="auth.user.value.administrator" color="error" variant="solid"
+                <UBadge v-if="currentUser.administrator" color="error" variant="solid"
                     class="absolute -bottom-1 -right-1">
                     {{ $t('user.administrator', 'Admin') }}
                 </UBadge>
@@ -78,8 +79,8 @@ const handleDeleteAccount = async () => {
             <!-- Character Info -->
             <div class="text-center sm:text-left flex-1">
                 <h1 class="text-2xl font-bold text-gray-900 dark:text-white">
-                    <NuxtLink :to="`/character/${auth.user.value.characterId}`" class="hover:underline">
-                        {{ characterData?.name || auth.user.value.characterName }}
+                    <NuxtLink :to="`/character/${currentUser.characterId}`" class="hover:underline">
+                        {{ characterData?.name || currentUser.characterName }}
                     </NuxtLink>
                 </h1>
 

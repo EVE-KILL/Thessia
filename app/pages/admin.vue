@@ -57,7 +57,9 @@
 
 <script setup lang="ts">
 const { t } = useI18n();
-const { isAuthenticated, isAdministrator, checkAuth } = useAuth();
+const authStore = useAuthStore();
+const { isAuthenticated, isAdministrator } = storeToRefs(authStore);
+const { checkAuth } = authStore;
 
 // Set up SEO meta
 useSeoMeta({

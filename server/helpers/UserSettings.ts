@@ -124,6 +124,17 @@ export class UserSettingsHelper {
             if (typeof value !== "number") return false;
             if ("min" in validation && value < validation.min) return false;
             if ("max" in validation && value > validation.max) return false;
+        } else if (
+            key === "defaultCharacterPage" ||
+            key === "defaultCorporationPage" ||
+            key === "defaultAlliancePage"
+        ) {
+            if (typeof value !== "string") return false;
+            if (
+                "allowedValues" in validation &&
+                !validation.allowedValues.includes(value as any)
+            )
+                return false;
         }
 
         return true;

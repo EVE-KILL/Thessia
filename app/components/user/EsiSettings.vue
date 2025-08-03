@@ -1,7 +1,9 @@
 <script setup lang="ts">
 interface Props {
     profileData?: any;
-    userSettings: { killmailDelay: number };
+    userSettings: {
+        killmailDelay: number;
+    };
     isUpdatingSettings?: boolean;
     settingsSuccess?: string;
     settingsError?: string;
@@ -11,12 +13,15 @@ const props = defineProps<Props>();
 
 const emit = defineEmits<{
     updateSettings: [];
-    'update:userSettings': [value: { killmailDelay: number }];
+    'update:userSettings': [value: {
+        killmailDelay: number;
+    }];
 }>();
 
 // Composables
 const { t } = useI18n();
-const auth = useAuth();
+const authStore = useAuthStore();
+const { user: currentUser } = storeToRefs(authStore);
 
 // Format expiration date
 const formattedExpirationDate = computed(() => {
@@ -149,7 +154,7 @@ const getRowId = (item: any) => {
 
 // Fetch ESI logs from the API with filters
 const fetchEsiLogs = async () => {
-    if (!auth.user?.value) return;
+    if (!currentUser?.value) return;
 
     esiLogsLoading.value = true;
     try {
@@ -276,13 +281,13 @@ const getPermissionDescription = (scope: string) => {
 const handleReauthenticate = async () => {
     const currentScopes = props.profileData?.user?.scopes || [];
     const currentDelay = props.userSettings.killmailDelay || 0;
-    auth.login("/user/settings", Array.isArray(currentScopes) ? currentScopes : [currentScopes], currentDelay);
+    authStore.login("/user/settings", Array.isArray(currentScopes) ? currentScopes : [currentScopes], currentDelay);
 };
 
 // Handle re-authentication with default scopes
 const handleDefaultScopes = async () => {
     const currentDelay = props.userSettings.killmailDelay || 0;
-    auth.login("/user/settings", undefined, currentDelay);
+    authStore.login("/user/settings", undefined, currentDelay);
 };
 
 // Handle customized scope selection
@@ -605,7 +610,7 @@ const handleSaveSettings = async () => {
                                         <span class="text-gray-600 dark:text-gray-400">Efficiency:</span>
                                         <span class="font-medium text-gray-900 dark:text-white">
                                             {{ Math.round(((item as any).newItemsCount / (item as any).itemsReturned) *
-                                            100) }}%
+                                                100) }}%
                                         </span>
                                     </div>
                                 </div>

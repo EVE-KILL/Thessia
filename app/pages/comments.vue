@@ -58,7 +58,7 @@
                                     :src="`https://images.evetech.net/characters/${selectedEntity.id}/portrait?size=64`"
                                     :alt="selectedEntity.name" size="xs" class="mr-2" />
                                 <span class="flex-grow text-sm text-gray-800 dark:text-gray-200">{{ selectedEntity.name
-                                    }}</span>
+                                }}</span>
                                 <button @click="clearSelectedEntity"
                                     class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 ml-2">
                                     <UIcon name="lucide:x" class="w-4 h-4" />
@@ -95,7 +95,7 @@
                     <!-- Search Field (always on the right) -->
                     <div class="filter-group" :class="filterType === 'all' ? 'lg:col-start-4' : ''">
                         <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{{ t('search')
-                            }}</label>
+                        }}</label>
                         <div class="flex">
                             <input v-model="searchQuery" @keyup.enter="currentPage = 1; performSearch()"
                                 :placeholder="t('comments.list.searchPlaceholder')"
@@ -288,7 +288,8 @@ import { computed, ref, watch } from 'vue';
 const { t } = useI18n();
 
 // Auth setup
-const { isAuthenticated, currentUser } = useAuth();
+const authStore = useAuthStore();
+const { isAuthenticated, currentUser } = storeToRefs(authStore);
 
 // SEO setup
 useSeoMeta({

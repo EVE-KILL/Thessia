@@ -266,7 +266,8 @@
 import { useI18n } from "vue-i18n";
 
 const { t } = useI18n();
-const { isAuthenticated, currentUser, login, isAdministrator } = useAuth();
+const authStore = useAuthStore();
+const { isAuthenticated, currentUser, isAdministrator } = storeToRefs(authStore);
 
 // Props
 const props = defineProps({
@@ -659,7 +660,7 @@ async function confirmDelete() {
 
 // Function to log in when clicking the login button
 function loginToComment() {
-    login();
+    authStore.login();
 }
 
 // Event handlers for keyboard events

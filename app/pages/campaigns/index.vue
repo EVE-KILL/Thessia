@@ -26,22 +26,26 @@
                             </UButton>
                             <UButton :color="statusFilter === 'active' ? 'primary' : 'gray'"
                                 :variant="statusFilter === 'active' ? 'solid' : 'outline'"
-                                @click="setStatusFilter('active')" class="flex-1 min-w-[90px] transition-all duration-200 hover:scale-105 hover:shadow-md cursor-pointer">
+                                @click="setStatusFilter('active')"
+                                class="flex-1 min-w-[90px] transition-all duration-200 hover:scale-105 hover:shadow-md cursor-pointer">
                                 {{ t('campaign.active') }}
                             </UButton>
                             <UButton :color="statusFilter === 'upcoming' ? 'primary' : 'gray'"
                                 :variant="statusFilter === 'upcoming' ? 'solid' : 'outline'"
-                                @click="setStatusFilter('upcoming')" class="flex-1 min-w-[90px] transition-all duration-200 hover:scale-105 hover:shadow-md cursor-pointer">
+                                @click="setStatusFilter('upcoming')"
+                                class="flex-1 min-w-[90px] transition-all duration-200 hover:scale-105 hover:shadow-md cursor-pointer">
                                 {{ t('campaign.upcoming') }}
                             </UButton>
                             <UButton :color="statusFilter === 'completed' ? 'primary' : 'gray'"
                                 :variant="statusFilter === 'completed' ? 'solid' : 'outline'"
-                                @click="setStatusFilter('completed')" class="flex-1 min-w-[90px] transition-all duration-200 hover:scale-105 hover:shadow-md cursor-pointer">
+                                @click="setStatusFilter('completed')"
+                                class="flex-1 min-w-[90px] transition-all duration-200 hover:scale-105 hover:shadow-md cursor-pointer">
                                 {{ t('campaign.completed') }}
                             </UButton>
                             <UButton v-if="isAuthenticated" :color="statusFilter === 'private' ? 'primary' : 'gray'"
                                 :variant="statusFilter === 'private' ? 'solid' : 'outline'"
-                                @click="setStatusFilter('private')" class="flex-1 min-w-[90px] transition-all duration-200 hover:scale-105 hover:shadow-md cursor-pointer"
+                                @click="setStatusFilter('private')"
+                                class="flex-1 min-w-[90px] transition-all duration-200 hover:scale-105 hover:shadow-md cursor-pointer"
                                 :title="t('campaign.private_tooltip')">
                                 {{ t('campaign.private') }}
                             </UButton>
@@ -155,7 +159,7 @@
                                     <UIcon name="lucide:calendar" class="w-4 h-4 flex-shrink-0" />
                                     <span class="truncate">{{ formatDate(campaign.startTime) }}</span>
                                     <span v-if="campaign.endTime" class="truncate">- {{ formatDate(campaign.endTime)
-                                        }}</span>
+                                    }}</span>
                                     <span v-else class="truncate">- {{ t('campaign.ongoing') }}</span>
                                 </span>
                             </div>
@@ -223,7 +227,8 @@ import { computed, ref, watch } from 'vue';
 const { t } = useI18n();
 
 // Auth setup
-const { isAuthenticated, currentUser } = useAuth();
+const authStore = useAuthStore();
+const { isAuthenticated, currentUser } = storeToRefs(authStore);
 
 // SEO setup
 useSeoMeta({

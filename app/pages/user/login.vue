@@ -12,7 +12,7 @@ useSeoMeta({
 import { onMounted, reactive } from "vue";
 
 // Composables
-const auth = useAuth();
+const authStore = useAuthStore();
 const route = useRoute();
 const colorMode = useColorMode();
 
@@ -93,38 +93,41 @@ const ssoImageSrc = computed(() => {
     return ssoImages[theme].large;
 });
 
+// Get error state reactively
+const { error } = storeToRefs(authStore);
+
 // Login with selected scopes
 const handleCustomLogin = () => {
     const selectedScopes = availableScopes.filter((scope) => scope.selected).map((scope) => scope.id);
 
-    auth.login(redirectPath.value, selectedScopes, killmailDelay.value);
+    authStore.login(redirectPath.value, selectedScopes, killmailDelay.value);
 };
 
 // Simple login with default scopes
 const handleQuickLogin = () => {
-    auth.login(redirectPath.value, undefined, killmailDelay.value);
+    authStore.login(redirectPath.value, undefined, killmailDelay.value);
 };
 
 // Check if already authenticated
 onMounted(async () => {
     // Initialize authentication state
-    await auth.checkAuth();
+    await authStore.checkAuth();
 
     // Check for auth error from redirect
     const authError = route.query.auth_error;
     if (authError) {
-        auth.authError.value = t("auth.error.general", "Authentication failed. Please try again.");
+        authStore.error = t("auth.error.general", "Authentication failed. Please try again.");
     }
 
     // Only redirect if authenticated AND not in customize scopes mode
-    if (auth.isAuthenticated.value && !isCustomizeMode.value) {
+    if (authStore.isAuthenticated && !isCustomizeMode.value) {
         navigateTo(redirectPath.value);
     }
 });
 
 // Clear errors when leaving
 onBeforeUnmount(() => {
-    auth.authError.value = null;
+    authStore.clearError();
 });
 </script>
 
@@ -144,10 +147,10 @@ onBeforeUnmount(() => {
                 <!-- CUSTOMIZE MODE: Show scope selection regardless of auth status -->
                 <div v-if="isCustomizeMode" class="space-y-6">
                     <!-- User Info when authenticated -->
-                    <div v-if="auth.isAuthenticated.value" class="text-center space-y-3 mb-4">
-                        <div class="text-sm text-gray-600 dark:text-gray-400">
-                            {{ $t('auth.signedInAs', { name: auth.user.value.characterName }) }}
-                        </div>
+                    <div v-if="authStore.isAuthenticated" class="text-center space-y-3 mb-4">
+                        <p class="text-green-600 dark:text-green-400">
+                            {{ $t('auth.signedInAs', { name: authStore.currentUser.characterName }) }}
+                        </p>
                     </div>
 
                     <!-- Scope selection -->
@@ -170,12 +173,12 @@ onBeforeUnmount(() => {
                     </div>
 
                     <div class="flex space-x-3">
-                        <UButton color="primary" class="flex-1" :loading="auth.isLoading.value"
-                            :disabled="auth.isLoading.value" @click="handleCustomLogin">
+                        <UButton color="primary" class="flex-1" :loading="authStore.isLoading"
+                            :disabled="authStore.isLoading" @click="handleCustomLogin">
                             {{ $t('auth.loginWithSelectedScopes', 'Login with Selected Scopes') }}
                         </UButton>
 
-                        <UButton color="warning" :to="redirectPath" :disabled="auth.isLoading.value">
+                        <UButton color="warning" :to="redirectPath" :disabled="authStore.isLoading">
                             {{ $t('common.cancel') }}
                         </UButton>
                     </div>
@@ -184,13 +187,13 @@ onBeforeUnmount(() => {
                 <!-- STANDARD MODE: Show based on auth status -->
                 <template v-else>
                     <!-- Regular already authenticated view -->
-                    <div v-if="auth.isAuthenticated.value" class="space-y-6">
+                    <div v-if="authStore.isAuthenticated" class="space-y-6">
                         <div class="text-center space-y-3">
                             <div class="text-gray-900 dark:text-white font-medium">
                                 {{ $t('auth.alreadySignedIn') }}
                             </div>
                             <div class="text-sm text-gray-600 dark:text-gray-400">
-                                {{ $t('auth.signedInAs', { name: auth.user.value.characterName }) }}
+                                {{ $t('auth.signedInAs', { name: authStore.currentUser.characterName }) }}
                             </div>
                         </div>
 
@@ -198,7 +201,7 @@ onBeforeUnmount(() => {
                             <UButton to="/" color="primary" class="w-full">
                                 {{ $t('common.goHome') }}
                             </UButton>
-                            <UButton color="warning" class="w-full" @click="auth.logout">
+                            <UButton color="warning" class="w-full" @click="authStore.logout">
                                 {{ $t('user.logout') }}
                             </UButton>
                         </div>
@@ -207,9 +210,9 @@ onBeforeUnmount(() => {
                     <!-- Not authenticated view -->
                     <div v-else class="space-y-6">
                         <div class="text-center flex flex-col items-center space-y-4">
-                            <button @click="handleQuickLogin" :disabled="auth.isLoading.value"
+                            <button @click="handleQuickLogin" :disabled="authStore.isLoading"
                                 class="w-full max-w-xs transition-opacity hover:opacity-90 disabled:opacity-50 focus:outline-none">
-                                <div v-if="auth.isLoading.value" class="flex items-center justify-center p-4">
+                                <div v-if="authStore.isLoading" class="flex items-center justify-center p-4">
                                     <UIcon name="lucide:loader" class="animate-spin mr-2" />
                                     {{ $t('auth.loading') }}
                                 </div>

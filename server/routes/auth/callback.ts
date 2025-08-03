@@ -36,6 +36,11 @@ export default defineEventHandler(async (event) => {
     // Generate a unique identifier
     const uniqueIdentifier = uuidv4();
 
+    // Check if user already exists to preserve existing settings
+    const existingUser = await Users.findOne({
+        characterId: userData.characterId,
+    });
+
     // Generate the payload we need to save in the database
     const payload: any = {
         accessToken: accessToken,
@@ -51,23 +56,46 @@ export default defineEventHandler(async (event) => {
         canFetchCorporationKillmails: userData.scopes.includes(
             "esi-killmails.read_corporation_killmails.v1"
         ),
-        settings: [],
+        settings: existingUser?.settings || [],
     };
 
-    // Add killmail delay setting if provided
+    // Add or update killmail delay setting if provided
     if (decodedState.killmailDelay && decodedState.killmailDelay > 0) {
-        payload.settings.push({
+        // Find existing killmail delay setting
+        const existingDelayIndex = payload.settings.findIndex(
+            (setting: any) => setting.key === "killmailDelay"
+        );
+
+        const newDelaySetting = {
             key: "killmailDelay",
             value: decodedState.killmailDelay,
             updatedAt: new Date(),
-        });
+        };
+
+        if (existingDelayIndex >= 0) {
+            // Update existing setting
+            payload.settings[existingDelayIndex] = newDelaySetting;
+        } else {
+            // Add new setting
+            payload.settings.push(newDelaySetting);
+        }
     }
 
-    const user = new Users(payload);
     try {
-        await user.save();
+        if (existingUser) {
+            // Update existing user
+            await Users.updateOne(
+                { characterId: userData.characterId },
+                payload
+            );
+        } else {
+            // Create new user
+            const user = new Users(payload);
+            await user.save();
+        }
     } catch (error) {
-        await Users.updateOne({ characterId: user.characterId }, payload, {
+        // Fallback to upsert
+        await Users.updateOne({ characterId: userData.characterId }, payload, {
             upsert: true,
         });
     }

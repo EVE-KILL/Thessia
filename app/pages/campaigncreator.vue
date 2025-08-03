@@ -4,8 +4,9 @@ import { computed, onMounted, ref, watch } from "vue";
 // i18n setup
 const { t } = useI18n();
 
-// Use the auth composable instead of direct API call
-const { isAuthenticated, currentUser, login } = useAuth();
+// Use the auth store
+const authStore = useAuthStore();
+const { isAuthenticated, currentUser } = storeToRefs(authStore);
 
 // Add the toast composable
 const toast = useToast();
@@ -666,7 +667,7 @@ const handleCreateCampaign = async () => {
 
 // Login function
 const loginToCreateCampaign = () => {
-    login();
+    authStore.login();
 };
 
 // Add these variables for preview functionality
@@ -696,7 +697,7 @@ const submitButtonText = computed(() => {
                     <UIcon name="lucide:lock" class="w-10 h-10 mx-auto mb-3 text-amber-500" />
                     <h3 class="text-lg font-medium mb-2">{{ $t('authenticationRequired') }}</h3>
                     <p class="text-gray-600 dark:text-gray-300 mb-4">{{ $t('loginToCreateCampaigns') }}</p>
-                    <UButton color="primary" @click="login" :block="true">{{ $t('login') }}</UButton>
+                    <UButton color="primary" @click="authStore.login" :block="true">{{ $t('login') }}</UButton>
                 </div>
             </UCard>
 
@@ -719,7 +720,7 @@ const submitButtonText = computed(() => {
                     <UCard class="bg-yellow-50 dark:bg-yellow-900/20 border-0">
                         <template #header>
                             <h2 class="text-xl font-semibold text-gray-800 dark:text-gray-100">{{ $t('campaignDetails')
-                            }}</h2>
+                                }}</h2>
                         </template>
                         <div class="space-y-4">
                             <div>
@@ -978,7 +979,7 @@ const submitButtonText = computed(() => {
                                         class="block text-sm font-medium text-gray-700 dark:text-gray-300">
                                         {{ $t('endTime') }}
                                         <span class="text-xs text-gray-500 ml-1">({{ $t('campaignCreator.optional')
-                                        }})</span>
+                                            }})</span>
                                     </label>
                                     <input type="datetime-local" id="campaignEndTime" class="custom-input"
                                         v-model="campaignEndTime">

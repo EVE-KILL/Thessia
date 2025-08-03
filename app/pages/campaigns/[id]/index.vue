@@ -279,7 +279,8 @@ const { t } = useI18n();
 const toast = useToast();
 const route = useRoute();
 const router = useRouter();
-const { isAuthenticated, currentUser } = useAuth();
+const authStore = useAuthStore();
+const { isAuthenticated, currentUser } = storeToRefs(authStore);
 const { generateCampaignDatasetStructuredData } = useStructuredData();
 
 // Get campaign ID from route

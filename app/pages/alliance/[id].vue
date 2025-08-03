@@ -520,9 +520,33 @@ const tabItems = computed(() => [
     },
 ]);
 
+// Use the user settings store to get the default tab preference
+const userSettingsStore = useUserSettingsStore();
+const { defaultTabId } = useDefaultTab('alliance', tabItems.value);
+
 // For SSR compatibility, always start with the default tab
 // Hash-based initialization will happen after hydration
 const activeTabId = ref<string>(tabItems.value[0]?.id || '');
+
+// Initialize from hash on client-side after hydration
+onMounted(() => {
+    isClient.value = true;
+
+    nextTick(() => {
+        const currentHash = route.hash.slice(1);
+        console.log('onMounted - currentHash:', currentHash);
+
+        if (currentHash && tabItems.value.some(item => item.id === currentHash)) {
+            console.log('onMounted - setting activeTabId to hash:', currentHash);
+            activeTabId.value = currentHash;
+        } else {
+            // Use user's preferred default tab if no hash is present
+            const preferredTab = defaultTabId.value;
+            console.log('onMounted - using preferred tab:', preferredTab);
+            activeTabId.value = preferredTab;
+        }
+    });
+});
 
 // Watch for changes in route.hash to update activeTabId
 watch(() => route.hash, (newHash) => {
@@ -532,8 +556,8 @@ watch(() => route.hash, (newHash) => {
     if (hashValue && tabItems.value.some(item => item.id === hashValue)) {
         activeTabId.value = hashValue;
     } else if (!hashValue && tabItems.value.length > 0) {
-        // If hash is empty or invalid, just set the active tab without updating URL
-        activeTabId.value = tabItems.value[0]?.id || '';
+        // If hash is empty, use user's preferred default tab
+        activeTabId.value = defaultTabId.value;
     }
 }, { immediate: false }); // Don't run immediately to avoid conflicts with onMounted
 
@@ -545,11 +569,11 @@ watch(activeTabId, (newTabId, oldTabId) => {
     // 1. This isn't the initial value (oldTabId exists)
     // 2. There was an actual change (newTabId !== oldTabId)
     // 3. The URL doesn't already have this hash
-    // 4. Either: there's already a hash in the URL, OR the new tab isn't the default
+    // 4. Either: there's already a hash in the URL, OR the new tab isn't the user's default
     if (oldTabId &&
         newTabId !== oldTabId &&
         route.hash !== `#${newTabId}` &&
-        (route.hash || newTabId !== (tabItems.value[0]?.id || ''))) {
+        (route.hash || newTabId !== defaultTabId.value)) {
         try {
             router.push({ hash: `#${newTabId}` });
         } catch (error) {
