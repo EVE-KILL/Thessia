@@ -118,6 +118,32 @@ thessia:
           - ReadWriteOnce
         size: 20Gi
         mountPath: /app/public/sitemaps
+    ingress:
+        enabled: true
+        className: nginx
+        annotations:
+            cert-manager.io/cluster-issuer: cloudflare
+            nginx.ingress.kubernetes.io/ssl-redirect: "true"
+            nginx.ingress.kubernetes.io/backend-protocol: "http"
+            nginx.ingress.kubernetes.io/proxy-read-timeout: "3600"
+            nginx.ingress.kubernetes.io/proxy-send-timeout: "3600"
+            nginx.ingress.kubernetes.io/enable-compression: "true"
+            nginx.ingress.kubernetes.io/configuration-snippet: |
+                proxy_set_header X-Real-IP $remote_addr;
+                proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+                proxy_set_header X-Forwarded-Proto $scheme;
+                proxy_set_header X-Forwarded-Host $host;
+            nginx.ingress.kubernetes.io/use-forwarded-headers: "true"
+            nginx.ingress.kubernetes.io/proxy-real-ip-cidr: "0.0.0.0/0"
+        hosts:
+          - host: "eve-kill.com"
+            paths:
+              - path: /
+                pathType: Prefix
+        tls:
+          - secretName: "evekill-tls"
+            hosts:
+              - "eve-kill.com"
 
 # WebSocket server
 websocket:
@@ -138,6 +164,34 @@ websocket:
         runAsGroup: 1000
         fsGroup: 1000
         runAsNonRoot: true
+    ingress:
+        enabled: true
+        className: nginx
+        annotations:
+            cert-manager.io/cluster-issuer: cloudflare
+            nginx.ingress.kubernetes.io/ssl-redirect: "true"
+            nginx.ingress.kubernetes.io/backend-protocol: "http"
+            nginx.ingress.kubernetes.io/proxy-read-timeout: "3600"
+            nginx.ingress.kubernetes.io/proxy-send-timeout: "3600"
+            nginx.ingress.kubernetes.io/enable-compression: "true"
+            nginx.ingress.kubernetes.io/configuration-snippet: |
+                proxy_set_header X-Real-IP $remote_addr;
+                proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+                proxy_set_header X-Forwarded-Proto $scheme;
+                proxy_set_header X-Forwarded-Host $host;
+                proxy_set_header Upgrade "websocket";
+                proxy_set_header Connection "Upgrade";
+            nginx.ingress.kubernetes.io/use-forwarded-headers: "true"
+            nginx.ingress.kubernetes.io/proxy-real-ip-cidr: "0.0.0.0/0"
+        hosts:
+          - host: "ws.eve-kill.com"
+            paths:
+              - path: /
+                pathType: Prefix
+        tls:
+          - secretName: "evekill-tls"
+            hosts:
+              - "ws.eve-kill.com"
 
 # Image server
 imageserver:
@@ -169,6 +223,32 @@ imageserver:
           - ReadWriteOnce
         size: 50Gi
         mountPath: /app/cache
+    ingress:
+        enabled: true
+        className: nginx
+        annotations:
+            cert-manager.io/cluster-issuer: cloudflare
+            nginx.ingress.kubernetes.io/ssl-redirect: "true"
+            nginx.ingress.kubernetes.io/backend-protocol: "http"
+            nginx.ingress.kubernetes.io/proxy-read-timeout: "3600"
+            nginx.ingress.kubernetes.io/proxy-send-timeout: "3600"
+            nginx.ingress.kubernetes.io/enable-compression: "true"
+            nginx.ingress.kubernetes.io/configuration-snippet: |
+                proxy_set_header X-Real-IP $remote_addr;
+                proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+                proxy_set_header X-Forwarded-Proto $scheme;
+                proxy_set_header X-Forwarded-Host $host;
+            nginx.ingress.kubernetes.io/use-forwarded-headers: "true"
+            nginx.ingress.kubernetes.io/proxy-real-ip-cidr: "0.0.0.0/0"
+        hosts:
+          - host: "images.eve-kill.com"
+            paths:
+              - path: /
+                pathType: Prefix
+        tls:
+          - secretName: "evekill-tls"
+            hosts:
+              - "images.eve-kill.com"
 
 # Process Entities
 processEntities:
@@ -326,38 +406,6 @@ cron:
         runAsGroup: 1000
         fsGroup: 1000
         runAsNonRoot: true
-
-# Ingress configuration
-ingress:
-    enabled: true
-    className: nginx
-    annotations:
-        cert-manager.io/cluster-issuer: cloudflare
-        nginx.ingress.kubernetes.io/ssl-redirect: "true"
-        nginx.ingress.kubernetes.io/backend-protocol: "http"
-        nginx.ingress.kubernetes.io/proxy-read-timeout: "3600"
-        nginx.ingress.kubernetes.io/proxy-send-timeout: "3600"
-        nginx.ingress.kubernetes.io/enable-compression: "true"
-        nginx.ingress.kubernetes.io/configuration-snippet: |
-            proxy_set_header X-Real-IP $remote_addr;
-            proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-            proxy_set_header X-Forwarded-Proto $scheme;
-            proxy_set_header X-Forwarded-Host $host;
-        nginx.ingress.kubernetes.io/use-forwarded-headers: "true"
-        nginx.ingress.kubernetes.io/proxy-real-ip-cidr: "0.0.0.0/0"
-    hosts:
-      - host: "eve-kill.com"
-        paths:
-          - path: /
-            pathType: Prefix
-            serviceName: thessia
-            servicePort: 3000
-
-    tls:
-      - secretName: "evekill-tls"
-        hosts:
-          - "eve-kill.com"
-          - "images.eve-kill.com"
 
 # Pod Disruption Budget
 podDisruptionBudget:

@@ -211,9 +211,9 @@ export default defineNuxtConfig({
                 "connect-src": [
                     "'self'",
                     "https://images.evetech.net",
-                    "wss://eve-kill.com", // WebSocket connections
-                    "ws://localhost:*", // Development WebSocket
-                    "wss://localhost:*", // Development WebSocket over SSL
+                    "wss://ws.eve-kill.com",
+                    "ws://localhost:*",
+                    "wss://localhost:*",
                 ],
                 "upgrade-insecure-requests": true,
             },
