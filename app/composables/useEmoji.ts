@@ -1,6 +1,6 @@
 /**
  * Emoji composable for handling emoji replacement in text content
- * 
+ *
  * Supports replacing :emojiname: syntax with actual emoji images
  * from the dynamically generated emoji manifest.
  */
@@ -9,7 +9,7 @@ interface EmojiData {
     name: string;
     filename: string;
     url: string;
-    type: 'png' | 'gif';
+    type: "png" | "gif";
     animated: boolean;
 }
 
@@ -32,11 +32,11 @@ export const useEmoji = () => {
         error.value = null;
 
         try {
-            const response = await $fetch<EmojiManifest>('/emoji.json');
+            const response = await $fetch<EmojiManifest>("/emoji.json");
             emojiManifest.value = response;
         } catch (err) {
-            error.value = 'Failed to load emoji manifest';
-            console.warn('Could not load emoji manifest:', err);
+            error.value = "Failed to load emoji manifest";
+            console.warn("Could not load emoji manifest:", err);
             emojiManifest.value = {}; // Fallback to empty manifest
         } finally {
             isLoading.value = false;
@@ -66,7 +66,7 @@ export const useEmoji = () => {
             const emoji = getEmoji(emojiName);
             if (emoji) {
                 const title = `Emoji: ${emoji.name}`;
-                
+
                 return `<img src="${emoji.url}" alt="${match}" title="${title}" class="emoji-inline" loading="lazy" />`;
             }
             return match; // Return original text if emoji not found
@@ -90,13 +90,13 @@ export const useEmoji = () => {
         if (!emojiManifest.value) {
             return [];
         }
-        
+
         const emojis = Object.values(emojiManifest.value);
         if (animated === undefined) {
             return emojis;
         }
-        
-        return emojis.filter(emoji => emoji.animated === animated);
+
+        return emojis.filter((emoji) => emoji.animated === animated);
     };
 
     /**

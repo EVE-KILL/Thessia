@@ -171,15 +171,9 @@
             </div>
 
             <!-- Use our new CommentInput component -->
-            <CommentInput 
-                v-model="newComment"
-                :loading="isSubmitting"
-                :disabled="isSubmitting"
-                :placeholder="$t('placeholder')"
-                :submit-button-text="$t('postComment')"
-                :last-posted-comment="lastPostedComment"
-                @submit="postComment"
-            />
+            <CommentInput v-model="newComment" :loading="isSubmitting" :disabled="isSubmitting"
+                :placeholder="$t('placeholder')" :submit-button-text="$t('postComment')"
+                :last-posted-comment="lastPostedComment" @submit="postComment" />
 
             <p v-if="errorMessage" class="text-red-500 text-sm mt-2">{{ errorMessage }}</p>
         </div>

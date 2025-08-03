@@ -123,10 +123,8 @@ export const useWebSocketStore = defineStore("websocket", {
             connection.state = "connecting";
 
             try {
-                const authStore = useAuthStore();
-                const protocol =
-                    window.location.protocol === "https:" ? "wss:" : "ws:";
-                const wsUrl = `${protocol}//${window.location.host}/ws`;
+                // Use the dedicated WebSocket server with specific endpoints
+                const wsUrl = `wss://ws.eve-kill.com/${connectionType}`;
 
                 const socket = new WebSocket(wsUrl);
                 connection.socket = socket;
@@ -136,17 +134,7 @@ export const useWebSocketStore = defineStore("websocket", {
                     connection.state = "connected";
                     connection.reconnectAttempts = 0;
 
-                    // Send authentication if user is logged in
-                    if (authStore.isAuthenticated && authStore.currentUser) {
-                        socket.send(
-                            JSON.stringify({
-                                type: "auth",
-                                token: authStore.currentUser.uniqueIdentifier,
-                            })
-                        );
-                    }
-
-                    // Send subscriptions
+                    // Send subscriptions if any
                     if (connection.subscriptions.size > 0) {
                         socket.send(
                             JSON.stringify({
@@ -419,6 +407,8 @@ export const useWebSocketStore = defineStore("websocket", {
 
         /**
          * Handle authentication state changes
+         * Note: WebSocket connections don't require authentication,
+         * but we keep this for compatibility
          */
         onAuthChange(isAuthenticated: boolean) {
             // Only work on client side
@@ -426,20 +416,8 @@ export const useWebSocketStore = defineStore("websocket", {
                 return;
             }
 
-            if (!isAuthenticated) {
-                // User logged out, disconnect all connections
-                this.cleanup();
-            } else {
-                // User logged in, reconnect active connections
-                for (const [connectionType, connection] of this.connections) {
-                    if (
-                        connection.state === "disconnected" &&
-                        connection.subscriptions.size > 0
-                    ) {
-                        this.connect(connectionType);
-                    }
-                }
-            }
+            // No action needed since WebSocket connections are anonymous
+            // This method is kept for API compatibility
         },
     },
 });

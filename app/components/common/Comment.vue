@@ -421,10 +421,10 @@ const renderMarkdown = (text: string) => {
     try {
         // Convert markdown to HTML and sanitize
         const rawHTML = marked.parse(text) as string;
-        
+
         // Process emojis in the HTML
         const htmlWithEmojis = replaceEmojis(rawHTML);
-        
+
         return DOMPurify.sanitize(htmlWithEmojis, {
             ADD_TAGS: ["iframe", "blockquote", "video", "source", "img"],
             ADD_ATTR: [

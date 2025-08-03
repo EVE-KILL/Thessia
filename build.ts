@@ -348,31 +348,42 @@ export async function generateEmojiManifest(): Promise<void> {
     try {
         console.log("🎭 Generating emoji manifest...");
 
-        const emojiDir = resolve(buildConfig.projectRoot, "public/images/emojis");
-        const outputFile = resolve(buildConfig.projectRoot, "public/emoji.json");
+        const emojiDir = resolve(
+            buildConfig.projectRoot,
+            "public/images/emojis"
+        );
+        const outputFile = resolve(
+            buildConfig.projectRoot,
+            "public/emoji.json"
+        );
 
         // Check if emoji directory exists
         try {
             await fs.promises.access(emojiDir);
         } catch {
-            console.warn("⚠️ Emoji directory not found, skipping emoji manifest generation");
+            console.warn(
+                "⚠️ Emoji directory not found, skipping emoji manifest generation"
+            );
             return;
         }
 
         // Read all emoji files
         const files = await fs.promises.readdir(emojiDir);
-        const emojiFiles = files.filter(file => 
-            file.endsWith('.png') || file.endsWith('.gif')
+        const emojiFiles = files.filter(
+            (file) => file.endsWith(".png") || file.endsWith(".gif")
         );
 
         // Parse emoji files and extract names
-        const emojiManifest: Record<string, {
-            name: string;
-            filename: string;
-            url: string;
-            type: 'png' | 'gif';
-            animated: boolean;
-        }> = {};
+        const emojiManifest: Record<
+            string,
+            {
+                name: string;
+                filename: string;
+                url: string;
+                type: "png" | "gif";
+                animated: boolean;
+            }
+        > = {};
 
         for (const filename of emojiFiles) {
             // Extract name from filename pattern: <id>-<name>.png/gif
@@ -381,25 +392,29 @@ export async function generateEmojiManifest(): Promise<void> {
                 const name = match[1];
                 const extension = match[2];
                 const emojiName = name.toLowerCase();
-                
+
                 emojiManifest[emojiName] = {
                     name: emojiName,
                     filename,
                     url: `/images/emojis/${filename}`,
-                    type: extension as 'png' | 'gif',
-                    animated: extension === 'gif'
+                    type: extension as "png" | "gif",
+                    animated: extension === "gif",
                 };
             }
         }
 
         // Write the manifest file
         await fs.promises.writeFile(
-            outputFile, 
+            outputFile,
             JSON.stringify(emojiManifest, null, 2),
-            'utf8'
+            "utf8"
         );
 
-        console.log(`✅ Generated emoji manifest with ${Object.keys(emojiManifest).length} emojis at ${outputFile}`);
+        console.log(
+            `✅ Generated emoji manifest with ${
+                Object.keys(emojiManifest).length
+            } emojis at ${outputFile}`
+        );
     } catch (error) {
         console.error(`❌ Error generating emoji manifest: ${error}`);
         throw error;
