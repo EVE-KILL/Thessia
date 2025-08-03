@@ -343,14 +343,8 @@ ingress:
             proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
             proxy_set_header X-Forwarded-Proto $scheme;
             proxy_set_header X-Forwarded-Host $host;
-        nginx.ingress.kubernetes.io/server-snippet: |
-            location ~* ^/.*$ {
-                if ($host = "ws.eve-kill.com") {
-                    proxy_set_header Upgrade $http_upgrade;
-                    proxy_set_header Connection "Upgrade";
-                    proxy_cache_bypass $http_upgrade;
-                }
-            }
+            proxy_set_header Upgrade "websocket";
+            proxy_set_header Connection "Upgrade";
         nginx.ingress.kubernetes.io/use-forwarded-headers: "true"
         nginx.ingress.kubernetes.io/proxy-real-ip-cidr: "0.0.0.0/0"
     hosts:
