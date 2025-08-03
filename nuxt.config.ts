@@ -238,7 +238,7 @@ export default defineNuxtConfig({
             tokensPerInterval: 150,
             interval: 300000, // 5 minutes
             headers: false,
-            whiteList: ["::1", "127.0.0.1"],
+            whiteList: ["::1", "127.0.0.1", "10.0.0.0/8"],
         },
     },
 
