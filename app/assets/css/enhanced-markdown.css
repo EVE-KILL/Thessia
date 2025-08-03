@@ -1,0 +1,311 @@
+/* Enhanced Markdown Styles with PrismJS highlighting - Dark theme by default */
+
+/* Basic markdown styling - Dark theme */
+.enhanced-markdown {
+    line-height: 1.6;
+    color: rgb(229 231 235);
+    overflow-wrap: break-word;
+}
+
+/* Headings - Dark theme */
+.enhanced-markdown h1,
+.enhanced-markdown h2,
+.enhanced-markdown h3,
+.enhanced-markdown h4,
+.enhanced-markdown h5,
+.enhanced-markdown h6 {
+    margin-top: 1.5rem;
+    margin-bottom: 0.5rem;
+    font-weight: 600;
+    line-height: 1.25;
+    color: white;
+}
+
+.enhanced-markdown h1 {
+    font-size: 2rem;
+    border-bottom: 1px solid rgb(75 85 99);
+    padding-bottom: 0.5rem;
+}
+
+.enhanced-markdown h2 {
+    font-size: 1.5rem;
+    border-bottom: 1px solid rgb(75 85 99);
+    padding-bottom: 0.25rem;
+}
+
+.enhanced-markdown h3 {
+    font-size: 1.25rem;
+}
+
+.enhanced-markdown h4 {
+    font-size: 1.125rem;
+}
+
+.enhanced-markdown h5,
+.enhanced-markdown h6 {
+    font-size: 1rem;
+}
+
+/* Paragraphs and spacing - Dark theme */
+.enhanced-markdown p {
+    margin-bottom: 1rem;
+    color: rgb(209 213 219);
+}
+
+.enhanced-markdown blockquote {
+    margin: 1rem 0;
+    padding: 0 1rem;
+    border-left: 4px solid rgb(75 85 99);
+    background-color: rgb(31 41 55);
+    font-style: italic;
+    color: rgb(156 163 175);
+}
+
+/* Lists - Dark theme */
+.enhanced-markdown ul,
+.enhanced-markdown ol {
+    margin-bottom: 1rem;
+    padding-left: 2rem;
+    color: rgb(209 213 219);
+}
+
+.enhanced-markdown li {
+    margin-bottom: 0.25rem;
+}
+
+/* Tables - Dark theme */
+.enhanced-markdown table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 1rem;
+    overflow-x: auto;
+    display: block;
+    white-space: nowrap;
+}
+
+.enhanced-markdown thead {
+    background-color: rgb(31 41 55);
+}
+
+.enhanced-markdown th,
+.enhanced-markdown td {
+    border: 1px solid rgb(75 85 99);
+    padding: 0.5rem;
+    text-align: left;
+    color: rgb(209 213 219);
+}
+
+.enhanced-markdown th {
+    font-weight: 600;
+    color: white;
+}
+
+/* Links - Dark theme */
+.enhanced-markdown a {
+    color: rgb(96 165 250);
+    text-decoration: underline;
+}
+
+.enhanced-markdown a:hover {
+    color: rgb(147 197 253);
+}
+
+/* Horizontal rules - Dark theme */
+.enhanced-markdown hr {
+    border: none;
+    border-top: 1px solid rgb(75 85 99);
+    margin: 2rem 0;
+}
+
+/* PrismJS Code highlighting - Dark theme by default */
+.enhanced-markdown pre,
+.enhanced-markdown code {
+    font-family: "Fira Code", "Consolas", "Monaco", "Andale Mono", "Ubuntu Mono",
+        monospace;
+    font-size: 0.875rem;
+}
+
+.enhanced-markdown pre[class*="language-"] {
+    background: rgb(31 41 55);
+    border: 1px solid rgb(75 85 99);
+    border-radius: 0.375rem;
+    margin: 1rem 0;
+    padding: 1rem;
+    overflow-x: auto;
+}
+
+.enhanced-markdown code[class*="language-"] {
+    background: transparent;
+    color: rgb(229 231 235);
+}
+
+.enhanced-markdown :not(pre) > code[class*="language-"] {
+    background: rgb(55 65 81);
+    padding: 0.125rem 0.25rem;
+    border-radius: 0.25rem;
+    white-space: normal;
+    color: rgb(229 231 235);
+}
+
+/* Fallback for code blocks without language class */
+.enhanced-markdown pre:not([class*="language-"]) {
+    background: rgb(31 41 55);
+    border: 1px solid rgb(75 85 99);
+    border-radius: 0.375rem;
+    margin: 1rem 0;
+    padding: 1rem;
+    overflow-x: auto;
+    color: rgb(229 231 235);
+}
+
+.enhanced-markdown :not(pre) > code:not([class*="language-"]) {
+    background: rgb(55 65 81);
+    padding: 0.125rem 0.25rem;
+    border-radius: 0.25rem;
+    color: rgb(229 231 235);
+}
+
+/* PrismJS tokens - Dark theme */
+.enhanced-markdown .token.comment,
+.enhanced-markdown .token.prolog,
+.enhanced-markdown .token.doctype,
+.enhanced-markdown .token.cdata {
+    color: rgb(156 163 175);
+}
+
+.enhanced-markdown .token.punctuation {
+    color: rgb(209 213 219);
+}
+
+.enhanced-markdown .token.property,
+.enhanced-markdown .token.tag,
+.enhanced-markdown .token.boolean,
+.enhanced-markdown .token.number,
+.enhanced-markdown .token.constant,
+.enhanced-markdown .token.symbol,
+.enhanced-markdown .token.deleted {
+    color: rgb(249 168 212);
+}
+
+.enhanced-markdown .token.selector,
+.enhanced-markdown .token.attr-name,
+.enhanced-markdown .token.string,
+.enhanced-markdown .token.char,
+.enhanced-markdown .token.builtin,
+.enhanced-markdown .token.inserted {
+    color: rgb(110 231 183);
+}
+
+.enhanced-markdown .token.operator,
+.enhanced-markdown .token.entity,
+.enhanced-markdown .token.url,
+.enhanced-markdown .language-css .token.string,
+.enhanced-markdown .style .token.string {
+    color: rgb(251 191 36);
+}
+
+.enhanced-markdown .token.atrule,
+.enhanced-markdown .token.attr-value,
+.enhanced-markdown .token.keyword {
+    color: rgb(147 197 253);
+}
+
+.enhanced-markdown .token.function,
+.enhanced-markdown .token.class-name {
+    color: rgb(196 181 253);
+}
+
+.enhanced-markdown .token.regex,
+.enhanced-markdown .token.important,
+.enhanced-markdown .token.variable {
+    color: rgb(252 165 165);
+}
+
+/* Light theme overrides (for when light theme is needed) */
+.light .enhanced-markdown {
+    color: rgb(17 24 39);
+}
+
+.light .enhanced-markdown h1,
+.light .enhanced-markdown h2,
+.light .enhanced-markdown h3,
+.light .enhanced-markdown h4,
+.light .enhanced-markdown h5,
+.light .enhanced-markdown h6 {
+    color: rgb(17 24 39);
+}
+
+.light .enhanced-markdown h1 {
+    border-bottom-color: rgb(229 231 235);
+}
+
+.light .enhanced-markdown h2 {
+    border-bottom-color: rgb(229 231 235);
+}
+
+.light .enhanced-markdown p {
+    color: rgb(55 65 81);
+}
+
+.light .enhanced-markdown blockquote {
+    border-left-color: rgb(209 213 219);
+    background-color: rgb(249 250 251);
+    color: rgb(107 114 126);
+}
+
+.light .enhanced-markdown ul,
+.light .enhanced-markdown ol {
+    color: rgb(55 65 81);
+}
+
+.light .enhanced-markdown thead {
+    background-color: rgb(249 250 251);
+}
+
+.light .enhanced-markdown th,
+.light .enhanced-markdown td {
+    border-color: rgb(229 231 235);
+    color: rgb(55 65 81);
+}
+
+.light .enhanced-markdown th {
+    color: rgb(17 24 39);
+}
+
+.light .enhanced-markdown a {
+    color: rgb(59 130 246);
+}
+
+.light .enhanced-markdown a:hover {
+    color: rgb(37 99 235);
+}
+
+.light .enhanced-markdown hr {
+    border-top-color: rgb(229 231 235);
+}
+
+.light .enhanced-markdown pre[class*="language-"] {
+    background: rgb(247 248 248);
+    border-color: rgb(229 231 235);
+}
+
+.light .enhanced-markdown code[class*="language-"] {
+    color: rgb(17 24 39);
+}
+
+.light .enhanced-markdown :not(pre) > code[class*="language-"] {
+    background: rgb(243 244 246);
+    color: rgb(17 24 39);
+}
+
+/* Responsive table wrapper */
+@media (max-width: 768px) {
+    .enhanced-markdown table {
+        font-size: 0.875rem;
+    }
+
+    .enhanced-markdown th,
+    .enhanced-markdown td {
+        padding: 0.25rem;
+    }
+}

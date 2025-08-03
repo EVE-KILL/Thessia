@@ -79,7 +79,13 @@
                     </nav>
 
                     <!-- Rendered Markdown Content -->
-                    <div class="markdown-content" v-html="renderedContent" />
+                    <div v-if="renderedContent" class="enhanced-markdown" v-html="renderedContent" />
+                    <!-- Loading state for client-side rendering -->
+                    <div v-else class="content-loading">
+                        <USkeleton class="h-4 w-full mb-2" />
+                        <USkeleton class="h-4 w-full mb-2" />
+                        <USkeleton class="h-4 w-3/4 mb-4" />
+                    </div>
                 </div>
 
                 <!-- Welcome state -->
@@ -101,7 +107,7 @@
 
 <script setup lang="ts">
 import DOMPurify from 'isomorphic-dompurify';
-import { marked } from 'marked';
+import '~/assets/css/enhanced-markdown.css';
 
 interface DocFile {
     name: string;
@@ -124,6 +130,7 @@ interface BreadcrumbItem {
 const { t } = useI18n();
 const route = useRoute();
 const router = useRouter();
+const { renderMarkdown } = useEnhancedMarkdown();
 
 // SEO Meta
 useSeoMeta({
@@ -218,129 +225,35 @@ const {
     }
 );
 
-// Computed properties
-const renderedContent = computed(() => {
-    if (!currentDoc.value?.content) {
-        return '';
-    }
+// Client-side only markdown rendering to avoid SSR hydration issues
+const renderedContent = ref('');
 
-    try {
-        // Configure marked with better options (similar to Comment.vue)
-        marked.setOptions({
-            breaks: true,
-            gfm: true
-        });
+// Render markdown on client-side only
+onMounted(() => {
+    const updateRenderedContent = () => {
+        if (!currentDoc.value?.content) {
+            renderedContent.value = '';
+            return;
+        }
 
-        // Create custom renderer for links
-        const renderer = new marked.Renderer();
+        try {
+            // Use enhanced markdown renderer with docs-specific features
+            renderedContent.value = renderMarkdown(currentDoc.value.content, {
+                currentPath: currentDocPath.value,
+                allowDiagrams: true,
+                allowHtml: true
+            });
+        } catch (error) {
+            console.error('Error rendering markdown for', currentDocPath.value, ':', error);
+            renderedContent.value = DOMPurify.sanitize(`<div class="error">Failed to render content: ${error.message}</div>`);
+        }
+    };
 
-        // Custom link renderer to handle documentation links
-        renderer.link = ({ href, title, tokens }: any): string => {
-            const url = href || '';
-            const linkText = tokens?.[0]?.text || href || 'link';
-            const linkTitle = title || '';
+    // Initial render
+    updateRenderedContent();
 
-            // Transform internal documentation links
-            if (url.startsWith('./') || url.startsWith('../') || url.endsWith('.md')) {
-                let transformedUrl = url;
-
-                // Handle relative paths
-                if (url.startsWith('./')) {
-                    // Same directory: ./file.md -> current_path/file
-                    const currentDir = currentDocPath.value ? currentDocPath.value.split('/').slice(0, -1).join('/') : '';
-                    transformedUrl = url.replace('./', '').replace('.md', '');
-                    if (currentDir) {
-                        transformedUrl = `${currentDir}/${transformedUrl}`;
-                    }
-                } else if (url.startsWith('../')) {
-                    // Parent directory: ../file.md -> parent_path/file
-                    const currentParts = currentDocPath.value ? currentDocPath.value.split('/') : [];
-                    let pathParts = [...currentParts];
-                    let relativePath = url;
-
-                    // Remove current file from path
-                    if (pathParts.length > 0) {
-                        pathParts.pop();
-                    }
-
-                    // Process ../ segments
-                    while (relativePath.startsWith('../')) {
-                        relativePath = relativePath.substring(3);
-                        if (pathParts.length > 0) {
-                            pathParts.pop();
-                        }
-                    }
-
-                    transformedUrl = relativePath.replace('.md', '');
-                    if (pathParts.length > 0) {
-                        transformedUrl = `${pathParts.join('/')}/${transformedUrl}`;
-                    }
-                } else if (url.endsWith('.md')) {
-                    // Direct .md file: file.md -> file
-                    transformedUrl = url.replace('.md', '');
-                }
-
-                // Create internal link to docs viewer with special class for Vue Router handling
-                const docsUrl = `/docs/${transformedUrl}`;
-                return `<a href="${docsUrl}" title="${linkTitle}" class="internal-docs-link" data-docs-path="${transformedUrl}">${linkText}</a>`;
-            }
-
-            // External links - open in new tab
-            if (url.startsWith('http://') || url.startsWith('https://')) {
-                return `<a href="${url}" title="${linkTitle}" target="_blank" rel="noopener noreferrer">${linkText}</a>`;
-            }
-
-            // Default: regular internal link
-            return `<a href="${url}" title="${linkTitle}">${linkText}</a>`;
-        };
-
-        // Add autolink extension for better URL handling
-        marked.use({
-            renderer,
-            extensions: [
-                {
-                    name: "autolink",
-                    level: "inline",
-                    start(src) {
-                        return src.indexOf("http");
-                    },
-                    tokenizer(src) {
-                        const urlRegex = /^(https?:\/\/[^\s<]+[^<.,:;"')\]\s])/;
-                        const match = src.match(urlRegex);
-                        if (match) {
-                            return {
-                                type: "link",
-                                raw: match[0],
-                                text: match[0],
-                                href: match[0],
-                                tokens: [
-                                    {
-                                        type: "text",
-                                        raw: match[0],
-                                        text: match[0],
-                                    },
-                                ],
-                            };
-                        }
-                        return undefined;
-                    },
-                },
-            ],
-        });
-
-        const rawHTML = marked.parse(currentDoc.value.content);
-        const sanitizedHTML = DOMPurify.sanitize(rawHTML, {
-            ADD_TAGS: ['iframe', 'blockquote', 'table', 'thead', 'tbody', 'tr', 'th', 'td', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6'],
-            ADD_ATTR: ['target', 'rel', 'href', 'src', 'alt', 'title', 'id', 'class', 'data-docs-path'],
-            FORBID_TAGS: ['script', 'style', 'form', 'input', 'button', 'textarea', 'select', 'option'],
-            FORBID_ATTR: ['onerror', 'onload', 'onclick', 'onmouseover', 'onmouseout', 'eval'],
-        });
-
-        return sanitizedHTML;
-    } catch (error) {
-        console.error('Error rendering markdown for', currentDocPath.value, ':', error);
-        return `<div class="error">Failed to render content: ${error.message}</div>`;
-    }
+    // Watch for content changes
+    watch([currentDoc, currentDocPath], updateRenderedContent, { immediate: false });
 });
 
 const breadcrumbs = computed<BreadcrumbItem[]>(() => {

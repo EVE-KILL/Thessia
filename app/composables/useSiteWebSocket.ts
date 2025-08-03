@@ -32,7 +32,7 @@ export const useSiteWebSocket = (options: SiteWebSocketOptions = {}) => {
         autoConnect = true,
         reconnectInterval = 5000,
         maxReconnectAttempts = 10,
-        connectionType = "notifications",
+        connectionType = "site",
     } = options;
 
     const webSocketStore = useWebSocketStore();
@@ -162,7 +162,7 @@ export const useSiteNotifications = (
 ) => {
     const ws = useSiteWebSocket({
         ...options,
-        connectionType: "notifications",
+        connectionType: "site",
     });
 
     /**
@@ -210,6 +210,6 @@ export const useSiteComponents = (
 ) => {
     return useSiteWebSocket({
         ...options,
-        connectionType: "components",
+        connectionType: "site",
     });
 };
