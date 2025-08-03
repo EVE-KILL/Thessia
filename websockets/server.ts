@@ -27,7 +27,9 @@ const FRONTEND_URL = process.env.FRONTEND_URL || "http://localhost:3000";
 // Ping/Pong configuration
 const PING_INTERVAL = parseInt(process.env.WS_PING_INTERVAL || "30000"); // 30 seconds
 const PING_TIMEOUT = parseInt(process.env.WS_PING_TIMEOUT || "10000"); // 10 seconds
-const CONNECTION_CLEANUP_INTERVAL = parseInt(process.env.WS_CLEANUP_INTERVAL || "60000"); // 1 minute
+const CONNECTION_CLEANUP_INTERVAL = parseInt(
+    process.env.WS_CLEANUP_INTERVAL || "60000"
+); // 1 minute
 
 // WebSocket type configuration
 interface WebSocketTypeConfig {
@@ -139,15 +141,23 @@ function sendPingToAllClients(): void {
 
     for (const [path, clients] of clientsByType.entries()) {
         let pingsSentForType = 0;
-        
+
         for (const [ws, clientData] of clients.entries()) {
             try {
-                ws.send(JSON.stringify({ type: "ping", timestamp: now.toISOString() }));
+                ws.send(
+                    JSON.stringify({
+                        type: "ping",
+                        timestamp: now.toISOString(),
+                    })
+                );
                 clientData.lastPing = now;
                 pingsSentForType++;
                 totalPingsSent++;
             } catch (error) {
-                console.error(`Error sending ping to client on ${path}:`, error);
+                console.error(
+                    `Error sending ping to client on ${path}:`,
+                    error
+                );
                 // Remove disconnected client
                 clients.delete(ws);
             }
@@ -155,7 +165,11 @@ function sendPingToAllClients(): void {
 
         if (pingsSentForType > 0) {
             const wsType = getWebSocketTypeByPath(path);
-            console.log(`🏓 Sent ping to ${pingsSentForType} client(s) on ${wsType?.name || path}`);
+            console.log(
+                `🏓 Sent ping to ${pingsSentForType} client(s) on ${
+                    wsType?.name || path
+                }`
+            );
         }
     }
 
@@ -173,21 +187,21 @@ function cleanupUnresponsiveClients(): void {
 
     for (const [path, clients] of clientsByType.entries()) {
         const clientsToRemove: any[] = [];
-        
+
         for (const [ws, clientData] of clients.entries()) {
-            // Check if client has been pinged but hasn't responded
+            // Only check clients that have been pinged
             if (clientData.lastPing) {
                 const timeSincePing = now.getTime() - clientData.lastPing.getTime();
                 
-                // If we sent a ping but no pong response within timeout
-                if (!clientData.lastPong || clientData.lastPong < clientData.lastPing) {
-                    if (timeSincePing > PING_TIMEOUT) {
-                        clientsToRemove.push(ws);
-                    }
-                } else {
-                    // Check if pong is too old compared to ping
-                    const pongAge = now.getTime() - clientData.lastPong.getTime();
-                    if (pongAge > PING_TIMEOUT && timeSincePing > PING_TIMEOUT) {
+                // Only consider a client unresponsive if:
+                // 1. We sent a ping more than PING_TIMEOUT ago, AND
+                // 2. Either no pong received, OR the last pong was before the last ping
+                if (timeSincePing > PING_TIMEOUT) {
+                    const hasRecentPong = clientData.lastPong && 
+                        clientData.lastPong.getTime() >= clientData.lastPing.getTime();
+                    
+                    if (!hasRecentPong) {
+                        console.log(`🧹 Removing unresponsive client - Last ping: ${clientData.lastPing.toISOString()}, Last pong: ${clientData.lastPong?.toISOString() || 'never'}, Time since ping: ${timeSincePing}ms`);
                         clientsToRemove.push(ws);
                     }
                 }
@@ -207,12 +221,18 @@ function cleanupUnresponsiveClients(): void {
 
         if (clientsToRemove.length > 0) {
             const wsType = getWebSocketTypeByPath(path);
-            console.log(`🧹 Cleaned up ${clientsToRemove.length} unresponsive client(s) on ${wsType?.name || path}`);
+            console.log(
+                `🧹 Cleaned up ${
+                    clientsToRemove.length
+                } unresponsive client(s) on ${wsType?.name || path}`
+            );
         }
     }
 
     if (totalRemovedClients > 0) {
-        console.log(`🧹 Total unresponsive clients removed: ${totalRemovedClients}`);
+        console.log(
+            `🧹 Total unresponsive clients removed: ${totalRemovedClients}`
+        );
     }
 }
 
@@ -222,11 +242,16 @@ function cleanupUnresponsiveClients(): void {
 function startPingPongMonitoring(): void {
     // Send periodic pings
     pingInterval = setInterval(sendPingToAllClients, PING_INTERVAL);
-    
+
     // Cleanup unresponsive clients
-    cleanupInterval = setInterval(cleanupUnresponsiveClients, CONNECTION_CLEANUP_INTERVAL);
-    
-    console.log(`🏓 Started ping/pong monitoring - Ping interval: ${PING_INTERVAL}ms, Timeout: ${PING_TIMEOUT}ms`);
+    cleanupInterval = setInterval(
+        cleanupUnresponsiveClients,
+        CONNECTION_CLEANUP_INTERVAL
+    );
+
+    console.log(
+        `🏓 Started ping/pong monitoring - Ping interval: ${PING_INTERVAL}ms, Timeout: ${PING_TIMEOUT}ms`
+    );
 }
 
 /**
@@ -237,12 +262,12 @@ function stopPingPongMonitoring(): void {
         clearInterval(pingInterval);
         pingInterval = null;
     }
-    
+
     if (cleanupInterval) {
         clearInterval(cleanupInterval);
         cleanupInterval = null;
     }
-    
+
     console.log("🏓 Stopped ping/pong monitoring");
 }
 
@@ -466,15 +491,20 @@ function handleClientMessage(
 
             case "ping":
                 clientData.lastPing = new Date();
+                console.log(`🏓 Received ping from client, responding with pong`);
                 // Respond to client ping with pong (including timestamp if provided)
-                ws.send(JSON.stringify({ 
-                    type: "pong", 
-                    timestamp: parsedMessage.timestamp || new Date().toISOString()
-                }));
+                ws.send(
+                    JSON.stringify({
+                        type: "pong",
+                        timestamp:
+                            parsedMessage.timestamp || new Date().toISOString(),
+                    })
+                );
                 break;
 
             case "pong":
                 clientData.lastPong = new Date();
+                console.log(`🏓 Received pong from client at ${clientData.lastPong.toISOString()}, last ping was at ${clientData.lastPing?.toISOString() || 'never'}`);
                 // Client responded to our ping - connection is healthy
                 break;
 
