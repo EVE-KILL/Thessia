@@ -90,7 +90,7 @@ rbac:
 # Thessia web application
 thessia:
     enabled: true
-    replicas: 1
+    replicas: 2
     autoscaling:
         enabled: false
         minReplicas: 1
