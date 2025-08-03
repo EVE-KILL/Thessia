@@ -38,7 +38,7 @@ export default defineNuxtConfig({
     nitro: {
         // use preset: node-server to get working SSE, but broken WS https://github.com/nitrojs/nitro/issues/2719
         // use preset: bun to get working WS, but broken SSE https://github.com/nitrojs/nitro/issues/2171
-        preset: "bun",
+        preset: "node-server",
         srcDir: "server",
         minify: true,
         esbuild: {

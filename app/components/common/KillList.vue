@@ -178,7 +178,7 @@ const {
     resume: resumeWs,
     sendMessage: wsSendMessage,
 } = useWebSocket({
-    url: "/ws/killmails",
+    url: "wss://ws.eve-kill.com/killmails",
     initialMessage: props.wsFilter === "latest" ? "all" : props.wsFilter,
     autoConnect: !props.wsDisabled && !useExternalData.value,
     handleBfCache: true,
@@ -1050,7 +1050,7 @@ onUpdated(() => {
                         <!-- System/Region Info -->
                         <div class="text-xs">
                             <span>{{ item.system_name }} / {{ getLocalizedString(item.region_name, currentLocale)
-                            }}</span>
+                                }}</span>
                             <span class="ml-1">(</span>
                             <span :class="getSecurityColor(item.system_security)">
                                 {{ item.system_security.toFixed(1) }}

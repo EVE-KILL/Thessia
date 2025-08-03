@@ -699,6 +699,73 @@ export async function buildQueue(): Promise<void> {
 }
 
 /**
+ * Build WebSocket server
+ */
+export async function buildWebSocket(): Promise<void> {
+    console.log("🔨 Building WebSocket Server...");
+
+    const outdir = resolve(".output/websocket");
+
+    // Ensure output directory exists
+    if (!fs.existsSync(outdir)) {
+        fs.mkdirSync(outdir, { recursive: true });
+    }
+
+    try {
+        console.log("Copying WebSocket files...");
+
+        // Copy the websockets directory contents directly to the output directory
+        const websocketsSource = resolve("websockets");
+
+        if (fs.existsSync(websocketsSource)) {
+            // Copy contents of websockets directory directly to outdir
+            await copyDirectory(websocketsSource, outdir);
+        }
+
+        // Create package.json in the output directory with all required dependencies
+        const packageJson = {
+            name: "thessia-websocket",
+            private: true,
+            type: "module",
+            dependencies: buildConfig.packageDependencies,
+        };
+
+        fs.writeFileSync(
+            resolve(outdir, "package.json"),
+            JSON.stringify(packageJson, null, 2)
+        );
+
+        console.log("✅ WebSocket build completed successfully");
+        console.log("Run with: bun run .output/websocket/server.ts");
+    } catch (error) {
+        console.error("❌ WebSocket build failed:", error);
+        process.exit(1);
+    }
+}
+
+/**
+ * Utility function to recursively copy a directory
+ */
+async function copyDirectory(source: string, target: string): Promise<void> {
+    if (!fs.existsSync(target)) {
+        fs.mkdirSync(target, { recursive: true });
+    }
+
+    const entries = fs.readdirSync(source, { withFileTypes: true });
+
+    for (const entry of entries) {
+        const sourcePath = path.join(source, entry.name);
+        const targetPath = path.join(target, entry.name);
+
+        if (entry.isDirectory()) {
+            await copyDirectory(sourcePath, targetPath);
+        } else {
+            fs.copyFileSync(sourcePath, targetPath);
+        }
+    }
+}
+
+/**
  * Build all binaries
  */
 export async function buildAll(): Promise<void> {
@@ -708,7 +775,12 @@ export async function buildAll(): Promise<void> {
     generateAllLoaders();
 
     // Build all binaries in parallel
-    await Promise.all([buildCLI(), buildCron(), buildQueue()]);
+    await Promise.all([
+        buildCLI(),
+        buildCron(),
+        buildQueue(),
+        buildWebSocket(),
+    ]);
 
     console.log("🎉 All builds completed successfully!");
 }
@@ -742,6 +814,9 @@ if (process.argv[1] && process.argv[1].endsWith("build.ts")) {
         case "queue":
             buildQueue();
             break;
+        case "websocket":
+            buildWebSocket();
+            break;
         case "all":
             buildAll();
             break;
@@ -750,11 +825,12 @@ if (process.argv[1] && process.argv[1].endsWith("build.ts")) {
             break;
         default:
             console.log("Available commands:");
-            console.log("  cli     - Build CLI binary");
-            console.log("  cron    - Build Cron binary");
-            console.log("  queue   - Build Queue binary");
-            console.log("  all     - Build all binaries");
-            console.log("  loaders - Generate all loaders with auto-imports");
+            console.log("  cli       - Build CLI binary");
+            console.log("  cron      - Build Cron binary");
+            console.log("  queue     - Build Queue binary");
+            console.log("  websocket - Build WebSocket server");
+            console.log("  all       - Build all binaries");
+            console.log("  loaders   - Generate all loaders with auto-imports");
             break;
     }
 }

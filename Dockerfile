@@ -23,7 +23,8 @@ RUN \
     chmod +x /app/bin/* && \
     ln -s /app/server/node_modules /app/cli/node_modules && \
     ln -s /app/server/node_modules /app/cron/node_modules && \
-    ln -s /app/server/node_modules /app/queue/node_modules
+    ln -s /app/server/node_modules /app/queue/node_modules && \
+    ln -s /app/server/node_modules /app/websocket/node_modules
 
 WORKDIR /app
 

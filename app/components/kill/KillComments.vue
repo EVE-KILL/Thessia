@@ -297,7 +297,7 @@ const {
     pause: pauseWs, // Destructure pause
     resume: resumeWs, // Destructure resume
 } = useWebSocket({
-    url: "/ws/comments",
+    url: "wss://ws.eve-kill.com/comments",
     autoConnect: true,
     handleBfCache: true,
     useGlobalInstance: true,

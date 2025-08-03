@@ -1,0 +1,60 @@
+{{- if .Values.websocket.enabled }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: websocket
+  namespace: {{ .Values.namespace.name }}
+  labels:
+    {{- include "thessia.labels" . | nindent 4 }}
+spec:
+  replicas: {{ .Values.websocket.replicas }}
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
+  selector:
+    matchLabels:
+      app: websocket
+  template:
+    metadata:
+      labels:
+        app: websocket
+        {{- include "thessia.selectorLabels" . | nindent 8 }}
+    spec:
+      serviceAccountName: {{ include "thessia.serviceAccountName" . }}
+      securityContext:
+        {{- toYaml .Values.websocket.securityContext | nindent 8 }}
+      containers:
+        - name: websocket
+          image: "{{ .Values.global.image.repository }}:{{ .Values.global.image.tag }}"
+          imagePullPolicy: {{ .Values.global.image.pullPolicy }}
+          command: ["bun", "--bun", "run", "/app/websocket/server.ts"]
+          ports:
+            - containerPort: {{ .Values.websocket.service.targetPort }}
+              name: websocket
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: {{ .Values.websocket.service.targetPort }}
+            initialDelaySeconds: 10
+            periodSeconds: 30
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: {{ .Values.websocket.service.targetPort }}
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          resources:
+            {{- toYaml .Values.websocket.resources | nindent 12 }}
+          envFrom:
+            - configMapRef:
+                name: config
+            - secretRef:
+                name: secrets
+          env:
+            - name: WS_PORT
+              value: {{ .Values.websocket.service.targetPort | quote }}
+            - name: WS_HOST
+              value: "0.0.0.0"
+{{- end }}

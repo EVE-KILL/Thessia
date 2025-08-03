@@ -221,7 +221,7 @@ export const useSiteWebSocket = (options: SiteWebSocketOptions = {}) => {
         try {
             const protocol =
                 window.location.protocol === "https:" ? "wss:" : "ws:";
-            const wsUrl = `${protocol}//${window.location.host}/ws/site`;
+            const wsUrl = `wss://ws.eve-kill.com/site`;
 
             const ws = new WebSocket(wsUrl);
             wsInstances.set(instanceKey, ws);

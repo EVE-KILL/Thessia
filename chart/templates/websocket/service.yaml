@@ -1,0 +1,19 @@
+{{- if .Values.websocket.enabled }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: websocket
+  namespace: {{ .Values.namespace.name }}
+  labels:
+    {{- include "thessia.labels" . | nindent 4 }}
+    app.kubernetes.io/component: websocket
+spec:
+  type: ClusterIP
+  ports:
+    - port: {{ .Values.websocket.service.port }}
+      targetPort: {{ .Values.websocket.service.targetPort }}
+      protocol: TCP
+      name: websocket
+  selector:
+    app: websocket
+{{- end }}
