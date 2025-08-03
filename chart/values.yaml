@@ -332,7 +332,7 @@ ingress:
     enabled: true
     className: nginx
     annotations:
-        cert-manager.io/cluster-issuer: letsencrypt
+        cert-manager.io/cluster-issuer: cloudflare
         nginx.ingress.kubernetes.io/ssl-redirect: "true"
         nginx.ingress.kubernetes.io/backend-protocol: "http"
         nginx.ingress.kubernetes.io/proxy-read-timeout: "3600"
