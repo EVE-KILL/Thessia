@@ -53,16 +53,16 @@
                 </div>
 
                 <!-- Killmails List -->
-                <div class="grid grid-cols-1 xl:grid-cols-5 gap-8">
-                    <!-- Left Side: 80% (4 columns out of 5) -->
-                    <div class="xl:col-span-4">
+                <div :class="showTopKillers ? 'grid grid-cols-1 xl:grid-cols-5 gap-8' : 'w-full'">
+                    <!-- Left Side: 80% (4 columns out of 5) when showing top killers, full width otherwise -->
+                    <div :class="showTopKillers ? 'xl:col-span-4' : 'w-full'">
                         <!-- Use the original KillList component with the type filter -->
                         <KillList :killlistType="currentType" :limit="100" :key="componentKey"
                             :wsFilter="currentType" />
                     </div>
 
                     <!-- Right Side: 20% (1 column out of 5) -->
-                    <div class="xl:col-span-1 space-y-6">
+                    <div v-if="showTopKillers" class="xl:col-span-1 space-y-6">
                         <!-- Top Killers by Character -->
                         <KillsTopBox title="Top Killers" :entities="stats?.topKillersByCharacter || []"
                             countField="kills" entityType="character" :loading="isStatsLoading" :days="selectedDays" />
@@ -159,17 +159,31 @@ const killlistTypeToFilters: Record<string, Record<string, any>> = {
     freighters: { "victim.ship_group_id": { $in: [513, 902] } },
     supercarriers: { "victim.ship_group_id": { $in: [659] } },
     titans: { "victim.ship_group_id": { $in: [30] } },
-    structureboys: { "items.type_id": { $in: [56201, 56202, 56203, 56204, 56205, 56206, 56207, 56208] }, "items.flag": 5 }
+    structureboys: {
+        "items": {
+            $elemMatch: {
+                "type_id": { $in: [56201, 56202, 56203, 56204, 56205, 56206, 56207, 56208] },
+                "flag": 5,
+                "qty_dropped": 0
+            }
+        },
+        "victim.ship_group_id": { $ne: 1657 }
+    }
 }
 
 // Types that should show ship statistics (broader categories only)
 const shipStatsTypes = [
-    'latest', 'abyssal', 'wspace', 'highsec', 'lowsec', 'nullsec', 'pochven', 'big', 'solo', 'npc', '5b', '10b', 'structureboys'
+    'latest', 'abyssal', 'wspace', 'highsec', 'lowsec', 'nullsec', 'pochven', 'big', 'solo', 'npc', '5b', '10b'
 ]
 
 // Types that should show most valuable kills (all except very specific ship types)
 const mostValuableKillsTypes = [
-    'latest', 'abyssal', 'wspace', 'highsec', 'lowsec', 'nullsec', 'pochven', 'big', 'solo', 'npc', '5b', '10b', 'citadels', 'structureboys'
+    'latest', 'abyssal', 'wspace', 'highsec', 'lowsec', 'nullsec', 'pochven', 'big', 'solo', 'npc', '5b', '10b', 'citadels'
+]
+
+// Types that should show top killers sections (broader categories only)
+const topKillersTypes = [
+    'latest', 'abyssal', 'wspace', 'highsec', 'lowsec', 'nullsec', 'pochven', 'big', 'solo', 'npc', '5b', '10b'
 ]
 
 // Composables
@@ -200,6 +214,7 @@ const typeLabel = computed(() => {
 // Computed properties for showing/hiding sections
 const showShipStats = computed(() => shipStatsTypes.includes(currentType.value))
 const showMostValuableKills = computed(() => mostValuableKillsTypes.includes(currentType.value))
+const showTopKillers = computed(() => topKillersTypes.includes(currentType.value))
 
 // Lifecycle
 onMounted(async () => {
@@ -266,8 +281,10 @@ async function loadStatsData() {
             requestedFacets.push('mostValuable');
         }
 
-        // Always include top killers for all types to ensure they populate
-        requestedFacets.push('topKillersChar', 'topKillersCorp', 'topKillersAlliance');
+        // Only include top killers for types that should show them
+        if (showTopKillers.value) {
+            requestedFacets.push('topKillersChar', 'topKillersCorp', 'topKillersAlliance');
+        }
 
         const filtersParam = JSON.stringify(filters);
         const facetsParam = JSON.stringify(requestedFacets);

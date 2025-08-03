@@ -1,5 +1,6 @@
 interface QueryConfig {
-    find: Record<string, unknown>;
+    find?: Record<string, unknown>;
+    aggregate?: any[];
     sort?: Record<string, 1 | -1>;
     projection?: Record<string, 0 | 1>;
     hint?: string;
@@ -176,14 +177,27 @@ const killlistQueries: Record<string, QueryConfig> = {
         hint: "victim.ship_group_id_titan_kill_time_-1",
     },
     structureboys: {
-        find: {
-            "items.type_id": {
-                $in: [56201, 56202, 56203, 56204, 56205, 56206, 56207, 56208],
+        aggregate: [
+            {
+                $match: {
+                    items: {
+                        $elemMatch: {
+                            type_id: {
+                                $in: [
+                                    56201, 56202, 56203, 56204, 56205, 56206,
+                                    56207, 56208,
+                                ],
+                            },
+                            flag: 5,
+                            qty_dropped: 0,
+                        },
+                    },
+                    "victim.ship_group_id": { $ne: 1657 },
+                },
             },
-            "items.flag": 5,
-        },
-        sort: { kill_time: -1 },
-        projection: { _id: 0, items: 0 },
+            { $sort: { kill_time: -1 } },
+            { $project: { _id: 0, items: 0 } },
+        ],
     },
 };
 
@@ -207,18 +221,36 @@ export default defineCachedEventHandler(
             return { error: `Invalid type provided: ${type}` };
         }
 
-        const projection = config.projection || {};
-
-        // Create cursor for streaming killmails
-        let cursor = Killmails.find(config.find, projection as any, {
-            sort: config.sort || { kill_time: -1 },
-            skip: skip,
-            limit: limit,
-            hint: config.hint || "kill_time_-1",
-        });
-
         // Stream through killmails using cursor and format on-the-fly
         const result: any[] = [];
+        let cursor: any;
+
+        if (config.aggregate) {
+            // Handle aggregation pipeline
+            const pipeline = [...config.aggregate];
+
+            // Add skip and limit to the pipeline
+            pipeline.push({ $skip: skip });
+            pipeline.push({ $limit: limit });
+
+            // Add hint if provided
+            const aggregateOptions: any = {};
+            if (config.hint) {
+                aggregateOptions.hint = config.hint;
+            }
+
+            cursor = Killmails.aggregate(pipeline, aggregateOptions);
+        } else {
+            // Handle traditional find query
+            const projection = config.projection || {};
+
+            cursor = Killmails.find(config.find!, projection as any, {
+                sort: config.sort || { kill_time: -1 },
+                skip: skip,
+                limit: limit,
+                hint: config.hint || "kill_time_-1",
+            });
+        }
         for await (const killmail of cursor) {
             const finalBlowAttacker = killmail.attackers.find(
                 (a: any) => a.final_blow
