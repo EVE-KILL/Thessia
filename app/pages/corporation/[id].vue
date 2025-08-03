@@ -206,7 +206,7 @@
                                     </div>
                                     <div class="stat-row">
                                         <div class="stat-label text-gray-600 dark:text-gray-400">{{ $t('iskEfficiency')
-                                            }}</div>
+                                        }}</div>
                                         <div class="stat-value text-gray-900 dark:text-white">
                                             {{ calcIskEfficiency(validShortStats) }}%
                                         </div>
@@ -244,13 +244,13 @@
                                     </div>
                                     <div class="stat-row">
                                         <div class="stat-label text-gray-600 dark:text-gray-400">{{ $t('soloKillRatio')
-                                            }}</div>
+                                        }}</div>
                                         <div class="stat-value text-gray-900 dark:text-white">{{
                                             calcSoloKillRatio(validShortStats) }}%</div>
                                     </div>
                                     <div class="stat-row">
                                         <div class="stat-label text-gray-600 dark:text-gray-400">{{ $t('soloEfficiency')
-                                            }}
+                                        }}
                                         </div>
                                         <div class="stat-value text-gray-900 dark:text-white">{{
                                             calcSoloEfficiency(validShortStats) }}%</div>
@@ -274,13 +274,13 @@
                                     </div>
                                     <div class="stat-row">
                                         <div class="stat-label text-gray-600 dark:text-gray-400">{{ $t('npcLossRatio')
-                                            }}</div>
+                                        }}</div>
                                         <div class="stat-value text-gray-900 dark:text-white">{{
                                             calcNpcLossRatio(validShortStats) }}</div>
                                     </div>
                                     <div class="stat-row">
                                         <div class="stat-label text-gray-600 dark:text-gray-400">{{ $t('avgKillsPerDay')
-                                            }}
+                                        }}
                                         </div>
                                         <div class="stat-value text-gray-900 dark:text-white">{{
                                             calcAvgKillsPerDay(validShortStats, corporation.date_founded) }}</div>
@@ -349,6 +349,12 @@
                 <template #stats>
                     <div class="tab-content">
                         <CorporationStats v-if="corporation" />
+                    </div>
+                </template>
+
+                <template #members>
+                    <div class="tab-content">
+                        <CorporationMembers v-if="corporation" :corporation="corporation" />
                     </div>
                 </template>
             </Tabs>
@@ -424,8 +430,14 @@ const tabItems = [
         slot: "battles" as const,
     },
     {
+        id: "members",
+        label: t("members"),
+        icon: "i-lucide-users",
+        slot: "members" as const,
+    },
+    {
         id: "corporation-history",
-        label: t("corporationHistory"),
+        label: t("history"),
         icon: "i-lucide-history",
         slot: "corporation-history" as const,
     },
