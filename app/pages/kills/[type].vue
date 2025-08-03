@@ -129,7 +129,7 @@ interface KillsViewStats {
 const allowedTypes = [
     'latest', 'abyssal', 'wspace', 'highsec', 'lowsec', 'nullsec', 'pochven', 'big', 'solo', 'npc',
     '5b', '10b', 'citadels', 't1', 't2', 't3', 'frigates', 'destroyers', 'cruisers',
-    'battlecruisers', 'battleships', 'capitals', 'freighters', 'supercarriers', 'titans'
+    'battlecruisers', 'battleships', 'capitals', 'freighters', 'supercarriers', 'titans', 'structureboys'
 ]
 
 // Mapping killlist types to filter queries for stats (last 30 days)
@@ -158,17 +158,18 @@ const killlistTypeToFilters: Record<string, Record<string, any>> = {
     capitals: { "victim.ship_group_id": { $in: [547, 485] } },
     freighters: { "victim.ship_group_id": { $in: [513, 902] } },
     supercarriers: { "victim.ship_group_id": { $in: [659] } },
-    titans: { "victim.ship_group_id": { $in: [30] } }
+    titans: { "victim.ship_group_id": { $in: [30] } },
+    structureboys: { "items.type_id": { $in: [56201, 56202, 56203, 56204, 56205, 56206, 56207, 56208] }, "items.flag": 5 }
 }
 
 // Types that should show ship statistics (broader categories only)
 const shipStatsTypes = [
-    'latest', 'abyssal', 'wspace', 'highsec', 'lowsec', 'nullsec', 'pochven', 'big', 'solo', 'npc', '5b', '10b'
+    'latest', 'abyssal', 'wspace', 'highsec', 'lowsec', 'nullsec', 'pochven', 'big', 'solo', 'npc', '5b', '10b', 'structureboys'
 ]
 
 // Types that should show most valuable kills (all except very specific ship types)
 const mostValuableKillsTypes = [
-    'latest', 'abyssal', 'wspace', 'highsec', 'lowsec', 'nullsec', 'pochven', 'big', 'solo', 'npc', '5b', '10b', 'citadels'
+    'latest', 'abyssal', 'wspace', 'highsec', 'lowsec', 'nullsec', 'pochven', 'big', 'solo', 'npc', '5b', '10b', 'citadels', 'structureboys'
 ]
 
 // Composables

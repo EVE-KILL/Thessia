@@ -77,6 +77,7 @@ const leftNavItems = computed(() => [
             { name: t("freighters"), label: t("freighters"), to: "/kills/freighters" },
             { name: t("supercarriers"), label: t("supercarriers"), to: "/kills/supercarriers" },
             { name: t("titans"), label: t("titans"), to: "/kills/titans" },
+            { name: t("structureboys"), label: t("structureboys"), to: "/kills/structureboys" }
         ],
     },
     {

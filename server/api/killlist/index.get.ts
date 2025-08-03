@@ -175,6 +175,16 @@ const killlistQueries: Record<string, QueryConfig> = {
         projection: { _id: 0, items: 0 },
         hint: "victim.ship_group_id_titan_kill_time_-1",
     },
+    structureboys: {
+        find: {
+            "items.type_id": {
+                $in: [56201, 56202, 56203, 56204, 56205, 56206, 56207, 56208],
+            },
+            "items.flag": 5,
+        },
+        sort: { kill_time: -1 },
+        projection: { _id: 0, items: 0 },
+    },
 };
 
 export default defineCachedEventHandler(
