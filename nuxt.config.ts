@@ -105,6 +105,11 @@ export default defineNuxtConfig({
                     "cache-control": "s-maxage=31536000, immutable",
                 },
             },
+            "/_healthcheck": {
+                security: {
+                    rateLimiter: false, // Disable rate limiting for health checks
+                },
+            },
             "/images/**": {
                 headers: {
                     "cache-control": "s-maxage=31536000, immutable",
@@ -176,6 +181,7 @@ export default defineNuxtConfig({
 
     // Security module configuration
     security: {
+        hidePoweredBy: true,
         headers: {
             contentSecurityPolicy: {
                 "base-uri": ["'self'"],
@@ -232,6 +238,7 @@ export default defineNuxtConfig({
             tokensPerInterval: 150,
             interval: 300000, // 5 minutes
             headers: false,
+            whiteList: ["::1", "127.0.0.1"],
         },
     },
 
