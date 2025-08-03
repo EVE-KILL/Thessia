@@ -77,7 +77,7 @@ const isPriorityImage = (index: number): boolean => {
 </script>
 
 <template>
-    <div class="flex flex-col min-w-full rounded-lg overflow-hidden min-h-[350px] bg-white dark:bg-background-900">
+    <div class="flex flex-col min-w-full rounded-lg overflow-hidden min-h-[350px] bg-transparent">
         <!-- Header -->
         <div class="p-4 border-b border-gray-200 dark:border-background-700">
             <h3 class="text-lg font-semibold">{{ title }}</h3>
