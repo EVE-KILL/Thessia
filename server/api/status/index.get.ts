@@ -4,6 +4,122 @@ import os from "node:os";
 const startTime = new Date();
 
 /**
+ * Helper function to fetch WebSocket stats from the unified WebSocket server
+ */
+async function fetchWebSocketStats(): Promise<any> {
+    try {
+        const wsStatsUrl =
+            process.env.WS_STATS_URL || "https://ws.eve-kill.com/stats";
+        const response = (await $fetch(wsStatsUrl, {
+            timeout: 5000, // 5 second timeout
+        })) as any;
+
+        // Transform the unified server response to match the expected format
+        const transformedStats = {
+            killmail: {
+                clients:
+                    response.websocketTypes?.["/killmails"]?.connections || 0,
+                health: {
+                    alive_clients:
+                        response.websocketTypes?.["/killmails"]?.connections ||
+                        0,
+                    total_clients:
+                        response.websocketTypes?.["/killmails"]?.connections ||
+                        0,
+                    last_ping_sent: response.timestamp,
+                    oldest_client: null, // Not available in new format
+                },
+            },
+            comment: {
+                clients:
+                    response.websocketTypes?.["/comments"]?.connections || 0,
+                health: {
+                    alive_clients:
+                        response.websocketTypes?.["/comments"]?.connections ||
+                        0,
+                    total_clients:
+                        response.websocketTypes?.["/comments"]?.connections ||
+                        0,
+                    last_ping_sent: response.timestamp,
+                    oldest_client: null,
+                },
+            },
+            site: {
+                clients: response.websocketTypes?.["/site"]?.connections || 0,
+                health: {
+                    alive_clients:
+                        response.websocketTypes?.["/site"]?.connections || 0,
+                    total_clients:
+                        response.websocketTypes?.["/site"]?.connections || 0,
+                    last_ping_sent: response.timestamp,
+                    oldest_client: null,
+                },
+            },
+            subscriptions: {
+                killmail: response.redis || false,
+                comment: response.redis || false,
+                site: response.redis || false,
+            },
+            // Add new unified server stats
+            unified: {
+                totalConnections: response.totalConnections || 0,
+                totalSubscriptions: response.totalSubscriptions || 0,
+                uptime: response.uptime || 0,
+                redis: response.redis || false,
+                server: response.server || "Unknown",
+            },
+        };
+
+        return transformedStats;
+    } catch (error) {
+        console.error(
+            "Failed to fetch WebSocket stats from unified server:",
+            error
+        );
+
+        // Return fallback data that matches expected structure
+        return {
+            killmail: {
+                clients: 0,
+                health: {
+                    alive_clients: 0,
+                    total_clients: 0,
+                    last_ping_sent: null,
+                    oldest_client: null,
+                },
+            },
+            comment: {
+                clients: 0,
+                health: {
+                    alive_clients: 0,
+                    total_clients: 0,
+                    last_ping_sent: null,
+                    oldest_client: null,
+                },
+            },
+            site: {
+                clients: 0,
+                health: {
+                    alive_clients: 0,
+                    total_clients: 0,
+                    last_ping_sent: null,
+                    oldest_client: null,
+                },
+            },
+            subscriptions: { killmail: false, comment: false, site: false },
+            unified: {
+                totalConnections: 0,
+                totalSubscriptions: 0,
+                uptime: 0,
+                redis: false,
+                server: "Unavailable",
+                error: error instanceof Error ? error.message : "Unknown error",
+            },
+        };
+    }
+}
+
+/**
  * Helper function to get queue processing metrics for different time periods
  */
 async function getQueueProcessingMetrics(
@@ -183,57 +299,8 @@ export default defineEventHandler(async () => {
         alliance: cacheStats[22],
     };
 
-    // Get WebSocket stats
-    let websocketStats = {};
-    try {
-        websocketStats = {
-            killmail: {
-                clients: getClientCount("killmail"),
-                health: getConnectionHealth("killmail"),
-            },
-            comment: {
-                clients: getClientCount("comment"),
-                health: getConnectionHealth("comment"),
-            },
-            site: {
-                clients: getClientCount("site"),
-                health: getConnectionHealth("site"),
-            },
-            subscriptions: getSubscriptionStatus(),
-        };
-    } catch (err) {
-        console.error("Failed to get WebSocket stats:", err);
-        websocketStats = {
-            killmail: {
-                clients: 0,
-                health: {
-                    alive_clients: 0,
-                    total_clients: 0,
-                    last_ping_sent: null,
-                    oldest_client: null,
-                },
-            },
-            comment: {
-                clients: 0,
-                health: {
-                    alive_clients: 0,
-                    total_clients: 0,
-                    last_ping_sent: null,
-                    oldest_client: null,
-                },
-            },
-            site: {
-                clients: 0,
-                health: {
-                    alive_clients: 0,
-                    total_clients: 0,
-                    last_ping_sent: null,
-                    oldest_client: null,
-                },
-            },
-            subscriptions: { killmail: false, comment: false, site: false },
-        };
-    }
+    // Get WebSocket stats from unified server
+    const websocketStats = await fetchWebSocketStats();
 
     // Get Redis stats
     let redisStats = {};
@@ -245,30 +312,45 @@ export default defineEventHandler(async () => {
             redisStorage.getConnectionDetails(),
         ]);
 
-        // Extract only the Redis stats we need for the UI
+        // Extract only the Redis stats we need for the UI and convert strings to numbers
         redisStats = {
             server: {
                 redis_version: fullRedisStats.server?.redis_version,
                 redis_mode: fullRedisStats.server?.redis_mode,
                 os: fullRedisStats.server?.os,
-                uptime_in_seconds: fullRedisStats.server?.uptime_in_seconds,
+                uptime_in_seconds: parseInt(
+                    fullRedisStats.server?.uptime_in_seconds || "0"
+                ),
             },
             clients: {
-                connected_clients: fullRedisStats.clients?.connected_clients,
+                connected_clients: parseInt(
+                    fullRedisStats.clients?.connected_clients || "0"
+                ),
             },
             memory: {
-                used_memory: fullRedisStats.memory?.used_memory,
-                used_memory_peak: fullRedisStats.memory?.used_memory_peak,
-                mem_fragmentation_ratio:
-                    fullRedisStats.memory?.mem_fragmentation_ratio,
+                used_memory: parseInt(
+                    fullRedisStats.memory?.used_memory || "0"
+                ),
+                used_memory_peak: parseInt(
+                    fullRedisStats.memory?.used_memory_peak || "0"
+                ),
+                mem_fragmentation_ratio: parseFloat(
+                    fullRedisStats.memory?.mem_fragmentation_ratio || "0"
+                ),
             },
             stats: {
-                total_connections_received:
-                    fullRedisStats.stats?.total_connections_received,
-                total_commands_processed:
-                    fullRedisStats.stats?.total_commands_processed,
-                keyspace_hits: fullRedisStats.stats?.keyspace_hits,
-                keyspace_misses: fullRedisStats.stats?.keyspace_misses,
+                total_connections_received: parseInt(
+                    fullRedisStats.stats?.total_connections_received || "0"
+                ),
+                total_commands_processed: parseInt(
+                    fullRedisStats.stats?.total_commands_processed || "0"
+                ),
+                keyspace_hits: parseInt(
+                    fullRedisStats.stats?.keyspace_hits || "0"
+                ),
+                keyspace_misses: parseInt(
+                    fullRedisStats.stats?.keyspace_misses || "0"
+                ),
             },
             keyspace: fullRedisStats.keyspace || {},
             // Add health and connection details

@@ -191,17 +191,24 @@ function cleanupUnresponsiveClients(): void {
         for (const [ws, clientData] of clients.entries()) {
             // Only check clients that have been pinged
             if (clientData.lastPing) {
-                const timeSincePing = now.getTime() - clientData.lastPing.getTime();
-                
+                const timeSincePing =
+                    now.getTime() - clientData.lastPing.getTime();
+
                 // Only consider a client unresponsive if:
                 // 1. We sent a ping more than PING_TIMEOUT ago, AND
                 // 2. Either no pong received, OR the last pong was before the last ping
                 if (timeSincePing > PING_TIMEOUT) {
-                    const hasRecentPong = clientData.lastPong && 
-                        clientData.lastPong.getTime() >= clientData.lastPing.getTime();
-                    
+                    const hasRecentPong =
+                        clientData.lastPong &&
+                        clientData.lastPong.getTime() >=
+                            clientData.lastPing.getTime();
+
                     if (!hasRecentPong) {
-                        console.log(`🧹 Removing unresponsive client - Last ping: ${clientData.lastPing.toISOString()}, Last pong: ${clientData.lastPong?.toISOString() || 'never'}, Time since ping: ${timeSincePing}ms`);
+                        console.log(
+                            `🧹 Removing unresponsive client - Last ping: ${clientData.lastPing.toISOString()}, Last pong: ${
+                                clientData.lastPong?.toISOString() || "never"
+                            }, Time since ping: ${timeSincePing}ms`
+                        );
                         clientsToRemove.push(ws);
                     }
                 }
@@ -491,7 +498,9 @@ function handleClientMessage(
 
             case "ping":
                 clientData.lastPing = new Date();
-                console.log(`🏓 Received ping from client, responding with pong`);
+                console.log(
+                    `🏓 Received ping from client, responding with pong`
+                );
                 // Respond to client ping with pong (including timestamp if provided)
                 ws.send(
                     JSON.stringify({
@@ -504,7 +513,11 @@ function handleClientMessage(
 
             case "pong":
                 clientData.lastPong = new Date();
-                console.log(`🏓 Received pong from client at ${clientData.lastPong.toISOString()}, last ping was at ${clientData.lastPing?.toISOString() || 'never'}`);
+                console.log(
+                    `🏓 Received pong from client at ${clientData.lastPong.toISOString()}, last ping was at ${
+                        clientData.lastPing?.toISOString() || "never"
+                    }`
+                );
                 // Client responded to our ping - connection is healthy
                 break;
 
