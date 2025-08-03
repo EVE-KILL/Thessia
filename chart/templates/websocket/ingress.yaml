@@ -1,0 +1,43 @@
+{{- if and .Values.websocket.enabled .Values.ingress.enabled }}
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: websocket
+  namespace: {{ .Values.namespace.name }}
+  labels:
+    {{- include "thessia.labels" . | nindent 4 }}
+    app.kubernetes.io/component: websocket
+  annotations:
+    cert-manager.io/cluster-issuer: cloudflare
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+    nginx.ingress.kubernetes.io/backend-protocol: "http"
+    nginx.ingress.kubernetes.io/proxy-read-timeout: "3600"
+    nginx.ingress.kubernetes.io/proxy-send-timeout: "3600"
+    nginx.ingress.kubernetes.io/enable-compression: "true"
+    nginx.ingress.kubernetes.io/configuration-snippet: |
+      proxy_set_header X-Real-IP $remote_addr;
+      proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+      proxy_set_header X-Forwarded-Proto $scheme;
+      proxy_set_header X-Forwarded-Host $host;
+      proxy_set_header Upgrade "websocket";
+      proxy_set_header Connection "Upgrade";
+    nginx.ingress.kubernetes.io/use-forwarded-headers: "true"
+    nginx.ingress.kubernetes.io/proxy-real-ip-cidr: "0.0.0.0/0"
+spec:
+  ingressClassName: {{ .Values.ingress.className }}
+  tls:
+    - secretName: "evekill-tls"
+      hosts:
+        - "ws.eve-kill.com"
+  rules:
+    - host: "ws.eve-kill.com"
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: websocket
+                port:
+                  number: {{ .Values.websocket.service.port }}
+{{- end }}
