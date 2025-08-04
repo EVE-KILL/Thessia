@@ -1,0 +1,100 @@
+/* Body & HTML Layout System - Base structure and background management */
+
+/* Base HTML/Body Setup */
+html,
+body {
+    height: 100%;
+    margin: 0;
+    padding: 0;
+    font-family: "Shentox", sans-serif;
+    font-size: 1em;
+    color: black;
+}
+
+html.dark,
+html.dark body {
+    color: white;
+}
+
+html {
+    background-color: black !important;
+    background-image: var(--bg-image-url) !important;
+    background-repeat: no-repeat !important;
+    background-position: center !important;
+    background-attachment: fixed !important;
+    background-size: cover !important;
+    position: relative;
+    min-height: 100%;
+    overflow-y: auto;
+}
+
+html.dark {
+    background-color: black;
+}
+
+/* Vignette overlay behind content */
+html::before {
+    content: "";
+    position: fixed;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    background: radial-gradient(circle, transparent, white 95%);
+    pointer-events: none;
+    z-index: 0;
+}
+
+html.dark::before {
+    background: radial-gradient(circle, transparent, black 95%);
+}
+
+body {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+    position: relative;
+    z-index: 1;
+    background-color: transparent;
+    padding-right: 0 !important;
+}
+
+/* Main Layout Container */
+.main-scroller {
+    background-color: black;
+    background-repeat: no-repeat;
+    background-position: center;
+    background-attachment: fixed;
+    background-size: cover;
+    position: relative;
+    height: 100%;
+    overflow: auto;
+}
+
+/* Vignette overlay for additional depth */
+.vignette-overlay {
+    position: fixed;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    background: radial-gradient(
+        circle,
+        transparent 30%,
+        rgba(245, 245, 245, 0.3) 70%,
+        rgba(220, 220, 220, 0.8) 100%
+    );
+    pointer-events: none;
+    z-index: 1;
+    transition: background 0.5s ease;
+    animation: subtle-pulse 8s infinite ease-in-out;
+}
+
+html.dark .vignette-overlay {
+    background: radial-gradient(
+        circle,
+        transparent 30%,
+        rgba(0, 0, 0, 0.5) 70%,
+        rgba(0, 0, 0, 0.85) 100%
+    );
+}

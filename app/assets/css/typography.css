@@ -1,14 +1,18 @@
-/* Typography Design System - Extracted font size patterns */
+/* Typography Design System - Font sizes, weights, and spacing */
 
 :root {
-    /* Font Size Scale */
-    --text-2xs: 0.65rem; /* line-height: 0.85rem */
-    --text-xs: 0.75rem; /* line-height: 1rem */
-    --text-sm: 0.875rem; /* line-height: 1.25rem */
-    --text-base: 1rem; /* line-height: 1.5rem */
-    --text-lg: 1.125rem; /* line-height: 1.75rem */
-    --text-xl: 1.25rem; /* line-height: 1.75rem */
-    --text-2xl: 1.5rem; /* line-height: 2rem */
+    /* Font Size Scale - Complete Tailwind-compatible scale */
+    --text-2xs: 0.65rem; /* line-height: 0.85rem - 10.4px */
+    --text-xs: 0.75rem; /* line-height: 1rem - 12px */
+    --text-sm: 0.875rem; /* line-height: 1.25rem - 14px */
+    --text-base: 1rem; /* line-height: 1.5rem - 16px */
+    --text-lg: 1.125rem; /* line-height: 1.75rem - 18px */
+    --text-xl: 1.25rem; /* line-height: 1.75rem - 20px */
+    --text-2xl: 1.5rem; /* line-height: 2rem - 24px */
+    --text-3xl: 1.875rem; /* line-height: 2.25rem - 30px */
+    --text-4xl: 2.25rem; /* line-height: 2.5rem - 36px */
+    --text-5xl: 3rem; /* line-height: 1 - 48px */
+    --text-6xl: 3.75rem; /* line-height: 1 - 60px */
 
     /* Custom sizes found in codebase */
     --text-custom-85: 0.85rem;
@@ -22,11 +26,13 @@
     --leading-normal: 1.5;
     --leading-relaxed: 1.75;
 
-    /* Font weights */
+    /* Font weights - Complete scale */
+    --font-light: 300;
     --font-normal: 400;
     --font-medium: 500;
     --font-semibold: 600;
     --font-bold: 700;
+    --font-black: 900;
 }
 
 /* Typography Utility Classes */
@@ -65,6 +71,26 @@
     line-height: 2rem;
 }
 
+.text-3xl {
+    font-size: var(--text-3xl);
+    line-height: 2.25rem;
+}
+
+.text-4xl {
+    font-size: var(--text-4xl);
+    line-height: 2.5rem;
+}
+
+.text-5xl {
+    font-size: var(--text-5xl);
+    line-height: 1;
+}
+
+.text-6xl {
+    font-size: var(--text-6xl);
+    line-height: 1;
+}
+
 /* Custom sizes frequently used in the app */
 .text-85 {
     font-size: var(--text-custom-85);
@@ -92,6 +118,9 @@
 }
 
 /* Font weight utilities */
+.font-light {
+    font-weight: var(--font-light);
+}
 .font-normal {
     font-weight: var(--font-normal);
 }
@@ -104,6 +133,9 @@
 .font-bold {
     font-weight: var(--font-bold);
 }
+.font-black {
+    font-weight: var(--font-black);
+}
 
 /* Line height utilities */
 .leading-tight {
@@ -114,6 +146,53 @@
 }
 .leading-relaxed {
     line-height: var(--leading-relaxed);
+}
+
+/* Text transform utilities */
+.uppercase {
+    text-transform: uppercase;
+}
+.lowercase {
+    text-transform: lowercase;
+}
+.capitalize {
+    text-transform: capitalize;
+}
+
+/* Text decoration utilities */
+.underline {
+    text-decoration: underline;
+}
+.no-underline {
+    text-decoration: none;
+}
+
+/* Text alignment utilities */
+.text-left {
+    text-align: left;
+}
+.text-center {
+    text-align: center;
+}
+.text-right {
+    text-align: right;
+}
+
+/* Text overflow utilities */
+.truncate {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.text-ellipsis {
+    text-overflow: ellipsis;
+}
+
+/* Font family utilities (if needed) */
+.font-mono {
+    font-family: ui-monospace, SFMono-Regular, "SF Mono", Consolas,
+        "Liberation Mono", Menlo, monospace;
 }
 
 /* Common text styles */
@@ -152,4 +231,54 @@
     .text-responsive-body {
         font-size: var(--text-sm);
     }
+}
+
+/* Semantic Typography Classes - combines font styling with color system */
+.text-page-title {
+    font-size: var(--text-3xl);
+    font-weight: var(--font-bold);
+    line-height: var(--leading-tight);
+    color: var(--color-text-primary);
+}
+
+@media (min-width: 768px) {
+    .text-page-title {
+        font-size: var(--text-4xl);
+    }
+}
+
+.text-section-title {
+    font-size: var(--text-2xl);
+    font-weight: var(--font-bold);
+    line-height: var(--leading-tight);
+    color: var(--color-text-primary);
+}
+
+.text-card-title {
+    font-size: var(--text-lg);
+    font-weight: var(--font-semibold);
+    line-height: var(--leading-normal);
+    color: var(--color-text-primary);
+}
+
+.text-table-header {
+    font-size: var(--text-xs);
+    font-weight: var(--font-medium);
+    text-transform: uppercase;
+    line-height: var(--leading-normal);
+    color: var(--color-text-secondary);
+}
+
+.text-stat-value {
+    font-size: var(--text-3xl);
+    font-weight: var(--font-bold);
+    line-height: 1;
+}
+
+.text-icon-large {
+    font-size: var(--text-4xl);
+}
+
+.text-icon-xl {
+    font-size: var(--text-6xl);
 }

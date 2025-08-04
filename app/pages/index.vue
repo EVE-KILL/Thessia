@@ -6,7 +6,7 @@
                 <FrontpageMostValuable />
             </div>
 
-            <div class="main-content">
+            <div class="index-content">
                 <div class="left-column">
                     <div class="mt-[48.39px]"></div>
                     <TopBox dataType="characters" :limit="10" :days="7" :title="t('top') + ' ' + t('characters')" />
@@ -167,7 +167,7 @@ addStructuredDataToHead([websiteStructuredData, organizationStructuredData]);
     grid-column: 1 / -1;
 }
 
-.main-content {
+.index-content {
     display: grid;
     grid-template-columns: 250px 1fr;
     gap: 1rem;

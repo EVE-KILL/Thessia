@@ -170,33 +170,32 @@ onUnmounted(() => {
             <Dropdown v-model="isDropdownOpen" width="320px" :max-height="80" :smart-position="true">
                 <!-- Trigger Button - Updated icon to a more appropriate choice -->
                 <template #trigger>
-                    <UButton color="primary" variant="ghost" aria-label="Change background" class="cursor-pointer">
-                        <UIcon name="lucide:wallpaper" class="text-xl text-black dark:text-white" />
+                    <UButton color="primary" variant="ghost" aria-label="Change background" class="background-trigger">
+                        <UIcon name="lucide:wallpaper" class="background-icon" />
                     </UButton>
                 </template>
 
                 <!-- Dropdown Content -->
-                <div class="p-2">
-                    <div class="flex items-center justify-between mb-4">
-                        <h3 class="text-base font-medium">
+                <div class="background-dropdown">
+                    <div class="background-header">
+                        <h3 class="background-title">
                             {{ $t('backgroundTitle') }}
                         </h3>
                     </div>
 
                     <!-- Reddit Random Button -->
-                    <div class="mb-4">
+                    <div class="background-reddit-section">
                         <UButton @click="selectRedditBackground" :loading="isRedditLoading" :disabled="isRedditLoading"
-                            variant="outline" color="primary" block class="mb-2">
-                            <UIcon name="lucide:shuffle" class="mr-2" />
+                            variant="outline" color="primary" block class="background-reddit-btn">
+                            <UIcon name="lucide:shuffle" class="background-shuffle-icon" />
                             {{ $t('background.randomReddit', 'Random r/eveporn') }}
                         </UButton>
 
                         <!-- Show current Reddit background info if active -->
-                        <div v-if="isRedditActive && redditBackgroundMeta"
-                            class="text-xs text-gray-500 dark:text-gray-400 px-2 py-1 bg-(--ui-bg-muted) rounded">
-                            <div class="flex items-center">
-                                <UIcon name="lucide:check" class="text-(--ui-primary) mr-1" />
-                                <span class="truncate">{{ redditBackgroundMeta.title }}</span>
+                        <div v-if="isRedditActive && redditBackgroundMeta" class="background-reddit-info">
+                            <div class="background-reddit-meta">
+                                <UIcon name="lucide:check" class="background-check-icon" />
+                                <span class="background-reddit-title">{{ redditBackgroundMeta.title }}</span>
                             </div>
                         </div>
                     </div>
@@ -290,25 +289,260 @@ onUnmounted(() => {
 </template>
 
 <style scoped>
-.aspect-video {
-    aspect-ratio: 16/9;
+/* Background switcher container */
+.background-switcher {
+    position: relative;
 }
 
-.bg-thumb-btn {
-    transition: all 0.2s ease;
+/* Desktop trigger button */
+.background-trigger,
+.background-mobile-trigger {
     cursor: pointer;
 }
 
-.bg-thumb-btn:hover {
+.background-icon {
+    font-size: var(--text-xl);
+    color: var(--color-text-primary);
+}
+
+/* Desktop dropdown content */
+.background-dropdown {
+    padding: var(--space-2);
+}
+
+.background-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: var(--space-4);
+}
+
+.background-title {
+    font-size: var(--text-base);
+    font-weight: var(--font-medium);
+    color: var(--color-text-primary);
+}
+
+/* Reddit section */
+.background-reddit-section {
+    margin-bottom: var(--space-4);
+}
+
+.background-reddit-btn {
+    margin-bottom: var(--space-2);
+}
+
+.background-shuffle-icon {
+    margin-right: var(--space-2);
+}
+
+.background-reddit-info {
+    font-size: var(--text-xs);
+    color: var(--color-text-secondary);
+    padding: var(--space-1) var(--space-2);
+    background-color: var(--color-bg-secondary);
+    border-radius: var(--radius-base);
+}
+
+.background-reddit-meta {
+    display: flex;
+    align-items: center;
+}
+
+.background-check-icon {
+    color: var(--color-brand-primary);
+    margin-right: var(--space-1);
+}
+
+.background-reddit-title {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+/* Loading state */
+.background-loading {
+    padding: var(--space-4);
+    text-align: center;
+}
+
+.background-loading-icon {
+    animation: spin 1s linear infinite;
+    font-size: var(--text-xl);
+    margin-bottom: var(--space-2);
+}
+
+.background-loading-text {
+    font-size: var(--text-sm);
+    color: var(--color-text-secondary);
+}
+
+/* Desktop background grid */
+.background-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: var(--space-2);
+}
+
+.background-thumb {
+    position: relative;
+    overflow: hidden;
+    border-radius: var(--radius-md);
+    cursor: pointer;
+    border: none;
+    background: transparent;
+    transition: var(--transition-transform);
+    box-shadow: var(--shadow-sm);
+}
+
+.background-thumb:hover {
     transform: scale(1.02);
 }
 
-/* Shadow for buttons in grid */
-.shadow-sm {
-    box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+.background-thumb:focus {
+    outline: none;
 }
 
-:root.dark .shadow-sm {
+.background-thumb:focus-visible {
+    outline: 2px solid var(--color-border-focus);
+    outline-offset: 2px;
+}
+
+.background-thumb-active {
+    outline: 2px solid var(--color-brand-primary);
+}
+
+.background-thumb-image {
+    aspect-ratio: 16/9;
+    background-color: var(--color-bg-secondary);
+    overflow: hidden;
+}
+
+.background-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.background-thumb-name {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: rgba(0, 0, 0, 0.7);
+    padding: var(--space-1) var(--space-2);
+}
+
+.background-name-text {
+    font-size: var(--text-xs);
+    color: white;
+}
+
+/* Mobile styles */
+.background-mobile-reddit {
+    margin-bottom: var(--space-6);
+    padding: 0 var(--space-4);
+}
+
+.background-mobile-reddit-btn {
+    margin-bottom: var(--space-3);
+}
+
+.background-mobile-reddit-info {
+    font-size: var(--text-sm);
+    color: var(--color-text-secondary);
+    padding: var(--space-3);
+    background-color: var(--color-bg-secondary);
+    border-radius: var(--radius-lg);
+}
+
+.background-mobile-reddit-meta {
+    display: flex;
+    align-items: center;
+}
+
+.background-mobile-loading {
+    padding: var(--space-8);
+    text-align: center;
+}
+
+.background-mobile-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: var(--space-4);
+    padding: 0 var(--space-4);
+}
+
+.background-mobile-thumb {
+    position: relative;
+    overflow: hidden;
+    border-radius: var(--radius-lg);
+    cursor: pointer;
+    border: none;
+    background: transparent;
+    transition: var(--transition-transform);
+    box-shadow: var(--shadow-sm);
+}
+
+.background-mobile-thumb:hover {
+    transform: scale(1.02);
+}
+
+.background-mobile-thumb:focus {
+    outline: none;
+}
+
+.background-mobile-thumb-active {
+    outline: 2px solid var(--color-brand-primary);
+}
+
+.background-mobile-thumb-image {
+    aspect-ratio: 16/9;
+    background-color: var(--color-bg-secondary);
+    overflow: hidden;
+}
+
+.background-mobile-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.background-mobile-overlay {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: rgba(0, 0, 0, 0.7);
+    padding: var(--space-2) var(--space-3);
+}
+
+.background-mobile-overlay-content {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.background-mobile-name {
+    font-size: var(--text-sm);
+    color: white;
+    font-weight: var(--font-medium);
+}
+
+/* Animation keyframes */
+@keyframes spin {
+    from {
+        transform: rotate(0deg);
+    }
+
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+/* Shadow styles */
+:global(.dark) .background-thumb,
+:global(.dark) .background-mobile-thumb {
     box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.3);
 }
 </style>

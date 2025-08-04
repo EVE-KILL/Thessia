@@ -3,6 +3,7 @@
 
 /* Import our organized CSS files - variables must come first */
 @import "./css/colors.css";
+@import "./css/body.css";
 @import "./css/components.css";
 @import "./css/globals.css";
 @import "./css/layout.css";

@@ -5,12 +5,12 @@
             <!-- Tab switcher in the top right -->
             <div class="ml-auto">
                 <div class="flex border border-light-dark-border rounded-md overflow-hidden">
-                    <button @click="activeTab = 'write'" class="px-3 py-1 text-xs"
-                        :class="activeTab === 'write' ? 'bg-primary-500 text-white' : 'bg-light-dark-tab text-light-dark-secondary'">
+                    <button @click="activeTab = 'write'" class="px-3 py-1 text-xs tab-button"
+                        :class="activeTab === 'write' ? 'tab-active' : 'tab-inactive'">
                         {{ $t('write') }}
                     </button>
-                    <button @click="activeTab = 'preview'" class="px-3 py-1 text-xs"
-                        :class="activeTab === 'preview' ? 'bg-primary-500 text-white' : 'bg-light-dark-tab text-light-dark-secondary'">
+                    <button @click="activeTab = 'preview'" class="px-3 py-1 text-xs tab-button"
+                        :class="activeTab === 'preview' ? 'tab-active' : 'tab-inactive'">
                         {{ $t('preview') }}
                     </button>
                 </div>
@@ -697,5 +697,31 @@ onMounted(() => {
 
 :global(.dark) .emoji-autocomplete-item:hover {
     background-color: rgba(255, 255, 255, 0.1);
+}
+
+/* Tab button styles */
+.tab-button {
+    transition: all 0.15s ease-in-out;
+    border: none;
+    cursor: pointer;
+}
+
+.tab-active {
+    background-color: var(--color-brand-primary);
+    color: white;
+}
+
+.tab-active:hover {
+    background-color: var(--color-brand-primary-hover);
+}
+
+.tab-inactive {
+    background-color: var(--color-bg-secondary);
+    color: var(--color-text-secondary);
+}
+
+.tab-inactive:hover {
+    background-color: var(--color-bg-primary);
+    color: var(--color-text-primary);
 }
 </style>

@@ -1,4 +1,4 @@
-/* Layout & Spacing Design System - Extracted common patterns */
+/* Layout & Spacing Design System - Layout utilities and component patterns */
 
 :root {
     /* Border radius scale */
@@ -40,6 +40,142 @@
     --size-icon-sm: 16px;
     --size-icon-md: 24px;
     --size-icon-lg: 32px;
+
+    /* Layout dimensions */
+    --max-width-content: 85rem;
+    --max-width-inner: 84rem;
+}
+
+/* ========================================
+   CONTENT LAYOUT SYSTEM
+   ======================================== */
+
+/* Content Container */
+.content {
+    position: relative;
+    z-index: 2;
+    max-width: var(--max-width-content);
+    background-color: rgba(245, 245, 245, 0.7) !important;
+    padding: 5px 5px 0px 5px;
+    width: 100%;
+    box-sizing: border-box;
+    min-height: 100vh;
+    height: auto;
+    overflow: visible;
+    display: flex;
+    flex-direction: column;
+
+    /* Create fade effect using CSS mask */
+    -webkit-mask: linear-gradient(
+        to right,
+        transparent 0px,
+        black 40px,
+        black calc(100% - 40px),
+        transparent 100%
+    );
+    mask: linear-gradient(
+        to right,
+        transparent 0px,
+        black 40px,
+        black calc(100% - 40px),
+        transparent 100%
+    );
+}
+
+html.dark .content {
+    background-color: rgba(21, 21, 21, 0.7) !important;
+}
+
+.inner-content {
+    max-width: var(--max-width-inner);
+    margin: 0 auto;
+    height: auto;
+    min-height: 100vh;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    overflow: visible;
+}
+
+#content > #inner-content {
+    display: flex;
+    flex-direction: column;
+    padding: 5px 5px 0 5px;
+    background: rgba(255, 255, 255, 0.8);
+    min-height: 100vh;
+    box-sizing: border-box;
+    margin: 0;
+    height: auto;
+    overflow: visible;
+    position: relative;
+
+    /* Create fade effect using CSS mask */
+    -webkit-mask: linear-gradient(
+        to right,
+        transparent 0px,
+        black 40px,
+        black calc(100% - 40px),
+        transparent 100%
+    );
+    mask: linear-gradient(
+        to right,
+        transparent 0px,
+        black 40px,
+        black calc(100% - 40px),
+        transparent 100%
+    );
+}
+
+html.dark #content > #inner-content {
+    background: rgba(0, 0, 0, 0.8);
+}
+
+.main-content {
+    flex: 1;
+    padding: 4.5rem 1rem 1.25rem 1rem;
+    width: 100%;
+    overflow: visible;
+}
+
+/* Responsive adjustments */
+@media (min-width: 768px) {
+    #content > #inner-content {
+        padding-right: 25px;
+        padding-left: 25px;
+    }
+}
+
+@media (max-width: 767px) {
+    /* Remove fade mask on mobile since content spans full width */
+    .content,
+    #content > #inner-content {
+        -webkit-mask: none;
+        mask: none;
+    }
+}
+
+/* Footer positioning */
+footer {
+    margin-bottom: 0;
+    align-self: end;
+    grid-row-start: 3;
+    height: auto;
+    min-height: 0;
+    margin: 0 !important;
+    padding-bottom: 0 !important;
+    width: 100%;
+    box-sizing: border-box;
+    margin-top: auto !important;
+}
+
+.u-container {
+    margin: 0 !important;
+    padding: 0 !important;
+    height: auto !important;
+    min-height: 100vh !important;
+    display: flex !important;
+    flex-direction: column !important;
+    overflow: visible !important;
 }
 
 /* Border Radius Utilities */

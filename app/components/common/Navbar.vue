@@ -19,7 +19,36 @@ const dropdownStates = ref<Record<string, boolean>>({});
 // Track which menu sections are expanded on mobile
 const expandedMobileMenus = ref<Record<string, boolean>>({});
 
-/**
+// Navbar scroll state - simplified with intersection observer for better performance
+const isScrolled = ref(false);
+
+// Use intersection observer for performance-optimized scroll detection
+let observer: IntersectionObserver | null = null;
+let sentinel: HTMLElement | null = null;
+
+onMounted(() => {
+    // Create a minimal sentinel element at the top of the page
+    sentinel = document.createElement('div');
+    sentinel.style.cssText = 'position:absolute;top:0;height:1px;width:100%;pointer-events:none;z-index:-1';
+    document.body.prepend(sentinel);
+
+    // Intersection observer with minimal options for performance
+    observer = new IntersectionObserver((entries) => {
+        isScrolled.value = !entries[0].isIntersecting;
+    }, {
+        threshold: 0,
+        rootMargin: '-1px 0px 0px 0px'
+    });
+
+    observer.observe(sentinel);
+});
+
+onUnmounted(() => {
+    observer?.disconnect();
+    sentinel?.remove();
+    observer = null;
+    sentinel = null;
+});/**
  * Navbar link interface
  */
 interface NavLink {
@@ -248,18 +277,17 @@ const closeMobileMenu = () => {
 
 <template>
     <!-- Desktop Navbar -->
-    <nav class="hidden md:flex h-16 sticky top-0 z-50 bg-transparent backdrop-blur-sm shadow-sm">
+    <nav class="navbar-desktop" :class="{ 'navbar-scrolled': isScrolled }">
         <!-- Three-section layout with flexbox -->
-        <div class="container mx-auto px-4 flex items-center justify-between w-full h-full">
+        <div class="navbar-container">
             <!-- Left items - natural width -->
-            <div class="flex items-center space-x-2">
+            <div class="navbar-section-left">
                 <template v-for="(link, index) in leftNavItems" :key="index">
                     <!-- Regular links -->
-                    <NuxtLink v-if="link.to && !link.children" :to="link.to"
-                        class="flex items-center px-3 py-2 rounded-md text-sm font-medium hover:bg-gray-700 dark:hover:bg-gray-700"
-                        :aria-label="link.label" color="neutral" variant="ghost">
-                        <UIcon v-if="link.icon" :name="link.icon" class="mr-2 text-lg" />
-                        <span class="text-lg">{{ link.name }}</span>
+                    <NuxtLink v-if="link.to && !link.children" :to="link.to" class="button-base navbar-button"
+                        :aria-label="link.label">
+                        <UIcon v-if="link.icon" :name="link.icon" class="navbar-icon" />
+                        <span class="navbar-text">{{ link.name }}</span>
                     </NuxtLink>
 
                     <!-- Dropdown menus with column distribution -->
@@ -267,18 +295,17 @@ const closeMobileMenu = () => {
                         :use-column-distribution="true" :items="link.children" :items-per-column="10" :max-height="70"
                         position="bottom" align="start" :smart-position="true">
                         <template #trigger>
-                            <UButton color="neutral" variant="ghost" class="flex items-center" :aria-label="link.label">
-                                <UIcon v-if="link.icon" :name="link.icon" class="mr-2 text-m" />
-                                <span class="text-lg">{{ link.name }}</span>
-                                <UIcon name="lucide:chevron-down" class="ml-1 text-lg" />
-                            </UButton>
+                            <button class="button-base navbar-button navbar-dropdown-trigger" :aria-label="link.label">
+                                <UIcon v-if="link.icon" :name="link.icon" class="navbar-icon" />
+                                <span class="navbar-text">{{ link.name }}</span>
+                                <UIcon name="lucide:chevron-down" class="navbar-chevron" />
+                            </button>
                         </template>
 
                         <!-- Column item slot for menu items -->
                         <template #column-item="{ item }">
-                            <NuxtLink :to="item.to"
-                                class="block px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-md"
-                                :aria-label="item.label" @click="dropdownStates[link.name || link.label || ''] = false">
+                            <NuxtLink :to="item.to" class="dropdown-item" :aria-label="item.label"
+                                @click="dropdownStates[link.name || link.label || ''] = false">
                                 {{ item.name }}
                             </NuxtLink>
                         </template>
@@ -288,35 +315,34 @@ const closeMobileMenu = () => {
                     <component v-else-if="link.component && link.inline" :is="link.component" />
 
                     <!-- Buttons with click handlers -->
-                    <UButton v-else-if="link.onClick" color="neutral" variant="ghost" class="flex items-center"
-                        :aria-label="link.label" @click="link.onClick">
-                        <UIcon v-if="link.icon" :name="link.icon" class="mr-2 text-lg" />
-                        <span class="text-lg">{{ link.name }}</span>
-                    </UButton>
+                    <button v-else-if="link.onClick" class="button-base navbar-button" :aria-label="link.label"
+                        @click="link.onClick">
+                        <UIcon v-if="link.icon" :name="link.icon" class="navbar-icon" />
+                        <span class="navbar-text">{{ link.name }}</span>
+                    </button>
                 </template>
             </div>
 
             <!-- Center items - takes all available space -->
-            <div class="flex-1 flex items-center justify-center ml-4 mr-4">
+            <div class="navbar-section-center">
                 <template v-for="(link, index) in centerNavItems" :key="index">
-                    <component v-if="link.component && link.inline" :is="link.component" class="w-full max-w-3xl" />
-                    <UButton v-else-if="link.onClick" color="neutral" variant="ghost" :aria-label="link.label"
+                    <component v-if="link.component && link.inline" :is="link.component" class="navbar-search" />
+                    <button v-else-if="link.onClick" class="button-base navbar-button" :aria-label="link.label"
                         @click="link.onClick">
-                        <UIcon v-if="link.icon" :name="link.icon" class="mr-2 text-lg" />
-                        <span class="text-lg">{{ link.name }}</span>
-                    </UButton>
+                        <UIcon v-if="link.icon" :name="link.icon" class="navbar-icon" />
+                        <span class="navbar-text">{{ link.name }}</span>
+                    </button>
                 </template>
             </div>
 
             <!-- Right items - natural width -->
-            <div class="flex items-center space-x-2">
+            <div class="navbar-section-right">
                 <template v-for="(link, index) in rightNavItems" :key="index">
                     <!-- Regular links -->
                     <NuxtLink v-if="link.to && !link.children && !link.component" :to="link.to"
-                        class="flex items-center px-3 py-2 rounded-md text-sm font-medium hover:bg-gray-700 dark:hover:bg-gray-700"
-                        :aria-label="link.label" color="neutral" variant="ghost">
-                        <UIcon v-if="link.icon" :name="link.icon" class="text-lg" />
-                        <span v-if="link.name" class="text-lg ml-2">{{ link.name }}</span>
+                        class="button-base navbar-button" :aria-label="link.label">
+                        <UIcon v-if="link.icon" :name="link.icon" class="navbar-icon navbar-icon-only" />
+                        <span v-if="link.name" class="navbar-text">{{ link.name }}</span>
                     </NuxtLink>
 
                     <!-- Inline components -->
@@ -329,19 +355,20 @@ const closeMobileMenu = () => {
                     <Dropdown v-else-if="link.children" v-model="dropdownStates[link.label || '']" position="bottom"
                         align="end" :smart-position="true">
                         <template #trigger>
-                            <UButton color="neutral" variant="ghost" class="flex items-center" :aria-label="link.label">
-                                <UIcon v-if="link.icon" :name="link.icon" class="text-lg" />
-                                <span v-if="link.name" class="text-lg ml-2">{{ link.name }}</span>
-                            </UButton>
+                            <button class="button-base navbar-button navbar-dropdown-trigger"
+                                :aria-label="link.label || link.name">
+                                <UIcon v-if="link.icon" :name="link.icon"
+                                    :class="link.name ? 'navbar-icon' : 'navbar-icon navbar-icon-only'" />
+                                <span v-if="link.name" class="navbar-text">{{ link.name }}</span>
+                            </button>
                         </template>
 
                         <!-- Render dropdown items -->
                         <template v-for="(item, itemIndex) in link.children" :key="itemIndex">
-                            <NuxtLink :to="item.to"
-                                class="block px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-md"
-                                :aria-label="item.label" @click="dropdownStates[link.label || ''] = false">
-                                <div class="flex items-center">
-                                    <UIcon v-if="item.icon" :name="item.icon" class="mr-2 text-sm" />
+                            <NuxtLink :to="item.to" class="dropdown-item" :aria-label="item.label"
+                                @click="dropdownStates[link.label || ''] = false">
+                                <div class="dropdown-item-content">
+                                    <UIcon v-if="item.icon" :name="item.icon" class="dropdown-icon" />
                                     {{ item.name }}
                                 </div>
                             </NuxtLink>
@@ -349,62 +376,61 @@ const closeMobileMenu = () => {
                     </Dropdown>
 
                     <!-- Buttons with click handlers -->
-                    <UButton v-else-if="link.onClick" color="neutral" variant="ghost" class="flex items-center"
-                        :aria-label="link.label" @click="link.onClick">
-                        <UIcon v-if="link.icon" :name="link.icon" class="text-lg" />
-                        <span v-if="link.name" class="text-lg ml-2">{{ link.name }}</span>
-                    </UButton>
+                    <button v-else-if="link.onClick" class="button-base navbar-button" :aria-label="'Toggle theme'"
+                        @click="link.onClick">
+                        <UIcon v-if="link.icon" :name="link.icon" class="navbar-icon navbar-icon-only" />
+                    </button>
                 </template>
             </div>
         </div>
     </nav>
 
     <!-- Mobile Navbar -->
-    <nav
-        class="md:hidden sticky top-0 z-50 bg-white bg-opacity-90 dark:bg-black dark:bg-opacity-90 backdrop-blur-sm shadow-sm">
-        <div class="flex items-center justify-between h-16 p-4">
+    <nav class="navbar-mobile" :class="{ 'navbar-scrolled': isScrolled, 'navbar-hidden': isMobileMenuOpen }">
+        <div class="navbar-mobile-header">
             <!-- Logo/Home link -->
-            <NuxtLink to="/" class="flex items-center">
-                <Icon name="lucide:house" class="text-2xl text-gray-900 text-black dark:text-white" />
+            <NuxtLink to="/" class="navbar-mobile-logo">
+                <Icon name="lucide:house" class="navbar-mobile-logo-icon" />
             </NuxtLink>
 
             <!-- Center mobile items (typically search) -->
-            <div class="flex items-center mx-2 flex-grow">
+            <div class="navbar-mobile-center">
                 <template v-for="(link, index) in centerNavItems" :key="index">
-                    <component v-if="link.component && link.inline" :is="link.component" class="w-full" />
+                    <component v-if="link.component && link.inline" :is="link.component" class="navbar-mobile-search" />
                 </template>
             </div>
 
             <!-- Mobile header actions for items marked with mobile: true -->
-            <div class="flex items-center gap-3">
-                <template v-for="(link, index) in allNavItems.filter(l => l.mobile === true)" :key="index">
+            <div class="navbar-mobile-actions">
+                <template v-for="(link, index) in allNavItems.filter(l => (l as any).mobile === true)" :key="index">
                     <!-- Regular component buttons -->
-                    <component v-if="link.component" :is="link.component" />
+                    <component v-if="(link as any).component" :is="(link as any).component" />
 
                     <!-- Click handlers -->
-                    <UButton v-else-if="link.onClick" color="neutral" variant="ghost" :aria-label="link.label"
-                        @click="link.onClick">
-                        <UIcon v-if="link.icon" :name="link.icon" class="text-xl text-black dark:text-white" />
-                    </UButton>
+                    <button v-else-if="(link as any).onClick" class="navbar-mobile-button"
+                        :aria-label="(link as any).label" @click="(link as any).onClick">
+                        <UIcon v-if="(link as any).icon" :name="(link as any).icon" class="navbar-mobile-icon" />
+                    </button>
                 </template>
 
                 <!-- Regular links that should appear in mobile header -->
                 <NuxtLink
-                    v-for="(link, index) in rightNavItems.filter(l => l.to && !l.mobile && !l.children && !l.component)"
-                    :key="`mobile-link-${index}`" :to="link.to" class="flex items-center" :aria-label="link.label">
-                    <UIcon v-if="link.icon" :name="link.icon" class="text-xl text-black dark:text-white" />
+                    v-for="(link, index) in rightNavItems.filter(l => (l as any).to && !(l as any).mobile && !(l as any).children && !(l as any).component)"
+                    :key="`mobile-link-${index}`" :to="(link as any).to" class="navbar-mobile-link"
+                    :aria-label="(link as any).label">
+                    <UIcon v-if="(link as any).icon" :name="(link as any).icon" class="navbar-mobile-icon" />
                 </NuxtLink>
 
                 <!-- Mobile menu toggle button -->
-                <UButton color="neutral" variant="ghost" aria-label="Menu" @click="isMobileMenuOpen = true">
-                    <UIcon name="lucide:menu" class="text-xl text-black dark:text-white" />
-                </UButton>
+                <button class="navbar-mobile-menu-toggle" aria-label="Menu" @click="isMobileMenuOpen = true">
+                    <UIcon name="lucide:menu" class="navbar-mobile-icon" />
+                </button>
             </div>
         </div>
     </nav>
 
     <!-- Mobile Fullscreen Menu Modal -->
-    <MobileFullscreen :open="isMobileMenuOpen" :title="t('menuTitle')" @close="closeMobileMenu">
+    <MobileFullscreen :open="isMobileMenuOpen" :title="t('menuTitle')" :z-index="10000" @close="closeMobileMenu">
         <!-- Main menu content -->
         <div class="h-full pb-20">
             <!-- Navigation section with collapsible items -->
@@ -558,105 +584,284 @@ const closeMobileMenu = () => {
 </template>
 
 <style scoped>
-/* Sticky header adjustments */
-.sticky.top-0 {
-    z-index: 5;
+/* Navbar Layout - Component-specific styles */
+.navbar-desktop {
+    display: none;
+    height: 4rem;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 50;
+    background-color: rgba(255, 255, 255, 0.0);
+    transition: all 0.3s ease;
 }
 
-/* Animation for collapsible sections */
-.collapsible-enter-active,
-.collapsible-leave-active {
-    transition: max-height 0.3s ease;
-    overflow: hidden;
+html.dark .navbar-desktop {
+    background-color: rgba(0, 0, 0, 0.1);
 }
 
-.collapsible-enter-from,
-.collapsible-leave-to {
-    max-height: 0;
+/* When scrolled, use solid colors matching inner-content */
+.navbar-desktop.navbar-scrolled {
+    background-color: rgba(255, 255, 255, 0.8) !important;
+    backdrop-filter: blur(12px) !important;
+    -webkit-backdrop-filter: blur(12px) !important;
+
+    /* Create edge fade using linear gradient mask */
+    -webkit-mask: linear-gradient(to right,
+            transparent 0px,
+            black 100px,
+            black calc(100% - 100px),
+            transparent 100%);
+    mask: linear-gradient(to right,
+            transparent 0px,
+            black 100px,
+            black calc(100% - 100px),
+            transparent 100%);
 }
 
-.collapsible-enter-to,
-.collapsible-leave-from {
-    max-height: 500px;
+/* When scrolled, extend container to full width but keep content centered */
+.navbar-desktop.navbar-scrolled .navbar-container {
+    max-width: 80rem;
+    margin: 0 auto;
+    padding: 0 var(--space-4);
 }
 
-/* Ensure navbar stays on top */
-nav.sticky {
-    backdrop-filter: blur(8px);
-    -webkit-backdrop-filter: blur(8px);
-    transition: background-color 0.3s ease;
+html.dark .navbar-desktop.navbar-scrolled {
+    background-color: rgba(0, 0, 0, 0.8) !important;
 }
 
-/* Safari fix for backdrop-filter */
-@supports not (backdrop-filter: blur(8px)) {
-    nav.sticky {
-        background-color: rgba(255, 255, 255, 0.98);
+@media (min-width: 768px) {
+    .navbar-desktop {
+        display: flex;
     }
-
-    :root.dark nav.sticky {
-        background-color: rgba(0, 0, 0, 0.98);
-    }
 }
 
-/* Glass effect */
-.bg-white\/50,
-.dark\:bg-black\/30,
-.bg-gray-50\/70,
-.dark\:bg-gray-800\/50 {
+.navbar-container {
+    max-width: 80rem;
+    margin: 10px auto;
+    padding: 0 var(--space-4);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    height: 100%;
+    transition: all 0.3s ease;
+}
+
+.navbar-section-left,
+.navbar-section-right {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    flex-shrink: 0;
+    /* Prevent shrinking */
+}
+
+.navbar-section-right>* {
+    display: flex;
+    align-items: center;
+    flex-shrink: 0;
+}
+
+.navbar-section-center {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 var(--space-4);
+    min-width: 0;
+    /* Allow shrinking if needed */
+}
+
+/* Navbar-specific styling for buttons */
+.navbar-icon {
+    margin-right: var(--space-2);
+    font-size: var(--text-lg);
+}
+
+/* Icon-only buttons */
+.navbar-icon-only {
+    margin-right: 0 !important;
+}
+
+.navbar-text {
+    font-size: var(--text-lg);
+}
+
+.navbar-chevron {
+    margin-left: var(--space-1);
+    font-size: var(--text-lg);
+}
+
+.navbar-search {
+    width: 100%;
+    max-width: 48rem;
+    /* 3xl */
+}
+
+/* Standardize all navbar component buttons to match .button-base */
+.navbar-section-right :deep(button),
+.navbar-section-left :deep(button) {
+    min-height: 2.5rem !important;
+    padding: var(--space-2) var(--space-3) !important;
+    border-radius: var(--radius-base) !important;
+    font-size: var(--text-sm) !important;
+    font-weight: var(--font-medium) !important;
+    display: flex !important;
+    align-items: center !important;
+    box-sizing: border-box !important;
+}
+
+/* Override UButton hover effects to match our standardized style */
+.navbar-section-right :deep(button:hover),
+.navbar-section-left :deep(button:hover) {
+    background-color: rgba(55, 65, 81, 0.6) !important;
+    color: var(--color-text-primary) !important;
+    transition: background-color 0.2s ease !important;
+}
+
+/* Ensure navbar component buttons don't have conflicting margins */
+.navbar-section-right :deep(button),
+.navbar-section-left :deep(button) {
+    margin: 0 !important;
+}
+
+/* Mobile Navbar Layout */
+.navbar-mobile {
+    display: block;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 50;
+    background-color: rgba(255, 255, 255, 0.1);
     backdrop-filter: blur(4px);
     -webkit-backdrop-filter: blur(4px);
+    box-shadow: var(--shadow-sm);
+    transition: all 0.3s ease;
 }
 
-/* Improved hover and active states */
-.hover\:bg-gray-100:hover,
-.dark .hover\:bg-gray-700\/70:hover {
-    transition: background-color 0.2s ease;
+html.dark .navbar-mobile {
+    margin-left: 10px;
+    margin-right: 10px;
+    background-color: rgba(0, 0, 0, 0.1);
 }
 
-/* Safari fixes for backdrop-filter */
-@supports not ((backdrop-filter: blur(8px)) or (-webkit-backdrop-filter: blur(8px))) {
+/* When scrolled, use solid colors matching inner-content */
+.navbar-mobile.navbar-scrolled {
+    background-color: rgba(255, 255, 255, 0.8) !important;
+    backdrop-filter: blur(12px) !important;
+    -webkit-backdrop-filter: blur(12px) !important;
 
-    .bg-white\/50,
-    .dark\:bg-black\/30,
-    .bg-gray-50\/70,
-    .dark\:bg-gray-800\/50 {
-        background-color: rgba(255, 255, 255, 0.95) !important;
+    /* Add margins and edge fade */
+    margin-left: 10px;
+    margin-right: 10px;
+    border-radius: 12px;
+
+    /* Create edge fade using linear gradient mask */
+    -webkit-mask: linear-gradient(to right,
+            transparent 0px,
+            black 30px,
+            black calc(100% - 30px),
+            transparent 100%);
+    mask: linear-gradient(to right,
+            transparent 0px,
+            black 30px,
+            black calc(100% - 30px),
+            transparent 100%);
+}
+
+/* When scrolled, keep mobile header centered */
+.navbar-mobile.navbar-scrolled .navbar-mobile-header {
+    max-width: 80rem;
+    margin: 0 auto;
+}
+
+html.dark .navbar-mobile.navbar-scrolled {
+    background-color: rgba(0, 0, 0, 0.8) !important;
+}
+
+.navbar-mobile.navbar-hidden {
+    transform: translateY(-100%);
+    opacity: 0;
+    pointer-events: none;
+}
+
+@media (min-width: 768px) {
+    .navbar-mobile {
+        display: none;
     }
-
-    :root.dark .bg-white\/50,
-    :root.dark .dark\:bg-black\/30,
-    :root.dark .bg-gray-50\/70,
-    :root.dark .dark\:bg-gray-800\/50 {
-        background-color: rgba(15, 15, 15, 0.95) !important;
-    }
 }
 
-/* Better shadows */
-.shadow-sm {
-    box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+.navbar-mobile-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    height: 4rem;
+    padding: var(--space-4);
+    max-width: 80rem;
+    margin: 0 auto;
+    width: 100%;
+    transition: all 0.3s ease;
 }
 
-:root.dark .shadow-sm {
-    box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.3);
+.navbar-mobile-logo {
+    display: flex;
+    align-items: center;
+    color: var(--color-text-primary);
+    text-decoration: none;
 }
 
-/* Enhanced animations for menu items */
-@keyframes slideIn {
-    from {
-        transform: translateY(10px);
-        opacity: 0;
-    }
-
-    to {
-        transform: translateY(0);
-        opacity: 1;
-    }
+.navbar-mobile-logo-icon {
+    font-size: var(--text-2xl);
+    color: var(--color-text-primary);
 }
 
-/* Apply animation to content */
-h3,
-.space-y-3>div {
-    animation: slideIn 0.3s ease forwards;
-    animation-delay: calc(var(--index, 0) * 0.05s);
+.navbar-mobile-center {
+    display: flex;
+    align-items: center;
+    margin: 0 var(--space-2);
+    flex-grow: 1;
+}
+
+.navbar-mobile-search {
+    width: 100%;
+}
+
+.navbar-mobile-actions {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+}
+
+.navbar-mobile-button,
+.navbar-mobile-link {
+    display: flex;
+    align-items: center;
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    color: var(--color-text-primary);
+    text-decoration: none;
+}
+
+.navbar-mobile-menu-toggle {
+    display: flex;
+    align-items: center;
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    color: var(--color-text-primary);
+}
+
+.navbar-mobile-icon {
+    font-size: var(--text-xl);
+    color: var(--color-text-primary);
+}
+
+/* Force mobile fullscreen modal to start at absolute top */
+:global(.modal-container) {
+    margin-top: -45px !important;
 }
 </style>

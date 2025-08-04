@@ -46,6 +46,18 @@
     }
 }
 
+@keyframes subtle-pulse {
+    0% {
+        opacity: 0.95;
+    }
+    50% {
+        opacity: 1;
+    }
+    100% {
+        opacity: 0.95;
+    }
+}
+
 /* Common skeleton loading patterns */
 .skeleton-animate {
     animation: pulse 1.5s ease-in-out infinite;

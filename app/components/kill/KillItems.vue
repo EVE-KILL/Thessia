@@ -1199,11 +1199,6 @@ function generateItemLink(item: Item): string | null {
     font-weight: 600;
 }
 
-:deep(.u-badge.bg-success),
-:deep(.u-badge.bg-error) {
-    color: #000000 !important;
-}
-
 /* Compact styling for badges */
 :deep(.u-badge) {
     padding: 0.1rem 0.4rem;
@@ -1426,11 +1421,6 @@ function generateItemLink(item: Item): string | null {
     color: light-dark(#6b7280, #9ca3af);
     margin-left: 4px;
     transition: transform 0.2s ease;
-    cursor: pointer;
-}
-
-/* Add cursor pointer for clickable rows */
-:deep(.cursor-pointer) {
     cursor: pointer;
 }
 

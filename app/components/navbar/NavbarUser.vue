@@ -91,86 +91,80 @@ const ssoImageDimensions = computed(() => {
     <ClientOnly>
         <!-- Desktop View -->
         <div v-if="!isMobileView" class="navbar-user">
-            <div class="hidden md:block">
+            <div class="navbar-user-desktop">
                 <!-- User dropdown menu -->
                 <Dropdown v-model="isDropdownOpen" :smart-position="true" position="bottom" align="end">
                     <template #trigger>
-                        <UButton color="neutral" variant="ghost" size="sm" class="flex items-center"
-                            aria-label="User menu">
-                            <UIcon v-if="!isAuthenticated" name="lucide:user" class="text-lg" />
+                        <UButton color="neutral" variant="ghost" size="sm" class="user-trigger" aria-label="User menu">
+                            <UIcon v-if="!isAuthenticated" name="lucide:user" class="user-icon" />
                             <Image v-else type="character" :id="currentUser.characterId!"
-                                :alt="currentUser.characterName!" :size="20" class="w-5 h-5" />
+                                :alt="currentUser.characterName!" :size="20" class="user-avatar" />
                         </UButton>
                     </template>
 
                     <!-- Dropdown Content -->
-                    <div class="py-2 w-64">
+                    <div class="user-dropdown">
                         <!-- Not Logged In Content -->
                         <div v-if="!isAuthenticated">
                             <!-- Basic Login Section -->
-                            <div class="px-4 py-2">
-                                <h3 class="text-sm font-medium text-gray-900 dark:text-white mb-2">{{
+                            <div class="user-login-section">
+                                <h3 class="user-section-title">{{
                                     t('auth.basicLogin',
                                         'Basic Login') }}
                                 </h3>
-                                <button
-                                    class="w-full px-3 py-2 flex justify-center items-center hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors rounded-md"
-                                    @click="handleBasicLogin" :disabled="isLoading">
-                                    <div v-if="isLoading" class="flex items-center justify-center">
-                                        <UIcon name="lucide:loader" class="animate-spin mr-2" />
+                                <button class="user-sso-button" @click="handleBasicLogin" :disabled="isLoading">
+                                    <div v-if="isLoading" class="user-loading">
+                                        <UIcon name="lucide:loader" class="user-loading-icon" />
                                         {{ t('auth.loading', 'Loading...') }}
                                     </div>
                                     <img v-else :src="ssoImageSrc" alt="Basic Login with EVE Online"
-                                        class="sso-image w-full h-auto" :width="ssoImageDimensions.width"
+                                        class="user-sso-image" :width="ssoImageDimensions.width"
                                         :height="ssoImageDimensions.height" />
                                 </button>
-                                <div class="text-xs text-gray-500 dark:text-gray-400 text-center mt-1">
+                                <div class="user-info-text">
                                     {{ t('auth.basicLoginInfo', 'Basic login with publicData only') }}
                                 </div>
                             </div>
 
                             <!-- Divider -->
-                            <div class="border-t border-gray-100 dark:border-gray-800 my-2"></div>
+                            <div class="user-divider"></div>
 
                             <!-- Killmail Login Section -->
-                            <div class="px-4 py-2">
-                                <h3 class="text-sm font-medium text-gray-900 dark:text-white mb-2">
+                            <div class="user-login-section">
+                                <h3 class="user-section-title">
                                     {{ t('auth.killmailLogin') }}
                                 </h3>
-                                <button
-                                    class="w-full px-3 py-2 flex justify-center items-center hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors rounded-md"
-                                    @click="handleEveLogin" :disabled="isLoading">
-                                    <div v-if="isLoading" class="flex items-center justify-center">
-                                        <UIcon name="lucide:loader" class="animate-spin mr-2" />
+                                <button class="user-sso-button" @click="handleEveLogin" :disabled="isLoading">
+                                    <div v-if="isLoading" class="user-loading">
+                                        <UIcon name="lucide:loader" class="user-loading-icon" />
                                         {{ t('auth.loading', 'Loading...') }}
                                     </div>
                                     <img v-else :src="ssoImageSrc" alt="Killmail Login with EVE Online"
-                                        class="sso-image w-full h-auto" :width="ssoImageDimensions.width"
+                                        class="user-sso-image" :width="ssoImageDimensions.width"
                                         :height="ssoImageDimensions.height" />
                                 </button>
-                                <div class="text-xs text-gray-500 dark:text-gray-400 text-center mt-1">
+                                <div class="user-info-text">
                                     {{ t('auth.killmailLoginInfo', 'For accessing private and corporation killmails') }}
                                 </div>
 
                                 <!-- Killmail Delay Slider -->
-                                <div class="mt-3 pt-2 border-t border-gray-100 dark:border-gray-700">
-                                    <label class="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                <div class="user-delay-section">
+                                    <label class="user-delay-label">
                                         {{ t('killmail.delay.label', 'Killmail Delay') }}
                                     </label>
-                                    <div class="space-y-2">
+                                    <div class="user-delay-controls">
                                         <USlider v-model="killmailDelay" :default-value="0" :min="0" :max="72" :step="1"
-                                            class="w-full" />
-                                        <div class="flex justify-between text-xs text-gray-500 dark:text-gray-400">
-                                            <span>0h</span>
-                                            <span class="font-medium text-gray-700 dark:text-gray-300">{{ delayText
-                                            }}</span>
-                                            <span>72h</span>
+                                            class="user-delay-slider" />
+                                        <div class="user-delay-range">
+                                            <span class="user-delay-min">0h</span>
+                                            <span class="user-delay-current">{{ delayText }}</span>
+                                            <span class="user-delay-max">72h</span>
                                         </div>
                                     </div>
-                                    <div class="text-xs text-gray-500 dark:text-gray-400 text-center mt-1">
+                                    <div class="user-info-text">
                                         {{ t('killmail.delay.description') }}
                                     </div>
-                                    <div class="text-center mt-2">
+                                    <div class="user-delay-display">
                                         <NuxtLink to="/faq#killmail-delay"
                                             class="text-xs text-blue-500 hover:text-blue-400 dark:text-blue-400 dark:hover:text-blue-300 underline"
                                             @click="isDropdownOpen = false">
@@ -181,13 +175,11 @@ const ssoImageDimensions = computed(() => {
                             </div>
 
                             <!-- Divider -->
-                            <div class="border-t border-gray-100 dark:border-gray-800 my-2"></div>
+                            <div class="user-divider"></div>
 
                             <!-- Customize Scopes Section -->
-                            <div class="px-4 py-2">
-                                <button
-                                    class="w-full px-3 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors text-left rounded-md border border-gray-200 dark:border-gray-600"
-                                    @click="handleCustomizeLogin">
+                            <div class="user-login-section">
+                                <button class="user-customize-button" @click="handleCustomizeLogin">
                                     <div class="flex items-center justify-center">
                                         <UIcon name="lucide:settings" class="mr-2" />
                                         {{ t('auth.customizeScopes', 'Customize Login Scopes') }}
@@ -195,7 +187,7 @@ const ssoImageDimensions = computed(() => {
                                 </button>
                             </div>
 
-                            <div v-if="hasError" class="px-4 py-2 text-sm text-red-600 dark:text-red-400">
+                            <div v-if="hasError" class="user-error">
                                 {{ errorMessage }}
                             </div>
                         </div>
@@ -203,24 +195,21 @@ const ssoImageDimensions = computed(() => {
                         <!-- Logged In Content -->
                         <template v-else>
                             <!-- User Profile -->
-                            <div class="px-4 py-3 border-b border-gray-100 dark:border-gray-800">
-                                <div class="flex flex-col items-center text-center">
-                                    <NuxtLink :to="`/character/${currentUser.characterId}`"
+                            <div class="user-profile-section">
+                                <div class="user-profile-content">
+                                    <NuxtLink :to="`/character/${currentUser.characterId}`" class="user-profile-link"
                                         @click="isDropdownOpen = false">
                                         <Image type="character" :id="currentUser.characterId!"
-                                            :alt="currentUser.characterName!" :size="64"
-                                            class="w-16 h-16 mb-2 hover:opacity-80 transition-opacity" />
+                                            :alt="currentUser.characterName!" :size="64" class="user-profile-avatar" />
                                     </NuxtLink>
 
-                                    <NuxtLink :to="`/character/${currentUser.characterId}`"
-                                        class="font-medium text-sm text-gray-900 dark:text-white mb-1 hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
+                                    <NuxtLink :to="`/character/${currentUser.characterId}`" class="user-profile-name"
                                         @click="isDropdownOpen = false">
                                         {{ currentUser.characterName }}
                                     </NuxtLink>
 
                                     <NuxtLink v-if="currentUser.corporationName"
-                                        :to="`/corporation/${currentUser.corporationId}`"
-                                        class="text-xs text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 flex items-center mt-1 w-full justify-center transition-colors"
+                                        :to="`/corporation/${currentUser.corporationId}`" class="user-corp-link"
                                         @click="isDropdownOpen = false">
                                         <Image type="corporation" :id="currentUser.corporationId!"
                                             :alt="currentUser.corporationName!" :size="20" class="w-5 h-5 mr-1" />
@@ -228,8 +217,7 @@ const ssoImageDimensions = computed(() => {
                                     </NuxtLink>
 
                                     <NuxtLink v-if="currentUser.allianceName"
-                                        :to="`/alliance/${currentUser.allianceId}`"
-                                        class="text-xs text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 flex items-center mt-1 w-full justify-center transition-colors"
+                                        :to="`/alliance/${currentUser.allianceId}`" class="user-alliance-link"
                                         @click="isDropdownOpen = false">
                                         <Image type="alliance" :id="currentUser.allianceId!"
                                             :alt="currentUser.allianceName!" :size="20" class="w-5 h-5 mr-1" />
@@ -240,8 +228,7 @@ const ssoImageDimensions = computed(() => {
 
                             <!-- Navigation Links -->
                             <div class="mt-2">
-                                <NuxtLink v-if="currentUser.administrator" to="/admin"
-                                    class="block px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                                <NuxtLink v-if="currentUser.administrator" to="/admin" class="dropdown-item"
                                     @click="isDropdownOpen = false">
                                     <div class="flex items-center">
                                         <UIcon name="lucide:shield" class="mr-2" />
@@ -249,9 +236,7 @@ const ssoImageDimensions = computed(() => {
                                     </div>
                                 </NuxtLink>
 
-                                <NuxtLink to="/user/settings"
-                                    class="block px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
-                                    @click="isDropdownOpen = false">
+                                <NuxtLink to="/user/settings" class="dropdown-item" @click="isDropdownOpen = false">
                                     <div class="flex items-center">
                                         <UIcon name="lucide:settings" class="mr-2" />
                                         {{ t('user.settings') }}
@@ -259,10 +244,9 @@ const ssoImageDimensions = computed(() => {
                                 </NuxtLink>
 
                                 <!-- Logout Button -->
-                                <div class="border-t border-gray-100 dark:border-gray-800 my-1 pt-1">
-                                    <button
-                                        class="w-full text-left px-4 py-2 text-sm text-red-600 dark:text-red-400 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
-                                        @click="handleLogout" :disabled="isLoading">
+                                <div class="user-divider mt-1 pt-1">
+                                    <button class="dropdown-item logout-button w-full text-left" @click="handleLogout"
+                                        :disabled="isLoading">
                                         <div class="flex items-center">
                                             <UIcon :name="isLoading ? 'lucide:loader' : 'lucide:log-out'"
                                                 :class="{ 'animate-spin': isLoading }" class="mr-2" />
@@ -278,104 +262,101 @@ const ssoImageDimensions = computed(() => {
             </div>
 
             <!-- Mobile Header Dropdown -->
-            <div class="md:hidden">
-                <div class="flex items-center">
+            <div class="navbar-user-mobile">
+                <div class="navbar-user-mobile-content">
                     <UButton v-if="!isAuthenticated" color="neutral" variant="ghost" aria-label="User menu"
-                        @click="isDropdownOpen = !isDropdownOpen">
-                        <UIcon name="lucide:user-circle" class="text-lg" />
+                        @click="isDropdownOpen = !isDropdownOpen" class="user-mobile-trigger">
+                        <UIcon name="lucide:user-circle" class="user-mobile-icon" />
                     </UButton>
 
-                    <div v-if="!isAuthenticated && isDropdownOpen"
-                        class="absolute top-16 right-4 bg-white dark:bg-gray-800 shadow-lg rounded-md py-2 w-56 z-50">
-                        <!-- Basic Login Section -->
-                        <div class="px-3 py-2">
-                            <h3 class="text-sm font-medium text-gray-900 dark:text-white mb-2">
-                                {{ t('auth.basicLogin') }}
-                            </h3>
-                            <button
-                                class="w-full px-2 py-2 flex justify-center items-center hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors rounded-md"
-                                @click="handleBasicLogin" :disabled="isLoading">
-                                <div v-if="isLoading" class="flex items-center justify-center">
-                                    <UIcon name="lucide:loader" class="animate-spin mr-2" />
-                                    {{ t('auth.loading', 'Loading...') }}
+                    <div v-if="!isAuthenticated && isDropdownOpen" class="user-mobile-dropdown">
+                        <!-- Mobile dropdown content similar to desktop, but more compact -->
+                        <div
+                            class="absolute top-16 right-4 bg-white dark:bg-gray-800 shadow-lg rounded-md py-2 w-56 z-50">
+                            <!-- Basic Login Section -->
+                            <div class="user-login-section px-3 py-2">
+                                <h3 class="user-section-title mb-2">
+                                    {{ t('auth.basicLogin') }}
+                                </h3>
+                                <button class="user-sso-button" @click="handleBasicLogin" :disabled="isLoading">
+                                    <div v-if="isLoading" class="user-loading">
+                                        <UIcon name="lucide:loader" class="user-loading-icon" />
+                                        {{ t('auth.loading', 'Loading...') }}
+                                    </div>
+                                    <img v-else :src="ssoImageSrc" alt="Basic Login with EVE Online"
+                                        class="user-sso-image" :width="ssoImageDimensions.width"
+                                        :height="ssoImageDimensions.height" />
+                                </button>
+                                <div class="user-info-text">
+                                    {{ t('auth.basicLoginInfo', 'Basic login with publicData only') }}
                                 </div>
-                                <img v-else :src="ssoImageSrc" alt="Basic Login with EVE Online"
-                                    class="sso-image w-full h-auto" :width="ssoImageDimensions.width"
-                                    :height="ssoImageDimensions.height" />
-                            </button>
-                            <div class="text-xs text-gray-500 dark:text-gray-400 text-center mt-1">
-                                {{ t('auth.basicLoginInfo', 'Basic login with publicData only') }}
-                            </div>
-                        </div>
-
-                        <!-- Divider -->
-                        <div class="border-t border-gray-100 dark:border-gray-800 my-2"></div>
-
-                        <!-- Killmail Login Section -->
-                        <div class="px-3 py-2">
-                            <h3 class="text-sm font-medium text-gray-900 dark:text-white mb-2">
-                                {{ t('auth.killmailLogin') }}
-                            </h3>
-                            <button
-                                class="w-full px-2 py-2 flex justify-center items-center hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors rounded-md"
-                                @click="handleEveLogin" :disabled="isLoading">
-                                <div v-if="isLoading" class="flex items-center justify-center">
-                                    <UIcon name="lucide:loader" class="animate-spin mr-2" />
-                                    {{ t('auth.loading', 'Loading...') }}
-                                </div>
-                                <img v-else :src="ssoImageSrc" alt="Killmail Login with EVE Online"
-                                    class="sso-image w-full h-auto" :width="ssoImageDimensions.width"
-                                    :height="ssoImageDimensions.height" />
-                            </button>
-                            <div class="text-xs text-gray-500 dark:text-gray-400 text-center mt-1">
-                                {{ t('auth.killmailLoginInfo', 'For private and corporation killmails') }}
                             </div>
 
-                            <!-- Killmail Delay Slider -->
-                            <div class="mt-3 pt-2 border-t border-gray-100 dark:border-gray-700">
-                                <label class="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-2">
-                                    {{ t('killmail.delay.label', 'Killmail Delay') }}
-                                </label>
-                                <div class="space-y-2">
-                                    <USlider v-model="killmailDelay" :default-value="0" :min="0" :max="72" :step="1"
-                                        class="w-full" />
-                                    <div class="flex justify-between text-xs text-gray-500 dark:text-gray-400">
-                                        <span>0h</span>
-                                        <span class="font-medium text-gray-700 dark:text-gray-300">{{ delayText
-                                        }}</span>
-                                        <span>72h</span>
+                            <!-- Divider -->
+                            <div class="user-divider"></div>
+
+                            <!-- Killmail Login Section -->
+                            <div class="user-login-section px-3 py-2">
+                                <h3 class="user-section-title mb-2">
+                                    {{ t('auth.killmailLogin') }}
+                                </h3>
+                                <button class="user-sso-button" @click="handleEveLogin" :disabled="isLoading">
+                                    <div v-if="isLoading" class="user-loading">
+                                        <UIcon name="lucide:loader" class="user-loading-icon" />
+                                        {{ t('auth.loading', 'Loading...') }}
+                                    </div>
+                                    <img v-else :src="ssoImageSrc" alt="Killmail Login with EVE Online"
+                                        class="user-sso-image" :width="ssoImageDimensions.width"
+                                        :height="ssoImageDimensions.height" />
+                                </button>
+                                <div class="user-info-text">
+                                    {{ t('auth.killmailLoginInfo', 'For private and corporation killmails') }}
+                                </div>
+
+                                <!-- Killmail Delay Slider -->
+                                <div class="user-delay-section">
+                                    <label class="user-delay-label">
+                                        {{ t('killmail.delay.label', 'Killmail Delay') }}
+                                    </label>
+                                    <div class="user-delay-controls">
+                                        <USlider v-model="killmailDelay" :default-value="0" :min="0" :max="72" :step="1"
+                                            class="user-delay-slider" />
+                                        <div class="user-delay-range">
+                                            <span class="user-delay-min">0h</span>
+                                            <span class="user-delay-current">{{ delayText }}</span>
+                                            <span class="user-delay-max">72h</span>
+                                        </div>
+                                    </div>
+                                    <div class="user-info-text">
+                                        {{ t('killmail.delay.description', 'Delay killmails to prevent instant leaks')
+                                        }}
+                                    </div>
+                                    <div class="user-delay-display">
+                                        <NuxtLink to="/faq#killmail-delay"
+                                            class="text-xs text-blue-500 hover:text-blue-400 dark:text-blue-400 dark:hover:text-blue-300 underline"
+                                            @click="isDropdownOpen = false">
+                                            {{ t('killmail.delay.learnMore', 'Learn more about killmail delays') }}
+                                        </NuxtLink>
                                     </div>
                                 </div>
-                                <div class="text-xs text-gray-500 dark:text-gray-400 text-center mt-1">
-                                    {{ t('killmail.delay.description', 'Delay killmails to prevent instant leaks') }}
-                                </div>
-                                <div class="text-center mt-2">
-                                    <NuxtLink to="/faq#killmail-delay"
-                                        class="text-xs text-blue-500 hover:text-blue-400 dark:text-blue-400 dark:hover:text-blue-300 underline"
-                                        @click="isDropdownOpen = false">
-                                        {{ t('killmail.delay.learnMore', 'Learn more about killmail delays') }}
-                                    </NuxtLink>
-                                </div>
                             </div>
-                        </div>
 
-                        <!-- Divider -->
-                        <div class="border-t border-gray-100 dark:border-gray-800 my-2"></div>
+                            <!-- Divider -->
+                            <div class="user-divider"></div>
 
-                        <!-- Customize Scopes -->
-                        <div class="px-3 py-2">
-                            <button
-                                class="w-full px-2 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors text-left rounded-md border border-gray-200 dark:border-gray-600"
-                                @click="handleCustomizeLogin">
-                                <div class="flex items-center justify-center">
-                                    <UIcon name="lucide:settings" class="mr-2" />
-                                    {{ t('auth.customizeScopes', 'Customize Login') }}
-                                </div>
-                            </button>
-                        </div>
+                            <!-- Customize Scopes -->
+                            <div class="user-login-section px-3 py-2">
+                                <button class="user-customize-button" @click="handleCustomizeLogin">
+                                    <div class="flex items-center justify-center">
+                                        <UIcon name="lucide:settings" class="mr-2" />
+                                        {{ t('auth.customizeScopes', 'Customize Login') }}
+                                    </div>
+                                </button>
+                            </div>
 
-                        <div v-if="hasError" class="px-4 py-2 text-sm text-red-500">
-                            {{ errorMessage }}
+                            <div v-if="hasError" class="user-error px-4 py-2">
+                                {{ errorMessage }}
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -383,67 +364,63 @@ const ssoImageDimensions = computed(() => {
         </div>
 
         <!-- Mobile Fullscreen Menu View -->
-        <div v-else class="p-4 bg-gray-50/70 dark:bg-gray-800/50 rounded-lg shadow-sm">
+        <div v-else class="user-mobile-fullscreen">
             <!-- Not logged in content -->
             <div v-if="!isAuthenticated">
                 <!-- Basic Login Section -->
                 <div class="mb-4">
-                    <h3 class="text-sm font-medium text-gray-900 dark:text-white mb-3">
+                    <h3 class="user-section-title mb-3">
                         {{ t('auth.basicLogin') }}
                     </h3>
-                    <button
-                        class="w-full mb-2 px-4 py-3 flex justify-center items-center hover:bg-gray-100 dark:hover:bg-gray-700/70 transition-colors rounded-md"
-                        @click="handleBasicLogin" :disabled="isLoading">
-                        <div v-if="isLoading" class="flex items-center justify-center">
-                            <UIcon name="lucide:loader" class="animate-spin mr-2" />
+                    <button class="user-sso-button w-full mb-2 px-4 py-3" @click="handleBasicLogin"
+                        :disabled="isLoading">
+                        <div v-if="isLoading" class="user-loading">
+                            <UIcon name="lucide:loader" class="user-loading-icon" />
                             {{ t('auth.loading', 'Loading...') }}
                         </div>
-                        <img v-else :src="ssoImageSrc" alt="Basic Login with EVE Online" class="sso-image w-full h-auto"
+                        <img v-else :src="ssoImageSrc" alt="Basic Login with EVE Online" class="user-sso-image"
                             :width="ssoImageDimensions.width" :height="ssoImageDimensions.height" />
                     </button>
-                    <div class="text-xs text-gray-500 dark:text-gray-400 text-center">
+                    <div class="user-info-text">
                         {{ t('auth.basicLoginInfo', 'Basic login with publicData only') }}
                     </div>
                 </div>
 
                 <!-- Divider -->
-                <div class="border-t border-gray-100 dark:border-gray-800 my-4"></div>
+                <div class="user-divider my-4"></div>
 
                 <!-- Killmail Login Section -->
                 <div class="mb-4">
-                    <h3 class="text-sm font-medium text-gray-900 dark:text-white mb-3">
+                    <h3 class="user-section-title mb-3">
                         {{ t('auth.killmailLogin') }}
                     </h3>
-                    <button
-                        class="w-full mb-2 px-4 py-3 flex justify-center items-center hover:bg-gray-100 dark:hover:bg-gray-700/70 transition-colors rounded-md"
-                        @click="handleEveLogin" :disabled="isLoading">
-                        <div v-if="isLoading" class="flex items-center justify-center">
-                            <UIcon name="lucide:loader" class="animate-spin mr-2" />
+                    <button class="user-sso-button w-full mb-2 px-4 py-3" @click="handleEveLogin" :disabled="isLoading">
+                        <div v-if="isLoading" class="user-loading">
+                            <UIcon name="lucide:loader" class="user-loading-icon" />
                             {{ t('auth.loading', 'Loading...') }}
                         </div>
-                        <img v-else :src="ssoImageSrc" alt="Killmail Login with EVE Online"
-                            class="sso-image w-full h-auto" :width="ssoImageDimensions.width"
-                            :height="ssoImageDimensions.height" />
+                        <img v-else :src="ssoImageSrc" alt="Killmail Login with EVE Online" class="user-sso-image"
+                            :width="ssoImageDimensions.width" :height="ssoImageDimensions.height" />
                     </button>
-                    <div class="text-xs text-gray-500 dark:text-gray-400 text-center">
+                    <div class="user-info-text">
                         {{ t('auth.killmailLoginInfo', 'For accessing private and corporation killmails') }}
                     </div>
 
                     <!-- Killmail Delay Slider -->
-                    <div class="mt-4 pt-3 border-t border-gray-100 dark:border-gray-700">
-                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
+                    <div class="user-delay-section mt-4 pt-3">
+                        <label class="user-delay-label block text-sm font-medium mb-3">
                             {{ t('killmail.delay.label', 'Killmail Delay') }}
                         </label>
                         <div class="space-y-3">
                             <USlider v-model="killmailDelay" :default-value="0" :min="0" :max="72" :step="1"
-                                class="w-full" />
-                            <div class="flex justify-between text-sm text-gray-500 dark:text-gray-400">
+                                class="user-delay-slider" />
+                            <div class="user-delay-range text-sm">
                                 <span>0h</span>
                                 <span class="font-medium text-gray-700 dark:text-gray-300">{{ delayText }}</span>
                                 <span>72h</span>
                             </div>
                         </div>
-                        <div class="text-xs text-gray-500 dark:text-gray-400 text-center mt-2">
+                        <div class="user-info-text mt-2">
                             {{ t('killmail.delay.description') }}
                         </div>
                         <div class="text-center mt-2">
@@ -456,13 +433,11 @@ const ssoImageDimensions = computed(() => {
                 </div>
 
                 <!-- Divider -->
-                <div class="border-t border-gray-100 dark:border-gray-800 my-4"></div>
+                <div class="user-divider my-4"></div>
 
                 <!-- Customize Scopes Section -->
                 <div class="mb-4">
-                    <button
-                        class="w-full px-4 py-3 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700/70 transition-colors rounded-md text-left border border-gray-200 dark:border-gray-600"
-                        @click="handleCustomizeLogin">
+                    <button class="user-customize-button w-full px-4 py-3" @click="handleCustomizeLogin">
                         <div class="flex items-center justify-center">
                             <UIcon name="lucide:settings" class="mr-2" />
                             {{ t('auth.customizeScopes', 'Customize Login Scopes') }}
@@ -470,7 +445,7 @@ const ssoImageDimensions = computed(() => {
                     </button>
                 </div>
 
-                <div v-if="hasError" class="px-2 py-2 text-sm text-red-500 mb-3">
+                <div v-if="hasError" class="user-error mb-3">
                     {{ errorMessage }}
                 </div>
             </div>
@@ -478,45 +453,44 @@ const ssoImageDimensions = computed(() => {
             <!-- Logged in content -->
             <div v-else>
                 <!-- User Profile -->
-                <div
-                    class="flex flex-col items-center text-center px-2 py-3 mb-3 border-b border-gray-100 dark:border-gray-800">
-                    <NuxtLink :to="`/character/${currentUser.characterId}`">
-                        <Image type="character" :id="currentUser.characterId!" :alt="currentUser.characterName!"
-                            :size="64" class="w-16 h-16 mb-2 hover:opacity-80 transition-opacity" />
-                    </NuxtLink>
+                <div class="user-profile-section mb-3">
+                    <div class="user-profile-content">
+                        <NuxtLink :to="`/character/${currentUser.characterId}`" class="user-profile-link">
+                            <Image type="character" :id="currentUser.characterId!" :alt="currentUser.characterName!"
+                                :size="64" class="user-profile-avatar" />
+                        </NuxtLink>
 
-                    <NuxtLink :to="`/character/${currentUser.characterId}`"
-                        class="font-medium text-base text-gray-900 dark:text-white hover:text-blue-600 dark:hover:text-blue-400 transition-colors">
-                        {{ currentUser.characterName }}
-                    </NuxtLink>
+                        <NuxtLink :to="`/character/${currentUser.characterId}`"
+                            class="font-medium text-base text-gray-900 dark:text-white hover:text-blue-600 dark:hover:text-blue-400 transition-colors">
+                            {{ currentUser.characterName }}
+                        </NuxtLink>
 
-                    <NuxtLink v-if="currentUser.corporationName" :to="`/corporation/${currentUser.corporationId}`"
-                        class="text-sm text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 flex items-center mt-1 w-full justify-center transition-colors">
-                        <Image type="corporation" :id="currentUser.corporationId!" :alt="currentUser.corporationName!"
-                            :size="20" class="w-5 h-5 mr-1" />
-                        {{ currentUser.corporationName }}
-                    </NuxtLink>
+                        <NuxtLink v-if="currentUser.corporationName" :to="`/corporation/${currentUser.corporationId}`"
+                            class="user-corp-link text-sm">
+                            <Image type="corporation" :id="currentUser.corporationId!"
+                                :alt="currentUser.corporationName!" :size="20" class="w-5 h-5 mr-1" />
+                            {{ currentUser.corporationName }}
+                        </NuxtLink>
 
-                    <NuxtLink v-if="currentUser.allianceName" :to="`/alliance/${currentUser.allianceId}`"
-                        class="text-sm text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 flex items-center mt-1 w-full justify-center transition-colors">
-                        <Image type="alliance" :id="currentUser.allianceId!" :alt="currentUser.allianceName!" :size="20"
-                            class="w-5 h-5 mr-1" />
-                        {{ currentUser.allianceName }}
-                    </NuxtLink>
+                        <NuxtLink v-if="currentUser.allianceName" :to="`/alliance/${currentUser.allianceId}`"
+                            class="user-alliance-link text-sm">
+                            <Image type="alliance" :id="currentUser.allianceId!" :alt="currentUser.allianceName!"
+                                :size="20" class="w-5 h-5 mr-1" />
+                            {{ currentUser.allianceName }}
+                        </NuxtLink>
+                    </div>
                 </div>
 
                 <!-- Navigation Links -->
                 <div class="space-y-1">
-                    <NuxtLink v-if="currentUser.administrator" to="/admin"
-                        class="block px-2 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700/70 rounded-md transition-colors">
+                    <NuxtLink v-if="currentUser.administrator" to="/admin" class="dropdown-item">
                         <div class="flex items-center">
                             <UIcon name="lucide:shield" class="mr-2" />
                             {{ t('admin.panel', 'Admin Panel') }}
                         </div>
                     </NuxtLink>
 
-                    <NuxtLink to="/user/settings"
-                        class="block px-2 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700/70 rounded-md transition-colors">
+                    <NuxtLink to="/user/settings" class="dropdown-item">
                         <div class="flex items-center">
                             <UIcon name="lucide:settings" class="mr-2" />
                             {{ t('user.settings') }}
@@ -524,10 +498,9 @@ const ssoImageDimensions = computed(() => {
                     </NuxtLink>
 
                     <!-- Logout Button -->
-                    <div class="border-t border-gray-100 dark:border-gray-800 my-1 pt-1">
-                        <button
-                            class="w-full text-left px-2 py-2 text-sm text-red-600 dark:text-red-400 hover:bg-gray-100 dark:hover:bg-gray-700/70 rounded-md transition-colors"
-                            @click="handleLogout" :disabled="isLoading">
+                    <div class="user-divider my-1 pt-1">
+                        <button class="dropdown-item logout-button w-full text-left" @click="handleLogout"
+                            :disabled="isLoading">
                             <div class="flex items-center">
                                 <UIcon :name="isLoading ? 'lucide:loader' : 'lucide:log-out'"
                                     :class="{ 'animate-spin': isLoading }" class="mr-2" />
@@ -542,22 +515,22 @@ const ssoImageDimensions = computed(() => {
         <template #fallback>
             <!-- Desktop fallback -->
             <div v-if="!isMobileView" class="navbar-user">
-                <div class="hidden md:block">
-                    <UButton color="neutral" variant="ghost" size="sm" class="flex items-center" aria-label="User menu">
-                        <UIcon name="lucide:user" class="text-lg" />
+                <div class="navbar-user-desktop">
+                    <UButton color="neutral" variant="ghost" size="sm" class="user-trigger" aria-label="User menu">
+                        <UIcon name="lucide:user" class="user-icon" />
                     </UButton>
                 </div>
-                <div class="md:hidden">
-                    <UButton color="neutral" variant="ghost" aria-label="User menu">
-                        <UIcon name="lucide:user-circle" class="text-lg" />
+                <div class="navbar-user-mobile">
+                    <UButton color="neutral" variant="ghost" aria-label="User menu" class="user-mobile-trigger">
+                        <UIcon name="lucide:user-circle" class="user-mobile-icon" />
                     </UButton>
                 </div>
             </div>
             <!-- Mobile fallback -->
-            <div v-else class="p-4 bg-gray-50/70 dark:bg-gray-800/50 rounded-lg shadow-sm">
-                <div class="flex items-center justify-center py-4">
-                    <UIcon name="lucide:loader-2" class="animate-spin text-lg text-gray-500" />
-                    <span class="ml-2 text-sm text-gray-500">{{ t('auth.loading', 'Loading...') }}</span>
+            <div v-else class="user-mobile-loading">
+                <div class="user-loading-content">
+                    <UIcon name="lucide:loader-2" class="user-loading-spinner" />
+                    <span class="user-loading-text">{{ t('auth.loading', 'Loading...') }}</span>
                 </div>
             </div>
         </template>
@@ -568,6 +541,24 @@ const ssoImageDimensions = computed(() => {
 .navbar-user {
     display: flex;
     align-items: center;
+}
+
+.navbar-user-desktop {
+    display: none;
+}
+
+.navbar-user-mobile {
+    display: block;
+}
+
+@media (min-width: 768px) {
+    .navbar-user-desktop {
+        display: block;
+    }
+
+    .navbar-user-mobile {
+        display: none;
+    }
 }
 
 /* Animation for user menu */
@@ -583,41 +574,24 @@ const ssoImageDimensions = computed(() => {
 }
 
 /* Glass effect for containers */
-.bg-gray-50\/70,
-.dark\:bg-gray-800\/50 {
+.user-mobile-fullscreen {
     backdrop-filter: blur(4px);
     -webkit-backdrop-filter: blur(4px);
 }
 
 /* Safari fix for backdrop-filter */
 @supports not ((backdrop-filter: blur(4px)) or (-webkit-backdrop-filter: blur(4px))) {
-    .bg-gray-50\/70 {
+    .user-mobile-fullscreen {
         background-color: rgba(249, 250, 251, 0.95) !important;
     }
 
-    :root.dark .dark\:bg-gray-800\/50 {
+    :root.dark .user-mobile-fullscreen {
         background-color: rgba(31, 41, 55, 0.95) !important;
     }
 }
 
-/* Consistent SSO image sizing */
-.sso-image {
-    display: block;
-    object-fit: contain;
-    max-width: 100%;
-    height: auto;
-}
-
-/* Enhanced button styling for login buttons */
-button:has(.sso-image) {
-    padding: 0 !important;
-    overflow: hidden;
-}
-
-button:has(.sso-image) .sso-image {
-    width: 100%;
-    height: auto;
+/* SSO Image sizing */
+.user-sso-image {
     border-radius: 0.375rem;
-    /* rounded-md */
 }
 </style>

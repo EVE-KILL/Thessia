@@ -43,9 +43,19 @@
 
     /* Status Colors */
     --color-success: rgb(16, 185, 129);
-    --color-success-bg: rgba(16, 185, 129, 0.2);
+    --color-success-bg: rgba(0, 255, 55, 0.76);
     --color-info: rgb(59, 130, 246);
     --color-info-bg: rgba(59, 130, 246, 0.2);
+    --color-error: light-dark(
+        #ef4444,
+        #f87171
+    ); /* red-500 in light, red-400 in dark */
+    --color-error-hover: light-dark(
+        #dc2626,
+        #fca5a5
+    ); /* red-600 in light, red-300 in dark */
+    --color-error-bg: rgba(239, 68, 68, 0.1);
+    --color-warning: #f59e0b; /* amber-500 */
     --color-neutral: rgba(156, 163, 175, 0.2);
 
     /* Kill/Loss Colors */
@@ -79,32 +89,47 @@
 .text-info {
     color: var(--color-info);
 }
-
-.bg-primary {
-    background-color: var(--color-bg-primary);
+.text-error {
+    color: var(--color-error);
 }
-.bg-secondary {
-    background-color: var(--color-bg-secondary);
-}
-.bg-tertiary {
-    background-color: var(--color-bg-tertiary);
-}
-.bg-overlay-light {
-    background-color: var(--color-overlay-light);
-}
-.bg-overlay-dark {
-    background-color: var(--color-overlay-dark);
-}
-.bg-overlay-subtle {
-    background-color: var(--color-overlay-subtle);
-}
-.bg-overlay-medium {
-    background-color: var(--color-overlay-medium);
-}
-.bg-overlay-strong {
-    background-color: var(--color-overlay-strong);
+.text-warning {
+    color: var(--color-warning);
 }
 
+/* Common gray text variations */
+.text-gray-light {
+    color: light-dark(var(--color-gray-300), var(--color-gray-400));
+}
+.text-gray-medium {
+    color: var(--color-gray-500);
+}
+.text-gray-dark {
+    color: light-dark(var(--color-gray-600), var(--color-gray-300));
+}
+
+/* Link colors */
+.text-link {
+    color: var(--color-brand-primary);
+}
+.text-link:hover {
+    color: var(--color-brand-primary-hover);
+}
+
+/* Status-specific text colors */
+.text-online {
+    color: var(--color-success);
+}
+.text-offline {
+    color: var(--color-gray-500);
+}
+
+/* EVE-specific text colors */
+.text-kill {
+    color: var(--color-success);
+}
+.text-loss {
+    color: #ef4444; /* red-500 */
+}
 .bg-success {
     background-color: var(--color-success-bg);
     color: var(--color-success);
