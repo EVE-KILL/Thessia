@@ -87,7 +87,7 @@ body {
     pointer-events: none;
     z-index: 1;
     transition: background 0.5s ease;
-    animation: subtle-pulse 8s infinite ease-in-out;
+    /* Removed: animation: subtle-pulse 8s infinite ease-in-out; - causes idle background pulsing */
 }
 
 html.dark .vignette-overlay {

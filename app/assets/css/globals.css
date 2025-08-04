@@ -58,9 +58,24 @@
     }
 }
 
-/* Common skeleton loading patterns */
+/* Performance-optimized skeleton loading patterns */
 .skeleton-animate {
     animation: pulse 1.5s ease-in-out infinite;
+    /* Only animate when loading state is active */
+    will-change: opacity;
+}
+
+/* Utility to stop animations when not needed */
+.no-animate {
+    animation: none !important;
+}
+
+/* Pause animations when user prefers reduced motion */
+@media (prefers-reduced-motion: reduce) {
+    .skeleton-animate,
+    .animate-pulse {
+        animation: none !important;
+    }
 }
 
 .skeleton-base {
