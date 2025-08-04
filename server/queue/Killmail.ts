@@ -36,10 +36,12 @@ async function processKillmail(
 ): Promise<Partial<IKillmail>> {
     const killmail = await fetchESIKillmail(killmailId, killmailHash);
 
-    // If the victim is empty, or attackers is empty, there was a problem fetching the killmail
+    // Validate the killmail data BEFORE saving to database
     if (
         killmail.error ||
         !killmail.victim ||
+        typeof killmail.victim !== "object" ||
+        Object.keys(killmail.victim).length === 0 ||
         !killmail.attackers ||
         !Array.isArray(killmail.attackers) ||
         killmail.attackers.length === 0

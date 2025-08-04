@@ -60,8 +60,35 @@ const killmailsESISchema = new Schema<IESIKillmailDocument>(
         killmail_hash: { type: String },
         killmail_time: { type: Date },
         solar_system_id: { type: Number },
-        attackers: { type: [attackerSchema] },
-        victim: { type: victimSchema },
+        attackers: {
+            type: [attackerSchema],
+            validate: {
+                validator: function (attackers: IESIAttacker[]) {
+                    // Attackers must exist and have at least one attacker
+                    return (
+                        attackers &&
+                        Array.isArray(attackers) &&
+                        attackers.length > 0
+                    );
+                },
+                message: "Killmail must have at least one attacker",
+            },
+        },
+        victim: {
+            type: victimSchema,
+            required: [true, "Killmail must have a victim"],
+            validate: {
+                validator: function (victim: IESIVictim) {
+                    // Victim must exist and not be an empty object
+                    return (
+                        victim &&
+                        typeof victim === "object" &&
+                        Object.keys(victim).length > 0
+                    );
+                },
+                message: "Killmail victim cannot be empty",
+            },
+        },
         processed: { type: Boolean, default: false },
         delayedUntil: { type: Date, default: null },
     },
