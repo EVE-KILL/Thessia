@@ -598,7 +598,7 @@ const closeMobileMenu = () => {
 }
 
 html.dark .navbar-desktop {
-    background-color: rgba(0, 0, 0, 0.1);
+    background-color: rgba(0, 0, 0, 0.0);
 }
 
 /* When scrolled, use solid colors matching inner-content */
