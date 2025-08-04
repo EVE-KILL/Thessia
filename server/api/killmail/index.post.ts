@@ -32,6 +32,26 @@ export default defineEventHandler(async (event) => {
         };
     }
 
+    // Validate killmail data - ensure it has victim and attackers
+    if (
+        !esiKillmail.victim ||
+        !esiKillmail.attackers ||
+        !Array.isArray(esiKillmail.attackers) ||
+        esiKillmail.attackers.length === 0
+    ) {
+        return {
+            error: "Invalid killmail data - missing victim or attackers",
+        };
+    }
+
+    // Save the valid ESI killmail data to the database
+    const km_esi = new KillmailsESI(esiKillmail);
+    try {
+        await km_esi.save();
+    } catch (error) {
+        await KillmailsESI.updateOne({ killmail_id: killmail_id }, esiKillmail);
+    }
+
     // Process killmail and save to database
     const killmail: Partial<IKillmail> = await parseKillmail(esiKillmail);
     if (!killmail) {
