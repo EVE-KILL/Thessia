@@ -1,5 +1,6 @@
 import { cliLogger } from "../server/helpers/Logger";
 import { createQueue } from "../server/helpers/Queue";
+import type { IESIKillmail } from "../server/interfaces/IESIKillmail";
 import { KillmailsESI } from "../server/models/KillmailsESI";
 
 export default {
@@ -20,14 +21,6 @@ export default {
             };
         }
 
-        // Lets first delete killmails that do not have a killmail_id and where attackers is empty.
-        await KillmailsESI.deleteMany({
-            $and: [
-                { killmail_id: { $exists: false } },
-                { attackers: { $size: 0 } },
-            ],
-        });
-
         const now = new Date();
 
         // Limit it to 100k mails at a time
@@ -36,7 +29,7 @@ export default {
         // Find unprocessed killmails that are either:
         // 1. Not delayed (delayedUntil is null/undefined)
         // 2. Have passed their delay time (delayedUntil <= now)
-        const unprocessedKillmails = await KillmailsESI.find(
+        const unprocessedKillmails: IESIKillmail[] = await KillmailsESI.find(
             {
                 processed: false,
                 $or: [
