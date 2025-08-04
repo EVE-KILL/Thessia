@@ -78,18 +78,23 @@ const useExternalData = computed(() => props.externalKilllistData !== null);
 const localKilllistData = ref<IKillList[]>([]);
 
 // Fetch kill list data only if not using external data
+const shouldFetch = computed(() => !useExternalData.value);
+
 const {
     data: fetchedData,
     pending,
     error,
     refresh,
-} = !useExternalData.value
-        ? useFetch<IKillList[]>(props.apiEndpoint, {
-            key: fetchKey.value,
-            query: queryParams,
-            watch: [queryParams],
-        })
-        : { data: ref(null), pending: ref(false), error: ref(null), refresh: () => Promise.resolve() };
+} = await useAsyncData(
+    fetchKey,
+    () => shouldFetch.value ? $fetch<IKillList[]>(props.apiEndpoint, { query: queryParams.value }) : null,
+    {
+        lazy: true,
+        server: false,
+        watch: [queryParams, shouldFetch],
+        default: () => []
+    }
+);
 
 // Combined kill list data - either from props or fetched
 const killlistData = computed(() => {
@@ -308,7 +313,8 @@ function handleWebSocketMessage(data) {
 
         if (data.type !== "killmail") return;
 
-        const killmail: IKillmail = data.data;
+        // The structure is: {"type":"killmail","data":{"killmail":{...}}}
+        const killmail: IKillmail = data.data.killmail;
 
         // Process or queue killmail only if it's newer than current newest
         if (!isNewerThanLatestKill(killmail)) {
@@ -1050,7 +1056,7 @@ onUpdated(() => {
                         <!-- System/Region Info -->
                         <div class="text-xs">
                             <span>{{ item.system_name }} / {{ getLocalizedString(item.region_name, currentLocale)
-                                }}</span>
+                            }}</span>
                             <span class="ml-1">(</span>
                             <span :class="getSecurityColor(item.system_security)">
                                 {{ item.system_security.toFixed(1) }}
