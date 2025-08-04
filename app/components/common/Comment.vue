@@ -262,7 +262,7 @@ function renderImgurGallery(originalUrl: string): string {
 
         // Show loading state
         placeholder.innerHTML = `<div class="flex items-center justify-center p-4">
-                            <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-500"></div>
+                            <div class="animate-spin h-8 w-8 border-b-2 border-primary-500"></div>
                             <span class="ml-2">Loading content from Imgur...</span>
                           </div>`;
 

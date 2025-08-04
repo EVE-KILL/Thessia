@@ -58,7 +58,7 @@
                                     :src="`https://images.evetech.net/characters/${selectedEntity.id}/portrait?size=64`"
                                     :alt="selectedEntity.name" size="xs" class="mr-2" />
                                 <span class="flex-grow text-sm text-gray-800 dark:text-gray-200">{{ selectedEntity.name
-                                }}</span>
+                                    }}</span>
                                 <button @click="clearSelectedEntity"
                                     class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 ml-2">
                                     <UIcon name="lucide:x" class="w-4 h-4" />
@@ -95,7 +95,7 @@
                     <!-- Search Field (always on the right) -->
                     <div class="filter-group" :class="filterType === 'all' ? 'lg:col-start-4' : ''">
                         <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{{ t('search')
-                        }}</label>
+                            }}</label>
                         <div class="flex">
                             <input v-model="searchQuery" @keyup.enter="currentPage = 1; performSearch()"
                                 :placeholder="t('comments.list.searchPlaceholder')"
@@ -133,7 +133,7 @@
                     <div class="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-lg shadow-lg border-0 h-full flex flex-col">
                         <!-- Comment Header Skeleton -->
                         <div class="flex items-center mb-3 pb-2 border-b border-gray-200 dark:border-gray-700">
-                            <USkeleton class="w-12 h-12 rounded-full mr-3" />
+                            <USkeleton class="w-12 h-12 mr-3" />
                             <div class="flex-grow min-w-0">
                                 <USkeleton class="h-4 w-24 mb-1" />
                                 <USkeleton class="h-3 w-32" />

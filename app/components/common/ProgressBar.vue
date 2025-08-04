@@ -9,16 +9,13 @@
 
         <!-- Progress bar -->
         <div :class="[
-            'relative overflow-hidden rounded-full bg-gray-200 dark:bg-gray-700',
+            'relative overflow-hidden bg-gray-200 dark:bg-gray-700',
             sizeClasses
         ]">
-            <div
-                :class="[
-                    'h-full transition-all duration-300 ease-out rounded-full',
-                    colorClasses
-                ]"
-                :style="{ width: `${Math.min(Math.max(value, 0), 100)}%` }"
-            />
+            <div :class="[
+                'h-full transition-all duration-300 ease-out',
+                colorClasses
+            ]" :style="{ width: `${Math.min(Math.max(value, 0), 100)}%` }" />
         </div>
     </div>
 </template>

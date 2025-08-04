@@ -767,13 +767,13 @@ onUpdated(() => {
                 <!-- WebSocket status indicator with clearer state indication -->
                 <div v-if="!wsDisabled && !useExternalData" class="flex items-center ml-4">
                     <div :class="[
-                        'w-3 h-3 rounded-full mr-1 cursor-pointer',
+                        'w-3 h-3 mr-1 cursor-pointer',
                         !wsConnected ? (wsReconnectAttempts > 0 ? 'bg-orange-500' : 'bg-red-500') :
                             (isWebSocketPaused ? 'bg-yellow-500' : 'bg-green-500')
                     ]" :title="wsStatusMessage" @click="toggleWebSocketMode"></div>
 
                     <span v-if="wsNewKillCount > 0"
-                        class="ml-1 px-1.5 py-0 bg-primary-500 text-black dark:text-white text-2xs rounded-full cursor-pointer kill-count-badge"
+                        class="ml-1 px-1.5 py-0 bg-primary-500 text-black dark:text-white text-2xs cursor-pointer kill-count-badge"
                         @click="resetNewKillCount">
                         +{{ wsNewKillCount }}
                     </span>
@@ -844,11 +844,9 @@ onUpdated(() => {
                 <div class="flex items-center py-1">
                     <template v-if="item.victim.character_id > 0">
                         <Image type="character" :id="item.victim.character_id"
-                            :alt="`Character: ${item.victim.character_name}`" class="rounded-full w-16 h-16 mx-2"
-                            size="64" />
+                            :alt="`Character: ${item.victim.character_name}`" class="w-16 h-16 mx-2" size="64" />
                     </template>
-                    <Image v-else type="character" :id="1" alt="Placeholder" class="rounded-full w-16 h-16 mx-2"
-                        size="64" />
+                    <Image v-else type="character" :id="1" alt="Placeholder" class="w-16 h-16 mx-2" size="64" />
                     <div class="flex flex-col items-start min-w-0 flex-1">
                         <!-- Character Name -->
                         <span class="text-sm text-black dark:text-white truncate max-w-full"
@@ -894,8 +892,7 @@ onUpdated(() => {
                     <!-- Character or placeholder when finalblow.character_id missing -->
                     <template v-if="item.finalblow.character_id > 0">
                         <Image type="character" :id="item.finalblow.character_id"
-                            :alt="`Character: ${item.finalblow.character_name}`" class="rounded-full w-16 h-16 mx-2"
-                            size="64" />
+                            :alt="`Character: ${item.finalblow.character_name}`" class="w-16 h-16 mx-2" size="64" />
                         <div class="flex flex-col items-start min-w-0 flex-1">
                             <!-- Character Name -->
                             <span class="text-sm text-black dark:text-white truncate max-w-full"
@@ -937,8 +934,7 @@ onUpdated(() => {
                         </div>
                     </template>
                     <template v-else>
-                        <Image type="character" :id="1" size="64" alt="NPC/Structure"
-                            class="rounded-full w-16 h-16 mx-2" />
+                        <Image type="character" :id="1" size="64" alt="NPC/Structure" class="w-16 h-16 mx-2" />
                         <div class="flex flex-col items-start min-w-0 flex-1">
                             <span class="text-sm text-black dark:text-white truncate max-w-full">
                                 {{ item.finalblow.faction_name || item.finalblow.character_name }}
@@ -1019,20 +1015,18 @@ onUpdated(() => {
                             <div class="character-portrait">
                                 <Image v-if="item.victim.character_id > 0" type="character"
                                     :id="item.victim.character_id" :alt="`Character: ${item.victim.character_name}`"
-                                    class="rounded-full w-16 h-16" size="64" />
-                                <Image v-else type="character" :id="1" alt="Placeholder" class="rounded-full w-16 h-16"
-                                    size="64" />
+                                    class="w-16 h-16" size="64" />
+                                <Image v-else type="character" :id="1" alt="Placeholder" class="w-16 h-16" size="64" />
                             </div>
 
                             <!-- Stacked Corp/Alliance Images - Exact 32px height each with no gap -->
                             <div class="flex flex-col h-16">
                                 <div v-if="item.victim.corporation_id" class="h-8">
                                     <Image type="corporation" :id="item.victim.corporation_id" size="32"
-                                        class="rounded-full w-8 h-8" />
+                                        class="w-8 h-8" />
                                 </div>
                                 <div v-if="item.victim.alliance_id" class="h-8">
-                                    <Image type="alliance" :id="item.victim.alliance_id" size="32"
-                                        class="rounded-full w-8 h-8" />
+                                    <Image type="alliance" :id="item.victim.alliance_id" size="32" class="w-8 h-8" />
                                 </div>
                             </div>
                         </div>
@@ -1056,7 +1050,7 @@ onUpdated(() => {
                         <!-- System/Region Info -->
                         <div class="text-xs">
                             <span>{{ item.system_name }} / {{ getLocalizedString(item.region_name, currentLocale)
-                            }}</span>
+                                }}</span>
                             <span class="ml-1">(</span>
                             <span :class="getSecurityColor(item.system_security)">
                                 {{ item.system_security.toFixed(1) }}
@@ -1089,10 +1083,10 @@ onUpdated(() => {
                         <!-- Character Section Skeleton -->
                         <div class="flex mb-2">
                             <div class="flex items-start">
-                                <div class="rounded-full w-16 h-16 bg-gray-200 dark:bg-gray-700 animate-pulse"></div>
+                                <div class="w-16 h-16 bg-gray-200 dark:bg-gray-700 animate-pulse"></div>
                                 <div class="flex flex-col h-16">
-                                    <div class="h-8 w-8 rounded-full bg-gray-200 dark:bg-gray-700 animate-pulse"></div>
-                                    <div class="h-8 w-8 rounded-full bg-gray-200 dark:bg-gray-700 animate-pulse"></div>
+                                    <div class="h-8 w-8 bg-gray-200 dark:bg-gray-700 animate-pulse"></div>
+                                    <div class="h-8 w-8 bg-gray-200 dark:bg-gray-700 animate-pulse"></div>
                                 </div>
                             </div>
                             <div class="ml-2 flex flex-col justify-center space-y-1 flex-1">
@@ -1125,7 +1119,7 @@ onUpdated(() => {
 
             <template #loading-victim>
                 <div class="flex items-center py-1">
-                    <div class="rounded-full w-16 h-16 bg-gray-200 dark:bg-gray-700 animate-pulse mx-2"></div>
+                    <div class="w-16 h-16 bg-gray-200 dark:bg-gray-700 animate-pulse mx-2"></div>
                     <div class="flex flex-col items-start space-y-1 min-w-0 flex-1">
                         <div class="h-4 bg-gray-200 dark:bg-gray-700 rounded w-full max-w-[150px] animate-pulse"></div>
                         <div class="h-3 bg-gray-200 dark:bg-gray-700 rounded w-full max-w-[130px] animate-pulse"></div>
@@ -1141,7 +1135,7 @@ onUpdated(() => {
 
             <template #loading-finalBlow>
                 <div class="flex items-center py-1">
-                    <div class="rounded-full w-16 h-16 bg-gray-200 dark:bg-gray-700 animate-pulse mx-2"></div>
+                    <div class="w-16 h-16 bg-gray-200 dark:bg-gray-700 animate-pulse mx-2"></div>
                     <div class="flex flex-col items-start space-y-1 min-w-0 flex-1">
                         <div class="h-4 bg-gray-200 dark:bg-gray-700 rounded w-full max-w-[150px] animate-pulse"></div>
                         <div class="h-3 bg-gray-200 dark:bg-gray-700 rounded w-full max-w-[130px] animate-pulse"></div>
@@ -1292,12 +1286,6 @@ onUpdated(() => {
 :deep(.header-cell) {
     font-size: 0.75rem;
     color: light-dark(#4b5563, #9ca3af) !important;
-}
-
-/* Add text-2xs class for very small text */
-.text-2xs {
-    font-size: 0.65rem;
-    line-height: 0.85rem;
 }
 
 /* Make the kill count badge smaller and more compact */

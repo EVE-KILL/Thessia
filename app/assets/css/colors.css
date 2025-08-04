@@ -1,0 +1,147 @@
+/* Color Design System - Extracted from repeated patterns across the app */
+
+:root {
+    /* Primary Brand Colors */
+    --color-brand-primary: #3b82f6;
+    --color-brand-primary-hover: #2563eb;
+    --color-brand-secondary: #10b981;
+    --color-brand-accent: #00aaff;
+
+    /* Gray Scale System */
+    --color-gray-50: #f9fafb;
+    --color-gray-100: #f3f4f6;
+    --color-gray-200: #e5e7eb;
+    --color-gray-300: #d1d5db;
+    --color-gray-400: #9ca3af;
+    --color-gray-500: #6b7280;
+    --color-gray-600: #4b5563;
+    --color-gray-700: #374151;
+    --color-gray-800: #1f2937;
+    --color-gray-900: #111827;
+
+    /* Semantic Colors */
+    --color-text-primary: light-dark(#111827, #f9fafb);
+    --color-text-secondary: light-dark(#4b5563, #9ca3af);
+    --color-text-muted: light-dark(#6b7280, #6b7280);
+
+    /* Background Colors */
+    --color-bg-primary: light-dark(#ffffff, #111827);
+    --color-bg-secondary: light-dark(#f3f4f6, #1f2937);
+    --color-bg-tertiary: light-dark(#f9fafb, #374151);
+
+    /* Overlay Colors - frequently used alphas */
+    --color-overlay-light: rgba(255, 255, 255, 0.6);
+    --color-overlay-dark: rgba(26, 26, 26, 0.4);
+    --color-overlay-subtle: rgba(128, 128, 128, 0.1);
+    --color-overlay-medium: rgba(0, 0, 0, 0.3);
+    --color-overlay-strong: rgba(26, 26, 26, 0.7);
+
+    /* Border Colors */
+    --color-border-light: light-dark(#e5e7eb, #374151);
+    --color-border-focus: #3b82f6;
+    --color-border-focus-light: #93c5fd;
+
+    /* Status Colors */
+    --color-success: rgb(16, 185, 129);
+    --color-success-bg: rgba(16, 185, 129, 0.2);
+    --color-info: rgb(59, 130, 246);
+    --color-info-bg: rgba(59, 130, 246, 0.2);
+    --color-neutral: rgba(156, 163, 175, 0.2);
+
+    /* Kill/Loss Colors */
+    --color-loss-bg: rgba(80, 0, 0, 0.6);
+    --color-loss-border: rgba(139, 46, 46, 0.8);
+    --color-loss-hover: rgba(90, 0, 0, 0.65);
+
+    /* Highlight Colors */
+    --color-highlight-cyan: #e0f2fe;
+    --color-highlight-cyan-text: #0369a1;
+    --color-highlight-cyan-dark: #0c4a6e;
+    --color-highlight-cyan-dark-text: #7dd3fc;
+}
+
+/* Color Utility Classes */
+.text-primary {
+    color: var(--color-text-primary);
+}
+.text-secondary {
+    color: var(--color-text-secondary);
+}
+.text-muted {
+    color: var(--color-text-muted);
+}
+.text-brand {
+    color: var(--color-brand-primary);
+}
+.text-success {
+    color: var(--color-success);
+}
+.text-info {
+    color: var(--color-info);
+}
+
+.bg-primary {
+    background-color: var(--color-bg-primary);
+}
+.bg-secondary {
+    background-color: var(--color-bg-secondary);
+}
+.bg-tertiary {
+    background-color: var(--color-bg-tertiary);
+}
+.bg-overlay-light {
+    background-color: var(--color-overlay-light);
+}
+.bg-overlay-dark {
+    background-color: var(--color-overlay-dark);
+}
+.bg-overlay-subtle {
+    background-color: var(--color-overlay-subtle);
+}
+.bg-overlay-medium {
+    background-color: var(--color-overlay-medium);
+}
+.bg-overlay-strong {
+    background-color: var(--color-overlay-strong);
+}
+
+.bg-success {
+    background-color: var(--color-success-bg);
+    color: var(--color-success);
+}
+.bg-info {
+    background-color: var(--color-info-bg);
+    color: var(--color-info);
+}
+.bg-neutral {
+    background-color: var(--color-neutral);
+}
+
+.bg-loss-highlight {
+    background-color: var(--color-loss-bg) !important;
+    border-left: 3px solid var(--color-loss-border) !important;
+}
+.bg-loss-highlight:hover {
+    background-color: var(--color-loss-hover) !important;
+}
+
+.border-default {
+    border-color: var(--color-border-light);
+}
+.border-focus {
+    border-color: var(--color-border-focus);
+}
+.border-focus-light {
+    border-color: var(--color-border-focus-light);
+}
+
+/* Focus state utilities */
+.focus-ring {
+    outline: none;
+    box-shadow: 0 0 0 2px var(--color-border-focus);
+}
+
+.focus-ring-light {
+    outline: none;
+    border-color: var(--color-border-focus-light);
+}

@@ -74,7 +74,7 @@
                     <!-- Badge/Type indicator -->
                     <div v-if="getResultType(result)" class="flex-shrink-0">
                         <span
-                            class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200">
+                            class="inline-flex items-center px-2 py-1 text-xs font-medium bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200">
                             {{ getResultType(result) }}
                         </span>
                     </div>

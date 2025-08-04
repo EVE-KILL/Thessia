@@ -54,8 +54,8 @@
                                 <!-- Character affiliations with icons -->
                                 <div class="affiliations space-y-2">
                                     <div class="flex items-center gap-2">
-                                        <Image type="corporation" :id="character.corporation_id"
-                                            class="w-6 h-6 rounded-full" size="64" />
+                                        <Image type="corporation" :id="character.corporation_id" class="w-6 h-6"
+                                            size="64" />
                                         <NuxtLink :to="`/corporation/${character.corporation_id}`"
                                             class="text-gray-900 dark:text-gray-100 hover:text-blue-600 dark:hover:text-blue-400 transition-colors">
                                             {{ (character as any).corporation_name || 'Unknown Corporation' }}
@@ -64,8 +64,7 @@
 
                                     <div v-if="character.alliance_id && (character as any).alliance_name"
                                         class="flex items-center gap-2">
-                                        <Image type="alliance" :id="character.alliance_id" class="w-6 h-6 rounded-full"
-                                            size="64" />
+                                        <Image type="alliance" :id="character.alliance_id" class="w-6 h-6" size="64" />
                                         <NuxtLink :to="`/alliance/${character.alliance_id}`"
                                             class="text-gray-900 dark:text-gray-100 hover:text-blue-600 dark:hover:text-blue-400 transition-colors">
                                             {{ (character as any).alliance_name }}
@@ -74,8 +73,8 @@
 
                                     <div v-if="character.faction_id && (character as any).faction_name"
                                         class="flex items-center gap-2">
-                                        <Image type="corporation" :id="character.faction_id"
-                                            class="w-6 h-6 rounded-full" size="64" />
+                                        <Image type="corporation" :id="character.faction_id" class="w-6 h-6"
+                                            size="64" />
                                         <NuxtLink :to="`/faction/${character.faction_id}`"
                                             class="text-gray-900 dark:text-gray-100 hover:text-blue-600 dark:hover:text-blue-400 transition-colors">
                                             {{ (character as any).faction_name }}
@@ -234,7 +233,7 @@
                                     </div>
                                     <div class="stat-row">
                                         <div class="stat-label text-gray-600 dark:text-gray-400">{{ $t('iskEfficiency')
-                                        }}</div>
+                                            }}</div>
                                         <div class="stat-value text-gray-900 dark:text-white">
                                             {{ calcIskEfficiency(validShortStats) }}%
                                         </div>
@@ -272,13 +271,13 @@
                                     </div>
                                     <div class="stat-row">
                                         <div class="stat-label text-gray-600 dark:text-gray-400">{{ $t('soloKillRatio')
-                                        }}</div>
+                                            }}</div>
                                         <div class="stat-value text-gray-900 dark:text-white">{{
                                             calcSoloKillRatio(validShortStats) }}%</div>
                                     </div>
                                     <div class="stat-row">
                                         <div class="stat-label text-gray-600 dark:text-gray-400">{{ $t('soloEfficiency')
-                                        }}
+                                            }}
                                         </div>
                                         <div class="stat-value text-gray-900 dark:text-white">{{
                                             calcSoloEfficiency(validShortStats) }}%</div>
@@ -302,13 +301,13 @@
                                     </div>
                                     <div class="stat-row">
                                         <div class="stat-label text-gray-600 dark:text-gray-400">{{ $t('npcLossRatio')
-                                        }}</div>
+                                            }}</div>
                                         <div class="stat-value text-gray-900 dark:text-white">{{
                                             calcNpcLossRatio(validShortStats) }}</div>
                                     </div>
                                     <div class="stat-row">
                                         <div class="stat-label text-gray-600 dark:text-gray-400">{{ $t('avgKillsPerDay')
-                                        }}
+                                            }}
                                         </div>
                                         <div class="stat-value text-gray-900 dark:text-white">{{
                                             calcAvgKillsPerDay(validShortStats, character.birthday) }}</div>

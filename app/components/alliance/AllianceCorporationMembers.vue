@@ -25,7 +25,7 @@
                             @click="goToCorporation(corporation.corporation_id)">
                             <div class="relative portrait-container">
                                 <Image type="corporation" :id="corporation.corporation_id" :alt="corporation.name"
-                                    class="rounded-full w-16 h-16 sm:w-20 sm:h-20 portrait-image" size="128" />
+                                    class="w-16 h-16 sm:w-20 sm:h-20 portrait-image" size="128" />
                             </div>
                             <div class="mt-2 text-center text-sm text-gray-300 truncate w-full">{{ corporation.name }}
                             </div>

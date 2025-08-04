@@ -64,7 +64,7 @@
 
                                     <!-- Ship skeleton -->
                                     <div class="skeleton-ship">
-                                        <USkeleton class="h-full w-full rounded-full" />
+                                        <USkeleton class="h-full w-full" />
                                     </div>
 
                                     <!-- Slot indicators -->
@@ -91,22 +91,22 @@
                                     <div v-for="i in 8" :key="`high-${i}`"
                                         :style="getSkeletonSlotPosition(i - 1, 8, 'top')"
                                         class="skeleton-slot high-slot">
-                                        <USkeleton class="h-full w-full rounded-full" />
+                                        <USkeleton class="h-full w-full" />
                                     </div>
                                     <div v-for="i in 8" :key="`mid-${i}`"
                                         :style="getSkeletonSlotPosition(i - 1, 8, 'right')"
                                         class="skeleton-slot mid-slot">
-                                        <USkeleton class="h-full w-full rounded-full" />
+                                        <USkeleton class="h-full w-full" />
                                     </div>
                                     <div v-for="i in 8" :key="`low-${i}`"
                                         :style="getSkeletonSlotPosition(i - 1, 8, 'bottom')"
                                         class="skeleton-slot low-slot">
-                                        <USkeleton class="h-full w-full rounded-full" />
+                                        <USkeleton class="h-full w-full" />
                                     </div>
                                     <div v-for="i in 3" :key="`rig-${i}`"
                                         :style="getSkeletonSlotPosition(i - 1, 3, 'left')"
                                         class="skeleton-slot rig-slot">
-                                        <USkeleton class="h-full w-full rounded-full" />
+                                        <USkeleton class="h-full w-full" />
                                     </div>
                                 </div>
                             </template>
@@ -127,7 +127,7 @@
                                                 <div class="flex justify-between">
                                                     <USkeleton class="h-5 w-24" />
                                                     <div class="flex gap-1">
-                                                        <USkeleton class="h-5 w-12 rounded-full" />
+                                                        <USkeleton class="h-5 w-12" />
                                                     </div>
                                                 </div>
                                             </div>
@@ -139,9 +139,8 @@
                                         <USkeleton class="h-5 w-24 mb-2" />
                                         <div class="flex items-start gap-3 mb-2">
                                             <div class="relative">
-                                                <USkeleton class="h-12 w-12 rounded-full" />
-                                                <USkeleton
-                                                    class="h-8 w-8 rounded-full absolute bottom-[-4px] right-[-4px]" />
+                                                <USkeleton class="h-12 w-12" />
+                                                <USkeleton class="h-8 w-8 absolute bottom-[-4px] right-[-4px]" />
                                             </div>
                                             <div class="flex flex-col gap-1 flex-grow min-w-0">
                                                 <USkeleton class="h-5 w-32" />
@@ -149,7 +148,7 @@
                                             </div>
                                         </div>
                                         <div class="flex items-center gap-1 mb-2">
-                                            <USkeleton class="h-6 w-6 rounded-full" />
+                                            <USkeleton class="h-6 w-6" />
                                             <USkeleton class="h-4 w-32" />
                                         </div>
                                         <div class="grid grid-cols-2 gap-2">
@@ -231,7 +230,7 @@
                                 </div>
                                 <div class="skeleton-cell quantity-cell">
                                     <div class="badge-container">
-                                        <USkeleton class="h-5 w-10 rounded-full" />
+                                        <USkeleton class="h-5 w-10" />
                                     </div>
                                 </div>
                                 <div class="skeleton-cell value-cell">
@@ -261,8 +260,8 @@
                                     </div>
                                     <div class="skeleton-cell quantity-cell">
                                         <div class="badge-container">
-                                            <USkeleton class="h-5 w-8 rounded-full" />
-                                            <USkeleton class="h-5 w-8 rounded-full" />
+                                            <USkeleton class="h-5 w-8" />
+                                            <USkeleton class="h-5 w-8" />
                                         </div>
                                     </div>
                                     <div class="skeleton-cell value-cell">
@@ -283,7 +282,7 @@
                                     </div>
                                     <div class="skeleton-cell quantity-cell">
                                         <div class="badge-container">
-                                            <USkeleton class="h-5 w-8 rounded-full" />
+                                            <USkeleton class="h-5 w-8" />
                                         </div>
                                     </div>
                                     <div class="skeleton-cell value-cell">
@@ -299,8 +298,8 @@
                                     </div>
                                     <div class="skeleton-cell quantity-cell">
                                         <div class="badge-container">
-                                            <USkeleton class="h-5 w-8 rounded-full" />
-                                            <USkeleton class="h-5 w-8 rounded-full" />
+                                            <USkeleton class="h-5 w-8" />
+                                            <USkeleton class="h-5 w-8" />
                                         </div>
                                     </div>
                                     <div class="skeleton-cell value-cell">
@@ -336,8 +335,8 @@
                             <div v-for="i in 8" :key="i"
                                 class="flex items-center gap-3 p-2 border-b border-background-800">
                                 <div class="relative">
-                                    <USkeleton class="h-10 w-10 rounded-full" />
-                                    <USkeleton class="h-6 w-6 rounded-full absolute -bottom-1 -right-1" />
+                                    <USkeleton class="h-10 w-10" />
+                                    <USkeleton class="h-6 w-6 absolute -bottom-1 -right-1" />
                                 </div>
                                 <div class="grid gap-1 flex-1 min-w-0">
                                     <div class="flex justify-between">
@@ -349,7 +348,7 @@
                                         <USkeleton class="h-4 w-12" />
                                     </div>
                                     <div class="flex items-center gap-1">
-                                        <USkeleton class="h-4 w-4 rounded-full" />
+                                        <USkeleton class="h-4 w-4" />
                                         <USkeleton class="h-4 w-20" />
                                     </div>
                                 </div>
@@ -434,7 +433,7 @@
 
                             <!-- Ship skeleton -->
                             <div class="skeleton-ship">
-                                <USkeleton class="h-full w-full rounded-full" />
+                                <USkeleton class="h-full w-full" />
                             </div>
 
                             <!-- Slot indicators -->
@@ -460,19 +459,19 @@
                             <!-- Slot skeletons for modules -->
                             <div v-for="i in 8" :key="`mobile-high-${i}`"
                                 :style="getSkeletonSlotPosition(i - 1, 8, 'top')" class="skeleton-slot high-slot">
-                                <USkeleton class="h-full w-full rounded-full" />
+                                <USkeleton class="h-full w-full" />
                             </div>
                             <div v-for="i in 8" :key="`mobile-mid-${i}`"
                                 :style="getSkeletonSlotPosition(i - 1, 8, 'right')" class="skeleton-slot mid-slot">
-                                <USkeleton class="h-full w-full rounded-full" />
+                                <USkeleton class="h-full w-full" />
                             </div>
                             <div v-for="i in 8" :key="`mobile-low-${i}`"
                                 :style="getSkeletonSlotPosition(i - 1, 8, 'bottom')" class="skeleton-slot low-slot">
-                                <USkeleton class="h-full w-full rounded-full" />
+                                <USkeleton class="h-full w-full" />
                             </div>
                             <div v-for="i in 3" :key="`mobile-rig-${i}`"
                                 :style="getSkeletonSlotPosition(i - 1, 3, 'left')" class="skeleton-slot rig-slot">
-                                <USkeleton class="h-full w-full rounded-full" />
+                                <USkeleton class="h-full w-full" />
                             </div>
                         </div>
                     </div>

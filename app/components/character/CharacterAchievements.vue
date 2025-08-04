@@ -296,7 +296,7 @@
                                                         <div>
                                                             <div class="font-medium truncate">{{
                                                                 killmail.victim.character_name
-                                                                }}</div>
+                                                            }}</div>
                                                             <div class="text-gray-500 text-xs truncate">{{
                                                                 killmail.victim.ship_name.en }}</div>
                                                         </div>
@@ -320,8 +320,7 @@
                                                     <!-- Final Blow -->
                                                     <div class="col-span-3 flex items-center space-x-2">
                                                         <img :src="`https://images.evetech.net/characters/${killmail.finalblow.character_id}/portrait?size=32`"
-                                                            :alt="killmail.finalblow.character_name"
-                                                            class="w-6 h-6 rounded-full"
+                                                            :alt="killmail.finalblow.character_name" class="w-6 h-6"
                                                             @error="$event.target.src = 'https://images.evetech.net/characters/1/portrait?size=32'" />
                                                         <div>
                                                             <div class="font-medium text-xs truncate">{{

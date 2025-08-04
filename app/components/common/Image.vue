@@ -91,11 +91,6 @@ const props = defineProps({
         type: Boolean,
         default: true,
     },
-    // Use rounded-full for completely round images
-    circle: {
-        type: Boolean,
-        default: false,
-    },
     // Whether to optimize image quality on mobile
     mobileOptimize: {
         type: Boolean,
@@ -239,12 +234,8 @@ const imageClasses = computed(() => {
         classes.push(props.class);
     }
 
-    if (props.rounded && !props.circle) {
+    if (props.rounded) {
         classes.push("rounded-lg");
-    }
-
-    if (props.circle) {
-        classes.push("rounded-full");
     }
 
     if (props.fit) {

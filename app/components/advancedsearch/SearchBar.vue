@@ -16,7 +16,7 @@
                 @input="onSearchInput" @keydown.enter="onSearchEnter" />
             <!-- Loading indicator -->
             <div v-if="isSearching" class="absolute inset-y-0 right-0 pr-3 flex items-center">
-                <div class="animate-spin h-5 w-5 border-2 border-blue-500 border-t-transparent rounded-full"></div>
+                <div class="animate-spin h-5 w-5 border-2 border-blue-500 border-t-transparent"></div>
             </div>
         </div>
 
@@ -39,9 +39,9 @@
         <!-- Selected Facets Display -->
         <div v-if="selectedFacets.length > 0" class="flex flex-wrap gap-2 mt-4">
             <div v-for="(facet, index) in selectedFacets" :key="index"
-                class="inline-flex items-center bg-blue-600 text-white text-sm px-3 py-1 rounded-full">
+                class="inline-flex items-center bg-blue-600 text-white text-sm px-3 py-1">
                 <span>{{ formatFacetDisplay(facet) }}</span>
-                <button @click="removeFacet(index)" class="ml-2 hover:bg-blue-700 rounded-full p-1">
+                <button @click="removeFacet(index)" class="ml-2 hover:bg-blue-700 p-1">
                     <svg class="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                             d="M6 18L18 6M6 6l12 12" />

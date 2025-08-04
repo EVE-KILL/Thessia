@@ -42,13 +42,13 @@
 
                         <div v-if="isAuthenticated" class="flex items-center gap-2">
                             <button v-if="currentUser?.characterId !== comment.characterId"
-                                class="p-1.5 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
+                                class="p-1.5 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
                                 title="Report comment" @click="openReportModal(comment.identifier)">
                                 <Icon name="lucide:flag" class="w-4 h-4 text-gray-500 dark:text-gray-400" />
                             </button>
 
                             <button v-if="isAdministrator || currentUser?.characterId === comment.characterId"
-                                class="p-1.5 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
+                                class="p-1.5 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
                                 title="Delete comment" @click="openDeleteModal(comment.identifier)">
                                 <Icon name="lucide:x" class="w-4 h-4 text-gray-500 dark:text-gray-400" />
                             </button>
@@ -127,7 +127,7 @@
         </div>
 
         <div v-show="!wsConnected" class="text-xs text-amber-500 mb-2 flex items-center justify-end gap-1">
-            <div class="w-2 h-2 rounded-full bg-amber-500 animate-pulse"></div>
+            <div class="w-2 h-2 bg-amber-500 animate-pulse"></div>
             <span>{{ $t('reconnecting_ws', { attempt: wsReconnectAttempts, max: 5 }) }}</span>
         </div>
 

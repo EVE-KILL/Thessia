@@ -18,9 +18,9 @@
                     <div v-if="shouldShowColumnOnMobile.change7d" class="text-right">{{ t('historicalStats.change7d') }}
                     </div>
                     <div v-if="shouldShowColumnOnMobile.change14d" class="text-right">{{ t('historicalStats.change14d')
-                        }}</div>
+                    }}</div>
                     <div v-if="shouldShowColumnOnMobile.change30d" class="text-right">{{ t('historicalStats.change30d')
-                        }}</div>
+                    }}</div>
 
                     <!-- Security status header -->
                     <div v-if="shouldShowColumnOnMobile.secStatus" class="text-right">
@@ -45,7 +45,7 @@
                     class="stats-row flex items-center py-2 px-3 border-t border-gray-800">
                     <div class="w-[7%] text-left pl-2 font-medium text-gray-500">{{ i }}</div>
                     <div class="w-[43%] flex items-center">
-                        <div class="w-8 h-8 bg-gray-700 rounded-full mr-3 animate-pulse"></div>
+                        <div class="w-8 h-8 bg-gray-700 mr-3 animate-pulse"></div>
                         <div class="h-4 w-32 bg-gray-700 rounded animate-pulse"></div>
                     </div>
                     <div class="w-[50%] grid" :class="getColumnsClass()">
@@ -86,8 +86,8 @@
                     <div class="w-[7%] text-left pl-2 font-medium text-gray-400">{{ idx + 1 }}</div>
                     <div class="w-[43%] flex items-center">
                         <NuxtLink :to="`/${props.entityType}/${item.id}`" class="flex items-center">
-                            <Image :type="props.entityType" :id="item.id" :alt="`${item.name}`"
-                                class="w-8 h-8 mr-3 rounded-full" size="64" />
+                            <Image :type="props.entityType" :id="item.id" :alt="`${item.name}`" class="w-8 h-8 mr-3"
+                                size="64" />
                             <span class="entity-name truncate">{{ item.name }}</span>
                         </NuxtLink>
                     </div>

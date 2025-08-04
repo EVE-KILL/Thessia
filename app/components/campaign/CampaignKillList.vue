@@ -445,11 +445,10 @@ onUpdated(() => {
                         <div class="flex items-center py-1">
                             <template v-if="item.victim.character_id > 0">
                                 <Image type="character" :id="item.victim.character_id"
-                                    :alt="`Character: ${item.victim.character_name}`"
-                                    class="rounded-full w-16 h-16 mx-2" size="64" />
+                                    :alt="`Character: ${item.victim.character_name}`" class="w-16 h-16 mx-2"
+                                    size="64" />
                             </template>
-                            <Image v-else type="character" :id="1" alt="Placeholder" class="rounded-full w-16 h-16 mx-2"
-                                size="64" />
+                            <Image v-else type="character" :id="1" alt="Placeholder" class="w-16 h-16 mx-2" size="64" />
                             <div class="flex flex-col items-start min-w-0 flex-1">
                                 <!-- Character Name -->
                                 <span class="text-sm text-black dark:text-white truncate max-w-full"
@@ -477,8 +476,8 @@ onUpdated(() => {
                             <!-- Character or placeholder when finalblow.character_id missing -->
                             <template v-if="item.finalblow.character_id > 0">
                                 <Image type="character" :id="item.finalblow.character_id"
-                                    :alt="`Character: ${item.finalblow.character_name}`"
-                                    class="rounded-full w-16 h-16 mx-2" size="64" />
+                                    :alt="`Character: ${item.finalblow.character_name}`" class="w-16 h-16 mx-2"
+                                    size="64" />
                                 <div class="flex flex-col items-start min-w-0 flex-1">
                                     <!-- Character Name -->
                                     <span class="text-sm text-black dark:text-white truncate max-w-full"
@@ -504,8 +503,7 @@ onUpdated(() => {
                                 </div>
                             </template>
                             <template v-else>
-                                <Image type="character" :id="1" size="64" alt="NPC/Structure"
-                                    class="rounded-full w-16 h-16 mx-2" />
+                                <Image type="character" :id="1" size="64" alt="NPC/Structure" class="w-16 h-16 mx-2" />
                                 <div class="flex flex-col items-start min-w-0 flex-1">
                                     <span class="text-sm text-black dark:text-white truncate max-w-full">
                                         {{ item.finalblow.faction_name || item.finalblow.character_name ||
@@ -601,7 +599,7 @@ onUpdated(() => {
                                         formatDate(item.kill_time) }}</span>
                                     <div class="attacker-count flex items-center gap-1">
                                         <span class="text-xs text-gray-600 dark:text-gray-400">{{ item.attackerCount
-                                            }}</span>
+                                        }}</span>
                                         <img src="/images/involved.png" width="16" height="16"
                                             :alt="`${item.attackerCount} Involved`" class="h-3" />
                                     </div>

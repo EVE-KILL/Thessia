@@ -128,9 +128,9 @@
                 <!-- Selected Facets Display -->
                 <div v-if="facets.length > 0" class="flex flex-wrap gap-2">
                     <div v-for="(facet, index) in facets" :key="index"
-                        class="inline-flex items-center bg-blue-600 text-white text-sm px-3 py-1 rounded-full">
+                        class="inline-flex items-center bg-blue-600 text-white text-sm px-3 py-1">
                         <span>{{ facet.displayValue || `${facet.field}: ${facet.value}` }}</span>
-                        <button @click="removeFacet(index)" class="ml-2 hover:bg-blue-700 rounded-full p-1">
+                        <button @click="removeFacet(index)" class="ml-2 hover:bg-blue-700 p-1">
                             <svg class="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                     d="M6 18L18 6M6 6l12 12" />
@@ -171,13 +171,11 @@
                             <h4 class="text-sm font-semibold text-zinc-300 mb-3">Location</h4>
                             <!-- Show specific location if selected -->
                             <div v-if="filters.location.type && filters.location.value" class="mb-2">
-                                <div
-                                    class="inline-flex items-center bg-green-600 text-white text-sm px-3 py-1 rounded-full">
+                                <div class="inline-flex items-center bg-green-600 text-white text-sm px-3 py-1">
                                     <span>{{ filters.location.type.charAt(0).toUpperCase() +
                                         filters.location.type.slice(1) }}: {{
                                             filters.location.value }}</span>
-                                    <button @click="clearLocationFilter"
-                                        class="ml-2 hover:bg-green-700 rounded-full p-1">
+                                    <button @click="clearLocationFilter" class="ml-2 hover:bg-green-700 p-1">
                                         <Icon name="lucide:x" class="h-3 w-3" />
                                     </button>
                                 </div>
@@ -326,7 +324,7 @@
                     <p class="text-sm text-zinc-400 mb-3">Items that must be present on killmails:</p>
                     <div class="flex flex-wrap gap-2">
                         <div v-for="(item, index) in filters.items" :key="item.id"
-                            class="bg-purple-600 text-white px-3 py-1 rounded-full text-sm flex items-center gap-2">
+                            class="bg-purple-600 text-white px-3 py-1 text-sm flex items-center gap-2">
                             <span>{{ item.name }}</span>
                             <button @click="removeItem(index)"
                                 class="text-purple-200 hover:text-white transition-colors">

@@ -52,8 +52,7 @@
                 class="mt-6 border rounded-lg p-4 bg-white dark:bg-gray-800 shadow-sm">
                 <div class="flex items-center justify-between mb-3">
                     <h2 class="text-xl font-semibold">{{ t('killmail.processed_killmails') }}</h2>
-                    <UButton @click="clearProcessedKillmails" color="gray" size="xs" icon="i-lucide-trash-2"
-                        :ui="{ rounded: 'rounded-full' }">
+                    <UButton @click="clearProcessedKillmails" color="gray" size="xs" icon="i-lucide-trash-2">
                         {{ t('killmail.clear_list') }}
                     </UButton>
                 </div>
@@ -72,7 +71,7 @@
                             <span class="text-xs text-gray-500 dark:text-gray-400">{{ kill.message }}</span>
                         </div>
                         <UButton icon="i-lucide-external-link" size="xs" color="gray"
-                            @click="navigateToKillmail(kill.id)" :ui="{ rounded: 'rounded-full' }">
+                            @click="navigateToKillmail(kill.id)">
                             {{ t('killmail.view') }}
                         </UButton>
                     </div>

@@ -21,7 +21,7 @@
                                 </h3>
                             </slot>
                             <button type="button" @click="close"
-                                class="rounded-full p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 dark:hover:text-gray-200 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors duration-200">
+                                class="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 dark:hover:text-gray-200 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors duration-200">
                                 <span class="sr-only">Close</span>
                                 <UIcon name="lucide:x" class="h-5 w-5" />
                             </button>

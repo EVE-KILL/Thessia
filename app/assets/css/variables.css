@@ -1,0 +1,290 @@
+/* CSS Custom Properties (Variables) for Thessia Design System */
+
+:root {
+    /* Brand Colors */
+    --color-brand-primary: #3b82f6; /* Primary blue */
+    --color-brand-secondary: #10b981; /* Secondary green */
+    --color-brand-accent: #f59e0b; /* Accent amber */
+
+    /* Text Colors */
+    --color-text-primary: #111827;
+    --color-text-secondary: #6b7280;
+    --color-text-tertiary: #9ca3af;
+    --color-text-inverse: #ffffff;
+
+    /* Background Colors */
+    --color-bg-primary: #ffffff;
+    --color-bg-secondary: rgba(249, 250, 251, 0.8);
+    --color-bg-tertiary: #f9fafb;
+    --color-bg-hover: rgba(229, 231, 235, 0.25);
+    --color-bg-glass-light: rgba(255, 255, 255, 0.95);
+    --color-bg-glass-dark: rgba(15, 15, 15, 0.95);
+
+    /* Border Colors */
+    --color-border-light: rgba(229, 231, 235, 0.3);
+    --color-border-medium: #e5e7eb;
+    --color-border-dark: #d1d5db;
+    --color-border-focus: #3b82f6;
+    --color-border-focus-light: rgba(59, 130, 246, 0.1);
+
+    /* Extended color system for complex components */
+    --color-surface: light-dark(white, #1e1e1e);
+    --color-surface-alpha: light-dark(
+        hsla(0, 0%, 96%, 0.05),
+        rgba(26, 26, 26, 0.5)
+    );
+    --color-surface-alpha-medium: light-dark(
+        rgba(245, 245, 245, 0.08),
+        rgba(26, 26, 26, 0.5)
+    );
+    --color-surface-alpha-light: light-dark(
+        rgba(229, 231, 235, 0.1),
+        rgba(55, 65, 81, 0.5)
+    );
+    --color-surface-alpha-dark: light-dark(
+        rgba(245, 245, 245, 0.05),
+        rgba(31, 41, 55, 0.3)
+    );
+    --color-surface-alpha-purple: light-dark(
+        rgba(245, 245, 245, 0.05),
+        rgba(40, 20, 40, 0.2)
+    );
+    --color-surface-hover: light-dark(#f3f4f6, #374151);
+    --color-surface-dark-alpha-85: rgba(26, 32, 44, 0.85);
+    --color-surface-dark-alpha-70: rgba(22, 28, 40, 0.7);
+    --color-surface-dark-alpha-40: rgba(15, 23, 42, 0.4);
+
+    --color-border-alpha: light-dark(
+        rgba(229, 231, 235, 0.3),
+        rgba(75, 85, 99, 0.2)
+    );
+    --color-border: light-dark(#e5e7eb, #2d3748);
+    --color-border-dark: rgba(40, 40, 40, 0.8);
+    --color-border-muted: light-dark(
+        rgba(60, 60, 60, 0.5),
+        rgba(80, 80, 80, 0.3)
+    );
+
+    --color-input-background: light-dark(
+        rgba(245, 245, 245, 0.05),
+        rgba(31, 41, 55, 0.5)
+    );
+    --color-overlay: rgba(0, 0, 0, 0.5);
+    --color-overlay-light: rgba(0, 0, 0, 0.15);
+
+    --color-text-light: #e2e8f0;
+
+    /* Additional background colors for page consistency */
+    --color-background-hover: light-dark(#e5e7eb, #1a1a1a);
+    --color-background-alpha-subtle: light-dark(
+        rgba(30, 30, 30, 0.05),
+        rgba(30, 30, 30, 0.1)
+    );
+    --color-background-alpha-light: light-dark(
+        rgba(255, 255, 255, 0.2),
+        rgba(40, 40, 40, 0.1)
+    );
+    --color-background-alpha-medium: light-dark(
+        rgba(128, 128, 128, 0.1),
+        rgba(40, 40, 40, 0.3)
+    );
+
+    /* Surface variations for enhanced design system */
+    --color-surface-alpha-heavy: light-dark(
+        rgba(229, 231, 235, 0.15),
+        rgba(26, 26, 26, 0.7)
+    );
+    --color-surface-alpha-subtle: light-dark(
+        rgba(245, 245, 245, 0.03),
+        rgba(20, 20, 20, 0.2)
+    );
+
+    --color-accent: #4fc3f7;
+    --color-accent-alpha: rgba(79, 195, 247, 0.2);
+
+    /* Slot type colors with alpha variants */
+    --color-danger-alpha: rgba(180, 60, 60, 0.4);
+    --color-info-alpha: rgba(60, 120, 180, 0.4);
+    --color-warning-alpha: rgba(180, 140, 60, 0.4);
+    --color-purple-alpha: rgba(140, 60, 140, 0.4);
+
+    /* EVE fitting slot colors */
+    --color-high-slot: rgba(180, 60, 60, 0.2);
+    --color-mid-slot: rgba(60, 120, 180, 0.2);
+    --color-low-slot: rgba(180, 140, 60, 0.2);
+    --color-rig-slot: rgba(150, 150, 150, 0.2);
+
+    /* Security status colors */
+    --color-highsec-highest: #2f75fe;
+    --color-highsec-high: #2f75fe;
+    --color-highsec-medium: #44a5ff;
+    --color-highsec-low: #59d2ff;
+    --color-lowsec-high: #f9a825;
+    --color-lowsec-medium: #fbc02d;
+    --color-lowsec-low: #ffd54f;
+    --color-nullsec-high: #d32f2f;
+    --color-nullsec-low: #e53935;
+    --color-unknown: #757575;
+
+    /* Status Colors */
+    --color-success: #10b981;
+    --color-success-alpha: rgba(16, 185, 129, 0.15);
+    --color-success-dark: rgba(5, 150, 105, 0.7);
+    --color-warning: #f59e0b;
+    --color-warning-alpha: rgba(245, 158, 11, 0.15);
+    --color-warning-dark: rgba(217, 119, 6, 0.7);
+    --color-error: #ef4444;
+    --color-danger: #ef4444;
+    --color-danger-alpha: rgba(239, 68, 68, 0.15);
+    --color-danger-dark: rgba(220, 38, 38, 0.7);
+    --color-info: #3b82f6;
+
+    /* Special EVE-specific colors */
+    --color-loss-bg: rgba(80, 0, 0, 0.6);
+    --color-loss-hover: rgba(90, 0, 0, 0.65);
+    --color-loss-border: rgba(139, 46, 46, 0.8);
+
+    /* Skeleton/Loading Colors */
+    --color-skeleton: #e5e7eb;
+
+    /* Spacing Scale */
+    --space-0: 0;
+    --space-1: 0.25rem; /* 4px */
+    --space-2: 0.5rem; /* 8px */
+    --space-3: 0.75rem; /* 12px */
+    --space-4: 1rem; /* 16px */
+    --space-5: 1.25rem; /* 20px */
+    --space-6: 1.5rem; /* 24px */
+    --space-8: 2rem; /* 32px */
+    --space-10: 2.5rem; /* 40px */
+    --space-12: 3rem; /* 48px */
+    --space-16: 4rem; /* 64px */
+    --space-20: 5rem; /* 80px */
+
+    /* Font Sizes */
+    --text-2xs: 0.65rem; /* 10.4px */
+    --text-xs: 0.75rem; /* 12px */
+    --text-sm: 0.875rem; /* 14px */
+    --text-base: 1rem; /* 16px */
+    --text-lg: 1.125rem; /* 18px */
+    --text-xl: 1.25rem; /* 20px */
+    --text-2xl: 1.5rem; /* 24px */
+    --text-3xl: 1.875rem; /* 30px */
+    --text-4xl: 2.25rem; /* 36px */
+
+    /* Font Weights */
+    --font-light: 300;
+    --font-normal: 400;
+    --font-medium: 500;
+    --font-semibold: 600;
+    --font-bold: 700;
+
+    /* Line Heights */
+    --line-height-tight: 1.25;
+    --line-height-normal: 1.5;
+    --line-height-relaxed: 1.625;
+    --line-height-loose: 2;
+
+    /* Border Radius */
+    --radius-none: 0;
+    --radius-sm: 0.125rem; /* 2px */
+    --radius-base: 0.25rem; /* 4px */
+    --radius-md: 0.375rem; /* 6px */
+    --radius-lg: 0.5rem; /* 8px */
+    --radius-xl: 0.75rem; /* 12px */
+    --radius-2xl: 1rem; /* 16px */
+    --radius-3xl: 1.5rem; /* 24px */
+    --radius-full: 9999px;
+
+    /* Shadows */
+    --shadow-xs: 0 0 3px rgba(0, 0, 0, 0.2);
+    --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+    --shadow-sm-muted: 0 0 6px rgba(100, 100, 100, 0.3);
+    --shadow-sm-purple: 0 0 6px rgba(120, 40, 120, 0.3);
+    --shadow-base: 0 1px 3px 0 rgba(0, 0, 0, 0.1),
+        0 1px 2px 0 rgba(0, 0, 0, 0.06);
+    --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1),
+        0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1),
+        0 4px 6px -2px rgba(0, 0, 0, 0.05);
+    --shadow-lg-subtle: 0 4px 12px rgba(0, 0, 0, 0.15);
+    --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1),
+        0 10px 10px -5px rgba(0, 0, 0, 0.04);
+    --shadow-glow-white: 0 0 8px rgba(255, 255, 255, 0.4);
+
+    /* Text Shadows */
+    --text-shadow-sm: 0 0 6px rgba(0, 0, 0, 0.4);
+    --text-shadow-md: 0 0 8px rgba(0, 0, 0, 0.4);
+    --text-shadow-lg: 0 0 10px rgba(0, 0, 0, 0.5);
+
+    /* Z-Index Scale */
+    --z-base: 0;
+    --z-1: 1;
+    --z-2: 2;
+    --z-3: 3;
+    --z-4: 4;
+    --z-5: 5;
+    --z-6: 6;
+    --z-7: 7;
+    --z-8: 8;
+    --z-9: 9;
+    --z-10: 10;
+    --z-dropdown: 10;
+    --z-sticky: 20;
+    --z-header: 30;
+    --z-modal: 40;
+    --z-popover: 50;
+    --z-tooltip: 60;
+    --z-overlay: 70;
+    --z-maximum: 9999;
+
+    /* Icon and Image Sizes */
+    --size-icon-xs: 12px;
+    --size-icon-sm: 16px;
+    --size-icon-base: 20px;
+    --size-icon-md: 24px;
+    --size-icon-lg: 32px;
+    --size-icon-xl: 40px;
+
+    /* EVE-specific image sizes */
+    --size-portrait-sm: 48px;
+    --size-portrait-md: 64px;
+    --size-portrait-lg: 96px;
+    --size-portrait-xl: 128px;
+}
+
+/* Dark Mode Variables */
+.dark {
+    /* Text Colors */
+    --color-text-primary: #ffffff;
+    --color-text-secondary: #9ca3af;
+    --color-text-tertiary: #6b7280;
+    --color-text-inverse: #111827;
+
+    /* Background Colors */
+    --color-bg-primary: #111827;
+    --color-bg-secondary: rgba(26, 26, 26, 0.8);
+    --color-bg-tertiary: #1f2937;
+    --color-bg-hover: rgba(45, 45, 45, 0.6);
+    --color-bg-glass-light: rgba(15, 15, 15, 0.95);
+    --color-bg-glass-dark: rgba(255, 255, 255, 0.95);
+
+    /* Border Colors */
+    --color-border-light: rgba(75, 85, 99, 0.2);
+    --color-border-medium: #374151;
+    --color-border-dark: #4b5563;
+
+    /* Skeleton/Loading Colors */
+    --color-skeleton: #374151;
+
+    /* Shadows (enhanced for dark mode) */
+    --shadow-sm: 0 1px 3px 0 rgba(0, 0, 0, 0.3);
+    --shadow-base: 0 1px 3px 0 rgba(0, 0, 0, 0.2),
+        0 1px 2px 0 rgba(0, 0, 0, 0.12);
+    --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.2),
+        0 2px 4px -1px rgba(0, 0, 0, 0.12);
+    --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.2),
+        0 4px 6px -2px rgba(0, 0, 0, 0.1);
+    --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.2),
+        0 10px 10px -5px rgba(0, 0, 0, 0.08);
+}

@@ -231,7 +231,7 @@ useSeoMeta({
                                 style="background-color: light-dark(rgba(255, 230, 230, 0.15), rgba(50, 20, 20, 0.4));">
                                 <div class="flex items-center space-x-3">
                                     <Image v-if="threat.character_id" type="character" :id="threat.character_id"
-                                        :size="32" class="rounded-full" />
+                                        :size="32" />
                                     <div class="flex-grow">
                                         <div class="font-semibold">
                                             <NuxtLink v-if="threat.character_id"
@@ -284,7 +284,7 @@ useSeoMeta({
                             <div class="p-3 rounded-md"
                                 style="background-color: light-dark(rgba(245, 245, 245, 0.1), rgba(26, 26, 26, 0.4))">
                                 <div class="text-sm text-gray-500 dark:text-gray-400">{{ t('tools.localscan.alliances')
-                                    }}</div>
+                                }}</div>
                                 <div class="text-lg font-semibold">{{ alliancesData.length }}</div>
                             </div>
                             <div class="p-3 rounded-md"
@@ -299,7 +299,7 @@ useSeoMeta({
                             <div class="p-3 rounded-md"
                                 style="background-color: light-dark(rgba(245, 245, 245, 0.1), rgba(26, 26, 26, 0.4))">
                                 <div class="text-sm text-gray-500 dark:text-gray-400">{{ t('tools.localscan.characters')
-                                    }}</div>
+                                }}</div>
                                 <div class="text-lg font-semibold">{{ totalCharacterCount }}</div>
                             </div>
                         </div>
@@ -315,8 +315,7 @@ useSeoMeta({
                                     :class="{ 'hover-highlight': true }"
                                     @click.prevent="toggleCollapse(`alliance-${alliance.id}`, $event)">
                                     <div class="flex items-center space-x-3">
-                                        <Image v-if="alliance.id" type="alliance" :id="alliance.id" :size="32"
-                                            class="rounded-full" />
+                                        <Image v-if="alliance.id" type="alliance" :id="alliance.id" :size="32" />
                                         <div>
                                             <div class="flex items-center">
                                                 <NuxtLink :to="`/alliance/${alliance.id}`"
@@ -353,8 +352,7 @@ useSeoMeta({
                                             :class="{ 'hover-highlight': true }"
                                             @click.prevent="toggleCollapse(`corp-${alliance.id}-${corp.id}`, $event)">
                                             <div class="flex items-center space-x-3">
-                                                <Image v-if="corp.id" type="corporation" :id="corp.id" :size="24"
-                                                    class="rounded-full" />
+                                                <Image v-if="corp.id" type="corporation" :id="corp.id" :size="24" />
                                                 <div>
                                                     <div class="flex items-center">
                                                         <NuxtLink :to="`/corporation/${corp.id}`"
@@ -425,8 +423,7 @@ useSeoMeta({
                                         :class="{ 'hover-highlight': true }"
                                         @click.prevent="toggleCollapse(`corp-na-${corp.id}`, $event)">
                                         <div class="flex items-center space-x-3">
-                                            <Image v-if="corp.id" type="corporation" :id="corp.id" :size="24"
-                                                class="rounded-full" />
+                                            <Image v-if="corp.id" type="corporation" :id="corp.id" :size="24" />
                                             <div>
                                                 <div class="flex items-center">
                                                     <NuxtLink :to="`/corporation/${corp.id}`"

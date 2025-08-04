@@ -51,8 +51,7 @@
                                 <div class="info-items space-y-3">
                                     <div v-if="alliance.faction_id && alliance.faction_name"
                                         class="flex items-center gap-2 text-gray-800 dark:text-gray-200">
-                                        <Image type="corporation" :id="alliance.faction_id" class="w-4 h-4 rounded-full"
-                                            size="64" />
+                                        <Image type="corporation" :id="alliance.faction_id" class="w-4 h-4" size="64" />
                                         <span>{{ $t('faction.title') }}:</span>
                                         <NuxtLink :to="`/faction/${alliance.faction_id}`"
                                             class="hover:text-blue-600 dark:hover:text-blue-400 transition-colors">
@@ -142,7 +141,7 @@
                                     </div>
                                     <div class="stat-row">
                                         <div class="stat-label text-gray-600 dark:text-gray-400">{{ $t('iskEfficiency')
-                                            }}</div>
+                                        }}</div>
                                         <div class="stat-value text-gray-900 dark:text-white">
                                             {{ calcIskEfficiency(validShortStats) }}%
                                         </div>
@@ -180,14 +179,14 @@
                                     </div>
                                     <div class="stat-row">
                                         <div class="stat-label text-gray-600 dark:text-gray-400">{{ $t('soloKillRatio')
-                                            }}</div>
+                                        }}</div>
                                         <div class="stat-value text-gray-900 dark:text-white">
                                             {{ calcSoloKillRatio(validShortStats) }}%
                                         </div>
                                     </div>
                                     <div class="stat-row">
                                         <div class="stat-label text-gray-600 dark:text-gray-400">{{ $t('soloEfficiency')
-                                            }}</div>
+                                        }}</div>
                                         <div class="stat-value text-gray-900 dark:text-white">
                                             {{ calcSoloEfficiency(validShortStats) }}%
                                         </div>
@@ -205,7 +204,7 @@
                                 <div class="stat-body">
                                     <div class="stat-row">
                                         <div class="stat-label text-gray-600 dark:text-gray-400">{{ $t('corporations')
-                                            }}</div>
+                                        }}</div>
                                         <div class="stat-value text-gray-900 dark:text-white">{{
                                             formatNumber(alliance.corporation_count || 0) }}</div>
                                     </div>

@@ -15,7 +15,7 @@
                     class="stats-row flex items-center py-2 px-3 border-t border-gray-800">
                     <div class="w-[7%] text-left pl-2 font-medium text-gray-500">{{ i }}</div>
                     <div class="w-[68%] flex items-center">
-                        <div class="w-8 h-8 bg-gray-700 rounded-full mr-3 animate-pulse"></div>
+                        <div class="w-8 h-8 bg-gray-700 mr-3 animate-pulse"></div>
                         <div class="h-4 w-32 bg-gray-700 rounded animate-pulse"></div>
                     </div>
                     <div class="w-[25%] text-right">
@@ -37,7 +37,7 @@
                     <div class="w-[68%] flex items-center">
                         <NuxtLink :to="`/character/${item.character_id}`" class="flex items-center">
                             <Image type="character" :id="item.character_id" :alt="`${item.character_name}`"
-                                class="w-8 h-8 mr-3 rounded-full" size="64" />
+                                class="w-8 h-8 mr-3" size="64" />
                             <span class="character-name truncate">{{ item.character_name }}</span>
                         </NuxtLink>
                     </div>
