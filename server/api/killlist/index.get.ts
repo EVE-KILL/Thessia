@@ -177,6 +177,8 @@ const killlistQueries: Record<string, QueryConfig> = {
         hint: "victim.ship_group_id_titan_kill_time_-1",
     },
     structureboys: {
+        // @TODO add a description field for them that gets displayed on the page
+        // That should help explain what this query is for in the end (And the others as well, and others like it if we add more)
         aggregate: [
             {
                 $match: {
