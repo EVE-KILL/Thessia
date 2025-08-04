@@ -72,8 +72,18 @@ function extractUrl(token: any): string {
 
     // Handle different marked versions and token structures
     if (typeof token === "string") return token;
-    if (token.raw) return token.raw;
-    if (token.href) return token.href;
+
+    // Safe property access with type checking
+    if (token && typeof token === "object") {
+        if (token.raw && typeof token.raw === "string") return token.raw;
+        if (token.href && typeof token.href === "string") return token.href;
+
+        // Handle Vue VNode-like structures that might be passed incorrectly
+        if (token.props && token.props.content && typeof token.props.content === "string") {
+            return token.props.content;
+        }
+    }
+
     return "";
 }
 
@@ -86,8 +96,18 @@ function extractText(token: any): string {
     if (!token) return "";
 
     if (typeof token === "string") return token;
-    if (token.text) return token.text;
-    if (token.raw) return token.raw;
+
+    // Safe property access with type checking
+    if (token && typeof token === "object") {
+        if (token.text && typeof token.text === "string") return token.text;
+        if (token.raw && typeof token.raw === "string") return token.raw;
+
+        // Handle Vue VNode-like structures that might be passed incorrectly
+        if (token.props && token.props.content && typeof token.props.content === "string") {
+            return token.props.content;
+        }
+    }
+
     return "";
 }
 
@@ -101,17 +121,27 @@ function detectMediaType(url: string): {
     id?: string;
     matches?: RegExpMatchArray | null;
 } {
+    // Input validation
+    if (!url || typeof url !== "string" || url.trim() === "") {
+        return { type: "unknown" };
+    }
+
+    // Ensure the URL starts with http/https for security
+    const trimmedUrl = url.trim();
+    if (!trimmedUrl.startsWith("http://") && !trimmedUrl.startsWith("https://")) {
+        return { type: "unknown" };
+    }
     // YouTube (including shorts)
     const youtubeMatch =
-        url.match(/^https?:\/\/(www\.)?youtube\.com\/watch\?v=([a-zA-Z0-9_-]+)/) ||
-        url.match(/^https?:\/\/(www\.)?youtu\.be\/([a-zA-Z0-9_-]+)/) ||
-        url.match(/^https?:\/\/(www\.)?youtube\.com\/shorts\/([a-zA-Z0-9_-]+)/);
+        trimmedUrl.match(/^https?:\/\/(www\.)?youtube\.com\/watch\?v=([a-zA-Z0-9_-]+)/) ||
+        trimmedUrl.match(/^https?:\/\/(www\.)?youtu\.be\/([a-zA-Z0-9_-]+)/) ||
+        trimmedUrl.match(/^https?:\/\/(www\.)?youtube\.com\/shorts\/([a-zA-Z0-9_-]+)/);
     if (youtubeMatch) {
         return { type: "iframe", id: youtubeMatch[2], matches: youtubeMatch };
     }
 
     // Imgur direct
-    const imgurDirectMatch = url.match(
+    const imgurDirectMatch = trimmedUrl.match(
         /^https?:\/\/(i\.)?imgur\.com\/([a-zA-Z0-9]+)(\.(jpeg|jpg|png|gif|mp4|webm))?$/i,
     );
     if (imgurDirectMatch) {
@@ -121,13 +151,13 @@ function detectMediaType(url: string): {
     }
 
     // Imgur gallery
-    const imgurGalleryMatch = url.match(/^https?:\/\/(www\.)?imgur\.com\/(gallery|a)\/([^\/\s]+)/i);
+    const imgurGalleryMatch = trimmedUrl.match(/^https?:\/\/(www\.)?imgur\.com\/(gallery|a)\/([^\/\s]+)/i);
     if (imgurGalleryMatch) {
         return { type: "iframe", id: imgurGalleryMatch[3], matches: imgurGalleryMatch };
     }
 
     // Giphy complex URL
-    const complexGiphyMatch = url.match(
+    const complexGiphyMatch = trimmedUrl.match(
         /^https?:\/\/media[0-9]?\.giphy\.com\/media\/v[0-9]\..*?\/.*?\/giphy\.gif/,
     );
     if (complexGiphyMatch) {
@@ -137,27 +167,27 @@ function detectMediaType(url: string): {
     // Giphy simple URL
     const simpleGiphyMatch =
         !complexGiphyMatch &&
-        (url.match(/^https?:\/\/(www\.)?giphy\.com\/gifs\/([a-zA-Z0-9]+-)*([a-zA-Z0-9]+)/) ||
-            url.match(/^https?:\/\/media[0-9]?\.giphy\.com\/media\/([a-zA-Z0-9]+)/));
+        (trimmedUrl.match(/^https?:\/\/(www\.)?giphy\.com\/gifs\/([a-zA-Z0-9]+-)*([a-zA-Z0-9]+)/) ||
+            trimmedUrl.match(/^https?:\/\/media[0-9]?\.giphy\.com\/media\/([a-zA-Z0-9]+)/));
     if (simpleGiphyMatch) {
         const giphyId = simpleGiphyMatch[simpleGiphyMatch.length - 1];
         return { type: "image", id: giphyId, matches: simpleGiphyMatch };
     }
 
     // Tenor
-    const tenorMatch = url.match(/^https?:\/\/(www\.)?tenor\.com\/view\/[a-zA-Z0-9-]+-([0-9]+)/);
+    const tenorMatch = trimmedUrl.match(/^https?:\/\/(www\.)?tenor\.com\/view\/[a-zA-Z0-9-]+-([0-9]+)/);
     if (tenorMatch) {
         return { type: "iframe", id: tenorMatch[2], matches: tenorMatch };
     }
 
     // Standard image
-    const imageMatch = url.match(/\.(jpeg|jpg|gif|png)$/i);
+    const imageMatch = trimmedUrl.match(/\.(jpeg|jpg|gif|png)$/i);
     if (imageMatch) {
         return { type: "image", matches: imageMatch };
     }
 
     // Standard video
-    const videoMatch = url.match(/\.(mp4|webm)$/i);
+    const videoMatch = trimmedUrl.match(/\.(mp4|webm)$/i);
     if (videoMatch) {
         return { type: "video", matches: videoMatch };
     }
@@ -367,49 +397,96 @@ const renderer = new marked.Renderer();
 
 // Custom link renderer to handle both older and newer marked versions
 renderer.link = ({ href, title, tokens }: any): string => {
-    // Extract URL and text safely from potentially complex tokens
-    const url = extractUrl(href);
-    const linkText = extractText(tokens?.[0] || href);
-    const linkTitle = title || "";
+    try {
+        // Safe type checking for href parameter with comprehensive validation
+        let url = "";
 
-    // If URL is not valid, return a basic link or text
-    if (!url) {
-        return `<span>${linkText || "link"}</span>`;
+        if (typeof href === "string") {
+            url = href;
+        } else if (href && typeof href === "object") {
+            // Handle different object structures that might contain the URL
+            if (href.href && typeof href.href === "string") {
+                url = href.href;
+            } else if (href.raw && typeof href.raw === "string") {
+                url = href.raw;
+            } else if (href.props && typeof href.props === "object" && href.props.content && typeof href.props.content === "string") {
+                // Handle Vue VNode-like structures that might have been passed incorrectly during SSR
+                url = href.props.content;
+            }
+        }
+
+        // Fallback to extractUrl function if url is still empty
+        if (!url) {
+            url = extractUrl(href);
+        }
+
+        // Safe extraction of link text and title
+        let linkText = "";
+        try {
+            linkText = extractText(tokens?.[0] || href) || "";
+        } catch (textError) {
+            linkText = "link";
+        }
+
+        const linkTitle = (title && typeof title === "string") ? title : "";
+
+        // If URL is not valid, return a basic span or link
+        if (!url || typeof url !== "string" || url.trim() === "") {
+            return `<span>${linkText || "link"}</span>`;
+        }
+
+        // Detect media type and get appropriate renderer - with error handling
+        let type: MediaType = "unknown";
+        let id: string | undefined = undefined;
+        let matches: RegExpMatchArray | null = null;
+
+        try {
+            const result = detectMediaType(url);
+            type = result.type;
+            id = result.id;
+            matches = result.matches || null;
+        } catch (error) {
+            console.error('Error detecting media type for URL:', url, error);
+            // Fall back to regular link
+            return `<a href="${url}" title="${linkTitle}" target="_blank" rel="noopener noreferrer">${linkText}</a>`;
+        }
+
+        switch (type) {
+            case "iframe":
+                if (url.includes("youtube.com") || url.includes("youtu.be")) {
+                    return id ? renderYouTube(id) : renderImage(url, linkText);
+                }
+                if (url.includes("tenor.com") && id) {
+                    return renderTenor(id, url);
+                }
+                if (url.includes("imgur.com") && !url.includes("i.imgur.com")) {
+                    return renderImgurGallery(url);
+                }
+                break;
+
+            case "video":
+                return renderVideo(url);
+
+            case "image":
+                if (url.includes("imgur.com") && matches) {
+                    const imgurId = matches[2] || '';
+                    const extension = matches[3] || ".jpg";
+                    return renderImgurDirect(imgurId, extension, url);
+                }
+                if (url.includes("giphy.com") || url.includes("media.giphy.com")) {
+                    return renderGiphy(url, id);
+                }
+                return renderImage(url, linkText);
+        }
+
+        // Default: regular link
+        return `<a href="${url}" title="${linkTitle}" target="_blank" rel="noopener noreferrer">${linkText}</a>`;
+
+    } catch (error) {
+        // Final safety net - return a safe fallback for any unexpected errors
+        console.error('Error in link renderer:', error);
+        return `<span>link</span>`;
     }
-
-    // Detect media type and get appropriate renderer
-    const { type, id, matches } = detectMediaType(url);
-
-    switch (type) {
-        case "iframe":
-            if (url.includes("youtube.com") || url.includes("youtu.be")) {
-                return id ? renderYouTube(id) : renderImage(url, linkText);
-            }
-            if (url.includes("tenor.com") && id) {
-                return renderTenor(id, url);
-            }
-            if (url.includes("imgur.com") && !url.includes("i.imgur.com")) {
-                return renderImgurGallery(url);
-            }
-            break;
-
-        case "video":
-            return renderVideo(url);
-
-        case "image":
-            if (url.includes("imgur.com") && matches) {
-                const imgurId = matches[2] || '';
-                const extension = matches[3] || ".jpg";
-                return renderImgurDirect(imgurId, extension, url);
-            }
-            if (url.includes("giphy.com") || url.includes("media.giphy.com")) {
-                return renderGiphy(url, id);
-            }
-            return renderImage(url, linkText);
-    }
-
-    // Default: regular link
-    return `<a href="${url}" title="${linkTitle}" target="_blank" rel="noopener noreferrer">${linkText}</a>`;
 };
 
 // Apply the custom renderer to marked
