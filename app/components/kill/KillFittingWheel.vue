@@ -605,8 +605,8 @@ onBeforeUnmount(() => {
     right: 1px;
     bottom: 1px;
     border-radius: 50%;
-    border: 1px solid rgba(40, 40, 40, 0.8);
-    z-index: 2;
+    border: 1px solid var(--color-border-dark);
+    z-index: var(--z-2);
     pointer-events: none;
 }
 
@@ -617,7 +617,7 @@ onBeforeUnmount(() => {
     left: 0;
     width: 100%;
     height: 100%;
-    z-index: 4;
+    z-index: var(--z-4);
     pointer-events: none;
 }
 
@@ -627,7 +627,7 @@ onBeforeUnmount(() => {
     left: 0;
     width: 100%;
     height: 100%;
-    z-index: 3;
+    z-index: var(--z-3);
     pointer-events: none;
 }
 
@@ -640,16 +640,16 @@ onBeforeUnmount(() => {
     display: flex;
     justify-content: center;
     align-items: center;
-    z-index: 1;
+    z-index: var(--z-1);
     border-radius: 50%;
     overflow: hidden;
     background-color: transparent;
-    transition: filter 0.2s ease-in-out;
+    transition: filter var(--duration-200) ease-in-out;
 }
 
 .ship-container.darkened .ship-image {
     filter: brightness(0.4) blur(1px);
-    transition: filter 0.2s ease-in-out;
+    transition: filter var(--duration-200) ease-in-out;
 }
 
 .ship-image {
@@ -664,7 +664,7 @@ onBeforeUnmount(() => {
     width: 80%;
     height: 80%;
     border-radius: 50%;
-    border: 2px dashed rgba(60, 60, 60, 0.5);
+    border: 2px dashed var(--color-border-muted);
 }
 
 .slots-container {
@@ -673,7 +673,7 @@ onBeforeUnmount(() => {
     left: 0;
     width: 100%;
     height: 100%;
-    z-index: 5;
+    z-index: var(--z-5);
     pointer-events: none;
 }
 
@@ -681,13 +681,13 @@ onBeforeUnmount(() => {
     position: absolute;
     width: 42px;
     height: 42px;
-    background-color: rgba(20, 20, 20, 0.2);
+    background-color: var(--color-surface-alpha-dark);
     border-radius: 50%;
     display: flex;
     justify-content: center;
     align-items: center;
-    z-index: 6;
-    box-shadow: 0 0 5px rgba(0, 0, 0, 0.2);
+    z-index: var(--z-6);
+    box-shadow: var(--shadow-sm);
     pointer-events: auto;
 }
 
@@ -698,7 +698,7 @@ onBeforeUnmount(() => {
     justify-content: center;
     align-items: center;
     cursor: pointer;
-    z-index: 7;
+    z-index: var(--z-7);
     position: relative;
 }
 
@@ -707,9 +707,9 @@ onBeforeUnmount(() => {
     height: 100%;
     object-fit: contain;
     border-radius: 0% 50% 50% 50%;
-    transition: transform 0.1s ease-in-out;
+    transition: transform var(--duration-100) ease-in-out;
     position: relative;
-    z-index: 8;
+    z-index: var(--z-8);
 }
 
 .module-icon:hover {
@@ -722,16 +722,16 @@ onBeforeUnmount(() => {
     position: absolute;
     width: 24px;
     height: 24px;
-    background-color: rgba(20, 20, 20, 0.3);
+    background-color: var(--color-surface-alpha-dark);
     border-radius: 50%;
     display: flex;
     justify-content: center;
     align-items: center;
-    z-index: 9;
-    box-shadow: 0 0 3px rgba(0, 0, 0, 0.2);
+    z-index: var(--z-9);
+    box-shadow: var(--shadow-xs);
     cursor: pointer;
-    border: 1px solid rgba(80, 80, 80, 0.3);
-    transition: transform 0.1s ease-in-out;
+    border: 1px solid var(--color-border-muted);
+    transition: transform var(--duration-100) ease-in-out;
 }
 
 .ammo-icon {
@@ -740,7 +740,7 @@ onBeforeUnmount(() => {
     object-fit: contain;
     border-radius: 50%;
     position: relative;
-    z-index: 10;
+    z-index: var(--z-10);
 }
 
 .ammo-container:hover {
@@ -770,7 +770,7 @@ onBeforeUnmount(() => {
 .high-slot .ammo-container {
     top: 28px;
     left: 30px;
-    background-color: rgba(0, 0, 0, 0.3)
+    background-color: var(--color-surface-alpha-dark);
 }
 
 .mid-slot .ammo-container {
@@ -787,39 +787,39 @@ onBeforeUnmount(() => {
     width: 100%;
     height: 100%;
     border-radius: 50%;
-    background-color: rgba(10, 10, 10, 0.15);
-    border: 1px dashed rgba(60, 60, 60, 0.3);
+    background-color: var(--color-surface-alpha-light);
+    border: 1px dashed var(--color-border-muted);
 }
 
 .high-slot {
-    border-color: rgba(180, 60, 60, 0.4);
+    border-color: var(--color-danger-alpha);
 }
 
 .mid-slot {
-    border-color: rgba(60, 120, 180, 0.4);
+    border-color: var(--color-info-alpha);
 }
 
 .low-slot {
-    border-color: rgba(180, 140, 60, 0.4);
+    border-color: var(--color-warning-alpha);
 }
 
 .rig-slot {
-    border-color: rgba(150, 150, 150, 0.4);
-    background-color: rgba(40, 40, 40, 0.2);
-    box-shadow: 0 0 6px rgba(100, 100, 100, 0.3);
+    border-color: var(--color-border);
+    background-color: var(--color-surface-alpha);
+    box-shadow: var(--shadow-sm-muted);
 }
 
 .subsystem-slot {
-    border-color: rgba(140, 60, 140, 0.4);
-    background-color: rgba(40, 20, 40, 0.2);
-    box-shadow: 0 0 6px rgba(120, 40, 120, 0.3);
+    border-color: var(--color-purple-alpha);
+    background-color: var(--color-surface-alpha-purple);
+    box-shadow: var(--shadow-sm-purple);
 }
 
 .slot-indicator {
     position: absolute;
     width: 18px;
     height: 18px;
-    z-index: 6;
+    z-index: var(--z-6);
     transform-origin: center;
     pointer-events: none;
 }
@@ -843,8 +843,7 @@ onBeforeUnmount(() => {
 
 /* Make sure tooltips appear above everything */
 :deep(.u-tooltip) {
-    z-index: 20;
-    /* Lower z-index for tooltips to stay below dropdowns */
+    z-index: var(--z-tooltip);
 }
 
 /* Override button styles to preserve icon appearance */
@@ -871,85 +870,79 @@ onBeforeUnmount(() => {
     display: flex;
     justify-content: center;
     align-items: center;
-    z-index: 10;
-    /* Lower z-index to not interfere with dropdowns */
-    background-color: rgba(0, 0, 0, 0.15);
+    z-index: var(--z-modal);
+    background-color: var(--color-overlay-light);
     border-radius: 50%;
     backdrop-filter: blur(3px);
-    transition: all 0.2s ease-in-out;
+    transition: all var(--duration-200) ease-in-out;
 }
 
 /* Enhanced tooltip with sophisticated fade-to-transparent effect */
 .center-tooltip {
     width: 80%;
     max-width: 280px;
-    padding: 1.25rem;
+    padding: var(--space-5);
     background: radial-gradient(circle,
-            rgba(26, 32, 44, 0.85) 0%,
-            /* Dark center with high opacity */
-            rgba(22, 28, 40, 0.7) 50%,
-            /* Mid-fade */
-            rgba(15, 23, 42, 0.4) 80%,
-            /* More faded */
-            rgba(15, 23, 42, 0) 100%
-            /* Completely transparent at edges */
-        );
+            var(--color-surface-dark-alpha-85) 0%,
+            var(--color-surface-dark-alpha-70) 50%,
+            var(--color-surface-dark-alpha-40) 80%,
+            transparent 100%);
     border: none;
-    border-radius: 10px;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-lg-subtle);
     text-align: center;
-    animation: fadeIn 0.15s ease-out;
-    color: #e2e8f0;
+    animation: fadeIn var(--duration-150) ease-out;
+    color: var(--color-text-light);
 }
 
 /* Add glow effect behind the tooltip text for better readability */
 .tooltip-name {
-    font-size: 1.1rem;
-    font-weight: bold;
-    margin-bottom: 8px;
-    text-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+    font-size: var(--text-lg);
+    font-weight: var(--font-weight-bold);
+    margin-bottom: var(--space-2);
+    text-shadow: var(--text-shadow-lg);
 }
 
 .tooltip-value {
-    font-size: 1rem;
-    color: #4fc3f7;
-    margin-bottom: 10px;
-    text-shadow: 0 0 8px rgba(0, 0, 0, 0.4);
+    font-size: var(--text-base);
+    color: var(--color-accent);
+    margin-bottom: var(--space-2-5);
+    text-shadow: var(--text-shadow-md);
 }
 
 .tooltip-status {
-    font-size: 0.95rem;
-    text-shadow: 0 0 6px rgba(0, 0, 0, 0.4);
+    font-size: var(--text-base);
+    text-shadow: var(--text-shadow-sm);
 }
 
 /* Add subtle text outline to status colors for better visibility */
 .status-dropped,
 .status-destroyed {
-    font-weight: 500;
-    text-shadow: 0 0 3px rgba(0, 0, 0, 0.5);
+    font-weight: var(--font-weight-medium);
+    text-shadow: var(--text-shadow-sm);
 }
 
 .status-dropped {
-    color: #81c784;
+    color: var(--color-success);
 }
 
 .status-destroyed {
-    color: #e57373;
+    color: var(--color-danger);
 }
 
 /* Override deep selectors for nested status spans */
 :deep(.tooltip-status .status-dropped),
 :deep(.tooltip-status .status-destroyed) {
-    font-weight: 500;
-    text-shadow: 0 0 3px rgba(0, 0, 0, 0.5);
+    font-weight: var(--font-weight-medium);
+    text-shadow: var(--text-shadow-sm);
 }
 
 :deep(.tooltip-status .status-dropped) {
-    color: #81c784;
+    color: var(--color-success);
 }
 
 :deep(.tooltip-status .status-destroyed) {
-    color: #e57373;
+    color: var(--color-danger);
 }
 
 /* Fade-in animation for the tooltip */
@@ -970,7 +963,7 @@ onBeforeUnmount(() => {
 .ammo-container:hover .ammo-icon {
     transform: scale(1.1);
     filter: brightness(1.1);
-    transition: all 0.1s ease;
+    transition: all var(--duration-100) ease;
 }
 
 /* Add a subtle pulsing effect to the active module */
@@ -990,8 +983,8 @@ onBeforeUnmount(() => {
 
 .module-icon.active,
 .ammo-icon.active {
-    animation: subtlePulse 1.5s infinite;
-    box-shadow: 0 0 8px rgba(255, 255, 255, 0.4);
+    animation: subtlePulse var(--duration-1500) infinite;
+    box-shadow: var(--shadow-glow-white);
 }
 
 /* Mobile responsive adjustments */

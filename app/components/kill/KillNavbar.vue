@@ -281,8 +281,8 @@ const rightNavItems = computed<NavLink[]>(() => {
                 <Dropdown v-if="link.children" v-model="dropdownStates[link.name]" position="bottom" align="start"
                     :max-height="60" width="auto" close-on-inner-click smart-position open-on-hover :hover-delay="100">
                     <template #trigger>
-                        <div class="flex items-center py-1.5 px-2 rounded-md hover:bg-gray-100 dark:hover:bg-gray-800
-                    transition-colors cursor-pointer text-gray-700 dark:text-gray-200" :title="link.name">
+                        <div class="flex items-center py-1.5 px-2 rounded-md transition-colors cursor-pointer nav-item"
+                            :title="link.name">
                             <span class="text-sm font-medium">{{ link.name }}</span>
                         </div>
                     </template>
@@ -297,9 +297,9 @@ const rightNavItems = computed<NavLink[]>(() => {
                                 ]" :tabindex="item.disabled ? -1 : 0"
                                 @click="item.disabled ? $event.preventDefault() : null">
                                 <div class="flex flex-col">
-                                    <span class="font-medium text-gray-700 dark:text-gray-200">{{ item.name }}</span>
+                                    <span class="font-medium dropdown-item-title">{{ item.name }}</span>
                                     <span v-if="item.description"
-                                        class="text-xs text-gray-500 dark:text-gray-400 mt-0.5 truncate max-w-[200px]">
+                                        class="text-xs mt-0.5 truncate max-w-[200px] dropdown-item-description">
                                         {{ item.description }}
                                     </span>
                                 </div>
@@ -314,16 +314,17 @@ const rightNavItems = computed<NavLink[]>(() => {
         <div class="flex items-center space-x-2">
             <template v-for="(link, index) in rightNavItems" :key="index">
                 <!-- Direct link -->
-                <NuxtLink v-if="link.to" :to="link.to" class="flex items-center py-1.5 px-2 rounded-md hover:bg-gray-100 dark:hover:bg-gray-800
-                    transition-colors cursor-pointer text-gray-700 dark:text-gray-200" :title="link.name">
+                <NuxtLink v-if="link.to" :to="link.to"
+                    class="flex items-center py-1.5 px-2 rounded-md transition-colors cursor-pointer nav-item"
+                    :title="link.name">
                     <span class="text-sm font-medium">{{ link.name }}</span>
                 </NuxtLink>
                 <!-- Dropdown menus -->
                 <Dropdown v-if="link.children" v-model="dropdownStates[link.name]" position="bottom" align="end"
                     :max-height="60" width="auto" close-on-inner-click smart-position open-on-hover :hover-delay="100">
                     <template #trigger>
-                        <div class="flex items-center py-1.5 px-2 rounded-md hover:bg-gray-100 dark:hover:bg-gray-800
-                    transition-colors cursor-pointer text-gray-700 dark:text-gray-200" :title="link.name">
+                        <div class="flex items-center py-1.5 px-2 rounded-md transition-colors cursor-pointer nav-item"
+                            :title="link.name">
                             <span class="text-sm font-medium">{{ link.name }}</span>
                         </div>
                     </template>
@@ -338,9 +339,9 @@ const rightNavItems = computed<NavLink[]>(() => {
                                 ]" :tabindex="item.disabled ? -1 : 0"
                                 @click="item.disabled ? $event.preventDefault() : null">
                                 <div class="flex flex-col">
-                                    <span class="font-medium text-gray-700 dark:text-gray-200">{{ item.name }}</span>
+                                    <span class="font-medium dropdown-item-title">{{ item.name }}</span>
                                     <span v-if="item.description"
-                                        class="text-xs text-gray-500 dark:text-gray-400 mt-0.5 truncate max-w-[200px]">
+                                        class="text-xs mt-0.5 truncate max-w-[200px] dropdown-item-description">
                                         {{ item.description }}
                                     </span>
                                 </div>
@@ -352,3 +353,33 @@ const rightNavItems = computed<NavLink[]>(() => {
         </div>
     </nav>
 </template>
+
+<style scoped>
+/* Navigation items - consistent with other Kill components */
+.nav-item {
+    color: light-dark(#111827, white);
+    background-color: transparent;
+}
+
+.nav-item:hover {
+    background-color: light-dark(rgba(245, 245, 245, 0.1), rgba(26, 26, 26, 0.4));
+    color: light-dark(#111827, white);
+}
+
+/* Dropdown items */
+.dropdown-item {
+    background-color: transparent;
+}
+
+.dropdown-item:hover {
+    background-color: light-dark(rgba(245, 245, 245, 0.15), rgba(26, 26, 26, 0.5));
+}
+
+.dropdown-item-title {
+    color: light-dark(#111827, white);
+}
+
+.dropdown-item-description {
+    color: light-dark(#6b7280, #9ca3af);
+}
+</style>

@@ -1,6 +1,11 @@
 @import "tailwindcss" theme(static);
 @import "@nuxt/ui";
 
+/* Import our organized CSS files - variables must come first */
+@import "./css/variables.css";
+@import "./css/globals.css";
+@import "./css/components.css";
+
 /* Font rendering consistency between SSR and client */
 * {
     font-display: swap; /* Use font-display swap for better loading performance */

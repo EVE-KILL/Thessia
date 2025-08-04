@@ -291,7 +291,7 @@ const getLocalizedString = (value: string | Record<string, string>, locale: stri
 .ship-stats-grid {
     display: grid;
     grid-template-columns: 1fr;
-    gap: 1rem;
+    gap: var(--space-4);
 }
 
 @media (min-width: 768px) {
@@ -308,26 +308,26 @@ const getLocalizedString = (value: string | Record<string, string>, locale: stri
 
 /* Common table styles */
 :deep(.topbox-header) {
-    background-color: light-dark(rgba(245, 245, 245, 0.05), rgba(26, 26, 26, 0.5));
-    padding: 0.5rem 1rem;
+    background-color: var(--color-surface-alpha);
+    padding: var(--space-2) var(--space-4);
     border-bottom: none;
 }
 
 /* Ship name styling */
 .ship-name-container {
-    padding: 0.25rem 0.5rem;
+    padding: var(--space-1) var(--space-2);
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
-    font-size: 0.9rem;
+    font-size: var(--text-sm);
 }
 
 /* Simplified stats layout - just kills */
 .ship-stats-simple {
     display: flex;
     justify-content: flex-end;
-    padding: 0.25rem 0.5rem;
-    font-size: 0.85rem;
+    padding: var(--space-1) var(--space-2);
+    font-size: var(--text-sm);
 }
 
 /* Right align all numeric values */
@@ -336,30 +336,29 @@ const getLocalizedString = (value: string | Record<string, string>, locale: stri
 }
 
 .killed {
-    color: #10b981;
-    /* green */
-    font-weight: 500;
+    color: var(--color-success);
+    font-weight: var(--font-medium);
 }
 
 /* Row hover effect */
 :deep(tbody tr:hover) {
-    background: light-dark(#e5e7eb, #1a1a1a);
+    background: var(--color-surface-alpha);
 }
 
 /* Border styles for table cells */
 :deep(tbody tr) {
-    border-color: rgb(40, 40, 40) !important;
+    border-color: var(--color-border-dark) !important;
 }
 
 :deep(tbody tr + tr) {
-    border-top: 1px solid rgb(40, 40, 40) !important;
+    border-top: 1px solid var(--color-border-dark) !important;
 }
 
 /* Empty state styling */
 .empty-state {
     text-align: center;
-    color: #9ca3af;
-    padding: 1rem 0;
+    color: var(--color-text-tertiary);
+    padding: var(--space-4) 0;
 }
 
 /* Mobile view styling */
@@ -370,12 +369,12 @@ const getLocalizedString = (value: string | Record<string, string>, locale: stri
 }
 
 .mobile-header {
-    margin-bottom: 0.5rem;
+    margin-bottom: var(--space-2);
 }
 
 .mobile-title {
-    font-weight: 600;
-    font-size: 0.95rem;
+    font-weight: var(--font-semibold);
+    font-size: var(--text-sm);
 }
 
 .mobile-stats {
@@ -386,12 +385,12 @@ const getLocalizedString = (value: string | Record<string, string>, locale: stri
 .mobile-stat {
     display: flex;
     align-items: center;
-    font-size: 0.85rem;
+    font-size: var(--text-sm);
 }
 
 .stat-label {
-    color: #9ca3af;
-    margin-right: 0.5rem;
+    color: var(--color-text-tertiary);
+    margin-right: var(--space-2);
 }
 
 /* Fix caption styling if needed */
@@ -407,34 +406,22 @@ const getLocalizedString = (value: string | Record<string, string>, locale: stri
 
 /* Skeleton styles */
 .skeleton-table {
-    border: 1px solid rgb(40, 40, 40);
-    border-radius: 0.5rem;
+    border: 1px solid var(--color-border-dark);
+    border-radius: var(--radius-lg);
     overflow: hidden;
     background: transparent;
 }
 
 .skeleton-header {
-    border-bottom: 1px solid rgb(40, 40, 40);
+    border-bottom: 1px solid var(--color-border-dark);
 }
 
 .skeleton-row:last-child {
     border-bottom: none;
 }
 
-/* Consistent animation timing for all skeleton elements */
-@keyframes pulse {
-
-    0%,
-    100% {
-        opacity: 1;
-    }
-
-    50% {
-        opacity: 0.5;
-    }
-}
-
+/* Use global pulse animation from globals.css */
 .animate-pulse {
-    animation: pulse 1.5s ease-in-out infinite;
+    animation: pulse var(--duration-1500) ease-in-out infinite;
 }
 </style>

@@ -421,11 +421,7 @@ const contentStyle = computed(() => {
 </script>
 
 <template>
-  <div
-    class="custom-dropdown-container"
-    @mouseenter="handleMouseEnter"
-    @mouseleave="handleMouseLeave"
-  >
+  <div class="custom-dropdown-container" @mouseenter="handleMouseEnter" @mouseleave="handleMouseLeave">
     <!-- Use stopPropagation to prevent click events from bubbling -->
     <div ref="triggerRef" @click.stop="toggleDropdown" class="cursor-pointer">
       <slot name="trigger"></slot>
@@ -435,28 +431,14 @@ const contentStyle = computed(() => {
     <Teleport to="body">
       <!-- Add a class that depends on positioning status -->
       <Transition name="dropdown">
-        <div
-          v-if="isOpen"
-          ref="dropdownRef"
-          class="custom-dropdown"
-          :class="{ 'is-positioned': isPositioned }"
-          :style="dropdownStyles"
-          @click="handleContentClick"
-          @mouseenter="handleMouseEnter"
-          @mouseleave="handleMouseLeave"
-        >
-          <div
-            class="dropdown-content"
-            :style="contentStyle"
-          >
+        <div v-if="isOpen" ref="dropdownRef" class="custom-dropdown" :class="{ 'is-positioned': isPositioned }"
+          :style="dropdownStyles" @click="handleContentClick" @mouseenter="handleMouseEnter"
+          @mouseleave="handleMouseLeave">
+          <div class="dropdown-content" :style="contentStyle">
             <!-- When using automatic column distribution -->
             <template v-if="useColumnDistribution && distributedColumns.length">
               <div class="flex space-x-4">
-                <div
-                  v-for="(column, colIndex) in distributedColumns"
-                  :key="`col-${colIndex}`"
-                  class="min-w-[200px]"
-                >
+                <div v-for="(column, colIndex) in distributedColumns" :key="`col-${colIndex}`" class="min-w-[200px]">
                   <slot name="column-item" v-for="(item, itemIndex) in column" :item="item" :index="itemIndex"></slot>
                 </div>
               </div>
@@ -473,21 +455,16 @@ const contentStyle = computed(() => {
 
 <style scoped>
 .custom-dropdown {
-  background-color: var(--ui-bg, #ffffff);
-  border-radius: var(--ui-radius, 0.5rem);
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
-  border: 1px solid var(--ui-border, rgba(229, 231, 235));
-  color: var(--ui-text, inherit);
+  background-color: var(--color-bg-primary);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-lg);
+  border: 1px solid var(--color-border-light);
+  color: var(--color-text-primary);
   overflow-y: auto;
 }
 
-:root.dark .custom-dropdown {
-  background-color: var(--ui-bg, rgb(31, 41, 55));
-  border-color: var(--ui-border, rgba(55, 65, 81));
-}
-
 .dropdown-content {
-  padding: 0.5rem;
+  padding: var(--space-2);
 }
 
 /* Animation for dropdown - updated with proper transitions */

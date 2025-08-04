@@ -2,7 +2,7 @@
     <div class="character-dashboard">
         <div class="grid-container">
             <!-- Character Bio Section -->
-            <UCard class="bg-black bg-opacity-30 dark:bg-gray-900 dark:bg-opacity-30">
+            <Card class="bio-card">
                 <template #header>
                     <div class="header-container">
                         <h3 class="header-title">{{ $t('bio') }}</h3>
@@ -13,10 +13,10 @@
                 <div v-else class="empty-bio">
                     {{ $t('noBio') }}
                 </div>
-            </UCard>
+            </Card>
 
             <!-- Character Stats Section -->
-            <UCard class="bg-black bg-opacity-30 dark:bg-gray-900 dark:bg-opacity-30">
+            <Card class="stats-card">
                 <template #header>
                     <div class="header-container">
                         <h3 class="header-title">
@@ -45,10 +45,10 @@
                             :show-header="false" density="compact" :bordered="false" :fit-content="false"
                             :special-header="true">
                             <template #cell-name="{ item }">
-                                <div class="stat-name">{{ item.name }}</div>
+                                <div class="stat-name">{{ (item as any).name }}</div>
                             </template>
                             <template #cell-value="{ item }">
-                                <div class="stat-value">{{ item.value }}</div>
+                                <div class="stat-value">{{ (item as any).value }}</div>
                             </template>
                         </Table>
                     </div>
@@ -74,10 +74,11 @@
                         <Table :columns="shipColumns" :items="sortByCountDesc(stats.full.mostUsedShips)"
                             background="transparent" density="compact" :bordered="false" :special-header="true">
                             <template #cell-name="{ item }">
-                                <div class="text-white">{{ getLocalizedString(item.name, currentLocale) }}</div>
+                                <div class="entity-name">{{ getLocalizedString((item as any).name, currentLocale) }}
+                                </div>
                             </template>
                             <template #cell-count="{ item }">
-                                <div class="count-value">{{ formatNumber(item.count) }}</div>
+                                <div class="count-value">{{ formatNumber((item as any).count) }}</div>
                             </template>
                         </Table>
                     </div>
@@ -89,10 +90,11 @@
                         <Table :columns="shipColumns" :items="sortByCountDesc(stats.full.mostLostShips)"
                             background="transparent" density="compact" :bordered="false" :special-header="true">
                             <template #cell-name="{ item }">
-                                <div class="text-white">{{ getLocalizedString(item.name, currentLocale) }}</div>
+                                <div class="entity-name">{{ getLocalizedString((item as any).name, currentLocale) }}
+                                </div>
                             </template>
                             <template #cell-count="{ item }">
-                                <div class="count-value">{{ formatNumber(item.count) }}</div>
+                                <div class="count-value">{{ formatNumber((item as any).count) }}</div>
                             </template>
                         </Table>
                     </div>
@@ -104,10 +106,10 @@
                         <Table :columns="corpColumns" :items="sortByCountDesc(stats.full.diesToCorporations)"
                             background="transparent" density="compact" :bordered="false" :special-header="true">
                             <template #cell-name="{ item }">
-                                <div class="text-white">{{ item.name }}</div>
+                                <div class="entity-name">{{ (item as any).name }}</div>
                             </template>
                             <template #cell-count="{ item }">
-                                <div class="count-value">{{ formatNumber(item.count) }}</div>
+                                <div class="count-value">{{ formatNumber((item as any).count) }}</div>
                             </template>
                         </Table>
                     </div>
@@ -119,10 +121,10 @@
                         <Table :columns="allianceColumns" :items="sortByCountDesc(stats.full.diesToAlliances)"
                             background="transparent" density="compact" :bordered="false" :special-header="true">
                             <template #cell-name="{ item }">
-                                <div class="text-white">{{ item.name }}</div>
+                                <div class="entity-name">{{ (item as any).name }}</div>
                             </template>
                             <template #cell-count="{ item }">
-                                <div class="count-value">{{ formatNumber(item.count) }}</div>
+                                <div class="count-value">{{ formatNumber((item as any).count) }}</div>
                             </template>
                         </Table>
                     </div>
@@ -134,10 +136,10 @@
                         <Table :columns="corpColumns" :items="sortByCountDesc(stats.full.fliesWithCorporations)"
                             background="transparent" density="compact" :bordered="false" :special-header="true">
                             <template #cell-name="{ item }">
-                                <div class="text-white">{{ item.name }}</div>
+                                <div class="entity-name">{{ (item as any).name }}</div>
                             </template>
                             <template #cell-count="{ item }">
-                                <div class="count-value">{{ formatNumber(item.count) }}</div>
+                                <div class="count-value">{{ formatNumber((item as any).count) }}</div>
                             </template>
                         </Table>
                     </div>
@@ -149,10 +151,10 @@
                         <Table :columns="allianceColumns" :items="sortByCountDesc(stats.full.fliesWithAlliances)"
                             background="transparent" density="compact" :bordered="false" :special-header="true">
                             <template #cell-name="{ item }">
-                                <div class="text-white">{{ item.name }}</div>
+                                <div class="entity-name">{{ (item as any).name }}</div>
                             </template>
                             <template #cell-count="{ item }">
-                                <div class="count-value">{{ formatNumber(item.count) }}</div>
+                                <div class="count-value">{{ formatNumber((item as any).count) }}</div>
                             </template>
                         </Table>
                     </div>
@@ -166,7 +168,7 @@
                         {{ $t('common.retry') }}
                     </UButton>
                 </div>
-            </UCard>
+            </Card>
         </div>
     </div>
 </template>
@@ -176,6 +178,17 @@ import { formatDistanceToNow } from "date-fns";
 import { de, enUS, es, fr, ja, ko, ru, zhCN } from "date-fns/locale";
 import { computed, onMounted, onUnmounted, ref } from "vue";
 import { useI18n } from "vue-i18n";
+
+// Types
+interface StatItem {
+    name: string;
+    value: string;
+}
+
+interface CountItem {
+    name: string | Record<string, string>;
+    count: number;
+}
 
 const props = defineProps({
     character: {
@@ -213,7 +226,7 @@ const stats = ref<any>(null);
 const statsLoading = ref(true);
 const statsError = ref(false);
 
-// Table columns - adjusted with proper width alignment
+// Table columns
 const statColumns = [
     { id: "name", header: t("name"), width: "50%" },
     { id: "value", header: t("value"), headerClass: "text-right", width: "50%" },
@@ -268,15 +281,12 @@ const dateLocales = {
     zh: zhCN,
 };
 
-/**
- * Gets localized string from an object containing translations
- */
+// Helper functions
 function getLocalizedString(obj: any, locale: string): string {
     if (!obj) return "";
     return obj[locale] || obj.en || "";
 }
 
-// Format date with date-fns using current locale
 const formatDate = (dateString: string) => {
     if (!dateString) return "";
     const date = new Date(dateString);
@@ -286,12 +296,10 @@ const formatDate = (dateString: string) => {
     });
 };
 
-// Format numbers with commas
 const formatNumber = (value: number): string => {
     return new Intl.NumberFormat().format(value || 0);
 };
 
-// Helper function to sort by count in descending order
 const sortByCountDesc = (items: Record<string, any>) => {
     if (!items) return [];
     return Object.values(items)
@@ -299,13 +307,11 @@ const sortByCountDesc = (items: Record<string, any>) => {
         .slice(0, 10); // Top 10 only
 };
 
-// Function to handle period change
 const changePeriod = (period: string) => {
     activePeriod.value = period;
     fetchStats(period);
 };
 
-// Function to determine the most active timezone based on the heatmap
 const determineActiveTimezone = (heatMap: Record<string, number> | undefined): string => {
     if (!heatMap) return "Unknown";
 
@@ -321,7 +327,6 @@ const determineActiveTimezone = (heatMap: Record<string, number> | undefined): s
     const activeHour = sortedHours[0].hour;
 
     for (const [timezone, [start, end]] of Object.entries(timezones)) {
-        // Handle the case where the timezone spans over midnight (e.g., USTZ)
         if (start > end) {
             if (activeHour >= start || activeHour <= end) {
                 return timezone;
@@ -336,47 +341,18 @@ const determineActiveTimezone = (heatMap: Record<string, number> | undefined): s
     return "Unknown";
 };
 
-// Get color for heatmap based on activity level
 const getHeatMapColor = (count: number, maxValue: number): string => {
-    if (!count || !maxValue) return "bg-gray-800";
+    if (!count || !maxValue) return "heat-0";
 
     const intensity = Math.min(Math.floor((count / maxValue) * 10), 10);
-
-    switch (intensity) {
-        case 0:
-            return "bg-gray-800";
-        case 1:
-            return "bg-blue-900 dark:bg-blue-950";
-        case 2:
-            return "bg-blue-800 dark:bg-blue-900";
-        case 3:
-            return "bg-blue-700 dark:bg-blue-800";
-        case 4:
-            return "bg-blue-600 dark:bg-blue-700";
-        case 5:
-            return "bg-blue-500 dark:bg-blue-600";
-        case 6:
-            return "bg-indigo-500 dark:bg-indigo-600";
-        case 7:
-            return "bg-indigo-400 dark:bg-indigo-500";
-        case 8:
-            return "bg-violet-400 dark:bg-violet-500";
-        case 9:
-            return "bg-violet-300 dark:bg-violet-400";
-        case 10:
-            return "bg-purple-300 dark:bg-purple-400";
-        default:
-            return "bg-gray-800";
-    }
+    return `heat-${intensity}`;
 };
 
-// Find the maximum value in the heatmap
 const getMaxHeatMapValue = (heatMap: Record<string, number>): number => {
     if (!heatMap) return 0;
     return Math.max(...Object.values(heatMap));
 };
 
-// Generate formatted stats for the basic stats table
 const formattedStats = computed(() => {
     if (!stats.value) return [];
 
@@ -398,7 +374,6 @@ const formattedStats = computed(() => {
     ];
 });
 
-// Fetch stats data
 const fetchStats = async (period = "90") => {
     if (!props.character?.character_id) {
         stats.value = null;
@@ -407,15 +382,12 @@ const fetchStats = async (period = "90") => {
         return;
     }
 
-    // Set loading state
     statsLoading.value = true;
     statsError.value = false;
 
     try {
         const url = `/api/stats/character_id/${props.character.character_id}${period === "all" ? "?days=0" : `?days=${period}`}`;
-
         const data = await $fetch(url);
-
         stats.value = data;
         statsError.value = false;
     } catch (error) {
@@ -425,7 +397,8 @@ const fetchStats = async (period = "90") => {
     } finally {
         statsLoading.value = false;
     }
-};// Fetch data on component mount
+};
+
 onMounted(() => {
     fetchStats(activePeriod.value);
 });
@@ -436,6 +409,7 @@ onUnmounted(() => {
 </script>
 
 <style scoped>
+/* Layout */
 .character-dashboard {
     width: 100%;
 }
@@ -443,7 +417,7 @@ onUnmounted(() => {
 .grid-container {
     display: grid;
     grid-template-columns: 1fr;
-    gap: 1rem;
+    gap: var(--space-4);
 }
 
 @media (min-width: 1024px) {
@@ -452,33 +426,47 @@ onUnmounted(() => {
     }
 }
 
+/* Card styling */
+.bio-card,
+.stats-card {
+    overflow: hidden;
+}
+
+/* Header */
 .header-container {
     display: flex;
     justify-content: space-between;
     align-items: center;
+    flex-wrap: wrap;
+    gap: var(--space-2);
 }
 
 .header-title {
-    font-size: 1.125rem;
-    font-weight: 500;
+    font-size: var(--text-lg);
+    font-weight: var(--font-weight-medium);
+    color: var(--color-text-primary);
+    margin: 0;
 }
 
 .period-selector {
     display: flex;
-    gap: 0.5rem;
+    gap: var(--space-2);
+    flex-wrap: wrap;
 }
 
+/* Bio styling */
 .character-bio {
-    line-height: 1;
-    font-family: monospace;
+    line-height: var(--line-height-tight);
+    font-family: var(--font-mono);
     word-break: break-word;
-    font-size: 1.4rem;
-    padding: 0.5rem;
+    font-size: var(--text-xl);
+    padding: var(--space-2);
     overflow-y: auto;
+    color: var(--color-text-primary);
 }
 
 .character-bio a {
-    color: rgb(99, 102, 241);
+    color: var(--color-brand-primary);
     text-decoration: none;
 }
 
@@ -488,70 +476,101 @@ onUnmounted(() => {
 
 .empty-bio {
     text-align: center;
-    padding: 1rem 0;
-    color: rgb(156, 163, 175);
-    font-size: 0.875rem;
+    padding: var(--space-4) 0;
+    color: var(--color-text-muted);
+    font-size: var(--text-sm);
 }
 
+/* Loading and error states */
 .loading-container {
     display: flex;
     justify-content: center;
     align-items: center;
-    padding: 2rem 0;
+    padding: var(--space-8) 0;
 }
 
 .loading-icon {
-    animation: spin 1s linear infinite;
-    color: rgb(156, 163, 175);
+    animation: spin var(--duration-slow) linear infinite;
+    color: var(--color-text-muted);
 }
 
+.error-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: var(--space-8) var(--space-4);
+    gap: var(--space-3);
+}
+
+.error-icon {
+    color: var(--color-warning-500);
+}
+
+.error-message {
+    font-size: var(--text-sm);
+    color: var(--color-text-secondary);
+    margin: 0;
+}
+
+.retry-button {
+    margin-top: var(--space-3);
+}
+
+/* Stats content */
 .stats-content {
     display: flex;
     flex-direction: column;
-    gap: 1.5rem;
+    gap: var(--space-6);
 }
 
 .stats-table-container {
-    margin-bottom: 0.5rem;
+    margin-bottom: var(--space-2);
 }
 
 .stat-name {
-    font-weight: 400;
-    color: rgb(209, 213, 219);
+    font-weight: var(--font-weight-normal);
+    color: var(--color-text-secondary);
 }
 
 .stat-value {
     text-align: right;
-    color: rgb(255, 255, 255);
-    font-weight: 500;
+    color: var(--color-text-primary);
+    font-weight: var(--font-weight-medium);
+}
+
+.entity-name {
+    color: var(--color-text-primary);
 }
 
 .count-value {
     text-align: right;
-    color: rgb(255, 255, 255);
+    color: var(--color-text-primary);
+    font-weight: var(--font-weight-medium);
 }
 
 .section-title {
-    font-size: 1rem;
-    font-weight: 500;
-    margin-bottom: 0.5rem;
-    color: rgb(229, 231, 235);
-    border-bottom: 1px solid rgba(75, 85, 99, 0.2);
-    padding-bottom: 0.25rem;
+    font-size: var(--text-base);
+    font-weight: var(--font-weight-medium);
+    margin-bottom: var(--space-2);
+    color: var(--color-text-primary);
+    border-bottom: 1px solid var(--color-border-secondary);
+    padding-bottom: var(--space-1);
 }
 
 .stats-section {
-    margin-bottom: 1.5rem;
+    margin-bottom: var(--space-6);
 }
 
+/* Heat map */
 .heat-map-container {
-    margin-bottom: 1.5rem;
+    margin-bottom: var(--space-6);
 }
 
 .heat-map-grid {
     display: grid;
     grid-template-columns: repeat(4, 1fr);
-    gap: 0.5rem;
+    gap: var(--space-2);
 }
 
 @media (min-width: 768px) {
@@ -568,63 +587,88 @@ onUnmounted(() => {
 
 .heat-map-hour {
     position: relative;
-    color: white;
+    color: var(--color-text-primary);
 }
 
 .heat-map-cell {
-    padding: 0.5rem;
+    padding: var(--space-2);
     text-align: center;
-    border-radius: 0.375rem;
+    border-radius: var(--radius-md);
+    transition: all var(--duration-normal) ease;
 }
 
 .hour-label {
-    font-size: 0.75rem;
-    font-weight: 500;
+    font-size: var(--text-xs);
+    font-weight: var(--font-weight-medium);
 }
 
 .hour-value {
-    font-size: 0.65rem;
-    line-height: 0.85rem;
+    font-size: var(--text-xs);
+    line-height: var(--line-height-tight);
 }
 
-.error-container {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    padding: 2rem 1rem;
+/* Heat map intensity colors */
+.heat-0 {
+    background-color: var(--color-surface-tertiary);
 }
 
-.error-icon {
-    color: rgb(245, 158, 11);
-    margin-bottom: 0.75rem;
+.heat-1 {
+    background-color: var(--color-brand-950);
 }
 
-.error-message {
-    font-size: 0.875rem;
-    margin-bottom: 0.75rem;
+.heat-2 {
+    background-color: var(--color-brand-900);
 }
 
-.retry-button {
-    margin-top: 0.75rem;
+.heat-3 {
+    background-color: var(--color-brand-800);
 }
 
+.heat-4 {
+    background-color: var(--color-brand-700);
+}
+
+.heat-5 {
+    background-color: var(--color-brand-600);
+}
+
+.heat-6 {
+    background-color: var(--color-brand-500);
+}
+
+.heat-7 {
+    background-color: var(--color-brand-400);
+}
+
+.heat-8 {
+    background-color: var(--color-brand-300);
+}
+
+.heat-9 {
+    background-color: var(--color-brand-200);
+}
+
+.heat-10 {
+    background-color: var(--color-brand-100);
+}
+
+/* Deep table styling */
+:deep(.body-cell) {
+    padding: var(--space-1) var(--space-2);
+}
+
+:deep(.table-header) {
+    padding: var(--space-2);
+}
+
+:deep(.table-row) {
+    padding: var(--space-1) 0;
+}
+
+/* Animations */
 @keyframes spin {
     to {
         transform: rotate(360deg);
     }
-}
-
-/* Ensure proper alignment in tables */
-:deep(.body-cell) {
-    padding: 0.25rem 0.5rem;
-}
-
-:deep(.table-header) {
-    padding: 0.5rem;
-}
-
-:deep(.table-row) {
-    padding: 0.25rem 0;
 }
 </style>

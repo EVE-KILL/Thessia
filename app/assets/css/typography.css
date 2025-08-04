@@ -1,0 +1,155 @@
+/* Typography Design System - Extracted font size patterns */
+
+:root {
+    /* Font Size Scale */
+    --text-2xs: 0.65rem; /* line-height: 0.85rem */
+    --text-xs: 0.75rem; /* line-height: 1rem */
+    --text-sm: 0.875rem; /* line-height: 1.25rem */
+    --text-base: 1rem; /* line-height: 1.5rem */
+    --text-lg: 1.125rem; /* line-height: 1.75rem */
+    --text-xl: 1.25rem; /* line-height: 1.75rem */
+    --text-2xl: 1.5rem; /* line-height: 2rem */
+
+    /* Custom sizes found in codebase */
+    --text-custom-85: 0.85rem;
+    --text-custom-9: 0.9rem;
+    --text-custom-95: 0.95rem;
+    --text-custom-7: 0.7rem;
+    --text-custom-14: 1.4rem;
+
+    /* Line heights */
+    --leading-tight: 1.25;
+    --leading-normal: 1.5;
+    --leading-relaxed: 1.75;
+
+    /* Font weights */
+    --font-normal: 400;
+    --font-medium: 500;
+    --font-semibold: 600;
+    --font-bold: 700;
+}
+
+/* Typography Utility Classes */
+.text-2xs {
+    font-size: var(--text-2xs);
+    line-height: 0.85rem;
+}
+
+.text-xs {
+    font-size: var(--text-xs);
+    line-height: 1rem;
+}
+
+.text-sm {
+    font-size: var(--text-sm);
+    line-height: 1.25rem;
+}
+
+.text-base {
+    font-size: var(--text-base);
+    line-height: 1.5rem;
+}
+
+.text-lg {
+    font-size: var(--text-lg);
+    line-height: 1.75rem;
+}
+
+.text-xl {
+    font-size: var(--text-xl);
+    line-height: 1.75rem;
+}
+
+.text-2xl {
+    font-size: var(--text-2xl);
+    line-height: 2rem;
+}
+
+/* Custom sizes frequently used in the app */
+.text-85 {
+    font-size: var(--text-custom-85);
+    line-height: 1.25rem;
+}
+
+.text-9 {
+    font-size: var(--text-custom-9);
+    line-height: 1.35rem;
+}
+
+.text-95 {
+    font-size: var(--text-custom-95);
+    line-height: 1.4rem;
+}
+
+.text-7 {
+    font-size: var(--text-custom-7);
+    line-height: 1rem;
+}
+
+.text-14 {
+    font-size: var(--text-custom-14);
+    line-height: 1.8rem;
+}
+
+/* Font weight utilities */
+.font-normal {
+    font-weight: var(--font-normal);
+}
+.font-medium {
+    font-weight: var(--font-medium);
+}
+.font-semibold {
+    font-weight: var(--font-semibold);
+}
+.font-bold {
+    font-weight: var(--font-bold);
+}
+
+/* Line height utilities */
+.leading-tight {
+    line-height: var(--leading-tight);
+}
+.leading-normal {
+    line-height: var(--leading-normal);
+}
+.leading-relaxed {
+    line-height: var(--leading-relaxed);
+}
+
+/* Common text styles */
+.text-title {
+    font-size: var(--text-lg);
+    font-weight: var(--font-semibold);
+    color: var(--color-text-primary);
+}
+
+.text-subtitle {
+    font-size: var(--text-sm);
+    font-weight: var(--font-medium);
+    color: var(--color-text-secondary);
+}
+
+.text-body {
+    font-size: var(--text-base);
+    font-weight: var(--font-normal);
+    color: var(--color-text-primary);
+    line-height: var(--leading-normal);
+}
+
+.text-caption {
+    font-size: var(--text-xs);
+    font-weight: var(--font-normal);
+    color: var(--color-text-muted);
+}
+
+/* Responsive typography */
+@media (max-width: 640px) {
+    .text-responsive-title {
+        font-size: var(--text-base);
+        font-weight: var(--font-semibold);
+    }
+
+    .text-responsive-body {
+        font-size: var(--text-sm);
+    }
+}

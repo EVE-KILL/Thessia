@@ -551,35 +551,35 @@ onBeforeUnmount(() => {
 
 <style scoped>
 .section {
-    padding: 0.85rem;
-    border-radius: 0.5rem;
-    background-color: light-dark(rgba(245, 245, 245, 0.05), rgba(26, 26, 26, 0.3));
-    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+    padding: var(--space-3-5);
+    border-radius: var(--radius-md);
+    background-color: var(--color-surface-alpha);
+    box-shadow: var(--shadow-sm);
 }
 
 .entity-name {
-    font-size: 0.95rem;
+    font-size: var(--text-base);
     width: 100%;
 }
 
 .entity-name.primary {
-    font-weight: 500;
+    font-weight: var(--font-weight-medium);
 }
 
 .entity-name.secondary {
-    font-size: 0.85rem;
-    color: light-dark(#6b7280, #9ca3af);
+    font-size: var(--text-sm);
+    color: var(--color-text-secondary);
 }
 
 .entity-link {
     color: inherit;
     text-decoration: none;
-    transition: color 0.2s ease;
+    transition: color var(--duration-200) ease;
     max-width: 100%;
 }
 
 .entity-link:hover {
-    color: #4fc3f7;
+    color: var(--color-accent);
     text-decoration: underline;
 }
 
@@ -590,19 +590,19 @@ onBeforeUnmount(() => {
 }
 
 .border-light-dark-border {
-    border-color: light-dark(rgba(229, 231, 235, 0.3), rgba(75, 85, 99, 0.2));
+    border-color: var(--color-border-alpha);
 }
 
 .text-light-dark-secondary {
-    color: light-dark(#6b7280, #9ca3af);
+    color: var(--color-text-secondary);
 }
 
 .bg-light-dark-tab {
-    background-color: light-dark(rgba(229, 231, 235, 0.1), rgba(55, 65, 81, 0.5));
+    background-color: var(--color-surface-alpha-light);
 }
 
 .bg-light-dark-input {
-    background-color: light-dark(rgba(245, 245, 245, 0.05), rgba(31, 41, 55, 0.5));
+    background-color: var(--color-input-background);
 }
 
 .truncate {
@@ -613,35 +613,30 @@ onBeforeUnmount(() => {
 }
 
 .editor-container {
-    border: 1px solid light-dark(rgba(229, 231, 235, 0.3), rgba(75, 85, 99, 0.2));
-    border-radius: 0.5rem;
-    padding: 0.5rem;
-    background-color: light-dark(rgba(245, 245, 245, 0.05), rgba(31, 41, 55, 0.3));
+    border: 1px solid var(--color-border-alpha);
+    border-radius: var(--radius-md);
+    padding: var(--space-2);
+    background-color: var(--color-surface-alpha-dark);
     min-height: 200px;
-    /* Base minimum height */
     transition: none;
-    /* Disable transitions to prevent animation during typing */
 }
 
 .editor-toolbar {
-    border-top: 1px solid light-dark(rgba(229, 231, 235, 0.3), rgba(75, 85, 99, 0.2));
-    padding-top: 0.5rem;
-    margin-top: 0.5rem;
+    border-top: 1px solid var(--color-border-alpha);
+    padding-top: var(--space-2);
+    margin-top: var(--space-2);
 }
 
 .preview-container {
-    border-color: light-dark(rgba(229, 231, 235, 0.3), rgba(75, 85, 99, 0.2));
+    border-color: var(--color-border-alpha);
     min-height: 200px;
-    /* Match editor height */
     overflow-y: auto;
-    /* Allow scrolling if content is taller */
     transition: none;
-    /* Disable transitions to prevent animation during tab switching */
 }
 
 .selected-comment {
     transform: scale(1.01);
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    box-shadow: var(--shadow-md);
 }
 
 /* Modal styles */
@@ -654,17 +649,17 @@ onBeforeUnmount(() => {
     display: flex;
     justify-content: center;
     align-items: center;
-    background-color: rgba(0, 0, 0, 0.5);
-    border-radius: 0.5rem;
-    z-index: 10;
+    background-color: var(--color-overlay);
+    border-radius: var(--radius-md);
+    z-index: var(--z-modal);
 }
 
 .custom-modal {
     width: 90%;
     max-width: 500px;
-    background: light-dark(white, #1e1e1e);
-    border-radius: 8px;
-    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    background: var(--color-surface);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-lg);
     overflow: hidden;
 }
 
@@ -672,38 +667,38 @@ onBeforeUnmount(() => {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 1rem;
-    border-bottom: 1px solid light-dark(#e5e7eb, #2d3748);
+    padding: var(--space-4);
+    border-bottom: 1px solid var(--color-border);
 }
 
 .modal-close-btn {
-    padding: 0.25rem;
-    border-radius: 0.375rem;
-    color: light-dark(#6b7280, #a0aec0);
-    transition: color 0.2s, background-color 0.2s;
+    padding: var(--space-1);
+    border-radius: var(--radius-sm);
+    color: var(--color-text-secondary);
+    transition: color var(--duration-200), background-color var(--duration-200);
 }
 
 .modal-close-btn:hover {
-    color: light-dark(#1f2937, #f7fafc);
-    background-color: light-dark(#f3f4f6, #374151);
+    color: var(--color-text-primary);
+    background-color: var(--color-surface-hover);
 }
 
 .custom-modal-body {
-    padding: 1rem;
+    padding: var(--space-4);
 }
 
 .custom-modal-footer {
     display: flex;
     justify-content: flex-end;
-    padding: 1rem;
-    gap: 0.75rem;
-    border-top: 1px solid light-dark(#e5e7eb, #2d3748);
+    padding: var(--space-4);
+    gap: var(--space-3);
+    border-top: 1px solid var(--color-border);
 }
 
 /* Animation */
 .modal-fade-enter-active,
 .modal-fade-leave-active {
-    transition: opacity 0.3s ease;
+    transition: opacity var(--duration-300) ease;
 }
 
 .modal-fade-enter-from,
@@ -714,12 +709,12 @@ onBeforeUnmount(() => {
 /* Blur effect for the comment when modal is active */
 .blur-sm {
     filter: blur(4px);
-    transition: filter 0.3s ease;
+    transition: filter var(--duration-300) ease;
 }
 
 /* Comment highlight effect for navigation */
 :deep(.highlighted-comment) {
-    animation: highlight-pulse 2s ease-in-out;
+    animation: highlight-pulse var(--duration-2s) ease-in-out;
 }
 
 @keyframes highlight-pulse {
@@ -728,7 +723,7 @@ onBeforeUnmount(() => {
     }
 
     30% {
-        background-color: rgba(79, 195, 247, 0.2);
+        background-color: var(--color-accent-alpha);
     }
 
     100% {

@@ -1,19 +1,19 @@
 <template>
-    <div class="mt-4 grid grid-cols-1 gap-4" :class="gridColumnsClass" ref="containerRef">
+    <div class="battle-overview-container" :class="gridColumnsClass" ref="containerRef">
         <!-- Dynamic Team Ships -->
         <div v-for="sideId in sideIds" :key="sideId" class="team-column">
-            <div class="mb-2 text-lg font-bold text-black dark:text-white">
+            <div class="team-header">
                 {{ getSideName(sideId) }} {{ t('ships') }}
             </div>
 
-            <div class="attacker-list bg-background-800 shadow-lg rounded-lg border border-gray-700/30 overflow-hidden">
+            <div class="attacker-list">
                 <div v-if="sortedTeamManifests[sideId] && sortedTeamManifests[sideId].length > 0">
                     <!-- Individual Ship Row -->
                     <component v-for="item in sortedTeamManifests[sideId]"
                         :key="`${sideId}-${item.character_id}-${item.ship_type_id}`"
                         :is="getItemUrl(item) ? 'a' : 'div'" :href="getItemUrl(item)"
                         :class="['attacker-row', { 'lost-ship-row': item.was_lost }]"
-                        @click="(e) => handleRowClick(item, e)">
+                        @click="(e: MouseEvent) => handleRowClick(item, e)">
                         <!-- Top section - images and names -->
                         <div class="attacker-top">
                             <!-- Character Portrait -->
@@ -43,8 +43,7 @@
                             <!-- Name Information -->
                             <div class="name-container">
                                 <!-- Character Name -->
-                                <div class="entity-name character-name"
-                                    :class="{ 'text-red-500 dark:text-red-400': item.was_lost }">
+                                <div class="entity-name character-name" :class="{ 'lost-character': item.was_lost }">
                                     {{ item.character_name || 'Unknown Pilot' }}
                                 </div>
 
@@ -62,8 +61,7 @@
 
                         <!-- Bottom section - ship name and damage -->
                         <div class="attacker-bottom">
-                            <div class="ship-name-container"
-                                :class="{ 'text-red-500 dark:text-red-400': item.was_lost }">
+                            <div class="ship-name-container" :class="{ 'lost-ship': item.was_lost }">
                                 {{ getLocalizedString(item.ship_name, locale) || 'Unknown Ship' }}
                                 <span class="ship-group">
                                     ({{ getLocalizedString(item.ship_group_name, locale) || 'Unknown Group' }})
@@ -73,11 +71,13 @@
                             <div class="damage-container">
                                 <div class="damage-item damage-taken">
                                     <span class="damage-label">{{ t('damageTaken') }}:</span>
-                                    {{ formatNumberWithLocale(item.damage_taken || 0) }}
+                                    <span class="damage-value">{{ formatNumberWithLocale(item.damage_taken || 0)
+                                    }}</span>
                                 </div>
                                 <div class="damage-item damage-dealt">
                                     <span class="damage-label">{{ t('damageDealt') }}:</span>
-                                    {{ formatNumberWithLocale(item.damage_dealt || 0) }}
+                                    <span class="damage-value">{{ formatNumberWithLocale(item.damage_dealt || 0)
+                                    }}</span>
                                 </div>
                             </div>
                         </div>
@@ -90,7 +90,7 @@
         </div>
 
         <!-- No ships message if no manifests -->
-        <div v-if="!hasAnyManifests" class="col-span-full text-center py-8 text-gray-500">
+        <div v-if="!hasAnyManifests" class="no-ships-message">
             No ship data available for this battle.
         </div>
     </div>
@@ -146,10 +146,10 @@ const sideIds = computed(() => props.battle?.side_ids || []);
 const gridColumnsClass = computed(() => {
     const count = sideIds.value.length;
     if (count === 0) return '';
-    if (count === 1) return 'md:grid-cols-1';
-    if (count === 2) return 'xl:grid-cols-2';
-    if (count === 3) return 'xl:grid-cols-3';
-    return 'xl:grid-cols-4'; // For 4 teams
+    if (count === 1) return 'single-column';
+    if (count === 2) return 'two-columns';
+    if (count === 3) return 'three-columns';
+    return 'four-columns'; // For 4 teams
 });
 
 // Function to observe size changes directly on the component's container
@@ -217,9 +217,17 @@ const hasAnyManifests = computed(() => {
 
 const getLocalizedString = (obj: any, localeKey: string): string => {
     if (!obj) return "";
+    if (typeof obj === 'string') return obj;
+
     // Convert localeKey from 'en-US' to 'en' if necessary
     const lang = localeKey.split('-')[0];
-    return obj[lang] || obj.en || (typeof obj === 'string' ? obj : "");
+
+    // Type-safe property access
+    if (typeof obj === 'object' && obj !== null && lang) {
+        return obj[lang] || obj['en'] || "";
+    }
+
+    return "";
 };
 
 // Format numbers with locale
@@ -270,23 +278,74 @@ function handleRowClick(item: ICharacterShipManifestEntry, event: MouseEvent) {
 </script>
 
 <style scoped>
+.battle-overview-container {
+    margin-top: var(--space-4);
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: var(--space-4);
+}
+
+/* Grid Layout Classes */
+.single-column {
+    grid-template-columns: 1fr;
+}
+
+.two-columns {
+    grid-template-columns: 1fr;
+}
+
+@media (min-width: 1280px) {
+    .two-columns {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+.three-columns {
+    grid-template-columns: 1fr;
+}
+
+@media (min-width: 1280px) {
+    .three-columns {
+        grid-template-columns: repeat(3, 1fr);
+    }
+}
+
+.four-columns {
+    grid-template-columns: 1fr;
+}
+
+@media (min-width: 1280px) {
+    .four-columns {
+        grid-template-columns: repeat(4, 1fr);
+    }
+}
+
 /* Team column sizing */
 .team-column {
     min-width: 0;
-    /* Allow columns to shrink */
+}
+
+.team-header {
+    margin-bottom: var(--space-2);
+    font-size: var(--text-lg);
+    font-weight: var(--font-bold);
+    color: var(--color-text-primary);
 }
 
 /* Attacker List Styling */
 .attacker-list {
-    border: 1px solid rgba(75, 85, 99, 0.2);
-    background-color: light-dark(rgba(245, 245, 245, 0.1), rgba(26, 26, 26, 0.4));
+    border: 1px solid var(--color-border);
+    background: var(--color-surface);
+    box-shadow: var(--shadow-lg);
+    border-radius: var(--radius-lg);
+    overflow: hidden;
 }
 
-/* Make attacker-row act like a link when it actually is a link */
+/* Attacker row styling */
 .attacker-row {
-    padding: 0.75rem;
-    border-bottom: 1px solid rgba(75, 85, 99, 0.2);
-    transition: background-color 0.15s ease;
+    padding: var(--space-3);
+    border-bottom: 1px solid var(--color-border);
+    transition: background-color var(--duration-fast);
     color: inherit;
     text-decoration: none;
     display: block;
@@ -298,42 +357,38 @@ a.attacker-row {
 }
 
 a.attacker-row:hover {
-    background-color: light-dark(rgba(243, 244, 246, 0.7), rgba(31, 41, 55, 0.7));
+    background: var(--color-surface-hover);
 }
 
 .lost-ship-row {
-    background-color: light-dark(rgba(254, 226, 226, 0.4), rgba(127, 29, 29, 0.1));
+    background: var(--color-danger-surface);
 }
 
 a.lost-ship-row:hover {
-    background-color: light-dark(rgba(254, 226, 226, 0.6), rgba(127, 29, 29, 0.2));
+    background: var(--color-danger-surface-hover);
 }
 
 /* Top section - images and names */
 .attacker-top {
     display: flex;
-    gap: 0.5rem;
+    gap: var(--space-2);
     align-items: flex-start;
 }
 
 .portrait-container {
     flex-shrink: 0;
     width: 64px;
-    /* Fixed width */
     height: 64px;
-    /* Fixed height */
     display: flex;
     align-items: center;
     justify-content: center;
     overflow: hidden;
-    /* Prevent any overflow */
 }
 
 .portrait {
     border-radius: 50%;
-    background-color: rgba(0, 0, 0, 0.1);
+    background: var(--color-surface-secondary);
     object-fit: contain;
-    /* Ensure the image fits without stretching */
     max-width: 100%;
     max-height: 100%;
 }
@@ -342,17 +397,15 @@ a.lost-ship-row:hover {
     width: 64px;
     height: 64px;
     flex-shrink: 0;
-    /* Prevent flexbox from shrinking the image */
     flex-grow: 0;
-    /* Prevent flexbox from growing the image */
 }
 
 .character-portrait-placeholder {
     width: 64px;
     height: 64px;
     border-radius: 50%;
-    background-color: rgba(100, 100, 100, 0.1);
-    border: 1px dashed rgba(128, 128, 128, 0.3);
+    background: var(--color-surface-secondary);
+    border: 1px dashed var(--color-border);
 }
 
 .corp-alliance-container {
@@ -362,7 +415,6 @@ a.lost-ship-row:hover {
     height: 64px;
     flex-shrink: 0;
     width: 32px;
-    /* Fixed width container */
 }
 
 .corporation-portrait,
@@ -375,12 +427,10 @@ a.lost-ship-row:hover {
 
 .ship-container {
     flex-shrink: 0;
-    margin-left: 0.25rem;
-    margin-right: 0.75rem;
+    margin-left: var(--space-1);
+    margin-right: var(--space-3);
     width: 64px;
-    /* Fixed width */
     height: 64px;
-    /* Fixed height */
     display: flex;
     align-items: center;
     justify-content: center;
@@ -389,9 +439,9 @@ a.lost-ship-row:hover {
 .ship-image {
     width: 64px;
     height: 64px;
-    border-radius: 4px;
-    background-color: rgba(0, 0, 0, 0.2);
-    border: 1px solid rgba(75, 85, 99, 0.2);
+    border-radius: var(--radius-sm);
+    background: var(--color-surface-secondary);
+    border: 1px solid var(--color-border);
     object-fit: contain;
     max-width: 100%;
     max-height: 100%;
@@ -399,7 +449,6 @@ a.lost-ship-row:hover {
 
 .name-container {
     min-width: 0;
-    /* Allow text to shrink */
     flex-grow: 1;
     display: flex;
     flex-direction: column;
@@ -414,19 +463,23 @@ a.lost-ship-row:hover {
 }
 
 .character-name {
-    font-weight: 600;
-    font-size: 1rem;
-    color: light-dark(#111827, #f3f4f6);
+    font-weight: var(--font-semibold);
+    font-size: var(--text-base);
+    color: var(--color-text-primary);
+}
+
+.lost-character {
+    color: var(--color-danger) !important;
 }
 
 .corporation-name {
-    font-size: 0.875rem;
-    color: light-dark(#4b5563, #d1d5db);
+    font-size: var(--text-sm);
+    color: var(--color-text-secondary);
 }
 
 .alliance-name {
-    font-size: 0.75rem;
-    color: light-dark(#6b7280, #9ca3af);
+    font-size: var(--text-xs);
+    color: var(--color-text-tertiary);
 }
 
 /* Bottom section - ship name and damage */
@@ -434,80 +487,85 @@ a.lost-ship-row:hover {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-top: 0.5rem;
-    padding-top: 0.5rem;
-    border-top: 1px solid rgba(75, 85, 99, 0.1);
+    margin-top: var(--space-2);
+    padding-top: var(--space-2);
+    border-top: 1px solid var(--color-border-light);
 }
 
 .ship-name-container {
-    font-size: 0.875rem;
-    font-weight: 500;
+    font-size: var(--text-sm);
+    font-weight: var(--font-medium);
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
-    color: light-dark(#374151, #e5e7eb);
+    color: var(--color-text-secondary);
     flex-grow: 1;
     min-width: 0;
-    /* Allow text to shrink */
+}
+
+.lost-ship {
+    color: var(--color-danger) !important;
 }
 
 .ship-group {
-    color: light-dark(#6b7280, #9ca3af);
-    font-weight: normal;
-    margin-left: 0.25rem;
+    color: var(--color-text-tertiary);
+    font-weight: var(--font-normal);
+    margin-left: var(--space-1);
 }
 
 .damage-container {
     display: flex;
-    gap: 1rem;
-    font-size: 0.875rem;
+    gap: var(--space-4);
+    font-size: var(--text-sm);
     white-space: nowrap;
     flex-shrink: 0;
 }
 
 .damage-item {
     display: flex;
-    gap: 0.25rem;
+    gap: var(--space-1);
+    align-items: center;
 }
 
-.damage-taken {
-    color: #f97316;
-    /* orange */
+.damage-taken .damage-value {
+    color: var(--color-warning);
 }
 
-.damage-dealt {
-    color: #22c55e;
-    /* green */
+.damage-dealt .damage-value {
+    color: var(--color-success);
 }
 
 .damage-label {
-    font-weight: 500;
-    color: light-dark(#6b7280, #9ca3af);
+    font-weight: var(--font-medium);
+    color: var(--color-text-tertiary);
+}
+
+.damage-value {
+    font-weight: var(--font-medium);
 }
 
 /* Empty state styling */
 .empty-state {
-    padding: 1.5rem;
+    padding: var(--space-6);
     text-align: center;
-    color: light-dark(#6b7280, #9ca3af);
+    color: var(--color-text-tertiary);
     font-style: italic;
 }
 
-/* Text color for lost ships */
-.text-red-500 {
-    color: #ef4444 !important;
-}
-
-.dark .text-red-400 {
-    color: #f87171 !important;
+.no-ships-message {
+    grid-column: 1 / -1;
+    text-align: center;
+    padding: var(--space-8) 0;
+    color: var(--color-text-tertiary);
 }
 
 /* Responsive adjustments for team columns */
 @media (max-width: 1200px) {
 
-    .xl\:grid-cols-4,
-    .xl\:grid-cols-3 {
-        grid-template-columns: repeat(2, minmax(0, 1fr));
+    .two-columns,
+    .three-columns,
+    .four-columns {
+        grid-template-columns: repeat(2, 1fr);
     }
 
     .attacker-top {
@@ -516,22 +574,22 @@ a.lost-ship-row:hover {
 
     .name-container {
         flex-basis: 100%;
-        margin-top: 0.5rem;
+        margin-top: var(--space-2);
     }
 }
 
 @media (max-width: 768px) {
 
-    .xl\:grid-cols-2,
-    .xl\:grid-cols-3,
-    .xl\:grid-cols-4 {
-        grid-template-columns: minmax(0, 1fr);
+    .two-columns,
+    .three-columns,
+    .four-columns {
+        grid-template-columns: 1fr;
     }
 
     .attacker-bottom {
         flex-direction: column;
         align-items: flex-start;
-        gap: 0.5rem;
+        gap: var(--space-2);
     }
 
     .damage-container {

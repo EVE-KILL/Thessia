@@ -1,5 +1,12 @@
 <template>
-    <div class="ship-stats-container">
+    <Card class="ship-stats-card">
+        <template #header>
+            <div class="ship-stats-header">
+                <h3 class="stats-title">{{ t('character.shipStats') }}</h3>
+                <p class="stats-description">{{ t('character.shipStatsDescription') }}</p>
+            </div>
+        </template>
+
         <div v-if="loading" class="loading-state">
             <Table :columns="tableColumns" :items="[]" :loading="true" :skeleton-count="10" />
         </div>
@@ -11,17 +18,18 @@
                     :bordered="true" :special-header="true" background="transparent" header-class="topbox-header">
                     <template #cell-entity="{ item }">
                         <div class="ship-name-container">
-                            {{ getLocalizedString(item.groupName, locale) }}
+                            {{ getLocalizedString((item as ShipGroupStatItem).groupName, locale) }}
                         </div>
                     </template>
                     <template #cell-stats="{ item }">
                         <div class="ship-stats-detailed">
                             <div class="stat-row">
-                                <span class="killed">{{ item.kills }}</span>
+                                <span class="killed">{{ (item as ShipGroupStatItem).kills }}</span>
                                 <span class="separator">/</span>
-                                <span class="lost">{{ item.losses }}</span>
-                                <span class="efficiency" :class="getEfficiencyClass(item.efficiency)">
-                                    ({{ item.efficiency }}%)
+                                <span class="lost">{{ (item as ShipGroupStatItem).losses }}</span>
+                                <span class="efficiency"
+                                    :class="getEfficiencyClass((item as ShipGroupStatItem).efficiency)">
+                                    ({{ (item as ShipGroupStatItem).efficiency }}%)
                                 </span>
                             </div>
                         </div>
@@ -30,19 +38,21 @@
                     <template #mobile-content="{ item }">
                         <div class="mobile-content">
                             <div class="mobile-header">
-                                <span class="mobile-title">{{ getLocalizedString(item.groupName, locale) }}</span>
+                                <span class="mobile-title">{{ getLocalizedString((item as ShipGroupStatItem).groupName,
+                                    locale) }}</span>
                             </div>
                             <div class="mobile-stats">
                                 <div class="mobile-stat-line">
                                     <span class="stat-label">{{ t('killed') }}:</span>
-                                    <span class="killed">{{ item.kills }}</span>
+                                    <span class="killed">{{ (item as ShipGroupStatItem).kills }}</span>
                                     <span class="stat-label ml-4">{{ t('lost') }}:</span>
-                                    <span class="lost">{{ item.losses }}</span>
+                                    <span class="lost">{{ (item as ShipGroupStatItem).losses }}</span>
                                 </div>
                                 <div class="mobile-stat-line">
                                     <span class="stat-label">{{ t('efficiency') }}:</span>
-                                    <span class="efficiency" :class="getEfficiencyClass(item.efficiency)">
-                                        {{ item.efficiency }}%
+                                    <span class="efficiency"
+                                        :class="getEfficiencyClass((item as ShipGroupStatItem).efficiency)">
+                                        {{ (item as ShipGroupStatItem).efficiency }}%
                                     </span>
                                 </div>
                             </div>
@@ -57,17 +67,18 @@
                     :bordered="true" :special-header="true" background="transparent" header-class="topbox-header">
                     <template #cell-entity="{ item }">
                         <div class="ship-name-container">
-                            {{ getLocalizedString(item.groupName, locale) }}
+                            {{ getLocalizedString((item as ShipGroupStatItem).groupName, locale) }}
                         </div>
                     </template>
                     <template #cell-stats="{ item }">
                         <div class="ship-stats-detailed">
                             <div class="stat-row">
-                                <span class="killed">{{ item.kills }}</span>
+                                <span class="killed">{{ (item as ShipGroupStatItem).kills }}</span>
                                 <span class="separator">/</span>
-                                <span class="lost">{{ item.losses }}</span>
-                                <span class="efficiency" :class="getEfficiencyClass(item.efficiency)">
-                                    ({{ item.efficiency }}%)
+                                <span class="lost">{{ (item as ShipGroupStatItem).losses }}</span>
+                                <span class="efficiency"
+                                    :class="getEfficiencyClass((item as ShipGroupStatItem).efficiency)">
+                                    ({{ (item as ShipGroupStatItem).efficiency }}%)
                                 </span>
                             </div>
                         </div>
@@ -76,19 +87,21 @@
                     <template #mobile-content="{ item }">
                         <div class="mobile-content">
                             <div class="mobile-header">
-                                <span class="mobile-title">{{ getLocalizedString(item.groupName, locale) }}</span>
+                                <span class="mobile-title">{{ getLocalizedString((item as ShipGroupStatItem).groupName,
+                                    locale) }}</span>
                             </div>
                             <div class="mobile-stats">
                                 <div class="mobile-stat-line">
                                     <span class="stat-label">{{ t('killed') }}:</span>
-                                    <span class="killed">{{ item.kills }}</span>
+                                    <span class="killed">{{ (item as ShipGroupStatItem).kills }}</span>
                                     <span class="stat-label ml-4">{{ t('lost') }}:</span>
-                                    <span class="lost">{{ item.losses }}</span>
+                                    <span class="lost">{{ (item as ShipGroupStatItem).losses }}</span>
                                 </div>
                                 <div class="mobile-stat-line">
                                     <span class="stat-label">{{ t('efficiency') }}:</span>
-                                    <span class="efficiency" :class="getEfficiencyClass(item.efficiency)">
-                                        {{ item.efficiency }}%
+                                    <span class="efficiency"
+                                        :class="getEfficiencyClass((item as ShipGroupStatItem).efficiency)">
+                                        {{ (item as ShipGroupStatItem).efficiency }}%
                                     </span>
                                 </div>
                             </div>
@@ -103,17 +116,18 @@
                     :bordered="true" :special-header="true" background="transparent" header-class="topbox-header">
                     <template #cell-entity="{ item }">
                         <div class="ship-name-container">
-                            {{ getLocalizedString(item.groupName, locale) }}
+                            {{ getLocalizedString((item as ShipGroupStatItem).groupName, locale) }}
                         </div>
                     </template>
                     <template #cell-stats="{ item }">
                         <div class="ship-stats-detailed">
                             <div class="stat-row">
-                                <span class="killed">{{ item.kills }}</span>
+                                <span class="killed">{{ (item as ShipGroupStatItem).kills }}</span>
                                 <span class="separator">/</span>
-                                <span class="lost">{{ item.losses }}</span>
-                                <span class="efficiency" :class="getEfficiencyClass(item.efficiency)">
-                                    ({{ item.efficiency }}%)
+                                <span class="lost">{{ (item as ShipGroupStatItem).losses }}</span>
+                                <span class="efficiency"
+                                    :class="getEfficiencyClass((item as ShipGroupStatItem).efficiency)">
+                                    ({{ (item as ShipGroupStatItem).efficiency }}%)
                                 </span>
                             </div>
                         </div>
@@ -122,19 +136,21 @@
                     <template #mobile-content="{ item }">
                         <div class="mobile-content">
                             <div class="mobile-header">
-                                <span class="mobile-title">{{ getLocalizedString(item.groupName, locale) }}</span>
+                                <span class="mobile-title">{{ getLocalizedString((item as ShipGroupStatItem).groupName,
+                                    locale) }}</span>
                             </div>
                             <div class="mobile-stats">
                                 <div class="mobile-stat-line">
                                     <span class="stat-label">{{ t('killed') }}:</span>
-                                    <span class="killed">{{ item.kills }}</span>
+                                    <span class="killed">{{ (item as ShipGroupStatItem).kills }}</span>
                                     <span class="stat-label ml-4">{{ t('lost') }}:</span>
-                                    <span class="lost">{{ item.losses }}</span>
+                                    <span class="lost">{{ (item as ShipGroupStatItem).losses }}</span>
                                 </div>
                                 <div class="mobile-stat-line">
                                     <span class="stat-label">{{ t('efficiency') }}:</span>
-                                    <span class="efficiency" :class="getEfficiencyClass(item.efficiency)">
-                                        {{ item.efficiency }}%
+                                    <span class="efficiency"
+                                        :class="getEfficiencyClass((item as ShipGroupStatItem).efficiency)">
+                                        {{ (item as ShipGroupStatItem).efficiency }}%
                                     </span>
                                 </div>
                             </div>
@@ -145,28 +161,34 @@
         </div>
 
         <div v-else class="empty-state">
-            <div class="text-center py-8">
-                <UIcon name="i-lucide-rocket" class="h-12 w-12 mx-auto mb-4 text-gray-400" />
-                <p class="text-gray-500">{{ t('character.noShipStats') }}</p>
+            <div class="empty-content">
+                <UIcon name="i-lucide-rocket" class="empty-icon" />
+                <p class="empty-text">{{ t('character.noShipStats') }}</p>
             </div>
         </div>
-    </div>
+    </Card>
 </template>
 
 <script setup lang="ts">
 import { computed } from 'vue';
 
-// Props
-interface ShipGroupStats {
-    shipGroupStats: Array<{
-        ship_group_id: number;
-        ship_group_name: string | Record<string, string>;
-        killed: number;
-        lost: number;
-        efficiency: number;
-    }>;
+// Types
+interface ShipGroupStatItem {
+    ship_group_id: number;
+    ship_group_name: string | Record<string, string>;
+    killed: number;
+    lost: number;
+    efficiency: number;
+    kills: number;
+    losses: number;
+    groupName: string | Record<string, string>;
 }
 
+interface ShipGroupStats {
+    shipGroupStats: ShipGroupStatItem[];
+}
+
+// Props
 const props = defineProps<{
     stats: ShipGroupStats;
     loading?: boolean;
@@ -180,10 +202,15 @@ const { locale } = useI18n();
 const sortedShipGroups = computed(() => {
     if (!props.stats.shipGroupStats) return [];
 
-    return [...props.stats.shipGroupStats].sort((a, b) => {
+    return [...props.stats.shipGroupStats].map(item => ({
+        ...item,
+        kills: item.killed || item.kills || 0,
+        losses: item.lost || item.losses || 0,
+        groupName: item.ship_group_name || item.groupName
+    })).sort((a, b) => {
         // Sort by total activity (kills + losses) descending
-        const totalA = a.killed + a.lost;
-        const totalB = b.killed + b.lost;
+        const totalA = a.kills + a.losses;
+        const totalB = b.kills + b.losses;
         return totalB - totalA;
     });
 });
@@ -218,8 +245,8 @@ const tableColumns = [
     }
 ];
 
-// Helpers
-const getLocalizedString = (value: string | ITranslation, locale: string): string => {
+// Helper functions
+const getLocalizedString = (value: string | Record<string, string>, locale: string): string => {
     if (!value) return 'Unknown';
     if (typeof value === 'string') return value;
 
@@ -234,14 +261,36 @@ const getEfficiencyClass = (efficiency: number): string => {
 </script>
 
 <style scoped>
-.ship-stats-container {
-    /* Clean container styling */
+/* Card styling */
+.ship-stats-card {
+    overflow: hidden;
 }
 
+/* Header */
+.ship-stats-header {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-1);
+}
+
+.stats-title {
+    font-size: var(--text-lg);
+    font-weight: var(--font-weight-semibold);
+    color: var(--color-text-primary);
+    margin: 0;
+}
+
+.stats-description {
+    font-size: var(--text-sm);
+    color: var(--color-text-tertiary);
+    margin: 0;
+}
+
+/* Grid layout */
 .ship-stats-grid {
     display: grid;
     grid-template-columns: 1fr;
-    gap: 1rem;
+    gap: var(--space-4);
 }
 
 @media (min-width: 768px) {
@@ -258,91 +307,104 @@ const getEfficiencyClass = (efficiency: number): string => {
 
 /* Table header styling */
 :deep(.topbox-header) {
-    background-color: light-dark(rgba(245, 245, 245, 0.05), rgba(26, 26, 26, 0.5));
-    padding: 0.5rem 1rem;
+    background-color: var(--color-surface-alpha);
+    padding: var(--space-2) var(--space-4);
     border-bottom: none;
-    font-weight: 600;
+    font-weight: var(--font-weight-semibold);
+    color: var(--color-text-secondary);
 }
 
 /* Ship name styling */
 .ship-name-container {
-    padding: 0.25rem 0.5rem;
+    padding: var(--space-1) var(--space-2);
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
-    font-size: 0.9rem;
+    font-size: var(--text-sm);
+    color: var(--color-text-primary);
 }
 
 /* Detailed stats layout - kills/losses/efficiency */
 .ship-stats-detailed {
     display: flex;
     justify-content: flex-end;
-    padding: 0.25rem 0.5rem;
-    font-size: 0.85rem;
+    padding: var(--space-1) var(--space-2);
+    font-size: var(--text-sm);
 }
 
 .stat-row {
     display: flex;
     align-items: center;
-    gap: 0.25rem;
+    gap: var(--space-1);
 }
 
 .killed {
-    color: #10b981;
-    /* green */
-    font-weight: 500;
+    color: var(--color-success-500);
+    font-weight: var(--font-weight-medium);
 }
 
 .lost {
-    color: #ef4444;
-    /* red */
-    font-weight: 500;
+    color: var(--color-error-500);
+    font-weight: var(--font-weight-medium);
 }
 
 .separator {
-    color: #6b7280;
-    /* gray */
+    color: var(--color-text-muted);
 }
 
 .efficiency {
-    font-size: 0.75rem;
-    font-weight: 600;
+    font-size: var(--text-xs);
+    font-weight: var(--font-weight-semibold);
 }
 
 .high-efficiency {
-    color: #10b981;
-    /* green - 75%+ */
+    color: var(--color-success-500);
 }
 
 .medium-efficiency {
-    color: #f59e0b;
-    /* yellow - 50-74% */
+    color: var(--color-warning-500);
 }
 
 .low-efficiency {
-    color: #ef4444;
-    /* red - <50% */
+    color: var(--color-error-500);
 }
 
 /* Row hover effect */
 :deep(tbody tr:hover) {
-    background: light-dark(#e5e7eb, #1a1a1a);
+    background: var(--color-surface-hover);
 }
 
 /* Border styles for table cells */
 :deep(tbody tr) {
-    border-color: rgb(40, 40, 40) !important;
+    border-color: var(--color-border-default) !important;
 }
 
 :deep(tbody tr + tr) {
-    border-top: 1px solid rgb(40, 40, 40) !important;
+    border-top: 1px solid var(--color-border-default) !important;
 }
 
 /* Empty state styling */
 .empty-state {
     text-align: center;
-    color: #9ca3af;
-    padding: 2rem 0;
+    padding: var(--space-8) 0;
+}
+
+.empty-content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--space-4);
+}
+
+.empty-icon {
+    width: var(--space-12);
+    height: var(--space-12);
+    color: var(--color-text-muted);
+}
+
+.empty-text {
+    color: var(--color-text-muted);
+    margin: 0;
 }
 
 /* Mobile view styling */
@@ -350,46 +412,48 @@ const getEfficiencyClass = (efficiency: number): string => {
     display: flex;
     flex-direction: column;
     width: 100%;
+    padding: var(--space-2);
 }
 
 .mobile-header {
-    margin-bottom: 0.5rem;
+    margin-bottom: var(--space-2);
+    padding-bottom: var(--space-2);
+    border-bottom: 1px solid var(--color-border-default);
 }
 
 .mobile-title {
-    font-weight: 600;
-    font-size: 0.95rem;
+    font-weight: var(--font-weight-semibold);
+    font-size: var(--text-base);
+    color: var(--color-text-primary);
 }
 
 .mobile-stats {
     display: flex;
     flex-direction: column;
-    gap: 0.25rem;
+    gap: var(--space-1);
 }
 
 .mobile-stat-line {
     display: flex;
     align-items: center;
-    font-size: 0.85rem;
+    font-size: var(--text-sm);
+    gap: var(--space-2);
 }
 
 .stat-label {
-    color: #9ca3af;
-    margin-right: 0.5rem;
+    color: var(--color-text-tertiary);
+    font-size: var(--text-xs);
+    text-transform: uppercase;
+    letter-spacing: var(--letter-spacing-wide);
 }
 
 .ml-4 {
-    margin-left: 1rem;
+    margin-left: var(--space-4);
 }
 
 /* Loading state */
 .loading-state {
-    opacity: 0.7;
-}
-
-/* Fix caption styling if needed */
-:deep(caption) {
-    display: none;
+    opacity: var(--opacity-disabled);
 }
 
 /* Make sure table column widths are maintained on mobile */

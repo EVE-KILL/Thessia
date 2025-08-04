@@ -274,27 +274,27 @@ const tableColumns = [
 
 <style scoped>
 .topbox-header {
-    background-color: light-dark(rgba(245, 245, 245, 0.05), rgba(26, 26, 26, 0.5));
-    padding: 0.5rem 1rem;
+    background-color: var(--color-surface-alpha);
+    padding: var(--space-2) var(--space-4);
     border-bottom: none;
 }
 
 .title-text {
     width: 100%;
     text-align: center;
-    font-size: 0.75rem;
-    font-weight: 600;
-    color: light-dark(#111827, white);
+    font-size: var(--text-xs);
+    font-weight: var(--font-semibold);
+    color: var(--color-text-primary);
 }
 
 /* Style for count column title */
 .count-title-text {
     width: 100%;
     text-align: right;
-    font-size: 0.75rem;
-    font-weight: 600;
-    color: light-dark(#111827, white);
-    padding-right: 0.5rem;
+    font-size: var(--text-xs);
+    font-weight: var(--font-semibold);
+    color: var(--color-text-primary);
+    padding-right: var(--space-2);
 }
 
 /* Make count header visible */
@@ -305,42 +305,30 @@ const tableColumns = [
 }
 
 :deep(tbody tr) {
-    border-color: rgb(40, 40, 40) !important;
+    border-color: var(--color-border-dark) !important;
 }
 
 :deep(tbody tr + tr) {
-    border-top: 1px solid rgb(40, 40, 40) !important;
+    border-top: 1px solid var(--color-border-dark) !important;
 }
 
 :deep(tbody tr):hover {
-    background: light-dark(#e5e7eb, #1a1a1a);
+    background: var(--color-surface-alpha);
 }
 
-/* Animation for skeleton loading */
+/* Use global pulse animation from globals.css */
 .animate-pulse {
-    animation: pulse 1.5s ease-in-out infinite;
-}
-
-@keyframes pulse {
-
-    0%,
-    100% {
-        opacity: 1;
-    }
-
-    50% {
-        opacity: 0.5;
-    }
+    animation: pulse var(--duration-1500) ease-in-out infinite;
 }
 
 /* Enhanced right alignment for count values */
 :deep(.count-value) {
     text-align: right;
     font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
-    font-size: 0.9rem;
-    line-height: 1rem;
-    color: var(--background-200);
-    padding-right: 0.5rem;
+    font-size: var(--text-sm);
+    line-height: var(--space-4);
+    color: var(--color-text-secondary);
+    padding-right: var(--space-2);
     white-space: nowrap;
     width: 100%;
     display: block;
@@ -405,14 +393,14 @@ const tableColumns = [
 }
 
 .entity-name {
-    font-weight: 500;
+    font-weight: var(--font-medium);
     max-width: 75%;
 }
 
 .mobile-count-value {
     font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
-    font-size: 0.9rem;
-    color: var(--background-200);
+    font-size: var(--text-sm);
+    color: var(--color-text-secondary);
     text-align: right;
     white-space: nowrap;
 }
@@ -425,7 +413,7 @@ const tableColumns = [
     }
 
     .mobile-count-value {
-        margin-top: 0.25rem;
+        margin-top: var(--space-1);
         margin-left: 2.25rem;
         /* Align with the text (after the icon) */
     }

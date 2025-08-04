@@ -519,13 +519,10 @@ const getRowUrl = (item: any): string | null => {
     flex-direction: column;
     width: 100%;
     gap: 0;
-    /* Remove gap to prevent spacing conflicts with section headers */
-    border-radius: 0.5rem;
+    border-radius: var(--radius-lg);
     overflow: hidden;
-    font-size: 0.875rem;
-    /* Explicit base font size to prevent inheritance issues */
-    line-height: 1.25rem;
-    /* Explicit line height */
+    font-size: var(--text-sm);
+    line-height: var(--line-height-relaxed);
 }
 
 /* Horizontal Layout */
@@ -536,8 +533,8 @@ const getRowUrl = (item: any): string | null => {
 .horizontal-grid {
     display: grid;
     grid-template-columns: repeat(var(--cols, 7), 1fr);
-    gap: 0.75rem;
-    padding: 0.5rem;
+    gap: var(--space-3);
+    padding: var(--space-2);
 }
 
 .grid-cols-2 {
@@ -568,16 +565,16 @@ const getRowUrl = (item: any): string | null => {
     display: flex;
     flex-direction: column;
     align-items: center;
-    padding: 0.5rem;
-    border-radius: 0.375rem;
-    transition: background-color 0.2s;
+    padding: var(--space-2);
+    border-radius: var(--radius-md);
+    transition: background-color var(--duration-fast);
     cursor: pointer;
     text-decoration: none;
     color: inherit;
 }
 
 .horizontal-item.has-link:hover {
-    background-color: light-dark(rgba(229, 231, 235, 0.25), rgba(45, 45, 45, 0.6));
+    background-color: var(--color-bg-hover);
 }
 
 .horizontal-item-content {
@@ -593,7 +590,7 @@ const getRowUrl = (item: any): string | null => {
     display: flex;
     flex-direction: column;
     align-items: center;
-    padding: 0.5rem;
+    padding: var(--space-2);
 }
 
 .skeleton-item-box {
@@ -606,8 +603,12 @@ const getRowUrl = (item: any): string | null => {
 .skeleton-image {
     width: 100%;
     aspect-ratio: 1/1;
-    background-color: light-dark(#e5e7eb, #2d3748);
-    animation: pulse 1.5s ease-in-out infinite;
+    background-color: var(--color-gray-200);
+    animation: pulse var(--duration-slow) ease-in-out infinite;
+}
+
+:global(.dark) .skeleton-image {
+    background-color: var(--color-gray-700);
 }
 
 /* Fit content width */
@@ -617,7 +618,7 @@ const getRowUrl = (item: any): string | null => {
 
 /* Background style variants */
 .ek-table-container.bg-default {
-    background-color: light-dark(rgba(255, 255, 255, 0.8), rgba(20, 20, 20, 0.8));
+    background-color: var(--color-bg-glass-light);
 }
 
 .ek-table-container.bg-transparent {
@@ -625,41 +626,39 @@ const getRowUrl = (item: any): string | null => {
 }
 
 .ek-table-container.bg-subtle {
-    background-color: light-dark(rgba(245, 245, 245, 0.5), rgba(26, 26, 26, 0.5));
+    background-color: var(--color-bg-subtle);
 }
 
 .ek-table-container.bg-transparent .table-row {
-    background-color: light-dark(rgba(255, 255, 255, 0.4), rgba(26, 26, 26, 0.3));
+    background-color: var(--color-bg-surface);
 }
 
 /* Table Header */
 .table-header {
     display: grid;
     grid-template-columns: var(--grid-columns, 1fr);
-    background-color: light-dark(rgba(245, 245, 245, 0.05), rgba(26, 26, 26, 0.3));
-    border-bottom: 1px solid light-dark(rgba(229, 231, 235, 0.3), rgba(75, 85, 99, 0.2));
+    background-color: var(--color-bg-muted);
+    border-bottom: 1px solid var(--color-border-light);
 }
 
 /* Density variations for header */
 .table-header.density-compact {
-    padding: 0.25rem 0.5rem;
+    padding: var(--space-1) var(--space-2);
 }
 
 .table-header.density-normal {
-    padding: 0.4rem 0.75rem;
+    padding: var(--space-2) var(--space-3);
 }
 
 .table-header.density-relaxed {
-    padding: 0.6rem 1rem;
+    padding: var(--space-3) var(--space-4);
 }
 
 .header-cell {
-    font-size: 0.75rem;
-    color: light-dark(#4b5563, #9ca3af);
+    font-size: var(--text-xs);
+    color: var(--color-text-muted);
     font-family: inherit;
-    /* Ensure consistent font inheritance */
-    line-height: 1rem;
-    /* Explicit line height for consistency */
+    line-height: var(--line-height-tight);
 }
 
 .header-cell.text-right {
@@ -677,43 +676,43 @@ const getRowUrl = (item: any): string | null => {
 .table-row {
     display: grid;
     grid-template-columns: var(--grid-columns, 1fr);
-    border-radius: 0.375rem;
-    background-color: light-dark(rgba(255, 255, 255, 0.4), rgba(26, 26, 26, 0.3));
-    transition: background-color 0.2s;
+    border-radius: var(--radius-md);
+    background-color: var(--color-bg-surface);
+    transition: background-color var(--duration-fast);
     cursor: pointer;
 }
 
 /* Add consistent spacing between rows */
 .table-row:not(:first-child) {
-    margin-top: 0.25rem;
+    margin-top: var(--space-1);
 }
 
 /* Density variations for rows */
 .table-row.density-compact {
-    padding: 0.25rem 0.5rem;
+    padding: var(--space-1) var(--space-2);
 }
 
 .table-row.density-normal {
-    padding: 0.35rem 0.75rem;
+    padding: var(--space-2) var(--space-3);
 }
 
 .table-row.density-relaxed {
-    padding: 0.5rem 1rem;
+    padding: var(--space-2) var(--space-4);
 }
 
 /* Row with borders */
 .table-row.bordered {
-    border-bottom: 1px solid light-dark(rgba(229, 231, 235, 0.3), rgba(75, 85, 99, 0.2));
+    border-bottom: 1px solid var(--color-border-light);
 }
 
 /* Striped row styling */
 .table-row-striped {
-    background-color: light-dark(rgba(249, 250, 251, 0.6), rgba(31, 31, 31, 0.4));
+    background-color: var(--color-bg-alternate);
 }
 
 /* Hover effect for rows */
 .table-row.hover-effect:hover {
-    background-color: light-dark(rgba(229, 231, 235, 0.15), rgba(35, 35, 35, 0.5));
+    background-color: var(--color-bg-hover);
 }
 
 /* Mobile view adjustments */
@@ -723,19 +722,19 @@ const getRowUrl = (item: any): string | null => {
 
 /* Ensure consistent spacing for both mobile and desktop */
 .mobile-view .table-row:not(:first-child) {
-    margin-top: 0.25rem;
+    margin-top: var(--space-1);
 }
 
 .mobile-view .table-row.density-compact {
-    padding: 0.35rem 0.5rem;
+    padding: var(--space-2) var(--space-2);
 }
 
 .mobile-view .table-row.density-normal {
-    padding: 0.5rem 0.75rem;
+    padding: var(--space-2) var(--space-3);
 }
 
 .mobile-view .table-row.density-relaxed {
-    padding: 0.75rem 1rem;
+    padding: var(--space-3) var(--space-4);
 }
 
 /* Body cell */
@@ -743,18 +742,16 @@ const getRowUrl = (item: any): string | null => {
     display: flex;
     align-items: center;
     overflow: hidden;
-    font-size: 0.875rem;
+    font-size: var(--text-sm);
     font-family: inherit;
-    /* Ensure consistent font inheritance */
-    line-height: 1.25rem;
-    /* Explicit line height for consistency */
+    line-height: var(--line-height-relaxed);
 }
 
 /* Mobile container */
 .mobile-container {
     display: flex;
     width: 100%;
-    gap: 0.75rem;
+    gap: var(--space-3);
 }
 
 .mobile-content {
@@ -768,24 +765,24 @@ const getRowUrl = (item: any): string | null => {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 0.25rem;
+    margin-bottom: var(--space-1);
 }
 
 .mobile-title {
-    font-weight: 500;
-    font-size: 0.875rem;
-    color: light-dark(#111827, white);
+    font-weight: var(--font-weight-medium);
+    font-size: var(--text-sm);
+    color: var(--color-text-primary);
 }
 
 /* Helper text classes */
 :deep(.text-sm) {
-    font-size: 0.875rem;
-    line-height: 1.25rem;
+    font-size: var(--text-sm);
+    line-height: var(--line-height-relaxed);
 }
 
 :deep(.text-xs) {
-    font-size: 0.75rem;
-    line-height: 1rem;
+    font-size: var(--text-xs);
+    line-height: var(--line-height-tight);
 }
 
 /* Skeleton styles */
@@ -798,65 +795,89 @@ const getRowUrl = (item: any): string | null => {
 }
 
 .skeleton-item {
-    height: 0.875rem;
+    height: var(--text-sm);
     width: 100%;
-    background-color: light-dark(#e5e7eb, #2d3748);
-    border-radius: 0.25rem;
-    animation: pulse 1.5s ease-in-out infinite;
+    background-color: var(--color-gray-200);
+    border-radius: var(--radius-sm);
+    animation: pulse var(--duration-slow) ease-in-out infinite;
+}
+
+:global(.dark) .skeleton-item {
+    background-color: var(--color-gray-700);
 }
 
 .mobile-skeleton-container {
     display: flex;
     width: 100%;
-    gap: 0.75rem;
+    gap: var(--space-3);
 }
 
 .skeleton-ship {
     width: 64px;
     height: 64px;
     flex-shrink: 0;
-    background-color: light-dark(#e5e7eb, #2d3748);
-    border-radius: 0.25rem;
-    animation: pulse 1.5s ease-in-out infinite;
+    background-color: var(--color-gray-200);
+    border-radius: var(--radius-sm);
+    animation: pulse var(--duration-slow) ease-in-out infinite;
+}
+
+:global(.dark) .skeleton-ship {
+    background-color: var(--color-gray-700);
 }
 
 .skeleton-content {
     flex: 1;
     display: flex;
     flex-direction: column;
-    gap: 0.5rem;
+    gap: var(--space-2);
 }
 
 .skeleton-line-full {
-    height: 0.875rem;
+    height: var(--text-sm);
     width: 100%;
-    background-color: light-dark(#e5e7eb, #2d3748);
-    border-radius: 0.25rem;
-    animation: pulse 1.5s ease-in-out infinite;
+    background-color: var(--color-gray-200);
+    border-radius: var(--radius-sm);
+    animation: pulse var(--duration-slow) ease-in-out infinite;
+}
+
+:global(.dark) .skeleton-line-full {
+    background-color: var(--color-gray-700);
 }
 
 .skeleton-line-med {
-    height: 0.75rem;
+    height: var(--text-xs);
     width: 70%;
-    background-color: light-dark(#e5e7eb, #2d3748);
-    border-radius: 0.25rem;
-    animation: pulse 1.5s ease-in-out infinite;
+    background-color: var(--color-gray-200);
+    border-radius: var(--radius-sm);
+    animation: pulse var(--duration-slow) ease-in-out infinite;
+}
+
+:global(.dark) .skeleton-line-med {
+    background-color: var(--color-gray-700);
 }
 
 .skeleton-line-wide {
-    height: 0.75rem;
+    height: var(--text-xs);
     width: 90%;
-    background-color: light-dark(#e5e7eb, #2d3748);
-    border-radius: 0.25rem;
-    animation: pulse 1.5s ease-in-out infinite;
+    background-color: var(--color-gray-200);
+    border-radius: var(--radius-sm);
+    animation: pulse var(--duration-slow) ease-in-out infinite;
+}
+
+:global(.dark) .skeleton-line-wide {
+    background-color: var(--color-gray-700);
 }
 
 .skeleton-line-small {
-    height: 0.75rem;
+    height: var(--text-xs);
     width: 50%;
-    background-color: light-dark(#e5e7eb, #2d3748);
-    border-radius: 0.25rem;
-    animation: pulse 1.5s ease-in-out infinite;
+    background-color: var(--color-gray-200);
+    border-radius: var(--radius-sm);
+    animation: pulse var(--duration-slow) ease-in-out infinite;
+}
+
+:global(.dark) .skeleton-line-small {
+    background-color: var(--color-gray-700);
 }
 
 /* Empty state */
@@ -865,30 +886,17 @@ const getRowUrl = (item: any): string | null => {
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    padding: 2rem 0;
-    color: light-dark(#6b7280, #9ca3af);
-    background-color: light-dark(rgba(245, 245, 245, 0.05), rgba(26, 26, 26, 0.3));
-    border-radius: 0.5rem;
-    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
-    font-size: 0.875rem;
+    padding: var(--space-8) 0;
+    color: var(--color-text-muted);
+    background-color: var(--color-bg-muted);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-sm);
+    font-size: var(--text-sm);
 }
 
 .empty-icon {
-    font-size: 1.5rem;
-    margin-bottom: 0.75rem;
-}
-
-/* Animation for skeleton loading */
-@keyframes pulse {
-
-    0%,
-    100% {
-        opacity: 1;
-    }
-
-    50% {
-        opacity: 0.5;
-    }
+    font-size: var(--text-2xl);
+    margin-bottom: var(--space-3);
 }
 
 /* Helper classes */
@@ -902,24 +910,20 @@ const getRowUrl = (item: any): string | null => {
 
 /* Vertical padding adjustment for cell content */
 :deep(.py-1) {
-    padding-top: 0.1rem;
-    padding-bottom: 0.1rem;
+    padding-top: var(--space-1);
+    padding-bottom: var(--space-1);
 }
 
 /* Special header styling */
 .table-header.special-header {
-    background-color: light-dark(rgba(229, 231, 235, 0.5), rgba(31, 41, 55, 0.5));
-}
-
-.table-header.special-header {
-    background-color: light-dark(rgba(245, 245, 245, 0.05), rgba(26, 26, 26, 0.5)) !important;
-    padding: 0.5rem 1rem !important;
+    background-color: var(--color-bg-muted);
+    padding: var(--space-2) var(--space-4) !important;
 }
 
 /* Ensure special header cells have consistent styling */
 .special-header .header-cell {
-    font-size: 0.75rem;
-    color: light-dark(#4b5563, #9ca3af) !important;
+    font-size: var(--text-xs);
+    color: var(--color-text-muted) !important;
 }
 
 /* Cursor pointer for linkable rows */
@@ -929,7 +933,7 @@ const getRowUrl = (item: any): string | null => {
 
 /* Enhance hover effect for linkable rows */
 .has-link:hover {
-    background-color: light-dark(rgba(229, 231, 235, 0.25), rgba(45, 45, 45, 0.6));
+    background-color: var(--color-bg-hover);
 }
 
 /* Style for the row content wrapper */
@@ -943,7 +947,6 @@ const getRowUrl = (item: any): string | null => {
 /* Ensure desktop view columns are properly displayed */
 .row-content:not(.mobile-view) {
     display: contents;
-    /* This preserves the grid layout */
 }
 
 /* Style for table rows that are links */
@@ -952,21 +955,11 @@ const getRowUrl = (item: any): string | null => {
     color: inherit;
 }
 
-/* Enhance pointer cursor */
-.has-link {
-    cursor: pointer;
-}
-
-/* Enhance hover effect for clickable rows */
-.has-link:hover {
-    background-color: light-dark(rgba(229, 231, 235, 0.25), rgba(45, 45, 45, 0.6));
-}
-
 /* Make horizontal skeleton grid responsive */
 .horizontal-skeleton-grid {
     display: grid;
     grid-template-columns: repeat(var(--cols, 7), 1fr);
-    gap: 0.75rem;
-    padding: 0.5rem;
+    gap: var(--space-3);
+    padding: var(--space-2);
 }
 </style>

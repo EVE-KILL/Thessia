@@ -1,5 +1,5 @@
 <template>
-    <div class="p-4 bg-background-900 rounded-lg shadow-lg text-black dark:text-white">
+    <div class="p-4 rounded-lg shadow-lg text-black dark:text-white">
         <!-- Loading state - Show when data is being fetched OR processed -->
         <div v-if="pending" class="flex flex-col items-center justify-center py-12">
             <UIcon name="lucide:loader" class="w-12 h-12 animate-spin text-primary mb-4" />

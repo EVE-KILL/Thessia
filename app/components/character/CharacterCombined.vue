@@ -4,7 +4,7 @@
             :api-endpoint="`/api/killlist/combined/character/${character.character_id}`"
             :wsFilter="`character.${character.character_id}`" :limit="100" :combinedKillsAndLosses="true"
             combinedVictimType="character" :combinedVictimId="character.character_id" />
-        <div v-else class="text-center text-gray-400">
+        <div v-else class="loading-state">
             {{ $t('loading') }}...
         </div>
     </div>
@@ -14,5 +14,11 @@
 const props = defineProps<{
     character: ICharacter | null;
 }>();
-
 </script>
+
+<style scoped>
+.loading-state {
+    text-align: center;
+    color: var(--color-text-tertiary);
+}
+</style>

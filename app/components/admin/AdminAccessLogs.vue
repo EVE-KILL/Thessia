@@ -492,11 +492,11 @@ onMounted(() => {
     display: flex;
     flex-direction: column;
     height: 100vh;
-    color: white;
+    color: var(--color-text-primary);
 }
 
 .logs-header {
-    padding: 1rem;
+    padding: var(--space-4);
     flex-shrink: 0;
 }
 
@@ -505,55 +505,63 @@ onMounted(() => {
     justify-content: space-between;
     align-items: center;
     flex-wrap: wrap;
-    gap: 1rem;
+    gap: var(--space-4);
 }
 
 .header-title {
     display: flex;
     align-items: center;
-    gap: 0.5rem;
+    gap: var(--space-2);
 }
 
 .header-icon {
-    width: 1.5rem;
-    height: 1.5rem;
-    color: rgb(99, 102, 241);
+    width: var(--space-6);
+    height: var(--space-6);
+    color: var(--color-indigo-500);
 }
 
 .header-title h2 {
-    font-size: 1.25rem;
-    font-weight: 600;
+    font-size: var(--text-xl);
+    font-weight: var(--font-weight-semibold);
     margin: 0;
 }
 
 .header-controls {
     display: flex;
     align-items: center;
-    gap: 1rem;
+    gap: var(--space-4);
     flex-wrap: wrap;
 }
 
 .control-group {
     display: flex;
     align-items: center;
-    gap: 0.5rem;
+    gap: var(--space-2);
 }
 
 .control-group label {
-    font-size: 0.875rem;
-    color: rgb(156, 163, 175);
+    font-size: var(--text-sm);
+    color: var(--color-text-muted);
 }
 
 .filter-select,
 .filter-input,
 .log-limit-input {
-    background-color: rgb(55, 65, 81);
-    color: white;
-    border: 1px solid rgb(75, 85, 99);
-    border-radius: 0.375rem;
-    padding: 0.25rem 0.5rem;
-    font-size: 0.875rem;
+    background-color: var(--color-gray-700);
+    color: var(--color-text-primary);
+    border: 1px solid var(--color-border-default);
+    border-radius: var(--radius-md);
+    padding: var(--space-1) var(--space-2);
+    font-size: var(--text-sm);
     min-width: 120px;
+}
+
+:global(.dark) .filter-select,
+:global(.dark) .filter-input,
+:global(.dark) .log-limit-input {
+    background-color: var(--color-gray-700);
+    color: var(--color-text-primary);
+    border-color: var(--color-border-default);
 }
 
 .log-limit-input {
@@ -564,42 +572,36 @@ onMounted(() => {
 .pause-button {
     display: flex;
     align-items: center;
-    gap: 0.5rem;
-    background-color: rgb(99, 102, 241);
-    color: white;
+    gap: var(--space-2);
+    background-color: var(--color-indigo-500);
+    color: var(--color-text-primary);
     border: none;
-    border-radius: 0.375rem;
-    padding: 0.5rem 1rem;
-    font-size: 0.875rem;
+    border-radius: var(--radius-md);
+    padding: var(--space-2) var(--space-4);
+    font-size: var(--text-sm);
     cursor: pointer;
-    transition: background-color 0.15s ease-in-out;
+    transition: background-color var(--duration-fast) ease-in-out;
 }
 
 .pause-button:hover {
-    background-color: rgb(79, 70, 229);
+    background-color: var(--color-indigo-600);
 }
 
 .pause-button.paused {
-    background-color: rgb(251, 191, 36);
+    background-color: var(--color-amber-400);
 }
 
 .pause-button.paused:hover {
-    background-color: rgb(245, 158, 11);
+    background-color: var(--color-amber-500);
 }
 
 .control-icon {
-    width: 1rem;
-    height: 1rem;
+    width: var(--space-4);
+    height: var(--space-4);
 }
 
 .spinning {
-    animation: spin 1s linear infinite;
-}
-
-@keyframes spin {
-    to {
-        transform: rotate(360deg);
-    }
+    animation: spin var(--duration-normal) linear infinite;
 }
 
 .logs-content {
@@ -616,43 +618,43 @@ onMounted(() => {
     align-items: center;
     justify-content: center;
     height: 100%;
-    padding: 2rem;
+    padding: var(--space-8);
     text-align: center;
 }
 
 .loading-icon,
 .error-icon {
-    width: 3rem;
-    height: 3rem;
-    margin-bottom: 1rem;
+    width: var(--space-12);
+    height: var(--space-12);
+    margin-bottom: var(--space-4);
 }
 
 .loading-icon {
-    color: rgb(99, 102, 241);
+    color: var(--color-indigo-500);
 }
 
 .error-icon {
-    color: rgb(239, 68, 68);
+    color: var(--color-red-500);
 }
 
 .loading-text,
 .error-text {
-    color: rgb(156, 163, 175);
-    margin-bottom: 1rem;
+    color: var(--color-text-muted);
+    margin-bottom: var(--space-4);
 }
 
 .retry-button {
-    background-color: rgb(99, 102, 241);
-    color: white;
+    background-color: var(--color-indigo-500);
+    color: var(--color-text-primary);
     border: none;
-    border-radius: 0.375rem;
-    padding: 0.5rem 1rem;
-    font-size: 0.875rem;
+    border-radius: var(--radius-md);
+    padding: var(--space-2) var(--space-4);
+    font-size: var(--text-sm);
     cursor: pointer;
 }
 
 .retry-button:hover {
-    background-color: rgb(79, 70, 229);
+    background-color: var(--color-indigo-600);
 }
 
 .logs-display {
@@ -663,8 +665,8 @@ onMounted(() => {
 
 .logs-info {
     display: flex;
-    gap: 1.5rem;
-    padding: 1rem;
+    gap: var(--space-6);
+    padding: var(--space-4);
     flex-shrink: 0;
     flex-wrap: wrap;
 }
@@ -672,36 +674,24 @@ onMounted(() => {
 .info-item {
     display: flex;
     align-items: center;
-    gap: 0.5rem;
-    font-size: 0.875rem;
-    color: rgb(156, 163, 175);
+    gap: var(--space-2);
+    font-size: var(--text-sm);
+    color: var(--color-text-muted);
 }
 
 .info-icon {
-    width: 1rem;
-    height: 1rem;
+    width: var(--space-4);
+    height: var(--space-4);
 }
 
 .pause-indicator {
-    color: rgb(251, 191, 36) !important;
-    font-weight: 600;
+    color: var(--color-amber-400) !important;
+    font-weight: var(--font-weight-semibold);
 }
 
 .pause-icon {
-    color: rgb(251, 191, 36);
-    animation: pulse 2s infinite;
-}
-
-@keyframes pulse {
-
-    0%,
-    100% {
-        opacity: 1;
-    }
-
-    50% {
-        opacity: 0.5;
-    }
+    color: var(--color-amber-400);
+    animation: pulse var(--duration-slow) infinite;
 }
 
 .unified-logs {
@@ -712,12 +702,12 @@ onMounted(() => {
 .log-content {
     width: 100%;
     height: 100%;
-    background-color: rgb(0, 0, 0);
-    color: rgb(229, 231, 235);
-    padding: 1rem;
-    font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
-    font-size: 0.75rem;
-    line-height: 1.4;
+    background-color: var(--color-black);
+    color: var(--color-gray-200);
+    padding: var(--space-4);
+    font-family: var(--font-mono);
+    font-size: var(--text-xs);
+    line-height: var(--line-height-relaxed);
     overflow: auto;
     white-space: pre-wrap;
     word-break: break-word;
@@ -726,7 +716,7 @@ onMounted(() => {
 
     /* Custom scrollbar styling */
     scrollbar-width: thin;
-    scrollbar-color: rgb(75, 85, 99) rgb(31, 41, 55);
+    scrollbar-color: var(--color-border-default) var(--color-gray-800);
 }
 
 .log-content::-webkit-scrollbar {
@@ -735,123 +725,123 @@ onMounted(() => {
 }
 
 .log-content::-webkit-scrollbar-track {
-    background: rgb(31, 41, 55);
+    background: var(--color-gray-800);
 }
 
 .log-content::-webkit-scrollbar-thumb {
-    background: rgb(75, 85, 99);
-    border-radius: 4px;
+    background: var(--color-border-default);
+    border-radius: var(--radius-sm);
 }
 
 .log-content::-webkit-scrollbar-thumb:hover {
-    background: rgb(107, 114, 128);
+    background: var(--color-gray-500);
 }
 
 /* Access log coloring styles */
 .log-content :deep(.log-flag-server) {
-    color: rgb(99, 102, 241);
-    font-weight: 600;
+    color: var(--color-indigo-500);
+    font-weight: var(--font-weight-semibold);
 }
 
 .log-content :deep(.log-flag-client) {
-    color: rgb(34, 197, 94);
-    font-weight: 600;
+    color: var(--color-green-500);
+    font-weight: var(--font-weight-semibold);
 }
 
 .log-content :deep(.log-flag-bot) {
-    color: rgb(251, 191, 36);
-    font-weight: 600;
+    color: var(--color-amber-400);
+    font-weight: var(--font-weight-semibold);
 }
 
 .log-content :deep(.log-flag-api) {
-    color: rgb(168, 85, 247);
-    font-weight: 600;
+    color: var(--color-purple-500);
+    font-weight: var(--font-weight-semibold);
 }
 
 .log-content :deep(.log-timestamp) {
-    color: rgb(156, 163, 175);
+    color: var(--color-text-muted);
 }
 
 .log-content :deep(.log-ip) {
-    color: rgb(168, 85, 247);
-    font-weight: 600;
+    color: var(--color-purple-500);
+    font-weight: var(--font-weight-semibold);
 }
 
 .log-content :deep(.log-method-get) {
-    color: rgb(34, 197, 94);
+    color: var(--color-green-500);
 }
 
 .log-content :deep(.log-method-post) {
-    color: rgb(59, 130, 246);
+    color: var(--color-blue-500);
 }
 
 .log-content :deep(.log-method-put) {
-    color: rgb(251, 191, 36);
+    color: var(--color-amber-400);
 }
 
 .log-content :deep(.log-method-delete) {
-    color: rgb(239, 68, 68);
+    color: var(--color-red-500);
 }
 
 .log-content :deep(.log-method-patch) {
-    color: rgb(168, 85, 247);
+    color: var(--color-purple-500);
 }
 
 .log-content :deep(.log-url) {
-    color: rgb(229, 231, 235);
+    color: var(--color-gray-200);
 }
 
 .log-content :deep(.log-status-success) {
-    color: rgb(34, 197, 94);
-    font-weight: 600;
+    color: var(--color-green-500);
+    font-weight: var(--font-weight-semibold);
 }
 
 .log-content :deep(.log-status-redirect) {
-    color: rgb(59, 130, 246);
-    font-weight: 600;
+    color: var(--color-blue-500);
+    font-weight: var(--font-weight-semibold);
 }
 
 .log-content :deep(.log-status-client-error) {
-    color: rgb(251, 191, 36);
-    font-weight: 600;
+    color: var(--color-amber-400);
+    font-weight: var(--font-weight-semibold);
 }
 
 .log-content :deep(.log-status-server-error) {
-    color: rgb(239, 68, 68);
-    font-weight: 600;
+    color: var(--color-red-500);
+    font-weight: var(--font-weight-semibold);
 }
 
 .log-content :deep(.log-response-fast) {
-    color: rgb(34, 197, 94);
+    color: var(--color-green-500);
 }
 
 .log-content :deep(.log-response-medium) {
-    color: rgb(251, 191, 36);
+    color: var(--color-amber-400);
 }
 
 .log-content :deep(.log-response-slow) {
-    color: rgb(239, 68, 68);
+    color: var(--color-red-500);
 }
 
 .log-content :deep(.log-user-agent) {
-    color: rgb(156, 163, 175);
+    color: var(--color-text-muted);
     font-style: italic;
 }
 
 .log-content :deep(.log-flags) {
-    color: rgb(168, 85, 247);
-    font-weight: 600;
+    color: var(--color-purple-500);
+    font-weight: var(--font-weight-semibold);
 }
 
 .log-content :deep(.log-default) {
-    color: rgb(156, 163, 175);
+    color: var(--color-text-muted);
 }
 
 .log-content :deep(.log-empty) {
-    color: rgb(156, 163, 175);
+    color: var(--color-text-muted);
     font-style: italic;
     text-align: center;
-    padding: 2rem;
+    padding: var(--space-8);
 }
 
 /* Responsive adjustments */
@@ -871,11 +861,11 @@ onMounted(() => {
 
     .logs-info {
         flex-direction: column;
-        gap: 0.5rem;
+        gap: var(--space-2);
     }
 
     .log-content {
-        font-size: 0.625rem;
+        font-size: var(--text-2xs);
     }
 }
 </style>

@@ -599,16 +599,16 @@ function debounce<T extends (...args: any[]) => any>(func: T, wait: number): (..
     display: flex;
     flex-direction: column;
     height: 100%;
-    padding: 1.5rem;
-    gap: 1.5rem;
+    padding: var(--space-6);
+    gap: var(--space-6);
 }
 
 .collection-header {
     display: flex;
     justify-content: space-between;
     align-items: flex-start;
-    padding-bottom: 1rem;
-    border-bottom: 1px solid rgb(55, 55, 55);
+    padding-bottom: var(--space-4);
+    border-bottom: 1px solid var(--color-border-light);
 }
 
 .header-info {
@@ -616,15 +616,15 @@ function debounce<T extends (...args: any[]) => any>(func: T, wait: number): (..
 }
 
 .collection-title {
-    font-size: 1.5rem;
-    font-weight: 600;
-    color: white;
-    margin-bottom: 0.5rem;
+    font-size: var(--text-2xl);
+    font-weight: var(--font-semibold);
+    color: var(--color-text-primary);
+    margin-bottom: var(--space-2);
 }
 
 .collection-description {
-    color: rgb(156, 163, 175);
-    font-size: 0.875rem;
+    color: var(--color-text-tertiary);
+    font-size: var(--text-sm);
 }
 
 .header-actions {
@@ -634,20 +634,20 @@ function debounce<T extends (...args: any[]) => any>(func: T, wait: number): (..
 .action-button {
     display: flex;
     align-items: center;
-    gap: 0.5rem;
-    padding: 0.75rem 1.5rem;
-    background-color: rgb(59, 130, 246);
-    color: white;
+    gap: var(--space-2);
+    padding: var(--space-3) var(--space-6);
+    background-color: var(--color-brand-primary);
+    color: var(--color-text-inverse);
     border: none;
-    border-radius: 0.375rem;
-    font-size: 0.875rem;
-    font-weight: 500;
+    border-radius: var(--radius-md);
+    font-size: var(--text-sm);
+    font-weight: var(--font-medium);
     cursor: pointer;
-    transition: background-color 0.15s ease-in-out;
+    transition: background-color var(--duration-150) ease-in-out;
 }
 
 .action-button:hover:not(:disabled) {
-    background-color: rgb(37, 99, 235);
+    background-color: var(--color-brand-primary-hover);
 }
 
 .action-button:disabled {
@@ -656,15 +656,15 @@ function debounce<T extends (...args: any[]) => any>(func: T, wait: number): (..
 }
 
 .action-icon {
-    width: 1rem;
-    height: 1rem;
+    width: var(--space-4);
+    height: var(--space-4);
 }
 
 .collection-controls {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    gap: 1rem;
+    gap: var(--space-4);
 }
 
 .search-container {
@@ -675,46 +675,46 @@ function debounce<T extends (...args: any[]) => any>(func: T, wait: number): (..
 
 .search-icon {
     position: absolute;
-    left: 0.75rem;
+    left: var(--space-3);
     top: 50%;
     transform: translateY(-50%);
-    width: 1rem;
-    height: 1rem;
-    color: rgb(156, 163, 175);
+    width: var(--space-4);
+    height: var(--space-4);
+    color: var(--color-text-tertiary);
 }
 
 .search-input {
     width: 100%;
-    padding: 0.75rem 0.75rem 0.75rem 2.5rem;
-    background: rgba(0, 0, 0, 0.3);
-    border: 1px solid rgb(55, 55, 55);
-    border-radius: 0.375rem;
-    color: white;
-    font-size: 0.875rem;
+    padding: var(--space-3) var(--space-3) var(--space-3) var(--space-10);
+    background: var(--color-surface-alpha);
+    border: 1px solid var(--color-border-light);
+    border-radius: var(--radius-md);
+    color: var(--color-text-primary);
+    font-size: var(--text-sm);
 }
 
 .search-input:focus {
     outline: none;
-    border-color: rgb(96, 165, 250);
+    border-color: var(--color-border-focus);
 }
 
 .search-input::placeholder {
-    color: rgb(156, 163, 175);
+    color: var(--color-text-tertiary);
 }
 
 .controls-right {
     display: flex;
     align-items: center;
-    gap: 1rem;
+    gap: var(--space-4);
 }
 
 .page-size-select {
-    padding: 0.75rem;
-    background: rgba(0, 0, 0, 0.3);
-    border: 1px solid rgb(55, 55, 55);
-    border-radius: 0.375rem;
-    color: white;
-    font-size: 0.875rem;
+    padding: var(--space-3);
+    background: var(--color-surface-alpha);
+    border: 1px solid var(--color-border-light);
+    border-radius: var(--radius-md);
+    color: var(--color-text-primary);
+    font-size: var(--text-sm);
 }
 
 .cards-container {
@@ -725,48 +725,48 @@ function debounce<T extends (...args: any[]) => any>(func: T, wait: number): (..
 .cards-grid {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
-    gap: 1rem;
-    padding: 1rem 0;
+    gap: var(--space-4);
+    padding: var(--space-4) 0;
 }
 
 .document-card {
-    background: rgba(0, 0, 0, 0.3);
-    border: 1px solid rgb(55, 55, 55);
-    border-radius: 0.5rem;
+    background: var(--color-surface-alpha);
+    border: 1px solid var(--color-border-light);
+    border-radius: var(--radius-lg);
     overflow: hidden;
-    transition: transform 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+    transition: transform var(--duration-150) ease-in-out, box-shadow var(--duration-150) ease-in-out;
 }
 
 .document-card:hover {
     transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    box-shadow: var(--shadow-lg-subtle);
 }
 
 .card-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 1rem;
-    background: rgba(0, 0, 0, 0.5);
-    border-bottom: 1px solid rgb(55, 55, 55);
+    padding: var(--space-4);
+    background: var(--color-surface-alpha-medium);
+    border-bottom: 1px solid var(--color-border-light);
 }
 
 .card-id {
     display: flex;
     align-items: center;
-    gap: 0.5rem;
+    gap: var(--space-2);
 }
 
 .id-icon {
-    width: 1rem;
-    height: 1rem;
-    color: rgb(96, 165, 250);
+    width: var(--space-4);
+    height: var(--space-4);
+    color: var(--color-brand-primary);
 }
 
 .id-text {
-    color: white;
-    font-weight: 600;
-    font-size: 0.875rem;
+    color: var(--color-text-primary);
+    font-weight: var(--font-semibold);
+    font-size: var(--text-sm);
     max-width: 200px;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -775,18 +775,18 @@ function debounce<T extends (...args: any[]) => any>(func: T, wait: number): (..
 
 .card-actions {
     display: flex;
-    gap: 0.5rem;
+    gap: var(--space-2);
 }
 
 .card-content {
-    padding: 1rem;
+    padding: var(--space-4);
 }
 
 .field-row {
     display: flex;
     flex-direction: column;
-    gap: 0.25rem;
-    margin-bottom: 0.75rem;
+    gap: var(--space-1);
+    margin-bottom: var(--space-3);
 }
 
 .field-row:last-child {
@@ -794,23 +794,23 @@ function debounce<T extends (...args: any[]) => any>(func: T, wait: number): (..
 }
 
 .field-label {
-    font-size: 0.75rem;
-    font-weight: 600;
-    color: rgb(156, 163, 175);
+    font-size: var(--text-xs);
+    font-weight: var(--font-semibold);
+    color: var(--color-text-tertiary);
     text-transform: uppercase;
     letter-spacing: 0.05em;
 }
 
 .field-value {
-    color: rgb(209, 213, 219);
-    font-size: 0.875rem;
+    color: var(--color-text-primary);
+    font-size: var(--text-sm);
     word-break: break-word;
     cursor: pointer;
-    padding: 0.5rem;
-    border-radius: 0.25rem;
-    background: rgba(0, 0, 0, 0.2);
+    padding: var(--space-2);
+    border-radius: var(--radius-base);
+    background: var(--color-surface-alpha-subtle);
     border: 1px solid transparent;
-    transition: all 0.15s ease-in-out;
+    transition: all var(--duration-150) ease-in-out;
     position: relative;
     display: flex;
     align-items: center;
@@ -818,53 +818,53 @@ function debounce<T extends (...args: any[]) => any>(func: T, wait: number): (..
 }
 
 .field-value:hover {
-    background: rgba(0, 0, 0, 0.4);
-    border-color: rgb(96, 165, 250);
+    background: var(--color-surface-alpha-medium);
+    border-color: var(--color-border-focus);
 }
 
 .view-icon {
-    width: 0.875rem;
-    height: 0.875rem;
-    color: rgb(96, 165, 250);
+    width: var(--text-sm);
+    height: var(--text-sm);
+    color: var(--color-brand-primary);
     flex-shrink: 0;
-    margin-left: 0.5rem;
+    margin-left: var(--space-2);
 }
 
 .show-more-container {
-    margin-top: 0.75rem;
-    padding-top: 0.75rem;
-    border-top: 1px solid rgb(55, 55, 55);
+    margin-top: var(--space-3);
+    padding-top: var(--space-3);
+    border-top: 1px solid var(--color-border-light);
 }
 
 .show-more-btn {
     display: flex;
     align-items: center;
-    gap: 0.5rem;
-    padding: 0.5rem;
-    background: rgba(59, 130, 246, 0.1);
-    border: 1px solid rgb(59, 130, 246);
-    border-radius: 0.25rem;
-    color: rgb(96, 165, 250);
-    font-size: 0.875rem;
+    gap: var(--space-2);
+    padding: var(--space-2);
+    background: var(--color-brand-primary-alpha);
+    border: 1px solid var(--color-brand-primary);
+    border-radius: var(--radius-base);
+    color: var(--color-brand-primary);
+    font-size: var(--text-sm);
     cursor: pointer;
-    transition: all 0.15s ease-in-out;
+    transition: all var(--duration-150) ease-in-out;
     width: 100%;
     justify-content: center;
 }
 
 .show-more-btn:hover {
-    background: rgba(59, 130, 246, 0.2);
+    background: var(--color-brand-primary-hover-alpha);
 }
 
 .chevron-icon {
-    width: 0.875rem;
-    height: 0.875rem;
+    width: var(--text-sm);
+    height: var(--text-sm);
 }
 
 .expanded-content {
-    margin-top: 0.75rem;
-    padding-top: 0.75rem;
-    border-top: 1px solid rgb(55, 55, 55);
+    margin-top: var(--space-3);
+    padding-top: var(--space-3);
+    border-top: 1px solid var(--color-border-light);
 }
 
 .modal-overlay {
@@ -873,18 +873,18 @@ function debounce<T extends (...args: any[]) => any>(func: T, wait: number): (..
     left: 0;
     right: 0;
     bottom: 0;
-    background: rgba(0, 0, 0, 0.7);
+    background: var(--color-overlay);
     display: flex;
     align-items: center;
     justify-content: center;
-    z-index: 1000;
-    padding: 1rem;
+    z-index: var(--z-modal);
+    padding: var(--space-4);
 }
 
 .modal-content {
-    background: rgb(17, 24, 39);
-    border: 1px solid rgb(55, 55, 55);
-    border-radius: 0.5rem;
+    background: var(--color-bg-primary);
+    border: 1px solid var(--color-border-light);
+    border-radius: var(--radius-lg);
     max-width: 800px;
     width: 100%;
     max-height: 80vh;
@@ -897,58 +897,58 @@ function debounce<T extends (...args: any[]) => any>(func: T, wait: number): (..
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 1rem;
-    border-bottom: 1px solid rgb(55, 55, 55);
+    padding: var(--space-4);
+    border-bottom: 1px solid var(--color-border-light);
 }
 
 .modal-title {
-    color: white;
-    font-size: 1.125rem;
-    font-weight: 600;
+    color: var(--color-text-primary);
+    font-size: var(--text-lg);
+    font-weight: var(--font-semibold);
 }
 
 .modal-close {
-    padding: 0.25rem;
+    padding: var(--space-1);
     background: none;
     border: none;
-    color: rgb(156, 163, 175);
+    color: var(--color-text-tertiary);
     cursor: pointer;
-    border-radius: 0.25rem;
-    transition: color 0.15s ease-in-out;
+    border-radius: var(--radius-base);
+    transition: color var(--duration-150) ease-in-out;
 }
 
 .modal-close:hover {
-    color: white;
+    color: var(--color-text-primary);
 }
 
 .close-icon {
-    width: 1.25rem;
-    height: 1.25rem;
+    width: var(--space-5);
+    height: var(--space-5);
 }
 
 .modal-body {
     flex: 1;
     overflow: auto;
-    padding: 1rem;
+    padding: var(--space-4);
 }
 
 .modal-value {
-    background: rgba(0, 0, 0, 0.3);
-    border: 1px solid rgb(55, 55, 55);
-    border-radius: 0.25rem;
-    padding: 1rem;
-    color: rgb(209, 213, 219);
+    background: var(--color-surface-alpha);
+    border: 1px solid var(--color-border-light);
+    border-radius: var(--radius-base);
+    padding: var(--space-4);
+    color: var(--color-text-primary);
     font-family: ui-monospace, SFMono-Regular, "SF Mono", Consolas, "Liberation Mono", Menlo, monospace;
-    font-size: 0.875rem;
-    line-height: 1.5;
+    font-size: var(--text-sm);
+    line-height: var(--line-height-normal);
     white-space: pre-wrap;
     word-break: break-word;
     margin: 0;
 }
 
 .modal-footer {
-    padding: 1rem;
-    border-top: 1px solid rgb(55, 55, 55);
+    padding: var(--space-4);
+    border-top: 1px solid var(--color-border-light);
     display: flex;
     justify-content: flex-end;
 }
@@ -956,24 +956,24 @@ function debounce<T extends (...args: any[]) => any>(func: T, wait: number): (..
 .copy-btn {
     display: flex;
     align-items: center;
-    gap: 0.5rem;
-    padding: 0.5rem 1rem;
-    background-color: rgb(59, 130, 246);
-    color: white;
+    gap: var(--space-2);
+    padding: var(--space-2) var(--space-4);
+    background-color: var(--color-brand-primary);
+    color: var(--color-text-inverse);
     border: none;
-    border-radius: 0.375rem;
-    font-size: 0.875rem;
+    border-radius: var(--radius-md);
+    font-size: var(--text-sm);
     cursor: pointer;
-    transition: background-color 0.15s ease-in-out;
+    transition: background-color var(--duration-150) ease-in-out;
 }
 
 .copy-btn:hover {
-    background-color: rgb(37, 99, 235);
+    background-color: var(--color-brand-primary-hover);
 }
 
 .copy-icon {
-    width: 0.875rem;
-    height: 0.875rem;
+    width: var(--text-sm);
+    height: var(--text-sm);
 }
 
 .edit-modal {
@@ -984,42 +984,42 @@ function debounce<T extends (...args: any[]) => any>(func: T, wait: number): (..
 .edit-form {
     display: flex;
     flex-direction: column;
-    gap: 1rem;
+    gap: var(--space-4);
 }
 
 .edit-field {
     display: flex;
     flex-direction: column;
-    gap: 0.5rem;
+    gap: var(--space-2);
 }
 
 .edit-label {
-    font-size: 0.875rem;
-    font-weight: 600;
-    color: white;
+    font-size: var(--text-sm);
+    font-weight: var(--font-semibold);
+    color: var(--color-text-primary);
 }
 
 .edit-input,
 .edit-textarea {
-    padding: 0.75rem;
-    background: rgba(0, 0, 0, 0.3);
-    border: 1px solid rgb(55, 55, 55);
-    border-radius: 0.375rem;
-    color: white;
-    font-size: 0.875rem;
+    padding: var(--space-3);
+    background: var(--color-surface-alpha);
+    border: 1px solid var(--color-border-light);
+    border-radius: var(--radius-md);
+    color: var(--color-text-primary);
+    font-size: var(--text-sm);
     font-family: ui-monospace, SFMono-Regular, "SF Mono", Consolas, "Liberation Mono", Menlo, monospace;
-    transition: border-color 0.15s ease-in-out;
+    transition: border-color var(--duration-150) ease-in-out;
 }
 
 .edit-input:focus,
 .edit-textarea:focus {
     outline: none;
-    border-color: rgb(96, 165, 250);
+    border-color: var(--color-border-focus);
 }
 
 .edit-readonly {
-    background: rgba(0, 0, 0, 0.5);
-    color: rgb(156, 163, 175);
+    background: var(--color-surface-alpha-medium);
+    color: var(--color-text-tertiary);
     cursor: not-allowed;
 }
 
@@ -1029,37 +1029,37 @@ function debounce<T extends (...args: any[]) => any>(func: T, wait: number): (..
 }
 
 .cancel-btn {
-    padding: 0.75rem 1.5rem;
-    background: rgba(0, 0, 0, 0.3);
-    border: 1px solid rgb(55, 55, 55);
-    border-radius: 0.375rem;
-    color: white;
-    font-size: 0.875rem;
+    padding: var(--space-3) var(--space-6);
+    background: var(--color-surface-alpha);
+    border: 1px solid var(--color-border-light);
+    border-radius: var(--radius-md);
+    color: var(--color-text-primary);
+    font-size: var(--text-sm);
     cursor: pointer;
-    transition: all 0.15s ease-in-out;
+    transition: all var(--duration-150) ease-in-out;
 }
 
 .cancel-btn:hover {
-    background: rgba(0, 0, 0, 0.5);
-    border-color: rgb(96, 165, 250);
+    background: var(--color-surface-alpha-medium);
+    border-color: var(--color-border-focus);
 }
 
 .save-btn {
     display: flex;
     align-items: center;
-    gap: 0.5rem;
-    padding: 0.75rem 1.5rem;
-    background-color: rgb(34, 197, 94);
-    color: white;
+    gap: var(--space-2);
+    padding: var(--space-3) var(--space-6);
+    background-color: var(--color-success);
+    color: var(--color-text-inverse);
     border: none;
-    border-radius: 0.375rem;
-    font-size: 0.875rem;
+    border-radius: var(--radius-md);
+    font-size: var(--text-sm);
     cursor: pointer;
-    transition: background-color 0.15s ease-in-out;
+    transition: background-color var(--duration-150) ease-in-out;
 }
 
 .save-btn:hover:not(:disabled) {
-    background-color: rgb(22, 163, 74);
+    background-color: var(--color-success-dark);
 }
 
 .save-btn:disabled {
@@ -1068,8 +1068,8 @@ function debounce<T extends (...args: any[]) => any>(func: T, wait: number): (..
 }
 
 .save-icon {
-    width: 0.875rem;
-    height: 0.875rem;
+    width: var(--text-sm);
+    height: var(--text-sm);
 }
 
 .delete-modal {
@@ -1085,25 +1085,25 @@ function debounce<T extends (...args: any[]) => any>(func: T, wait: number): (..
 }
 
 .warning-icon {
-    width: 3rem;
-    height: 3rem;
-    color: rgb(245, 158, 11);
+    width: var(--space-12);
+    height: var(--space-12);
+    color: var(--color-warning);
 }
 
 .warning-text {
-    color: rgb(209, 213, 219);
-    font-size: 1rem;
+    color: var(--color-text-secondary);
+    font-size: var(--text-base);
     margin: 0;
 }
 
 .document-preview {
-    background: rgba(0, 0, 0, 0.3);
-    border: 1px solid rgb(55, 55, 55);
-    border-radius: 0.375rem;
-    padding: 0.75rem;
+    background: var(--color-surface-alpha);
+    border: 1px solid var(--color-border-light);
+    border-radius: var(--radius-md);
+    padding: var(--space-3);
     font-family: ui-monospace, SFMono-Regular, "SF Mono", Consolas, "Liberation Mono", Menlo, monospace;
-    font-size: 0.875rem;
-    color: rgb(209, 213, 219);
+    font-size: var(--text-sm);
+    color: var(--color-text-secondary);
     text-align: left;
     width: 100%;
 }
@@ -1111,19 +1111,19 @@ function debounce<T extends (...args: any[]) => any>(func: T, wait: number): (..
 .delete-confirm-btn {
     display: flex;
     align-items: center;
-    gap: 0.5rem;
-    padding: 0.75rem 1.5rem;
-    background-color: rgb(239, 68, 68);
-    color: white;
+    gap: var(--space-2);
+    padding: var(--space-3) var(--space-6);
+    background-color: var(--color-danger);
+    color: var(--color-text-inverse);
     border: none;
-    border-radius: 0.375rem;
-    font-size: 0.875rem;
+    border-radius: var(--radius-md);
+    font-size: var(--text-sm);
     cursor: pointer;
-    transition: background-color 0.15s ease-in-out;
+    transition: background-color var(--duration-150) ease-in-out;
 }
 
 .delete-confirm-btn:hover:not(:disabled) {
-    background-color: rgb(220, 38, 38);
+    background-color: var(--color-danger-dark);
 }
 
 .delete-confirm-btn:disabled {
@@ -1132,63 +1132,63 @@ function debounce<T extends (...args: any[]) => any>(func: T, wait: number): (..
 }
 
 .delete-icon {
-    width: 0.875rem;
-    height: 0.875rem;
+    width: var(--text-sm);
+    height: var(--text-sm);
 }
 
 .action-btn {
-    padding: 0.375rem;
+    padding: var(--space-1-5);
     border: none;
-    border-radius: 0.25rem;
+    border-radius: var(--radius-base);
     cursor: pointer;
-    transition: background-color 0.15s ease-in-out;
+    transition: background-color var(--duration-150) ease-in-out;
 }
 
 .edit-btn {
-    background-color: rgb(59, 130, 246);
-    color: white;
+    background-color: var(--color-primary);
+    color: var(--color-text-inverse);
 }
 
 .edit-btn:hover {
-    background-color: rgb(37, 99, 235);
+    background-color: var(--color-primary-dark);
 }
 
 .delete-btn {
-    background-color: rgb(239, 68, 68);
-    color: white;
+    background-color: var(--color-danger);
+    color: var(--color-text-inverse);
 }
 
 .delete-btn:hover {
-    background-color: rgb(220, 38, 38);
+    background-color: var(--color-danger-dark);
 }
 
 .action-btn-icon {
-    width: 0.875rem;
-    height: 0.875rem;
+    width: var(--text-sm);
+    height: var(--text-sm);
 }
 
 .pagination {
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: 0.5rem;
-    padding: 1rem 0;
+    gap: var(--space-2);
+    padding: var(--space-4) 0;
 }
 
 .pagination-btn {
-    padding: 0.5rem 1rem;
-    background: rgba(0, 0, 0, 0.3);
-    border: 1px solid rgb(55, 55, 55);
-    border-radius: 0.375rem;
-    color: white;
-    font-size: 0.875rem;
+    padding: var(--space-2) var(--space-4);
+    background: var(--color-surface-alpha);
+    border: 1px solid var(--color-border-light);
+    border-radius: var(--radius-md);
+    color: var(--color-text-primary);
+    font-size: var(--text-sm);
     cursor: pointer;
-    transition: background-color 0.15s ease-in-out;
+    transition: background-color var(--duration-150) ease-in-out;
 }
 
 .pagination-btn:hover:not(:disabled) {
-    background: rgba(0, 0, 0, 0.5);
-    border-color: rgb(96, 165, 250);
+    background: var(--color-surface-alpha-medium);
+    border-color: var(--color-border-focus);
 }
 
 .pagination-btn:disabled {
@@ -1197,9 +1197,9 @@ function debounce<T extends (...args: any[]) => any>(func: T, wait: number): (..
 }
 
 .pagination-info {
-    color: rgb(156, 163, 175);
-    font-size: 0.875rem;
-    margin: 0 1rem;
+    color: var(--color-text-tertiary);
+    font-size: var(--text-sm);
+    margin: 0 var(--space-4);
 }
 
 .loading-container,
@@ -1209,44 +1209,44 @@ function debounce<T extends (...args: any[]) => any>(func: T, wait: number): (..
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    padding: 3rem;
-    gap: 1rem;
+    padding: var(--space-12);
+    gap: var(--space-4);
 }
 
 .loading-icon,
 .error-icon,
 .empty-icon {
-    width: 2rem;
-    height: 2rem;
-    color: rgb(156, 163, 175);
+    width: var(--space-8);
+    height: var(--space-8);
+    color: var(--color-text-tertiary);
 }
 
 .loading-text,
 .error-text,
 .empty-text {
-    color: rgb(156, 163, 175);
-    font-size: 0.875rem;
+    color: var(--color-text-tertiary);
+    font-size: var(--text-sm);
 }
 
 .error-retry {
-    padding: 0.5rem 1rem;
-    background-color: rgb(59, 130, 246);
-    color: white;
+    padding: var(--space-2) var(--space-4);
+    background-color: var(--color-primary);
+    color: var(--color-text-inverse);
     border: none;
-    border-radius: 0.375rem;
-    font-size: 0.875rem;
+    border-radius: var(--radius-md);
+    font-size: var(--text-sm);
     cursor: pointer;
 }
 
 /* Responsive adjustments */
 @media (max-width: 768px) {
     .collection-view {
-        padding: 1rem;
+        padding: var(--space-4);
     }
 
     .collection-header {
         flex-direction: column;
-        gap: 1rem;
+        gap: var(--space-4);
     }
 
     .collection-controls {
@@ -1267,7 +1267,7 @@ function debounce<T extends (...args: any[]) => any>(func: T, wait: number): (..
     }
 
     .modal-overlay {
-        padding: 0.5rem;
+        padding: var(--space-2);
     }
 
     .modal-content {

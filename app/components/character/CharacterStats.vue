@@ -1,41 +1,40 @@
 <template>
     <div class="character-stats-container">
         <!-- Period Selector -->
-        <div class="flex justify-between items-center mb-6">
-            <h2 class="text-xl font-semibold flex items-center gap-2">
-                <UIcon name="i-lucide-bar-chart-3" class="h-5 w-5" />
+        <div class="period-header">
+            <h2 class="stats-title">
+                <UIcon name="i-lucide-bar-chart-3" class="title-icon" />
                 {{ $t('stats') }} ({{ activePeriodLabel }})
             </h2>
-            <div class="flex gap-2">
-                <UButton
-                    v-for="period in periods"
-                    :key="period.value"
-                    size="sm"
-                    :variant="activePeriod === period.value ? 'solid' : 'outline'"
-                    @click="changePeriod(period.value)"
-                >
+            <div class="period-buttons">
+                <UButton v-for="period in periods" :key="period.value" size="sm"
+                    :variant="activePeriod === period.value ? 'solid' : 'outline'" @click="changePeriod(period.value)">
                     {{ period.label }}
                 </UButton>
             </div>
         </div>
 
         <!-- Ship Stats Section -->
-        <div class="ship-stats-section mb-8">
-            <h2 class="text-xl font-semibold mb-4 flex items-center gap-2">
-                <UIcon name="i-lucide-rocket" class="h-5 w-5" />
-                {{ t('character.shipStats') }}
-            </h2>
-            <CharacterShipStats :stats="shipStats" :loading="shipStatsLoading" />
-        </div>
+        <Card class="stats-section">
+            <template #header>
+                <div class="section-header">
+                    <UIcon name="i-lucide-rocket" class="section-icon" />
+                    {{ t('character.shipStats') }}
+                </div>
+            </template>
+            <CharacterShipStats :stats="shipStats || { shipGroupStats: [] }" :loading="shipStatsLoading" />
+        </Card>
 
         <!-- Monthly History Section -->
-        <div class="monthly-history-section">
-            <h2 class="text-xl font-semibold mb-4 flex items-center gap-2">
-                <UIcon name="i-lucide-calendar" class="h-5 w-5" />
-                {{ t('character.monthlyHistory') }}
-            </h2>
-            <CharacterMonthlyHistory :stats="monthlyStats" :loading="monthlyStatsLoading" />
-        </div>
+        <Card class="stats-section">
+            <template #header>
+                <div class="section-header">
+                    <UIcon name="i-lucide-calendar" class="section-icon" />
+                    {{ t('character.monthlyHistory') }}
+                </div>
+            </template>
+            <CharacterMonthlyHistory :stats="monthlyStats || { monthlyStats: [] }" :loading="monthlyStatsLoading" />
+        </Card>
     </div>
 </template>
 
@@ -88,13 +87,70 @@ const { data: monthlyStats, pending: monthlyStatsLoading, refresh: refreshMonthl
 </script>
 
 <style scoped>
+/* Container */
 .character-stats-container {
-    padding: 1rem;
+    padding: var(--space-4);
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-6);
 }
 
 @media (max-width: 768px) {
     .character-stats-container {
-        padding: 0.5rem;
+        padding: var(--space-2);
+        gap: var(--space-4);
     }
+}
+
+/* Period header */
+.period-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: var(--space-4);
+    margin-bottom: var(--space-2);
+}
+
+.stats-title {
+    font-size: var(--text-xl);
+    font-weight: var(--font-weight-semibold);
+    color: var(--color-text-primary);
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    margin: 0;
+}
+
+.title-icon {
+    width: var(--space-5);
+    height: var(--space-5);
+    color: var(--color-text-secondary);
+}
+
+.period-buttons {
+    display: flex;
+    gap: var(--space-2);
+    flex-wrap: wrap;
+}
+
+/* Section styling */
+.stats-section {
+    overflow: hidden;
+}
+
+.section-header {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    font-size: var(--text-lg);
+    font-weight: var(--font-weight-semibold);
+    color: var(--color-text-primary);
+}
+
+.section-icon {
+    width: var(--space-5);
+    height: var(--space-5);
+    color: var(--color-text-secondary);
 }
 </style>

@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import type { TableColumn } from "@nuxt/ui";
 
 interface ITopEntity {
     id: number;
@@ -30,7 +29,7 @@ const currentLocale = computed(() => locale.value);
 const displayTitle = computed(() => {
     if (props.title) return props.title;
 
-    const dataTypeMap = {
+    const dataTypeMap: Record<string, string> = {
         characters: t("topBox.characters"),
         corporations: t("topBox.corporations"),
         alliances: t("topBox.alliances"),
@@ -65,7 +64,7 @@ const getLocalizedString = (obj: any, locale: string): string => {
 };
 
 // Entity-specific mappings for character/corporation/alliance APIs
-const entityImageTypeMap = {
+const entityImageTypeMap: Record<string, string> = {
     ships: "item",
     systems: "system",
     constellations: "constellation",
@@ -75,7 +74,7 @@ const entityImageTypeMap = {
     alliances: "alliance",
 };
 
-const entityUrlPathMap = {
+const entityUrlPathMap: Record<string, string> = {
     ships: "item",
     systems: "system",
     constellations: "constellation",
@@ -96,7 +95,7 @@ const getEntityId = (entity: ITopEntity): number => {
     if (!entity) return 0;
 
     // Entity APIs return different field names based on dataType
-    const idFieldMap = {
+    const idFieldMap: Record<string, string> = {
         ships: "type_id",
         systems: "system_id",
         constellations: "constellation_id",
@@ -139,7 +138,7 @@ const generateEntityLink = (item: any): string | null => {
 const tableColumns = [
     {
         id: "entity",
-        header: displayTitle,
+        header: displayTitle.value,
         headerClass: "title-header",
         width: "80%",
     },
@@ -154,7 +153,7 @@ const tableColumns = [
 </script>
 
 <template>
-    <div class="pb-5 min-h-[485px]">
+    <div class="topbox-container">
         <Table :columns="tableColumns" :items="pending ? skeletonRows : (entities || [])" :loading="pending"
             :skeleton-count="props.limit" :empty-text="t('noData')" :empty-icon="'i-lucide-file-text'"
             :density="'compact'" :striped="false" :bordered="true" :special-header="true" background="transparent"
@@ -165,75 +164,84 @@ const tableColumns = [
             </template>
 
             <template #cell-entity="{ item }">
-                <div class="flex items-center py-1">
-                    <Image v-if="!item.isLoading" :type="entityImageTypeMap[props.dataType]" :id="getEntityId(item)"
-                        :alt="`${props.dataType}: ${getEntityDisplayName(item)}`" class="w-7 flex-shrink-0 mr-2"
+                <div class="entity-cell">
+                    <Image v-if="!(item as any).isLoading" :type="entityImageTypeMap[props.dataType]"
+                        :id="getEntityId(item as ITopEntity)"
+                        :alt="`${props.dataType}: ${getEntityDisplayName(item as ITopEntity)}`" class="entity-image"
                         size="32" />
-                    <div v-else class="w-7 h-7 flex-shrink-0 mr-2 rounded bg-gray-200 dark:bg-gray-700 animate-pulse">
+                    <div v-else class="entity-skeleton">
                     </div>
 
-                    <div class="text-sm text-left text-black dark:text-white truncate min-w-0 overflow-hidden">
-                        {{ getEntityDisplayName(item) }}
+                    <div class="entity-name">
+                        {{ getEntityDisplayName(item as ITopEntity) }}
                     </div>
                 </div>
             </template>
 
             <template #cell-count="{ item }">
-                <div class="text-sm text-right text-background-200 pr-2 whitespace-nowrap">
-                    {{ item.count }}
+                <div class="count-cell">
+                    {{ (item as any).count }}
                 </div>
             </template>
 
             <template #mobile-row="{ item }">
-                <div class="flex items-center justify-between p-2 w-full">
-                    <div class="flex items-center py-1 flex-1 min-w-0">
-                        <Image v-if="!item.isLoading" :type="entityImageTypeMap[props.dataType]" :id="getEntityId(item)"
-                            :alt="`${props.dataType}: ${getEntityDisplayName(item)}`" class="w-7 flex-shrink-0 mr-2"
+                <div class="mobile-row">
+                    <div class="mobile-entity">
+                        <Image v-if="!(item as any).isLoading" :type="entityImageTypeMap[props.dataType]"
+                            :id="getEntityId(item as ITopEntity)"
+                            :alt="`${props.dataType}: ${getEntityDisplayName(item as ITopEntity)}`" class="entity-image"
                             size="32" />
-                        <div v-else
-                            class="w-7 h-7 flex-shrink-0 mr-2 rounded bg-gray-200 dark:bg-gray-700 animate-pulse">
+                        <div v-else class="entity-skeleton">
                         </div>
 
-                        <div class="text-sm text-left text-black dark:text-white truncate min-w-0 overflow-hidden">
-                            {{ getEntityDisplayName(item) }}
+                        <div class="entity-name">
+                            {{ getEntityDisplayName(item as ITopEntity) }}
                         </div>
                     </div>
 
-                    <div class="text-sm text-right text-background-200 whitespace-nowrap ml-4">
-                        {{ item.count }}
+                    <div class="mobile-count">
+                        {{ (item as any).count }}
                     </div>
                 </div>
             </template>
         </Table>
 
-        <div v-if="error" class="text-center py-4 text-red-400">
+        <div v-if="error" class="error-message">
             {{ t('common.error') }}: {{ error.message }}
         </div>
 
-        <div class="text-sm text-center text-background-300 py-1 rounded-br-lg rounded-bl-lg">
+        <div class="time-period">
             ({{ props.days === 0 ? t('allTime') : t('killsOverLastXDays', { days: props.days }) }})
         </div>
     </div>
 </template>
 
 <style scoped>
+/* Container */
+.topbox-container {
+    padding-bottom: var(--space-5);
+    min-height: 485px;
+}
+
+/* Table styling */
 :deep(.topbox-header) {
-    background-color: light-dark(rgba(245, 245, 245, 0.05), rgba(26, 26, 26, 0.5)) !important;
-    padding: 0.5rem 1rem !important;
+    background-color: var(--color-surface-alpha) !important;
+    padding: var(--space-2) var(--space-4) !important;
     border-bottom: none !important;
 }
 
 :deep(.title-header) {
-    font-size: 0.875rem !important;
-    color: light-dark(#111827, white) !important;
+    font-size: var(--text-sm) !important;
+    color: var(--color-text-primary) !important;
     text-align: center !important;
 }
 
 :deep(.title-text) {
     width: 100%;
     text-align: center;
-    font-size: 0.75rem;
-    font-weight: 600;
+    font-size: var(--text-xs);
+    font-weight: var(--font-weight-semibold);
+    color: var(--color-text-primary);
 }
 
 :deep(.count-header) {
@@ -242,13 +250,98 @@ const tableColumns = [
 }
 
 :deep(tbody tr + tr) {
-    border-top: 1px solid rgb(40, 40, 40) !important;
+    border-top: 1px solid var(--color-border-default) !important;
 }
 
 :deep(tbody tr):hover {
-    background: light-dark(#e5e7eb, #1a1a1a);
+    background: var(--color-surface-hover);
 }
 
+/* Entity cell styling */
+.entity-cell {
+    display: flex;
+    align-items: center;
+    padding: var(--space-1) 0;
+}
+
+.entity-image {
+    width: var(--space-7);
+    flex-shrink: 0;
+    margin-right: var(--space-2);
+}
+
+.entity-skeleton {
+    width: var(--space-7);
+    height: var(--space-7);
+    flex-shrink: 0;
+    margin-right: var(--space-2);
+    border-radius: var(--radius-sm);
+    background-color: var(--color-surface-tertiary);
+    animation: pulse var(--duration-slow) ease-in-out infinite;
+}
+
+.entity-name {
+    font-size: var(--text-sm);
+    text-align: left;
+    color: var(--color-text-primary);
+    truncate: true;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+/* Count cell styling */
+.count-cell {
+    font-size: var(--text-sm);
+    text-align: right;
+    color: var(--color-text-secondary);
+    padding-right: var(--space-2);
+    white-space: nowrap;
+}
+
+/* Mobile row styling */
+.mobile-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: var(--space-2);
+    width: 100%;
+}
+
+.mobile-entity {
+    display: flex;
+    align-items: center;
+    padding: var(--space-1) 0;
+    flex: 1;
+    min-width: 0;
+}
+
+.mobile-count {
+    font-size: var(--text-sm);
+    text-align: right;
+    color: var(--color-text-secondary);
+    white-space: nowrap;
+    margin-left: var(--space-4);
+}
+
+/* Error message */
+.error-message {
+    text-align: center;
+    padding: var(--space-4);
+    color: var(--color-error-500);
+}
+
+/* Time period */
+.time-period {
+    font-size: var(--text-sm);
+    text-align: center;
+    color: var(--color-text-tertiary);
+    padding: var(--space-1);
+    border-radius: 0 0 var(--radius-lg) var(--radius-lg);
+}
+
+/* Animations */
 @keyframes pulse {
 
     0%,
@@ -257,11 +350,7 @@ const tableColumns = [
     }
 
     50% {
-        opacity: 0.5;
+        opacity: var(--opacity-50);
     }
-}
-
-.animate-pulse {
-    animation: pulse 1.5s ease-in-out infinite;
 }
 </style>

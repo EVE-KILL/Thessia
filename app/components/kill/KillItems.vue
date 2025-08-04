@@ -1,8 +1,8 @@
 <template>
     <Table :columns="columns" :items="data" :loading="!killmail" :row-class="getRowClasses" :bordered="true"
         :striped="false" :hover="true" :density="'compact'" :show-header="true" :special-header="true"
-        :empty-icon="'lucide:package'" :empty-text="t('noItems')" background="transparent" :link-fn="generateItemLink"
-        class="kill-items-table" @row-click="handleRowClick">
+        :empty-icon="'lucide:package'" :empty-text="t('noItems')" :link-fn="generateItemLink" class="kill-items-table"
+        @row-click="handleRowClick">
         <!-- Image cell with connector lines for container items -->
         <template #cell-image="{ item }">
             <div class="image-cell" :class="{
@@ -1058,26 +1058,26 @@ function generateItemLink(item: Item): string | null {
 <style scoped>
 /* Add override styles for the Table component */
 :deep(.kill-items-table) {
-    --table-border-color: light-dark(#e5e7eb, rgb(40, 40, 40));
+    --table-border-color: var(--color-border-medium);
     overflow: hidden;
     /* Prevent overflow during animations */
-    /* Add solid background matching the body background to prevent any transparency issues */
-    background-color: light-dark(var(--color-background), var(--color-background));
+    /* Add solid background matching the other Kill components */
+    background-color: light-dark(rgba(245, 245, 245, 0.05), rgba(26, 26, 26, 0.3));
 }
 
 /* Add explicit font size inheritance to prevent SSR/client differences */
 .kill-items-table {
-    font-size: 0.875rem;
-    line-height: 1.25rem;
+    font-size: var(--text-sm);
+    line-height: var(--line-height-tight);
 }
 
 /* Section headers - Use consistent spacing without margin conflicts */
 :deep(.section-header-row) {
     position: relative;
     cursor: pointer;
-    background-color: light-dark(rgba(245, 245, 245, 0.1), rgba(26, 26, 26, 0.5));
+    background-color: light-dark(rgba(245, 245, 245, 0.1), rgba(26, 26, 26, 0.4));
     color: light-dark(#111827, white);
-    border-top: 1px solid light-dark(#d1d5db, rgb(40, 40, 40));
+    border-top: 1px solid light-dark(rgba(229, 231, 235, 0.3), rgba(75, 85, 99, 0.2));
 }
 
 :deep(.section-header-row:first-child) {
@@ -1086,26 +1086,26 @@ function generateItemLink(item: Item): string | null {
 
 /* Add specific spacing for section headers - override Table component's margin for both mobile and desktop */
 :deep(.section-header-row:not(:first-child)) {
-    margin-top: 0.5rem !important;
+    margin-top: var(--space-2) !important;
 }
 
 /* Ensure mobile view also gets the same section header spacing */
 :deep(.mobile-view .section-header-row:not(:first-child)) {
-    margin-top: 0.5rem !important;
+    margin-top: var(--space-2) !important;
 }
 
 :deep(.section-header-row:hover) {
-    background-color: light-dark(rgba(229, 231, 235, 0.7), rgba(40, 40, 40, 0.4));
+    background-color: light-dark(rgba(245, 245, 245, 0.15), rgba(26, 26, 26, 0.5));
 }
 
 /* Section total rows - prevent animations */
 :deep(.section-total-row) {
-    background-color: light-dark(rgba(243, 244, 246, 0.2), rgba(40, 40, 40, 0.2));
+    background-color: light-dark(rgba(245, 245, 245, 0.08), rgba(26, 26, 26, 0.35));
     animation: none !important;
     transition: none !important;
     opacity: 1 !important;
     position: relative;
-    z-index: 2;
+    z-index: var(--z-2);
 }
 
 /* Same for the total row */
@@ -1114,7 +1114,7 @@ function generateItemLink(item: Item): string | null {
     transition: none !important;
     opacity: 1 !important;
     position: relative;
-    z-index: 2;
+    z-index: var(--z-2);
 }
 
 /* Image cell styling */
@@ -1126,48 +1126,48 @@ function generateItemLink(item: Item): string | null {
 
 /* Hover effect for container items */
 :deep(.container-item-row:hover) {
-    background-color: light-dark(rgba(229, 231, 235, 0.7), rgba(50, 50, 50, 0.4)) !important;
+    background-color: light-dark(rgba(245, 245, 245, 0.12), rgba(26, 26, 26, 0.45)) !important;
 }
 
 /* Styling for container items */
 :deep(.container-item-row) {
     position: relative;
-    border-left: 1px dashed rgba(100, 100, 100, 0.2);
-    background-color: light-dark(rgba(250, 250, 250, 0.1), rgba(40, 40, 40, 0.15));
-    animation: simpleSlideDown 0.25s ease-in-out;
+    border-left: 1px dashed light-dark(rgba(156, 163, 175, 0.4), rgba(107, 114, 128, 0.3));
+    background-color: light-dark(rgba(245, 245, 245, 0.08), rgba(26, 26, 26, 0.35));
+    animation: simpleSlideDown var(--duration-200) ease-in-out;
     /* Modified animation with no bounce */
     /* Ensure edges are covered during animation */
-    box-shadow: 0 0 0 2px light-dark(rgba(250, 250, 250, 0.1), rgba(40, 40, 40, 0.15));
-    z-index: 1;
+    box-shadow: 0 0 0 2px light-dark(rgba(245, 245, 245, 0.08), rgba(26, 26, 26, 0.35));
+    z-index: var(--z-1);
 }
 
 /* Adjust container items indentation */
 .indented-image {
-    padding-left: 35px !important;
+    padding-left: calc(var(--space-8) + var(--space-1)) !important;
 }
 
 /* Connector line styling */
 .connector-line {
     position: absolute;
-    left: 5px;
+    left: var(--space-1);
     display: flex;
     align-items: center;
 }
 
 .connector-icon {
-    width: 12px;
-    height: 12px;
-    color: light-dark(#6b7280, #9ca3af);
-    margin-right: 2px;
+    width: var(--size-icon-xs);
+    height: var(--size-icon-xs);
+    color: var(--color-text-secondary);
+    margin-right: var(--space-1);
 }
 
 /* Collapse icon styling */
 .collapse-icon {
-    width: 16px;
-    height: 16px;
-    color: light-dark(#6b7280, #9ca3af);
-    margin-right: 4px;
-    transition: transform 0.3s ease;
+    width: var(--size-icon-sm);
+    height: var(--size-icon-sm);
+    color: var(--color-text-secondary);
+    margin-right: var(--space-1);
+    transition: transform var(--duration-300) ease;
 }
 
 .rotate-icon {
@@ -1175,16 +1175,16 @@ function generateItemLink(item: Item): string | null {
 }
 
 .section-count {
-    font-size: 0.8rem;
-    color: light-dark(#6b7280, #9ca3af);
-    font-weight: normal;
-    margin-left: 0.5rem;
+    font-size: var(--text-2xs);
+    color: var(--color-text-secondary);
+    font-weight: var(--font-normal);
+    margin-left: var(--space-2);
 }
 
 /* Quantity badges styling */
 .quantity-badges {
     display: flex;
-    gap: 0.5rem;
+    gap: var(--space-2);
     flex-wrap: wrap;
 }
 
@@ -1196,7 +1196,7 @@ function generateItemLink(item: Item): string | null {
 .badge-text {
     color: #000000 !important;
     /* Force black text for both light and dark modes */
-    font-weight: 600;
+    font-weight: var(--font-semibold);
 }
 
 :deep(.u-badge.bg-success),
@@ -1206,17 +1206,17 @@ function generateItemLink(item: Item): string | null {
 
 /* Compact styling for badges */
 :deep(.u-badge) {
-    padding: 0.1rem 0.4rem;
-    font-size: 0.7rem;
+    padding: var(--space-1) var(--space-3);
+    font-size: var(--text-2xs);
 }
 
 /* Mobile view styling - horizontal layout */
 .mobile-container {
     display: flex;
     width: 100%;
-    gap: 0.75rem;
+    gap: var(--space-3);
     align-items: center;
-    padding: 0.25rem 0;
+    padding: var(--space-1) 0;
 }
 
 .mobile-image-cell {
@@ -1228,12 +1228,12 @@ function generateItemLink(item: Item): string | null {
 }
 
 .indented-mobile-image {
-    padding-left: 15px;
+    padding-left: var(--space-4);
 }
 
 .mobile-connector-line {
     position: absolute;
-    left: 2px;
+    left: var(--space-1);
     display: flex;
     align-items: center;
 }
@@ -1241,14 +1241,14 @@ function generateItemLink(item: Item): string | null {
 .connector-icon-mobile {
     width: 10px;
     height: 10px;
-    color: light-dark(#6b7280, #9ca3af);
+    color: var(--color-text-secondary);
 }
 
 .collapse-icon-mobile {
     width: 14px;
     height: 14px;
-    color: light-dark(#6b7280, #9ca3af);
-    margin-right: 2px;
+    color: var(--color-text-secondary);
+    margin-right: var(--space-1);
 }
 
 .mobile-content {
@@ -1259,10 +1259,10 @@ function generateItemLink(item: Item): string | null {
 }
 
 .mobile-header {
-    font-size: 0.75rem;
-    font-weight: 600;
+    font-size: var(--text-xs);
+    font-weight: var(--font-semibold);
     text-transform: uppercase;
-    color: light-dark(#111827, white);
+    color: var(--color-text-primary);
 }
 
 /* Main item row layout - horizontal with space distribution */
@@ -1278,35 +1278,35 @@ function generateItemLink(item: Item): string | null {
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
-    font-weight: 500;
-    font-size: 0.875rem;
-    color: light-dark(#111827, white);
-    padding-right: 0.5rem;
+    font-weight: var(--font-medium);
+    font-size: var(--text-sm);
+    color: var(--color-text-primary);
+    padding-right: var(--space-2);
 }
 
 .mobile-meta {
     display: flex;
     align-items: center;
-    gap: 0.5rem;
+    gap: var(--space-2);
     flex-shrink: 0;
 }
 
 .mobile-badges-wrapper {
     display: flex;
-    gap: 0.25rem;
+    gap: var(--space-1);
     white-space: nowrap;
 }
 
 .item-badge-mobile {
-    padding: 0.05rem 0.3rem;
-    font-size: 0.65rem;
+    padding: calc(var(--space-1) / 2) var(--space-2);
+    font-size: var(--text-2xs);
 }
 
 .mobile-value {
-    font-size: 0.75rem;
-    font-weight: 500;
+    font-size: var(--text-xs);
+    font-weight: var(--font-medium);
     white-space: nowrap;
-    color: light-dark(#111827, white);
+    color: var(--color-text-primary);
     min-width: 60px;
     text-align: right;
 }
@@ -1318,7 +1318,7 @@ function generateItemLink(item: Item): string | null {
     }
 
     .mobile-meta {
-        gap: 0.25rem;
+        gap: var(--space-1);
     }
 
     .mobile-value {
@@ -1337,25 +1337,25 @@ function generateItemLink(item: Item): string | null {
 .mobile-container {
     display: flex;
     width: 100%;
-    gap: 0.75rem;
+    gap: var(--space-3);
 }
 
 .mobile-image-cell {
     position: relative;
     display: flex;
     align-items: flex-start;
-    padding-top: 2px;
+    padding-top: var(--space-1);
     width: 30px;
     flex-shrink: 0;
 }
 
 .indented-mobile-image {
-    padding-left: 25px;
+    padding-left: var(--space-6);
 }
 
 .mobile-connector-line {
     position: absolute;
-    left: 2px;
+    left: var(--space-1);
     display: flex;
     align-items: center;
 }
@@ -1363,14 +1363,14 @@ function generateItemLink(item: Item): string | null {
 .connector-icon-mobile {
     width: 10px;
     height: 10px;
-    color: light-dark(#6b7280, #9ca3af);
+    color: var(--color-text-secondary);
 }
 
 .collapse-icon-mobile {
     width: 14px;
     height: 14px;
-    color: light-dark(#6b7280, #9ca3af);
-    margin-right: 2px;
+    color: var(--color-text-secondary);
+    margin-right: var(--space-1);
 }
 
 .mobile-content {
@@ -1381,18 +1381,18 @@ function generateItemLink(item: Item): string | null {
 }
 
 .mobile-header {
-    font-size: 0.75rem;
-    font-weight: 600;
+    font-size: var(--text-xs);
+    font-weight: var(--font-semibold);
     text-transform: uppercase;
-    color: light-dark(#111827, white);
-    padding-top: 2px;
+    color: var(--color-text-primary);
+    padding-top: var(--space-1);
 }
 
 .mobile-item-name {
-    font-size: 0.875rem;
-    font-weight: 500;
-    color: light-dark(#111827, white);
-    margin-bottom: 0.25rem;
+    font-size: var(--text-sm);
+    font-weight: var(--font-medium);
+    color: var(--color-text-primary);
+    margin-bottom: var(--space-1);
     display: flex;
     align-items: center;
 }
@@ -1405,27 +1405,27 @@ function generateItemLink(item: Item): string | null {
 
 .mobile-badges-wrapper {
     display: flex;
-    gap: 0.25rem;
+    gap: var(--space-1);
 }
 
 .item-badge-mobile {
-    padding: 0.05rem 0.3rem;
-    font-size: 0.65rem;
+    padding: calc(var(--space-1) / 2) var(--space-2);
+    font-size: var(--text-2xs);
 }
 
 .mobile-value {
-    font-size: 0.75rem;
-    font-weight: 500;
-    color: light-dark(#111827, white);
-    margin-left: 1rem;
+    font-size: var(--text-xs);
+    font-weight: var(--font-medium);
+    color: var(--color-text-primary);
+    margin-left: var(--space-4);
 }
 
 .container-collapse-icon-mobile {
-    width: 12px;
-    height: 12px;
-    color: light-dark(#6b7280, #9ca3af);
-    margin-left: 4px;
-    transition: transform 0.2s ease;
+    width: var(--size-icon-xs);
+    height: var(--size-icon-xs);
+    color: var(--color-text-secondary);
+    margin-left: var(--space-1);
+    transition: transform var(--duration-200) ease;
     cursor: pointer;
 }
 
@@ -1436,17 +1436,17 @@ function generateItemLink(item: Item): string | null {
 
 /* Ensure rows are properly spaced */
 :deep(.table-row) {
-    margin-bottom: 0.25rem;
-    transition: background-color 0.3s ease;
+    margin-bottom: var(--space-1);
+    transition: background-color var(--duration-300) ease;
     /* Only transition background color, not position or size */
     position: relative;
     /* Thicker box shadow to prevent any gaps between rows */
-    box-shadow: 0 0 0 2px light-dark(rgba(255, 255, 255, 0.25), rgba(26, 26, 26, 0.25));
+    box-shadow: 0 0 0 2px var(--color-surface-alpha-light);
 }
 
 /* Regular item rows have simple fade animation without transforms */
 :deep(.table-row.item) {
-    animation: simpleFadeIn 0.25s ease-in-out;
+    animation: simpleFadeIn var(--duration-200) ease-in-out;
 }
 
 /* Ensure columns are distributed properly */
@@ -1494,13 +1494,13 @@ function generateItemLink(item: Item): string | null {
     isolation: isolate;
     overflow: hidden;
     /* Ensure table body has solid background to prevent leaks */
-    background-color: light-dark(var(--color-background), var(--color-background));
+    background-color: light-dark(rgba(245, 245, 245, 0.05), rgba(26, 26, 26, 0.3));
 }
 
 /* Collapsible section hover effect */
 :deep(.section-header-row:hover) {
-    background-color: light-dark(rgba(229, 231, 235, 0.9), rgba(40, 40, 40, 0.6));
-    transition: background-color 0.2s ease;
+    background-color: light-dark(rgba(245, 245, 245, 0.15), rgba(26, 26, 26, 0.5));
+    transition: background-color var(--duration-200) ease;
 }
 
 /* Ensure cell backgrounds are transparent */
@@ -1513,11 +1513,11 @@ function generateItemLink(item: Item): string | null {
 :deep(.table-row) {
     margin-bottom: 0;
     /* Remove margin to prevent gaps */
-    padding-top: 0.125rem;
+    padding-top: var(--space-1);
     /* Add padding instead */
-    padding-bottom: 0.125rem;
+    padding-bottom: var(--space-1);
     /* Add outline to reinforce edges */
-    outline: 2px solid light-dark(rgba(255, 255, 255, 0.25), rgba(26, 26, 26, 0.25));
+    outline: 2px solid light-dark(rgba(245, 245, 245, 0.1), rgba(26, 26, 26, 0.4));
     outline-offset: -1px;
 }
 
@@ -1545,14 +1545,14 @@ function generateItemLink(item: Item): string | null {
 
 /* Sorting styles */
 .sort-indicator {
-    font-size: 0.7rem;
-    color: light-dark(#6b7280, #9ca3af);
-    font-weight: normal;
-    margin-left: 0.5rem;
+    font-size: var(--text-2xs);
+    color: var(--color-text-secondary);
+    font-weight: var(--font-normal);
+    margin-left: var(--space-2);
 }
 
 .sort-active {
-    color: light-dark(#4b5563, #d1d5db);
+    color: var(--color-text-primary);
 }
 
 .sort-hint {
@@ -1566,8 +1566,8 @@ function generateItemLink(item: Item): string | null {
     align-items: center;
     cursor: pointer;
     height: 100%;
-    padding: 0.25rem;
-    border-radius: 0.25rem;
+    padding: var(--space-1);
+    border-radius: var(--radius-base);
 }
 
 .full-width-cell {
@@ -1581,8 +1581,8 @@ function generateItemLink(item: Item): string | null {
     width: 100%;
     height: 100%;
     background-color: transparent;
-    transition: background-color 0.2s ease;
-    padding: 0 0.5rem;
+    transition: background-color var(--duration-200) ease;
+    padding: 0 var(--space-2);
 }
 
 /* Text alignment classes */
@@ -1596,17 +1596,17 @@ function generateItemLink(item: Item): string | null {
 
 /* Sort icons */
 .sort-icon {
-    width: 16px;
-    height: 16px;
-    margin-left: 4px;
-    color: light-dark(#4b5563, #d1d5db);
+    width: var(--size-icon-sm);
+    height: var(--size-icon-sm);
+    margin-left: var(--space-1);
+    color: var(--color-text-primary);
 }
 
 .sort-icon-inactive {
-    width: 16px;
-    height: 16px;
-    margin-left: 4px;
-    color: light-dark(#9ca3af, #6b7280);
+    width: var(--size-icon-sm);
+    height: var(--size-icon-sm);
+    margin-left: var(--space-1);
+    color: var(--color-text-secondary);
     opacity: 0.6;
 }
 
@@ -1615,7 +1615,7 @@ function generateItemLink(item: Item): string | null {
 }
 
 .full-width-cell:hover {
-    background-color: light-dark(rgba(229, 231, 235, 0.5), rgba(45, 45, 45, 0.5));
+    background-color: var(--color-surface-hover);
 }
 
 /* Container collapsible items styling */
@@ -1627,39 +1627,39 @@ function generateItemLink(item: Item): string | null {
 /* Style for container names to indicate they're clickable */
 .container-name {
     cursor: pointer;
-    transition: color 0.2s ease;
+    transition: color var(--duration-200) ease;
 }
 
 .container-name:hover {
-    color: light-dark(#4b5563, #e5e7eb);
+    color: var(--color-text-primary);
 }
 
 .container-collapse-icon {
     width: 14px;
     height: 14px;
-    color: light-dark(#6b7280, #9ca3af);
-    margin-left: 4px;
-    transition: transform 0.2s ease;
+    color: var(--color-text-secondary);
+    margin-left: var(--space-1);
+    transition: transform var(--duration-200) ease;
     cursor: pointer;
 }
 
 /* Add mobile version */
 .container-collapse-icon-mobile {
-    width: 12px;
-    height: 12px;
-    color: light-dark(#6b7280, #9ca3af);
-    margin-left: 4px;
-    transition: transform 0.2s ease;
+    width: var(--size-icon-xs);
+    height: var(--size-icon-xs);
+    color: var(--color-text-secondary);
+    margin-left: var(--space-1);
+    transition: transform var(--duration-200) ease;
     cursor: pointer;
 }
 
 .container-collapse-icon-mobile:hover {
-    color: light-dark(#4b5563, #d1d5db);
+    color: var(--color-text-primary);
 }
 
 /* Animation for container items */
 :deep(.container-item-row) {
-    animation: containerSlideDown 0.2s ease-in-out;
+    animation: containerSlideDown var(--duration-200) ease-in-out;
 }
 
 @keyframes containerSlideDown {
@@ -1676,13 +1676,13 @@ function generateItemLink(item: Item): string | null {
 
 /* Container row styling */
 :deep(.container-row) {
-    background-color: light-dark(rgba(250, 250, 250, 0.15), rgba(45, 45, 45, 0.15));
-    transition: background-color 0.2s ease;
+    background-color: light-dark(rgba(245, 245, 245, 0.08), rgba(26, 26, 26, 0.35));
+    transition: background-color var(--duration-200) ease;
     cursor: pointer;
 }
 
 :deep(.container-row:hover) {
-    background-color: light-dark(rgba(245, 245, 245, 0.25), rgba(50, 50, 50, 0.25));
+    background-color: light-dark(rgba(245, 245, 245, 0.12), rgba(26, 26, 26, 0.45));
 }
 
 /* Privacy blur effect for items table */
@@ -1699,8 +1699,8 @@ function generateItemLink(item: Item): string | null {
     right: 0;
     bottom: 0;
     backdrop-filter: blur(8px);
-    background: rgba(0, 0, 0, 0.1);
-    z-index: 2;
+    background: light-dark(rgba(255, 255, 255, 0.7), rgba(0, 0, 0, 0.7));
+    z-index: var(--z-2);
     pointer-events: all;
     /* Block all interactions */
 }

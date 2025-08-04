@@ -27,6 +27,20 @@
             </div>
         </div>
 
+        <!-- Quick Navigation -->
+        <div v-if="data && data.success" class="quick-nav">
+            <button @click="scrollToSection('alliances')" class="nav-btn"
+                :class="{ 'active': activeSection === 'alliances' }">
+                <Icon name="heroicons:flag" class="nav-icon" />
+                {{ t('admin.analytics.esi.alliances') }} ({{ filteredAlliances.length }})
+            </button>
+            <button @click="scrollToSection('corporations')" class="nav-btn"
+                :class="{ 'active': activeSection === 'corporations' }">
+                <Icon name="heroicons:building-storefront" class="nav-icon" />
+                {{ t('admin.analytics.esi.corporations') }} ({{ filteredCorporations.length }})
+            </button>
+        </div>
+
         <!-- Content -->
         <div class="analytics-container">
             <div v-if="pending" class="loading-container">
@@ -37,131 +51,154 @@
             <div v-else-if="error" class="error-container">
                 <Icon name="heroicons:exclamation-triangle" class="error-icon" />
                 <p class="error-text">{{ t('admin.analytics.error') }}</p>
-                <p style="font-size: 0.75rem; color: rgb(156, 163, 175); margin-top: 0.5rem;">{{ error }}</p>
+                <p class="error-details">{{ error }}</p>
                 <button @click="() => refreshData()" class="error-retry">
                     {{ t('admin.analytics.retry') }}
                 </button>
             </div>
 
             <div v-else-if="data && data.success" class="analytics-content">
-                <!-- Debug info (remove after testing) -->
-                <!-- <pre>{{ JSON.stringify(data, null, 2) }}</pre> -->
-
                 <!-- Summary Statistics -->
                 <div class="summary-section">
                     <h4 class="section-title">{{ t('admin.analytics.esi.summary') }}</h4>
                     <div class="stats-grid">
-                        <div class="stat-card">
-                            <div class="stat-icon">
-                                <Icon name="heroicons:key" class="icon" />
-                            </div>
-                            <div class="stat-info">
-                                <div class="stat-label">{{ t('admin.analytics.esi.totalKeys') }}</div>
-                                <div class="stat-value">{{ data?.data?.summary?.totalKeys || 0 }}</div>
-                            </div>
-                        </div>
-                        <div class="stat-card">
-                            <div class="stat-icon corp-icon">
-                                <Icon name="heroicons:building-office" class="icon" />
-                            </div>
-                            <div class="stat-info">
-                                <div class="stat-label">{{ t('admin.analytics.esi.corporationKeys') }}</div>
-                                <div class="stat-value">{{ data?.data?.summary?.totalCorporationKeys || 0 }}</div>
-                            </div>
-                        </div>
-                        <div class="stat-card">
-                            <div class="stat-icon">
-                                <Icon name="heroicons:building-storefront" class="icon" />
-                            </div>
-                            <div class="stat-info">
-                                <div class="stat-label">{{ t('admin.analytics.esi.uniqueCorporations') }}</div>
-                                <div class="stat-value">{{ data?.data?.summary?.uniqueCorporations || 0 }}</div>
-                            </div>
-                        </div>
-                        <div class="stat-card">
-                            <div class="stat-icon alliance-icon">
-                                <Icon name="heroicons:flag" class="icon" />
-                            </div>
-                            <div class="stat-info">
-                                <div class="stat-label">{{ t('admin.analytics.esi.uniqueAlliances') }}</div>
-                                <div class="stat-value">{{ data?.data?.summary?.uniqueAlliances || 0 }}</div>
-                            </div>
-                        </div>
-                        <div class="stat-card">
-                            <div class="stat-icon members-icon">
-                                <Icon name="heroicons:users" class="icon" />
-                            </div>
-                            <div class="stat-info">
-                                <div class="stat-label">{{ t('admin.analytics.esi.membersCovered') }}</div>
-                                <div class="stat-value">{{ data?.data?.summary?.membersCovered?.toLocaleString() || 0 }}
+                        <Card variant="default" size="sm" class="summary-statistics">
+                            <div class="stat-content">
+                                <div class="stat-icon">
+                                    <Icon name="heroicons:key" class="icon" />
+                                </div>
+                                <div class="stat-info">
+                                    <div class="stat-label">{{ t('admin.analytics.esi.totalKeys') }}</div>
+                                    <div class="stat-value">{{ data?.data?.summary?.totalKeys || 0 }}</div>
                                 </div>
                             </div>
-                        </div>
-                        <div class="stat-card">
-                            <div class="stat-icon killmails-icon">
-                                <Icon name="heroicons:bolt" class="icon" />
-                            </div>
-                            <div class="stat-info">
-                                <div class="stat-label">{{ t('admin.analytics.esi.newKillmailsLast30Days') }}</div>
-                                <div class="stat-value">{{ data?.data?.summary?.newKillmailsLast30Days?.toLocaleString()
-                                    || 0 }}
+                        </Card>
+                        <Card variant="default" size="sm" class="summary-statistics">
+                            <div class="stat-content">
+                                <div class="stat-icon corp-icon">
+                                    <Icon name="heroicons:building-office" class="icon" />
+                                </div>
+                                <div class="stat-info">
+                                    <div class="stat-label">{{ t('admin.analytics.esi.corporationKeys') }}</div>
+                                    <div class="stat-value">{{ data?.data?.summary?.totalCorporationKeys || 0 }}
+                                    </div>
                                 </div>
                             </div>
-                        </div>
+                        </Card>
+                        <Card variant="default" size="sm" class="summary-statistics">
+                            <div class="stat-content">
+                                <div class="stat-icon">
+                                    <Icon name="heroicons:building-storefront" class="icon" />
+                                </div>
+                                <div class="stat-info">
+                                    <div class="stat-label">{{ t('admin.analytics.esi.uniqueCorporations') }}</div>
+                                    <div class="stat-value">{{ data?.data?.summary?.uniqueCorporations || 0 }}</div>
+                                </div>
+                            </div>
+                        </Card>
+                        <Card variant="default" size="sm" class="summary-statistics">
+                            <div class="stat-content">
+                                <div class="stat-icon alliance-icon">
+                                    <Icon name="heroicons:flag" class="icon" />
+                                </div>
+                                <div class="stat-info">
+                                    <div class="stat-label">{{ t('admin.analytics.esi.uniqueAlliances') }}</div>
+                                    <div class="stat-value">{{ data?.data?.summary?.uniqueAlliances || 0 }}</div>
+                                </div>
+                            </div>
+                        </Card>
+                        <Card variant="default" size="sm" class="summary-statistics">
+                            <div class="stat-content">
+                                <div class="stat-icon members-icon">
+                                    <Icon name="heroicons:users" class="icon" />
+                                </div>
+                                <div class="stat-info">
+                                    <div class="stat-label">{{ t('admin.analytics.esi.membersCovered') }}</div>
+                                    <div class="stat-value">{{ data?.data?.summary?.membersCovered?.toLocaleString()
+                                        || 0 }}
+                                    </div>
+                                </div>
+                            </div>
+                        </Card>
+                        <Card variant="default" size="sm" class="summary-statistics">
+                            <div class="stat-content">
+                                <div class="stat-icon killmails-icon">
+                                    <Icon name="heroicons:bolt" class="icon" />
+                                </div>
+                                <div class="stat-info">
+                                    <div class="stat-label">{{ t('admin.analytics.esi.newKillmailsLast30Days') }}
+                                    </div>
+                                    <div class="stat-value">{{
+                                        data?.data?.summary?.newKillmailsLast30Days?.toLocaleString()
+                                        || 0 }}</div>
+                                </div>
+                            </div>
+                        </Card>
                     </div>
                 </div>
 
                 <!-- Alliances Section -->
-                <div class="alliances-section">
+                <div id="alliances-section" class="data-section">
                     <h4 class="section-title">
                         {{ t('admin.analytics.esi.alliances') }}
                         <span class="section-count">({{ filteredAlliances.length }})</span>
                     </h4>
-                    <div v-if="filteredAlliances.length > 0" class="alliances-grid">
-                        <div v-for="alliance in filteredAlliances" :key="alliance.id" class="alliance-card">
-                            <div class="alliance-header">
-                                <div class="alliance-avatar">
-                                    <Image type="alliance" :id="alliance.id" :alt="alliance.name" :size="64"
-                                        class="alliance-image" />
-                                </div>
-                                <div class="alliance-info">
-                                    <h5 class="alliance-name">{{ alliance.name }}</h5>
-                                    <div class="alliance-stats">
-                                        <span class="stat-item">{{ alliance.totalKeys }} {{ t('admin.analytics.keys')
-                                            }}</span>
-                                        <span class="stat-item">{{ alliance.totalCorporations }} {{
-                                            t('admin.analytics.corporations') }}</span>
-                                    </div>
-                                </div>
-                                <div class="completion-badge"
-                                    :class="getCompletionClass(alliance.completionPercentage)">
-                                    {{ alliance.completionPercentage }}%
-                                </div>
-                            </div>
+                    <div class="data-container">
+                        <div v-if="filteredAlliances.length > 0" class="data-grid">
+                            <div v-for="alliance in filteredAlliances" :key="alliance.id" class="alliance-wrapper">
+                                <Card variant="elevated" size="md">
+                                    <template #header>
+                                        <div class="entity-header">
+                                            <div class="entity-avatar">
+                                                <Image type="alliance" :id="alliance.id" :alt="alliance.name" :size="64"
+                                                    class="entity-image" />
+                                            </div>
+                                            <div class="entity-info">
+                                                <h5 class="entity-name">{{ alliance.name }}</h5>
+                                                <div class="entity-id">ID: {{ alliance.id }}</div>
+                                                <div class="entity-stats">
+                                                    <span class="stat-item">{{ alliance.totalKeys }} {{
+                                                        t('admin.analytics.keys') }}</span>
+                                                    <span class="stat-item">{{ alliance.totalCorporations }} {{
+                                                        t('admin.analytics.corporations') }}</span>
+                                                </div>
+                                            </div>
+                                            <div class="completion-badge"
+                                                :class="getCompletionClass(alliance.completionPercentage)">
+                                                {{ alliance.completionPercentage }}%
+                                            </div>
+                                        </div>
+                                    </template>
 
-                            <div class="alliance-details">
-                                <div class="progress-bar">
-                                    <div class="progress-fill" :style="`width: ${alliance.completionPercentage}%`">
-                                    </div>
-                                </div>
-                                <div class="progress-text">
-                                    {{ alliance.corporationsWithKeys }} / {{ alliance.totalCorporations }} {{
-                                        t('admin.analytics.corporationsWithKeys') }}
-                                </div>
-                            </div>
+                                    <template #body>
+                                        <div class="progress-section">
+                                            <div class="progress-bar">
+                                                <div class="progress-fill"
+                                                    :style="`width: ${alliance.completionPercentage}%`"></div>
+                                            </div>
+                                            <div class="progress-text">
+                                                {{ alliance.corporationsWithKeys }} / {{ alliance.totalCorporations }}
+                                                {{ t('admin.analytics.corporationsWithKeys') }}
+                                            </div>
+                                        </div>
+                                    </template>
 
-                            <!-- Missing Corporations -->
-                            <div v-if="alliance.missingCorporations.length > 0 || alliance.corporations.length > 0"
-                                class="missing-corps">
-                                <button @click="toggleMissingCorps(alliance.id)" class="missing-toggle">
-                                    <Icon name="heroicons:exclamation-triangle" class="missing-icon" />
-                                    {{ alliance.missingCorporations.length }} {{
-                                        t('admin.analytics.missingCorporations') }}
-                                    <Icon
-                                        :name="expandedAlliances.has(alliance.id) ? 'heroicons:chevron-up' : 'heroicons:chevron-down'"
-                                        class="chevron-icon" />
-                                </button>
-                                <div v-if="expandedAlliances.has(alliance.id)" class="missing-list">
+                                    <template #actions
+                                        v-if="alliance.missingCorporations.length > 0 || alliance.corporations.length > 0">
+                                        <button @click="toggleMissingCorps(alliance.id)" class="action-btn expand-btn">
+                                            <Icon name="heroicons:exclamation-triangle"
+                                                class="action-btn-icon warning-icon" />
+                                            {{ t('admin.analytics.viewCorporations') }} ({{
+                                                alliance.missingCorporations.length }})
+                                            <Icon
+                                                :name="expandedAlliances.has(alliance.id) ? 'heroicons:chevron-up' : 'heroicons:chevron-down'"
+                                                class="chevron-icon" />
+                                        </button>
+                                    </template>
+                                </Card>
+
+                                <!-- Expanded content outside of card to prevent layout issues -->
+                                <div v-if="expandedAlliances.has(alliance.id)" class="expanded-content-external">
                                     <!-- Corporations We Have Keys For -->
                                     <div v-if="alliance.corporations.length > 0" class="corp-section">
                                         <div class="section-header have-keys">
@@ -199,58 +236,70 @@
                                 </div>
                             </div>
                         </div>
-                    </div>
-                    <div v-else class="empty-state">
-                        <Icon name="heroicons:flag" class="empty-icon" />
-                        <p class="empty-text">{{ t('admin.analytics.esi.noAlliances') }}</p>
+                        <div v-else class="empty-state">
+                            <Icon name="heroicons:flag" class="empty-icon" />
+                            <p class="empty-text">{{ t('admin.analytics.esi.noAlliances') }}</p>
+                        </div>
                     </div>
                 </div>
 
+                <!-- Section Divider -->
+                <div class="section-divider"></div>
+
                 <!-- Corporations Section -->
-                <div class="corporations-section">
+                <div id="corporations-section" class="data-section">
                     <h4 class="section-title">
                         {{ t('admin.analytics.esi.corporations') }}
                         <span class="section-count">({{ filteredCorporations.length }})</span>
                     </h4>
-                    <div v-if="filteredCorporations.length > 0" class="corporations-grid">
-                        <div v-for="corporation in filteredCorporations" :key="corporation.id" class="corporation-card">
-                            <div class="corporation-header">
-                                <div class="corporation-avatar">
-                                    <Image type="corporation" :id="corporation.id" :alt="corporation.name" :size="48"
-                                        class="corporation-image" />
-                                    <div v-if="corporation.hasCorpKeys" class="corp-key-badge">
-                                        <Icon name="heroicons:key" class="key-icon" />
-                                    </div>
-                                </div>
-                                <div class="corporation-info">
-                                    <h5 class="corporation-name">{{ corporation.name }}</h5>
-                                    <div class="corporation-stats">
-                                        <span class="stat-item">{{ corporation.keyCount }} {{ t('admin.analytics.keys')
-                                            }}</span>
-                                        <span class="stat-item">{{ corporation.memberCount }} {{
-                                            t('admin.analytics.members') }}</span>
-                                    </div>
-                                </div>
-                            </div>
+                    <div class="data-container">
+                        <div v-if="filteredCorporations.length > 0" class="data-grid">
+                            <div v-for="corporation in filteredCorporations" :key="corporation.id"
+                                class="corporation-wrapper">
+                                <Card variant="elevated" size="md">
+                                    <template #header>
+                                        <div class="entity-header">
+                                            <div class="entity-avatar">
+                                                <Image type="corporation" :id="corporation.id" :alt="corporation.name"
+                                                    :size="48" class="entity-image" />
+                                                <div v-if="corporation.hasCorpKeys" class="entity-badge">
+                                                    <Icon name="heroicons:key" class="badge-icon" />
+                                                </div>
+                                            </div>
+                                            <div class="entity-info">
+                                                <h5 class="entity-name">{{ corporation.name }}</h5>
+                                                <div class="entity-id">ID: {{ corporation.id }}</div>
+                                                <div class="entity-stats">
+                                                    <span class="stat-item">{{ corporation.keyCount }} {{
+                                                        t('admin.analytics.keys') }}</span>
+                                                    <span class="stat-item">{{ corporation.memberCount }} {{
+                                                        t('admin.analytics.members') }}</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </template>
 
-                            <!-- Corporation Users -->
-                            <div class="corporation-users">
-                                <button @click="toggleCorpUsers(corporation.id)" class="users-toggle">
-                                    <Icon name="heroicons:users" class="users-icon" />
-                                    {{ t('admin.analytics.viewUsers') }} ({{ corporation.users.length }})
-                                    <Icon
-                                        :name="expandedCorporations.has(corporation.id) ? 'heroicons:chevron-up' : 'heroicons:chevron-down'"
-                                        class="chevron-icon" />
-                                </button>
-                                <div v-if="expandedCorporations.has(corporation.id)" class="users-list">
-                                    <div v-for="user in corporation.users" :key="user.characterId" class="corp-user">
+                                    <template #actions>
+                                        <button @click="toggleCorpUsers(corporation.id)" class="action-btn expand-btn">
+                                            <Icon name="heroicons:users" class="action-btn-icon primary-icon" />
+                                            {{ t('admin.analytics.viewUsers') }} ({{ corporation.users.length }})
+                                            <Icon
+                                                :name="expandedCorporations.has(corporation.id) ? 'heroicons:chevron-up' : 'heroicons:chevron-down'"
+                                                class="chevron-icon" />
+                                        </button>
+                                    </template>
+                                </Card>
+
+                                <!-- Expanded content outside of card -->
+                                <div v-if="expandedCorporations.has(corporation.id)" class="expanded-content-external">
+                                    <div v-for="user in corporation.users" :key="user.characterId" class="user-item">
                                         <Image type="character" :id="user.characterId" :alt="user.characterName"
                                             :size="32" class="user-image" />
                                         <NuxtLink :to="`/character/${user.characterId}`" class="user-name">
                                             {{ user.characterName }}
                                         </NuxtLink>
-                                        <span class="user-scopes">{{ user.scopesCount }} {{ t('admin.analytics.scopes')
-                                            }}</span>
+                                        <span class="user-scopes">{{ user.scopesCount }} {{
+                                            t('admin.analytics.scopes') }}</span>
                                         <div v-if="user.canFetchCorporationKillmails" class="corp-key-indicator">
                                             <Icon name="heroicons:key" class="key-icon" />
                                         </div>
@@ -258,10 +307,10 @@
                                 </div>
                             </div>
                         </div>
-                    </div>
-                    <div v-else class="empty-state">
-                        <Icon name="heroicons:building-storefront" class="empty-icon" />
-                        <p class="empty-text">{{ t('admin.analytics.esi.noCorporations') }}</p>
+                        <div v-else class="empty-state">
+                            <Icon name="heroicons:building-storefront" class="empty-icon" />
+                            <p class="empty-text">{{ t('admin.analytics.esi.noCorporations') }}</p>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -296,6 +345,7 @@ const searchQuery = ref('');
 const debouncedSearchQuery = ref('');
 const expandedAlliances = ref(new Set<number>());
 const expandedCorporations = ref(new Set<number>());
+const activeSection = ref('alliances');
 
 // Computed API endpoint
 const apiEndpoint = computed(() => {
@@ -383,6 +433,18 @@ const toggleCorpUsers = (corporationId: number) => {
     }
 };
 
+// Navigation functions
+const scrollToSection = (section: string) => {
+    activeSection.value = section;
+    const element = document.getElementById(`${section}-section`);
+    if (element) {
+        element.scrollIntoView({
+            behavior: 'smooth',
+            block: 'start'
+        });
+    }
+};
+
 // Debounce utility
 function debounce<T extends (...args: any[]) => any>(func: T, wait: number): (...args: Parameters<T>) => void {
     let timeout: NodeJS.Timeout;
@@ -394,20 +456,24 @@ function debounce<T extends (...args: any[]) => any>(func: T, wait: number): (..
 </script>
 
 <style scoped>
+/* Main Container */
 .analytics-view {
-    display: flex;
-    flex-direction: column;
-    height: 100%;
-    padding: 1.5rem;
-    gap: 1.5rem;
+    padding: var(--space-6);
+    background: var(--color-surface-primary);
+    min-height: 100vh;
 }
 
+/* Header Section */
 .analytics-header {
     display: flex;
     justify-content: space-between;
     align-items: flex-start;
-    padding-bottom: 1rem;
-    border-bottom: 1px solid rgb(55, 55, 55);
+    margin-bottom: var(--space-8);
+    padding: var(--space-6);
+    background: var(--color-surface-secondary);
+    border-radius: var(--radius-lg);
+    border: 1px solid var(--color-border-primary);
+    box-shadow: var(--shadow-sm);
 }
 
 .header-info {
@@ -415,38 +481,41 @@ function debounce<T extends (...args: any[]) => any>(func: T, wait: number): (..
 }
 
 .analytics-title {
-    font-size: 1.5rem;
-    font-weight: 600;
-    color: white;
-    margin-bottom: 0.5rem;
+    font-size: var(--text-2xl);
+    font-weight: var(--font-weight-bold);
+    color: var(--color-text-primary);
+    margin-bottom: var(--space-2);
 }
 
 .analytics-description {
-    color: rgb(156, 163, 175);
-    font-size: 0.875rem;
+    font-size: var(--text-base);
+    color: var(--color-text-muted);
+    margin: 0;
 }
 
 .header-actions {
-    flex-shrink: 0;
+    display: flex;
+    gap: var(--space-3);
 }
 
 .action-button {
     display: flex;
     align-items: center;
-    gap: 0.5rem;
-    padding: 0.75rem 1.5rem;
-    background-color: rgb(59, 130, 246);
-    color: white;
+    gap: var(--space-2);
+    padding: var(--space-3) var(--space-4);
+    background: var(--color-primary-500);
+    color: var(--color-text-inverse);
     border: none;
-    border-radius: 0.375rem;
-    font-size: 0.875rem;
-    font-weight: 500;
+    border-radius: var(--radius-md);
+    font-size: var(--text-sm);
+    font-weight: var(--font-weight-medium);
     cursor: pointer;
-    transition: background-color 0.15s ease-in-out;
+    transition: all var(--transition-normal);
 }
 
 .action-button:hover:not(:disabled) {
-    background-color: rgb(37, 99, 235);
+    background: var(--color-primary-600);
+    transform: translateY(-1px);
 }
 
 .action-button:disabled {
@@ -455,582 +524,699 @@ function debounce<T extends (...args: any[]) => any>(func: T, wait: number): (..
 }
 
 .action-icon {
-    width: 1rem;
-    height: 1rem;
+    width: var(--space-4);
+    height: var(--space-4);
 }
 
+/* Search Controls */
 .analytics-controls {
-    display: flex;
-    justify-content: flex-start;
-    align-items: center;
+    margin-bottom: var(--space-6);
 }
 
 .search-container {
     position: relative;
-    width: 100%;
     max-width: 400px;
-}
-
-.search-icon {
-    position: absolute;
-    left: 0.75rem;
-    top: 50%;
-    transform: translateY(-50%);
-    width: 1rem;
-    height: 1rem;
-    color: rgb(156, 163, 175);
 }
 
 .search-input {
     width: 100%;
-    padding: 0.75rem 0.75rem 0.75rem 2.5rem;
-    background: rgba(0, 0, 0, 0.3);
-    border: 1px solid rgb(55, 55, 55);
-    border-radius: 0.375rem;
-    color: white;
-    font-size: 0.875rem;
+    padding: var(--space-3) var(--space-4) var(--space-3) var(--space-10);
+    border: 1px solid var(--color-border-primary);
+    border-radius: var(--radius-md);
+    background: var(--color-surface-secondary);
+    color: var(--color-text-primary);
+    font-size: var(--text-sm);
+    transition: all var(--transition-normal);
 }
 
 .search-input:focus {
     outline: none;
-    border-color: rgb(96, 165, 250);
+    border-color: var(--color-primary-500);
+    box-shadow: 0 0 0 3px var(--color-primary-alpha-100);
 }
 
-.search-input::placeholder {
-    color: rgb(156, 163, 175);
+.search-icon {
+    position: absolute;
+    left: var(--space-3);
+    top: 50%;
+    transform: translateY(-50%);
+    width: var(--space-4);
+    height: var(--space-4);
+    color: var(--color-text-muted);
 }
 
 .search-clear-btn {
     position: absolute;
-    right: 0.75rem;
+    right: var(--space-2);
     top: 50%;
     transform: translateY(-50%);
     background: none;
     border: none;
-    color: rgb(156, 163, 175);
+    padding: var(--space-2);
+    color: var(--color-text-muted);
     cursor: pointer;
-    padding: 0.25rem;
-    border-radius: 0.25rem;
-    transition: color 0.15s ease-in-out;
-    display: flex;
-    align-items: center;
-    justify-content: center;
+    border-radius: var(--radius-sm);
+    transition: all var(--transition-fast);
 }
 
 .search-clear-btn:hover {
-    color: white;
-    background: rgba(255, 255, 255, 0.1);
+    background: var(--color-surface-tertiary);
+    color: var(--color-text-primary);
 }
 
 .clear-icon {
-    width: 1rem;
-    height: 1rem;
+    width: var(--space-3);
+    height: var(--space-3);
 }
 
+/* Quick Navigation */
+.quick-nav {
+    display: flex;
+    gap: var(--space-4);
+    margin-bottom: var(--space-6);
+    padding: var(--space-4);
+    background: var(--color-surface-secondary);
+    border-radius: var(--radius-lg);
+    border: 1px solid var(--color-border-primary);
+    box-shadow: var(--shadow-sm);
+}
+
+.nav-btn {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    padding: var(--space-3) var(--space-4);
+    background: var(--color-surface-tertiary);
+    border: 1px solid var(--color-border-primary);
+    border-radius: var(--radius-md);
+    color: var(--color-text-muted);
+    font-size: var(--text-sm);
+    font-weight: var(--font-weight-medium);
+    cursor: pointer;
+    transition: all var(--transition-normal);
+    text-decoration: none;
+}
+
+.nav-btn:hover {
+    background: var(--color-surface-primary);
+    border-color: var(--color-primary-500);
+    color: var(--color-text-primary);
+}
+
+.nav-btn.active {
+    background: var(--color-primary-500);
+    border-color: var(--color-primary-600);
+    color: var(--color-text-inverse);
+}
+
+.nav-icon {
+    width: var(--space-4);
+    height: var(--space-4);
+}
+
+/* Content Container */
 .analytics-container {
-    flex: 1;
-    overflow-y: auto;
+    background: var(--color-surface-secondary);
+    border-radius: var(--radius-lg);
+    border: 1px solid var(--color-border-primary);
+    box-shadow: var(--shadow-sm);
+    overflow: hidden;
 }
 
-.loading-container,
+/* Loading State */
+.loading-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: var(--space-16);
+    text-align: center;
+}
+
+.loading-icon {
+    width: var(--space-8);
+    height: var(--space-8);
+    color: var(--color-primary-500);
+    margin-bottom: var(--space-4);
+}
+
+.loading-text {
+    font-size: var(--text-base);
+    color: var(--color-text-muted);
+    margin: 0;
+}
+
+/* Error State */
 .error-container {
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    padding: 3rem;
-    gap: 1rem;
+    padding: var(--space-16);
+    text-align: center;
 }
 
-.loading-icon,
 .error-icon {
-    width: 2rem;
-    height: 2rem;
-    color: rgb(156, 163, 175);
+    width: var(--space-8);
+    height: var(--space-8);
+    color: var(--color-danger-500);
+    margin-bottom: var(--space-4);
 }
 
-.loading-text,
 .error-text {
-    color: rgb(156, 163, 175);
-    font-size: 0.875rem;
+    font-size: var(--text-lg);
+    font-weight: var(--font-weight-semibold);
+    color: var(--color-text-primary);
+    margin-bottom: var(--space-2);
+}
+
+.error-details {
+    font-size: var(--text-sm);
+    color: var(--color-text-muted);
+    margin-bottom: var(--space-4);
 }
 
 .error-retry {
-    padding: 0.5rem 1rem;
-    background-color: rgb(59, 130, 246);
-    color: white;
+    padding: var(--space-2) var(--space-4);
+    background: var(--color-primary-500);
+    color: var(--color-text-inverse);
     border: none;
-    border-radius: 0.375rem;
-    font-size: 0.875rem;
+    border-radius: var(--radius-md);
+    font-size: var(--text-sm);
     cursor: pointer;
+    transition: background-color var(--transition-normal);
 }
 
+.error-retry:hover {
+    background: var(--color-primary-600);
+}
+
+/* Main Content */
 .analytics-content {
-    display: flex;
-    flex-direction: column;
-    gap: 2rem;
+    padding: var(--space-6);
 }
 
+/* Section Titles */
 .section-title {
-    font-size: 1.25rem;
-    font-weight: 600;
-    color: white;
-    margin-bottom: 1rem;
     display: flex;
     align-items: center;
-    gap: 0.5rem;
+    gap: var(--space-2);
+    font-size: var(--text-xl);
+    font-weight: var(--font-weight-bold);
+    color: var(--color-text-primary);
+    margin-bottom: var(--space-6);
 }
 
 .section-count {
-    font-size: 0.875rem;
-    color: rgb(156, 163, 175);
-    font-weight: 400;
+    font-size: var(--text-sm);
+    font-weight: var(--font-weight-normal);
+    color: var(--color-text-muted);
+    background: var(--color-surface-tertiary);
+    padding: var(--space-1) var(--space-2);
+    border-radius: var(--radius-full);
 }
 
 /* Summary Statistics */
+.summary-statistics {
+    background: var(--color-surface-alpha-subtle);
+}
+
 .summary-section {
-    background: rgba(0, 0, 0, 0.3);
-    border: 1px solid rgb(55, 55, 55);
-    border-radius: 0.5rem;
-    padding: 1.5rem;
+    margin-bottom: var(--space-8);
 }
 
 .stats-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-    gap: 1rem;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: var(--space-4);
 }
 
-.stat-card {
+.stat-content {
     display: flex;
     align-items: center;
-    gap: 1rem;
-    background: rgba(0, 0, 0, 0.3);
-    border: 1px solid rgb(55, 55, 55);
-    border-radius: 0.375rem;
-    padding: 1rem;
+    gap: var(--space-4);
+    padding: var(--space-2);
 }
 
 .stat-icon {
     display: flex;
     align-items: center;
     justify-content: center;
-    width: 3rem;
-    height: 3rem;
-    background: rgba(59, 130, 246, 0.2);
-    border-radius: 0.5rem;
+    width: var(--space-12);
+    height: var(--space-12);
+    background: var(--color-primary-alpha-100);
+    border-radius: var(--radius-md);
+    flex-shrink: 0;
 }
 
 .stat-icon.corp-icon {
-    background: rgba(34, 197, 94, 0.2);
+    background: var(--color-success-alpha-100);
 }
 
 .stat-icon.alliance-icon {
-    background: rgba(168, 85, 247, 0.2);
+    background: var(--color-secondary-alpha-100);
 }
 
 .stat-icon.members-icon {
-    background: rgba(99, 102, 241, 0.2);
+    background: var(--color-info-alpha-100);
 }
 
 .stat-icon.killmails-icon {
-    background: rgba(245, 158, 11, 0.2);
+    background: var(--color-warning-alpha-100);
 }
 
 .stat-icon .icon {
-    width: 1.5rem;
-    height: 1.5rem;
-    color: rgb(96, 165, 250);
+    width: var(--space-6);
+    height: var(--space-6);
+    color: var(--color-primary-600);
 }
 
 .corp-icon .icon {
-    color: rgb(34, 197, 94);
+    color: var(--color-success-600);
 }
 
 .alliance-icon .icon {
-    color: rgb(168, 85, 247);
+    color: var(--color-secondary-600);
 }
 
 .members-icon .icon {
-    color: rgb(99, 102, 241);
+    color: var(--color-info-600);
 }
 
 .killmails-icon .icon {
-    color: rgb(245, 158, 11);
+    color: var(--color-warning-600);
 }
 
 .stat-info {
     flex: 1;
+    min-width: 0;
 }
 
 .stat-label {
-    font-size: 0.875rem;
-    color: rgb(156, 163, 175);
-    margin-bottom: 0.25rem;
+    font-size: var(--text-sm);
+    color: var(--color-text-muted);
+    margin-bottom: var(--space-1);
 }
 
 .stat-value {
-    font-size: 1.5rem;
-    font-weight: 600;
-    color: white;
+    font-size: var(--text-2xl);
+    font-weight: var(--font-weight-bold);
+    color: var(--color-text-primary);
 }
 
-/* Alliances */
-.alliances-section,
-.corporations-section {
-    background: rgba(0, 0, 0, 0.3);
-    border: 1px solid rgb(55, 55, 55);
-    border-radius: 0.5rem;
-    padding: 1.5rem;
+/* Data Section - Single Vertical Layout */
+.data-section {
+    margin-bottom: var(--space-8);
 }
 
-.alliances-grid,
-.corporations-grid {
+.data-container {
+    /* Remove height limits and scrolling */
+}
+
+.data-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
-    gap: 1rem;
+    grid-template-columns: repeat(2, 1fr);
+    gap: var(--space-4);
+    padding: var(--space-2) 0;
 }
 
-.alliance-card,
-.corporation-card {
-    background: rgba(0, 0, 0, 0.3);
-    border: 1px solid rgb(55, 55, 55);
-    border-radius: 0.375rem;
-    overflow: hidden;
+.alliance-wrapper,
+.corporation-wrapper {
+    display: flex;
+    flex-direction: column;
 }
 
-.alliance-header,
-.corporation-header {
+/* Section Spacing */
+.section-divider {
+    margin: var(--space-8) 0;
+    border-bottom: 1px solid var(--color-border-secondary);
+}
+
+/* Entity Header - For Card header slot */
+.entity-header {
     display: flex;
     align-items: center;
-    gap: 1rem;
-    padding: 1rem;
-    background: rgba(0, 0, 0, 0.5);
-    border-bottom: 1px solid rgb(55, 55, 55);
+    gap: var(--space-4);
 }
 
-.alliance-avatar,
-.corporation-avatar {
+.entity-avatar {
     position: relative;
     flex-shrink: 0;
 }
 
-.alliance-image {
-    width: 64px;
-    height: 64px;
-    border-radius: 0.375rem;
-    border: 1px solid rgb(55, 55, 55);
+.entity-image {
+    border-radius: var(--radius-md);
+    border: 2px solid var(--color-border-light);
+    object-fit: cover;
 }
 
-.corporation-image {
-    width: 48px;
-    height: 48px;
-    border-radius: 0.375rem;
-    border: 1px solid rgb(55, 55, 55);
-}
-
-.corp-key-badge {
+.entity-badge {
     position: absolute;
     top: -4px;
     right: -4px;
-    background: rgb(34, 197, 94);
+    background: var(--color-success);
     border-radius: 50%;
-    width: 18px;
-    height: 18px;
+    width: 20px;
+    height: 20px;
     display: flex;
     align-items: center;
     justify-content: center;
 }
 
-.corp-key-badge .key-icon {
-    width: 10px;
-    height: 10px;
-    color: white;
+.badge-icon {
+    width: 12px;
+    height: 12px;
+    color: var(--color-text-inverse);
 }
 
-.alliance-info,
-.corporation-info {
+.entity-info {
     flex: 1;
     min-width: 0;
 }
 
-.alliance-name,
-.corporation-name {
-    font-size: 1rem;
-    font-weight: 600;
-    color: white;
-    margin-bottom: 0.25rem;
+.entity-name {
+    font-size: var(--text-lg);
+    font-weight: var(--font-semibold);
+    color: var(--color-text-primary);
+    margin-bottom: var(--space-1);
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
 }
 
-.alliance-stats,
-.corporation-stats {
+.entity-id {
+    font-size: var(--text-xs);
+    color: var(--color-text-tertiary);
+    margin-bottom: var(--space-0-5);
+}
+
+.entity-stats {
     display: flex;
-    gap: 1rem;
+    gap: var(--space-3);
 }
 
 .stat-item {
-    font-size: 0.75rem;
-    color: rgb(156, 163, 175);
+    font-size: var(--text-sm);
+    color: var(--color-text-muted);
 }
 
 .completion-badge {
-    padding: 0.25rem 0.5rem;
-    border-radius: 0.25rem;
-    font-size: 0.75rem;
-    font-weight: 600;
-    color: white;
+    padding: var(--space-1) var(--space-2);
+    border-radius: var(--radius-sm);
+    font-size: var(--text-xs);
+    font-weight: var(--font-weight-semibold);
+    color: var(--color-text-inverse);
+    flex-shrink: 0;
 }
 
 .completion-high {
-    background: rgb(34, 197, 94);
+    background: var(--color-success-500);
 }
 
 .completion-medium {
-    background: rgb(234, 179, 8);
+    background: var(--color-warning-500);
 }
 
 .completion-low {
-    background: rgb(249, 115, 22);
+    background: var(--color-orange-500);
 }
 
 .completion-none {
-    background: rgb(239, 68, 68);
+    background: var(--color-danger-500);
 }
 
-.alliance-details {
-    padding: 1rem;
+.progress-section {
+    margin-bottom: var(--space-2);
 }
 
 .progress-bar {
     width: 100%;
-    height: 8px;
-    background: rgba(55, 55, 55, 0.5);
-    border-radius: 4px;
+    height: var(--space-2);
+    background: var(--color-surface-tertiary);
+    border-radius: var(--radius-sm);
     overflow: hidden;
-    margin-bottom: 0.5rem;
+    margin-bottom: var(--space-2);
 }
 
 .progress-fill {
     height: 100%;
-    background: rgb(59, 130, 246);
-    transition: width 0.3s ease;
+    background: var(--color-primary-500);
+    transition: width var(--transition-normal);
 }
 
 .progress-text {
-    font-size: 0.75rem;
-    color: rgb(156, 163, 175);
+    font-size: var(--text-xs);
+    color: var(--color-text-muted);
 }
 
-.missing-corps,
-.corporation-users {
-    border-top: 1px solid rgb(55, 55, 55);
-}
-
-.missing-toggle,
-.users-toggle {
-    width: 100%;
+.action-btn {
     display: flex;
     align-items: center;
-    gap: 0.5rem;
-    padding: 0.75rem 1rem;
-    background: none;
+    gap: var(--space-2);
+    width: 100%;
+    padding: var(--space-3) var(--space-4);
     border: none;
-    color: rgb(156, 163, 175);
-    font-size: 0.875rem;
+    background: none;
+    text-align: left;
     cursor: pointer;
-    transition: background-color 0.15s ease-in-out;
+    font-size: var(--text-sm);
+    color: var(--color-text-primary);
+    transition: background-color var(--duration-150) ease-in-out;
 }
 
-.missing-toggle:hover,
-.users-toggle:hover {
-    background: rgba(0, 0, 0, 0.3);
+.action-btn:hover {
+    background: var(--color-surface-alpha-medium);
 }
 
-.missing-icon,
-.users-icon,
+.action-btn-icon {
+    width: var(--space-4);
+    height: var(--space-4);
+    flex-shrink: 0;
+}
+
+.primary-icon {
+    color: var(--color-brand-primary);
+}
+
+.warning-icon {
+    color: var(--color-warning-500);
+}
+
 .chevron-icon {
-    width: 1rem;
-    height: 1rem;
+    width: var(--space-4);
+    height: var(--space-4);
+    margin-left: auto;
+    transition: transform var(--transition-fast);
 }
 
-.missing-icon {
-    color: rgb(234, 179, 8);
-}
-
-.users-icon {
-    color: rgb(96, 165, 250);
-}
-
-.missing-list,
-.users-list {
-    padding: 0 1rem 1rem 1rem;
-    display: flex;
-    flex-direction: column;
-    gap: 0.75rem;
+/* External Expanded Content */
+.expanded-content-external {
+    margin-top: 0;
+    padding: var(--space-4);
+    background: var(--color-surface-alpha-subtle);
+    border-radius: 0 0 var(--radius-lg) var(--radius-lg);
+    border: 1px solid var(--color-border-primary);
+    border-top: none;
+    box-shadow: var(--shadow-md);
+    max-width: 100%;
+    width: 100%;
+    overflow: hidden;
+    box-sizing: border-box;
 }
 
 .corp-section {
     display: flex;
     flex-direction: column;
-    gap: 0.5rem;
+    gap: var(--space-2);
+}
+
+.corp-section:not(:last-child) {
+    margin-bottom: var(--space-4);
 }
 
 .section-header {
     display: flex;
     align-items: center;
-    gap: 0.5rem;
-    font-size: 0.875rem;
-    font-weight: 600;
-    padding: 0.5rem 0.75rem;
-    border-radius: 0.25rem;
-    margin-bottom: 0.25rem;
+    gap: var(--space-2);
+    font-size: var(--text-sm);
+    font-weight: var(--font-weight-semibold);
+    padding: var(--space-2) var(--space-3);
+    border-radius: var(--radius-sm);
+    margin-bottom: var(--space-2);
 }
 
 .section-header.have-keys {
-    background: rgba(34, 197, 94, 0.1);
-    color: rgb(34, 197, 94);
-    border: 1px solid rgba(34, 197, 94, 0.2);
+    background: var(--color-success-alpha-100);
+    color: var(--color-success-600);
+    border: 1px solid var(--color-success-alpha-200);
 }
 
 .section-header.missing-keys {
-    background: rgba(234, 179, 8, 0.1);
-    color: rgb(234, 179, 8);
-    border: 1px solid rgba(234, 179, 8, 0.2);
+    background: var(--color-warning-alpha-100);
+    color: var(--color-warning-600);
+    border: 1px solid var(--color-warning-alpha-200);
 }
 
 .section-icon {
-    width: 1rem;
-    height: 1rem;
+    width: var(--space-4);
+    height: var(--space-4);
 }
 
 .corp-item {
     display: flex;
     align-items: center;
-    gap: 0.75rem;
-    padding: 0.5rem;
-    background: rgba(0, 0, 0, 0.3);
-    border-radius: 0.25rem;
+    gap: var(--space-3);
+    padding: var(--space-2);
+    background: var(--color-surface-secondary);
+    border-radius: var(--radius-sm);
+    min-width: 0;
 }
 
 .corp-item.have-corp {
-    border-left: 3px solid rgb(34, 197, 94);
+    border-left: 3px solid var(--color-success-500);
 }
 
 .corp-item.missing-corp {
-    border-left: 3px solid rgb(234, 179, 8);
+    border-left: 3px solid var(--color-warning-500);
 }
 
-.missing-corp,
-.corp-user {
-    display: flex;
-    align-items: center;
-    gap: 0.75rem;
-    padding: 0.5rem;
-    background: rgba(0, 0, 0, 0.3);
-    border-radius: 0.25rem;
-}
-
-.corp-image,
-.user-image {
-    width: 32px;
-    height: 32px;
-    border-radius: 0.25rem;
-    border: 1px solid rgb(55, 55, 55);
+.corp-image {
+    width: var(--space-8);
+    height: var(--space-8);
+    border-radius: var(--radius-sm);
+    object-fit: cover;
     flex-shrink: 0;
 }
 
-.corp-name,
-.user-name {
+.corp-name {
     flex: 1;
-    font-size: 0.875rem;
-    color: white;
-    text-decoration: none;
+    font-size: var(--text-sm);
+    color: var(--color-text-primary);
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
+    min-width: 0;
+    max-width: 200px;
 }
 
-.user-name:hover {
-    color: rgb(96, 165, 250);
-}
-
-.corp-members,
-.user-scopes {
-    font-size: 0.75rem;
-    color: rgb(156, 163, 175);
+.corp-members {
+    font-size: var(--text-xs);
+    color: var(--color-text-muted);
 }
 
 .corp-key-indicator {
     display: flex;
     align-items: center;
     justify-content: center;
-    width: 20px;
-    height: 20px;
-    background: rgb(34, 197, 94);
-    border-radius: 50%;
+    width: var(--space-5);
+    height: var(--space-5);
+    background: var(--color-success-500);
+    color: var(--color-text-inverse);
+    border-radius: var(--radius-full);
+    flex-shrink: 0;
 }
 
-.corp-key-indicator .key-icon {
-    width: 12px;
-    height: 12px;
-    color: white;
+.key-icon {
+    width: var(--space-3);
+    height: var(--space-3);
 }
 
+/* User Items in Corporation Section */
+.user-item {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    padding: var(--space-2);
+    background: var(--color-surface-secondary);
+    border-radius: var(--radius-sm);
+    min-width: 0;
+}
+
+.user-image {
+    width: var(--space-8);
+    height: var(--space-8);
+    border-radius: var(--radius-sm);
+    object-fit: cover;
+    flex-shrink: 0;
+}
+
+.user-name {
+    flex: 1;
+    font-size: var(--text-sm);
+    color: var(--color-text-primary);
+    text-decoration: none;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    transition: color var(--transition-fast);
+    min-width: 0;
+    max-width: 200px;
+}
+
+.user-name:hover {
+    color: var(--color-primary-500);
+}
+
+.user-scopes {
+    font-size: var(--text-xs);
+    color: var(--color-text-muted);
+}
+
+/* Empty States */
 .empty-state {
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    padding: 3rem;
-    gap: 1rem;
+    padding: var(--space-12);
+    text-align: center;
 }
 
 .empty-icon {
-    width: 2rem;
-    height: 2rem;
-    color: rgb(156, 163, 175);
+    width: var(--space-12);
+    height: var(--space-12);
+    color: var(--color-text-muted);
+    margin-bottom: var(--space-4);
 }
 
 .empty-text {
-    color: rgb(156, 163, 175);
-    font-size: 0.875rem;
+    font-size: var(--text-base);
+    color: var(--color-text-muted);
+    margin: 0;
 }
 
-/* Responsive adjustments */
+/* Responsive Design */
 @media (max-width: 768px) {
     .analytics-view {
-        padding: 1rem;
+        padding: var(--space-4);
     }
 
     .analytics-header {
         flex-direction: column;
-        gap: 1rem;
+        gap: var(--space-4);
+        align-items: stretch;
     }
 
     .stats-grid {
         grid-template-columns: 1fr;
     }
 
-    .alliances-grid,
-    .corporations-grid {
+    .data-grid {
         grid-template-columns: 1fr;
     }
 
-    .alliance-header,
-    .corporation-header {
+    .entity-stats {
         flex-direction: column;
-        align-items: flex-start;
-        gap: 0.75rem;
+        gap: var(--space-1);
     }
 
-    .missing-corp,
-    .corp-user {
+    .quick-nav {
         flex-direction: column;
-        align-items: flex-start;
-        gap: 0.5rem;
+        gap: var(--space-3);
+    }
+
+    .nav-btn {
+        justify-content: center;
     }
 }
 </style>

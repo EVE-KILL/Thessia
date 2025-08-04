@@ -58,29 +58,29 @@
             </div>
 
             <div v-else-if="data && data.data.length > 0" class="users-grid">
-                <div v-for="(user, index) in filteredUsers" :key="index" class="user-card">
-                    <!-- User Header -->
-                    <div class="user-header">
-                        <div class="user-avatar">
-                            <img :src="`https://images.evetech.net/characters/${user.characterId}/portrait?size=64`"
-                                :alt="user.characterName" class="character-image" @error="handleImageError" />
-                            <div v-if="user.administrator" class="admin-badge">
-                                <Icon name="heroicons:shield-check" class="admin-icon" />
+                <Card v-for="(user, index) in filteredUsers" :key="index" variant="elevated" size="md">
+                    <template #header>
+                        <div class="user-header-content">
+                            <div class="user-avatar">
+                                <img :src="`https://images.evetech.net/characters/${user.characterId}/portrait?size=64`"
+                                    :alt="user.characterName" class="character-image" @error="handleImageError" />
+                                <div v-if="user.administrator" class="admin-badge">
+                                    <Icon name="heroicons:shield-check" class="admin-icon" />
+                                </div>
+                            </div>
+                            <div class="user-info">
+                                <NuxtLink :to="`/character/${user.characterId}`" class="character-name-link">
+                                    <h4 class="character-name">{{ user.characterName }}</h4>
+                                </NuxtLink>
+                                <div class="character-id">ID: {{ user.characterId }}</div>
+                                <div class="last-active">
+                                    {{ t('admin.users.lastChecked') }}: {{ formatDate(user.lastChecked) }}
+                                </div>
                             </div>
                         </div>
-                        <div class="user-info">
-                            <NuxtLink :to="`/character/${user.characterId}`" class="character-name-link">
-                                <h4 class="character-name">{{ user.characterName }}</h4>
-                            </NuxtLink>
-                            <div class="character-id">ID: {{ user.characterId }}</div>
-                            <div class="last-active">
-                                {{ t('admin.users.lastChecked') }}: {{ formatDate(user.lastChecked) }}
-                            </div>
-                        </div>
-                    </div>
+                    </template>
 
-                    <!-- User Details -->
-                    <div class="user-details">
+                    <template #body>
                         <!-- User Stats -->
                         <div class="user-stats">
                             <div class="stat-item">
@@ -119,10 +119,9 @@
                                 </div>
                             </div>
                         </div>
-                    </div>
+                    </template>
 
-                    <!-- User Actions -->
-                    <div class="user-actions">
+                    <template #actions>
                         <button @click="viewUserDetails(user)" class="action-btn view-btn">
                             <Icon name="heroicons:eye" class="action-btn-icon" />
                             {{ t('admin.users.viewDetails') }}
@@ -132,8 +131,8 @@
                             <Icon name="heroicons:shield-check" class="action-btn-icon" />
                             {{ user.administrator ? t('admin.users.removeAdmin') : t('admin.users.makeAdmin') }}
                         </button>
-                    </div>
-                </div>
+                    </template>
+                </Card>
             </div>
 
             <div v-else class="empty-state">
@@ -449,16 +448,16 @@ function debounce<T extends (...args: any[]) => any>(func: T, wait: number): (..
     display: flex;
     flex-direction: column;
     height: 100%;
-    padding: 1.5rem;
-    gap: 1.5rem;
+    padding: var(--space-6);
+    gap: var(--space-6);
 }
 
 .users-header {
     display: flex;
     justify-content: space-between;
     align-items: flex-start;
-    padding-bottom: 1rem;
-    border-bottom: 1px solid rgb(55, 55, 55);
+    padding-bottom: var(--space-4);
+    border-bottom: 1px solid var(--color-border-light);
 }
 
 .header-info {
@@ -466,15 +465,15 @@ function debounce<T extends (...args: any[]) => any>(func: T, wait: number): (..
 }
 
 .users-title {
-    font-size: 1.5rem;
-    font-weight: 600;
-    color: white;
-    margin-bottom: 0.5rem;
+    font-size: var(--text-2xl);
+    font-weight: var(--font-semibold);
+    color: var(--color-text-primary);
+    margin-bottom: var(--space-2);
 }
 
 .users-description {
-    color: rgb(156, 163, 175);
-    font-size: 0.875rem;
+    color: var(--color-text-tertiary);
+    font-size: var(--text-sm);
 }
 
 .header-actions {
@@ -484,20 +483,20 @@ function debounce<T extends (...args: any[]) => any>(func: T, wait: number): (..
 .action-button {
     display: flex;
     align-items: center;
-    gap: 0.5rem;
-    padding: 0.75rem 1.5rem;
-    background-color: rgb(59, 130, 246);
-    color: white;
+    gap: var(--space-2);
+    padding: var(--space-3) var(--space-6);
+    background-color: var(--color-brand-primary);
+    color: var(--color-text-inverse);
     border: none;
-    border-radius: 0.375rem;
-    font-size: 0.875rem;
-    font-weight: 500;
+    border-radius: var(--radius-md);
+    font-size: var(--text-sm);
+    font-weight: var(--font-medium);
     cursor: pointer;
-    transition: background-color 0.15s ease-in-out;
+    transition: background-color var(--duration-150) ease-in-out;
 }
 
 .action-button:hover:not(:disabled) {
-    background-color: rgb(37, 99, 235);
+    background-color: var(--color-brand-primary-hover);
 }
 
 .action-button:disabled {
@@ -506,8 +505,8 @@ function debounce<T extends (...args: any[]) => any>(func: T, wait: number): (..
 }
 
 .action-icon {
-    width: 1rem;
-    height: 1rem;
+    width: var(--space-4);
+    height: var(--space-4);
 }
 
 .users-controls {
@@ -672,30 +671,14 @@ function debounce<T extends (...args: any[]) => any>(func: T, wait: number): (..
 .users-grid {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(450px, 1fr));
-    gap: 1.5rem;
-    padding: 1rem 0;
+    gap: var(--space-6);
+    padding: var(--space-4) 0;
 }
 
-.user-card {
-    background: rgba(0, 0, 0, 0.3);
-    border: 1px solid rgb(55, 55, 55);
-    border-radius: 0.5rem;
-    overflow: hidden;
-    transition: transform 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
-}
-
-.user-card:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-}
-
-.user-header {
+.user-header-content {
     display: flex;
     align-items: center;
-    gap: 1rem;
-    padding: 1rem;
-    background: rgba(0, 0, 0, 0.5);
-    border-bottom: 1px solid rgb(55, 55, 55);
+    gap: var(--space-4);
 }
 
 .user-avatar {
@@ -707,14 +690,14 @@ function debounce<T extends (...args: any[]) => any>(func: T, wait: number): (..
     width: 64px;
     height: 64px;
     border-radius: 50%;
-    border: 2px solid rgb(55, 55, 55);
+    border: 2px solid var(--color-border-light);
 }
 
 .admin-badge {
     position: absolute;
     top: -4px;
     right: -4px;
-    background: rgb(34, 197, 94);
+    background: var(--color-success);
     border-radius: 50%;
     width: 20px;
     height: 20px;
@@ -726,7 +709,7 @@ function debounce<T extends (...args: any[]) => any>(func: T, wait: number): (..
 .admin-icon {
     width: 12px;
     height: 12px;
-    color: white;
+    color: var(--color-text-inverse);
 }
 
 .user-info {
@@ -735,10 +718,10 @@ function debounce<T extends (...args: any[]) => any>(func: T, wait: number): (..
 }
 
 .character-name {
-    font-size: 1.125rem;
-    font-weight: 600;
-    color: white;
-    margin-bottom: 0.25rem;
+    font-size: var(--text-lg);
+    font-weight: var(--font-semibold);
+    color: var(--color-text-primary);
+    margin-bottom: var(--space-1);
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
@@ -747,170 +730,159 @@ function debounce<T extends (...args: any[]) => any>(func: T, wait: number): (..
 .character-name-link {
     text-decoration: none;
     color: inherit;
-    transition: color 0.15s ease-in-out;
+    transition: color var(--duration-150) ease-in-out;
 }
 
 .character-name-link:hover .character-name {
-    color: rgb(96, 165, 250);
+    color: var(--color-brand-primary);
 }
 
 .character-id,
 .last-active {
-    font-size: 0.75rem;
-    color: rgb(156, 163, 175);
-    margin-bottom: 0.125rem;
+    font-size: var(--text-xs);
+    color: var(--color-text-tertiary);
+    margin-bottom: var(--space-0-5);
 }
 
-.user-details {
-    padding: 1rem;
-}
 
 .user-stats {
-    margin-bottom: 1rem;
+    margin-bottom: var(--space-4);
 }
 
 .stat-item {
     display: flex;
     align-items: center;
-    gap: 0.5rem;
-    margin-bottom: 0.5rem;
-    font-size: 0.875rem;
+    gap: var(--space-2);
+    margin-bottom: var(--space-2);
+    font-size: var(--text-sm);
 }
 
 .stat-icon {
-    width: 1rem;
-    height: 1rem;
-    color: rgb(96, 165, 250);
+    width: var(--space-4);
+    height: var(--space-4);
+    color: var(--color-brand-primary);
     flex-shrink: 0;
 }
 
 .stat-label {
-    color: rgb(156, 163, 175);
+    color: var(--color-text-tertiary);
     min-width: 0;
 }
 
 .stat-value {
-    color: white;
-    font-weight: 500;
+    color: var(--color-text-primary);
+    font-weight: var(--font-medium);
 }
 
 .settings-summary {
-    margin-bottom: 1rem;
+    margin-bottom: var(--space-4);
 }
 
 .settings-header {
     display: flex;
     align-items: center;
-    gap: 0.5rem;
-    margin-bottom: 0.5rem;
-    font-size: 0.875rem;
-    font-weight: 500;
-    color: white;
+    gap: var(--space-2);
+    margin-bottom: var(--space-2);
+    font-size: var(--text-sm);
+    font-weight: var(--font-medium);
+    color: var(--color-text-primary);
 }
 
 .settings-icon {
-    width: 1rem;
-    height: 1rem;
-    color: rgb(96, 165, 250);
+    width: var(--space-4);
+    height: var(--space-4);
+    color: var(--color-brand-primary);
 }
 
 .settings-list {
-    background: rgba(0, 0, 0, 0.2);
-    border-radius: 0.25rem;
-    padding: 0.5rem;
+    background: var(--color-surface-alpha-subtle);
+    border-radius: var(--radius-base);
+    padding: var(--space-2);
 }
 
 .setting-item {
     display: flex;
     justify-content: space-between;
-    font-size: 0.75rem;
-    margin-bottom: 0.25rem;
+    font-size: var(--text-xs);
+    margin-bottom: var(--space-1);
 }
 
 .setting-key {
-    color: rgb(156, 163, 175);
+    color: var(--color-text-tertiary);
 }
 
 .setting-value {
-    color: white;
-}
-
-.user-actions {
-    display: flex;
-    gap: 0.5rem;
-    padding: 1rem;
-    background: rgba(0, 0, 0, 0.2);
-    border-top: 1px solid rgb(55, 55, 55);
+    color: var(--color-text-primary);
 }
 
 .action-btn {
     display: flex;
     align-items: center;
-    gap: 0.5rem;
-    padding: 0.5rem 1rem;
+    gap: var(--space-2);
+    padding: var(--space-2) var(--space-4);
     border: none;
-    border-radius: 0.25rem;
-    font-size: 0.875rem;
+    border-radius: var(--radius-base);
+    font-size: var(--text-sm);
     cursor: pointer;
-    transition: background-color 0.15s ease-in-out;
+    transition: background-color var(--duration-150) ease-in-out;
     flex: 1;
     justify-content: center;
 }
 
 .view-btn {
-    background-color: rgb(59, 130, 246);
-    color: white;
+    background-color: var(--color-primary);
+    color: var(--color-text-inverse);
 }
 
 .view-btn:hover {
-    background-color: rgb(37, 99, 235);
+    background-color: var(--color-primary-dark);
 }
 
 .admin-btn {
-    background-color: rgb(55, 55, 55);
-    color: rgb(156, 163, 175);
+    background-color: var(--color-surface-alpha-medium);
+    color: var(--color-text-tertiary);
 }
 
 .admin-btn:hover {
-    background-color: rgb(75, 75, 75);
+    background-color: var(--color-surface-alpha);
 }
 
 .admin-btn.admin-active {
-    background-color: rgb(34, 197, 94);
-    color: white;
+    background-color: var(--color-success);
+    color: var(--color-text-inverse);
 }
 
 .admin-btn.admin-active:hover {
-    background-color: rgb(22, 163, 74);
+    background-color: var(--color-success-dark);
 }
 
 .action-btn-icon {
-    width: 0.875rem;
-    height: 0.875rem;
+    width: var(--text-sm);
+    height: var(--text-sm);
 }
 
 .pagination {
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: 0.5rem;
-    padding: 1rem 0;
+    gap: var(--space-2);
+    padding: var(--space-4) 0;
 }
 
 .pagination-btn {
-    padding: 0.5rem 1rem;
-    background: rgba(0, 0, 0, 0.3);
-    border: 1px solid rgb(55, 55, 55);
-    border-radius: 0.375rem;
-    color: white;
-    font-size: 0.875rem;
+    padding: var(--space-2) var(--space-4);
+    background: var(--color-surface-alpha);
+    border: 1px solid var(--color-border-light);
+    border-radius: var(--radius-md);
+    color: var(--color-text-primary);
+    font-size: var(--text-sm);
     cursor: pointer;
-    transition: background-color 0.15s ease-in-out;
+    transition: background-color var(--duration-150) ease-in-out;
 }
 
 .pagination-btn:hover:not(:disabled) {
-    background: rgba(0, 0, 0, 0.5);
-    border-color: rgb(96, 165, 250);
+    background: var(--color-surface-alpha-medium);
+    border-color: var(--color-border-focus);
 }
 
 .pagination-btn:disabled {
@@ -919,9 +891,9 @@ function debounce<T extends (...args: any[]) => any>(func: T, wait: number): (..
 }
 
 .pagination-info {
-    color: rgb(156, 163, 175);
-    font-size: 0.875rem;
-    margin: 0 1rem;
+    color: var(--color-text-tertiary);
+    font-size: var(--text-sm);
+    margin: 0 var(--space-4);
 }
 
 /* Modal Styles */
@@ -931,18 +903,18 @@ function debounce<T extends (...args: any[]) => any>(func: T, wait: number): (..
     left: 0;
     right: 0;
     bottom: 0;
-    background: rgba(0, 0, 0, 0.7);
+    background: var(--color-overlay);
     display: flex;
     align-items: center;
     justify-content: center;
-    z-index: 1000;
-    padding: 1rem;
+    z-index: var(--z-modal);
+    padding: var(--space-4);
 }
 
 .modal-content {
-    background: rgb(17, 24, 39);
-    border: 1px solid rgb(55, 55, 55);
-    border-radius: 0.5rem;
+    background: var(--color-bg-primary);
+    border: 1px solid var(--color-border-light);
+    border-radius: var(--radius-lg);
     max-width: 800px;
     width: 100%;
     max-height: 90vh;
@@ -959,148 +931,148 @@ function debounce<T extends (...args: any[]) => any>(func: T, wait: number): (..
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 1rem;
-    border-bottom: 1px solid rgb(55, 55, 55);
+    padding: var(--space-4);
+    border-bottom: 1px solid var(--color-border-light);
 }
 
 .modal-title {
-    color: white;
-    font-size: 1.125rem;
-    font-weight: 600;
+    color: var(--color-text-primary);
+    font-size: var(--text-lg);
+    font-weight: var(--font-semibold);
 }
 
 .modal-close {
-    padding: 0.25rem;
+    padding: var(--space-1);
     background: none;
     border: none;
-    color: rgb(156, 163, 175);
+    color: var(--color-text-tertiary);
     cursor: pointer;
-    border-radius: 0.25rem;
-    transition: color 0.15s ease-in-out;
+    border-radius: var(--radius-base);
+    transition: color var(--duration-150) ease-in-out;
 }
 
 .modal-close:hover {
-    color: white;
+    color: var(--color-text-primary);
 }
 
 .close-icon {
-    width: 1.25rem;
-    height: 1.25rem;
+    width: var(--space-5);
+    height: var(--space-5);
 }
 
 .modal-body {
     flex: 1;
     overflow: auto;
-    padding: 1rem;
+    padding: var(--space-4);
 }
 
 .user-detail-content {
     display: flex;
     flex-direction: column;
-    gap: 1.5rem;
+    gap: var(--space-6);
 }
 
 .detail-section {
-    background: rgba(0, 0, 0, 0.2);
-    border-radius: 0.5rem;
-    padding: 1rem;
+    background: var(--color-surface-alpha-subtle);
+    border-radius: var(--radius-lg);
+    padding: var(--space-4);
 }
 
 .section-title {
-    color: white;
-    font-size: 1rem;
-    font-weight: 600;
-    margin-bottom: 1rem;
-    border-bottom: 1px solid rgb(55, 55, 55);
-    padding-bottom: 0.5rem;
+    color: var(--color-text-primary);
+    font-size: var(--text-base);
+    font-weight: var(--font-semibold);
+    margin-bottom: var(--space-4);
+    border-bottom: 1px solid var(--color-border-light);
+    padding-bottom: var(--space-2);
 }
 
 .detail-grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-    gap: 1rem;
+    gap: var(--space-4);
 }
 
 .detail-item {
     display: flex;
     flex-direction: column;
-    gap: 0.25rem;
+    gap: var(--space-1);
 }
 
 .detail-item label {
-    color: rgb(156, 163, 175);
-    font-size: 0.875rem;
-    font-weight: 500;
+    color: var(--color-text-tertiary);
+    font-size: var(--text-sm);
+    font-weight: var(--font-medium);
 }
 
 .detail-item span {
-    color: white;
-    font-size: 0.875rem;
+    color: var(--color-text-primary);
+    font-size: var(--text-sm);
 }
 
 .hash-value {
     font-family: ui-monospace, SFMono-Regular, "SF Mono", Consolas, "Liberation Mono", Menlo, monospace;
-    font-size: 0.75rem;
+    font-size: var(--text-xs);
     word-break: break-all;
 }
 
 .scopes-list {
     display: flex;
     flex-wrap: wrap;
-    gap: 0.5rem;
+    gap: var(--space-2);
 }
 
 .scope-tag {
-    background: rgba(59, 130, 246, 0.2);
-    border: 1px solid rgb(59, 130, 246);
-    border-radius: 0.25rem;
-    padding: 0.25rem 0.5rem;
-    color: rgb(96, 165, 250);
-    font-size: 0.75rem;
+    background: var(--color-brand-primary-alpha);
+    border: 1px solid var(--color-brand-primary);
+    border-radius: var(--radius-base);
+    padding: var(--space-1) var(--space-2);
+    color: var(--color-brand-primary);
+    font-size: var(--text-xs);
     font-family: ui-monospace, SFMono-Regular, "SF Mono", Consolas, "Liberation Mono", Menlo, monospace;
 }
 
 .settings-detail {
     display: flex;
     flex-direction: column;
-    gap: 0.75rem;
+    gap: var(--space-3);
 }
 
 .setting-detail-item {
     display: grid;
     grid-template-columns: 1fr 1fr auto;
-    gap: 1rem;
+    gap: var(--space-4);
     align-items: center;
-    padding: 0.5rem;
-    background: rgba(0, 0, 0, 0.3);
-    border-radius: 0.25rem;
+    padding: var(--space-2);
+    background: var(--color-surface-alpha);
+    border-radius: var(--radius-base);
 }
 
 .setting-detail-item label {
-    color: rgb(156, 163, 175);
-    font-size: 0.875rem;
-    font-weight: 500;
+    color: var(--color-text-tertiary);
+    font-size: var(--text-sm);
+    font-weight: var(--font-medium);
 }
 
 .setting-detail-item span {
-    color: white;
-    font-size: 0.875rem;
+    color: var(--color-text-primary);
+    font-size: var(--text-sm);
 }
 
 .setting-updated {
-    color: rgb(156, 163, 175) !important;
-    font-size: 0.75rem !important;
+    color: var(--color-text-tertiary) !important;
+    font-size: var(--text-xs) !important;
 }
 
 /* Responsive adjustments */
 @media (max-width: 768px) {
     .users-view {
-        padding: 1rem;
+        padding: var(--space-4);
     }
 
     .users-header {
         flex-direction: column;
-        gap: 1rem;
+        gap: var(--space-4);
     }
 
     .users-controls {
@@ -1126,7 +1098,7 @@ function debounce<T extends (...args: any[]) => any>(func: T, wait: number): (..
 
     .setting-detail-item {
         grid-template-columns: 1fr;
-        gap: 0.5rem;
+        gap: var(--space-2);
     }
 }
 </style>

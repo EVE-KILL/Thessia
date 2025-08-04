@@ -1,12 +1,19 @@
 <template>
-    <div class="monthly-history-container">
+    <Card class="monthly-history-card">
+        <template #header>
+            <div class="monthly-history-header">
+                <h3 class="history-title">{{ t('character.monthlyHistory') }}</h3>
+                <p class="history-description">{{ t('character.monthlyHistoryDescription') }}</p>
+            </div>
+        </template>
+
         <div v-if="loading" class="loading-state">
             <Table :columns="tableColumns" :items="[]" :loading="true" :skeleton-count="12" />
         </div>
 
-        <div v-else-if="stats.monthlyStats && stats.monthlyStats.length > 0" class="monthly-history-table">
-            <Table :columns="tableColumns" :items="stats.monthlyStats" :density="'compact'"
-                :striped="true" :bordered="true" background="default">
+        <div v-else-if="stats.monthlyStats && stats.monthlyStats.length > 0">
+            <Table :columns="tableColumns" :items="stats.monthlyStats" :density="'compact'" :striped="true"
+                :bordered="true" background="transparent">
                 <template #cell-month="{ item }">
                     <div class="month-container">
                         {{ item.monthLabel }}
@@ -38,8 +45,7 @@
                             {{ item.efficiency }}%
                         </span>
                         <div class="efficiency-bar">
-                            <div class="efficiency-fill"
-                                :style="{ width: `${item.efficiency}%` }"
+                            <div class="efficiency-fill" :style="{ width: `${item.efficiency}%` }"
                                 :class="getEfficiencyClass(item.efficiency)">
                             </div>
                         </div>
@@ -83,29 +89,31 @@
         </div>
 
         <div v-else class="empty-state">
-            <div class="text-center py-8">
-                <UIcon name="i-lucide-calendar" class="h-12 w-12 mx-auto mb-4 text-gray-400" />
-                <p class="text-gray-500">{{ t('character.noMonthlyStats') }}</p>
+            <div class="empty-content">
+                <UIcon name="i-lucide-calendar" class="empty-icon" />
+                <p class="empty-text">{{ t('character.noMonthlyStats') }}</p>
             </div>
         </div>
-    </div>
+    </Card>
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue';
+
+// Types
+interface MonthlyStatItem {
+    year: number;
+    month: number;
+    monthLabel: string;
+    kills: number;
+    iskKilled: number;
+    losses: number;
+    iskLost: number;
+    efficiency: number;
+}
 
 // Props
 interface MonthlyStats {
-    monthlyStats: Array<{
-        year: number;
-        month: number;
-        monthLabel: string;
-        kills: number;
-        iskKilled: number;
-        losses: number;
-        iskLost: number;
-        efficiency: number;
-    }>;
+    monthlyStats: MonthlyStatItem[];
 }
 
 const props = defineProps<{
@@ -176,44 +184,57 @@ const getEfficiencyClass = (efficiency: number): string => {
 </script>
 
 <style scoped>
-.monthly-history-container {
-    /* Clean container styling */
+.monthly-history-card {
+    overflow: hidden;
 }
 
-.monthly-history-table {
-    background: light-dark(#ffffff, #1a1a1a);
-    border-radius: 0.5rem;
-    overflow: hidden;
-    border: 1px solid light-dark(#e5e7eb, #374151);
+/* Header */
+.monthly-history-header {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-1);
+}
+
+.history-title {
+    font-size: var(--text-lg);
+    font-weight: var(--font-weight-semibold);
+    color: var(--color-text-primary);
+    margin: 0;
+}
+
+.history-description {
+    font-size: var(--text-sm);
+    color: var(--color-text-tertiary);
+    margin: 0;
 }
 
 /* Month styling */
 .month-container {
-    font-weight: 600;
-    padding: 0.5rem;
+    font-weight: var(--font-weight-semibold);
+    padding: var(--space-2);
 }
 
 /* Stat value styling */
 .stat-value {
-    padding: 0.5rem;
+    padding: var(--space-2);
     text-align: right;
-    font-weight: 500;
+    font-weight: var(--font-weight-medium);
 }
 
 .killed {
-    color: #10b981; /* green */
+    color: var(--color-success-500);
 }
 
 .lost {
-    color: #ef4444; /* red */
+    color: var(--color-error-500);
 }
 
 .isk-killed {
-    color: #3b82f6; /* blue */
+    color: var(--color-brand-primary);
 }
 
 .isk-lost {
-    color: #f59e0b; /* amber */
+    color: var(--color-warning-500);
 }
 
 /* Efficiency styling */
@@ -221,62 +242,79 @@ const getEfficiencyClass = (efficiency: number): string => {
     display: flex;
     flex-direction: column;
     align-items: center;
-    padding: 0.5rem;
-    gap: 0.25rem;
+    padding: var(--space-2);
+    gap: var(--space-1);
 }
 
 .efficiency-value {
-    font-weight: 600;
-    font-size: 0.875rem;
+    font-weight: var(--font-weight-semibold);
+    font-size: var(--text-sm);
 }
 
 .efficiency-bar {
     width: 100%;
     height: 4px;
-    background-color: light-dark(#e5e7eb, #374151);
-    border-radius: 2px;
+    background-color: var(--color-surface-tertiary);
+    border-radius: var(--radius-sm);
     overflow: hidden;
 }
 
 .efficiency-fill {
     height: 100%;
-    transition: width 0.3s ease;
+    transition: width var(--duration-normal) ease;
 }
 
 .high-efficiency {
-    color: #10b981; /* green - 75%+ */
+    color: var(--color-success-500);
 }
 
 .high-efficiency.efficiency-fill {
-    background-color: #10b981;
+    background-color: var(--color-success-500);
 }
 
 .medium-efficiency {
-    color: #f59e0b; /* yellow - 50-74% */
+    color: var(--color-warning-500);
 }
 
 .medium-efficiency.efficiency-fill {
-    background-color: #f59e0b;
+    background-color: var(--color-warning-500);
 }
 
 .low-efficiency {
-    color: #ef4444; /* red - <50% */
+    color: var(--color-error-500);
 }
 
 .low-efficiency.efficiency-fill {
-    background-color: #ef4444;
+    background-color: var(--color-error-500);
 }
 
 /* Row hover effect */
 :deep(tbody tr:hover) {
-    background: light-dark(#f9fafb, #1f2937);
+    background: var(--color-surface-hover);
 }
 
 /* Empty state styling */
 .empty-state {
     text-align: center;
-    color: #9ca3af;
-    padding: 2rem 0;
+    padding: var(--space-8) 0;
+}
+
+.empty-content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--space-4);
+}
+
+.empty-icon {
+    width: var(--space-12);
+    height: var(--space-12);
+    color: var(--color-text-muted);
+}
+
+.empty-text {
+    color: var(--color-text-muted);
+    margin: 0;
 }
 
 /* Mobile view styling */
@@ -284,41 +322,41 @@ const getEfficiencyClass = (efficiency: number): string => {
     display: flex;
     flex-direction: column;
     width: 100%;
-    padding: 0.5rem;
+    padding: var(--space-2);
 }
 
 .mobile-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 0.75rem;
-    padding-bottom: 0.5rem;
-    border-bottom: 1px solid light-dark(#e5e7eb, #374151);
+    margin-bottom: var(--space-3);
+    padding-bottom: var(--space-2);
+    border-bottom: 1px solid var(--color-border-default);
 }
 
 .mobile-title {
-    font-weight: 600;
-    font-size: 1rem;
+    font-weight: var(--font-weight-semibold);
+    font-size: var(--text-base);
 }
 
 .efficiency-badge {
-    font-weight: 600;
-    font-size: 0.875rem;
-    padding: 0.25rem 0.5rem;
-    border-radius: 0.25rem;
-    background: light-dark(rgba(0,0,0,0.1), rgba(255,255,255,0.1));
+    font-weight: var(--font-weight-semibold);
+    font-size: var(--text-sm);
+    padding: var(--space-1) var(--space-2);
+    border-radius: var(--radius-sm);
+    background: var(--color-surface-alpha);
 }
 
 .mobile-stats {
     display: flex;
     flex-direction: column;
-    gap: 0.5rem;
+    gap: var(--space-2);
 }
 
 .mobile-stat-row {
     display: flex;
     justify-content: space-between;
-    gap: 1rem;
+    gap: var(--space-4);
 }
 
 .mobile-stat {
@@ -326,26 +364,19 @@ const getEfficiencyClass = (efficiency: number): string => {
     flex-direction: column;
     align-items: center;
     flex: 1;
-    font-size: 0.875rem;
+    font-size: var(--text-sm);
 }
 
 .stat-label {
-    color: #9ca3af;
-    margin-bottom: 0.25rem;
-    font-size: 0.75rem;
+    color: var(--color-text-tertiary);
+    margin-bottom: var(--space-1);
+    font-size: var(--text-xs);
     text-transform: uppercase;
-    letter-spacing: 0.05em;
+    letter-spacing: var(--letter-spacing-wide);
 }
 
 /* Loading state */
 .loading-state {
-    opacity: 0.7;
-}
-
-/* Responsive adjustments */
-@media (max-width: 768px) {
-    .monthly-history-table {
-        border-radius: 0.25rem;
-    }
+    opacity: var(--opacity-disabled);
 }
 </style>

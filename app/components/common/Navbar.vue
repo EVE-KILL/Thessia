@@ -256,8 +256,8 @@ const closeMobileMenu = () => {
                 <template v-for="(link, index) in leftNavItems" :key="index">
                     <!-- Regular links -->
                     <NuxtLink v-if="link.to && !link.children" :to="link.to"
-                        class="flex items-center px-3 py-2 rounded-md text-sm font-medium hover:bg-gray-700 dark:hover:bg-gray-700"
-                        :aria-label="link.label" color="neutral" variant="ghost">
+                        class="flex items-center px-3 py-2 rounded-md text-lg font-medium hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors duration-200"
+                        :aria-label="link.label">
                         <UIcon v-if="link.icon" :name="link.icon" class="mr-2 text-lg" />
                         <span class="text-lg">{{ link.name }}</span>
                     </NuxtLink>
@@ -267,8 +267,10 @@ const closeMobileMenu = () => {
                         :use-column-distribution="true" :items="link.children" :items-per-column="10" :max-height="70"
                         position="bottom" align="start" :smart-position="true">
                         <template #trigger>
-                            <UButton color="neutral" variant="ghost" class="flex items-center" :aria-label="link.label">
-                                <UIcon v-if="link.icon" :name="link.icon" class="mr-2 text-m" />
+                            <UButton color="neutral" variant="ghost"
+                                class="flex items-center px-3 py-2 rounded-md text-lg font-medium hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors duration-200"
+                                :aria-label="link.label">
+                                <UIcon v-if="link.icon" :name="link.icon" class="mr-2 text-lg" />
                                 <span class="text-lg">{{ link.name }}</span>
                                 <UIcon name="lucide:chevron-down" class="ml-1 text-lg" />
                             </UButton>
@@ -313,10 +315,10 @@ const closeMobileMenu = () => {
                 <template v-for="(link, index) in rightNavItems" :key="index">
                     <!-- Regular links -->
                     <NuxtLink v-if="link.to && !link.children && !link.component" :to="link.to"
-                        class="flex items-center px-3 py-2 rounded-md text-sm font-medium hover:bg-gray-700 dark:hover:bg-gray-700"
-                        :aria-label="link.label" color="neutral" variant="ghost">
-                        <UIcon v-if="link.icon" :name="link.icon" class="text-lg" />
-                        <span v-if="link.name" class="text-lg ml-2">{{ link.name }}</span>
+                        class="flex items-center px-3 py-2 rounded-md text-lg font-medium hover:bg-gray-700 dark:hover:bg-gray-700"
+                        :aria-label="link.label">
+                        <UIcon v-if="link.icon" :name="link.icon" class="mr-2 text-lg" />
+                        <span v-if="link.name" class="text-lg">{{ link.name }}</span>
                     </NuxtLink>
 
                     <!-- Inline components -->
@@ -560,13 +562,13 @@ const closeMobileMenu = () => {
 <style scoped>
 /* Sticky header adjustments */
 .sticky.top-0 {
-    z-index: 5;
+    z-index: var(--z-header);
 }
 
 /* Animation for collapsible sections */
 .collapsible-enter-active,
 .collapsible-leave-active {
-    transition: max-height 0.3s ease;
+    transition: max-height var(--duration-normal) ease;
     overflow: hidden;
 }
 
@@ -582,19 +584,15 @@ const closeMobileMenu = () => {
 
 /* Ensure navbar stays on top */
 nav.sticky {
-    backdrop-filter: blur(8px);
-    -webkit-backdrop-filter: blur(8px);
-    transition: background-color 0.3s ease;
+    backdrop-filter: var(--blur-md);
+    -webkit-backdrop-filter: var(--blur-md);
+    transition: background-color var(--duration-normal) ease;
 }
 
 /* Safari fix for backdrop-filter */
-@supports not (backdrop-filter: blur(8px)) {
+@supports not (backdrop-filter: var(--blur-md)) {
     nav.sticky {
-        background-color: rgba(255, 255, 255, 0.98);
-    }
-
-    :root.dark nav.sticky {
-        background-color: rgba(0, 0, 0, 0.98);
+        background-color: var(--color-bg-glass-light);
     }
 }
 
@@ -603,60 +601,36 @@ nav.sticky {
 .dark\:bg-black\/30,
 .bg-gray-50\/70,
 .dark\:bg-gray-800\/50 {
-    backdrop-filter: blur(4px);
-    -webkit-backdrop-filter: blur(4px);
+    backdrop-filter: var(--blur-sm);
+    -webkit-backdrop-filter: var(--blur-sm);
 }
 
 /* Improved hover and active states */
 .hover\:bg-gray-100:hover,
 .dark .hover\:bg-gray-700\/70:hover {
-    transition: background-color 0.2s ease;
+    transition: background-color var(--duration-fast) ease;
 }
 
 /* Safari fixes for backdrop-filter */
-@supports not ((backdrop-filter: blur(8px)) or (-webkit-backdrop-filter: blur(8px))) {
+@supports not ((backdrop-filter: var(--blur-md)) or (-webkit-backdrop-filter: var(--blur-md))) {
 
     .bg-white\/50,
     .dark\:bg-black\/30,
     .bg-gray-50\/70,
     .dark\:bg-gray-800\/50 {
-        background-color: rgba(255, 255, 255, 0.95) !important;
-    }
-
-    :root.dark .bg-white\/50,
-    :root.dark .dark\:bg-black\/30,
-    :root.dark .bg-gray-50\/70,
-    :root.dark .dark\:bg-gray-800\/50 {
-        background-color: rgba(15, 15, 15, 0.95) !important;
+        background-color: var(--color-bg-glass-light) !important;
     }
 }
 
 /* Better shadows */
 .shadow-sm {
-    box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
-}
-
-:root.dark .shadow-sm {
-    box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.3);
-}
-
-/* Enhanced animations for menu items */
-@keyframes slideIn {
-    from {
-        transform: translateY(10px);
-        opacity: 0;
-    }
-
-    to {
-        transform: translateY(0);
-        opacity: 1;
-    }
+    box-shadow: var(--shadow-sm);
 }
 
 /* Apply animation to content */
 h3,
 .space-y-3>div {
-    animation: slideIn 0.3s ease forwards;
+    animation: slideIn var(--duration-normal) ease forwards;
     animation-delay: calc(var(--index, 0) * 0.05s);
 }
 </style>

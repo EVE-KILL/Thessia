@@ -79,10 +79,7 @@ const isDefaultZoom = computed(() => zoom.value === 100);
         <!-- Zoom Level Display - Now styled like a button -->
         <div v-if="showZoomLevel" class="floating-button zoom-level-button" :style="zoomLevelPosition">
             <UButton size="sm" variant="solid" color="neutral" :ui="{
-                base: 'min-w-[3em] flex justify-center',
-                size: {
-                    sm: 'text-xs'
-                }
+                base: 'min-w-[3em] flex justify-center text-xs'
             }">
                 {{ zoom }}%
             </UButton>
@@ -111,9 +108,9 @@ const isDefaultZoom = computed(() => zoom.value === 100);
 <style scoped>
 .floating-button {
     position: fixed;
-    z-index: 40;
+    z-index: var(--z-popover);
     opacity: 0.6;
-    transition: opacity 0.3s ease, transform 0.3s ease;
+    transition: opacity var(--duration-300), transform var(--duration-300);
 }
 
 .floating-button:hover {
@@ -123,6 +120,6 @@ const isDefaultZoom = computed(() => zoom.value === 100);
 
 /* Add an inset shadow to make the buttons visible on all backgrounds */
 .floating-button :deep(.u-button) {
-    box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
+    box-shadow: var(--shadow-lg);
 }
 </style>

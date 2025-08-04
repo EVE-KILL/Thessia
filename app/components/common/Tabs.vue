@@ -71,7 +71,7 @@ const { isMobile } = useResponsive();
 const ensureValidTab = () => {
     // Only set to first tab if modelValue is completely empty or invalid
     if (!props.modelValue || !props.items.find(item => item.id === props.modelValue)) {
-        if (props.items.length > 0) {
+        if (props.items.length > 0 && props.items[0]) {
             emit('update:modelValue', props.items[0].id);
         }
     }
@@ -117,6 +117,7 @@ const getCleanIconName = (iconName: string) => {
 
     // Remove any extra classes like 'text-xl', 'text-lg', etc.
     const cleanName = iconName.split(' ')[0];
+    if (!cleanName) return '';
 
     // Convert from UIcon format (i-lucide-swords) to @nuxt/icon format (lucide:swords)
     if (cleanName.startsWith('i-lucide-')) {
@@ -169,7 +170,7 @@ const headerContainerClass = computed(() => {
                     <button type="button" :disabled="item.disabled" :class="getButtonClasses(item)"
                         @click="selectTab(item.id)">
                         <!-- Use @nuxt/icon for mobile -->
-                        <Icon v-if="item.icon" :name="getCleanIconName(item.icon)"
+                        <Icon v-if="item.icon" :name="getCleanIconName(item.icon!)"
                             class="tab-icon mobile-icon-force icon-mobile" size="20" />
                         <!-- Show text based on mobile display mode -->
                         <span v-if="mobileDisplayMode !== 'icon-only' || !item.icon" class="tab-label">
@@ -208,21 +209,15 @@ const headerContainerClass = computed(() => {
     display: flex !important;
     flex-direction: row !important;
     flex-wrap: nowrap !important;
-    border-bottom: 1px solid light-dark(rgba(229, 231, 235, 0.5), rgba(75, 85, 99, 0.5));
-    /* Enhanced border */
-    margin-bottom: 1rem;
-    gap: 0.5rem;
+    border-bottom: 1px solid var(--color-border-light);
+    margin-bottom: var(--space-4);
+    gap: var(--space-2);
     overflow-x: auto;
-    /* Enable horizontal scrolling */
     padding-bottom: 2px;
-    /* Ensure bottom border is visible */
     width: 100%;
     align-items: center;
-    /* Center items vertically */
     max-width: 100%;
-    /* Prevent overflow */
     position: relative;
-    /* For absolute positioning of active indicator */
 }
 
 /* Desktop-specific styles with stronger selectors */
@@ -302,9 +297,8 @@ div>.custom-tabs-header-container {
 }
 
 .custom-tabs-inactive-button {
-    padding: 0.5rem 1rem;
-    color: light-dark(#6B7280, #9CA3AF);
-    /* Updated colors */
+    padding: var(--space-2) var(--space-4);
+    color: var(--color-text-secondary);
     background-color: transparent;
     border: 1px solid transparent;
     border-bottom: 2px solid transparent;
@@ -312,63 +306,47 @@ div>.custom-tabs-header-container {
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: 0.25rem;
+    gap: var(--space-1);
     flex-shrink: 0;
-    /* Prevent tab buttons from shrinking */
     white-space: nowrap;
-    /* Prevent text from wrapping */
     flex: 0 0 auto;
-    /* Don't grow or shrink */
-    transition: all 0.2s ease;
+    transition: all var(--duration-200);
     position: relative;
     margin-bottom: -1px;
-    /* Overlap the container border */
 }
 
 .custom-tabs-inactive-button:hover:not(:disabled) {
-    color: light-dark(#4B5563, #E5E7EB);
-    /* Brighter text on hover */
-    background-color: light-dark(rgba(243, 244, 246, 0.2), rgba(55, 65, 81, 0.2));
-    /* Subtle highlight */
-    border-radius: 0.25rem 0.25rem 0 0;
-    /* Rounded top corners */
+    color: var(--color-text-primary);
+    background-color: var(--color-bg-hover);
+    border-radius: var(--radius-base) var(--radius-base) 0 0;
 }
 
 .custom-tabs-inactive-button:disabled {
-    color: #718096;
+    color: var(--color-text-tertiary);
     cursor: not-allowed;
 }
 
 .custom-tabs-active-button {
-    padding: 0.5rem 1rem;
-    color: light-dark(#1F2937, #F9FAFB);
-    /* Brighter text */
-    background-color: light-dark(rgba(59, 130, 246, 0.15), rgba(59, 130, 246, 0.25));
-    /* More visible background */
+    padding: var(--space-2) var(--space-4);
+    color: var(--color-text-primary);
+    background-color: var(--color-brand-primary);
+    background-color: var(--color-success-alpha);
     border: 1px solid transparent;
-    border-bottom: 2px solid #3B82F6;
-    /* Primary blue accent */
-    font-weight: 600;
-    /* Slightly bolder */
+    border-bottom: 2px solid var(--color-brand-primary);
+    font-weight: var(--font-semibold);
     cursor: pointer;
     position: relative;
-    transition: all 0.2s ease;
+    transition: all var(--duration-200);
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: 0.25rem;
+    gap: var(--space-1);
     flex-shrink: 0;
-    /* Prevent tab buttons from shrinking */
     white-space: nowrap;
-    /* Prevent text from wrapping */
     flex: 0 0 auto;
-    /* Don't grow or shrink */
-    border-radius: 0.25rem 0.25rem 0 0;
-    /* Rounded top corners */
+    border-radius: var(--radius-base) var(--radius-base) 0 0;
     margin-bottom: -1px;
-    /* Overlap the container border */
-    box-shadow: 0 -2px 8px rgba(59, 130, 246, 0.2);
-    /* Subtle glow on top */
+    box-shadow: var(--shadow-sm);
 }
 
 .custom-tabs-active-button::after {
@@ -378,30 +356,26 @@ div>.custom-tabs-header-container {
     left: 0;
     width: 100%;
     height: 2px;
-    background-color: #3B82F6;
-    /* Bright blue active indicator */
-    box-shadow: 0 0 8px rgba(59, 130, 246, 0.6);
-    /* Enhanced glow effect */
+    background-color: var(--color-brand-primary);
+    box-shadow: var(--shadow-glow-white);
 }
 
 /* Add transitions to both active and inactive buttons for smooth state changes */
 .custom-tabs-active-button,
 .custom-tabs-inactive-button {
-    transition: background-color 0.3s, color 0.3s, border-color 0.3s, box-shadow 0.3s;
+    transition: background-color var(--duration-300), color var(--duration-300), border-color var(--duration-300), box-shadow var(--duration-300);
 }
 
 /* Mobile specific styling */
 .mobile-tab-button {
-    padding: 0.5rem;
+    padding: var(--space-2);
     min-width: 2.5rem;
-    /* Minimum width for buttons */
     flex: 0 0 auto;
-    /* Don't stretch or shrink */
 }
 
 .mobile-tab-button .tab-icon {
-    width: 1.25rem;
-    height: 1.25rem;
+    width: var(--size-icon-base);
+    height: var(--size-icon-base);
 }
 
 /* Force mobile icons to be visible */
@@ -486,9 +460,8 @@ div>.custom-tabs-header-container {
 
     .custom-tabs-active-button,
     .custom-tabs-inactive-button {
-        padding: 0.5rem;
+        padding: var(--space-2);
         white-space: nowrap;
-        /* Prevent text wrapping */
         flex-direction: row !important;
         display: flex !important;
     }
@@ -496,9 +469,8 @@ div>.custom-tabs-header-container {
     /* Make sure there's always room for the icons */
     .tab-icon {
         display: inline-flex !important;
-        /* Force display */
-        width: 1.25rem;
-        height: 1.25rem;
+        width: var(--size-icon-base);
+        height: var(--size-icon-base);
         flex-shrink: 0 !important;
         opacity: 1 !important;
         visibility: visible !important;
@@ -508,10 +480,8 @@ div>.custom-tabs-header-container {
     button {
         min-height: 2.5rem;
         min-width: 2.5rem;
-        /* Ensure minimum width for icons */
         flex-direction: row !important;
         flex: 0 0 auto;
-        /* Don't grow or shrink */
     }
 
     /* Fix tab label visibility */
@@ -522,7 +492,6 @@ div>.custom-tabs-header-container {
     /* Enhance active tab on mobile */
     .custom-tabs-active-button {
         border-bottom-width: 2px;
-        /* Make the bottom border more visible */
     }
 
     /* Force UIcon component visibility on mobile */
@@ -531,39 +500,37 @@ div>.custom-tabs-header-container {
         display: inline-flex !important;
         opacity: 1 !important;
         visibility: visible !important;
-        min-width: 1.25rem !important;
-        min-height: 1.25rem !important;
+        min-width: var(--size-icon-base) !important;
+        min-height: var(--size-icon-base) !important;
     }
 }
 
 .custom-tab-content-container {
-    padding-top: 1rem;
+    padding-top: var(--space-4);
 }
 
 /* Default button styling if tabButtonClass is not provided or for base styling */
 button {
-    border-radius: 0.25rem;
-    transition: background-color 0.2s, color 0.2s, border-color 0.2s;
+    border-radius: var(--radius-base);
+    transition: background-color var(--duration-200), color var(--duration-200), border-color var(--duration-200);
     white-space: nowrap;
-    /* Prevent text from wrapping */
 }
 
 /* Enhanced active tab icon */
 .custom-tabs-active-button .tab-icon {
-    color: #3B82F6;
-    /* Blue for active tab icon */
+    color: var(--color-brand-primary);
 }
 
 /* Add subtle glow effect to active tab content transition */
 :deep(.tab-content-appear-active),
 :deep(.tab-content-enter-active) {
-    animation: fade-in 0.3s ease-out;
+    animation: fade-in var(--duration-300) ease-out;
 }
 
 @keyframes fade-in {
     from {
         opacity: 0;
-        transform: translateY(5px);
+        transform: translateY(var(--space-1));
     }
 
     to {

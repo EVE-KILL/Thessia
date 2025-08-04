@@ -68,7 +68,7 @@
                                 {{ finalBlowAttacker.faction_name }}
                             </NuxtLink>
                             <span v-else-if="finalBlowAttacker.alliance_name">{{ finalBlowAttacker.alliance_name
-                                }}</span>
+                            }}</span>
                             <span v-else-if="finalBlowAttacker.faction_name">{{ finalBlowAttacker.faction_name }}</span>
                         </div>
                     </div>
@@ -194,7 +194,7 @@
                                 {{ topDamageAttacker.faction_name }}
                             </NuxtLink>
                             <span v-else-if="topDamageAttacker.alliance_name">{{ topDamageAttacker.alliance_name
-                                }}</span>
+                            }}</span>
                             <span v-else-if="topDamageAttacker.faction_name">{{ topDamageAttacker.faction_name }}</span>
                         </div>
                     </div>
@@ -766,23 +766,22 @@ onBeforeUnmount(() => {
     display: flex;
     flex-direction: column;
     margin: 0 auto;
-    --color-background-hover: light-dark(rgba(245, 245, 245, 0.95), rgba(40, 40, 40, 0.95));
+    --color-background-hover: var(--color-bg-hover);
 }
 
 /* Key Attacker Styles */
 .key-attacker-info {
     display: flex;
-    gap: 1rem;
-    padding: 0.25rem 0.25rem 0.1rem;
+    gap: var(--space-4);
+    padding: var(--space-1) var(--space-1) var(--space-1);
     width: 100%;
     border-bottom: none;
-    /* Remove border since we added border to the meta section */
 }
 
 .attacker-portraits-layout {
     display: flex;
     align-items: flex-start;
-    gap: 0.5rem;
+    gap: var(--space-2);
 }
 
 .portrait-image {
@@ -808,15 +807,14 @@ onBeforeUnmount(() => {
     flex-direction: column;
     justify-content: flex-start;
     width: 32px !important;
-    /* Force exact width */
     height: 64px;
     gap: 0;
     overflow: hidden;
 }
 
 .ship-image {
-    border-radius: 0.25rem;
-    margin-left: 0.5rem;
+    border-radius: var(--radius-sm);
+    margin-left: var(--space-2);
     width: 64px;
     height: 64px;
     flex-shrink: 0;
@@ -828,43 +826,47 @@ onBeforeUnmount(() => {
     display: flex;
     flex-direction: column;
     justify-content: center;
-    gap: 0.5rem;
+    gap: var(--space-2);
 }
 
 .entity-info {
     display: flex;
     flex-direction: column;
-    gap: 0.15rem;
+    gap: var(--space-1);
 }
 
 .entity-name-line {
     width: 100%;
     text-align: left;
     font-size: 0.95rem;
-    line-height: 1.3;
-    color: light-dark(#525252, #b8b8b8);
+    line-height: var(--line-height-snug);
+    color: var(--color-text-secondary);
 }
 
 .entity-name-line.name-character {
-    font-weight: 600;
-    color: light-dark(#1f2937, #f3f4f6);
-    font-size: 1rem;
+    font-weight: var(--font-weight-semibold);
+    color: var(--color-text-primary);
+    font-size: var(--text-base);
 }
 
 .entity-name-line.name-corporation {
     font-size: 0.9rem;
-    color: light-dark(#374151, #d1d5db);
+    color: var(--color-gray-600);
+}
+
+:global(.dark) .entity-name-line.name-corporation {
+    color: var(--color-gray-300);
 }
 
 .entity-name-line.name-alliance-faction {
     font-size: 0.85rem;
-    color: light-dark(#4b5563, #9ca3af);
+    color: var(--color-text-muted);
 }
 
 .attacker-meta-info {
-    padding: 0.5rem 0.75rem 0;
-    border-top: 1px solid light-dark(rgba(229, 231, 235, 0.3), rgba(75, 85, 99, 0.2));
-    margin-top: 0.25rem;
+    padding: var(--space-2) var(--space-3) 0;
+    border-top: 1px solid var(--color-border-light);
+    margin-top: var(--space-1);
     background-color: transparent;
 }
 
@@ -875,44 +877,39 @@ onBeforeUnmount(() => {
     justify-content: space-between;
     width: 100%;
     position: relative;
-    /* Ensure the absolute positioned damage info is contained */
 }
 
 /* Position damage info at bottom-right corner */
 .damage-info {
-    display: flex;
     display: flex;
     align-items: center;
     justify-content: flex-end;
     position: absolute;
     right: -10px;
     bottom: 5px;
-    /* Position slightly above the bottom edge */
 }
 
 .damage-value {
-    font-weight: 600;
-    color: #ef4444;
+    font-weight: var(--font-weight-semibold);
+    color: var(--color-red-500);
     font-size: 0.9rem;
-    line-height: 1.2;
+    line-height: var(--line-height-tight);
     display: flex;
     align-items: center;
     text-align: right;
     font-family: inherit;
-    /* Ensure font inheritance consistency */
 }
 
 .damage-percent {
-    color: light-dark(#9ca3af, #9ca3af);
-    font-size: 0.75rem;
+    color: var(--color-text-muted);
+    font-size: var(--text-xs);
     font-weight: normal;
     white-space: nowrap;
 }
 
 .damage-icon {
-    color: #ef4444;
+    color: var(--color-red-500);
     flex-shrink: 0;
-    /* Removed margin-right */
 }
 
 .ship-weapon-group {
@@ -927,27 +924,34 @@ onBeforeUnmount(() => {
     font-size: 0.95rem;
     display: flex;
     align-items: center;
-    font-weight: 500;
-    line-height: 1.4;
-    color: light-dark(#525252, #d1d5db);
+    font-weight: var(--font-weight-medium);
+    line-height: var(--line-height-relaxed);
+    color: var(--color-text-secondary);
     min-width: 0;
+}
+
+:global(.dark) .ship-info {
+    color: var(--color-gray-300);
 }
 
 .weapon-info {
     font-size: 0.9rem;
     display: flex;
     align-items: center;
-    line-height: 1.4;
-    color: light-dark(#525252, #d1d5db);
+    line-height: var(--line-height-relaxed);
+    color: var(--color-text-secondary);
     min-width: 0;
+}
+
+:global(.dark) .weapon-info {
+    color: var(--color-gray-300);
 }
 
 .separator {
     display: inline-block;
     margin: 0 2px;
-    color: light-dark(#9ca3af, #6b7280);
+    color: var(--color-text-muted);
     transform: scaleX(0.5);
-    /* shorten dash by half */
 }
 
 .ship-name {
@@ -955,7 +959,7 @@ onBeforeUnmount(() => {
     white-space: nowrap;
     max-width: 150px;
     position: relative;
-    transition: all 0.15s ease;
+    transition: all var(--duration-fast) ease;
     will-change: overflow;
 }
 
@@ -966,7 +970,7 @@ onBeforeUnmount(() => {
 
 .ship-name.fade:hover {
     overflow: visible;
-    z-index: 100;
+    z-index: var(--z-popover);
     mask-image: none;
     -webkit-mask-image: none;
 }
@@ -974,12 +978,12 @@ onBeforeUnmount(() => {
 .ship-name.fade:hover .entity-link,
 .ship-name.fade:hover>span {
     position: relative;
-    z-index: 100;
+    z-index: var(--z-popover);
     display: inline-block;
     background: linear-gradient(to right,
-            light-dark(rgba(247, 247, 247, 0.98), rgba(30, 30, 30, 0.98)) 70%,
-            light-dark(rgba(247, 247, 247, 0.8), rgba(30, 30, 30, 0.8)) 85%,
-            light-dark(rgba(247, 247, 247, 0), rgba(30, 30, 30, 0)) 100%);
+            var(--color-bg-tooltip) 70%,
+            color-mix(in srgb, var(--color-bg-tooltip) 80%, transparent) 85%,
+            transparent 100%);
     margin: 0;
     box-decoration-break: clone;
     white-space: nowrap;
@@ -990,7 +994,7 @@ onBeforeUnmount(() => {
     white-space: nowrap;
     max-width: 150px;
     position: relative;
-    transition: all 0.15s ease;
+    transition: all var(--duration-fast) ease;
     will-change: overflow;
 }
 
@@ -1001,7 +1005,7 @@ onBeforeUnmount(() => {
 
 .weapon-name.fade:hover {
     overflow: visible;
-    z-index: 100;
+    z-index: var(--z-popover);
     mask-image: none;
     -webkit-mask-image: none;
 }
@@ -1009,13 +1013,13 @@ onBeforeUnmount(() => {
 .weapon-name.fade:hover .entity-link,
 .weapon-name.fade:hover>span {
     position: relative;
-    z-index: 100;
+    z-index: var(--z-popover);
     display: inline-block;
     background: linear-gradient(to right,
-            light-dark(rgba(247, 247, 247, 0.98), rgba(30, 30, 30, 0.98)) 70%,
-            light-dark(rgba(247, 247, 247, 0.8), rgba(30, 30, 30, 0.8)) 85%,
-            light-dark(rgba(247, 247, 247, 0), rgba(30, 30, 30, 0)) 100%);
-    padding: 1px 8px 1px 0;
+            var(--color-bg-tooltip) 70%,
+            color-mix(in srgb, var(--color-bg-tooltip) 80%, transparent) 85%,
+            transparent 100%);
+    padding: 1px var(--space-2) 1px 0;
     margin: 0;
     box-decoration-break: clone;
     white-space: nowrap;
@@ -1032,47 +1036,36 @@ onBeforeUnmount(() => {
 @media (max-width: 600px) {
     .key-attacker-info {
         flex-direction: row;
-        /* Keep horizontal layout on mobile */
-        gap: 0.5rem;
+        gap: var(--space-2);
         align-items: flex-start;
-        /* Align items to the top */
     }
 
     .attacker-portraits-layout {
         display: grid;
         grid-template-columns: 64px 32px 64px;
-        /* Exact sizing for each column */
         width: auto;
-        /* Let it take natural width */
         max-width: 170px;
-        /* Allow space for all images */
-        gap: 4px;
+        gap: var(--space-1);
         justify-content: start;
-        /* Ensure left alignment */
         flex-shrink: 0;
-        /* Prevent shrinking */
     }
 
-    /* Remove existing margin on ship image that could cause misalignment */
     .ship-image {
         margin-left: 0 !important;
         width: 64px !important;
         height: 64px !important;
     }
 
-    /* Enforce fixed dimensions for character image */
     .portrait-image[type="character"] {
         width: 64px !important;
         height: 64px !important;
     }
 
-    /* Make stacked icons container a fixed width */
     .stacked-icons-container {
         width: 32px !important;
         height: 64px !important;
     }
 
-    /* Ensure corp and alliance images maintain size */
     .portrait-image[type="corporation"],
     .portrait-image[type="alliance"] {
         width: 32px !important;
@@ -1082,11 +1075,8 @@ onBeforeUnmount(() => {
     .attacker-details {
         padding-left: 0;
         margin-top: 0;
-        /* Remove top margin since we're now side-by-side */
         flex: 1;
-        /* Allow text to take remaining space */
         min-width: 0;
-        /* Enable text truncation */
     }
 }
 
@@ -1094,12 +1084,9 @@ onBeforeUnmount(() => {
     .attacker-portraits-layout {
         gap: 2px;
         max-width: 170px;
-        /* Still allow full width for images */
         grid-template-columns: 64px 32px 64px;
-        /* Maintain exact column widths */
     }
 
-    /* Force image sizes on very small screens */
     .portrait-image[type="character"],
     .ship-image {
         width: 64px !important;
@@ -1123,26 +1110,25 @@ onBeforeUnmount(() => {
 
 .final-blow-section,
 .top-damage-section {
-    padding-bottom: 0.5rem;
-    /* Add minimal padding at the bottom */
+    padding-bottom: var(--space-2);
 }
 
 .section-title {
-    font-size: 1rem;
-    font-weight: 600;
-    margin-bottom: 0.75rem;
-    padding-bottom: 0.25rem;
-    border-bottom: 1px solid light-dark(rgba(229, 231, 235, 0.3), rgba(75, 85, 99, 0.2));
+    font-size: var(--text-base);
+    font-weight: var(--font-weight-semibold);
+    margin-bottom: var(--space-3);
+    padding-bottom: var(--space-1);
+    border-bottom: 1px solid var(--color-border-light);
 }
 
 .alliance-group {
-    margin-bottom: 1rem;
+    margin-bottom: var(--space-4);
 }
 
 .alliance-name {
-    font-weight: 500;
-    font-size: 1rem;
-    margin-bottom: 0.25rem;
+    font-weight: var(--font-weight-medium);
+    font-size: var(--text-base);
+    margin-bottom: var(--space-1);
     display: flex;
     align-items: center;
 }
@@ -1151,20 +1137,20 @@ onBeforeUnmount(() => {
     width: 24px;
     height: 24px;
     border-radius: 50%;
-    margin-right: 0.5rem;
+    margin-right: var(--space-2);
 }
 
 .count {
-    margin-left: 0.5rem;
-    font-size: 0.8rem;
-    color: light-dark(#6b7280, #d1d5db);
+    margin-left: var(--space-2);
+    font-size: var(--text-sm);
+    color: var(--color-text-muted);
 }
 
 .corporation-list {
     display: flex;
     flex-direction: column;
-    gap: 0.25rem;
-    margin-left: 2rem;
+    gap: var(--space-1);
+    margin-left: var(--space-8);
 }
 
 .corporation-item {
@@ -1183,57 +1169,56 @@ onBeforeUnmount(() => {
 }
 
 .no-alliance-section {
-    margin-top: 1rem;
+    margin-top: var(--space-4);
 }
 
 .no-alliance-header {
-    font-weight: 500;
-    font-size: 1rem;
-    margin-bottom: 0.25rem;
-    color: light-dark(#6b7280, #9ca3af);
+    font-weight: var(--font-weight-medium);
+    font-size: var(--text-base);
+    margin-bottom: var(--space-1);
+    color: var(--color-text-muted);
 }
 
 /* Style for attacker sections */
 .attacker-section {
-    padding: 0.5rem 0;
+    padding: var(--space-2) 0;
     margin-bottom: 0 !important;
-    /* Override the mb-4 in template */
 }
 
 .attacker-section:hover {
-    background-color: light-dark(rgba(229, 231, 235, 0.2), rgba(40, 40, 40, 0.2));
-    border-radius: 0.25rem;
+    background-color: var(--color-bg-hover);
+    border-radius: var(--radius-sm);
 }
 
 /* Special attacker styles */
 .attacker-section.final-blow:hover,
 .attacker-section.top-damage:hover {
-    background-color: light-dark(rgba(229, 231, 235, 0.3), rgba(40, 40, 40, 0.3));
+    background-color: var(--color-bg-hover-intense);
 }
 
 .character-name {
     display: flex;
     align-items: center;
-    gap: 0.5rem;
-    font-weight: 500;
+    gap: var(--space-2);
+    font-weight: var(--font-weight-medium);
     min-width: 0;
 }
 
 .final-blow-tag {
     display: inline-flex;
     align-items: center;
-    padding: 0.1rem 0.4rem;
+    padding: var(--space-1) var(--space-2);
     font-size: 0.65rem;
-    border-radius: 9999px;
-    background-color: rgba(220, 38, 38, 0.2);
-    color: rgb(220, 38, 38);
-    font-weight: 600;
+    border-radius: var(--radius-full);
+    background-color: color-mix(in srgb, var(--color-red-600) 20%, transparent);
+    color: var(--color-red-600);
+    font-weight: var(--font-weight-semibold);
     white-space: nowrap;
 }
 
 .corporation-name {
-    font-size: 0.8rem;
-    color: light-dark(#6b7280, #9ca3af);
+    font-size: var(--text-sm);
+    color: var(--color-text-muted);
     min-width: 0;
 }
 
@@ -1241,40 +1226,40 @@ onBeforeUnmount(() => {
 .weapon-info {
     display: flex;
     align-items: center;
-    gap: 0.5rem;
+    gap: var(--space-2);
 }
 
 .ship-icon,
 .weapon-icon {
     width: 32px;
     height: 32px;
-    border-radius: 0.25rem;
+    border-radius: var(--radius-sm);
 }
 
 .ship-name,
 .weapon-name {
     min-width: 0;
-    font-size: 0.875rem;
+    font-size: var(--text-sm);
 }
 
 .damage-info {
     display: flex;
     align-items: center;
-    gap: 0.25rem;
+    gap: var(--space-1);
     justify-content: flex-end;
 }
 
 .entity-link {
     color: inherit;
     text-decoration: none;
-    transition: color 0.2s ease;
+    transition: color var(--duration-fast) ease;
     display: inline-flex;
     align-items: center;
     min-width: 0;
 }
 
 .entity-link:hover {
-    color: #4fc3f7;
+    color: var(--color-blue-400);
     text-decoration: underline;
 }
 
@@ -1291,7 +1276,7 @@ onBeforeUnmount(() => {
     .table-header,
     .table-row {
         grid-template-columns: minmax(150px, 1fr) minmax(100px, 1fr) minmax(100px, 1fr) minmax(80px, 0.5fr);
-        font-size: 0.8rem;
+        font-size: var(--text-sm);
     }
 
     .portraits-container {
@@ -1318,7 +1303,7 @@ onBeforeUnmount(() => {
     .character-name,
     .ship-name,
     .weapon-name {
-        font-size: 0.8rem;
+        font-size: var(--text-sm);
     }
 
     .corporation-name {
@@ -1332,7 +1317,7 @@ onBeforeUnmount(() => {
     .table-row {
         grid-template-columns: minmax(120px, 1.5fr) minmax(80px, 1fr) minmax(80px, 1fr) minmax(60px, 0.5fr);
         font-size: 0.7rem;
-        padding: 0.25rem;
+        padding: var(--space-1);
     }
 
     .section-title {
@@ -1344,7 +1329,7 @@ onBeforeUnmount(() => {
     }
 
     .corporation-item {
-        font-size: 0.8rem;
+        font-size: var(--text-sm);
     }
 }
 
@@ -1361,77 +1346,73 @@ onBeforeUnmount(() => {
 }
 
 .section-title {
-    font-size: 1rem;
-    font-weight: 600;
+    font-size: var(--text-base);
+    font-weight: var(--font-weight-semibold);
     margin-bottom: 0;
     display: flex;
     align-items: center;
-    gap: 0.5rem;
+    gap: var(--space-2);
 }
 
 .org-counts {
     font-size: 0.85rem;
-    color: light-dark(#6b7280, #9ca3af);
+    color: var(--color-text-muted);
     font-weight: normal;
 }
 
 .toggle-icon {
     width: 18px;
     height: 18px;
-    color: light-dark(#6b7280, #9ca3af);
+    color: var(--color-text-muted);
 }
 
 .organizations-content {
-    margin-top: 0.75rem;
-    animation: fadeIn 0.2s ease-out;
-}
-
-@keyframes fadeIn {
-    from {
-        opacity: 0;
-        transform: translateY(-5px);
-    }
-
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
+    margin-top: var(--space-3);
+    animation: fadeIn var(--duration-fast) ease-out;
 }
 
 /* Attacker section specific styles */
 .attacker-placeholder-image {
-    background-color: rgba(100, 100, 100, 0.2);
-    border-radius: 4px;
+    background-color: color-mix(in srgb, var(--color-gray-500) 20%, transparent);
+    border-radius: var(--radius-sm);
 }
 
 .attacker-placeholder-stacked {
-    background-color: rgba(100, 100, 100, 0.1);
+    background-color: color-mix(in srgb, var(--color-gray-500) 10%, transparent);
     border-radius: 2px;
 }
 
 /* Character name style */
 .character-name {
-    font-weight: 500;
+    font-weight: var(--font-weight-medium);
 }
 
 /* Ship and weapon styles */
 .ship-reference {
-    color: light-dark(#6b7280, #9ca3af);
-    font-size: 0.875rem;
+    color: var(--color-text-muted);
+    font-size: var(--text-sm);
 }
 
 .ship-name-small {
-    color: light-dark(#6b7280, #d1d5db);
+    color: var(--color-text-secondary);
+}
+
+:global(.dark) .ship-name-small {
+    color: var(--color-gray-300);
 }
 
 .corporation-line {
-    font-size: 0.75rem;
-    color: light-dark(#6b7280, #d1d5db);
+    font-size: var(--text-xs);
+    color: var(--color-text-secondary);
+}
+
+:global(.dark) .corporation-line {
+    color: var(--color-gray-300);
 }
 
 /* Damage display styles */
 .damage-cell {
-    padding-left: 0.5rem;
+    padding-left: var(--space-2);
     text-align: right;
 }
 
@@ -1444,59 +1425,59 @@ onBeforeUnmount(() => {
 }
 
 .damage-container .damage-value {
-    font-weight: 600;
-    color: #ef4444;
+    font-weight: var(--font-weight-semibold);
+    color: var(--color-red-500);
     display: flex;
     align-items: center;
-    font-size: 1rem;
+    font-size: var(--text-base);
 }
 
 .damage-container .damage-percent {
-    font-size: 0.75rem;
-    color: light-dark(#6b7280, #9ca3af);
+    font-size: var(--text-xs);
+    color: var(--color-text-muted);
 }
 
 .damage-container .damage-icon {
-    color: #ef4444;
-    margin-right: 0.1rem;
+    color: var(--color-red-500);
+    margin-right: var(--space-1);
 }
 
 .corporation-logo {
-    margin-top: 0.25rem;
+    margin-top: var(--space-1);
 }
 
 .corp-logo {
     width: 32px;
     height: 32px;
-    border-radius: 0.375rem;
+    border-radius: var(--radius-md);
 }
 
 .final-blow-badge {
     font-size: 0.7rem;
-    padding: 0 0.3rem;
+    padding: 0 var(--space-1);
     letter-spacing: 0.02em;
 }
 
 .top-damage-badge {
     font-size: 0.7rem;
-    padding: 0 0.3rem;
+    padding: 0 var(--space-1);
     letter-spacing: 0.02em;
 }
 
 /* Attacker section styles */
 .attacker-section {
-    padding: 0.5rem 0;
+    padding: var(--space-2) 0;
 }
 
 /* Optional special styling for final blow and top damage attackers */
 .attacker-section.final-blow,
 .attacker-section.top-damage {
-    background-color: light-dark(rgba(229, 231, 235, 0.05), rgba(40, 40, 40, 0.05));
+    background-color: var(--color-bg-subtle);
 }
 
 /* Attacker separator */
 .attacker-separator {
-    margin: 0.5rem 0;
+    margin: var(--space-2) 0;
 }
 
 /* Responsive adjustments */
@@ -1516,11 +1497,11 @@ onBeforeUnmount(() => {
     }
 
     .character-line {
-        font-size: 0.8rem;
+        font-size: var(--text-sm);
     }
 
     .ship-reference {
-        font-size: 0.75rem;
+        font-size: var(--text-xs);
     }
 
     .corporation-line {

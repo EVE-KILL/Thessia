@@ -1,121 +1,120 @@
 <template>
-    <div class="grid grid-cols-1 gap-4" :class="{
-        'md:grid-cols-2': sideIds.length <= 2,
-        'md:grid-cols-3': sideIds.length === 3,
-        'md:grid-cols-4': sideIds.length >= 4
-    }">
+    <div class="teams-grid">
         <!-- Dynamic team rendering -->
         <div v-for="sideId in sideIds" :key="sideId" class="team-column">
-            <div class="bg-background-800 p-4 rounded-lg shadow-lg">
-                <div class="team-header">
-                    <h2 class="text-lg font-semibold">{{ getSideName(sideId) }}</h2>
-                </div>
-
-                <!-- Enhanced stats section styled like KillInformationBox -->
-                <div class="stats-grid">
-                    <div class="stat-item">
-                        <span class="stat-label">ISK Lost:</span>
-                        <span class="stat-value">{{ formatIsk(teamStats[sideId]?.iskLost || 0) }}</span>
-                    </div>
-                    <div class="stat-item">
-                        <span class="stat-label">Ships Lost:</span>
-                        <span class="stat-value">{{ teamStats[sideId]?.shipsLost || 0 }}</span>
-                    </div>
-                    <div class="stat-item">
-                        <span class="stat-label">Damage Inflicted:</span>
-                        <span class="stat-value">{{ formatNumberWithLocale(teamStats[sideId]?.damageInflicted || 0)
-                            }}</span>
-                    </div>
-                    <div class="stat-item">
-                        <span class="stat-label">Alliances:</span>
-                        <span class="stat-value">{{ getAllianceCount(sideId) }}</span>
-                    </div>
-                    <div class="stat-item">
-                        <span class="stat-label">Corporations:</span>
-                        <span class="stat-value">{{ getCorpCount(sideId) }}</span>
-                    </div>
-                    <div class="stat-item">
-                        <span class="stat-label">Characters:</span>
-                        <span class="stat-value">{{ getCharacterCount(sideId) }}</span>
-                    </div>
-                </div>
-
-                <div class="organizations-section">
-                    <!-- Make the title clickable to toggle the organizations content -->
-                    <h3 class="section-title text-black dark:text-white mb-2 cursor-pointer flex justify-between items-center"
-                        @click="toggleOrganizationsSection(sideId)">
-                        Organizations
-                        <Icon
-                            :name="isOrganizationsSectionCollapsed(sideId) ? 'lucide:chevron-down' : 'lucide:chevron-up'"
-                            class="toggle-icon text-black dark:text-white" />
+            <Card>
+                <template #header>
+                    <h3 class="team-title" :class="`team-${getSideIndex(sideId) + 1}`">
+                        {{ getSideName(sideId) }}
                     </h3>
-
-                    <!-- Only show the organizations content when the section is expanded -->
-                    <div v-if="!isOrganizationsSectionCollapsed(sideId)" class="organizations-content">
-                        <!-- Alliances with corporations -->
-                        <div v-for="alliance in teamAlliances[sideId] || []" :key="`${sideId}-alliance-${alliance.id}`"
-                            class="alliance-group">
-                            <div class="alliance-header" @click="toggleAlliance(`${sideId}-${alliance.id}`)">
-                                <div class="alliance-name text-black dark:text-white">
-                                    <NuxtLink v-if="alliance.id" :to="`/alliance/${alliance.id}`" class="entity-link">
-                                        <Image v-if="alliance.id" :type="'alliance'" :id="alliance.id" :size="24"
-                                            clsoass="org-icon" />
-                                        <span class="text-black dark:text-white">{{ alliance.name }}</span>
-                                        <span class="count">
-                                            ({{ getCorpsInAlliance(sideId, alliance.id) }})
-                                        </span>
-                                    </NuxtLink>
-                                    <span v-else>
-                                        <span class="text-black dark:text-white">{{ alliance.name }}</span>
-                                    </span>
-                                </div>
-                                <Icon
-                                    :name="isAllianceCollapsed(`${sideId}-${alliance.id}`) ? 'lucide:chevron-down' : 'lucide:chevron-up'"
-                                    class="toggle-icon text-black dark:text-white" />
-                            </div>
-                            <div v-if="!isAllianceCollapsed(`${sideId}-${alliance.id}`)" class="corporation-list">
-                                <div v-for="corp in getCorpsForAlliance(sideId, alliance.id)"
-                                    :key="`${sideId}-corp-${corp.id}`" class="corporation-item">
-                                    <NuxtLink v-if="corp.id" :to="`/corporation/${corp.id}`"
-                                        class="entity-link corporation-name text-black dark:text-white">
-                                        <Image v-if="corp.id" :type="'corporation'" :id="corp.id" :size="24"
-                                            class="org-icon" />
-                                        <span class="text-black dark:text-white">{{ corp.name }}</span>
-                                    </NuxtLink>
-                                    <span v-else class="text-black dark:text-white">
-                                        <span>{{ corp.name }}</span>
-                                    </span>
-                                </div>
-                            </div>
+                </template>
+                <template #body>
+                    <!-- Enhanced stats section -->
+                    <div class="stats-grid">
+                        <div class="stat-item">
+                            <span class="stat-label">ISK Lost:</span>
+                            <span class="stat-value">{{ formatIsk(teamStats[sideId]?.iskLost || 0) }}</span>
                         </div>
+                        <div class="stat-item">
+                            <span class="stat-label">Ships Lost:</span>
+                            <span class="stat-value">{{ teamStats[sideId]?.shipsLost || 0 }}</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-label">Damage Inflicted:</span>
+                            <span class="stat-value">{{ formatNumberWithLocale(teamStats[sideId]?.damageInflicted || 0)
+                                }}</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-label">Alliances:</span>
+                            <span class="stat-value">{{ getAllianceCount(sideId) }}</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-label">Corporations:</span>
+                            <span class="stat-value">{{ getCorpCount(sideId) }}</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-label">Characters:</span>
+                            <span class="stat-value">{{ getCharacterCount(sideId) }}</span>
+                        </div>
+                    </div>
 
-                        <!-- Standalone corporations -->
-                        <div v-if="getStandaloneCorpsCount(sideId) > 0" class="no-alliance-section">
-                            <div class="no-alliance-header text-black dark:text-white"
-                                @click="toggleStandaloneCorps(sideId)">
-                                Standalone Corporations ({{ getStandaloneCorpsCount(sideId) }})
-                                <Icon
-                                    :name="isStandaloneCorpsCollapsed(sideId) ? 'lucide:chevron-down' : 'lucide:chevron-up'"
-                                    class="toggle-icon text-black dark:text-white" />
+                    <div class="organizations-section">
+                        <!-- Make the title clickable to toggle the organizations content -->
+                        <h4 class="section-title" @click="toggleOrganizationsSection(sideId)">
+                            <span>Organizations</span>
+                            <Icon
+                                :name="isOrganizationsSectionCollapsed(sideId) ? 'lucide:chevron-down' : 'lucide:chevron-up'"
+                                class="toggle-icon" />
+                        </h4>
+
+                        <!-- Only show the organizations content when the section is expanded -->
+                        <div v-if="!isOrganizationsSectionCollapsed(sideId)" class="organizations-content">
+                            <!-- Alliances with corporations -->
+                            <div v-for="alliance in teamAlliances[sideId] || []"
+                                :key="`${sideId}-alliance-${alliance.id}`" class="alliance-group">
+                                <div class="alliance-header" @click="toggleAlliance(`${sideId}-${alliance.id}`)">
+                                    <div class="alliance-name">
+                                        <NuxtLink v-if="alliance.id" :to="`/alliance/${alliance.id}`"
+                                            class="entity-link">
+                                            <Image v-if="alliance.id" :type="'alliance'" :id="alliance.id" :size="24"
+                                                class="org-icon" />
+                                            <span>{{ alliance.name }}</span>
+                                            <span class="count">
+                                                ({{ getCorpsInAlliance(sideId, alliance.id) }})
+                                            </span>
+                                        </NuxtLink>
+                                        <span v-else>
+                                            <span>{{ alliance.name }}</span>
+                                        </span>
+                                    </div>
+                                    <Icon
+                                        :name="isAllianceCollapsed(`${sideId}-${alliance.id}`) ? 'lucide:chevron-down' : 'lucide:chevron-up'"
+                                        class="toggle-icon" />
+                                </div>
+                                <div v-if="!isAllianceCollapsed(`${sideId}-${alliance.id}`)" class="corporation-list">
+                                    <div v-for="corp in getCorpsForAlliance(sideId, alliance.id)"
+                                        :key="`${sideId}-corp-${corp.id}`" class="corporation-item">
+                                        <NuxtLink v-if="corp.id" :to="`/corporation/${corp.id}`"
+                                            class="entity-link corporation-name">
+                                            <Image v-if="corp.id" :type="'corporation'" :id="corp.id" :size="24"
+                                                class="org-icon" />
+                                            <span>{{ corp.name }}</span>
+                                        </NuxtLink>
+                                        <span v-else>
+                                            <span>{{ corp.name }}</span>
+                                        </span>
+                                    </div>
+                                </div>
                             </div>
-                            <div v-if="!isStandaloneCorpsCollapsed(sideId)" class="corporation-list standalone-list">
-                                <div v-for="corp in getStandaloneCorps(sideId)" :key="`${sideId}-standalone-${corp.id}`"
-                                    class="corporation-item standalone">
-                                    <NuxtLink v-if="corp.id" :to="`/corporation/${corp.id}`"
-                                        class="entity-link corporation-name text-black dark:text-white">
-                                        <Image v-if="corp.id" :type="'corporation'" :id="corp.id" :size="24"
-                                            class="org-icon" />
-                                        <span class="text-black dark:text-white">{{ corp.name }}</span>
-                                    </NuxtLink>
-                                    <span v-else class="text-black dark:text-white">
-                                        <span>{{ corp.name }}</span>
-                                    </span>
+
+                            <!-- Standalone corporations -->
+                            <div v-if="getStandaloneCorpsCount(sideId) > 0" class="no-alliance-section">
+                                <div class="no-alliance-header" @click="toggleStandaloneCorps(sideId)">
+                                    <span>Standalone Corporations ({{ getStandaloneCorpsCount(sideId) }})</span>
+                                    <Icon
+                                        :name="isStandaloneCorpsCollapsed(sideId) ? 'lucide:chevron-down' : 'lucide:chevron-up'"
+                                        class="toggle-icon" />
+                                </div>
+                                <div v-if="!isStandaloneCorpsCollapsed(sideId)"
+                                    class="corporation-list standalone-list">
+                                    <div v-for="corp in getStandaloneCorps(sideId)"
+                                        :key="`${sideId}-standalone-${corp.id}`" class="corporation-item standalone">
+                                        <NuxtLink v-if="corp.id" :to="`/corporation/${corp.id}`"
+                                            class="entity-link corporation-name">
+                                            <Image v-if="corp.id" :type="'corporation'" :id="corp.id" :size="24"
+                                                class="org-icon" />
+                                            <span>{{ corp.name }}</span>
+                                        </NuxtLink>
+                                        <span v-else>
+                                            <span>{{ corp.name }}</span>
+                                        </span>
+                                    </div>
                                 </div>
                             </div>
                         </div>
                     </div>
-                </div>
-            </div>
+                </template>
+            </Card>
         </div>
     </div>
 </template>
@@ -234,6 +233,11 @@ function getCharacterCount(sideId: string): number {
     return (props.teamCharacters[sideId] || []).length;
 }
 
+// Get side index for styling
+function getSideIndex(sideId: string): number {
+    return sideIds.value.indexOf(sideId);
+}
+
 // Formatting helpers
 function formatNumber(n: number): string {
     if (typeof n !== 'number') return '0';
@@ -262,167 +266,194 @@ function formatIsk(isk: number): string {
 </script>
 
 <style scoped>
-/* Add CSS classes for team colors */
-.team-column:nth-child(1) .team-header h2 {
-    color: #3b82f6;
-    /* Blue */
+/* Grid Layout */
+.teams-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: var(--space-lg);
 }
 
-.team-column:nth-child(2) .team-header h2 {
-    color: #ef4444;
-    /* Red */
+/* Team Column Responsive Grid */
+@media (min-width: 768px) {
+    .teams-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
 }
 
-.team-column:nth-child(3) .team-header h2 {
-    color: #10b981;
-    /* Green */
+@media (min-width: 992px) {
+    .teams-grid {
+        grid-template-columns: repeat(3, 1fr);
+    }
 }
 
-.team-column:nth-child(4) .team-header h2 {
-    color: #f59e0b;
-    /* Yellow */
+@media (min-width: 1280px) {
+    .teams-grid {
+        grid-template-columns: repeat(4, 1fr);
+    }
 }
 
-.team-header {
-    margin-bottom: 0.5rem;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-    padding-bottom: 0.5rem;
+/* Team Column */
+.team-column {
+    min-width: 0;
+}
+
+/* Team Colors */
+.team-title {
+    font-size: var(--text-lg);
+    font-weight: var(--font-semibold);
+    color: var(--color-text-primary);
+    margin: 0;
     text-align: center;
 }
 
-/* New stats grid styling */
+.team-1 {
+    color: var(--color-info);
+}
+
+.team-2 {
+    color: var(--color-danger);
+}
+
+.team-3 {
+    color: var(--color-success);
+}
+
+.team-4 {
+    color: var(--color-warning);
+}
+
+/* Stats Grid */
 .stats-grid {
     display: grid;
     grid-template-columns: 1fr 1fr;
-    gap: 0.5rem;
-    margin-bottom: 1rem;
-    padding: 0.75rem;
-    border-radius: 0.5rem;
-    background-color: light-dark(rgba(245, 245, 245, 0.1), rgba(26, 26, 26, 0.4));
+    gap: var(--space-sm);
+    margin-bottom: var(--space-lg);
+    padding: var(--space-md);
+    border-radius: var(--radius-md);
+    background-color: var(--color-background-secondary);
 }
 
 .stat-item {
     display: flex;
     flex-direction: row;
-    /* Changed from column to row */
     justify-content: space-between;
-    /* Push label and value to opposite ends */
     align-items: center;
-    /* Center vertically */
-    padding: 0.25rem;
+    padding: var(--space-xs);
 }
 
 .stat-label {
-    font-size: 0.75rem;
-    color: light-dark(#6b7280, #9ca3af);
-    font-weight: 500;
+    font-size: var(--text-xs);
+    color: var(--color-text-tertiary);
+    font-weight: var(--font-medium);
     flex-shrink: 0;
-    /* Prevent label from shrinking */
 }
 
 .stat-value {
-    font-size: 0.9rem;
-    font-weight: 600;
-    color: light-dark(#1f2937, #f3f4f6);
+    font-size: var(--text-sm);
+    font-weight: var(--font-semibold);
+    color: var(--color-text-primary);
     text-align: right;
-    /* Align text to the right */
 }
 
+/* Organizations Section */
 .organizations-section {
-    margin-top: 0.75rem;
-    padding: 1rem;
-    border-radius: 0.5rem;
-    background-color: light-dark(rgba(245, 245, 245, 0.05), rgba(26, 26, 26, 0.3));
+    margin-top: var(--space-md);
+    padding: var(--space-lg);
+    border-radius: var(--radius-md);
+    background-color: var(--color-background-tertiary);
 }
 
 .section-title {
-    font-size: 0.85rem;
-    font-weight: 600;
+    font-size: var(--text-sm);
+    font-weight: var(--font-semibold);
     text-transform: uppercase;
     letter-spacing: 0.05em;
-    margin-bottom: 0.75rem;
-    padding-bottom: 0.5rem;
-    border-bottom: 1px solid light-dark(rgba(229, 231, 235, 0.3), rgba(75, 85, 99, 0.2));
+    margin-bottom: var(--space-md);
+    padding-bottom: var(--space-sm);
+    border-bottom: 1px solid var(--color-border);
     cursor: pointer;
     user-select: none;
     display: flex;
     justify-content: space-between;
     align-items: center;
+    color: var(--color-text-primary);
+    transition: color var(--duration-fast) ease;
 }
 
 .section-title:hover {
-    color: light-dark(#3b82f6, #60a5fa);
+    color: var(--color-primary);
 }
 
-/* Alliance styling */
+/* Alliance Styling */
 .alliance-group {
-    margin-bottom: 0.75rem;
+    margin-bottom: var(--space-md);
 }
 
 .alliance-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 0.5rem 0.75rem;
-    background-color: light-dark(rgba(245, 245, 245, 0.15), rgba(38, 38, 38, 0.4));
-    border-radius: 0.375rem;
+    padding: var(--space-sm) var(--space-md);
+    background-color: var(--color-background-hover);
+    border-radius: var(--radius-md);
     cursor: pointer;
-    transition: background-color 0.2s ease;
+    transition: background-color var(--duration-fast) ease;
 }
 
 .alliance-header:hover {
-    background-color: light-dark(rgba(245, 245, 245, 0.25), rgba(45, 45, 45, 0.5));
+    background-color: var(--color-background-active);
 }
 
 .alliance-name {
     display: flex;
     align-items: center;
-    gap: 0.5rem;
+    gap: var(--space-sm);
+    color: var(--color-text-primary);
 }
 
 .no-alliance-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 0.5rem 0.75rem;
-    background-color: light-dark(rgba(245, 245, 245, 0.15), rgba(38, 38, 38, 0.4));
-    border-radius: 0.375rem;
+    padding: var(--space-sm) var(--space-md);
+    background-color: var(--color-background-hover);
+    border-radius: var(--radius-md);
     cursor: pointer;
-    margin-top: 1rem;
-    font-weight: 500;
-    transition: background-color 0.2s ease;
+    margin-top: var(--space-lg);
+    font-weight: var(--font-medium);
+    transition: background-color var(--duration-fast) ease;
+    color: var(--color-text-primary);
 }
 
 .no-alliance-header:hover {
-    background-color: light-dark(rgba(245, 245, 245, 0.25), rgba(45, 45, 45, 0.5));
+    background-color: var(--color-background-active);
 }
 
-/* Corporation styling with indentation */
+/* Corporation Styling */
 .corporation-list {
-    padding: 0.25rem 0;
+    padding: var(--space-xs) 0;
 }
 
 .corporation-item {
     display: flex;
     align-items: center;
-    padding: 0.4rem 0.75rem;
-    margin: 0.25rem 0;
-    background-color: light-dark(rgba(245, 245, 245, 0.05), rgba(26, 26, 26, 0.2));
-    border-radius: 0.25rem;
-    margin-left: 1.5rem;
-    /* Indentation */
-    border-left: 2px solid light-dark(rgba(203, 213, 225, 0.3), rgba(71, 85, 105, 0.3));
+    padding: var(--space-sm) var(--space-md);
+    margin: var(--space-xs) 0;
+    background-color: var(--color-background-secondary);
+    border-radius: var(--radius-sm);
+    margin-left: var(--space-xl);
+    border-left: 2px solid var(--color-border);
 }
 
 .corporation-item.standalone {
     margin-left: 0;
-    /* No indentation for standalone corps */
 }
 
 .corporation-name {
     display: flex;
     align-items: center;
-    gap: 0.5rem;
+    gap: var(--space-sm);
+    color: var(--color-text-primary);
 }
 
 .org-icon {
@@ -433,22 +464,26 @@ function formatIsk(isk: number): string {
 .toggle-icon {
     width: 18px;
     height: 18px;
+    color: var(--color-text-secondary);
 }
 
 .entity-link {
     color: inherit;
     text-decoration: none;
-    transition: color 0.2s ease;
+    transition: color var(--duration-fast) ease;
+    display: flex;
+    align-items: center;
+    gap: var(--space-sm);
 }
 
 .entity-link:hover {
-    color: light-dark(#3b82f6, #60a5fa);
+    color: var(--color-primary);
     text-decoration: underline;
 }
 
 .count {
-    font-size: 0.85rem;
-    color: light-dark(#6b7280, #9ca3af);
-    margin-left: 0.25rem;
+    font-size: var(--text-sm);
+    color: var(--color-text-tertiary);
+    margin-left: var(--space-xs);
 }
 </style>

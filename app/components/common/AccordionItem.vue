@@ -49,31 +49,96 @@ const toggle = () => {
 </script>
 
 <template>
-    <div :id="itemKey" class="border-b border-gray-700/50 last:border-b-0">
-        <button class="w-full flex items-center justify-between py-5 px-2 focus:outline-none text-left" @click="toggle"
-            :aria-expanded="isExpanded">
-            <div class="flex items-center">
-                <UIcon v-if="icon" :name="icon" class="text-primary mr-3 text-xl" />
-                <span class="text-xl font-medium">{{ label }}</span>
+    <div :id="itemKey" class="accordion-item">
+        <button class="accordion-button" @click="toggle" :aria-expanded="isExpanded">
+            <div class="accordion-header">
+                <UIcon v-if="icon" :name="icon" class="accordion-icon" />
+                <span class="accordion-label">{{ label }}</span>
             </div>
-            <UIcon :name="isExpanded ? 'i-lucide-chevron-up' : 'i-lucide-chevron-down'"
-                class="text-xl transition-transform duration-200" :class="{ 'rotate-180': isExpanded }" />
+            <UIcon :name="isExpanded ? 'i-lucide-chevron-up' : 'i-lucide-chevron-down'" class="accordion-chevron"
+                :class="{ 'rotate-180': isExpanded }" />
         </button>
 
-        <div v-show="isExpanded" class="pb-5 px-2 text-gray-300 space-y-4">
-            <div class="pt-2 pl-8" v-html="content"></div>
+        <div v-show="isExpanded" class="accordion-content">
+            <div class="accordion-body" v-html="content"></div>
         </div>
     </div>
 </template>
 
 <style scoped>
+.accordion-item {
+    border-bottom: 1px solid var(--color-border-light);
+}
+
+.accordion-item:last-child {
+    border-bottom: none;
+}
+
+.accordion-button {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: var(--space-5) var(--space-2);
+    background: none;
+    border: none;
+    color: var(--color-text-primary);
+    text-align: left;
+    cursor: pointer;
+    transition: var(--duration-200);
+}
+
+.accordion-button:focus {
+    outline: none;
+    background-color: var(--color-bg-hover);
+}
+
+.accordion-button:hover {
+    background-color: var(--color-bg-hover);
+}
+
+.accordion-header {
+    display: flex;
+    align-items: center;
+}
+
+.accordion-icon {
+    color: var(--color-brand-primary);
+    margin-right: var(--space-3);
+    font-size: var(--text-xl);
+}
+
+.accordion-label {
+    font-size: var(--text-xl);
+    font-weight: var(--font-medium);
+    color: var(--color-text-primary);
+}
+
+.accordion-chevron {
+    font-size: var(--text-xl);
+    color: var(--color-text-secondary);
+    transition: transform var(--duration-200);
+}
+
+.accordion-content {
+    padding-bottom: var(--space-5);
+    padding-left: var(--space-2);
+    padding-right: var(--space-2);
+    color: var(--color-text-secondary);
+}
+
+.accordion-body {
+    padding-top: var(--space-2);
+    padding-left: var(--space-8);
+    line-height: var(--line-height-relaxed);
+}
+
 /* Target links within the accordion content */
 :deep(a) {
-    color: #00aaff;
-    /* Primary color - adjust to match your theme */
+    color: var(--color-brand-primary);
     text-decoration: none;
-    font-weight: 500;
-    transition: all 0.2s ease;
+    font-weight: var(--font-medium);
+    transition: all var(--duration-200);
 }
 
 :deep(a:hover) {

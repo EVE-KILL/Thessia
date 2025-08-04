@@ -1,147 +1,151 @@
 <template>
-    <div class="mt-4 grid grid-cols-1 gap-4" :class="gridColumnsClass" ref="containerRef">
+    <div class="kills-grid" :class="gridColumnsClass" ref="containerRef">
         <!-- Dynamic Team Kills -->
         <div v-for="sideId in sideIds" :key="sideId" class="team-kills-column">
-            <div class="mb-2 text-lg font-bold text-black dark:text-white">
-                {{ getSideName(sideId) }} {{ t('kills') }}
-            </div>
+            <Card>
+                <template #header>
+                    <h3 class="section-title">{{ getSideName(sideId) }} {{ t('kills') }}</h3>
+                </template>
+                <template #body>
+                    <div v-if="teamKills[sideId] && teamKills[sideId].length > 0">
+                        <!-- Individual Killmail Row -->
+                        <component v-for="item in teamKills[sideId]" :key="item.killmail_id" :is="'a'"
+                            :href="`/kill/${item.killmail_id}`" :class="['attacker-row']">
+                            <!-- Top row: Victim Information -->
+                            <div class="attacker-top">
+                                <!-- Section Label -->
+                                <div class="section-label victim-label">Victim</div>
 
-            <div class="attacker-list bg-background-800 shadow-lg rounded-lg border border-gray-700/30 overflow-hidden">
-                <div v-if="teamKills[sideId] && teamKills[sideId].length > 0">
-                    <!-- Individual Killmail Row -->
-                    <component v-for="item in teamKills[sideId]" :key="item.killmail_id" :is="'a'"
-                        :href="`/kill/${item.killmail_id}`" :class="['attacker-row']">
-                        <!-- Top row: Victim Information -->
-                        <div class="attacker-top">
-                            <!-- Section Label -->
-                            <div class="section-label victim-label">Victim</div>
-
-                            <!-- Victim Portrait -->
-                            <div class="portrait-container">
-                                <Image v-if="item.victim?.character_id" :type="'character'"
-                                    :id="item.victim.character_id" :size="48" class="portrait character-portrait"
-                                    :style="{ maxWidth: '48px', maxHeight: '48px' }" />
-                                <div v-else class="portrait character-portrait-placeholder"></div>
-                            </div>
-
-                            <!-- Corp/Alliance Stacked -->
-                            <div class="corp-alliance-container">
-                                <Image v-if="item.victim?.corporation_id" :type="'corporation'"
-                                    :id="item.victim.corporation_id" :size="24" class="portrait corporation-portrait"
-                                    :style="{ maxWidth: '24px', maxHeight: '24px' }" />
-                                <Image v-if="item.victim?.alliance_id" :type="'alliance'" :id="item.victim.alliance_id"
-                                    :size="24" class="portrait alliance-portrait"
-                                    :style="{ maxWidth: '24px', maxHeight: '24px' }" />
-                            </div>
-
-                            <!-- Name Information -->
-                            <div class="name-container">
-                                <!-- Character Name -->
-                                <div class="entity-name character-name text-red-500 dark:text-red-400">
-                                    {{ item.victim.character_name || 'Unknown Pilot' }}
+                                <!-- Victim Portrait -->
+                                <div class="portrait-container">
+                                    <Image v-if="item.victim?.character_id" :type="'character'"
+                                        :id="item.victim.character_id" :size="48" class="portrait character-portrait"
+                                        :style="{ maxWidth: '48px', maxHeight: '48px' }" />
+                                    <div v-else class="portrait character-portrait-placeholder"></div>
                                 </div>
 
-                                <!-- Corporation Name -->
-                                <div class="entity-name corporation-name">
-                                    {{ item.victim.corporation_name || 'Unknown Corporation' }}
+                                <!-- Corp/Alliance Stacked -->
+                                <div class="corp-alliance-container">
+                                    <Image v-if="item.victim?.corporation_id" :type="'corporation'"
+                                        :id="item.victim.corporation_id" :size="24"
+                                        class="portrait corporation-portrait"
+                                        :style="{ maxWidth: '24px', maxHeight: '24px' }" />
+                                    <Image v-if="item.victim?.alliance_id" :type="'alliance'"
+                                        :id="item.victim.alliance_id" :size="24" class="portrait alliance-portrait"
+                                        :style="{ maxWidth: '24px', maxHeight: '24px' }" />
                                 </div>
 
-                                <!-- Alliance Name -->
-                                <div v-if="item.victim?.alliance_name" class="entity-name alliance-name">
-                                    {{ item.victim.alliance_name }}
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Middle row: Attacker (Final Blow) Information -->
-                        <div class="attacker-middle">
-                            <!-- Section Label -->
-                            <div class="section-label finalblow-label">Final Blow</div>
-
-                            <!-- Final Blow Portrait -->
-                            <div class="portrait-container">
-                                <Image v-if="getFinalBlowAttacker(item)?.character_id" :type="'character'"
-                                    :id="getFinalBlowAttacker(item).character_id" :size="48"
-                                    class="portrait character-portrait"
-                                    :style="{ maxWidth: '48px', maxHeight: '48px' }" />
-                                <div v-else class="portrait character-portrait-placeholder"></div>
-                            </div>
-
-                            <!-- Corp/Alliance Stacked -->
-                            <div class="corp-alliance-container">
-                                <Image v-if="getFinalBlowAttacker(item)?.corporation_id" :type="'corporation'"
-                                    :id="getFinalBlowAttacker(item).corporation_id" :size="24"
-                                    class="portrait corporation-portrait"
-                                    :style="{ maxWidth: '24px', maxHeight: '24px' }" />
-                                <Image v-if="getFinalBlowAttacker(item)?.alliance_id" :type="'alliance'"
-                                    :id="getFinalBlowAttacker(item).alliance_id" :size="24"
-                                    class="portrait alliance-portrait"
-                                    :style="{ maxWidth: '24px', maxHeight: '24px' }" />
-                            </div>
-
-                            <!-- Name Information -->
-                            <div class="name-container">
-                                <!-- Character Name -->
-                                <div class="entity-name character-name">
-                                    {{ getFinalBlowAttacker(item)?.character_name || 'Unknown Pilot' }}
-                                </div>
-
-                                <!-- Corporation Name -->
-                                <div class="entity-name corporation-name">
-                                    {{ getFinalBlowAttacker(item)?.corporation_name || 'Unknown Corporation' }}
-                                </div>
-
-                                <!-- Alliance Name -->
-                                <div v-if="getFinalBlowAttacker(item)?.alliance_name" class="entity-name alliance-name">
-                                    {{ getFinalBlowAttacker(item).alliance_name }}
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Bottom Row: Ship & Kill Details -->
-                        <div class="attacker-bottom">
-                            <!-- Ship Details -->
-                            <div class="ship-details">
-                                <div class="ship-image-container">
-                                    <Image :type="'type-render'" :id="item.victim.ship_id" :size="40" class="ship-image"
-                                        :style="{ maxWidth: '40px', maxHeight: '40px' }" />
-                                </div>
-                                <div class="ship-info">
-                                    <div class="ship-name text-red-500 dark:text-red-400">
-                                        {{ getLocalizedString(item.victim.ship_name, locale) || 'Unknown Ship' }}
+                                <!-- Name Information -->
+                                <div class="name-container">
+                                    <!-- Character Name -->
+                                    <div class="entity-name character-name text-red-500 dark:text-red-400">
+                                        {{ item.victim.character_name || 'Unknown Pilot' }}
                                     </div>
-                                    <div class="ship-group">
-                                        {{ getLocalizedString(item.victim.ship_group_name, locale) || 'Unknown Group' }}
+
+                                    <!-- Corporation Name -->
+                                    <div class="entity-name corporation-name">
+                                        {{ item.victim.corporation_name || 'Unknown Corporation' }}
+                                    </div>
+
+                                    <!-- Alliance Name -->
+                                    <div v-if="item.victim?.alliance_name" class="entity-name alliance-name">
+                                        {{ item.victim.alliance_name }}
                                     </div>
                                 </div>
                             </div>
 
-                            <!-- Kill Details -->
-                            <div class="kill-info-container">
-                                <!-- Damage Taken -->
-                                <div class="killmail-damage">
-                                    <Icon name="lucide:zap" class="damage-icon" />
-                                    <span class="damage-value">{{ formatNumberWithLocale(item.victim.damage_taken || 0)
-                                        }}</span>
+                            <!-- Middle row: Attacker (Final Blow) Information -->
+                            <div class="attacker-middle">
+                                <!-- Section Label -->
+                                <div class="section-label finalblow-label">Final Blow</div>
+
+                                <!-- Final Blow Portrait -->
+                                <div class="portrait-container">
+                                    <Image v-if="getFinalBlowAttacker(item)?.character_id" :type="'character'"
+                                        :id="getFinalBlowAttacker(item).character_id!" :size="48"
+                                        class="portrait character-portrait"
+                                        :style="{ maxWidth: '48px', maxHeight: '48px' }" />
+                                    <div v-else class="portrait character-portrait-placeholder"></div>
                                 </div>
 
-                                <!-- Value -->
-                                <div class="killmail-value">
-                                    <span class="value-label">{{ formatIsk(item.total_value || 0) }}</span>
+                                <!-- Corp/Alliance Stacked -->
+                                <div class="corp-alliance-container">
+                                    <Image v-if="getFinalBlowAttacker(item)?.corporation_id" :type="'corporation'"
+                                        :id="getFinalBlowAttacker(item).corporation_id!" :size="24"
+                                        class="portrait corporation-portrait"
+                                        :style="{ maxWidth: '24px', maxHeight: '24px' }" />
+                                    <Image v-if="getFinalBlowAttacker(item)?.alliance_id" :type="'alliance'"
+                                        :id="getFinalBlowAttacker(item).alliance_id!" :size="24"
+                                        class="portrait alliance-portrait"
+                                        :style="{ maxWidth: '24px', maxHeight: '24px' }" />
                                 </div>
 
-                                <!-- Time -->
-                                <div class="killmail-time">
-                                    {{ formatTime(item.kill_time) }}
+                                <!-- Name Information -->
+                                <div class="name-container">
+                                    <!-- Character Name -->
+                                    <div class="entity-name character-name">
+                                        {{ getFinalBlowAttacker(item)?.character_name || 'Unknown Pilot' }}
+                                    </div>
+
+                                    <!-- Corporation Name -->
+                                    <div class="entity-name corporation-name">
+                                        {{ getFinalBlowAttacker(item)?.corporation_name || 'Unknown Corporation' }}
+                                    </div>
+
+                                    <!-- Alliance Name -->
+                                    <div v-if="getFinalBlowAttacker(item)?.alliance_name"
+                                        class="entity-name alliance-name">
+                                        {{ getFinalBlowAttacker(item).alliance_name }}
+                                    </div>
                                 </div>
                             </div>
-                        </div>
-                    </component>
-                </div>
-                <div v-else class="empty-state">
-                    {{ t('noKillsFoundForThisTeam') }}
-                </div>
-            </div>
+
+                            <!-- Bottom Row: Ship & Kill Details -->
+                            <div class="attacker-bottom">
+                                <!-- Ship Details -->
+                                <div class="ship-details">
+                                    <div class="ship-image-container">
+                                        <Image :type="'type-render'" :id="item.victim.ship_id" :size="40"
+                                            class="ship-image" :style="{ maxWidth: '40px', maxHeight: '40px' }" />
+                                    </div>
+                                    <div class="ship-info">
+                                        <div class="ship-name text-red-500 dark:text-red-400">
+                                            {{ getLocalizedString(item.victim.ship_name, locale) || 'Unknown Ship' }}
+                                        </div>
+                                        <div class="ship-group">
+                                            {{ getLocalizedString(item.victim.ship_group_name, locale) }}
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Kill Details -->
+                                <div class="kill-info-container">
+                                    <!-- Damage Taken -->
+                                    <div class="killmail-damage">
+                                        <Icon name="lucide:zap" class="damage-icon" />
+                                        <span class="damage-value">{{ formatNumberWithLocale(item.victim.damage_taken ||
+                                            0)
+                                            }}</span>
+                                    </div>
+
+                                    <!-- Value -->
+                                    <div class="killmail-value">
+                                        <span class="value-label">{{ formatIsk(item.total_value || 0) }}</span>
+                                    </div>
+
+                                    <!-- Time -->
+                                    <div class="killmail-time">
+                                        {{ formatTime(item.kill_time) }}
+                                    </div>
+                                </div>
+                            </div>
+                        </component>
+                    </div>
+                    <div v-else class="empty-state">
+                        {{ t('noKillsFoundForThisTeam') }}
+                    </div>
+                </template>
+            </Card>
         </div>
     </div>
 </template>
@@ -232,7 +236,8 @@ const getFinalBlowAttacker = (kill: BattleKill): AttackerData => {
     if (finalBlowAttacker) return finalBlowAttacker;
 
     // If no final_blow flag, return the highest damage dealer
-    return [...kill.attackers].sort((a, b) => (b.damage_done || 0) - (a.damage_done || 0))[0];
+    const sorted = [...kill.attackers].sort((a, b) => (b.damage_done || 0) - (a.damage_done || 0));
+    return sorted[0] || { character_name: 'Unknown', damage_done: 0 };
 };
 
 // Format ISK values
@@ -264,107 +269,145 @@ function formatNumberWithLocale(n: number): string {
 // Localization helper
 const getLocalizedString = (obj: any, localeKey: string): string => {
     if (!obj) return "";
+    if (typeof obj === 'string') return obj;
+
     // Convert localeKey from 'en-US' to 'en' if necessary
     const lang = localeKey.split('-')[0];
-    return obj[lang] || obj.en || (typeof obj === 'string' ? obj : "");
+
+    // Type-safe property access
+    if (typeof obj === 'object' && obj !== null && lang) {
+        return obj[lang] || obj['en'] || "";
+    }
+
+    return "";
 };
 </script>
 
 <style scoped>
-/* Team column sizing */
+/* Grid Layout */
+.kills-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: var(--space-lg);
+    margin-top: var(--space-lg);
+}
+
+.single-column {
+    grid-template-columns: 1fr;
+}
+
+.two-columns {
+    grid-template-columns: repeat(2, 1fr);
+}
+
+.three-columns {
+    grid-template-columns: repeat(3, 1fr);
+}
+
+.four-columns {
+    grid-template-columns: repeat(4, 1fr);
+}
+
+/* Section Title */
+.section-title {
+    font-size: var(--text-lg);
+    font-weight: var(--font-semibold);
+    color: var(--color-text-primary);
+    margin: 0;
+}
+
+/* Team Column */
 .team-kills-column {
     min-width: 0;
-    /* Allow columns to shrink */
 }
 
-/* Attacker List Styling */
-.attacker-list {
-    border: 1px solid rgba(75, 85, 99, 0.2);
-    background-color: light-dark(rgba(245, 245, 245, 0.1), rgba(26, 26, 26, 0.4));
-}
-
-/* Make attacker-row act like a link */
+/* Kill Row Styling */
 .attacker-row {
     display: flex;
     flex-direction: column;
-    padding: 0.75rem;
-    border-bottom: 1px solid rgba(75, 85, 99, 0.2);
-    transition: background-color 0.15s ease;
+    padding: var(--space-md);
+    border-bottom: 1px solid var(--color-border);
+    transition: background-color var(--duration-fast) ease;
     color: inherit;
     text-decoration: none;
     position: relative;
 }
 
 .attacker-row:hover {
-    background-color: light-dark(rgba(243, 244, 246, 0.7), rgba(31, 41, 55, 0.7));
+    background-color: var(--color-background-hover);
 }
 
-/* Section label styling */
+/* Section Labels */
 .section-label {
     position: absolute;
-    top: 4px;
-    right: 4px;
-    font-size: 0.6rem;
-    font-weight: 700;
-    padding: 1px 4px;
-    border-radius: 2px;
+    top: var(--space-xs);
+    right: var(--space-xs);
+    font-size: var(--text-xs);
+    font-weight: var(--font-bold);
+    padding: var(--space-xs) var(--space-sm);
+    border-radius: var(--radius-sm);
     text-transform: uppercase;
 }
 
 .victim-label {
-    background-color: rgba(239, 68, 68, 0.2);
-    color: #ef4444;
+    background-color: var(--color-danger-alpha);
+    color: var(--color-danger);
 }
 
 .finalblow-label {
-    background-color: rgba(34, 197, 94, 0.2);
-    color: #22c55e;
+    background-color: var(--color-success-alpha);
+    color: var(--color-success);
 }
 
-/* Top section - victim information */
+/* Section Layouts */
 .attacker-top {
     display: flex;
-    gap: 0.5rem;
+    gap: var(--space-sm);
     align-items: center;
-    margin-bottom: 0.5rem;
+    margin-bottom: var(--space-sm);
     width: 100%;
-    padding: 4px;
+    padding: var(--space-xs);
     position: relative;
-    background-color: rgba(239, 68, 68, 0.05);
-    border-radius: 4px;
+    background-color: var(--color-danger-alpha);
+    border-radius: var(--radius-sm);
 }
 
-/* Middle section - attacker information */
 .attacker-middle {
     display: flex;
-    gap: 0.5rem;
+    gap: var(--space-sm);
     align-items: center;
-    margin-bottom: 0.5rem;
+    margin-bottom: var(--space-sm);
     width: 100%;
-    padding: 4px;
+    padding: var(--space-xs);
     position: relative;
-    background-color: rgba(34, 197, 94, 0.05);
-    border-radius: 4px;
+    background-color: var(--color-success-alpha);
+    border-radius: var(--radius-sm);
 }
 
+.attacker-bottom {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+    padding: var(--space-sm) var(--space-xs) 0;
+    border-top: 1px solid var(--color-border-subtle);
+}
+
+/* Portrait Containers */
 .portrait-container {
     flex-shrink: 0;
     width: 48px;
-    /* Fixed width */
     height: 48px;
-    /* Fixed height */
     display: flex;
     align-items: center;
     justify-content: center;
     overflow: hidden;
-    /* Prevent any overflow */
 }
 
 .portrait {
     border-radius: 50%;
-    background-color: rgba(0, 0, 0, 0.1);
+    background-color: var(--color-background-tertiary);
     object-fit: contain;
-    /* Ensure the image fits without stretching */
     max-width: 100%;
     max-height: 100%;
 }
@@ -373,17 +416,15 @@ const getLocalizedString = (obj: any, localeKey: string): string => {
     width: 48px;
     height: 48px;
     flex-shrink: 0;
-    /* Prevent flexbox from shrinking the image */
     flex-grow: 0;
-    /* Prevent flexbox from growing the image */
 }
 
 .character-portrait-placeholder {
     width: 48px;
     height: 48px;
     border-radius: 50%;
-    background-color: rgba(100, 100, 100, 0.1);
-    border: 1px dashed rgba(128, 128, 128, 0.3);
+    background-color: var(--color-background-tertiary);
+    border: 1px dashed var(--color-border-subtle);
     flex-shrink: 0;
     flex-grow: 0;
 }
@@ -395,7 +436,6 @@ const getLocalizedString = (obj: any, localeKey: string): string => {
     height: 48px;
     flex-shrink: 0;
     width: 24px;
-    /* Fixed width container */
 }
 
 .corporation-portrait,
@@ -406,20 +446,11 @@ const getLocalizedString = (obj: any, localeKey: string): string => {
     flex-grow: 0;
 }
 
-/* Bottom section - ship and kill details */
-.attacker-bottom {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    width: 100%;
-    padding: 8px 4px 0;
-    border-top: 1px solid rgba(75, 85, 99, 0.1);
-}
-
+/* Ship Details */
 .ship-details {
     display: flex;
     align-items: center;
-    gap: 8px;
+    gap: var(--space-sm);
     min-width: 0;
     flex-grow: 1;
 }
@@ -427,9 +458,7 @@ const getLocalizedString = (obj: any, localeKey: string): string => {
 .ship-image-container {
     flex-shrink: 0;
     width: 40px;
-    /* Fixed width */
     height: 40px;
-    /* Fixed height */
     display: flex;
     align-items: center;
     justify-content: center;
@@ -438,9 +467,9 @@ const getLocalizedString = (obj: any, localeKey: string): string => {
 .ship-image {
     width: 40px;
     height: 40px;
-    border-radius: 4px;
-    background-color: rgba(0, 0, 0, 0.2);
-    border: 1px solid rgba(75, 85, 99, 0.2);
+    border-radius: var(--radius-sm);
+    background-color: var(--color-background-tertiary);
+    border: 1px solid var(--color-border);
     object-fit: contain;
     max-width: 100%;
     max-height: 100%;
@@ -453,36 +482,36 @@ const getLocalizedString = (obj: any, localeKey: string): string => {
 }
 
 .ship-name {
-    font-size: 0.85rem;
-    font-weight: 500;
+    font-size: var(--text-sm);
+    font-weight: var(--font-medium);
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
 }
 
 .ship-group {
-    font-size: 0.7rem;
-    color: light-dark(#6b7280, #9ca3af);
+    font-size: var(--text-xs);
+    color: var(--color-text-tertiary);
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
 }
 
+/* Kill Information */
 .kill-info-container {
     display: flex;
     flex-direction: column;
     align-items: flex-end;
-    gap: 0.15rem;
+    gap: var(--space-xs);
     flex-shrink: 0;
 }
 
 .killmail-damage {
     display: flex;
     align-items: center;
-    gap: 0.25rem;
-    font-size: 0.75rem;
-    color: #ef4444;
-    /* Red for damage */
+    gap: var(--space-xs);
+    font-size: var(--text-xs);
+    color: var(--color-danger);
 }
 
 .damage-icon {
@@ -491,35 +520,89 @@ const getLocalizedString = (obj: any, localeKey: string): string => {
 }
 
 .damage-value {
-    font-weight: 500;
+    font-weight: var(--font-medium);
 }
 
 .killmail-value {
-    font-size: 0.85rem;
-    font-weight: 600;
-    color: #38bdf8;
-    /* Light blue for ISK */
+    font-size: var(--text-sm);
+    font-weight: var(--font-semibold);
+    color: var(--color-info);
 }
 
 .killmail-time {
-    font-size: 0.7rem;
-    color: light-dark(#6b7280, #9ca3af);
+    font-size: var(--text-xs);
+    color: var(--color-text-tertiary);
 }
 
-/* Empty state styling */
+/* Entity Names */
+.name-container {
+    flex-grow: 1;
+    min-width: 0;
+}
+
+.entity-name {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    line-height: 1.2;
+}
+
+.character-name {
+    font-size: var(--text-sm);
+    font-weight: var(--font-medium);
+    color: var(--color-text-primary);
+}
+
+.corporation-name {
+    font-size: var(--text-xs);
+    color: var(--color-text-secondary);
+}
+
+.alliance-name {
+    font-size: var(--text-xs);
+    color: var(--color-text-tertiary);
+}
+
+/* Empty State */
 .empty-state {
-    padding: 1.5rem;
+    padding: var(--space-xl);
     text-align: center;
-    color: light-dark(#6b7280, #9ca3af);
+    color: var(--color-text-tertiary);
     font-style: italic;
 }
 
-/* Responsive adjustments for team columns */
+/* Semantic Color Classes */
+.text-red-500,
+.text-red-400 {
+    color: var(--color-danger) !important;
+}
+
+/* Responsive Design */
+@media (min-width: 768px) {
+    .md\:grid-cols-1 {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (min-width: 1280px) {
+    .xl\:grid-cols-2 {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    .xl\:grid-cols-3 {
+        grid-template-columns: repeat(3, 1fr);
+    }
+
+    .xl\:grid-cols-4 {
+        grid-template-columns: repeat(4, 1fr);
+    }
+}
+
 @media (max-width: 1200px) {
 
     .xl\:grid-cols-4,
     .xl\:grid-cols-3 {
-        grid-template-columns: repeat(2, minmax(0, 1fr));
+        grid-template-columns: repeat(2, 1fr);
     }
 }
 
@@ -528,27 +611,18 @@ const getLocalizedString = (obj: any, localeKey: string): string => {
     .xl\:grid-cols-2,
     .xl\:grid-cols-3,
     .xl\:grid-cols-4 {
-        grid-template-columns: minmax(0, 1fr);
+        grid-template-columns: 1fr;
     }
 
     .attacker-bottom {
         flex-direction: column;
         align-items: flex-start;
-        gap: 0.5rem;
+        gap: var(--space-sm);
     }
 
     .kill-info-container {
         align-self: flex-end;
         align-items: flex-start;
     }
-}
-
-/* Red text for victims */
-.text-red-500 {
-    color: #ef4444 !important;
-}
-
-.dark .text-red-400 {
-    color: #f87171 !important;
 }
 </style>

@@ -28,7 +28,8 @@
                         </header>
 
                         <!-- Body -->
-                        <section class="px-6 pt-6 pb-6 bg-white dark:bg-gray-800 flex-1 overflow-auto">
+                        <section v-if="$slots.default"
+                            class="px-6 pt-6 pb-6 bg-white dark:bg-gray-800 flex-1 overflow-auto">
                             <slot />
                         </section>
 
@@ -142,7 +143,7 @@ onUnmounted(() => {
 <style scoped>
 /* Backdrop: dark + blur */
 .modal-overlay {
-    background-color: rgba(0, 0, 0, 0.6);
+    background-color: var(--color-overlay);
     backdrop-filter: blur(8px);
     -webkit-backdrop-filter: blur(8px);
 }
@@ -150,7 +151,7 @@ onUnmounted(() => {
 /* Overlay fade animations */
 .overlay-fade-enter-active,
 .overlay-fade-leave-active {
-    transition: opacity 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    transition: opacity var(--duration-300) cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .overlay-fade-enter-from,
@@ -161,47 +162,37 @@ onUnmounted(() => {
 /* Content scale/fade animations */
 .content-scale-enter-active,
 .content-scale-leave-active {
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    transition: all var(--duration-300) cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .content-scale-enter-from,
 .content-scale-leave-to {
     opacity: 0;
-    transform: scale(0.9) translateY(-16px);
+    transform: scale(0.9) translateY(-1rem);
 }
 
 /* Modal content styling */
 .modal-content {
-    background-color: white !important;
+    background-color: var(--color-bg-primary) !important;
     opacity: 1 !important;
-    box-shadow:
-        0 20px 25px -5px rgba(0, 0, 0, 0.1),
-        0 10px 10px -5px rgba(0, 0, 0, 0.04),
-        0 0 0 1px rgba(0, 0, 0, 0.05);
+    box-shadow: var(--shadow-xl);
 }
 
 .dark .modal-content {
-    background-color: rgb(31, 41, 55) !important;
+    background-color: var(--color-bg-primary) !important;
     opacity: 1 !important;
-    box-shadow:
-        0 20px 25px -5px rgba(0, 0, 0, 0.25),
-        0 10px 10px -5px rgba(0, 0, 0, 0.1),
-        0 0 0 1px rgba(255, 255, 255, 0.05);
+    box-shadow: var(--shadow-xl);
 }
 
 /* Header and footer subtle backgrounds */
 .modal-content header,
 .modal-content footer {
-    background: linear-gradient(to bottom,
-            rgba(249, 250, 251, 0.8),
-            rgba(249, 250, 251, 0.4));
+    background: var(--color-surface-alpha-light);
 }
 
 .dark .modal-content header,
 .dark .modal-content footer {
-    background: linear-gradient(to bottom,
-            rgba(55, 65, 81, 0.6),
-            rgba(55, 65, 81, 0.2));
+    background: var(--color-surface-alpha-dark);
 }
 
 /* Close button hover effects */
@@ -212,6 +203,6 @@ onUnmounted(() => {
 /* Focus rings for accessibility */
 .modal-content button:focus {
     outline: none;
-    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.3);
+    box-shadow: 0 0 0 3px var(--color-border-focus-light);
 }
 </style>

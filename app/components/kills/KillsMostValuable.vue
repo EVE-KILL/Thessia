@@ -132,40 +132,28 @@ const isPriorityImage = (index: number): boolean => {
 <style scoped>
 /* Table styles */
 :deep(tbody tr) {
-    border-color: rgb(40, 40, 40) !important;
+    border-color: var(--color-border-dark) !important;
 }
 
 :deep(tbody tr + tr) {
-    border-top: 1px solid rgb(40, 40, 40) !important;
+    border-top: 1px solid var(--color-border-dark) !important;
 }
 
 :deep(tbody tr):hover {
-    background: light-dark(#e5e7eb, #1a1a1a);
+    background: var(--color-surface-alpha);
 }
 
-/* Consistent animation timing for all skeleton elements */
-@keyframes pulse {
-
-    0%,
-    100% {
-        opacity: 1;
-    }
-
-    50% {
-        opacity: 0.5;
-    }
-}
-
+/* Use global pulse animation from globals.css */
 .animate-pulse {
-    animation: pulse 1.5s ease-in-out infinite;
+    animation: pulse var(--duration-1500) ease-in-out infinite;
 }
 
 /* Fix grid columns for skeleton */
 .horizontal-grid {
     display: grid;
     grid-template-columns: repeat(var(--cols, 5), 1fr);
-    gap: 0.75rem;
-    padding: 0.5rem;
+    gap: var(--space-3);
+    padding: var(--space-2);
 }
 
 .grid-cols-2 {

@@ -6,7 +6,7 @@
             <ScrollTo targetSelector="#comments-section" title="Go to comments" :bottomOffset="80" />
             <KillNavbar :killmail="killmail" :battle="battle" :siblings="siblings" />
             <!-- Left Container -->
-            <div class="flex-1 min-w-0 text-black dark:text-white bg-background-900 rounded-md overflow-hidden">
+            <div class="flex-1 min-w-0 text-black dark:text-white rounded-md overflow-hidden">
                 <!-- Header -->
                 <div>
                     <div id="information-area" class="flex flex-col md:flex-row justify-around">
@@ -111,7 +111,7 @@
                                 </div>
                             </template>
                             <KillFittingWheel v-else :killmail="killmail" :hideFitting="shouldHideFitting"
-                                :max-width="1000" style="min-width: 350px" />
+                                :max-width="1000" class="kill-fitting-wheel-container" />
                         </div>
 
                         <!-- Kill Information - Adjusted width -->
@@ -119,7 +119,7 @@
                             <template v-if="!killmail">
                                 <div class="grid gap-4">
                                     <!-- Ship section skeleton -->
-                                    <div class="section p-3 rounded-lg bg-background-800 bg-opacity-30">
+                                    <div class="section p-3 rounded-lg skeleton-section-bg">
                                         <div class="flex items-center gap-3">
                                             <USkeleton class="h-16 w-16 rounded-md flex-shrink-0" />
                                             <div class="flex flex-col gap-2 flex-grow min-w-0">
@@ -135,7 +135,7 @@
                                     </div>
 
                                     <!-- Victim section skeleton -->
-                                    <div class="section p-3 rounded-lg bg-background-800 bg-opacity-30">
+                                    <div class="section p-3 rounded-lg skeleton-section-bg">
                                         <USkeleton class="h-5 w-24 mb-2" />
                                         <div class="flex items-start gap-3 mb-2">
                                             <div class="relative">
@@ -165,7 +165,7 @@
                                     </div>
 
                                     <!-- Details section skeleton -->
-                                    <div class="section p-3 rounded-lg bg-background-800 bg-opacity-30">
+                                    <div class="section p-3 rounded-lg skeleton-section-bg">
                                         <div class="grid gap-3">
                                             <div class="flex items-start gap-2">
                                                 <USkeleton class="h-4 w-4 mt-1 flex-shrink-0" />
@@ -327,8 +327,7 @@
             </div>
 
             <!-- Right Container -->
-            <div
-                class="w-full md:w-2/5 lg:w-1/3 xl:max-w-md text-black dark:text-white bg-background-900 rounded-md overflow-hidden">
+            <div class="w-full md:w-2/5 lg:w-1/3 xl:max-w-md text-black dark:text-white rounded-md overflow-hidden">
                 <template v-if="!killmail">
                     <!-- Skeleton content for attackers -->
                     <div class="p-4">
@@ -369,7 +368,7 @@
 
         <!-- Mobile Layout -->
         <div v-else class="mt-4">
-            <div class="text-black dark:text-white bg-background-900 rounded-md overflow-hidden">
+            <div class="text-black dark:text-white rounded-md overflow-hidden mobile-kill-container">
                 <template v-if="!killmail">
                     <!-- Skeleton tabs -->
                     <div class="border-b border-background-700">
@@ -411,7 +410,7 @@
                                     <defs>
                                         <mask id="skeleton-slot-corners-mobile">
                                             <rect width="512" height="512" x="0" y="0"
-                                                style="fill: rgba(255, 255, 255, 0.2);"></rect>
+                                                style="fill: var(--color-background-alpha-light);"></rect>
                                             <rect width="17" height="17" x="133" y="126" style="fill: rgb(0, 0, 0);">
                                             </rect>
                                             <rect width="17" height="17" x="366" y="129" style="fill: rgb(0, 0, 0);">
@@ -426,7 +425,7 @@
                                     </defs>
                                     <g>
                                         <circle cx="256" cy="256" r="195" mask="url(#skeleton-slot-corners-mobile)"
-                                            style="fill: none; stroke: rgba(40, 40, 40, 0.3); stroke-width: 46; stroke-opacity: 0.6;">
+                                            style="fill: none; stroke: var(--color-border-light); stroke-width: 46; stroke-opacity: 0.6;">
                                         </circle>
                                     </g>
                                 </svg>
@@ -532,7 +531,7 @@ const { isMobile } = useResponsive();
 
 // Common UI configuration for tabs
 const tabsUi = {
-    list: "mb-0 border-b border-background-700",
+    list: "mb-0 border-b border-border-medium",
     tab: {
         base: "text-sm inline-flex items-center h-10 px-4 cursor-pointer",
         active: "text-black dark:text-white font-medium",
@@ -919,15 +918,15 @@ onBeforeUnmount(() => {
 }
 
 :deep(tbody tr) {
-    border-color: rgb(40, 40, 40) !important;
+    border-color: var(--color-border-medium) !important;
 }
 
 :deep(tbody tr + tr) {
-    border-top: 1px solid rgb(40, 40, 40) !important;
+    border-top: 1px solid var(--color-border-medium) !important;
 }
 
 :deep(tbody tr):hover {
-    background: light-dark(#e5e7eb, #1a1a1a);
+    background: var(--color-background-hover);
 }
 
 /* Fix tab overflow scrolling on mobile */
@@ -961,7 +960,7 @@ onBeforeUnmount(() => {
     margin: 0 auto;
     border-radius: 50%;
     overflow: hidden;
-    background-color: rgba(128, 128, 128, 0.1);
+    background-color: var(--color-background-alpha-light);
 }
 
 .skeleton-ring {
@@ -975,7 +974,7 @@ onBeforeUnmount(() => {
     left: 0;
     width: 100%;
     height: 100%;
-    border: 8px solid rgba(128, 128, 128, 0.2);
+    border: 8px solid var(--color-border-light);
 }
 
 .inner-skeleton-ring {
@@ -983,7 +982,7 @@ onBeforeUnmount(() => {
     left: 15%;
     width: 70%;
     height: 70%;
-    border: 6px solid rgba(128, 128, 128, 0.15);
+    border: 6px solid var(--color-border-light);
 }
 
 .skeleton-ship {
@@ -994,7 +993,7 @@ onBeforeUnmount(() => {
     height: 60%;
     border-radius: 50%;
     overflow: hidden;
-    background-color: rgba(128, 128, 128, 0.1);
+    background-color: var(--color-background-alpha-light);
 }
 
 .skeleton-slot {
@@ -1006,19 +1005,19 @@ onBeforeUnmount(() => {
 }
 
 .skeleton-slot.high-slot {
-    border: 1px solid rgba(180, 60, 60, 0.2);
+    border: 1px solid var(--color-high-slot);
 }
 
 .skeleton-slot.mid-slot {
-    border: 1px solid rgba(60, 120, 180, 0.2);
+    border: 1px solid var(--color-mid-slot);
 }
 
 .skeleton-slot.low-slot {
-    border: 1px solid rgba(180, 140, 60, 0.2);
+    border: 1px solid var(--color-low-slot);
 }
 
 .skeleton-slot.rig-slot {
-    border: 1px solid rgba(150, 150, 150, 0.2);
+    border: 1px solid var(--color-rig-slot);
 }
 
 .skeleton-indicator {
@@ -1038,26 +1037,26 @@ onBeforeUnmount(() => {
     display: grid;
     grid-template-columns: 80px 1fr 120px 120px;
     padding: 0.5rem 1rem;
-    border-bottom: 1px solid rgb(40, 40, 40);
-    background-color: rgba(26, 26, 26, 0.5);
+    border-bottom: 1px solid var(--color-border-medium);
+    background-color: var(--color-surface-alpha-medium);
 }
 
 .table-row-skeleton {
     display: grid;
     grid-template-columns: 80px 1fr 120px 120px;
     padding: 0.4rem 1rem;
-    border-bottom: 1px solid rgb(40, 40, 40);
+    border-bottom: 1px solid var(--color-border-medium);
     align-items: center;
 }
 
 .table-row-skeleton.header-row {
-    background-color: rgba(26, 26, 26, 0.7);
+    background-color: var(--color-surface-alpha-heavy);
     padding: 0.3rem 1rem;
     height: 2rem;
 }
 
 .table-row-skeleton.value-row {
-    background-color: rgba(40, 40, 40, 0.3);
+    background-color: var(--color-background-alpha-medium);
     font-weight: 600;
 }
 
@@ -1093,7 +1092,7 @@ onBeforeUnmount(() => {
     margin: 0 auto;
     border-radius: 50%;
     overflow: hidden;
-    background-color: rgba(30, 30, 30, 0.05);
+    background-color: var(--color-background-alpha-subtle);
 }
 
 .skeleton-outer-ring,
@@ -1122,7 +1121,7 @@ onBeforeUnmount(() => {
     height: 60%;
     border-radius: 50%;
     overflow: hidden;
-    background-color: rgba(40, 40, 40, 0.1);
+    background-color: var(--color-background-alpha-light);
     z-index: 1;
 }
 
@@ -1132,24 +1131,24 @@ onBeforeUnmount(() => {
     height: 42px;
     border-radius: 50%;
     overflow: hidden;
-    background-color: rgba(30, 30, 30, 0.1);
+    background-color: var(--color-background-alpha-subtle);
     z-index: 5;
 }
 
 .skeleton-slot.high-slot {
-    border: 1px solid rgba(180, 60, 60, 0.2);
+    border: 1px solid var(--color-high-slot);
 }
 
 .skeleton-slot.mid-slot {
-    border: 1px solid rgba(60, 120, 180, 0.2);
+    border: 1px solid var(--color-mid-slot);
 }
 
 .skeleton-slot.low-slot {
-    border: 1px solid rgba(180, 140, 60, 0.2);
+    border: 1px solid var(--color-low-slot);
 }
 
 .skeleton-slot.rig-slot {
-    border: 1px solid rgba(150, 150, 150, 0.2);
+    border: 1px solid var(--color-rig-slot);
 }
 
 .skeleton-indicator {
@@ -1161,21 +1160,21 @@ onBeforeUnmount(() => {
 }
 
 .skeleton-indicator.high-indicator .indicator-svg {
-    background-color: rgba(180, 60, 60, 0.2);
+    background-color: var(--color-high-slot);
     height: 100%;
     width: 100%;
     transform: rotate(-125deg);
 }
 
 .skeleton-indicator.mid-indicator .indicator-svg {
-    background-color: rgba(60, 120, 180, 0.2);
+    background-color: var(--color-mid-slot);
     height: 100%;
     width: 100%;
     transform: rotate(-35deg);
 }
 
 .skeleton-indicator.low-indicator .indicator-svg {
-    background-color: rgba(180, 140, 60, 0.2);
+    background-color: var(--color-low-slot);
     height: 100%;
     width: 100%;
     transform: rotate(55deg);
@@ -1215,15 +1214,15 @@ onBeforeUnmount(() => {
     grid-template-columns: 80px 1fr 120px 120px;
     padding: 0.5rem 1rem;
     align-items: center;
-    border-bottom: 1px solid rgba(40, 40, 40, 0.5);
+    border-bottom: 1px solid var(--color-border-medium);
 }
 
 .skeleton-header {
-    background-color: rgba(26, 26, 26, 0.5);
+    background-color: var(--color-surface-alpha-medium);
 }
 
 .section-header {
-    background-color: rgba(26, 26, 26, 0.7);
+    background-color: var(--color-surface-alpha-heavy);
     padding: 0.3rem 1rem;
     margin-top: 0.5rem;
     height: 2.2rem;
@@ -1234,7 +1233,7 @@ onBeforeUnmount(() => {
 }
 
 .nested-item {
-    background-color: rgba(40, 40, 40, 0.15);
+    background-color: var(--color-background-alpha-light);
     position: relative;
 }
 
@@ -1253,12 +1252,12 @@ onBeforeUnmount(() => {
 }
 
 .subtotal-row {
-    background-color: rgba(40, 40, 40, 0.2);
+    background-color: var(--color-background-alpha-light);
     font-weight: 500;
 }
 
 .total-row {
-    background-color: rgba(40, 40, 40, 0.3);
+    background-color: var(--color-background-alpha-medium);
     font-weight: 600;
     margin-top: 0.5rem;
 }
@@ -1288,5 +1287,20 @@ onBeforeUnmount(() => {
         gap: 0.25rem;
         align-items: flex-start;
     }
+}
+
+/* Kill fitting wheel container */
+.kill-fitting-wheel-container {
+    min-width: 350px;
+}
+
+/* Mobile kill container */
+.mobile-kill-container {
+    background-color: var(--color-surface);
+}
+
+/* Skeleton section background */
+.skeleton-section-bg {
+    background-color: var(--color-surface-alpha-medium);
 }
 </style>

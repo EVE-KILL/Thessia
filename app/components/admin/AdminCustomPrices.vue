@@ -1,46 +1,53 @@
 <template>
-    <div class="custom-prices-view">
-        <!-- Header -->
-        <div class="custom-prices-header">
-            <div class="header-info">
-                <h3 class="custom-prices-title">{{ t('admin.customPrices.title') }}</h3>
-                <p class="custom-prices-description">{{ t('admin.customPrices.description') }}</p>
-            </div>
-            <div class="header-actions">
-                <button @click="showCreateModal = true" class="action-button create-btn">
-                    <Icon name="heroicons:plus" class="action-icon" />
-                    {{ t('admin.customPrices.create') }}
-                </button>
-                <button @click="refreshData" class="action-button" :disabled="pending">
-                    <Icon name="heroicons:arrow-path" class="action-icon" :class="{ 'animate-spin': pending }" />
-                    {{ t('admin.customPrices.refresh') }}
-                </button>
-            </div>
-        </div>
+    <div class="admin-custom-prices">
+        <!-- Header Card -->
+        <Card>
+            <template #header>
+                <div class="header-content">
+                    <div class="header-info">
+                        <h3 class="header-title">{{ t('admin.customPrices.title') }}</h3>
+                        <p class="header-description">{{ t('admin.customPrices.description') }}</p>
+                    </div>
+                    <div class="header-actions">
+                        <button @click="showCreateModal = true" class="action-button create-btn">
+                            <Icon name="heroicons:plus" class="action-icon" />
+                            {{ t('admin.customPrices.create') }}
+                        </button>
+                        <button @click="refreshData" class="action-button" :disabled="pending">
+                            <Icon name="heroicons:arrow-path" class="action-icon"
+                                :class="{ 'animate-spin': pending }" />
+                            {{ t('admin.customPrices.refresh') }}
+                        </button>
+                    </div>
+                </div>
+            </template>
+        </Card>
 
-        <!-- Controls -->
-        <div class="custom-prices-controls">
-            <div class="search-container">
-                <Icon name="heroicons:magnifying-glass" class="search-icon" />
-                <input v-model="searchQuery" type="text" :placeholder="t('admin.customPrices.searchPlaceholder')"
-                    class="search-input" />
-                <button v-if="searchQuery" @click="clearSearch" class="search-clear-btn">
-                    <Icon name="heroicons:x-mark" class="clear-icon" />
-                </button>
-            </div>
+        <!-- Controls Card -->
+        <Card>
+            <div class="controls-content">
+                <div class="search-container">
+                    <Icon name="heroicons:magnifying-glass" class="search-icon" />
+                    <input v-model="searchQuery" type="text" :placeholder="t('admin.customPrices.searchPlaceholder')"
+                        class="search-input" />
+                    <button v-if="searchQuery" @click="clearSearch" class="search-clear-btn">
+                        <Icon name="heroicons:x-mark" class="clear-icon" />
+                    </button>
+                </div>
 
-            <div class="controls-right">
-                <select v-model="pageSize" class="page-size-select" @change="handlePageSizeChange">
-                    <option value="10">10 {{ t('admin.customPrices.perPage') }}</option>
-                    <option value="25">25 {{ t('admin.customPrices.perPage') }}</option>
-                    <option value="50">50 {{ t('admin.customPrices.perPage') }}</option>
-                    <option value="100">100 {{ t('admin.customPrices.perPage') }}</option>
-                </select>
+                <div class="controls-right">
+                    <select v-model="pageSize" class="page-size-select" @change="handlePageSizeChange">
+                        <option value="10">10 {{ t('admin.customPrices.perPage') }}</option>
+                        <option value="25">25 {{ t('admin.customPrices.perPage') }}</option>
+                        <option value="50">50 {{ t('admin.customPrices.perPage') }}</option>
+                        <option value="100">100 {{ t('admin.customPrices.perPage') }}</option>
+                    </select>
+                </div>
             </div>
-        </div>
+        </Card>
 
-        <!-- Table -->
-        <div class="custom-prices-table-container">
+        <!-- Table Card -->
+        <Card class="table-card">
             <Table :columns="tableColumns" :items="data?.data || []" :loading="pending"
                 :empty-text="t('admin.customPrices.empty')" :skeleton-count="10" striped hover>
                 <!-- Item Column -->
@@ -91,32 +98,35 @@
                     </div>
                 </template>
             </Table>
-        </div>
 
-        <!-- Pagination -->
-        <div v-if="data && data.pagination.totalPages > 1" class="pagination">
-            <button @click="changePage(1)" :disabled="!data.pagination.hasPrevPage" class="pagination-btn">
-                {{ t('admin.customPrices.first') }}
-            </button>
-            <button @click="changePage(data.pagination.currentPage - 1)" :disabled="!data.pagination.hasPrevPage"
-                class="pagination-btn">
-                {{ t('admin.customPrices.previous') }}
-            </button>
-            <span class="pagination-info">
-                {{ t('admin.customPrices.pageInfo', {
-                    current: data.pagination.currentPage, total:
-                        data.pagination.totalPages })
-                }}
-            </span>
-            <button @click="changePage(data.pagination.currentPage + 1)" :disabled="!data.pagination.hasNextPage"
-                class="pagination-btn">
-                {{ t('admin.customPrices.next') }}
-            </button>
-            <button @click="changePage(data.pagination.totalPages)" :disabled="!data.pagination.hasNextPage"
-                class="pagination-btn">
-                {{ t('admin.customPrices.last') }}
-            </button>
-        </div>
+            <!-- Pagination Footer -->
+            <template #footer v-if="data && data.pagination.totalPages > 1">
+                <div class="pagination">
+                    <button @click="changePage(1)" :disabled="!data.pagination.hasPrevPage" class="pagination-btn">
+                        {{ t('admin.customPrices.first') }}
+                    </button>
+                    <button @click="changePage(data.pagination.currentPage - 1)"
+                        :disabled="!data.pagination.hasPrevPage" class="pagination-btn">
+                        {{ t('admin.customPrices.previous') }}
+                    </button>
+                    <span class="pagination-info">
+                        {{ t('admin.customPrices.pageInfo', {
+                            current: data.pagination.currentPage, total:
+                                data.pagination.totalPages
+                        })
+                        }}
+                    </span>
+                    <button @click="changePage(data.pagination.currentPage + 1)"
+                        :disabled="!data.pagination.hasNextPage" class="pagination-btn">
+                        {{ t('admin.customPrices.next') }}
+                    </button>
+                    <button @click="changePage(data.pagination.totalPages)" :disabled="!data.pagination.hasNextPage"
+                        class="pagination-btn">
+                        {{ t('admin.customPrices.last') }}
+                    </button>
+                </div>
+            </template>
+        </Card>
 
         <!-- Create/Edit Modal -->
         <Modal :is-open="showCreateModal"
@@ -182,7 +192,7 @@
                 <div class="form-group">
                     <label for="date" class="form-label">{{ t('admin.customPrices.date') }} ({{
                         t('admin.customPrices.optional')
-                        }})</label>
+                    }})</label>
                     <input id="date" v-model="formData.date" type="date" class="form-input" />
                 </div>
 
@@ -485,92 +495,88 @@ async function confirmDelete(): Promise<void> {
 </script>
 
 <style scoped>
-.custom-prices-view {
+.admin-custom-prices {
     display: flex;
     flex-direction: column;
-    gap: 1.5rem;
-    padding: 1.5rem;
+    gap: var(--space-6);
+    padding: var(--space-6);
     height: 100%;
 }
 
-/* Header */
-.custom-prices-header {
+/* Header Card */
+.header-content {
     display: flex;
     justify-content: space-between;
     align-items: flex-start;
-    gap: 2rem;
+    gap: var(--space-8);
 }
 
 .header-info {
     flex: 1;
 }
 
-.custom-prices-title {
-    font-size: 1.5rem;
-    font-weight: 600;
-    color: white;
-    margin-bottom: 0.5rem;
+.header-title {
+    font-size: var(--text-xl);
+    font-weight: var(--font-weight-semibold);
+    color: var(--color-text-primary);
+    margin-bottom: var(--space-2);
 }
 
-.custom-prices-description {
-    color: rgb(156, 163, 175);
-    font-size: 0.875rem;
+.header-description {
+    color: var(--color-text-tertiary);
+    font-size: var(--text-sm);
 }
 
 .header-actions {
     display: flex;
-    gap: 1rem;
+    gap: var(--space-4);
     flex-shrink: 0;
 }
 
 .action-button {
     display: flex;
     align-items: center;
-    gap: 0.5rem;
-    padding: 0.75rem 1.5rem;
-    border: 1px solid rgb(55, 55, 55);
-    border-radius: 0.375rem;
+    gap: var(--space-2);
+    padding: var(--space-3) var(--space-6);
+    border: 1px solid var(--color-border-default);
+    border-radius: var(--radius-md);
     background-color: transparent;
-    color: white;
-    font-size: 0.875rem;
-    font-weight: 500;
+    color: var(--color-text-primary);
+    font-size: var(--text-sm);
+    font-weight: var(--font-weight-medium);
     cursor: pointer;
-    transition: all 0.15s ease;
+    transition: all var(--duration-fast) ease;
 }
 
 .action-button:hover:not(:disabled) {
-    background-color: rgb(55, 55, 55);
+    background-color: var(--color-surface-hover);
 }
 
 .action-button:disabled {
-    opacity: 0.5;
+    opacity: var(--opacity-disabled);
     cursor: not-allowed;
 }
 
 .create-btn {
-    background-color: rgb(59, 130, 246);
-    border-color: rgb(59, 130, 246);
+    background-color: var(--color-brand-primary);
+    border-color: var(--color-brand-primary);
 }
 
 .create-btn:hover:not(:disabled) {
-    background-color: rgb(37, 99, 235);
+    background-color: var(--color-brand-secondary);
 }
 
 .action-icon {
-    width: 1rem;
-    height: 1rem;
+    width: var(--space-4);
+    height: var(--space-4);
 }
 
-/* Controls */
-.custom-prices-controls {
+/* Controls Card */
+.controls-content {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    gap: 1rem;
-    padding: 1rem;
-    background-color: rgb(31, 31, 31);
-    border: 1px solid rgb(55, 55, 55);
-    border-radius: 0.5rem;
+    gap: var(--space-4);
 }
 
 .search-container {
@@ -581,121 +587,117 @@ async function confirmDelete(): Promise<void> {
 
 .search-icon {
     position: absolute;
-    left: 0.75rem;
+    left: var(--space-3);
     top: 50%;
     transform: translateY(-50%);
-    width: 1rem;
-    height: 1rem;
-    color: rgb(156, 163, 175);
+    width: var(--space-4);
+    height: var(--space-4);
+    color: var(--color-text-tertiary);
 }
 
 .search-input {
     width: 100%;
-    padding: 0.5rem 0.75rem 0.5rem 2.5rem;
-    background-color: rgb(23, 23, 23);
-    border: 1px solid rgb(55, 55, 55);
-    border-radius: 0.375rem;
-    color: white;
-    font-size: 0.875rem;
+    padding: var(--space-2) var(--space-3) var(--space-2) calc(var(--space-4) + var(--space-6));
+    background-color: var(--color-surface-secondary);
+    border: 1px solid var(--color-border-default);
+    border-radius: var(--radius-md);
+    color: var(--color-text-primary);
+    font-size: var(--text-sm);
 }
 
 .search-input:focus {
     outline: none;
-    border-color: rgb(59, 130, 246);
+    border-color: var(--color-brand-primary);
 }
 
 .search-clear-btn {
     position: absolute;
-    right: 0.5rem;
+    right: var(--space-2);
     top: 50%;
     transform: translateY(-50%);
-    padding: 0.25rem;
+    padding: var(--space-1);
     background: none;
     border: none;
-    color: rgb(156, 163, 175);
+    color: var(--color-text-tertiary);
     cursor: pointer;
 }
 
 .clear-icon {
-    width: 0.875rem;
-    height: 0.875rem;
+    width: var(--space-3-5);
+    height: var(--space-3-5);
 }
 
 .controls-right {
     display: flex;
     align-items: center;
-    gap: 1rem;
+    gap: var(--space-4);
 }
 
 .page-size-select {
-    padding: 0.5rem;
-    background-color: rgb(23, 23, 23);
-    border: 1px solid rgb(55, 55, 55);
-    border-radius: 0.375rem;
-    color: white;
-    font-size: 0.875rem;
+    padding: var(--space-2);
+    background-color: var(--color-surface-secondary);
+    border: 1px solid var(--color-border-default);
+    border-radius: var(--radius-md);
+    color: var(--color-text-primary);
+    font-size: var(--text-sm);
 }
 
-/* Table */
-.custom-prices-table-container {
+/* Table Card */
+.table-card {
     flex: 1;
     overflow: hidden;
-    border: 1px solid rgb(55, 55, 55);
-    border-radius: 0.5rem;
 }
 
 /* Table Cell Styles */
 .type-id-cell,
 .price-cell,
-.date-cell,
-.created-at-cell,
-.updated-at-cell {
-    padding: 0.5rem;
+.date-cell {
+    padding: var(--space-2);
 }
 
 .type-id {
-    font-family: monospace;
-    font-weight: 600;
+    font-family: var(--font-mono);
+    font-weight: var(--font-weight-semibold);
 }
 
 .price {
-    font-weight: 600;
-    color: rgb(34, 197, 94);
+    font-weight: var(--font-weight-semibold);
+    color: var(--color-success-500);
 }
 
 .actions-cell {
     display: flex;
-    gap: 0.5rem;
+    gap: var(--space-2);
     justify-content: center;
 }
 
 .action-btn {
-    padding: 0.375rem;
-    border: 1px solid rgb(55, 55, 55);
-    border-radius: 0.25rem;
+    padding: var(--space-1-5);
+    border: 1px solid var(--color-border-default);
+    border-radius: var(--radius-sm);
     background-color: transparent;
-    color: rgb(156, 163, 175);
+    color: var(--color-text-tertiary);
     cursor: pointer;
-    transition: all 0.15s ease;
+    transition: all var(--duration-fast) ease;
 }
 
 .action-btn:hover {
-    background-color: rgb(55, 55, 55);
+    background-color: var(--color-surface-hover);
 }
 
 .edit-btn:hover {
-    color: rgb(59, 130, 246);
-    border-color: rgb(59, 130, 246);
+    color: var(--color-brand-primary);
+    border-color: var(--color-brand-primary);
 }
 
 .delete-btn:hover {
-    color: rgb(239, 68, 68);
-    border-color: rgb(239, 68, 68);
+    color: var(--color-error-500);
+    border-color: var(--color-error-500);
 }
 
 .action-icon {
-    width: 0.875rem;
-    height: 0.875rem;
+    width: var(--space-3-5);
+    height: var(--space-3-5);
 }
 
 /* Pagination */
@@ -703,124 +705,124 @@ async function confirmDelete(): Promise<void> {
     display: flex;
     justify-content: center;
     align-items: center;
-    gap: 1rem;
-    padding: 1rem;
+    gap: var(--space-4);
+    padding: var(--space-4);
 }
 
 .pagination-btn {
-    padding: 0.5rem 1rem;
+    padding: var(--space-2) var(--space-4);
     background-color: transparent;
-    border: 1px solid rgb(55, 55, 55);
-    border-radius: 0.375rem;
-    color: white;
-    font-size: 0.875rem;
+    border: 1px solid var(--color-border-default);
+    border-radius: var(--radius-md);
+    color: var(--color-text-primary);
+    font-size: var(--text-sm);
     cursor: pointer;
-    transition: all 0.15s ease;
+    transition: all var(--duration-fast) ease;
 }
 
 .pagination-btn:hover:not(:disabled) {
-    background-color: rgb(55, 55, 55);
+    background-color: var(--color-surface-hover);
 }
 
 .pagination-btn:disabled {
-    opacity: 0.5;
+    opacity: var(--opacity-disabled);
     cursor: not-allowed;
 }
 
 .pagination-info {
-    color: rgb(156, 163, 175);
-    font-size: 0.875rem;
+    color: var(--color-text-tertiary);
+    font-size: var(--text-sm);
 }
 
 /* Form Styles */
 .price-form {
     display: flex;
     flex-direction: column;
-    gap: 1.5rem;
+    gap: var(--space-6);
 }
 
 .form-group {
     display: flex;
     flex-direction: column;
-    gap: 0.5rem;
+    gap: var(--space-2);
 }
 
 .form-label {
-    font-weight: 500;
-    color: white;
-    font-size: 0.875rem;
+    font-weight: var(--font-weight-medium);
+    color: var(--color-text-primary);
+    font-size: var(--text-sm);
 }
 
 .form-input {
-    padding: 0.75rem;
-    background-color: rgb(23, 23, 23);
-    border: 1px solid rgb(55, 55, 55);
-    border-radius: 0.375rem;
-    color: white;
-    font-size: 0.875rem;
+    padding: var(--space-3);
+    background-color: var(--color-surface-secondary);
+    border: 1px solid var(--color-border-default);
+    border-radius: var(--radius-md);
+    color: var(--color-text-primary);
+    font-size: var(--text-sm);
 }
 
 .form-input:focus {
     outline: none;
-    border-color: rgb(59, 130, 246);
+    border-color: var(--color-brand-primary);
 }
 
 .form-actions {
     display: flex;
     justify-content: flex-end;
-    gap: 1rem;
-    margin-top: 1rem;
+    gap: var(--space-4);
+    margin-top: var(--space-4);
 }
 
 .btn {
     display: flex;
     align-items: center;
-    gap: 0.5rem;
-    padding: 0.75rem 1.5rem;
+    gap: var(--space-2);
+    padding: var(--space-3) var(--space-6);
     border: 1px solid transparent;
-    border-radius: 0.375rem;
-    font-size: 0.875rem;
-    font-weight: 500;
+    border-radius: var(--radius-md);
+    font-size: var(--text-sm);
+    font-weight: var(--font-weight-medium);
     cursor: pointer;
-    transition: all 0.15s ease;
+    transition: all var(--duration-fast) ease;
 }
 
 .btn:disabled {
-    opacity: 0.5;
+    opacity: var(--opacity-disabled);
     cursor: not-allowed;
 }
 
 .btn-secondary {
     background-color: transparent;
-    border-color: rgb(55, 55, 55);
-    color: white;
+    border-color: var(--color-border-default);
+    color: var(--color-text-primary);
 }
 
 .btn-secondary:hover:not(:disabled) {
-    background-color: rgb(55, 55, 55);
+    background-color: var(--color-surface-hover);
 }
 
 .btn-primary {
-    background-color: rgb(59, 130, 246);
-    color: white;
+    background-color: var(--color-brand-primary);
+    color: var(--color-text-on-brand);
 }
 
 .btn-primary:hover:not(:disabled) {
-    background-color: rgb(37, 99, 235);
+    background-color: var(--color-brand-secondary);
 }
 
 .btn-danger {
-    background-color: rgb(239, 68, 68);
-    color: white;
+    background-color: var(--color-error-500);
+    color: var(--color-text-on-error);
 }
 
 .btn-danger:hover:not(:disabled) {
-    background-color: rgb(220, 38, 38);
+    background-color: var(--color-error-600);
 }
 
 .btn-icon {
-    width: 1rem;
-    height: 1rem;
+    width: var(--space-4);
+    height: var(--space-4);
 }
 
 /* Delete confirmation */
@@ -829,17 +831,17 @@ async function confirmDelete(): Promise<void> {
 }
 
 .warning-icon {
-    width: 3rem;
-    height: 3rem;
-    color: rgb(245, 158, 11);
-    margin: 0 auto 1rem;
+    width: var(--space-12);
+    height: var(--space-12);
+    color: var(--color-warning-500);
+    margin: 0 auto var(--space-4);
 }
 
 .confirm-details {
-    margin-top: 1rem;
-    padding: 1rem;
-    background-color: rgb(23, 23, 23);
-    border-radius: 0.375rem;
+    margin-top: var(--space-4);
+    padding: var(--space-4);
+    background-color: var(--color-surface-secondary);
+    border-radius: var(--radius-md);
     text-align: left;
 }
 
@@ -852,13 +854,13 @@ async function confirmDelete(): Promise<void> {
 .item-info {
     display: flex;
     align-items: center;
-    gap: 0.75rem;
+    gap: var(--space-3);
 }
 
 .item-icon {
     width: 32px;
     height: 32px;
-    border-radius: 0.25rem;
+    border-radius: var(--radius-sm);
     flex-shrink: 0;
 }
 
@@ -869,8 +871,8 @@ async function confirmDelete(): Promise<void> {
 }
 
 .item-name {
-    font-weight: 500;
-    color: white;
+    font-weight: var(--font-weight-medium);
+    color: var(--color-text-primary);
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -878,116 +880,66 @@ async function confirmDelete(): Promise<void> {
 }
 
 .item-type-id {
-    font-size: 0.75rem;
-    color: rgb(156, 163, 175);
+    font-size: var(--text-xs);
+    color: var(--color-text-tertiary);
 }
 
 .no-date {
-    color: rgb(107, 114, 128);
-    font-style: italic;
-}
-
-/* Item cell styles */
-.item-cell {
-    display: flex;
-    align-items: center;
-}
-
-.item-info {
-    display: flex;
-    align-items: center;
-    gap: 0.75rem;
-}
-
-.item-icon {
-    width: 32px;
-    height: 32px;
-    border-radius: 0.25rem;
-    flex-shrink: 0;
-}
-
-.item-details {
-    display: flex;
-    flex-direction: column;
-    min-width: 0;
-}
-
-.item-name {
-    font-weight: 500;
-    color: white;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    max-width: 200px;
-}
-
-.item-type-id {
-    font-size: 0.75rem;
-    color: rgb(156, 163, 175);
-}
-
-.no-date {
-    color: rgb(107, 114, 128);
+    color: var(--color-text-muted);
     font-style: italic;
 }
 
 /* Form styles */
 .selected-item {
-    margin-top: 0.5rem;
-    padding: 0.75rem;
-    background-color: rgb(30, 30, 30);
-    border-radius: 0.375rem;
-    border: 1px solid rgb(55, 55, 55);
+    margin-top: var(--space-2);
+    padding: var(--space-3);
+    background-color: var(--color-surface-tertiary);
+    border-radius: var(--radius-md);
+    border: 1px solid var(--color-border-default);
 }
 
-.search-dropdown {
-    background-color: rgb(23, 23, 23);
-    color: white;
-}
-
-/* Override Search component input styling to match form-input */
+/* Search component overrides */
 :deep(.search-component input) {
-    padding: 0.75rem !important;
-    background-color: rgb(23, 23, 23) !important;
-    border: 1px solid rgb(55, 55, 55) !important;
-    border-radius: 0.375rem !important;
-    color: white !important;
-    font-size: 0.875rem !important;
+    padding: var(--space-3) !important;
+    background-color: var(--color-surface-secondary) !important;
+    border: 1px solid var(--color-border-default) !important;
+    border-radius: var(--radius-md) !important;
+    color: var(--color-text-primary) !important;
+    font-size: var(--text-sm) !important;
 }
 
 :deep(.search-component input:focus) {
     outline: none !important;
-    border-color: rgb(59, 130, 246) !important;
+    border-color: var(--color-brand-primary) !important;
 }
 
-/* Override Search component dropdown styling to match dark theme */
 :deep(.search-dropdown) {
-    background-color: rgb(23, 23, 23) !important;
-    border: 1px solid rgb(55, 55, 55) !important;
-    border-radius: 0.375rem !important;
-    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3), 0 4px 6px -2px rgba(0, 0, 0, 0.1) !important;
+    background-color: var(--color-surface-secondary) !important;
+    border: 1px solid var(--color-border-default) !important;
+    border-radius: var(--radius-md) !important;
+    box-shadow: var(--shadow-lg) !important;
 }
 
 :deep(.search-dropdown a) {
-    color: rgb(243, 244, 246) !important;
+    color: var(--color-text-secondary) !important;
     background-color: transparent !important;
 }
 
 :deep(.search-dropdown a:hover) {
-    background-color: rgb(55, 55, 55) !important;
-    color: white !important;
+    background-color: var(--color-surface-hover) !important;
+    color: var(--color-text-primary) !important;
 }
 
 .selected-item-info {
     display: flex;
     align-items: center;
-    gap: 0.75rem;
+    gap: var(--space-3);
 }
 
 .selected-item-icon {
     width: 24px;
     height: 24px;
-    border-radius: 0.25rem;
+    border-radius: var(--radius-sm);
     flex-shrink: 0;
 }
 
@@ -999,47 +951,41 @@ async function confirmDelete(): Promise<void> {
 }
 
 .selected-item-name {
-    font-weight: 500;
-    color: white;
-    font-size: 0.875rem;
+    font-weight: var(--font-weight-medium);
+    color: var(--color-text-primary);
+    font-size: var(--text-sm);
 }
 
 .selected-item-id {
-    font-size: 0.75rem;
-    color: rgb(156, 163, 175);
+    font-size: var(--text-xs);
+    color: var(--color-text-tertiary);
 }
 
 .clear-item-btn {
-    padding: 0.25rem;
+    padding: var(--space-1);
     background: transparent;
     border: none;
-    color: rgb(156, 163, 175);
+    color: var(--color-text-tertiary);
     cursor: pointer;
-    border-radius: 0.25rem;
+    border-radius: var(--radius-sm);
     display: flex;
     align-items: center;
     justify-content: center;
 }
 
 .clear-item-btn:hover {
-    background-color: rgb(55, 55, 55);
-    color: white;
+    background-color: var(--color-surface-hover);
+    color: var(--color-text-primary);
 }
 
 .clear-icon {
-    width: 1rem;
-    height: 1rem;
-}
-
-.form-help {
-    font-size: 0.75rem;
-    color: rgb(156, 163, 175);
-    margin-top: 0.25rem;
+    width: var(--space-4);
+    height: var(--space-4);
 }
 
 .confirm-details p {
-    margin-bottom: 0.5rem;
-    color: rgb(156, 163, 175);
-    font-size: 0.875rem;
+    margin-bottom: var(--space-2);
+    color: var(--color-text-tertiary);
+    font-size: var(--text-sm);
 }
 </style>

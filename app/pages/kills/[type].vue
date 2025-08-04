@@ -10,13 +10,13 @@
                     <span class="text-sm text-zinc-400">Stats for last:</span>
                     <div class="relative w-20">
                         <select v-model="selectedDays"
-                            class="custom-select w-full appearance-none rounded-md border border-gray-300 dark:border-gray-700 pl-3 pr-8 py-1.5 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 text-sm font-medium shadow-sm">
+                            class="custom-select w-full appearance-none rounded-md border border-border-light pl-3 pr-8 py-1.5 bg-surface text-text-primary text-sm font-medium shadow-sm">
                             <option v-for="option in dayOptions" :key="option.value" :value="option.value">
                                 {{ option.label }}
                             </option>
                         </select>
                         <div
-                            class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700 dark:text-gray-300">
+                            class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-text-secondary">
                             <svg class="h-4 w-4 fill-current" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">
                                 <path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z" />
                             </svg>
@@ -26,7 +26,7 @@
             </div>
 
             <!-- Invalid type -->
-            <div v-if="!isValidType" class="text-center text-gray-400 py-16">
+            <div v-if="!isValidType" class="text-center text-text-secondary py-16">
                 <h2 class="text-3xl font-bold mb-4">404</h2>
                 <p>{{ t('notFound') }}</p>
             </div>
@@ -36,8 +36,9 @@
                 <!-- Most Valuable Kills - moved above split layout -->
                 <div v-if="showMostValuableKills" class="mb-8">
                     <div class="mb-4">
-                        <h3 class="text-lg font-semibold text-zinc-100">Most Valuable Kills</h3>
-                        <p class="text-zinc-400 text-sm mt-1">Highest value killmails (Last {{ selectedDays }} Days)</p>
+                        <h3 class="text-lg font-semibold text-text-primary">Most Valuable Kills</h3>
+                        <p class="text-text-secondary text-sm mt-1">Highest value killmails (Last {{ selectedDays }}
+                            Days)</p>
                     </div>
                     <KillsMostValuable :items="stats?.mostValuableKills?.slice(0, 7) || []" :loading="isStatsLoading" />
                 </div>
@@ -45,8 +46,9 @@
                 <!-- Ship Statistics - only for broader categories -->
                 <div v-if="showShipStats" class="mb-8">
                     <div class="mb-4">
-                        <h3 class="text-lg font-semibold text-zinc-100">Ship Statistics</h3>
-                        <p class="text-zinc-400 text-sm mt-1">Ships destroyed breakdown (Last {{ selectedDays }} Days)
+                        <h3 class="text-lg font-semibold text-text-primary">Ship Statistics</h3>
+                        <p class="text-text-secondary text-sm mt-1">Ships destroyed breakdown (Last {{ selectedDays }}
+                            Days)
                         </p>
                     </div>
                     <KillsShipStats :stats="stats || {}" :loading="isStatsLoading" />

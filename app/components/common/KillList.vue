@@ -1056,7 +1056,7 @@ onUpdated(() => {
                         <!-- System/Region Info -->
                         <div class="text-xs">
                             <span>{{ item.system_name }} / {{ getLocalizedString(item.region_name, currentLocale)
-                            }}</span>
+                                }}</span>
                             <span class="ml-1">(</span>
                             <span :class="getSecurityColor(item.system_security)">
                                 {{ item.system_security.toFixed(1) }}
@@ -1220,84 +1220,47 @@ onUpdated(() => {
 <style scoped>
 /* Additional mobile-specific styles for slots */
 .victim-name {
-    font-weight: 500;
-    font-size: 0.875rem;
-    /* Ensure consistent medium size */
-    color: light-dark(#111827, white);
+    font-weight: var(--font-medium);
+    font-size: var(--text-sm);
+    color: var(--color-text-primary);
     max-width: 70%;
 }
 
 .isk-value {
-    font-size: 0.75rem;
-    /* Small font for ISK */
+    font-size: var(--text-xs);
     white-space: nowrap;
 }
 
 .mobile-corporation {
-    margin-bottom: 0.25rem;
-    font-size: 0.75rem;
-    /* Ensure XS size */
+    margin-bottom: var(--space-1);
+    font-size: var(--text-xs);
 }
 
 .mobile-meta {
-    margin-bottom: 0.25rem;
-    font-size: 0.75rem;
-    /* Ensure XS size */
+    margin-bottom: var(--space-1);
+    font-size: var(--text-xs);
 }
 
 .mobile-footer {
-    margin-top: 0.25rem;
-    font-size: 0.75rem;
-    /* Ensure XS size */
-}
-
-/* Enhanced Custom color class for combined losses */
-.bg-darkred {
-    background-color: rgba(139, 0, 0, 0.4) !important;
-    /* Darker red with more opacity */
-}
-
-/* Add an additional class to ensure it gets applied with higher specificity */
-.combined-loss-row {
-    background-color: rgba(139, 0, 0, 0.4) !important;
-    border-left: 3px solid rgb(220, 38, 38) !important;
-    /* Add a left border for extra visibility */
-}
-
-/* Make sure our class overrides table row styles */
-:deep(tr.combined-loss-row),
-:deep(tr.combined-loss-row td),
-:deep(tr.combined-loss-row:hover) {
-    background-color: rgba(139, 0, 0, 0.4) !important;
-}
-
-/* For mobile view */
-:deep(.mobile-container.combined-loss-row) {
-    background-color: rgba(139, 0, 0, 0.4) !important;
-    border-left: 3px solid rgb(220, 38, 38) !important;
+    margin-top: var(--space-1);
+    font-size: var(--text-xs);
 }
 
 /* Override pagination text size */
 :deep(.u-pagination) {
-    font-size: 0.875rem;
+    font-size: var(--text-sm);
 }
 
 /* Add these styles to match the original header styling */
 :deep(.table-header) {
-    background-color: light-dark(rgba(245, 245, 245, 0.05), rgba(26, 26, 26, 0.5)) !important;
-    padding: 0.5rem 1rem !important;
-    font-weight: 600;
+    background-color: var(--color-bg-secondary) !important;
+    padding: var(--space-2) var(--space-4) !important;
+    font-weight: var(--font-semibold);
 }
 
 :deep(.header-cell) {
-    font-size: 0.75rem;
-    color: light-dark(#4b5563, #9ca3af) !important;
-}
-
-/* Add text-2xs class for very small text */
-.text-2xs {
-    font-size: 0.65rem;
-    line-height: 0.85rem;
+    font-size: var(--text-xs);
+    color: var(--color-text-secondary) !important;
 }
 
 /* Make the kill count badge smaller and more compact */
@@ -1305,39 +1268,22 @@ onUpdated(() => {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    min-width: 16px;
-    height: 16px;
-    font-weight: 600;
-    padding-left: 4px;
-    padding-right: 4px;
-}
-
-/* Consistent animation timing for all skeleton elements */
-@keyframes pulse {
-
-    0%,
-    100% {
-        opacity: 1;
-    }
-
-    50% {
-        opacity: 0.5;
-    }
-}
-
-.animate-pulse {
-    animation: pulse 1.5s ease-in-out infinite;
+    min-width: var(--size-icon-sm);
+    height: var(--size-icon-sm);
+    font-weight: var(--font-semibold);
+    padding-left: var(--space-1);
+    padding-right: var(--space-1);
 }
 
 /* Ensure our skeleton row maintains the proper layout */
 .skeleton-row {
     display: flex;
     width: 100%;
-    background-color: light-dark(rgba(255, 255, 255, 0.4), rgba(26, 26, 26, 0.3));
-    border-radius: 0.375rem;
-    margin-bottom: 0.25rem;
-    padding: 0.35rem 0.75rem;
-    border-bottom: 1px solid light-dark(rgba(229, 231, 235, 0.3), rgba(75, 85, 99, 0.2));
+    background-color: var(--color-bg-secondary);
+    border-radius: var(--radius-md);
+    margin-bottom: var(--space-1);
+    padding: var(--space-2) var(--space-3);
+    border-bottom: 1px solid var(--color-border-light);
 }
 
 /* Make sure skeleton cells have the right dimensions */
@@ -1377,75 +1323,66 @@ onUpdated(() => {
 }
 
 .killlist-skeleton-image {
-    width: 64px;
-    height: 64px;
+    width: var(--size-portrait-md);
+    height: var(--size-portrait-md);
     flex-shrink: 0;
-    margin: 0 8px;
-    border-radius: 6px;
-    background-color: light-dark(#e5e7eb, #374151);
-    animation: pulse 1.5s ease-in-out infinite;
+    margin: 0 var(--space-2);
+    border-radius: var(--radius-md);
+    background-color: var(--color-skeleton);
 }
 
 .killlist-skeleton-title {
-    height: 16px;
+    height: var(--size-icon-sm);
     width: 100px;
-    border-radius: 4px;
-    background-color: light-dark(#e5e7eb, #374151);
-    animation: pulse 1.5s ease-in-out infinite;
+    border-radius: var(--radius-sm);
+    background-color: var(--color-skeleton);
 }
 
 .killlist-skeleton-subtitle {
-    height: 12px;
+    height: var(--space-3);
     width: 80px;
-    margin-top: 4px;
-    border-radius: 4px;
-    background-color: light-dark(#e5e7eb, #374151);
-    animation: pulse 1.5s ease-in-out infinite;
+    margin-top: var(--space-1);
+    border-radius: var(--radius-sm);
+    background-color: var(--color-skeleton);
 }
 
 .killlist-skeleton-system {
-    height: 12px;
+    height: var(--space-3);
     width: 70px;
-    border-radius: 4px;
-    background-color: light-dark(#e5e7eb, #374151);
-    animation: pulse 1.5s ease-in-out infinite;
+    border-radius: var(--radius-sm);
+    background-color: var(--color-skeleton);
 }
 
 .killlist-skeleton-security {
-    height: 12px;
+    height: var(--space-3);
     width: 24px;
-    border-radius: 4px;
-    background-color: light-dark(#e5e7eb, #374151);
-    animation: pulse 1.5s ease-in-out infinite;
+    border-radius: var(--radius-sm);
+    background-color: var(--color-skeleton);
 }
 
 .killlist-skeleton-count {
-    height: 12px;
+    height: var(--space-3);
     width: 20px;
-    border-radius: 4px;
-    background-color: light-dark(#e5e7eb, #374151);
-    animation: pulse 1.5s ease-in-out infinite;
+    border-radius: var(--radius-sm);
+    background-color: var(--color-skeleton);
 }
 
 .killlist-skeleton-icon {
-    height: 16px;
-    width: 16px;
-    border-radius: 4px;
-    background-color: light-dark(#e5e7eb, #374151);
-    animation: pulse 1.5s ease-in-out infinite;
+    height: var(--size-icon-sm);
+    width: var(--size-icon-sm);
+    border-radius: var(--radius-sm);
+    background-color: var(--color-skeleton);
 }
 
-/* Enhanced pulse animation */
-@keyframes pulse {
-
-    0%,
-    100% {
-        opacity: 0.7;
-    }
-
-    50% {
-        opacity: 0.4;
-    }
+/* All skeleton elements use our global animation */
+.killlist-skeleton-image,
+.killlist-skeleton-title,
+.killlist-skeleton-subtitle,
+.killlist-skeleton-system,
+.killlist-skeleton-security,
+.killlist-skeleton-count,
+.killlist-skeleton-icon {
+    animation: pulse 1.5s ease-in-out infinite;
 }
 
 /* Direct targeting of the table row elements with more muted red */
@@ -1453,21 +1390,21 @@ onUpdated(() => {
 .combined-loss-row,
 :deep(a.table-row.bg-darkred),
 :deep(a.table-row.combined-loss-row) {
-    background-color: rgba(80, 0, 0, 0.6) !important;
-    border-left: 3px solid rgba(139, 46, 46, 0.8) !important;
+    background-color: var(--color-loss-bg) !important;
+    border-left: 3px solid var(--color-loss-border) !important;
 }
 
 /* Target hover states with a slightly darker but still muted red */
 :deep(a.table-row.bg-darkred:hover),
 :deep(a.table-row.combined-loss-row:hover) {
-    background-color: rgba(90, 0, 0, 0.65) !important;
+    background-color: var(--color-loss-hover) !important;
 }
 
 /* Target mobile view as well */
 :deep(.mobile-container.bg-darkred),
 :deep(.mobile-container.combined-loss-row) {
-    background-color: rgba(80, 0, 0, 0.6) !important;
-    border-left: 3px solid rgba(139, 46, 46, 0.8) !important;
+    background-color: var(--color-loss-bg) !important;
+    border-left: 3px solid var(--color-loss-border) !important;
 }
 
 /* Target any other nested elements to ensure the background is visible */
@@ -1491,71 +1428,20 @@ onUpdated(() => {
     left: 0;
     right: 0;
     bottom: 0;
-    background-color: rgba(80, 0, 0, 0.6);
+    background-color: var(--color-loss-bg);
     opacity: 0.7;
     z-index: 0;
     pointer-events: none;
 }
 
-/* Add truncation with fade effect */
-.fade-text {
-    position: relative;
-    mask-image: linear-gradient(to right, black 85%, transparent);
-    -webkit-mask-image: linear-gradient(to right, black 85%, transparent);
-}
-
-/* Remove the old hover tooltip behavior */
-.fade-text:hover {
-    overflow: visible;
-    position: relative;
-    z-index: 5;
-    mask-image: linear-gradient(to right, black 85%, transparent);
-    -webkit-mask-image: linear-gradient(to right, black 85%, transparent);
-}
-
-/* Remove old tooltip */
-.fade-text:hover::before {
-    content: none;
-}
-
-/* Global tooltip that follows cursor */
-.global-tooltip {
-    position: fixed;
-    z-index: 10000;
-    background-color: light-dark(rgba(255, 255, 255, 0.98), rgba(30, 30, 30, 0.98));
-    padding: 4px 10px;
-    border-radius: 4px;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
-    border: 1px solid light-dark(rgba(229, 231, 235, 0.5), rgba(75, 85, 99, 0.5));
-    font-size: 0.875rem;
-    max-width: 300px;
-    white-space: normal;
-    word-break: break-word;
-    pointer-events: none;
-    /* Allow interacting with elements below */
-    animation: tooltip-fade-in 0.15s ease-out;
-}
-
-@keyframes tooltip-fade-in {
-    from {
-        opacity: 0;
-        transform: translateY(5px);
-    }
-
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
-}
-
-/* Fix responsive image sizes */
+/* Fix responsive image sizes - using our CSS variables */
 @media (max-width: 640px) {
     .w-16 {
-        width: 48px !important;
+        width: var(--size-portrait-sm) !important;
     }
 
     .h-16 {
-        height: 48px !important;
+        height: var(--size-portrait-sm) !important;
     }
 }
 

@@ -22,7 +22,7 @@
                         <Image :type="'type-icon'" :id="killmail.victim.ship_id" :size="128"
                             class="portrait-image structure-npc-main" />
                     </NuxtLink>
-                    <div v-else class="portrait-image placeholder-main" style="width: 128px; height: 128px;"></div>
+                    <div v-else class="portrait-image placeholder-main placeholder-main-size"></div>
                 </div>
 
                 <!-- Stacked Corp and Alliance Icons (Right) -->
@@ -32,8 +32,8 @@
                         <Image :type="'corporation'" :id="killmail.victim.corporation_id" :size="64"
                             class="portrait-image corporation-stacked" />
                     </NuxtLink>
-                    <div v-else-if="killmail?.victim?.corporation_name" class="portrait-image placeholder-stacked"
-                        style="width: 64px; height: 64px;"></div>
+                    <div v-else-if="killmail?.victim?.corporation_name"
+                        class="portrait-image placeholder-stacked placeholder-stacked-size"></div>
 
                     <NuxtLink v-if="killmail?.victim?.alliance_id" :to="`/alliance/${killmail.victim.alliance_id}`"
                         class="portrait-link">
@@ -41,7 +41,7 @@
                             class="portrait-image alliance-stacked" />
                     </NuxtLink>
                     <div v-else-if="killmail?.victim?.faction_id || killmail?.victim?.alliance_name"
-                        class="portrait-image placeholder-stacked" style="width: 64px; height: 64px;"></div>
+                        class="portrait-image placeholder-stacked placeholder-stacked-size"></div>
                 </div>
             </div>
 
@@ -53,7 +53,7 @@
                         {{ killmail.victim.character_name }}
                     </NuxtLink>
                     <span v-else>{{ killmail?.victim?.character_name || getLocalizedString(killmail?.victim?.ship_name)
-                        }}</span>
+                    }}</span>
                 </div>
                 <div v-if="killmail?.victim?.corporation_name" class="entity-name-line name-corporation truncate">
                     <NuxtLink v-if="killmail.victim.corporation_id"
@@ -324,7 +324,6 @@ watch(
     text-overflow: ellipsis;
     max-width: 100%;
     display: inline-block;
-    /* Important for ellipsis to work with max-width */
 }
 
 .section {
@@ -538,57 +537,49 @@ watch(
 
 /* Styling for Location, ISK sections that keep their titles */
 .detail-item {
-    /* Used inside Location, ISK sections */
     display: flex;
     align-items: center;
     gap: 0.75rem;
-    font-size: 0.9rem;
+    font-size: 1rem;
 }
 
 .detail-icon {
     flex-shrink: 0;
     color: light-dark(#6b7280, #9ca3af);
-    /* Icon color */
-    font-size: 1.1rem;
-    /* Icon size */
+    font-size: 1.125rem;
 }
 
 .detail-content {
     min-width: 0;
-    /* Allow shrinking */
     flex-grow: 1;
 }
 
 .detail-primary {
     font-weight: 500;
-    color: light-dark(#1f2937, #f3f4f6);
+    color: light-dark(#111827, white);
 }
 
 .detail-secondary {
-    font-size: 0.8rem;
+    font-size: 0.875rem;
     color: light-dark(#6b7280, #9ca3af);
 }
 
 .system-section .security-status {
     margin-left: 0.5rem;
-    padding: 0.1rem 0.3rem;
-    border-radius: 0.25rem;
+    padding: 0.25rem 0.375rem;
+    border-radius: 0.375rem;
     font-size: 0.75rem;
-    font-weight: bold;
+    font-weight: 700;
 }
-
-/* Security status colors are defined below */
 
 .location-section .location-text {
     font-style: italic;
 }
 
-
 /* 6. Damage Done Section */
 .damage-section .damage-value {
     font-weight: 600;
-    color: #ef4444;
-    /* Red color for damage */
+    color: rgb(239 68 68);
 }
 
 /* 7. ISK Figures Section */
@@ -689,8 +680,6 @@ watch(
     /* Slightly smaller for overlay */
     font-weight: 600;
     /* Good weight for readability */
-    /* Specific color and background from .solo, .npc, .value will still apply if more specific */
-    /* Ensure text color is light if background is dark from specific classes */
 }
 
 /* Ensure specific label colors are still prominent but with better overlay properties */
@@ -701,7 +690,6 @@ watch(
     /* Override default text color from specific classes if they are dark */
 }
 
-/* If specific backgrounds are light, this might need adjustment or use their original text color */
 .overlay-labels .kill-label.solo {
     background-color: rgba(5, 150, 105, 0.7);
     /* Darker, more opaque version of original */
@@ -721,71 +709,73 @@ watch(
 .entity-link {
     color: inherit;
     text-decoration: none;
-    transition: color 0.2s ease;
+    transition: color 200ms ease;
 }
 
 .entity-link:hover {
-    color: #4fc3f7;
-    /* Standard hover color */
+    color: #3b82f6;
     text-decoration: underline;
 }
 
 /* Security Status Colors */
 .security-status.highsec-highest {
-    background-color: #2F75FE;
+    background-color: #2dd4bf;
     color: white;
 }
 
 .security-status.highsec-high {
-    background-color: #2F75FE;
+    background-color: #60a5fa;
     color: white;
 }
 
-/* Merged for simplicity */
 .security-status.highsec-medium {
-    background-color: #44A5FF;
+    background-color: #34d399;
     color: white;
 }
 
 .security-status.highsec-low {
-    background-color: #59D2FF;
+    background-color: #fbbf24;
+    color: black;
+}
+
+.security-status.highsec-low {
+    background-color: #fbbf24;
     color: black;
 }
 
 .security-status.lowsec-high {
-    background-color: #F9A825;
+    background-color: #fb923c;
     color: black;
 }
 
 .security-status.lowsec-medium {
-    background-color: #FBC02D;
+    background-color: #f87171;
     color: black;
 }
 
 .security-status.lowsec-low {
-    background-color: #FFD54F;
-    color: black;
+    background-color: #ef4444;
+    color: white;
 }
 
 .security-status.nullsec-high {
-    background-color: #D32F2F;
+    background-color: #dc2626;
     color: white;
 }
 
 .security-status.nullsec-low {
-    background-color: #E53935;
+    background-color: #991b1b;
     color: white;
 }
 
 .security-status.unknown {
-    background-color: #757575;
+    background-color: #6b7280;
     color: white;
 }
 
 /* Margin top utility */
 .mt-2 {
     margin-top: 0.5rem;
-    /* 8px */
 }
 
 .stat-item {
@@ -793,18 +783,15 @@ watch(
     align-items: center;
     gap: 0.5rem;
     flex-grow: 1;
-    /* Allow items to grow */
     max-width: calc(50% - 0.375rem);
-    /* Half width minus half the gap */
 }
 
 /* Details section styles */
 .details-grid {
     display: grid;
     grid-template-columns: 1fr;
-    gap: 0.85rem;
+    gap: 0.925rem;
     width: 100%;
-    /* Ensure full width */
 }
 
 /* Location container with system and near */
@@ -813,7 +800,6 @@ watch(
     flex-direction: column;
     gap: 0.5rem;
     width: 100%;
-    /* Ensure full width */
 }
 
 .detail-item {
@@ -821,7 +807,6 @@ watch(
     align-items: flex-start;
     gap: 0.5rem;
     width: 100%;
-    /* Ensure full width */
 }
 
 .detail-icon {
@@ -832,70 +817,66 @@ watch(
     margin-top: 2px;
     width: 16px;
     flex-shrink: 0;
-    /* Prevent shrinking */
 }
 
 .detail-content {
     min-width: 0;
     flex-grow: 1;
-    /* Allow to grow and fill space */
     width: calc(100% - 24px);
-    /* Account for icon width and gap */
     overflow: hidden;
 }
 
 .detail-primary,
 .detail-secondary {
     width: 100%;
-    /* Ensure full width */
 }
 
 /* Security status colors */
 .security-status {
     font-weight: 600;
     padding: 0 0.25rem;
-    border-radius: 0.25rem;
-    font-size: 0.8rem;
+    border-radius: 0.375rem;
+    font-size: 0.875rem;
 }
 
 .highsec-highest {
-    color: #ecc94b;
+    color: #2dd4bf;
 }
 
 .highsec-high {
-    color: #48bb78;
+    color: #60a5fa;
 }
 
 .highsec-medium {
-    color: #38a169;
+    color: #34d399;
 }
 
 .highsec-low {
-    color: #68d391;
+    color: #fbbf24;
 }
 
 .lowsec-high {
-    color: #f6ad55;
+    color: #fb923c;
 }
 
 .lowsec-medium {
-    color: #ed8936;
+    color: #f87171;
 }
 
 .lowsec-low {
-    color: #f6ad55;
+    color: #ef4444;
 }
 
 .nullsec-high {
-    color: #fc8181;
+    color: #dc2626;
 }
 
 .nullsec-low {
-    color: #f56565;
+    color: #991b1b;
 }
 
 .unknown {
-    color: #a0aec0;
+    color: #6b7280;
 }
 
 /* Image sizes and positioning */
@@ -907,9 +888,9 @@ watch(
     position: absolute;
     bottom: -5px;
     right: -5px;
-    border: 2px solid light-dark(white, #1a1a1a);
+    border: 2px solid light-dark(#f3f4f6, #374151);
     border-radius: 50%;
-    background-color: light-dark(white, #1a1a1a);
+    background-color: light-dark(#f3f4f6, #374151);
 }
 
 .small-icon {
@@ -926,8 +907,19 @@ watch(
     }
 
     .entity-column:not(:first-child) {
-        border-top: 1px solid light-dark(rgba(229, 231, 235, 0.3), rgba(75, 85, 99, 0.2));
+        border-top: 1px solid light-dark(rgba(0, 0, 0, 0.1), rgba(255, 255, 255, 0.1));
         padding-top: 0.75rem;
     }
+}
+
+/* Placeholder sizes */
+.placeholder-main-size {
+    width: 128px;
+    height: 128px;
+}
+
+.placeholder-stacked-size {
+    width: 64px;
+    height: 64px;
 }
 </style>
