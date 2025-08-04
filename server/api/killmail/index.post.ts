@@ -40,7 +40,10 @@ export default defineEventHandler(async (event) => {
         esiKillmail.attackers.length === 0
     ) {
         return {
-            error: "Invalid killmail data - missing victim or attackers",
+            error: `Error fetching killmail (KillmailID: ${killmail_id}): ${
+                esiKillmail.error ||
+                "Invalid killmail data - missing victim or attackers"
+            }`,
         };
     }
 

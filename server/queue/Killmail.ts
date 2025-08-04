@@ -45,7 +45,7 @@ async function processKillmail(
         killmail.attackers.length === 0
     ) {
         throw new Error(
-            `Error fetching killmail: ${
+            `Error fetching killmail (KillmailID: ${killmailId}): ${
                 killmail.error ||
                 "Invalid killmail data - missing victim or attackers"
             }`
