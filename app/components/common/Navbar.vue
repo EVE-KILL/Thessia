@@ -639,7 +639,7 @@ html.dark .navbar-desktop.navbar-scrolled {
 
 .navbar-container {
     max-width: 80rem;
-    margin: 10px auto;
+    margin: 0 auto;
     padding: 0 var(--space-4);
     display: flex;
     align-items: center;
