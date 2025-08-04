@@ -5,6 +5,10 @@ import { generateAllLoaders, handleNitroBuildHooks } from "./build";
 export default defineNuxtConfig({
     css: [`~/assets/main.css`],
 
+    fonts: {
+        devtools: false,
+    },
+
     components: [
         {
             path: "~/components",

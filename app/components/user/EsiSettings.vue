@@ -320,15 +320,6 @@ const handleSaveSettings = async () => {
 
 <template>
     <div class="space-y-6 p-6">
-        <div>
-            <h3 class="text-lg font-medium text-gray-900 dark:text-white">
-                {{ t("settings.esi.title", "ESI/OAuth Settings") }}
-            </h3>
-            <p class="mt-1 text-sm text-gray-600 dark:text-gray-400">
-                {{ t("settings.esi.description", "Manage authentication and killmail settings") }}
-            </p>
-        </div>
-
         <!-- Compact Layout: Two Columns -->
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
             <!-- Left Column: Authentication & Killmail Delay -->

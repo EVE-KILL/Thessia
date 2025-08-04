@@ -1,18 +1,14 @@
 <template>
     <div class="overflow-x-auto">
-        <!-- Loading indicator -->
         <div v-if="!commentsLoaded" class="loading-comments p-4 text-center">
             <UIcon name="i-heroicons-arrow-path" class="animate-spin inline-block mr-2" />
             {{ $t('loading') }}...
         </div>
 
-        <!-- Display existing comments -->
         <div v-for="comment in comments" :key="comment.identifier" class="comment section mb-4 relative"
             :id="`comment-${comment.identifier}`">
 
-            <!-- Comment content -->
             <div class="flex flex-col" :class="{ 'blur-sm': activeModal && activeComment === comment.identifier }">
-                <!-- Comment header with user info -->
                 <div class="flex items-center mb-3 pb-2 border-b border-light-dark-border">
                     <NuxtLink :to="`/character/${comment.characterId}`" class="flex-shrink-0">
                         <UAvatar :src="`https://images.evetech.net/characters/${comment.characterId}/portrait?size=64`"
@@ -44,16 +40,13 @@
                             {{ formatDate(comment.createdAt) }}
                         </div>
 
-                        <!-- Comment actions (icon buttons) -->
                         <div v-if="isAuthenticated" class="flex items-center gap-2">
-                            <!-- Report button - show for all users except the comment author -->
                             <button v-if="currentUser?.characterId !== comment.characterId"
                                 class="p-1.5 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
                                 title="Report comment" @click="openReportModal(comment.identifier)">
                                 <Icon name="lucide:flag" class="w-4 h-4 text-gray-500 dark:text-gray-400" />
                             </button>
 
-                            <!-- Delete button - only for admin or comment author -->
                             <button v-if="isAdministrator || currentUser?.characterId === comment.characterId"
                                 class="p-1.5 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
                                 title="Delete comment" @click="openDeleteModal(comment.identifier)">
@@ -66,7 +59,6 @@
                 <Comment :comment="comment.comment" />
             </div>
 
-            <!-- Custom in-comment modal for reporting -->
             <Transition name="modal-fade">
                 <div v-if="activeModal === 'report' && activeComment === comment.identifier"
                     class="custom-modal-overlay">
@@ -100,7 +92,6 @@
                 </div>
             </Transition>
 
-            <!-- Custom in-comment modal for deletion -->
             <Transition name="modal-fade">
                 <div v-if="activeModal === 'delete' && activeComment === comment.identifier"
                     class="custom-modal-overlay">
@@ -131,57 +122,67 @@
             </Transition>
         </div>
 
-        <div v-if="comments.length === 0" class="section mb-4 text-center py-8">
+        <div v-show="commentsLoaded && comments.length === 0" class="section mb-4 text-center py-8">
             <div class="text-light-dark-secondary">{{ $t('noComments') }}</div>
         </div>
 
-        <!-- WebSocket connection status indicator -->
-        <div v-if="!wsConnected" class="text-xs text-amber-500 mb-2 flex items-center justify-end gap-1">
+        <div v-show="!wsConnected" class="text-xs text-amber-500 mb-2 flex items-center justify-end gap-1">
             <div class="w-2 h-2 rounded-full bg-amber-500 animate-pulse"></div>
             <span>{{ $t('reconnecting_ws', { attempt: wsReconnectAttempts, max: 5 }) }}</span>
         </div>
 
-        <!-- Comment Input Box for authenticated users -->
-        <div v-if="isAuthenticated" class="section mb-4">
-            <!-- Comment header with user info -->
-            <div class="flex items-center mb-3 pb-2 border-b border-light-dark-border">
-                <NuxtLink :to="`/character/${currentUser.characterId}`" class="flex-shrink-0">
-                    <UAvatar :src="`https://images.evetech.net/characters/${currentUser.characterId}/portrait?size=64`"
-                        :alt="currentUser.characterName" size="md" class="mr-3" />
-                </NuxtLink>
-                <div class="entity-details">
-                    <NuxtLink :to="`/character/${currentUser.characterId}`" class="entity-link entity-name primary">
-                        {{ currentUser.characterName }}
-                    </NuxtLink>
-                    <div v-if="currentUser.corporationName" class="entity-name secondary">
-                        <NuxtLink v-if="currentUser.corporationId" :to="`/corporation/${currentUser.corporationId}`"
-                            class="entity-link truncate">
-                            {{ currentUser.corporationName }}
+        <div class="section mb-4">
+            <ClientOnly>
+                <div v-if="isAuthenticated">
+                    <div class="flex items-center mb-3 pb-2 border-b border-light-dark-border">
+                        <NuxtLink :to="`/character/${currentUser.characterId}`" class="flex-shrink-0">
+                            <UAvatar
+                                :src="`https://images.evetech.net/characters/${currentUser.characterId}/portrait?size=64`"
+                                :alt="currentUser.characterName" size="md" class="mr-3" />
                         </NuxtLink>
-                        <span v-if="currentUser.allianceName" class="truncate">
-                            /
-                            <NuxtLink v-if="currentUser.allianceId" :to="`/alliance/${currentUser.allianceId}`"
-                                class="entity-link truncate">
-                                {{ currentUser.allianceName }}
+                        <div class="entity-details">
+                            <NuxtLink :to="`/character/${currentUser.characterId}`"
+                                class="entity-link entity-name primary">
+                                {{ currentUser.characterName }}
                             </NuxtLink>
-                            <span v-else>{{ currentUser.allianceName }}</span>
-                        </span>
+                            <div v-if="currentUser.corporationName" class="entity-name secondary">
+                                <NuxtLink v-if="currentUser.corporationId"
+                                    :to="`/corporation/${currentUser.corporationId}`" class="entity-link truncate">
+                                    {{ currentUser.corporationName }}
+                                </NuxtLink>
+                                <span v-if="currentUser.allianceName" class="truncate">
+                                    /
+                                    <NuxtLink v-if="currentUser.allianceId" :to="`/alliance/${currentUser.allianceId}`"
+                                        class="entity-link truncate">
+                                        {{ currentUser.allianceName }}
+                                    </NuxtLink>
+                                    <span v-else>{{ currentUser.allianceName }}</span>
+                                </span>
+                            </div>
+                        </div>
                     </div>
+
+                    <CommentInput v-model="newComment" :loading="isSubmitting" :disabled="isSubmitting"
+                        :placeholder="$t('placeholder')" :submit-button-text="$t('postComment')"
+                        :last-posted-comment="lastPostedComment" @submit="postComment" />
+
+                    <p v-if="errorMessage" class="text-red-500 text-sm mt-2">{{ errorMessage }}</p>
                 </div>
-            </div>
 
-            <!-- Use our new CommentInput component -->
-            <CommentInput v-model="newComment" :loading="isSubmitting" :disabled="isSubmitting"
-                :placeholder="$t('placeholder')" :submit-button-text="$t('postComment')"
-                :last-posted-comment="lastPostedComment" @submit="postComment" />
+                <div v-else class="text-center py-4">
+                    <p class="mb-2">{{ $t('loginToComment') }}</p>
+                    <UButton color="primary" @click="loginToComment">{{ $t('login') }}</UButton>
+                </div>
 
-            <p v-if="errorMessage" class="text-red-500 text-sm mt-2">{{ errorMessage }}</p>
-        </div>
-
-        <!-- Login prompt for unauthenticated users -->
-        <div v-else class="section mb-4 text-center py-4">
-            <p class="mb-2">{{ $t('loginToComment') }}</p>
-            <UButton color="primary" @click="loginToComment">{{ $t('login') }}</UButton>
+                <template #fallback>
+                    <div class="text-center py-4">
+                        <div class="flex items-center justify-center">
+                            <UIcon name="i-heroicons-arrow-path" class="animate-spin mr-2" />
+                            {{ $t('loading') }}...
+                        </div>
+                    </div>
+                </template>
+            </ClientOnly>
         </div>
     </div>
 </template>

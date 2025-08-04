@@ -386,11 +386,6 @@ const tableColumns = [
     flex-wrap: nowrap;
 }
 
-:deep(.text-sm) {
-    font-size: 0.9rem;
-    line-height: 1rem;
-}
-
 /* Mobile view styling */
 .mobile-entity-container {
     width: 100%;

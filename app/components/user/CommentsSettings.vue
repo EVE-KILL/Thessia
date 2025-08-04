@@ -52,11 +52,11 @@ const isDeleting = ref(false);
 // Fetch comments for the current user
 const { data: commentsData, pending, error, refresh } = await useFetch<CommentResponse>('/api/comments', {
     query: computed(() => ({
-        characterId: auth.user.value?.characterId,
+        characterId: currentUser.value?.characterId,
         page: currentPage.value,
         limit: 20
     })),
-    key: computed(() => `user-comments-${auth.user.value?.characterId}-${currentPage.value}`),
+    key: computed(() => `user-comments-${currentUser.value?.characterId}-${currentPage.value}`),
     server: false, // Only fetch on client side to ensure auth is ready
 });
 
@@ -209,7 +209,7 @@ onBeforeUnmount(() => {
         <!-- No Comments State -->
         <div v-else-if="!commentsData?.comments?.length" class="rounded-md bg-blue-50 p-4 dark:bg-blue-900/20">
             <div class="flex">
-                <Icon name="lucide:message-circle" class="h-5 w-5 text-blue-400" />
+                <UIcon name="lucide:message-circle" class="h-5 w-5 text-blue-400" />
                 <div class="ml-3">
                     <p class="text-sm text-blue-700 dark:text-blue-300">
                         {{ t("settings.comments.noComments", "You haven't made any comments yet.") }}
@@ -277,32 +277,32 @@ onBeforeUnmount(() => {
             <!-- Pagination -->
             <div v-if="commentsData.pagination.pages > 1" class="flex justify-center">
                 <div class="flex items-center gap-2">
-                    <Button :disabled="!commentsData.pagination.hasPrev" variant="outline" size="sm"
+                    <UButton :disabled="!commentsData.pagination.hasPrev" variant="outline" size="sm"
                         @click="handlePageChange(currentPage - 1)">
                         <Icon name="lucide:chevron-left" class="h-4 w-4" />
                         {{ t("common.previous", "Previous") }}
-                    </Button>
+                    </UButton>
 
                     <div class="flex items-center gap-1">
                         <template v-for="page in Math.min(5, commentsData.pagination.pages)" :key="page">
-                            <Button :variant="page === currentPage ? 'solid' : 'outline'" size="sm"
+                            <UButton :variant="page === currentPage ? 'solid' : 'outline'" size="sm"
                                 @click="handlePageChange(page)">
                                 {{ page }}
-                            </Button>
+                            </UButton>
                         </template>
                         <span v-if="commentsData.pagination.pages > 5" class="px-2 text-gray-500">...</span>
-                        <Button v-if="commentsData.pagination.pages > 5 && currentPage < commentsData.pagination.pages"
+                        <UButton v-if="commentsData.pagination.pages > 5 && currentPage < commentsData.pagination.pages"
                             :variant="currentPage === commentsData.pagination.pages ? 'solid' : 'outline'" size="sm"
                             @click="handlePageChange(commentsData.pagination.pages)">
                             {{ commentsData.pagination.pages }}
-                        </Button>
+                        </UButton>
                     </div>
 
-                    <Button :disabled="!commentsData.pagination.hasNext" variant="outline" size="sm"
+                    <UButton :disabled="!commentsData.pagination.hasNext" variant="outline" size="sm"
                         @click="handlePageChange(currentPage + 1)">
                         {{ t("common.next", "Next") }}
                         <Icon name="lucide:chevron-right" class="h-4 w-4" />
-                    </Button>
+                    </UButton>
                 </div>
             </div>
         </div>
@@ -324,12 +324,12 @@ onBeforeUnmount(() => {
                     </div>
 
                     <div class="custom-modal-footer">
-                        <Button variant="outline" @click="closeModal">
+                        <UButton variant="outline" @click="closeModal">
                             {{ t('common.cancel', 'Cancel') }}
-                        </Button>
-                        <Button variant="solid" color="red" :disabled="isDeleting" @click="confirmDelete">
+                        </UButton>
+                        <UButton variant="solid" color="red" :disabled="isDeleting" @click="confirmDelete">
                             {{ isDeleting ? t('common.deleting') : t('settings.comments.confirmDelete') }}
-                        </Button>
+                        </UButton>
                     </div>
                 </div>
             </div>

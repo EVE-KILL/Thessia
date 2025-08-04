@@ -18,6 +18,7 @@
     "5b": "5B",
     "10b": "10B",
     "citadels": "Citadels",
+    "structureboys": "Structures",
     "t1": "T1",
     "t2": "T2",
     "t3": "T3",
@@ -893,7 +894,7 @@
     "settings.saveChanges": "Save Changes",
     "settings.updateSuccess": "Settings updated successfully",
     "settings.updateError": "Failed to update settings",
-    "settings.updateSuccessDesc": "Your killmail delay settings have been saved.",
+    "settings.updateSuccessDesc": "Your settings have been saved.",
     "settings.updateErrorDesc": "Please try again or contact support if the problem persists.",
     "settings.defaultScopes": "Default Scopes",
     "settings.customizeScopes": "Customize Scopes",
@@ -2090,5 +2091,13 @@
         }
     },
     "Documentation": "Documentation",
-    "history": "History"
+    "history": "History",
+    "settings": {
+        "privacy": {
+            "hideFitting": {
+                "description": "Redact the fitting in the fitting wheel and items list for one hour after a killmail is posted. Note: this only applies to the UI display, the complete data remains fully available in the API for third-party tools and applications.",
+                "title": "Redact fitting for 1 hour after killmail posting"
+            }
+        }
+    }
 }

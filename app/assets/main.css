@@ -1,6 +1,24 @@
 @import "tailwindcss" theme(static);
 @import "@nuxt/ui";
 
+/* Font rendering consistency between SSR and client */
+* {
+    font-display: swap; /* Use font-display swap for better loading performance */
+    text-size-adjust: 100%; /* Prevent font size adjustments */
+    -webkit-text-size-adjust: 100%; /* Safari */
+    -moz-text-size-adjust: 100%; /* Firefox */
+}
+
+/* Ensure consistent font metrics */
+html,
+body {
+    font-synthesis: none; /* Prevent synthetic font generation */
+    text-rendering: optimizeLegibility;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    line-height: 1.5; /* Explicit base line height */
+}
+
 /* Core structural styles */
 #__nuxt {
     min-height: 100vh;
@@ -180,13 +198,6 @@ input,
 select,
 textarea {
     touch-action: manipulation;
-}
-
-/* Ensure consistent text sizing in different contexts */
-.text-base,
-.text-sm,
-.text-xs {
-    font-size: revert;
 }
 
 /* Override UI framework input styles */

@@ -128,28 +128,6 @@ const isPriorityImage = (index: number): boolean => {
 </template>
 
 <style scoped>
-/* Match text sizes with other components */
-:deep(.text-sm) {
-    font-size: 0.9rem;
-    line-height: 1rem;
-}
-
-:deep(.text-xs) {
-    font-size: 0.8rem;
-    line-height: 1rem;
-}
-
-/* Responsive adjustments */
-@media (max-width: 768px) {
-    :deep(.text-sm) {
-        font-size: 0.85rem;
-    }
-
-    :deep(.text-xs) {
-        font-size: 0.75rem;
-    }
-}
-
 /* Table styles */
 :deep(tbody tr) {
     border-color: rgb(40, 40, 40) !important;

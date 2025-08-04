@@ -65,7 +65,9 @@ const props = withDefaults(defineProps<{
     size: 'md'
 });
 
-const emit = defineEmits();
+const emit = defineEmits<{
+    close: [];
+}>();
 const dialog = ref<HTMLElement | null>(null);
 
 const modalSizeClasses = computed(() => {

@@ -318,16 +318,6 @@ const tableColumns = [
     background-color: rgba(0, 0, 0, 0.4);
 }
 
-:deep(.text-sm) {
-    font-size: 0.9rem;
-    line-height: 1rem;
-}
-
-:deep(.text-xs) {
-    font-size: 0.8rem;
-    line-height: 1rem;
-}
-
 :deep(table) {
     border-collapse: collapse;
     width: 100%;

@@ -68,7 +68,7 @@
                                 {{ finalBlowAttacker.faction_name }}
                             </NuxtLink>
                             <span v-else-if="finalBlowAttacker.alliance_name">{{ finalBlowAttacker.alliance_name
-                            }}</span>
+                                }}</span>
                             <span v-else-if="finalBlowAttacker.faction_name">{{ finalBlowAttacker.faction_name }}</span>
                         </div>
                     </div>
@@ -194,7 +194,7 @@
                                 {{ topDamageAttacker.faction_name }}
                             </NuxtLink>
                             <span v-else-if="topDamageAttacker.alliance_name">{{ topDamageAttacker.alliance_name
-                            }}</span>
+                                }}</span>
                             <span v-else-if="topDamageAttacker.faction_name">{{ topDamageAttacker.faction_name }}</span>
                         </div>
                     </div>
@@ -898,6 +898,8 @@ onBeforeUnmount(() => {
     display: flex;
     align-items: center;
     text-align: right;
+    font-family: inherit;
+    /* Ensure font inheritance consistency */
 }
 
 .damage-percent {

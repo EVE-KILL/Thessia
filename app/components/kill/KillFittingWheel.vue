@@ -129,19 +129,17 @@
                     :style="getSlotPosition(index, highSlots.length, 'top')" :class="{ 'empty-slot-container': !item }">
                     <div v-if="item" class="module-container" @mouseenter="showTooltip(item)"
                         @mouseleave="prepareToHideTooltip" @click="togglePinnedTooltip(item)">
-                        <Image :type="'item'" :id="item.type_id"
-                            :name="getLocalizedString(item.name, currentLocale.value)" :size="64"
-                            :alt="getLocalizedString(item.name, currentLocale.value)" class="module-icon" />
+                        <Image :type="'item'" :id="item.type_id" :name="getLocalizedString(item.name, currentLocale)"
+                            :size="64" :alt="getLocalizedString(item.name, currentLocale)" class="module-icon" />
                     </div>
                     <div v-else class="empty-slot"></div>
 
                     <!-- Ammo for high slots -->
                     <div v-if="getAmmoForSlot(index, 'high')" class="ammo-container"
-                        @mouseenter="showTooltip(getAmmoForSlot(index, 'high'))" @mouseleave="prepareToHideTooltip">
-                        <Image :type="'item'" :id="getAmmoForSlot(index, 'high').type_id"
-                            :name="getLocalizedString(getAmmoForSlot(index, 'high').name, currentLocale.value)"
-                            :size="64"
-                            :alt="getLocalizedString(getAmmoForSlot(index, 'high').name, currentLocale.value)"
+                        @mouseenter="showTooltip(getAmmoForSlot(index, 'high')!)" @mouseleave="prepareToHideTooltip">
+                        <Image :type="'item'" :id="getAmmoForSlot(index, 'high')!.type_id"
+                            :name="getLocalizedString(getAmmoForSlot(index, 'high')!.name, currentLocale)" :size="64"
+                            :alt="getLocalizedString(getAmmoForSlot(index, 'high')!.name, currentLocale)"
                             class="ammo-icon" />
                     </div>
                 </div>
@@ -152,17 +150,16 @@
                     :class="{ 'empty-slot-container': !item }">
                     <div v-if="item" class="module-container" @mouseenter="showTooltip(item)"
                         @mouseleave="prepareToHideTooltip" @click="togglePinnedTooltip(item)">
-                        <Image :type="'item'" :id="item.type_id"
-                            :name="getLocalizedString(item.name, currentLocale.value)" :size="64"
-                            :alt="getLocalizedString(item.name, currentLocale.value)" class="module-icon" />
+                        <Image :type="'item'" :id="item.type_id" :name="getLocalizedString(item.name, currentLocale)"
+                            :size="64" :alt="getLocalizedString(item.name, currentLocale)" class="module-icon" />
                     </div>
                     <div v-else class="empty-slot"></div>
 
                     <div v-if="getAmmoForSlot(index, 'mid')" class="ammo-container"
-                        @mouseenter="showTooltip(getAmmoForSlot(index, 'mid'))" @mouseleave="prepareToHideTooltip">
-                        <Image :type="'item'" :id="getAmmoForSlot(index, 'mid').type_id"
-                            :name="getLocalizedString(getAmmoForSlot(index, 'mid').name, currentLocale.value)"
-                            :size="64" :alt="getLocalizedString(getAmmoForSlot(index, 'mid').name, currentLocale.value)"
+                        @mouseenter="showTooltip(getAmmoForSlot(index, 'mid')!)" @mouseleave="prepareToHideTooltip">
+                        <Image :type="'item'" :id="getAmmoForSlot(index, 'mid')!.type_id"
+                            :name="getLocalizedString(getAmmoForSlot(index, 'mid')!.name, currentLocale)" :size="64"
+                            :alt="getLocalizedString(getAmmoForSlot(index, 'mid')!.name, currentLocale)"
                             class="ammo-icon" />
                     </div>
                 </div>
@@ -173,17 +170,16 @@
                     :class="{ 'empty-slot-container': !item }">
                     <div v-if="item" class="module-container" @mouseenter="showTooltip(item)"
                         @mouseleave="prepareToHideTooltip" @click="togglePinnedTooltip(item)">
-                        <Image :type="'item'" :id="item.type_id"
-                            :name="getLocalizedString(item.name, currentLocale.value)" :size="64"
-                            :alt="getLocalizedString(item.name, currentLocale.value)" class="module-icon" />
+                        <Image :type="'item'" :id="item.type_id" :name="getLocalizedString(item.name, currentLocale)"
+                            :size="64" :alt="getLocalizedString(item.name, currentLocale)" class="module-icon" />
                     </div>
                     <div v-else class="empty-slot"></div>
 
                     <div v-if="getAmmoForSlot(index, 'low')" class="ammo-container"
-                        @mouseenter="showTooltip(getAmmoForSlot(index, 'low'))" @mouseleave="prepareToHideTooltip">
-                        <Image :type="'item'" :id="getAmmoForSlot(index, 'low').type_id"
-                            :name="getLocalizedString(getAmmoForSlot(index, 'low').name, currentLocale.value)"
-                            :size="64" :alt="getLocalizedString(getAmmoForSlot(index, 'low').name, currentLocale.value)"
+                        @mouseenter="showTooltip(getAmmoForSlot(index, 'low')!)" @mouseleave="prepareToHideTooltip">
+                        <Image :type="'item'" :id="getAmmoForSlot(index, 'low')!.type_id"
+                            :name="getLocalizedString(getAmmoForSlot(index, 'low')!.name, currentLocale)" :size="64"
+                            :alt="getLocalizedString(getAmmoForSlot(index, 'low')!.name, currentLocale)"
                             class="ammo-icon" />
                     </div>
                 </div>
@@ -193,9 +189,8 @@
                     :style="getSlotPosition(index, rigSlots.length, 'left')" :class="{ 'empty-slot-container': !item }">
                     <div v-if="item" class="module-container" @mouseenter="showTooltip(item)"
                         @mouseleave="prepareToHideTooltip" @click="togglePinnedTooltip(item)">
-                        <Image :type="'item'" :id="item.type_id"
-                            :name="getLocalizedString(item.name, currentLocale.value)" :size="64"
-                            :alt="getLocalizedString(item.name, currentLocale.value)" class="module-icon" />
+                        <Image :type="'item'" :id="item.type_id" :name="getLocalizedString(item.name, currentLocale)"
+                            :size="64" :alt="getLocalizedString(item.name, currentLocale)" class="module-icon" />
                     </div>
                     <div v-else class="empty-slot"></div>
                 </div>
@@ -206,9 +201,8 @@
                     :class="{ 'empty-slot-container': !item }">
                     <div v-if="item" class="module-container" @mouseenter="showTooltip(item)"
                         @mouseleave="prepareToHideTooltip" @click="togglePinnedTooltip(item)">
-                        <Image :type="'item'" :id="item.type_id"
-                            :name="getLocalizedString(item.name, currentLocale.value)" :size="64"
-                            :alt="getLocalizedString(item.name, currentLocale.value)"
+                        <Image :type="'item'" :id="item.type_id" :name="getLocalizedString(item.name, currentLocale)"
+                            :size="64" :alt="getLocalizedString(item.name, currentLocale)"
                             class="module-icon subsystem-icon" />
                     </div>
                     <div v-else class="empty-slot"></div>
@@ -225,6 +219,7 @@ const currentLocale = computed(() => locale.value);
 const props = defineProps<{
     killmail: IKillmail | null;
     maxWidth?: number;
+    hideFitting?: boolean;
 }>();
 
 // Computed style for container to allow dynamic sizing
@@ -306,6 +301,9 @@ function organizeAmmo() {
  * Gets ammo for a specific slot position
  */
 function getAmmoForSlot(slotIndex: number, slotType: "high" | "mid" | "low"): IItem | null {
+    // If fitting is hidden, don't show ammo
+    if (props.hideFitting) return null;
+
     let flagValue: number;
 
     // Get the flag value for this slot
@@ -408,11 +406,11 @@ function getIndicatorPosition(position: string): Record<string, string> {
 }
 
 // Group items by slot type
-const highSlots = computed(() => organizeSlots(HIGH_SLOT_FLAGS, 8));
-const midSlots = computed(() => organizeSlots(MID_SLOT_FLAGS, 8));
-const lowSlots = computed(() => organizeSlots(LOW_SLOT_FLAGS, 8));
-const rigSlots = computed(() => organizeSlots(RIG_SLOT_FLAGS, 3));
-const subsystemSlots = computed(() => organizeSlots(SUBSYSTEM_FLAGS, 4));
+const highSlots = computed(() => props.hideFitting ? Array(8).fill(null) : organizeSlots(HIGH_SLOT_FLAGS, 8));
+const midSlots = computed(() => props.hideFitting ? Array(8).fill(null) : organizeSlots(MID_SLOT_FLAGS, 8));
+const lowSlots = computed(() => props.hideFitting ? Array(8).fill(null) : organizeSlots(LOW_SLOT_FLAGS, 8));
+const rigSlots = computed(() => props.hideFitting ? Array(3).fill(null) : organizeSlots(RIG_SLOT_FLAGS, 3));
+const subsystemSlots = computed(() => props.hideFitting ? Array(4).fill(null) : organizeSlots(SUBSYSTEM_FLAGS, 4));
 const hasSubsystems = computed(() => {
     if (!props.killmail || !props.killmail.items) return false;
     return subsystemSlots.value.some((item) => item !== null);
@@ -1023,4 +1021,6 @@ onBeforeUnmount(() => {
         right: -14px;
     }
 }
+
+/* Make the item completely transparent for privacy */
 </style>

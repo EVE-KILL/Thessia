@@ -5,7 +5,10 @@
         class="kill-items-table" @row-click="handleRowClick">
         <!-- Image cell with connector lines for container items -->
         <template #cell-image="{ item }">
-            <div class="image-cell" :class="{ 'indented-image': item.isNested }">
+            <div class="image-cell" :class="{
+                'indented-image': item.isNested,
+                'privacy-blur': props.hideFitting && isFittingItem(item) && (item.type === 'item' || item.type === 'container-item')
+            }">
                 <template v-if="item.isNested">
                     <div class="connector-line">
                         <Icon name="lucide:corner-down-right" class="connector-icon" />
@@ -22,11 +25,10 @@
                 <Image
                     v-if="(item.type === 'item' || item.type === 'container-item') && item.itemId && !isSkin(item.itemName || '')"
                     :type="isBlueprint(item.itemName || '') ? 'blueprint-copy' : 'item'" :id="item.itemId" size="24"
-                    class="w-6 h-6 rounded-md" :alt="item.itemName || ''" />
+                    class="w-6 h-6 rounded-md"
+                    :alt="props.hideFitting && isFittingItem(item as Item) ? '[REDACTED]' : ((item as Item).itemName || '')" />
             </div>
-        </template>
-
-        <!-- Name cell -->
+        </template> <!-- Name cell -->
         <template #cell-name="{ item }">
             <div v-if="item.type === 'header'" class="font-bold text-sm uppercase"
                 @click.stop="isCollapsible(item.itemName) && toggleSectionCollapse(item.itemName)">
@@ -35,20 +37,21 @@
                     ({{ getSectionItemCount(item.itemName) }})
                 </span>
             </div>
-            <div v-else-if="item.type === 'item' || item.type === 'container-item'" class="font-medium">
+            <div v-else-if="item.type === 'item' || item.type === 'container-item'" class="font-medium"
+                :class="{ 'privacy-blur': props.hideFitting && isFittingItem(item) }">
                 <!-- Add click handler directly to the name wrapper for containers -->
                 <div class="item-name-wrapper" :class="{ 'container-name': item.isContainer }"
-                    @click.stop="item.isContainer && item.containerId && toggleContainerCollapse(item.containerId)">
+                    @click.stop="item.isContainer && item.containerId && toggleContainerCollapse(item.containerId!)">
                     <!-- Container name first, then the icon -->
-                    {{ item.itemName }}
+                    {{ props.hideFitting && isFittingItem(item as Item) ? '[REDACTED]' : (item as Item).itemName }}
                     <!-- Add collapse/expand control for containers after name -->
-                    <Icon v-if="item.isContainer"
-                        :name="isContainerCollapsed(item.containerId) ? 'lucide:chevron-right' : 'lucide:chevron-down'"
+                    <Icon v-if="(item as Item).isContainer"
+                        :name="isContainerCollapsed((item as Item).containerId!) ? 'lucide:chevron-right' : 'lucide:chevron-down'"
                         class="container-collapse-icon"
-                        @click.stop="toggleContainerCollapse(item.containerId, $event)" />
+                        @click.stop="toggleContainerCollapse((item as Item).containerId!, $event)" />
                 </div>
             </div>
-            <div v-else-if="item.type === 'value'" class="font-medium">{{ item.itemName }}</div>
+            <div v-else-if="item.type === 'value'" class="font-medium">{{ (item as Item).itemName }}</div>
         </template>
 
         <!-- Quantity cell with badges -->
@@ -99,31 +102,34 @@
         </template>
 
         <!-- Mobile view template -->
-        <template #mobile-content="{ item }: { item: Item }">
+        <template #mobile-content="{ item }">
             <div class="mobile-container">
                 <!-- Image cell -->
-                <div class="mobile-image-cell" :class="{ 'indented-mobile-image': item.isNested }">
-                    <template v-if="item.isNested">
+                <div class="mobile-image-cell" :class="{ 'indented-mobile-image': (item as Item).isNested }">
+                    <template v-if="(item as Item).isNested">
                         <div class="mobile-connector-line">
                             <Icon name="lucide:corner-down-right" class="connector-icon-mobile" />
                         </div>
                     </template>
 
-                    <Icon v-if="item.type === 'header'" name="lucide:chevron-right" class="collapse-icon-mobile" />
+                    <Icon v-if="(item as Item).type === 'header'" name="lucide:chevron-right"
+                        class="collapse-icon-mobile" />
 
                     <!-- Show image only when not a skin -->
                     <Image
-                        v-if="(item.type === 'item' || item.type === 'container-item') && item.itemId && !isSkin(item.itemName || '')"
-                        type="item" :id="item.itemId" size="24" class="w-6 h-6 rounded-md" :alt="item.itemName || ''" />
+                        v-if="((item as Item).type === 'item' || (item as Item).type === 'container-item') && (item as Item).itemId && !isSkin((item as Item).itemName || '')"
+                        type="item" :id="(item as Item).itemId" size="24" class="w-6 h-6 rounded-md"
+                        :alt="props.hideFitting && isFittingItem(item as Item) ? '[REDACTED]' : ((item as Item).itemName || '')" />
                 </div>
 
                 <!-- Mobile content - single row layout -->
                 <div class="mobile-content">
                     <!-- For header items -->
-                    <div v-if="item.type === 'header'" class="font-bold text-xs uppercase mobile-header w-full">
-                        {{ item.itemName }}
-                        <span v-if="isCollapsible(item.itemName)" class="section-count">
-                            ({{ getSectionItemCount(item.itemName) }})
+                    <div v-if="(item as Item).type === 'header'"
+                        class="font-bold text-xs uppercase mobile-header w-full">
+                        {{ (item as Item).itemName }}
+                        <span v-if="isCollapsible((item as Item).itemName)" class="section-count">
+                            ({{ getSectionItemCount((item as Item).itemName!) }})
                         </span>
                     </div>
 
@@ -131,7 +137,8 @@
                     <div v-else class="mobile-item-row">
                         <!-- Item name (truncated) -->
                         <div class="mobile-item-name">
-                            {{ item.itemName }}
+                            {{ props.hideFitting && isFittingItem(item as Item) ? '[REDACTED]' : (item as Item).itemName
+                            }}
                         </div>
 
                         <!-- Right-side content: quantity badges and ISK value in one section -->
@@ -200,6 +207,7 @@ const currentLocale = computed(() => locale.value);
 
 const props = defineProps<{
     killmail: IKillmail | null;
+    hideFitting?: boolean;
 }>();
 
 // Sorting state
@@ -486,6 +494,23 @@ function isSectionCollapsed(sectionName: string): boolean {
 // Check if a container is currently collapsed
 function isContainerCollapsed(containerId: string): boolean {
     return collapsedContainers.value[containerId] || false;
+}
+
+// Check if an item is in a fitting section (should be hidden when hideFitting is true)
+function isFittingItem(item: any): boolean {
+    if (!item.sectionName) return false;
+
+    // Fitting sections that should be hidden
+    const fittingSections = ['highSlot', 'mediumSlot', 'lowSlot', 'rigSlot', 'subsystem'];
+
+    // Find the section by translated name
+    for (const [key, config] of Object.entries(slotTypeConfig)) {
+        const translatedKey = config.label();
+        if (translatedKey === item.sectionName && fittingSections.includes(key)) {
+            return true;
+        }
+    }
+    return false;
 }
 
 // Toggle collapsed state for a section with animation support
@@ -941,11 +966,6 @@ function processKillmailData(killmail: IKillmail) {
     });
 }
 
-// Initialize collapsed state BEFORE processing killmail data
-onMounted(() => {
-    initializeCollapsedState();
-});
-
 // Also initialize when locale changes
 watch(locale, () => {
     // Do NOT reset collapsedSections here
@@ -1011,6 +1031,11 @@ function groupByQty(items: any[]) {
  * Generates a link URL for an item if it should be clickable
  */
 function generateItemLink(item: Item): string | null {
+    // If hideFitting is true and this is a fitting item, disable the link
+    if (props.hideFitting && isFittingItem(item)) {
+        return null;
+    }
+
     // Containers should not be clickable links (they toggle collapse instead)
     if (item.isContainer) {
         return null;
@@ -1040,19 +1065,33 @@ function generateItemLink(item: Item): string | null {
     background-color: light-dark(var(--color-background), var(--color-background));
 }
 
-/* Section headers */
+/* Add explicit font size inheritance to prevent SSR/client differences */
+.kill-items-table {
+    font-size: 0.875rem;
+    line-height: 1.25rem;
+}
+
+/* Section headers - Use consistent spacing without margin conflicts */
 :deep(.section-header-row) {
     position: relative;
     cursor: pointer;
     background-color: light-dark(rgba(245, 245, 245, 0.1), rgba(26, 26, 26, 0.5));
     color: light-dark(#111827, white);
-    margin-top: 0.5rem !important;
-    border-top: 1px solid light-dark(#d1d5db, rgb(40, 40, 40)) !important;
+    border-top: 1px solid light-dark(#d1d5db, rgb(40, 40, 40));
 }
 
 :deep(.section-header-row:first-child) {
-    margin-top: 0 !important;
-    border-top: none !important;
+    border-top: none;
+}
+
+/* Add specific spacing for section headers - override Table component's margin for both mobile and desktop */
+:deep(.section-header-row:not(:first-child)) {
+    margin-top: 0.5rem !important;
+}
+
+/* Ensure mobile view also gets the same section header spacing */
+:deep(.mobile-view .section-header-row:not(:first-child)) {
+    margin-top: 0.5rem !important;
 }
 
 :deep(.section-header-row:hover) {
@@ -1645,4 +1684,26 @@ function generateItemLink(item: Item): string | null {
 :deep(.container-row:hover) {
     background-color: light-dark(rgba(245, 245, 245, 0.25), rgba(50, 50, 50, 0.25));
 }
+
+/* Privacy blur effect for items table */
+.privacy-blur {
+    position: relative;
+    overflow: hidden;
+}
+
+.privacy-blur::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    backdrop-filter: blur(8px);
+    background: rgba(0, 0, 0, 0.1);
+    z-index: 2;
+    pointer-events: all;
+    /* Block all interactions */
+}
+
+/* Remove the text overlay for items table too */
 </style>
