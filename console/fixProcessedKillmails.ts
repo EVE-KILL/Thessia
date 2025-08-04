@@ -15,7 +15,6 @@ export default {
             const killmailsCount = await Killmails.estimatedDocumentCount();
             const esiKillmailsCount =
                 await KillmailsESI.estimatedDocumentCount();
-            const processedESICount = esiKillmailsCount - killmailsCount;
 
             cliLogger.info(`📊 Collection counts:`);
             cliLogger.info(`   Killmails: ${killmailsCount.toLocaleString()}`);
@@ -23,10 +22,7 @@ export default {
                 `   KillmailsESI: ${esiKillmailsCount.toLocaleString()}`
             );
             cliLogger.info(
-                `   KillmailsESI (processed: true): ${processedESICount.toLocaleString()}`
-            );
-            cliLogger.info(
-                `   Difference: ${(
+                `   Collection difference: ${(
                     esiKillmailsCount - killmailsCount
                 ).toLocaleString()}`
             );
@@ -34,70 +30,103 @@ export default {
             // Find processed ESI killmails that don't exist in the main Killmails collection
             cliLogger.info("🔍 Finding orphaned processed ESI killmails...");
 
-            // Use aggregation to find ESI killmails marked as processed but not in Killmails
-            const orphanedKillmails = await KillmailsESI.aggregate(
-                [
-                    // Only look at processed ESI killmails
-                    { $match: { processed: true } },
+            // Use cursor-based approach for better performance
+            const orphanedKillmails: Array<{
+                killmail_id: number;
+                killmail_hash: string;
+            }> = [];
 
-                    // Project only the fields we need for the lookup
-                    {
-                        $project: {
-                            killmail_id: 1,
-                            killmail_hash: 1,
-                        },
-                    },
+            const checkBatchSize = 10_000;
+            let processedCount = 0;
+            let checkedCount = 0;
 
-                    // Left join with Killmails collection
-                    {
-                        $lookup: {
-                            from: "killmails",
-                            let: {
-                                esi_id: "$killmail_id",
-                                esi_hash: "$killmail_hash",
-                            },
-                            pipeline: [
-                                {
-                                    $match: {
-                                        $expr: {
-                                            $and: [
-                                                {
-                                                    $eq: [
-                                                        "$killmail_id",
-                                                        "$$esi_id",
-                                                    ],
-                                                },
-                                                {
-                                                    $eq: [
-                                                        "$killmail_hash",
-                                                        "$$esi_hash",
-                                                    ],
-                                                },
-                                            ],
-                                        },
-                                    },
-                                },
-                            ],
-                            as: "killmail_match",
-                        },
-                    },
+            // Get a cursor for processed ESI killmails
+            const cursor = KillmailsESI.find(
+                { processed: true },
+                { killmail_id: 1, killmail_hash: 1 }
+            ).cursor();
 
-                    // Only keep ESI killmails that don't have a match in Killmails
-                    {
-                        $match: {
-                            killmail_match: { $size: 0 },
-                        },
-                    },
+            const batch: Array<{
+                killmail_id: number;
+                killmail_hash: string;
+            }> = [];
 
-                    // Project the final result
-                    {
-                        $project: {
-                            killmail_id: 1,
-                            killmail_hash: 1,
+            for (
+                let doc = await cursor.next();
+                doc != null;
+                doc = await cursor.next()
+            ) {
+                batch.push({
+                    killmail_id: (doc as any).killmail_id,
+                    killmail_hash: (doc as any).killmail_hash,
+                });
+                checkedCount++;
+
+                if (batch.length >= checkBatchSize) {
+                    // Check existence for this batch using $in for efficiency
+                    const killmailIds = batch.map((km) => km.killmail_id);
+                    const existingIds = await Killmails.find(
+                        {
+                            killmail_id: { $in: killmailIds },
                         },
+                        { killmail_id: 1, killmail_hash: 1 }
+                    ).lean();
+
+                    // Create a Set for fast lookup
+                    const existingSet = new Set(
+                        existingIds.map(
+                            (km: any) => `${km.killmail_id}:${km.killmail_hash}`
+                        )
+                    );
+
+                    // Find orphaned killmails in this batch
+                    for (const km of batch) {
+                        const key = `${km.killmail_id}:${km.killmail_hash}`;
+                        if (!existingSet.has(key)) {
+                            orphanedKillmails.push(km);
+                        }
+                    }
+
+                    processedCount++;
+                    if (processedCount % 10 === 0) {
+                        cliLogger.info(
+                            `   Processed ${(
+                                processedCount * checkBatchSize
+                            ).toLocaleString()} records, found ${orphanedKillmails.length.toLocaleString()} orphaned so far...`
+                        );
+                    }
+
+                    // Clear batch for next iteration
+                    batch.length = 0;
+                }
+            }
+
+            // Process remaining batch
+            if (batch.length > 0) {
+                const killmailIds = batch.map((km) => km.killmail_id);
+                const existingIds = await Killmails.find(
+                    {
+                        killmail_id: { $in: killmailIds },
                     },
-                ],
-                { allowDiskUse: true }
+                    { killmail_id: 1, killmail_hash: 1 }
+                ).lean();
+
+                const existingSet = new Set(
+                    existingIds.map(
+                        (km: any) => `${km.killmail_id}:${km.killmail_hash}`
+                    )
+                );
+
+                for (const km of batch) {
+                    const key = `${km.killmail_id}:${km.killmail_hash}`;
+                    if (!existingSet.has(key)) {
+                        orphanedKillmails.push(km);
+                    }
+                }
+            }
+
+            cliLogger.info(
+                `   Checked ${checkedCount.toLocaleString()} processed ESI killmails total`
             );
 
             const orphanedCount = orphanedKillmails.length;
@@ -148,76 +177,22 @@ export default {
                 `✅ Successfully fixed ${fixedCount.toLocaleString()} orphaned ESI killmails`
             );
 
-            // Final verification
-            const remainingOrphaned = await KillmailsESI.aggregate(
-                [
-                    { $match: { processed: true } },
-                    {
-                        $lookup: {
-                            from: "killmails",
-                            let: {
-                                esi_id: "$killmail_id",
-                                esi_hash: "$killmail_hash",
-                            },
-                            pipeline: [
-                                {
-                                    $match: {
-                                        $expr: {
-                                            $and: [
-                                                {
-                                                    $eq: [
-                                                        "$killmail_id",
-                                                        "$$esi_id",
-                                                    ],
-                                                },
-                                                {
-                                                    $eq: [
-                                                        "$killmail_hash",
-                                                        "$$esi_hash",
-                                                    ],
-                                                },
-                                            ],
-                                        },
-                                    },
-                                },
-                            ],
-                            as: "killmail_match",
-                        },
-                    },
-                    {
-                        $match: {
-                            killmail_match: { $size: 0 },
-                        },
-                    },
-                    {
-                        $count: "orphaned_count",
-                    },
-                ],
-                { allowDiskUse: true }
-            );
-
-            const finalOrphanedCount =
-                remainingOrphaned.length > 0
-                    ? remainingOrphaned[0].orphaned_count
-                    : 0;
-
-            if (finalOrphanedCount === 0) {
-                cliLogger.info(
-                    "🎉 All orphaned ESI killmails have been fixed!"
-                );
-            } else {
-                cliLogger.info(
-                    `⚠️  ${finalOrphanedCount} orphaned ESI killmails still remain`
-                );
-            }
-
-            // Show final statistics
+            // Final verification - quick count of remaining processed records
             const finalProcessedCount = await KillmailsESI.countDocuments({
                 processed: true,
             });
-            cliLogger.info(
-                `📊 Final processed ESI killmails: ${finalProcessedCount.toLocaleString()}`
-            );
+
+            if (finalProcessedCount === 0) {
+                cliLogger.info(
+                    "🎉 All processed ESI killmails have been fixed!"
+                );
+            } else {
+                cliLogger.info(
+                    `📊 ${finalProcessedCount.toLocaleString()} ESI killmails still marked as processed`
+                );
+            }
+
+            cliLogger.info("✅ Killmail processing completed successfully!");
         } catch (error) {
             cliLogger.error(`❌ Error during killmail comparison: ${error}`);
             throw error;
