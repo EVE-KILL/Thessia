@@ -19,15 +19,6 @@ async function fetchESIKillmail(
         );
         esiKillmail.killmail_hash = killmailHash;
 
-        // Insert the killmail into the esi killmails table
-        const km = new KillmailsESI(esiKillmail);
-
-        try {
-            await km.save();
-        } catch (err) {
-            await km.updateOne({ killmail_id: killmailId }, esiKillmail);
-        }
-
         return esiKillmail;
     } catch (error) {
         const errorMessage =

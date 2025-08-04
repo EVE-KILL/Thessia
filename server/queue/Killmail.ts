@@ -36,8 +36,28 @@ async function processKillmail(
 ): Promise<Partial<IKillmail>> {
     const killmail = await fetchESIKillmail(killmailId, killmailHash);
 
-    if (killmail.error || !killmail.victim) {
-        throw new Error(`Error fetching killmail: ${killmail.error}`);
+    // If the victim is empty, or attackers is empty, there was a problem fetching the killmail
+    if (
+        killmail.error ||
+        !killmail.victim ||
+        !killmail.attackers ||
+        !Array.isArray(killmail.attackers) ||
+        killmail.attackers.length === 0
+    ) {
+        throw new Error(
+            `Error fetching killmail: ${
+                killmail.error ||
+                "Invalid killmail data - missing victim or attackers"
+            }`
+        );
+    }
+
+    // Save the valid ESI killmail data to the database
+    const esiKillmail = new KillmailsESI(killmail);
+    try {
+        await esiKillmail.save();
+    } catch (error) {
+        await KillmailsESI.updateOne({ killmail_id: killmailId }, killmail);
     }
 
     const processedKillmail = await parseKillmail(killmail, warId);
