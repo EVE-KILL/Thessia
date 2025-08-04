@@ -1,3 +1,5 @@
+import { cliLogger } from "../server/helpers/Logger";
+import { KillmailsESI } from "../server/models/KillmailsESI";
 import { addKillmail } from "../server/queue/Killmail";
 
 export default {
@@ -15,6 +17,16 @@ export default {
                 if (data?.package) {
                     const killmailId = data.package.killID;
                     const killmailHash = data.package.zkb.hash;
+
+                    // Check if killmail already exists in database
+                    const existingKillmail = await KillmailsESI.findOne({
+                        killmail_id: killmailId,
+                        killmail_hash: killmailHash,
+                    });
+
+                    if (existingKillmail) {
+                        return;
+                    }
 
                     cliLogger.info(
                         `ℹ️  New killmail: ${killmailId} - ${killmailHash}`
