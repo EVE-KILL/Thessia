@@ -2,9 +2,9 @@
     <div class="rounded bg-background-800 bg-opacity-75">
         <h2 class="text-xl font-bold">{{ $t('latestKills') }}</h2>
 
-        <Table :columns="tableColumns" :items="killmails" :loading="isLoading" :skeleton-count="5"
+        <Table :columns="tableColumns" :items="killmails" :loading="loading" :skeleton-count="5"
             :empty-text="$t('noKills')" :link-fn="generateKillLink" :bordered="true" :striped="false" :hover="true"
-            background="transparent" :error="error" :error-text="$t('common.errorLoading')">
+            background="transparent">
             <!-- Ship column -->
             <template #cell-ship="{ item }">
                 <div class="flex items-center">
@@ -58,59 +58,20 @@
                     </div>
                 </div>
             </template>
-
-            <!-- Custom mobile row template -->
-            <template #mobile-row="{ item }">
-                <div class="flex items-center gap-3 w-full p-2">
-                    <!-- Ship image -->
-                    <Image type="type-render" :id="item.victim.ship_id"
-                        :alt="`Ship: ${getLocalizedString(item.victim.ship_name, currentLocale)}`"
-                        class="rounded w-14 h-14" size="64" />
-
-                    <!-- Kill details -->
-                    <div class="flex-grow">
-                        <div class="font-medium truncate">
-                            {{ item.victim.character_name || $t('unknown') }}
-                        </div>
-                        <div class="text-sm text-gray-400 truncate">
-                            {{ item.victim.corporation_name || $t('unknown') }}
-                        </div>
-                        <div class="text-xs text-gray-500 truncate"
-                            v-if="item.victim.alliance_id && item.victim.alliance_id > 0">
-                            {{ item.victim.alliance_name }}
-                        </div>
-                    </div>
-
-                    <!-- Date and system info -->
-                    <div class="text-right text-xs">
-                        <div>{{ formatDate(item.killmail_time) }}</div>
-                        <div class="mt-1 flex items-center justify-end">
-                            <span class="px-1.5 py-0.5 bg-background-600 rounded text-xs">
-                                {{ (item.solar_system_name && getLocalizedString(item.solar_system_name, currentLocale))
-                                    || '???' }}
-                            </span>
-                        </div>
-                    </div>
-                </div>
-            </template>
         </Table>
     </div>
 </template>
 
 <script setup lang="ts">
-import moment from "moment";
-import { computed, ref, watch } from "vue";
 import { useI18n } from "vue-i18n";
-import { useRoute } from "vue-router";
 
 const { t, locale } = useI18n();
 const currentLocale = computed(() => locale.value);
-const route = useRoute();
 
 const props = defineProps({
-    item: {
-        type: Object,
-        default: null,
+    killmails: {
+        type: Array,
+        default: () => [],
     },
     loading: {
         type: Boolean,
@@ -118,104 +79,17 @@ const props = defineProps({
     },
 });
 
-// State
-const killmails = ref([]);
-const isLoading = ref(true);
-const error = ref(null);
-
-// Fetch key based on item id to ensure proper cache invalidation
-const fetchKey = computed(() => `item-killmails-${props.item?.type_id || "none"}-${Date.now()}`);
-
 // Table configuration
 const tableColumns = [
     {
         id: "ship",
-        header: computed(() => t("ship")),
+        header: () => t("ship"),
     },
     {
         id: "victim",
-        header: computed(() => t("victim")),
+        header: () => t("victim"),
     },
 ];
-
-// Update the fetch and data handling
-const {
-    data,
-    pending,
-    error: fetchError,
-    refresh
-} = useAsyncData(
-    fetchKey.value,
-    async () => {
-        if (!props.item?.type_id) {
-            console.log('No type_id available for fetching killmails');
-            return [];
-        }
-
-        try {
-            const response = await $fetch(`/api/items/${props.item.type_id}/killmails?limit=20`);
-            return response;
-        } catch (err) {
-            console.error("Error fetching killmail data:", err);
-            error.value = err;
-            return [];
-        }
-    },
-    {
-        watch: false, // Don't automatically watch
-        server: false,
-        immediate: false, // Changed to false, will trigger manually
-    },
-);
-
-// Set error from fetch error
-watch(fetchError, (newError) => {
-    if (newError) {
-        console.error("Fetch error in killmails:", newError);
-        error.value = newError;
-    }
-});
-
-// Update loading state whenever props.loading or pending changes
-watch(
-    [() => props.loading, pending],
-    ([propsLoading, asyncPending]) => {
-        isLoading.value = propsLoading || asyncPending;
-    },
-    { immediate: true },
-);
-
-// Watch for item changes and trigger the fetch
-watch(
-    () => props.item?.type_id,
-    (newTypeId) => {
-        if (newTypeId) {
-            refresh();
-        }
-    },
-    { immediate: true }
-);
-
-// Update kill list when data changes
-watch(
-    data,
-    (newData) => {
-        if (newData) {
-            console.log(`Updating killmails with ${newData.length} items`);
-            killmails.value = newData;
-        }
-    },
-    { immediate: true },
-);
-
-// Handle route changes and ensure data refreshes
-watch(
-    () => route.params.id,
-    () => {
-        isLoading.value = true;
-    },
-    { immediate: true },
-);
 
 /**
  * Gets localized string from an object containing translations
@@ -223,14 +97,6 @@ watch(
 function getLocalizedString(obj: any, locale: string): string {
     if (!obj) return "";
     return obj[locale] || obj.en || "";
-}
-
-/**
- * Format date for display in mobile view
- */
-function formatDate(dateString: string): string {
-    const date = moment(dateString);
-    return date.format('MM/DD HH:mm');
 }
 
 /**

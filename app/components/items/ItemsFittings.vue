@@ -3,15 +3,10 @@
         <h2 class="text-xl font-bold mb-4">{{ $t('topFittings') }}</h2>
 
         <!-- Loading state -->
-        <div v-if="isLoading" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div v-if="loading" class="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div v-for="i in 4" :key="i" class="p-4 rounded-md">
                 <USkeleton class="h-60" />
             </div>
-        </div>
-
-        <!-- Error state -->
-        <div v-else-if="error" class="p-4 text-red-500">
-            {{ $t('common.errorLoading') }}
         </div>
 
         <!-- Data loaded state -->
@@ -28,8 +23,6 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from "vue";
-
 const props = defineProps({
     item: {
         type: Object,
@@ -48,57 +41,26 @@ interface Fitting {
     svg: string;
 }
 
-// State
-const fittings = ref<Fitting[]>([]);
-const isLoading = ref(true);
-const error = ref(null);
-
-// Fetch fittings data when item is available
-const {
-    data,
-    pending,
-    error: fetchError,
-} = await useAsyncData(
-    `item-fittings-${props.item?.type_id}`,
+// Improved data fetching with proper caching
+const { data, pending, error: fetchError } = await useAsyncData(
+    () => `item-fittings-${props.item?.type_id}`,
     async () => {
-        if (!props.item?.type_id) return [];
-
-        try {
-            return await $fetch<Fitting[]>(`/api/fitting/${props.item.type_id}?limit=10`);
-        } catch (err) {
-            error.value = err;
+        if (!props.item?.type_id) {
             return [];
         }
+
+        return await $fetch<Fitting[]>(`/api/fitting/${props.item.type_id}?limit=10`);
     },
     {
-        watch: [() => props.item?.type_id],
+        lazy: true,
         server: false,
+        watch: [() => props.item?.type_id],
+        default: () => [],
     },
 );
 
-// Set error from fetch error
-watch(fetchError, (newError) => {
-    if (newError) {
-        error.value = newError;
-    }
-});
-
-// Update loading state whenever props.loading or pending changes
-watch([() => props.loading, pending], ([propsLoading, asyncPending]) => {
-    isLoading.value = propsLoading || asyncPending;
-});
-
-// Update fittings when data changes
-watch(
-    data,
-    (newData) => {
-        if (newData) {
-            fittings.value = newData;
-            isLoading.value = false;
-        }
-    },
-    { immediate: true },
-);
+// Reactive fittings data
+const fittings = computed(() => data.value || []);
 
 // Generate eveship.fit URL
 function generateEveShipFitUrl(killmailId: number, killmailHash: string): string {

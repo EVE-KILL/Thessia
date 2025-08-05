@@ -38,19 +38,21 @@
         <!-- Content Sections -->
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
             <div class="flex flex-col space-y-4">
-                <!-- Kill list component - now with proper padding -->
+                <!-- Kill list component - now with pre-fetched data -->
                 <div class="p-4">
-                    <ItemsKillList :item="item" :loading="loading" :key="`kills-${$route.params.id}`" />
+                    <ItemsKillList :item="item" :loading="loading" :killmails="killmails"
+                        :key="`kills-${$route.params.id}`" />
                 </div>
             </div>
             <div class="flex flex-col space-y-4">
-                <!-- Fittings component - now with proper padding -->
+                <!-- Fittings component - still uses its own API call since it's complex -->
                 <div class="p-4">
                     <ItemsFittings :item="item" :loading="loading" :key="`fittings-${$route.params.id}`" />
                 </div>
-                <!-- Price list component - now with proper padding -->
+                <!-- Price list component - now with pre-fetched data -->
                 <div class="p-4">
-                    <ItemsPriceList :item="item" :loading="loading" :key="`prices-${$route.params.id}`" />
+                    <ItemsPriceList :item="item" :loading="loading" :prices="prices"
+                        :key="`prices-${$route.params.id}`" />
                 </div>
             </div>
         </div>
@@ -64,30 +66,25 @@ const { t, locale } = useI18n();
 const currentLocale = computed(() => locale.value);
 const route = useRoute();
 const { id } = route.params;
-const loading = ref(true);
 
-// Generate a dynamic fetch key that changes with each route ID change
-const fetchKey = computed(() => `item-${id}-${Date.now()}`);
-
-// Fetch item data with improved caching strategy
-const { data: item, pending } = await useFetch(`/api/items/${id}`, {
-    initialCache: false, // Don't use initial cache
-    key: fetchKey.value, // Use dynamic key to ensure proper cache invalidation
-    watch: [() => route.params.id], // Watch for route parameter changes
-});
-
-// Set loading state based on pending status
-watch(pending, (newPending) => {
-    loading.value = newPending;
-});
-
-// Watch for route changes to reset state
-watch(
-    () => route.params.id,
-    (newId) => {
-        loading.value = true;
+// Fetch all item data in a single optimized request
+const { data: itemSummary, pending } = await useAsyncData(
+    () => `item-summary-${id}`,
+    () => $fetch(`/api/items/${id}?killmailLimit=20&regionId=10000002&priceDays=30`),
+    {
+        lazy: true,
+        server: false,
+        watch: [() => route.params.id],
     },
 );
+
+// Extract individual data pieces from the summary
+const item = computed(() => itemSummary.value?.item || null);
+const killmails = computed(() => itemSummary.value?.killmails || []);
+const prices = computed(() => itemSummary.value?.prices || []);
+
+// Simplified loading state
+const loading = computed(() => pending.value);
 
 // Update SEO metadata
 useSeoMeta({
