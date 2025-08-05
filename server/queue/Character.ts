@@ -81,7 +81,14 @@ async function queueUpdateCharacterHistory(characterId: number, priority = 1) {
 }
 
 async function updateCharacter(characterId: number) {
-    const characterData = await getCharacter(characterId, true);
+    cliLogger.info(`Starting character update for ${characterId} with cache bypass`);
+    
+    // Use bypass_cache=true to ensure we get fresh ESI data even if recently updated
+    const characterData = await getCharacter(characterId, true, true);
+
+    cliLogger.info(
+        `Character ${characterId} update completed - Corporation: ${characterData.corporation_id}, Alliance: ${characterData.alliance_id}`
+    );
 
     // Check if the corporation exists, if not queue it for update
     if (characterData.corporation_id && characterData.corporation_id > 0) {

@@ -33,7 +33,8 @@ async function fetchESIKillmail(
 
 async function getCharacter(
     character_id: number,
-    force_update = false
+    force_update = false,
+    bypass_cache = false
 ): Promise<Partial<ICharacter>> {
     let character: ICharacter | null = null;
     const now = new Date();
@@ -56,16 +57,19 @@ async function getCharacter(
         );
     }
 
-    character = await Characters.findOne(
-        {
-            character_id: character_id,
-            updatedAt: { $gte: daysAgo },
-        },
-        { _id: 0, __v: 0, createdAt: 0, updatedAt: 0 }
-    );
+    // Skip cache lookup if bypass_cache is true
+    if (!bypass_cache) {
+        character = await Characters.findOne(
+            {
+                character_id: character_id,
+                updatedAt: { $gte: daysAgo },
+            },
+            { _id: 0, __v: 0, createdAt: 0, updatedAt: 0 }
+        );
 
-    if (character) {
-        return character;
+        if (character) {
+            return character;
+        }
     }
 
     // Fetch character from external API if not found or outdated
@@ -74,6 +78,11 @@ async function getCharacter(
             process.env.ESI_URL || "https://esi.evetech.net/"
         }latest/characters/${character_id}/?datasource=tranquility`
     );
+
+    // Handle null data from ESI
+    if (!data) {
+        throw new Error(`ESI returned null data for character ${character_id}`);
+    }
 
     // Handle errors
     if (data.error) {
@@ -158,12 +167,16 @@ async function getCharacter(
         await queueUpdateCharacterHistory(character_id);
     }
 
-    // Save character to database
-    const characterModel = new Characters(data);
+    // Save character to database using upsert
     try {
-        await characterModel.save();
+        await Characters.updateOne(
+            { character_id: character_id },
+            { $set: data },
+            { upsert: true }
+        );
     } catch (error) {
-        await Characters.updateOne({ character_id: character_id }, data);
+        const errorMessage = error instanceof Error ? error.message : String(error);
+        throw new Error(`Failed to save character ${character_id}: ${errorMessage}`);
     }
 
     // Return character

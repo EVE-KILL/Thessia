@@ -28,6 +28,9 @@ async function processChunk(
         }
 
         if (affiliation.corporation_id !== originalData.corporation_id) {
+            cliLogger.info(
+                `Character ${characterId}: Corporation change detected - DB: ${originalData.corporation_id}, ESI: ${affiliation.corporation_id}`
+            );
             updates.push({
                 character_id: characterId,
                 corporation_id: affiliation.corporation_id,
@@ -38,6 +41,9 @@ async function processChunk(
         const originalAllianceId = originalData.alliance_id || 0;
         const newAllianceId = affiliation.alliance_id || 0;
         if (originalAllianceId !== newAllianceId) {
+            cliLogger.info(
+                `Character ${characterId}: Alliance change detected - DB: ${originalAllianceId}, ESI: ${newAllianceId}`
+            );
             updates.push({
                 character_id: characterId,
                 alliance_id: affiliation.alliance_id,
