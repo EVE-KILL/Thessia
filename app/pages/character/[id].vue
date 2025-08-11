@@ -1,6 +1,6 @@
 <template>
     <div class="min-h-screen">
-        <!-- Always show loading until both hydrated AND data is ready -->
+        <!-- Show loading while data is being fetched -->
         <div v-if="pending || !character" class="mx-auto p-4">
             <USkeleton class="h-64 rounded-lg mb-4" />
             <USkeleton class="h-8 w-64 mb-6" />
@@ -233,7 +233,7 @@
                                     </div>
                                     <div class="stat-row">
                                         <div class="stat-label text-gray-600 dark:text-gray-400">{{ $t('iskEfficiency')
-                                            }}</div>
+                                        }}</div>
                                         <div class="stat-value text-gray-900 dark:text-white">
                                             {{ calcIskEfficiency(validShortStats) }}%
                                         </div>
@@ -271,13 +271,13 @@
                                     </div>
                                     <div class="stat-row">
                                         <div class="stat-label text-gray-600 dark:text-gray-400">{{ $t('soloKillRatio')
-                                            }}</div>
+                                        }}</div>
                                         <div class="stat-value text-gray-900 dark:text-white">{{
                                             calcSoloKillRatio(validShortStats) }}%</div>
                                     </div>
                                     <div class="stat-row">
                                         <div class="stat-label text-gray-600 dark:text-gray-400">{{ $t('soloEfficiency')
-                                            }}
+                                        }}
                                         </div>
                                         <div class="stat-value text-gray-900 dark:text-white">{{
                                             calcSoloEfficiency(validShortStats) }}%</div>
@@ -301,13 +301,13 @@
                                     </div>
                                     <div class="stat-row">
                                         <div class="stat-label text-gray-600 dark:text-gray-400">{{ $t('npcLossRatio')
-                                            }}</div>
+                                        }}</div>
                                         <div class="stat-value text-gray-900 dark:text-white">{{
                                             calcNpcLossRatio(validShortStats) }}</div>
                                     </div>
                                     <div class="stat-row">
                                         <div class="stat-label text-gray-600 dark:text-gray-400">{{ $t('avgKillsPerDay')
-                                            }}
+                                        }}
                                         </div>
                                         <div class="stat-value text-gray-900 dark:text-white">{{
                                             calcAvgKillsPerDay(validShortStats, character.birthday) }}</div>
@@ -509,7 +509,7 @@ onMounted(() => {
 watch(() => route.hash, (newHash) => {
     // Only handle hash changes on client-side
     if (import.meta.server) return;
-    
+
     const hashValue = newHash.slice(1);
     if (hashValue && tabItems.some(item => item.id === hashValue)) {
         activeTabId.value = hashValue;
@@ -523,7 +523,7 @@ watch(() => route.hash, (newHash) => {
 watch(activeTabId, (newTabId, oldTabId) => {
     // Only handle URL updates on client-side
     if (import.meta.server) return;
-    
+
     // Only update the URL if:
     // 1. This isn't the initial value (oldTabId exists)
     // 2. There was an actual change (newTabId !== oldTabId)
@@ -636,8 +636,7 @@ const {
     refresh,
 } = useAsyncData(fetchKey.value, () =>
     $fetch<ICharacter | { error: string } | null>(`/api/characters/${id}`), {
-    lazy: true,
-    server: true,
+    server: true, // Fetch on server for SSR
     watch: [() => route.params.id],
 });
 
@@ -664,8 +663,7 @@ const {
     pending: shortStatsLoading,
 } = useAsyncData(`character-stats-${id}`, () =>
     $fetch<IShortStats | { error: string } | null>(`/api/stats/character_id/${id}?dataType=basic&days=0`), {
-    lazy: true,
-    server: true,
+    server: true, // Fetch on server for SSR
     watch: [() => route.params.id],
 });
 
