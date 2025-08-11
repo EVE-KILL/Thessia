@@ -62,70 +62,7 @@ marked.use({
     ],
 });
 
-/**
- * Extract URL from token based on marked version compatibility
- * @param token - Link token from marked parser
- * @returns Safe URL string
- */
-function extractUrl(token: any): string {
-    if (!token) return "";
 
-    // Handle different marked versions and token structures
-    if (typeof token === "string") return token;
-
-    // Safe property access with type checking
-    if (token && typeof token === "object") {
-        if (token.raw && typeof token.raw === "string") return token.raw;
-        if (token.href && typeof token.href === "string") return token.href;
-
-        // Handle Vue VNode-like structures that might be passed incorrectly
-        if (token.props && token.props.content) {
-            if (typeof token.props.content === "string") {
-                return token.props.content;
-            } else if (Array.isArray(token.props.content) && token.props.content.length > 0 && typeof token.props.content[0] === "string") {
-                // Handle cases where content might be an array of strings
-                return token.props.content[0];
-            } else if (token.props.content && typeof token.props.content === "object" && token.props.content.text && typeof token.props.content.text === "string") {
-                // Handle nested VNode structures
-                return token.props.content.text;
-            }
-        }
-    }
-
-    return "";
-}
-
-/**
- * Extract text from token based on marked version compatibility
- * @param token - Text token from marked parser
- * @returns Safe text string
- */
-function extractText(token: any): string {
-    if (!token) return "";
-
-    if (typeof token === "string") return token;
-
-    // Safe property access with type checking
-    if (token && typeof token === "object") {
-        if (token.text && typeof token.text === "string") return token.text;
-        if (token.raw && typeof token.raw === "string") return token.raw;
-
-        // Handle Vue VNode-like structures that might be passed incorrectly
-        if (token.props && token.props.content) {
-            if (typeof token.props.content === "string") {
-                return token.props.content;
-            } else if (Array.isArray(token.props.content) && token.props.content.length > 0 && typeof token.props.content[0] === "string") {
-                // Handle cases where content might be an array of strings
-                return token.props.content[0];
-            } else if (token.props.content && typeof token.props.content === "object" && token.props.content.text && typeof token.props.content.text === "string") {
-                // Handle nested VNode structures
-                return token.props.content.text;
-            }
-        }
-    }
-
-    return "";
-}
 
 /**
  * Detect media type from URL
@@ -137,20 +74,13 @@ function detectMediaType(url: string): {
     id?: string;
     matches?: RegExpMatchArray | null;
 } {
-    // Input validation with enhanced type checking
-    if (!url || typeof url !== "string" || url.trim() === "") {
+    // Simple input validation
+    if (!url || typeof url !== "string" || !url.trim()) {
         return { type: "unknown" };
     }
 
-    // Additional safety check for non-string values that might have been passed
-    let trimmedUrl: string;
-    try {
-        trimmedUrl = String(url).trim();
-    } catch (error) {
-        console.error('Error converting URL to string:', url, error);
-        return { type: "unknown" };
-    }
-
+    const trimmedUrl = url.trim();
+    
     // Ensure the URL starts with http/https for security
     if (!trimmedUrl.startsWith("http://") && !trimmedUrl.startsWith("https://")) {
         return { type: "unknown" };
@@ -419,116 +349,72 @@ function renderVideo(url: string): string {
 // Create the custom renderer
 const renderer = new marked.Renderer();
 
-// Custom link renderer to handle both older and newer marked versions
+// Simplified link renderer
 renderer.link = ({ href, title, tokens }: any): string => {
     try {
-        // Safe type checking for href parameter with comprehensive validation
-        let url = "";
-
-        if (typeof href === "string") {
-            url = href;
-        } else if (href && typeof href === "object") {
-            // Handle different object structures that might contain the URL
-            if (href.href && typeof href.href === "string") {
-                url = href.href;
-            } else if (href.raw && typeof href.raw === "string") {
-                url = href.raw;
-            } else if (href.props && typeof href.props === "object" && href.props.content) {
-                // Handle Vue VNode-like structures that might have been passed incorrectly during SSR
-                // Additional safety check to ensure we only use string values
-                if (typeof href.props.content === "string") {
-                    url = href.props.content;
-                } else if (Array.isArray(href.props.content) && href.props.content.length > 0 && typeof href.props.content[0] === "string") {
-                    // Handle cases where content might be an array of strings
-                    url = href.props.content[0];
-                } else if (href.props.content && typeof href.props.content === "object" && href.props.content.text && typeof href.props.content.text === "string") {
-                    // Handle nested VNode structures
-                    url = href.props.content.text;
-                }
-            }
-        }
-
-        // Fallback to extractUrl function if url is still empty
-        if (!url) {
-            url = extractUrl(href);
-        }
-
-        // Safe extraction of link text and title
+        // Simple and robust href extraction
+        const url = typeof href === "string" ? href.trim() : "";
+        
+        // Extract link text safely
         let linkText = "";
-        try {
-            linkText = extractText(tokens?.[0] || href) || "";
-        } catch (textError) {
-            linkText = "link";
+        if (tokens && tokens[0] && typeof tokens[0].text === "string") {
+            linkText = tokens[0].text;
+        } else if (tokens && tokens[0] && typeof tokens[0].raw === "string") {
+            linkText = tokens[0].raw;
+        } else {
+            linkText = url || "link";
+        }
+
+        // Basic validation
+        if (!url || !url.startsWith("http")) {
+            return `<span>${linkText}</span>`;
         }
 
         const linkTitle = (title && typeof title === "string") ? title : "";
 
-        // If URL is not valid, return a basic span or link
-        if (!url || typeof url !== "string" || url.trim() === "") {
-            return `<span>${linkText || "link"}</span>`;
-        }
-
-        // Additional safety: ensure URL is actually a string before proceeding
-        let safeUrl: string;
+        // Detect media type and render accordingly
         try {
-            safeUrl = String(url).trim();
-            if (!safeUrl) {
-                return `<span>${linkText || "link"}</span>`;
+            const result = detectMediaType(url);
+            const { type, id, matches } = result;
+
+            switch (type) {
+                case "iframe":
+                    if (url.includes("youtube.com") || url.includes("youtu.be")) {
+                        return id ? renderYouTube(id) : renderImage(url, linkText);
+                    }
+                    if (url.includes("tenor.com") && id) {
+                        return renderTenor(id, url);
+                    }
+                    if (url.includes("imgur.com") && !url.includes("i.imgur.com")) {
+                        return renderImgurGallery(url);
+                    }
+                    break;
+
+                case "video":
+                    return renderVideo(url);
+
+                case "image":
+                    if (url.includes("imgur.com") && matches) {
+                        const imgurId = matches[2] || '';
+                        const extension = matches[3] || ".jpg";
+                        return renderImgurDirect(imgurId, extension, url);
+                    }
+                    if (url.includes("giphy.com") || url.includes("media.giphy.com")) {
+                        return renderGiphy(url, id);
+                    }
+                    return renderImage(url, linkText);
             }
-        } catch (error) {
-            console.error('Error converting URL to string in renderer:', url, error);
-            return `<span>${linkText || "link"}</span>`;
+
+            // Default: regular link
+            return `<a href="${url}" title="${linkTitle}" target="_blank" rel="noopener noreferrer">${linkText}</a>`;
+
+        } catch (mediaError) {
+            // If media detection fails, just return a regular link
+            return `<a href="${url}" title="${linkTitle}" target="_blank" rel="noopener noreferrer">${linkText}</a>`;
         }
-
-        // Detect media type and get appropriate renderer - with error handling
-        let type: MediaType = "unknown";
-        let id: string | undefined = undefined;
-        let matches: RegExpMatchArray | null = null;
-
-        try {
-            const result = detectMediaType(safeUrl);
-            type = result.type;
-            id = result.id;
-            matches = result.matches || null;
-        } catch (error) {
-            console.error('Error detecting media type for URL:', safeUrl, error);
-            // Fall back to regular link
-            return `<a href="${safeUrl}" title="${linkTitle}" target="_blank" rel="noopener noreferrer">${linkText}</a>`;
-        }
-
-        switch (type) {
-            case "iframe":
-                if (safeUrl.includes("youtube.com") || safeUrl.includes("youtu.be")) {
-                    return id ? renderYouTube(id) : renderImage(safeUrl, linkText);
-                }
-                if (safeUrl.includes("tenor.com") && id) {
-                    return renderTenor(id, safeUrl);
-                }
-                if (safeUrl.includes("imgur.com") && !safeUrl.includes("i.imgur.com")) {
-                    return renderImgurGallery(safeUrl);
-                }
-                break;
-
-            case "video":
-                return renderVideo(safeUrl);
-
-            case "image":
-                if (safeUrl.includes("imgur.com") && matches) {
-                    const imgurId = matches[2] || '';
-                    const extension = matches[3] || ".jpg";
-                    return renderImgurDirect(imgurId, extension, safeUrl);
-                }
-                if (safeUrl.includes("giphy.com") || safeUrl.includes("media.giphy.com")) {
-                    return renderGiphy(safeUrl, id);
-                }
-                return renderImage(safeUrl, linkText);
-        }
-
-        // Default: regular link
-        return `<a href="${safeUrl}" title="${linkTitle}" target="_blank" rel="noopener noreferrer">${linkText}</a>`;
 
     } catch (error) {
-        // Final safety net - return a safe fallback for any unexpected errors
+        // Final fallback for any unexpected errors
         console.error('Error in link renderer:', error);
         return `<span>link</span>`;
     }
