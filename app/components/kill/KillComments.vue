@@ -56,7 +56,9 @@
                     </div>
                 </div>
 
-                <Comment :comment="comment.comment" />
+                <ClientOnly>
+                    <Comment :comment="comment.comment" />
+                </ClientOnly>
             </div>
 
             <Transition name="modal-fade">

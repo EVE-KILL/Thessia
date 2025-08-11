@@ -244,7 +244,9 @@ onBeforeUnmount(() => {
                 background="default" hover bordered>
                 <template #cell-comment="{ item }">
                     <div class="comment-content">
-                        <Comment :comment="(item as Comment).comment" />
+                        <ClientOnly>
+                            <Comment :comment="(item as Comment).comment" />
+                        </ClientOnly>
                         <div v-if="(item as Comment).createdAt !== (item as Comment).updatedAt"
                             class="mt-1 text-xs text-gray-500 dark:text-gray-400">
                             <Icon name="lucide:edit" class="h-3 w-3 inline" />

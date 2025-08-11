@@ -222,7 +222,9 @@
 
                         <!-- Comment Content -->
                         <div class="flex-grow mb-4">
-                            <Comment :comment="comment.comment" />
+                            <ClientOnly>
+                                <Comment :comment="comment.comment" />
+                            </ClientOnly>
                         </div>
 
                         <!-- Comment Actions -->

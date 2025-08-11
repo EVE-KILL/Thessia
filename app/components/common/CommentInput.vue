@@ -110,8 +110,10 @@
             <!-- Preview tab -->
             <div v-show="activeTab === 'preview'"
                 class="preview-container border rounded-md p-3 mb-3 prose prose-sm dark:prose-invert bg-light-dark-input">
-                <Comment v-if="modelValue.trim()" :comment="modelValue" />
-                <div v-else class="text-light-dark-secondary text-sm italic">{{ $t('preview_empty') }}</div>
+                <ClientOnly>
+                    <Comment v-if="modelValue.trim()" :comment="modelValue" />
+                    <div v-else class="text-light-dark-secondary text-sm italic">{{ $t('preview_empty') }}</div>
+                </ClientOnly>
             </div>
         </div>
 
