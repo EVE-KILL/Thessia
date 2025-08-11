@@ -10,7 +10,7 @@
         </div>
 
         <!-- Main content - only show when data is ready -->
-        <div v-else-if="corporation && isClient" class="mx-auto p-4 text-gray-900 dark:text-white">
+        <div v-else-if="corporation" class="mx-auto p-4 text-gray-900 dark:text-white">
             <!-- Corporation Profile Header -->
             <div
                 class="corporation-header rounded-lg overflow-hidden mb-6 bg-gray-100 bg-opacity-90 dark:bg-gray-900 dark:bg-opacity-30 border border-gray-300 dark:border-gray-800">
@@ -395,9 +395,6 @@ const router = useRouter();
 const { id } = route.params;
 const { generateCorporationStructuredData } = useStructuredData();
 
-// For hydration safety
-const isClient = ref(false);
-
 const tabItems = [
     {
         id: "dashboard",
@@ -465,8 +462,6 @@ const activeTabId = ref<string>(tabItems[0]?.id || '');
 
 // Initialize from hash on client-side after hydration
 onMounted(() => {
-    isClient.value = true;
-
     nextTick(() => {
         const currentHash = route.hash.slice(1);
         console.log('onMounted - currentHash:', currentHash);
@@ -485,8 +480,9 @@ onMounted(() => {
 
 // Watch for changes in route.hash to update activeTabId
 watch(() => route.hash, (newHash) => {
-    if (!isClient.value) return; // Don't run until hydrated
-
+    // Only handle hash changes on client-side
+    if (import.meta.server) return;
+    
     const hashValue = newHash.slice(1);
     if (hashValue && tabItems.some(item => item.id === hashValue)) {
         activeTabId.value = hashValue;
@@ -498,8 +494,9 @@ watch(() => route.hash, (newHash) => {
 
 // Update URL only when activeTabId changes due to user interaction
 watch(activeTabId, (newTabId, oldTabId) => {
-    if (!isClient.value) return; // Don't run until hydrated
-
+    // Only handle URL updates on client-side
+    if (import.meta.server) return;
+    
     // Only update the URL if:
     // 1. This isn't the initial value (oldTabId exists)
     // 2. There was an actual change (newTabId !== oldTabId)
@@ -627,8 +624,6 @@ const validShortStats = computed(() => {
 
 // Generate structured data when corporation is loaded
 watch(corporation, (newcorporation) => {
-    if (!isClient.value) return; // Don't run until hydrated
-
     if (newcorporation) {
         try {
             const corporationUrl = `https://eve-kill.com${route.fullPath}`;
