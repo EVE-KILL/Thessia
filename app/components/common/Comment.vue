@@ -359,8 +359,27 @@ const renderer = new marked.Renderer();
 // Simplified link renderer
 renderer.link = ({ href, title, tokens }: any): string => {
     try {
-        // Simple and robust href extraction
-        const url = typeof href === "string" ? href.trim() : "";
+        // Robust href extraction - only proceed if we get a valid string
+        let url = "";
+
+        if (typeof href === "string") {
+            url = href.trim();
+        } else if (href && typeof href === "object") {
+            // Try to extract string from object - but be very defensive
+            if (typeof href.href === "string") {
+                url = href.href.trim();
+            } else if (href.props && typeof href.props.content === "string") {
+                url = href.props.content.trim();
+            } else if (typeof href.text === "string") {
+                url = href.text.trim();
+            }
+            // If none of these work, url stays ""
+        }
+
+        // If we don't have a valid string URL, bail out early
+        if (!url || typeof url !== "string") {
+            return `<span>link</span>`;
+        }
 
         // Extract link text safely
         let linkText = "";
@@ -372,8 +391,8 @@ renderer.link = ({ href, title, tokens }: any): string => {
             linkText = url || "link";
         }
 
-        // Basic validation
-        if (!url || typeof url !== "string" || !url.startsWith("http")) {
+        // Only call startsWith if we're absolutely sure url is a string
+        if (typeof url !== "string" || !url.startsWith("http")) {
             return `<span>${linkText}</span>`;
         }
 
