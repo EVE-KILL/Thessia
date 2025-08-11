@@ -79,8 +79,16 @@ function extractUrl(token: any): string {
         if (token.href && typeof token.href === "string") return token.href;
 
         // Handle Vue VNode-like structures that might be passed incorrectly
-        if (token.props && token.props.content && typeof token.props.content === "string") {
-            return token.props.content;
+        if (token.props && token.props.content) {
+            if (typeof token.props.content === "string") {
+                return token.props.content;
+            } else if (Array.isArray(token.props.content) && token.props.content.length > 0 && typeof token.props.content[0] === "string") {
+                // Handle cases where content might be an array of strings
+                return token.props.content[0];
+            } else if (token.props.content && typeof token.props.content === "object" && token.props.content.text && typeof token.props.content.text === "string") {
+                // Handle nested VNode structures
+                return token.props.content.text;
+            }
         }
     }
 
@@ -103,8 +111,16 @@ function extractText(token: any): string {
         if (token.raw && typeof token.raw === "string") return token.raw;
 
         // Handle Vue VNode-like structures that might be passed incorrectly
-        if (token.props && token.props.content && typeof token.props.content === "string") {
-            return token.props.content;
+        if (token.props && token.props.content) {
+            if (typeof token.props.content === "string") {
+                return token.props.content;
+            } else if (Array.isArray(token.props.content) && token.props.content.length > 0 && typeof token.props.content[0] === "string") {
+                // Handle cases where content might be an array of strings
+                return token.props.content[0];
+            } else if (token.props.content && typeof token.props.content === "object" && token.props.content.text && typeof token.props.content.text === "string") {
+                // Handle nested VNode structures
+                return token.props.content.text;
+            }
         }
     }
 
@@ -121,13 +137,21 @@ function detectMediaType(url: string): {
     id?: string;
     matches?: RegExpMatchArray | null;
 } {
-    // Input validation
+    // Input validation with enhanced type checking
     if (!url || typeof url !== "string" || url.trim() === "") {
         return { type: "unknown" };
     }
 
+    // Additional safety check for non-string values that might have been passed
+    let trimmedUrl: string;
+    try {
+        trimmedUrl = String(url).trim();
+    } catch (error) {
+        console.error('Error converting URL to string:', url, error);
+        return { type: "unknown" };
+    }
+
     // Ensure the URL starts with http/https for security
-    const trimmedUrl = url.trim();
     if (!trimmedUrl.startsWith("http://") && !trimmedUrl.startsWith("https://")) {
         return { type: "unknown" };
     }
@@ -409,9 +433,18 @@ renderer.link = ({ href, title, tokens }: any): string => {
                 url = href.href;
             } else if (href.raw && typeof href.raw === "string") {
                 url = href.raw;
-            } else if (href.props && typeof href.props === "object" && href.props.content && typeof href.props.content === "string") {
+            } else if (href.props && typeof href.props === "object" && href.props.content) {
                 // Handle Vue VNode-like structures that might have been passed incorrectly during SSR
-                url = href.props.content;
+                // Additional safety check to ensure we only use string values
+                if (typeof href.props.content === "string") {
+                    url = href.props.content;
+                } else if (Array.isArray(href.props.content) && href.props.content.length > 0 && typeof href.props.content[0] === "string") {
+                    // Handle cases where content might be an array of strings
+                    url = href.props.content[0];
+                } else if (href.props.content && typeof href.props.content === "object" && href.props.content.text && typeof href.props.content.text === "string") {
+                    // Handle nested VNode structures
+                    url = href.props.content.text;
+                }
             }
         }
 
@@ -435,52 +468,64 @@ renderer.link = ({ href, title, tokens }: any): string => {
             return `<span>${linkText || "link"}</span>`;
         }
 
+        // Additional safety: ensure URL is actually a string before proceeding
+        let safeUrl: string;
+        try {
+            safeUrl = String(url).trim();
+            if (!safeUrl) {
+                return `<span>${linkText || "link"}</span>`;
+            }
+        } catch (error) {
+            console.error('Error converting URL to string in renderer:', url, error);
+            return `<span>${linkText || "link"}</span>`;
+        }
+
         // Detect media type and get appropriate renderer - with error handling
         let type: MediaType = "unknown";
         let id: string | undefined = undefined;
         let matches: RegExpMatchArray | null = null;
 
         try {
-            const result = detectMediaType(url);
+            const result = detectMediaType(safeUrl);
             type = result.type;
             id = result.id;
             matches = result.matches || null;
         } catch (error) {
-            console.error('Error detecting media type for URL:', url, error);
+            console.error('Error detecting media type for URL:', safeUrl, error);
             // Fall back to regular link
-            return `<a href="${url}" title="${linkTitle}" target="_blank" rel="noopener noreferrer">${linkText}</a>`;
+            return `<a href="${safeUrl}" title="${linkTitle}" target="_blank" rel="noopener noreferrer">${linkText}</a>`;
         }
 
         switch (type) {
             case "iframe":
-                if (url.includes("youtube.com") || url.includes("youtu.be")) {
-                    return id ? renderYouTube(id) : renderImage(url, linkText);
+                if (safeUrl.includes("youtube.com") || safeUrl.includes("youtu.be")) {
+                    return id ? renderYouTube(id) : renderImage(safeUrl, linkText);
                 }
-                if (url.includes("tenor.com") && id) {
-                    return renderTenor(id, url);
+                if (safeUrl.includes("tenor.com") && id) {
+                    return renderTenor(id, safeUrl);
                 }
-                if (url.includes("imgur.com") && !url.includes("i.imgur.com")) {
-                    return renderImgurGallery(url);
+                if (safeUrl.includes("imgur.com") && !safeUrl.includes("i.imgur.com")) {
+                    return renderImgurGallery(safeUrl);
                 }
                 break;
 
             case "video":
-                return renderVideo(url);
+                return renderVideo(safeUrl);
 
             case "image":
-                if (url.includes("imgur.com") && matches) {
+                if (safeUrl.includes("imgur.com") && matches) {
                     const imgurId = matches[2] || '';
                     const extension = matches[3] || ".jpg";
-                    return renderImgurDirect(imgurId, extension, url);
+                    return renderImgurDirect(imgurId, extension, safeUrl);
                 }
-                if (url.includes("giphy.com") || url.includes("media.giphy.com")) {
-                    return renderGiphy(url, id);
+                if (safeUrl.includes("giphy.com") || safeUrl.includes("media.giphy.com")) {
+                    return renderGiphy(safeUrl, id);
                 }
-                return renderImage(url, linkText);
+                return renderImage(safeUrl, linkText);
         }
 
         // Default: regular link
-        return `<a href="${url}" title="${linkTitle}" target="_blank" rel="noopener noreferrer">${linkText}</a>`;
+        return `<a href="${safeUrl}" title="${linkTitle}" target="_blank" rel="noopener noreferrer">${linkText}</a>`;
 
     } catch (error) {
         // Final safety net - return a safe fallback for any unexpected errors
