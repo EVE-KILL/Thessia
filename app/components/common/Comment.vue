@@ -1,5 +1,5 @@
 <template>
-    <div class="markdown-content prose prose-sm dark:prose-invert max-w-none" v-html="renderMarkdown(comment)">
+    <div class="markdown-content prose prose-sm dark:prose-invert max-w-none" v-html="renderMarkdown(safeComment)">
     </div>
 </template>
 
@@ -19,6 +19,11 @@ const props = defineProps({
     }
 });
 
+// Ensure comment is always a string
+const safeComment = computed(() => {
+    return typeof props.comment === 'string' ? props.comment : String(props.comment || '');
+});
+
 // Load emoji manifest when component mounts
 onMounted(() => {
     loadEmojiManifest();
@@ -36,9 +41,11 @@ marked.use({
             name: "autolink",
             level: "inline",
             start(src) {
+                if (typeof src !== 'string') return -1;
                 return src.indexOf("http");
             },
             tokenizer(src) {
+                if (typeof src !== 'string') return undefined;
                 const urlRegex = /^(https?:\/\/[^\s<]+[^<.,:;"')\]\s])/;
                 const match = src.match(urlRegex);
                 if (match) {
@@ -366,7 +373,7 @@ renderer.link = ({ href, title, tokens }: any): string => {
         }
 
         // Basic validation
-        if (!url || !url.startsWith("http")) {
+        if (!url || typeof url !== "string" || !url.startsWith("http")) {
             return `<span>${linkText}</span>`;
         }
 

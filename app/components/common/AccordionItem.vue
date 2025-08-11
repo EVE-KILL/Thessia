@@ -7,6 +7,11 @@ const props = defineProps<{
     itemKey?: string;
 }>();
 
+// Ensure content is always a string
+const safeContent = computed(() => {
+    return typeof props.content === 'string' ? props.content : String(props.content || '');
+});
+
 const isExpanded = ref(false);
 const route = useRoute();
 
@@ -61,7 +66,7 @@ const toggle = () => {
         </button>
 
         <div v-show="isExpanded" class="pb-5 px-2 text-gray-300 space-y-4">
-            <div class="pt-2 pl-8" v-html="content"></div>
+            <div class="pt-2 pl-8" v-html="safeContent"></div>
         </div>
     </div>
 </template>
