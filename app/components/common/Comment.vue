@@ -80,7 +80,7 @@ function detectMediaType(url: string): {
     }
 
     const trimmedUrl = url.trim();
-    
+
     // Ensure the URL starts with http/https for security
     if (!trimmedUrl.startsWith("http://") && !trimmedUrl.startsWith("https://")) {
         return { type: "unknown" };
@@ -354,7 +354,7 @@ renderer.link = ({ href, title, tokens }: any): string => {
     try {
         // Simple and robust href extraction
         const url = typeof href === "string" ? href.trim() : "";
-        
+
         // Extract link text safely
         let linkText = "";
         if (tokens && tokens[0] && typeof tokens[0].text === "string") {

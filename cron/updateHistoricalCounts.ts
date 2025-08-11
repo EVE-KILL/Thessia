@@ -40,7 +40,11 @@ export default {
             },
         ]).cursor();
 
-        const alliances = [];
+        const alliances: Array<{
+            entityId: number;
+            entityType: "alliance";
+            memberCount: number;
+        }> = [];
         for (
             let alliance = await allianceAggregationCursor.next();
             alliance != null;
@@ -54,6 +58,16 @@ export default {
         }
 
         cliLogger.info(`Found ${alliances.length} alliances to process`);
+
+        // Log some sample alliance counts for debugging
+        if (alliances.length > 0) {
+            const samples = alliances.slice(0, 3);
+            samples.forEach((alliance) => {
+                cliLogger.info(
+                    `  Sample alliance ${alliance.entityId}: ${alliance.memberCount} members`
+                );
+            });
+        }
 
         // Collect all corporations that need processing
         cliLogger.info("Collecting corporations for processing...");
@@ -75,7 +89,11 @@ export default {
             },
         ]).cursor();
 
-        const corporations = [];
+        const corporations: Array<{
+            entityId: number;
+            entityType: "corporation";
+            memberCount: number;
+        }> = [];
         for (
             let corporation = await corporationAggregationCursor.next();
             corporation != null;
@@ -89,6 +107,16 @@ export default {
         }
 
         cliLogger.info(`Found ${corporations.length} corporations to process`);
+
+        // Log some sample corporation counts for debugging
+        if (corporations.length > 0) {
+            const samples = corporations.slice(0, 3);
+            samples.forEach((corp) => {
+                cliLogger.info(
+                    `  Sample corporation ${corp.entityId}: ${corp.memberCount} members`
+                );
+            });
+        }
 
         // Queue all entities in bulk
         const allEntities = [...alliances, ...corporations];
