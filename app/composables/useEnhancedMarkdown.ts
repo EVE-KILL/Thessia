@@ -14,8 +14,16 @@ import "prismjs/components/prism-yaml";
 /**
  * Enhanced markdown renderer with PrismJS syntax highlighting
  * Designed for documentation and comment rendering
+ * CLIENT-SIDE ONLY - Do not use on server
  */
 export const useEnhancedMarkdown = () => {
+    // Prevent execution on server-side
+    if (import.meta.server) {
+        return {
+            renderMarkdown: () => "",
+            renderSimpleMarkdown: () => "",
+        };
+    }
     /**
      * Initialize the markdown renderer with plugins
      */

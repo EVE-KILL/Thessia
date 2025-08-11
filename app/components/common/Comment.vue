@@ -1,5 +1,5 @@
 <template>
-    <div class="markdown-content prose prose-sm dark:prose-invert max-w-none" v-html="renderMarkdown(safeComment)">
+    <div class="markdown-content prose prose-sm dark:prose-invert max-w-none" v-html="finalRenderMarkdown(safeComment)">
     </div>
 </template>
 
@@ -29,8 +29,12 @@ onMounted(() => {
     loadEmojiManifest();
 });
 
-// Markdown rendering - exact copy from KillComments
-type MediaType = "image" | "video" | "gif" | "iframe" | "unknown";
+// SERVER-SIDE PROTECTION: Only set up markdown processing on client-side
+let clientRenderMarkdown: (text: string) => string;
+
+if (!import.meta.server) {
+    // Markdown rendering - exact copy from KillComments
+    type MediaType = "image" | "video" | "gif" | "iframe" | "unknown";
 
 /**
  * Add autolink extension to handle raw URLs in text
@@ -491,6 +495,17 @@ const renderMarkdown = (text: string) => {
         return DOMPurify.sanitize(text || '');
     }
 };
+
+// Assign to the variable that will be exported
+clientRenderMarkdown = renderMarkdown;
+
+} else {
+    // Server-side fallback
+    clientRenderMarkdown = (text: string) => DOMPurify.sanitize(text || '');
+}
+
+// Export the final function
+const finalRenderMarkdown = clientRenderMarkdown;
 </script>
 
 <style>
