@@ -16,7 +16,7 @@ export default {
                 await processAchievement(characterId);
             },
             {
-                concurrency: 2,
+                concurrency: 1,
             }
         )
             .on("failed", (job: Job | undefined, err: Error) => {

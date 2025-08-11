@@ -93,7 +93,6 @@ export default {
         // We can only fetch upwards of 1000 characters at a time, so we have to spluit the characters into chunks
         const characterChunks = _.chunk(characters, 1000);
         let queuedCount = 0;
-
         // For each character chunk we fetch the character data
         for (const chunk of characterChunks) {
             let count = 0;

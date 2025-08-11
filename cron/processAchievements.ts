@@ -7,8 +7,6 @@ export default {
     description: "Queue achievement processing for characters that need it",
     schedule: "0 * * * *", // Run every hour at minute 0
     run: async () => {
-        return; // Disable the cronjob for now
-        // @TODO Fix this once the achivement processing is actually mostly done and the queue is finally going down
         cliLogger.info("Processing achievements that need processing...");
 
         try {
