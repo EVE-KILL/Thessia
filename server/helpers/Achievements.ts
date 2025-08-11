@@ -1674,6 +1674,10 @@ export const achievements: IAchievement[] = [
                     "attackers.character_id": characterId,
                     "attackers.final_blow": true,
                 })
+                    .select({
+                        killmail_id: 1,
+                        kill_time: 1,
+                    })
                     .lean()
                     .sort({ kill_time: 1 });
 
@@ -1682,10 +1686,10 @@ export const achievements: IAchievement[] = [
                 // Sliding window approach to find 10 kills within 10 minutes
                 for (let i = 0; i <= soloKills.length - 10; i++) {
                     const firstKill = new Date(
-                        (soloKills[i] as any).kill_time
+                        soloKills[i].kill_time
                     ).getTime();
                     const tenthKill = new Date(
-                        (soloKills[i + 9] as any).kill_time
+                        soloKills[i + 9].kill_time
                     ).getTime();
 
                     if (tenthKill - firstKill <= tenMinutes) {
@@ -1733,6 +1737,12 @@ export const achievements: IAchievement[] = [
                             "attackers.character_id": characterId,
                             "attackers.final_blow": true,
                             system_security: { $lte: 0.0 }, // Corrected field name for nullsec
+                        },
+                    },
+                    {
+                        $project: {
+                            kill_time: 1,
+                            attackers: 1,
                         },
                     },
                     {
@@ -1834,7 +1844,17 @@ export const achievements: IAchievement[] = [
                     "attackers.character_id": characterId,
                     "attackers.final_blow": true,
                     "victim.ship_group_id": { $in: capitalShipGroups },
-                }).lean();
+                })
+                    .select({
+                        killmail_id: 1,
+                        kill_time: 1,
+                        "victim.ship_name": 1,
+                        "attackers.character_id": 1,
+                        "attackers.final_blow": 1,
+                        "attackers.ship_group_id": 1,
+                        "attackers.ship_name": 1,
+                    })
+                    .lean();
 
                 for (const kill of capitalKills) {
                     const km = kill as any;
@@ -1897,18 +1917,23 @@ export const achievements: IAchievement[] = [
                         },
                     ],
                 })
+                    .select({
+                        killmail_id: 1,
+                        kill_time: 1,
+                        "victim.character_id": 1,
+                        "attackers.character_id": 1,
+                        "attackers.final_blow": 1,
+                    })
                     .lean()
                     .sort({ kill_time: 1 });
 
                 for (const event of allEvents) {
-                    const km = event as any;
-
-                    if (km.victim.character_id === characterId) {
+                    if (event.victim?.character_id === characterId) {
                         // We died, reset kill streak
                         currentKillStreak = 0;
                     } else {
                         // Check if we got the kill
-                        const gotKill = km.attackers.some(
+                        const gotKill = event.attackers?.some(
                             (attacker: any) =>
                                 attacker.character_id === characterId &&
                                 attacker.final_blow === true
