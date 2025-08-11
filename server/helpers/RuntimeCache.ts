@@ -28,6 +28,7 @@ export const CACHE_NAMESPACES = {
     CHARACTER: "character",
     CORPORATION: "corporation",
     ALLIANCE: "alliance",
+    SHIP_TYPE_LISTS: "shipTypeLists",
 };
 
 // Primary cache using Maps or LRU for fast access
@@ -39,6 +40,9 @@ export const regionsCache = new Map<number, IRegion>();
 export const constellationsCache = new Map<number, IConstellation>();
 export const solarSystemsCache = new Map<number, ISolarSystem>();
 export const customPriceCache = new Map<number, ICustomPrice>();
+
+// Ship type lists cache for killlist queries
+export const shipTypeListsCache = new Map<string, number[]>();
 
 // For the LRU caches for dynamic data
 export const priceCache = new LRUCache<string, number>({
@@ -332,6 +336,54 @@ export async function getCacheSize(namespace: string): Promise<number> {
     } catch (err) {
         cliLogger.error(`Failed to get cache size for ${namespace}:`, err);
         return 0;
+    }
+}
+
+/**
+ * Get ship type IDs for killlist queries (T1, T2, T3, faction)
+ */
+export async function getShipTypeList(type: string): Promise<number[]> {
+    // Check local cache first
+    if (shipTypeListsCache.has(type)) {
+        return shipTypeListsCache.get(type)!;
+    }
+
+    // Define queries for each ship type
+    const shipTypeQueries: Record<string, any> = {
+        t1: { "dogma_attributes.422.value": 1, category_id: 6 },
+        t2: { "dogma_attributes.422.value": 2, category_id: 6 },
+        t3: { "dogma_attributes.422.value": 3, category_id: 6 },
+        faction: { "dogma_attributes.1692.value": 4, category_id: 6 },
+    };
+
+    const query = shipTypeQueries[type];
+    if (!query) {
+        return [];
+    }
+
+    try {
+        // Try Redis cache
+        const redisKey = redisCacheKey(CACHE_NAMESPACES.SHIP_TYPE_LISTS, type);
+        const cachedData = await getRedisClient().get(redisKey);
+        
+        if (cachedData) {
+            const typeIds = JSON.parse(cachedData);
+            shipTypeListsCache.set(type, typeIds);
+            return typeIds;
+        }
+
+        // Fetch from database
+        const shipTypes = await InvTypes.find(query, { type_id: 1 }).lean();
+        const typeIds = shipTypes.map((ship: any) => ship.type_id);
+
+        // Cache in both local and Redis (TTL: 24 hours since this data rarely changes)
+        shipTypeListsCache.set(type, typeIds);
+        await getRedisClient().set(redisKey, JSON.stringify(typeIds), "EX", 86400);
+
+        return typeIds;
+    } catch (error) {
+        cliLogger.error(`Failed to get ship type list for ${type}:`, error);
+        return [];
     }
 }
 

@@ -54,6 +54,16 @@ const invTypesSchema = new Schema<IInvTypeDocument>(
 
 invTypesSchema.index({ group_id: 1 }, { sparse: true });
 
+// Indexes for ship type lookups in killlist queries
+invTypesSchema.index(
+    { "dogma_attributes.422.value": 1, category_id: 1 },
+    { sparse: true }
+); // T1, T2, T3 ships
+invTypesSchema.index(
+    { "dogma_attributes.1692.value": 1, category_id: 1 },
+    { sparse: true }
+); // Faction, Officer ships
+
 export const InvTypes: Model<IInvTypeDocument> = model<IInvTypeDocument>(
     "invTypes",
     invTypesSchema,

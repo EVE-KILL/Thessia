@@ -55,7 +55,7 @@ const killlistQueries: Record<string, QueryConfig> = {
         },
         sort: { kill_time: -1 },
         projection: { _id: 0, items: 0 },
-        hint: "victim.ship_group_id_big_kill_time_-1",
+        hint: "victim_ship_group_id_kill_time",
     },
     solo: {
         find: { is_solo: true },
@@ -89,48 +89,43 @@ const killlistQueries: Record<string, QueryConfig> = {
         },
         sort: { kill_time: -1 },
         projection: { _id: 0, items: 0 },
-        hint: "victim.ship_group_id_citadel_kill_time_-1",
+        hint: "victim_ship_group_id_kill_time",
     },
     t1: {
-        find: {
-            "victim.ship_group_id": {
-                $in: [419, 27, 29, 547, 26, 420, 25, 28, 941, 463, 237, 31],
-            },
-        },
+        find: {}, // Will be populated dynamically with ship type IDs
         sort: { kill_time: -1 },
         projection: { _id: 0, items: 0 },
-        hint: "victim.ship_group_id_t1_kill_time_-1",
+        hint: "victim_ship_id_kill_time",
     },
     t2: {
-        find: {
-            "victim.ship_group_id": {
-                $in: [
-                    324, 898, 906, 540, 830, 893, 543, 541, 833, 358, 894, 831,
-                    902, 832, 900, 834, 380,
-                ],
-            },
-        },
+        find: {}, // Will be populated dynamically with ship type IDs
         sort: { kill_time: -1 },
         projection: { _id: 0, items: 0 },
-        hint: "victim.ship_group_id_t2_kill_time_-1",
+        hint: "victim_ship_id_kill_time",
     },
     t3: {
-        find: { "victim.ship_group_id": { $in: [963, 1305] } },
+        find: {}, // Will be populated dynamically with ship type IDs
         sort: { kill_time: -1 },
         projection: { _id: 0, items: 0 },
-        hint: "victim.ship_group_id_t3_kill_time_-1",
+        hint: "victim_ship_id_kill_time",
+    },
+    faction: {
+        find: {}, // Will be populated dynamically with ship type IDs
+        sort: { kill_time: -1 },
+        projection: { _id: 0, items: 0 },
+        hint: "victim_ship_id_kill_time",
     },
     frigates: {
         find: { "victim.ship_group_id": { $in: [324, 893, 25, 831, 237] } },
         sort: { kill_time: -1 },
         projection: { _id: 0, items: 0 },
-        hint: "victim.ship_group_id_frigate_kill_time_-1",
+        hint: "victim_ship_group_id_kill_time",
     },
     destroyers: {
         find: { "victim.ship_group_id": { $in: [420, 541] } },
         sort: { kill_time: -1 },
         projection: { _id: 0, items: 0 },
-        hint: "victim.ship_group_id_destroyer_kill_time_-1",
+        hint: "victim_ship_group_id_kill_time",
     },
     cruisers: {
         find: {
@@ -138,43 +133,43 @@ const killlistQueries: Record<string, QueryConfig> = {
         },
         sort: { kill_time: -1 },
         projection: { _id: 0, items: 0 },
-        hint: "victim.ship_group_id_cruiser_kill_time_-1",
+        hint: "victim_ship_group_id_kill_time",
     },
     battlecruisers: {
         find: { "victim.ship_group_id": { $in: [419, 540] } },
         sort: { kill_time: -1 },
         projection: { _id: 0, items: 0 },
-        hint: "victim.ship_group_id_battlecruiser_kill_time_-1",
+        hint: "victim_ship_group_id_kill_time",
     },
     battleships: {
         find: { "victim.ship_group_id": { $in: [27, 898, 900] } },
         sort: { kill_time: -1 },
         projection: { _id: 0, items: 0 },
-        hint: "victim.ship_group_id_battleship_kill_time_-1",
+        hint: "victim_ship_group_id_kill_time",
     },
     capitals: {
         find: { "victim.ship_group_id": { $in: [547, 485] } },
         sort: { kill_time: -1 },
         projection: { _id: 0, items: 0 },
-        hint: "victim.ship_group_id_capital_kill_time_-1",
+        hint: "victim_ship_group_id_kill_time",
     },
     freighters: {
         find: { "victim.ship_group_id": { $in: [513, 902] } },
         sort: { kill_time: -1 },
         projection: { _id: 0, items: 0 },
-        hint: "victim.ship_group_id_freighter_kill_time_-1",
+        hint: "victim_ship_group_id_kill_time",
     },
     supercarriers: {
         find: { "victim.ship_group_id": { $in: [659] } },
         sort: { kill_time: -1 },
         projection: { _id: 0, items: 0 },
-        hint: "victim.ship_group_id_supercarrier_kill_time_-1",
+        hint: "victim_ship_group_id_kill_time",
     },
     titans: {
         find: { "victim.ship_group_id": { $in: [30] } },
         sort: { kill_time: -1 },
         projection: { _id: 0, items: 0 },
-        hint: "victim.ship_group_id_titan_kill_time_-1",
+        hint: "victim_ship_group_id_kill_time",
     },
     structureboys: {
         // @TODO add a description field for them that gets displayed on the page
@@ -223,13 +218,30 @@ export default defineCachedEventHandler(
             return { error: `Invalid type provided: ${type}` };
         }
 
+        // Handle dynamic ship type queries for t1, t2, t3, and faction
+        let finalConfig = config;
+        if (["t1", "t2", "t3", "faction"].includes(type)) {
+            const shipTypeIds = await getShipTypeList(type);
+
+            if (shipTypeIds.length === 0) {
+                return []; // Return empty array if no ship types found
+            }
+
+            finalConfig = {
+                ...config,
+                find: {
+                    "victim.ship_id": { $in: shipTypeIds },
+                },
+            };
+        }
+
         // Stream through killmails using cursor and format on-the-fly
         const result: any[] = [];
         let cursor: any;
 
-        if (config.aggregate) {
+        if (finalConfig.aggregate) {
             // Handle aggregation pipeline
-            const pipeline = [...config.aggregate];
+            const pipeline = [...finalConfig.aggregate];
 
             // Add skip and limit to the pipeline
             pipeline.push({ $skip: skip });
@@ -237,20 +249,20 @@ export default defineCachedEventHandler(
 
             // Add hint if provided
             const aggregateOptions: any = {};
-            if (config.hint) {
-                aggregateOptions.hint = config.hint;
+            if (finalConfig.hint) {
+                aggregateOptions.hint = finalConfig.hint;
             }
 
             cursor = Killmails.aggregate(pipeline, aggregateOptions);
         } else {
             // Handle traditional find query
-            const projection = config.projection || {};
+            const projection = finalConfig.projection || {};
 
-            cursor = Killmails.find(config.find!, projection as any, {
-                sort: config.sort || { kill_time: -1 },
+            cursor = Killmails.find(finalConfig.find!, projection as any, {
+                sort: finalConfig.sort || { kill_time: -1 },
                 skip: skip,
                 limit: limit,
-                hint: config.hint || "kill_time_-1",
+                hint: finalConfig.hint || "kill_time_-1",
             });
         }
         for await (const killmail of cursor) {
