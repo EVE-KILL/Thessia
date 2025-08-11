@@ -141,7 +141,7 @@
                                     </div>
                                     <div class="stat-row">
                                         <div class="stat-label text-gray-600 dark:text-gray-400">{{ $t('iskEfficiency')
-                                        }}</div>
+                                            }}</div>
                                         <div class="stat-value text-gray-900 dark:text-white">
                                             {{ calcIskEfficiency(validShortStats) }}%
                                         </div>
@@ -179,14 +179,14 @@
                                     </div>
                                     <div class="stat-row">
                                         <div class="stat-label text-gray-600 dark:text-gray-400">{{ $t('soloKillRatio')
-                                        }}</div>
+                                            }}</div>
                                         <div class="stat-value text-gray-900 dark:text-white">
                                             {{ calcSoloKillRatio(validShortStats) }}%
                                         </div>
                                     </div>
                                     <div class="stat-row">
                                         <div class="stat-label text-gray-600 dark:text-gray-400">{{ $t('soloEfficiency')
-                                        }}</div>
+                                            }}</div>
                                         <div class="stat-value text-gray-900 dark:text-white">
                                             {{ calcSoloEfficiency(validShortStats) }}%
                                         </div>
@@ -204,7 +204,7 @@
                                 <div class="stat-body">
                                     <div class="stat-row">
                                         <div class="stat-label text-gray-600 dark:text-gray-400">{{ $t('corporations')
-                                        }}</div>
+                                            }}</div>
                                         <div class="stat-value text-gray-900 dark:text-white">{{
                                             formatNumber(alliance.corporation_count || 0) }}</div>
                                     </div>
@@ -317,12 +317,7 @@ const router = useRouter()
 const allianceId = route.params.id
 const { generateAllianceStructuredData } = useStructuredData();
 
-// For hydration safety
-const isClient = ref(false);
-
 onMounted(() => {
-    isClient.value = true;
-
     nextTick(() => {
         const currentHash = route.hash.slice(1);
         console.log('onMounted - currentHash:', currentHash);
@@ -361,7 +356,6 @@ const fetchKey = computed(() => `alliance-${allianceId}`);
 
 const { data: alliance, pending, error } = useAsyncData(fetchKey.value, () =>
     $fetch(`/api/alliances/${allianceId}`), {
-    lazy: true,
     server: true,
     watch: [() => route.params.id],
 });
@@ -450,7 +444,8 @@ const validShortStats = computed(() => {
 
 // Generate structured data when alliance is loaded
 watch(alliance, (newAlliance) => {
-    if (!isClient.value) return; // Don't run until hydrated
+    // Only generate structured data on client-side
+    if (import.meta.server) return;
 
     if (newAlliance) {
         try {
@@ -529,8 +524,6 @@ const activeTabId = ref<string>(tabItems.value[0]?.id || '');
 
 // Initialize from hash on client-side after hydration
 onMounted(() => {
-    isClient.value = true;
-
     nextTick(() => {
         const currentHash = route.hash.slice(1);
         console.log('onMounted - currentHash:', currentHash);
@@ -549,7 +542,8 @@ onMounted(() => {
 
 // Watch for changes in route.hash to update activeTabId
 watch(() => route.hash, (newHash) => {
-    if (!isClient.value) return; // Don't run until hydrated
+    // Only handle hash changes on client-side
+    if (import.meta.server) return;
 
     const hashValue = newHash.slice(1);
     if (hashValue && tabItems.value.some(item => item.id === hashValue)) {
@@ -562,7 +556,8 @@ watch(() => route.hash, (newHash) => {
 
 // Update URL only when activeTabId changes due to user interaction
 watch(activeTabId, (newTabId, oldTabId) => {
-    if (!isClient.value) return; // Don't run until hydrated
+    // Only handle URL updates on client-side
+    if (import.meta.server) return;
 
     // Only update the URL if:
     // 1. This isn't the initial value (oldTabId exists)

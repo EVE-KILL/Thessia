@@ -130,8 +130,16 @@ export const useEnhancedMarkdown = () => {
                 const hrefIndex = token.attrIndex("href");
                 if (hrefIndex >= 0 && token.attrs && token.attrs[hrefIndex]) {
                     const href = token.attrs[hrefIndex][1];
-                    if (!href)
+                    
+                    // Simple: if it's not a string, skip processing
+                    if (typeof href !== "string" || !href.trim()) {
                         return defaultRender(tokens, idx, options, env, self);
+                    }
+
+                    // Update the token's href attribute with the cleaned string value
+                    if (token.attrs && token.attrs[hrefIndex]) {
+                        token.attrs[hrefIndex][1] = href;
+                    }
 
                     let transformedHref = href;
 
