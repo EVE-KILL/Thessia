@@ -77,7 +77,7 @@
         "@iconify-json/heroicons": "^1.2.2",
         "@iconify-json/lucide": "^1.2.62",
         "@iconify-json/simple-icons": "^1.2.47",
-        "@nuxt/icon": "1.15.0",
+        "@nuxt/icon": "2.0.0",
         "@nuxt/ui": "^3.3.0",
         "@nuxtjs/i18n": "^10.0.4",
         "@nuxtjs/sitemap": "^7.4.3",
