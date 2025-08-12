@@ -63,6 +63,7 @@ invTypesSchema.index(
     { "dogma_attributes.1692.value": 1, category_id: 1 },
     { sparse: true }
 ); // Faction, Officer ships
+invTypesSchema.index({ meta_group_id: 1, category_id: 1 }, { sparse: true }); // Deadspace, Abyssal ships
 
 export const InvTypes: Model<IInvTypeDocument> = model<IInvTypeDocument>(
     "invTypes",

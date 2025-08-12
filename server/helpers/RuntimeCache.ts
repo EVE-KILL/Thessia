@@ -353,7 +353,12 @@ export async function getShipTypeList(type: string): Promise<number[]> {
         t1: { "dogma_attributes.422.value": 1, category_id: 6 },
         t2: { "dogma_attributes.422.value": 2, category_id: 6 },
         t3: { "dogma_attributes.422.value": 3, category_id: 6 },
-        faction: { "dogma_attributes.1692.value": 4, category_id: 6 },
+        faction: {
+            $or: [
+                { meta_group_id: 4, category_id: 6 },
+                { "dogma_attributes.1692.value": 4, category_id: 6 },
+            ],
+        },
     };
 
     const query = shipTypeQueries[type];
@@ -365,22 +370,58 @@ export async function getShipTypeList(type: string): Promise<number[]> {
         // Try Redis cache
         const redisKey = redisCacheKey(CACHE_NAMESPACES.SHIP_TYPE_LISTS, type);
         const cachedData = await getRedisClient().get(redisKey);
-        
+
         if (cachedData) {
             const typeIds = JSON.parse(cachedData);
             shipTypeListsCache.set(type, typeIds);
             return typeIds;
         }
 
-        // Fetch from database
+        // For faction ships, just fetch them directly (no deduplication needed)
+        if (type === "faction") {
+            const shipTypes = await InvTypes.find(query, { type_id: 1 }).lean();
+            const typeIds = shipTypes.map((ship: any) => ship.type_id);
+
+            // Cache the result
+            shipTypeListsCache.set(type, typeIds);
+            await getRedisClient().set(
+                redisKey,
+                JSON.stringify(typeIds),
+                "EX",
+                86400
+            );
+
+            return typeIds;
+        }
+
+        // For T1, T2, T3 - fetch and remove any faction ships
         const shipTypes = await InvTypes.find(query, { type_id: 1 }).lean();
-        const typeIds = shipTypes.map((ship: any) => ship.type_id);
+        const allTypeIds = shipTypes.map((ship: any) => ship.type_id);
+
+        // Get faction ship IDs for deduplication
+        const factionQuery = shipTypeQueries.faction;
+        const factionShips = await InvTypes.find(factionQuery, {
+            type_id: 1,
+        }).lean();
+        const factionShipIds = new Set(
+            factionShips.map((ship: any) => ship.type_id)
+        );
+
+        // Remove any ships that are also faction ships
+        const uniqueTypeIds = allTypeIds.filter(
+            (id) => !factionShipIds.has(id)
+        );
 
         // Cache in both local and Redis (TTL: 24 hours since this data rarely changes)
-        shipTypeListsCache.set(type, typeIds);
-        await getRedisClient().set(redisKey, JSON.stringify(typeIds), "EX", 86400);
+        shipTypeListsCache.set(type, uniqueTypeIds);
+        await getRedisClient().set(
+            redisKey,
+            JSON.stringify(uniqueTypeIds),
+            "EX",
+            86400
+        );
 
-        return typeIds;
+        return uniqueTypeIds;
     } catch (error) {
         cliLogger.error(`Failed to get ship type list for ${type}:`, error);
         return [];

@@ -36,177 +36,177 @@ if (!import.meta.server) {
     // Markdown rendering - exact copy from KillComments
     type MediaType = "image" | "video" | "gif" | "iframe" | "unknown";
 
-/**
- * Add autolink extension to handle raw URLs in text
- */
-marked.use({
-    extensions: [
-        {
-            name: "autolink",
-            level: "inline",
-            start(src) {
-                if (typeof src !== 'string') return -1;
-                return src.indexOf("http");
+    /**
+     * Add autolink extension to handle raw URLs in text
+     */
+    marked.use({
+        extensions: [
+            {
+                name: "autolink",
+                level: "inline",
+                start(src) {
+                    if (typeof src !== 'string') return -1;
+                    return src.indexOf("http");
+                },
+                tokenizer(src) {
+                    if (typeof src !== 'string') return undefined;
+                    const urlRegex = /^(https?:\/\/[^\s<]+[^<.,:;"')\]\s])/;
+                    const match = src.match(urlRegex);
+                    if (match) {
+                        return {
+                            type: "link",
+                            raw: match[0],
+                            text: match[0],
+                            href: match[0],
+                            tokens: [
+                                {
+                                    type: "text",
+                                    raw: match[0],
+                                    text: match[0],
+                                },
+                            ],
+                        };
+                    }
+                    return undefined;
+                },
             },
-            tokenizer(src) {
-                if (typeof src !== 'string') return undefined;
-                const urlRegex = /^(https?:\/\/[^\s<]+[^<.,:;"')\]\s])/;
-                const match = src.match(urlRegex);
-                if (match) {
-                    return {
-                        type: "link",
-                        raw: match[0],
-                        text: match[0],
-                        href: match[0],
-                        tokens: [
-                            {
-                                type: "text",
-                                raw: match[0],
-                                text: match[0],
-                            },
-                        ],
-                    };
-                }
-                return undefined;
-            },
-        },
-    ],
-});
+        ],
+    });
 
 
 
-/**
- * Detect media type from URL
- * @param url - URL to analyze
- * @returns Media type and additional metadata
- */
-function detectMediaType(url: string): {
-    type: MediaType;
-    id?: string;
-    matches?: RegExpMatchArray | null;
-} {
-    // Simple input validation
-    if (!url || typeof url !== "string" || !url.trim()) {
+    /**
+     * Detect media type from URL
+     * @param url - URL to analyze
+     * @returns Media type and additional metadata
+     */
+    function detectMediaType(url: string): {
+        type: MediaType;
+        id?: string;
+        matches?: RegExpMatchArray | null;
+    } {
+        // Simple input validation
+        if (!url || typeof url !== "string" || !url.trim()) {
+            return { type: "unknown" };
+        }
+
+        const trimmedUrl = url.trim();
+
+        // Ensure the URL starts with http/https for security
+        if (!trimmedUrl.startsWith("http://") && !trimmedUrl.startsWith("https://")) {
+            return { type: "unknown" };
+        }
+        // YouTube (including shorts)
+        const youtubeMatch =
+            trimmedUrl.match(/^https?:\/\/(www\.)?youtube\.com\/watch\?v=([a-zA-Z0-9_-]+)/) ||
+            trimmedUrl.match(/^https?:\/\/(www\.)?youtu\.be\/([a-zA-Z0-9_-]+)/) ||
+            trimmedUrl.match(/^https?:\/\/(www\.)?youtube\.com\/shorts\/([a-zA-Z0-9_-]+)/);
+        if (youtubeMatch) {
+            return { type: "iframe", id: youtubeMatch[2], matches: youtubeMatch };
+        }
+
+        // Imgur direct
+        const imgurDirectMatch = trimmedUrl.match(
+            /^https?:\/\/(i\.)?imgur\.com\/([a-zA-Z0-9]+)(\.(jpeg|jpg|png|gif|mp4|webm))?$/i,
+        );
+        if (imgurDirectMatch) {
+            const extension = imgurDirectMatch[3] || ".jpg";
+            const mediaType = extension.match(/\.(mp4|webm)$/i) ? "video" : "image";
+            return { type: mediaType as MediaType, id: imgurDirectMatch[2], matches: imgurDirectMatch };
+        }
+
+        // Imgur gallery
+        const imgurGalleryMatch = trimmedUrl.match(/^https?:\/\/(www\.)?imgur\.com\/(gallery|a)\/([^\/\s]+)/i);
+        if (imgurGalleryMatch) {
+            return { type: "iframe", id: imgurGalleryMatch[3], matches: imgurGalleryMatch };
+        }
+
+        // Giphy complex URL
+        const complexGiphyMatch = trimmedUrl.match(
+            /^https?:\/\/media[0-9]?\.giphy\.com\/media\/v[0-9]\..*?\/.*?\/giphy\.gif/,
+        );
+        if (complexGiphyMatch) {
+            return { type: "image", matches: complexGiphyMatch };
+        }
+
+        // Giphy simple URL
+        const simpleGiphyMatch =
+            !complexGiphyMatch &&
+            (trimmedUrl.match(/^https?:\/\/(www\.)?giphy\.com\/gifs\/([a-zA-Z0-9]+-)*([a-zA-Z0-9]+)/) ||
+                trimmedUrl.match(/^https?:\/\/media[0-9]?\.giphy\.com\/media\/([a-zA-Z0-9]+)/));
+        if (simpleGiphyMatch) {
+            const giphyId = simpleGiphyMatch[simpleGiphyMatch.length - 1];
+            return { type: "image", id: giphyId, matches: simpleGiphyMatch };
+        }
+
+        // Tenor
+        const tenorMatch = trimmedUrl.match(/^https?:\/\/(www\.)?tenor\.com\/view\/[a-zA-Z0-9-]+-([0-9]+)/);
+        if (tenorMatch) {
+            return { type: "iframe", id: tenorMatch[2], matches: tenorMatch };
+        }
+
+        // Standard image
+        const imageMatch = trimmedUrl.match(/\.(jpeg|jpg|gif|png)$/i);
+        if (imageMatch) {
+            return { type: "image", matches: imageMatch };
+        }
+
+        // Standard video
+        const videoMatch = trimmedUrl.match(/\.(mp4|webm)$/i);
+        if (videoMatch) {
+            return { type: "video", matches: videoMatch };
+        }
+
+        // Default - regular link
         return { type: "unknown" };
     }
 
-    const trimmedUrl = url.trim();
+    // Create a reactive map to store resolved Imgur URLs with media type information
+    const resolvedImgurMedia = ref(new Map<string, { url: string; type: string }>());
 
-    // Ensure the URL starts with http/https for security
-    if (!trimmedUrl.startsWith("http://") && !trimmedUrl.startsWith("https://")) {
-        return { type: "unknown" };
-    }
-    // YouTube (including shorts)
-    const youtubeMatch =
-        trimmedUrl.match(/^https?:\/\/(www\.)?youtube\.com\/watch\?v=([a-zA-Z0-9_-]+)/) ||
-        trimmedUrl.match(/^https?:\/\/(www\.)?youtu\.be\/([a-zA-Z0-9_-]+)/) ||
-        trimmedUrl.match(/^https?:\/\/(www\.)?youtube\.com\/shorts\/([a-zA-Z0-9_-]+)/);
-    if (youtubeMatch) {
-        return { type: "iframe", id: youtubeMatch[2], matches: youtubeMatch };
-    }
+    // Function to resolve an Imgur gallery/album URL to its media
+    async function resolveImgurUrl(url: string): Promise<{ url: string; type: string } | null> {
+        try {
+            // Generate a unique cache key for this specific URL
+            const cacheKey = url.trim();
 
-    // Imgur direct
-    const imgurDirectMatch = trimmedUrl.match(
-        /^https?:\/\/(i\.)?imgur\.com\/([a-zA-Z0-9]+)(\.(jpeg|jpg|png|gif|mp4|webm))?$/i,
-    );
-    if (imgurDirectMatch) {
-        const extension = imgurDirectMatch[3] || ".jpg";
-        const mediaType = extension.match(/\.(mp4|webm)$/i) ? "video" : "image";
-        return { type: mediaType as MediaType, id: imgurDirectMatch[2], matches: imgurDirectMatch };
-    }
+            // Don't re-fetch URLs we've already resolved in this session
+            if (resolvedImgurMedia.value.has(cacheKey)) {
+                return resolvedImgurMedia.value.get(cacheKey) || null;
+            }
 
-    // Imgur gallery
-    const imgurGalleryMatch = trimmedUrl.match(/^https?:\/\/(www\.)?imgur\.com\/(gallery|a)\/([^\/\s]+)/i);
-    if (imgurGalleryMatch) {
-        return { type: "iframe", id: imgurGalleryMatch[3], matches: imgurGalleryMatch };
-    }
+            // Use server proxy to fetch Imgur data (avoids CORS issues)
+            const data = await $fetch("/api/proxy/imgur", {
+                method: "POST",
+                body: { url: cacheKey },
+                headers: {
+                    "Content-Type": "application/json",
+                },
+            }) as any;
 
-    // Giphy complex URL
-    const complexGiphyMatch = trimmedUrl.match(
-        /^https?:\/\/media[0-9]?\.giphy\.com\/media\/v[0-9]\..*?\/.*?\/giphy\.gif/,
-    );
-    if (complexGiphyMatch) {
-        return { type: "image", matches: complexGiphyMatch };
-    }
+            if (data?.mediaUrl) {
+                const result = {
+                    url: data.mediaUrl,
+                    type: data.mediaType || "image",
+                };
 
-    // Giphy simple URL
-    const simpleGiphyMatch =
-        !complexGiphyMatch &&
-        (trimmedUrl.match(/^https?:\/\/(www\.)?giphy\.com\/gifs\/([a-zA-Z0-9]+-)*([a-zA-Z0-9]+)/) ||
-            trimmedUrl.match(/^https?:\/\/media[0-9]?\.giphy\.com\/media\/([a-zA-Z0-9]+)/));
-    if (simpleGiphyMatch) {
-        const giphyId = simpleGiphyMatch[simpleGiphyMatch.length - 1];
-        return { type: "image", id: giphyId, matches: simpleGiphyMatch };
-    }
+                // Cache the resolved media info in the component
+                resolvedImgurMedia.value.set(cacheKey, result);
 
-    // Tenor
-    const tenorMatch = trimmedUrl.match(/^https?:\/\/(www\.)?tenor\.com\/view\/[a-zA-Z0-9-]+-([0-9]+)/);
-    if (tenorMatch) {
-        return { type: "iframe", id: tenorMatch[2], matches: tenorMatch };
-    }
+                return result;
+            }
 
-    // Standard image
-    const imageMatch = trimmedUrl.match(/\.(jpeg|jpg|gif|png)$/i);
-    if (imageMatch) {
-        return { type: "image", matches: imageMatch };
-    }
-
-    // Standard video
-    const videoMatch = trimmedUrl.match(/\.(mp4|webm)$/i);
-    if (videoMatch) {
-        return { type: "video", matches: videoMatch };
-    }
-
-    // Default - regular link
-    return { type: "unknown" };
-}
-
-// Create a reactive map to store resolved Imgur URLs with media type information
-const resolvedImgurMedia = ref(new Map<string, { url: string; type: string }>());
-
-// Function to resolve an Imgur gallery/album URL to its media
-async function resolveImgurUrl(url: string): Promise<{ url: string; type: string } | null> {
-    try {
-        // Generate a unique cache key for this specific URL
-        const cacheKey = url.trim();
-
-        // Don't re-fetch URLs we've already resolved in this session
-        if (resolvedImgurMedia.value.has(cacheKey)) {
-            return resolvedImgurMedia.value.get(cacheKey) || null;
+            return null;
+        } catch (error) {
+            return null;
         }
-
-        // Use server proxy to fetch Imgur data (avoids CORS issues)
-        const data = await $fetch("/api/proxy/imgur", {
-            method: "POST",
-            body: { url: cacheKey },
-            headers: {
-                "Content-Type": "application/json",
-            },
-        }) as any;
-
-        if (data?.mediaUrl) {
-            const result = {
-                url: data.mediaUrl,
-                type: data.mediaType || "image",
-            };
-
-            // Cache the resolved media info in the component
-            resolvedImgurMedia.value.set(cacheKey, result);
-
-            return result;
-        }
-
-        return null;
-    } catch (error) {
-        return null;
     }
-}
 
-/**
- * Generate HTML for YouTube embed
- */
-function renderYouTube(videoId: string): string {
-    return `<div class="video-container">
+    /**
+     * Generate HTML for YouTube embed
+     */
+    function renderYouTube(videoId: string): string {
+        return `<div class="video-container">
             <iframe width="100%" height="315"
               src="https://www.youtube.com/embed/${videoId}"
               frameborder="0"
@@ -214,15 +214,15 @@ function renderYouTube(videoId: string): string {
               allowfullscreen>
             </iframe>
           </div>`;
-}
+    }
 
-/**
- * Generate HTML for Imgur direct media
- */
-function renderImgurDirect(imgurId: string, extension: string, originalUrl: string): string {
-    // Check if it's a video
-    if (extension.match(/\.(mp4|webm)$/i)) {
-        return `<div class="video-container">
+    /**
+     * Generate HTML for Imgur direct media
+     */
+    function renderImgurDirect(imgurId: string, extension: string, originalUrl: string): string {
+        // Check if it's a video
+        if (extension.match(/\.(mp4|webm)$/i)) {
+            return `<div class="video-container">
               <video autoplay loop muted playsinline controls class="max-w-full">
                 <source src="https://i.imgur.com/${imgurId}${extension}" type="video/mp4">
                 Your browser doesn't support HTML5 video.
@@ -233,8 +233,8 @@ function renderImgurDirect(imgurId: string, extension: string, originalUrl: stri
                 </a>
               </div>
             </div>`;
-    }
-    return `<div class="image-container">
+        }
+        return `<div class="image-container">
               <img src="https://i.imgur.com/${imgurId}${extension}" alt="Imgur Image" class="max-w-full h-auto" />
               <div class="media-source">
                 <a href="${originalUrl}" target="_blank" rel="noopener noreferrer" class="source-link">
@@ -242,60 +242,60 @@ function renderImgurDirect(imgurId: string, extension: string, originalUrl: stri
                 </a>
               </div>
             </div>`;
-}
+    }
 
-/**
- * Generate HTML for Imgur gallery/album with async loading
- */
-function renderImgurGallery(originalUrl: string): string {
-    const uniqueId = `imgur-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
+    /**
+     * Generate HTML for Imgur gallery/album with async loading
+     */
+    function renderImgurGallery(originalUrl: string): string {
+        const uniqueId = `imgur-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
 
-    // Create an async function to fetch and update the media URL later
-    nextTick(async () => {
-        const placeholder = document.getElementById(uniqueId);
-        if (!placeholder) return;
+        // Create an async function to fetch and update the media URL later
+        nextTick(async () => {
+            const placeholder = document.getElementById(uniqueId);
+            if (!placeholder) return;
 
-        // Show loading state
-        placeholder.innerHTML = `<div class="flex items-center justify-center p-4">
+            // Show loading state
+            placeholder.innerHTML = `<div class="flex items-center justify-center p-4">
                             <div class="animate-spin h-8 w-8 border-b-2 border-primary-500"></div>
                             <span class="ml-2">Loading content from Imgur...</span>
                           </div>`;
 
-        try {
-            // Use the proxy to fetch the media data
-            const media = await resolveImgurUrl(originalUrl);
+            try {
+                // Use the proxy to fetch the media data
+                const media = await resolveImgurUrl(originalUrl);
 
-            // Update the placeholder with the resolved media
-            if (placeholder) {
-                if (media) {
-                    if (media.type === "video") {
-                        placeholder.innerHTML = `<video autoplay loop muted playsinline controls class="max-w-full">
+                // Update the placeholder with the resolved media
+                if (placeholder) {
+                    if (media) {
+                        if (media.type === "video") {
+                            placeholder.innerHTML = `<video autoplay loop muted playsinline controls class="max-w-full">
                                     <source src="${media.url}" type="video/mp4">
                                     Your browser doesn't support HTML5 video.
                                    </video>`;
-                    } else if (media.type === "gif") {
-                        placeholder.innerHTML = `<img src="${media.url}" alt="Imgur GIF" class="max-w-full h-auto" />`;
+                        } else if (media.type === "gif") {
+                            placeholder.innerHTML = `<img src="${media.url}" alt="Imgur GIF" class="max-w-full h-auto" />`;
+                        } else {
+                            placeholder.innerHTML = `<img src="${media.url}" alt="Imgur Image" class="max-w-full h-auto" />`;
+                        }
                     } else {
-                        placeholder.innerHTML = `<img src="${media.url}" alt="Imgur Image" class="max-w-full h-auto" />`;
-                    }
-                } else {
-                    placeholder.innerHTML = `<div class="p-4 text-center">
+                        placeholder.innerHTML = `<div class="p-4 text-center">
                                   <p>Imgur content could not be loaded</p>
                                   <a href="${originalUrl}" target="_blank" rel="noopener noreferrer" class="text-primary-500">View on Imgur</a>
                                  </div>`;
+                    }
                 }
-            }
-        } catch (error) {
-            if (placeholder) {
-                placeholder.innerHTML = `<div class="p-4 text-center">
+            } catch (error) {
+                if (placeholder) {
+                    placeholder.innerHTML = `<div class="p-4 text-center">
                                 <p>Error loading Imgur content</p>
                                 <a href="${originalUrl}" target="_blank" rel="noopener noreferrer" class="text-primary-500">View on Imgur</a>
                                </div>`;
+                }
             }
-        }
-    });
+        });
 
-    return `<div class="media-container">
+        return `<div class="media-container">
           <div id="${uniqueId}" class="imgur-content bg-light-dark-input rounded-md min-h-32 flex items-center justify-center" data-url="${originalUrl}">
             <span>Loading Imgur content...</span>
           </div>
@@ -305,28 +305,28 @@ function renderImgurGallery(originalUrl: string): string {
             </a>
           </div>
         </div>`;
-}
+    }
 
-/**
- * Generate HTML for Giphy media
- */
-function renderGiphy(url: string, giphyId?: string): string {
-    const imgSrc = giphyId ? `https://media.giphy.com/media/${giphyId}/giphy.gif` : url;
+    /**
+     * Generate HTML for Giphy media
+     */
+    function renderGiphy(url: string, giphyId?: string): string {
+        const imgSrc = giphyId ? `https://media.giphy.com/media/${giphyId}/giphy.gif` : url;
 
-    return `<div class="gif-container">
+        return `<div class="gif-container">
             <img src="${imgSrc}" alt="GIPHY" class="max-w-full h-auto" />
             <div class="media-source">
               <a href="${url}" target="_blank" rel="noopener noreferrer" class="source-link">
               </a>
             </div>
           </div>`;
-}
+    }
 
-/**
- * Generate HTML for Tenor embed
- */
-function renderTenor(tenorId: string, url: string): string {
-    return `<div class="gif-container">
+    /**
+     * Generate HTML for Tenor embed
+     */
+    function renderTenor(tenorId: string, url: string): string {
+        return `<div class="gif-container">
             <iframe src="https://tenor.com/embed/${tenorId}" frameBorder="0" width="100%" height="300px"></iframe>
             <div class="media-source">
               <a href="${url}" target="_blank" rel="noopener noreferrer" class="source-link">
@@ -334,170 +334,170 @@ function renderTenor(tenorId: string, url: string): string {
               </a>
             </div>
           </div>`;
-}
+    }
 
-/**
- * Generate HTML for standard image
- */
-function renderImage(url: string, altText: string): string {
-    return `<div class="image-container">
+    /**
+     * Generate HTML for standard image
+     */
+    function renderImage(url: string, altText: string): string {
+        return `<div class="image-container">
             <img src="${url}" alt="${altText}" class="max-w-full h-auto" />
           </div>`;
-}
+    }
 
-/**
- * Generate HTML for standard video
- */
-function renderVideo(url: string): string {
-    return `<div class="video-container">
+    /**
+     * Generate HTML for standard video
+     */
+    function renderVideo(url: string): string {
+        return `<div class="video-container">
             <video autoplay loop muted playsinline controls class="max-w-full">
               <source src="${url}" type="video/mp4">
               Your browser doesn't support HTML5 video.
             </video>
           </div>`;
-}
+    }
 
-// Create the custom renderer
-const renderer = new marked.Renderer();
+    // Create the custom renderer
+    const renderer = new marked.Renderer();
 
-// Simplified link renderer
-renderer.link = ({ href, title, tokens }: any): string => {
-    try {
-        // Robust href extraction - only proceed if we get a valid string
-        let url = "";
+    // Simplified link renderer
+    renderer.link = ({ href, title, tokens }: any): string => {
+        try {
+            // Robust href extraction - only proceed if we get a valid string
+            let url = "";
 
-        if (typeof href === "string") {
-            url = href.trim();
-        } else if (href && typeof href === "object") {
-            // Try to extract string from object - but be very defensive
-            if (typeof href.href === "string") {
-                url = href.href.trim();
-            } else if (href.props && typeof href.props.content === "string") {
-                url = href.props.content.trim();
-            } else if (typeof href.text === "string") {
-                url = href.text.trim();
+            if (typeof href === "string") {
+                url = href.trim();
+            } else if (href && typeof href === "object") {
+                // Try to extract string from object - but be very defensive
+                if (typeof href.href === "string") {
+                    url = href.href.trim();
+                } else if (href.props && typeof href.props.content === "string") {
+                    url = href.props.content.trim();
+                } else if (typeof href.text === "string") {
+                    url = href.text.trim();
+                }
+                // If none of these work, url stays ""
             }
-            // If none of these work, url stays ""
-        }
 
-        // If we don't have a valid string URL, bail out early
-        if (!url || typeof url !== "string") {
+            // If we don't have a valid string URL, bail out early
+            if (!url || typeof url !== "string") {
+                return `<span>link</span>`;
+            }
+
+            // Extract link text safely
+            let linkText = "";
+            if (tokens && tokens[0] && typeof tokens[0].text === "string") {
+                linkText = tokens[0].text;
+            } else if (tokens && tokens[0] && typeof tokens[0].raw === "string") {
+                linkText = tokens[0].raw;
+            } else {
+                linkText = url || "link";
+            }
+
+            // Only call startsWith if we're absolutely sure url is a string
+            if (typeof url !== "string" || !url.startsWith("http")) {
+                return `<span>${linkText}</span>`;
+            }
+
+            const linkTitle = (title && typeof title === "string") ? title : "";
+
+            // Detect media type and render accordingly
+            try {
+                const result = detectMediaType(url);
+                const { type, id, matches } = result;
+
+                switch (type) {
+                    case "iframe":
+                        if (url.includes("youtube.com") || url.includes("youtu.be")) {
+                            return id ? renderYouTube(id) : renderImage(url, linkText);
+                        }
+                        if (url.includes("tenor.com") && id) {
+                            return renderTenor(id, url);
+                        }
+                        if (url.includes("imgur.com") && !url.includes("i.imgur.com")) {
+                            return renderImgurGallery(url);
+                        }
+                        break;
+
+                    case "video":
+                        return renderVideo(url);
+
+                    case "image":
+                        if (url.includes("imgur.com") && matches) {
+                            const imgurId = matches[2] || '';
+                            const extension = matches[3] || ".jpg";
+                            return renderImgurDirect(imgurId, extension, url);
+                        }
+                        if (url.includes("giphy.com") || url.includes("media.giphy.com")) {
+                            return renderGiphy(url, id);
+                        }
+                        return renderImage(url, linkText);
+                }
+
+                // Default: regular link
+                return `<a href="${url}" title="${linkTitle}" target="_blank" rel="noopener noreferrer">${linkText}</a>`;
+
+            } catch (mediaError) {
+                // If media detection fails, just return a regular link
+                return `<a href="${url}" title="${linkTitle}" target="_blank" rel="noopener noreferrer">${linkText}</a>`;
+            }
+
+        } catch (error) {
+            // Final fallback for any unexpected errors
+            console.error('Error in link renderer:', error);
             return `<span>link</span>`;
         }
+    };
 
-        // Extract link text safely
-        let linkText = "";
-        if (tokens && tokens[0] && typeof tokens[0].text === "string") {
-            linkText = tokens[0].text;
-        } else if (tokens && tokens[0] && typeof tokens[0].raw === "string") {
-            linkText = tokens[0].raw;
-        } else {
-            linkText = url || "link";
-        }
+    // Apply the custom renderer to marked
+    marked.use({ renderer });
 
-        // Only call startsWith if we're absolutely sure url is a string
-        if (typeof url !== "string" || !url.startsWith("http")) {
-            return `<span>${linkText}</span>`;
-        }
+    const renderMarkdown = (text: string) => {
+        if (!text) return "";
 
-        const linkTitle = (title && typeof title === "string") ? title : "";
-
-        // Detect media type and render accordingly
         try {
-            const result = detectMediaType(url);
-            const { type, id, matches } = result;
+            // Convert markdown to HTML and sanitize
+            const rawHTML = marked.parse(text) as string;
 
-            switch (type) {
-                case "iframe":
-                    if (url.includes("youtube.com") || url.includes("youtu.be")) {
-                        return id ? renderYouTube(id) : renderImage(url, linkText);
-                    }
-                    if (url.includes("tenor.com") && id) {
-                        return renderTenor(id, url);
-                    }
-                    if (url.includes("imgur.com") && !url.includes("i.imgur.com")) {
-                        return renderImgurGallery(url);
-                    }
-                    break;
+            // Process emojis in the HTML
+            const htmlWithEmojis = replaceEmojis(rawHTML);
 
-                case "video":
-                    return renderVideo(url);
-
-                case "image":
-                    if (url.includes("imgur.com") && matches) {
-                        const imgurId = matches[2] || '';
-                        const extension = matches[3] || ".jpg";
-                        return renderImgurDirect(imgurId, extension, url);
-                    }
-                    if (url.includes("giphy.com") || url.includes("media.giphy.com")) {
-                        return renderGiphy(url, id);
-                    }
-                    return renderImage(url, linkText);
-            }
-
-            // Default: regular link
-            return `<a href="${url}" title="${linkTitle}" target="_blank" rel="noopener noreferrer">${linkText}</a>`;
-
-        } catch (mediaError) {
-            // If media detection fails, just return a regular link
-            return `<a href="${url}" title="${linkTitle}" target="_blank" rel="noopener noreferrer">${linkText}</a>`;
+            return DOMPurify.sanitize(htmlWithEmojis, {
+                ADD_TAGS: ["iframe", "blockquote", "video", "source", "img"],
+                ADD_ATTR: [
+                    "allow",
+                    "allowfullscreen",
+                    "frameborder",
+                    "scrolling",
+                    "target",
+                    "rel",
+                    "async",
+                    "charset",
+                    "data-id",
+                    "lang",
+                    "controls",
+                    "loop",
+                    "muted",
+                    "playsinline",
+                    "type",
+                    "src",
+                    "alt",
+                    "title",
+                    "class",
+                    "loading",
+                ],
+                FORBID_TAGS: ["script", "style", "form", "input", "button", "textarea", "select", "option"],
+                FORBID_ATTR: ["onerror", "onload", "onclick", "onmouseover", "onmouseout", "eval"],
+            });
+        } catch (error) {
+            console.error('Error rendering markdown:', error);
+            return DOMPurify.sanitize(text || '');
         }
+    };
 
-    } catch (error) {
-        // Final fallback for any unexpected errors
-        console.error('Error in link renderer:', error);
-        return `<span>link</span>`;
-    }
-};
-
-// Apply the custom renderer to marked
-marked.use({ renderer });
-
-const renderMarkdown = (text: string) => {
-    if (!text) return "";
-
-    try {
-        // Convert markdown to HTML and sanitize
-        const rawHTML = marked.parse(text) as string;
-
-        // Process emojis in the HTML
-        const htmlWithEmojis = replaceEmojis(rawHTML);
-
-        return DOMPurify.sanitize(htmlWithEmojis, {
-            ADD_TAGS: ["iframe", "blockquote", "video", "source", "img"],
-            ADD_ATTR: [
-                "allow",
-                "allowfullscreen",
-                "frameborder",
-                "scrolling",
-                "target",
-                "rel",
-                "async",
-                "charset",
-                "data-id",
-                "lang",
-                "controls",
-                "loop",
-                "muted",
-                "playsinline",
-                "type",
-                "src",
-                "alt",
-                "title",
-                "class",
-                "loading",
-            ],
-            FORBID_TAGS: ["script", "style", "form", "input", "button", "textarea", "select", "option"],
-            FORBID_ATTR: ["onerror", "onload", "onclick", "onmouseover", "onmouseout", "eval"],
-        });
-    } catch (error) {
-        console.error('Error rendering markdown:', error);
-        return DOMPurify.sanitize(text || '');
-    }
-};
-
-// Assign to the variable that will be exported
-clientRenderMarkdown = renderMarkdown;
+    // Assign to the variable that will be exported
+    clientRenderMarkdown = renderMarkdown;
 
 } else {
     // Server-side fallback
