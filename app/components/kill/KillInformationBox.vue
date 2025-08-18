@@ -85,10 +85,9 @@
                 class="entity-link truncate">
                 {{ getLocalizedString(killmail?.victim?.ship_name) }}
             </NuxtLink>
-            <NuxtLink v-if="killmail?.victim?.ship_group_name" :to="`/group/${killmail.victim.ship_group_id}`"
-                class="entity-link truncate">
+            <span v-if="killmail?.victim?.ship_group_name" class="entity-text truncate">
                 ({{ getLocalizedString(killmail?.victim?.ship_group_name) }})
-            </NuxtLink>
+            </span>
             <span v-else class="truncate">{{ getLocalizedString(killmail?.victim?.ship_name) }}</span>
         </div>
 
@@ -728,6 +727,12 @@ watch(
     color: #4fc3f7;
     /* Standard hover color */
     text-decoration: underline;
+}
+
+.entity-text {
+    color: inherit;
+    font-style: italic;
+    opacity: 0.8;
 }
 
 /* Security Status Colors */

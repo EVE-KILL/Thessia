@@ -275,14 +275,8 @@ async function fetchComments() {
             return;
         }
 
-        const { data, error } = await useFetch(`/api/comments/${killIdentifier.value}`);
-
-        if (error.value) {
-            console.error(`Error fetching comments: ${error.value.message}`);
-            return;
-        }
-
-        comments.value = (data.value as any[]) || [];
+        const data = await $fetch(`/api/comments/${killIdentifier.value}`);
+        comments.value = (data as any[]) || [];
         commentsLoaded.value = true;
     } catch (err) {
         console.error("Error fetching comments:", err);
@@ -303,22 +297,26 @@ async function postComment() {
 
     try {
         // Post JSON data to the API
-        const { data, error } = await useFetch(`/api/comments/${killIdentifier.value}`, {
-            method: "POST",
-            body: {
-                comment: newComment.value.trim(),
-            },
-            headers: {
-                "Content-Type": "application/json",
-            },
-        });
+        try {
+            const data = await $fetch(`/api/comments/${killIdentifier.value}`, {
+                method: "POST",
+                body: {
+                    comment: newComment.value.trim(),
+                },
+                headers: {
+                    "Content-Type": "application/json",
+                },
+            });
 
-        if (error.value) {
+            comments.value = (data as any[]) || [];
+            newComment.value = "";
+            errorMessage.value = "";
+        } catch (error: any) {
             // Extract just the relevant part of the error message
-            if (error.value.message) {
+            if (error.message) {
                 // Parse error message to extract just the content after the status code
-                const match = error.value.message.match(/\d{3}\s+(.*)/);
-                errorMessage.value = match?.[1] ?? (error.value.message ?? "Unknown error");
+                const match = error.message.match(/\d{3}\s+(.*)/);
+                errorMessage.value = match?.[1] ?? (error.message ?? "Unknown error");
 
                 // If the error is about moderation, format it nicely
                 if (errorMessage.value.includes("potentially harmful content")) {
@@ -332,7 +330,6 @@ async function postComment() {
             } else {
                 errorMessage.value = t("comment_post_error");
             }
-            return;
         }
 
         // Don't need to manually add the comment here anymore
@@ -443,18 +440,13 @@ async function submitReport() {
     isReporting.value = true;
 
     try {
-        const { data, error } = await useFetch("/api/comments/report", {
+        await $fetch("/api/comments/report", {
             method: "POST",
             body: {
                 identifier: activeComment.value,
                 reportMessage: reportMessage.value.trim(),
             },
         });
-
-        if (error.value) {
-            alert(t("comment.report_error"));
-            return;
-        }
 
         closeModal();
         alert(t("comment.report_success"));
@@ -472,17 +464,12 @@ async function confirmDelete() {
     isDeleting.value = true;
 
     try {
-        const { data, error } = await useFetch("/api/comments/delete", {
+        await $fetch("/api/comments/delete", {
             method: "POST",
             body: {
                 identifier: activeComment.value,
             },
         });
-
-        if (error.value) {
-            alert(t("comment.delete_error"));
-            return;
-        }
 
         closeModal();
     } catch (err) {

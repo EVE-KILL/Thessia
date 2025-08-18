@@ -675,31 +675,11 @@ const siblings = computed(() => fetchedSiblings.value || []);
 // Use the fetched killmail directly instead of a separate reactive ref
 const killmail = computed(() => fetchedKillmail.value || null);
 
-// Debug logging for SSR/client rendering
-if (import.meta.dev) {
-    watchEffect(() => {
-        console.log('Render state check:', {
-            environment: import.meta.server ? 'server' : 'client',
-            killmail: !!killmail.value,
-            pending: pending.value,
-            shouldShowSkeleton: !killmail.value || pending.value
-        });
-    });
-}
-
 // Privacy settings computed property - use SSR data directly to prevent flash
 const shouldHideFitting = computed(() => {
     // First try to get from SSR configuration data
     const configs = configurationData.value?.configurations || [];
     const hideFittingConfig = configs.find(config => config.key === 'hideFitting');
-
-    if (import.meta.dev) {
-        console.log('Configuration check:', {
-            configsLength: configs.length,
-            hideFittingConfig,
-            characterId: killmail.value?.victim?.character_id
-        });
-    }
 
     if (hideFittingConfig) {
         return hideFittingConfig.value;
