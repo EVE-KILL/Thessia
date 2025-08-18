@@ -46,36 +46,10 @@ const processNamesAndSubmit = async (text: string) => {
         isLoading.value = true;
         error.value = null;
 
-        const response = await fetch('/api/tools/localscan', {
+        const data = await $fetch('/api/tools/localscan', {
             method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify(names)
+            body: names
         });
-
-        // First check if response is ok
-        if (!response.ok) {
-            // Try to parse error message from JSON response
-            try {
-                const errorData = await response.json();
-                // Use the server's error message if available
-                error.value = errorData.message || t('tools.localscan.error_processing');
-            } catch (parseError) {
-                // If JSON parsing fails, use a generic error based on status code
-                if (response.status === 404) {
-                    error.value = t('tools.localscan.no_valid_characters');
-                } else {
-                    error.value = `${t('tools.localscan.error_processing')} (${response.status})`;
-                }
-            }
-
-            console.error('API error:', response.status, error.value);
-            return;
-        }
-
-        // If we get here, the response is ok, so parse the data
-        const data = await response.json();
 
         // Navigate to result page with hash
         if (data && typeof data.hash === 'string' && data.hash.length > 0) {
@@ -87,8 +61,9 @@ const processNamesAndSubmit = async (text: string) => {
         } else {
             error.value = t('tools.localscan.invalid_response');
         }
-    } catch (e) {
-        error.value = t('tools.localscan.error_processing');
+    } catch (e: any) {
+        console.error('Error processing localscan:', e);
+        error.value = e?.data?.message || t('tools.localscan.error_processing');
     } finally {
         isLoading.value = false;
     }

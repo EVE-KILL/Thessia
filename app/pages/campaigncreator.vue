@@ -288,24 +288,10 @@ async function loadCampaignForEditing() {
         isLoading.value = true;
         console.log(`Loading campaign ${campaignId.value} for editing...`);
 
-        // Fetch campaign data
-        const { data: campaignData, error } = await useFetch(`/api/campaign/${campaignId.value}`, {
-            key: `edit-campaign-${campaignId.value}`
-        });
+        // Fetch campaign data with $fetch
+        const campaignData = await $fetch(`/api/campaign/${campaignId.value}`);
 
-        if (error.value) {
-            console.error('Error loading campaign:', error.value);
-            toast.add({
-                title: t('error'),
-                description: t('campaignCreator.loadError'),
-                color: 'error',
-                icon: 'i-lucide-alert-circle',
-                timeout: 5000
-            });
-            return;
-        }
-
-        if (!campaignData.value) {
+        if (!campaignData) {
             console.error('No campaign data returned');
             toast.add({
                 title: t('error'),
@@ -318,7 +304,7 @@ async function loadCampaignForEditing() {
         }
 
         // Store campaign data
-        editCampaignData.value = campaignData.value;
+        editCampaignData.value = campaignData;
 
         // Check if user is the creator
         if (!currentUser.value || editCampaignData.value.creator_id !== currentUser.value.characterId) {
@@ -720,7 +706,7 @@ const submitButtonText = computed(() => {
                     <UCard class="bg-yellow-50 dark:bg-yellow-900/20 border-0">
                         <template #header>
                             <h2 class="text-xl font-semibold text-gray-800 dark:text-gray-100">{{ $t('campaignDetails')
-                                }}</h2>
+                            }}</h2>
                         </template>
                         <div class="space-y-4">
                             <div>
@@ -979,7 +965,7 @@ const submitButtonText = computed(() => {
                                         class="block text-sm font-medium text-gray-700 dark:text-gray-300">
                                         {{ $t('endTime') }}
                                         <span class="text-xs text-gray-500 ml-1">({{ $t('campaignCreator.optional')
-                                            }})</span>
+                                        }})</span>
                                     </label>
                                     <input type="datetime-local" id="campaignEndTime" class="custom-input"
                                         v-model="campaignEndTime">

@@ -484,17 +484,15 @@ async function validateFacets() {
 
     // Call backend validation API for cross-entity checks
     try {
-        const { data, error } = await useFetch("/api/query/validate", {
+        const data = await $fetch("/api/query/validate", {
             method: "POST",
             body: { facets: facets.value },
         });
-        if (error.value) {
-            warnings.push("Validation API error: " + (error.value.message || "Unknown error"));
-        } else if (data.value && Array.isArray(data.value.warnings)) {
-            warnings.push(...data.value.warnings);
+        if (data && Array.isArray(data.warnings)) {
+            warnings.push(...data.warnings);
         }
-    } catch (err) {
-        warnings.push("Validation API error: " + (err instanceof Error ? err.message : String(err)));
+    } catch (err: any) {
+        warnings.push("Validation API error: " + (err?.data?.message || err?.message || "Unknown error"));
     }
 
     validationWarnings.value = warnings;
@@ -614,11 +612,11 @@ const searchEntities = async (facetId: string, searchTerm: string) => {
 
     try {
         const encoded = encodeURIComponent(searchTerm);
-        const { data } = await useFetch(`/api/search/${encoded}`);
+        const data = await $fetch(`/api/search/${encoded}`);
 
-        if (data.value && data.value.hits) {
+        if (data && data.hits) {
             // Filter results by entity type
-            facet.searchResults = data.value.hits
+            facet.searchResults = data.hits
                 .filter((hit) => hit.type === facet.entityType)
                 .slice(0, 10); // Limit to 10 results
         }
@@ -895,18 +893,18 @@ async function saveQuery() {
             url = "/api/query/save";
             body.id = savedQueryId.value;
         }
-        const { data, error } = await useFetch(url, {
+        const data = await $fetch(url, {
             method: "POST",
             body,
         });
-        if (error.value || !data.value || !data.value.hash) {
-            saveError.value = error.value?.message || "Failed to save query.";
+        if (!data || !data.hash) {
+            saveError.value = "Failed to save query.";
             isSaving.value = false;
             return;
         }
         // If new, redirect to /query?id=<hash>
         if (!savedQueryId.value) {
-            window.location.href = `/query?id=${data.value.hash}`;
+            window.location.href = `/query?id=${data.hash}`;
         } else {
             // If updating, just reload page
             window.location.reload();
@@ -942,20 +940,17 @@ const executeQuery = async () => {
         isLoading.value = true;
         error.value = null;
 
-        const { data, error: fetchError } = await useFetch("/api/query", {
+        // Use $fetch for on-demand queries instead of useFetch
+        const data = await $fetch("/api/query", {
             method: "POST",
             body: queryObject.value,
         });
 
-        if (fetchError.value) {
-            throw new Error(fetchError.value.message || "Error fetching data");
-        }
-
-        queryResult.value = data.value;
+        queryResult.value = data;
         error.value = null;
-    } catch (err) {
+    } catch (err: any) {
         console.error("Query execution error:", err);
-        error.value = err instanceof Error ? err.message : "Unknown error executing query";
+        error.value = err?.data?.message || err?.message || "Unknown error executing query";
         queryResult.value = null;
     } finally {
         isLoading.value = false;

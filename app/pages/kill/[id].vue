@@ -12,7 +12,7 @@
                     <div id="information-area" class="flex flex-col md:flex-row justify-around">
                         <!-- Fitting Wheel - Increased size container -->
                         <div class="w-full flex justify-center items-center">
-                            <template v-if="!killmail">
+                            <template v-if="pending">
                                 <div class="fitting-wheel-skeleton max-w-[650px]">
                                     <!-- Outer SVG ring -->
                                     <div class="skeleton-outer-ring">
@@ -110,13 +110,16 @@
                                     </div>
                                 </div>
                             </template>
-                            <KillFittingWheel v-else :killmail="killmail" :hideFitting="shouldHideFitting"
+                            <KillFittingWheel v-else-if="killmail" :killmail="killmail" :hideFitting="shouldHideFitting"
                                 :max-width="1000" style="min-width: 350px" />
+                            <div v-else class="text-center py-8">
+                                <p>{{ t('error.killmail_not_found') }}</p>
+                            </div>
                         </div>
 
                         <!-- Kill Information - Adjusted width -->
                         <div class="information-box ml-0 md:ml-4 md:mt-0 w-full md:w-3/5 lg:w-1/2 max-w-[325px]">
-                            <template v-if="!killmail">
+                            <template v-if="pending">
                                 <div class="grid gap-4">
                                     <!-- Ship section skeleton -->
                                     <div class="section p-3 rounded-lg bg-background-800 bg-opacity-30">
@@ -194,7 +197,7 @@
 
                 <!-- Body -->
                 <div class="mt-4">
-                    <template v-if="!killmail">
+                    <template v-if="pending">
                         <div class="kill-items-skeleton">
                             <!-- Table header skeleton -->
                             <div class="skeleton-header">
@@ -321,14 +324,17 @@
                             </div>
                         </div>
                     </template>
-                    <KillItems v-else :killmail="killmail" :hideFitting="shouldHideFitting" />
+                    <KillItems v-else-if="killmail" :killmail="killmail" :hideFitting="shouldHideFitting" />
+                    <div v-else class="text-center py-8">
+                        <p>{{ t('error.killmail_not_found') }}</p>
+                    </div>
                 </div>
             </div>
 
             <!-- Right Container -->
             <div
                 class="w-full md:w-2/5 lg:w-1/3 xl:max-w-md text-black dark:text-white bg-background-900 rounded-md overflow-hidden">
-                <template v-if="!killmail">
+                <template v-if="pending">
                     <!-- Skeleton content for attackers -->
                     <div class="p-4">
                         <div class="grid gap-4">
@@ -356,12 +362,13 @@
                         </div>
                     </div>
                 </template>
-                <div v-else>
+                <div v-else-if="killmail">
                     <KillAttackers :killmail="killmail" />
                     <div id="comments-section"></div>
-                    <ClientOnly>
-                        <KillComments :killId="killmail.killmail_id" />
-                    </ClientOnly>
+                    <KillComments :killId="killmail.killmail_id" @comment-count-changed="updateCommentCount" />
+                </div>
+                <div v-else class="text-center py-8">
+                    <p>{{ t('error.killmail_not_found') }}</p>
                 </div>
             </div>
         </div>
@@ -369,7 +376,7 @@
         <!-- Mobile Layout -->
         <div v-else class="mt-4">
             <div class="text-black dark:text-white bg-background-900 rounded-md overflow-hidden">
-                <template v-if="!killmail">
+                <template v-if="pending">
                     <!-- Skeleton tabs -->
                     <div class="border-b border-background-700">
                         <div class="flex gap-2 p-2 overflow-x-auto">
@@ -476,44 +483,47 @@
                         </div>
                     </div>
                 </template>
-                <Tabs v-else v-model="activeTabId" :items="mobileTabs" :class="tabsUi">
+                <Tabs v-else-if="killmail" v-model="activeTabId" :items="mobileTabs" :class="tabsUi">
                     <!-- Fitting Wheel Tab -->
                     <template #fitting="{ item }">
                         <div class="flex justify-center">
-                            <KillFittingWheel v-if="killmail" :key="killmail.killmail_id" :killmail="killmail" />
+                            <KillFittingWheel :key="killmail.killmail_id" :killmail="killmail"
+                                :hideFitting="shouldHideFitting" />
                         </div>
                     </template>
 
                     <!-- Items Tab -->
                     <template #items="{ item }">
                         <div class="">
-                            <KillItems v-if="killmail" :killmail="killmail" />
+                            <KillItems :killmail="killmail" :hideFitting="shouldHideFitting" />
                         </div>
                     </template>
 
                     <!-- Info Tab -->
                     <template #info="{ item }">
-                        <div class="">
-                            <KillInformationBox v-if="killmail" :killmail="killmail" />
+                        <div class="p-4">
+                            <KillInformationBox :killmail="killmail" />
                         </div>
                     </template>
 
                     <!-- Attackers Tab -->
                     <template #attackers="{ item }">
-                        <div class="">
-                            <KillAttackers v-if="killmail" :attackers="killmail.attackers" />
+                        <div class="p-2">
+                            <KillAttackers :killmail="killmail" />
                         </div>
                     </template>
 
                     <!-- Comments Tab -->
                     <template #comments="{ item }">
                         <div class="">
-                            <ClientOnly>
-                                <KillComments :killId="killmail.killmail_id" />
-                            </ClientOnly>
+                            <div id="comments-section"></div>
+                            <KillComments :killId="killmail.killmail_id" @comment-count-changed="updateCommentCount" />
                         </div>
                     </template>
                 </Tabs>
+                <div v-else class="text-center py-8">
+                    <p>{{ t('error.killmail_not_found') }}</p>
+                </div>
             </div>
         </div>
     </div>
@@ -673,7 +683,10 @@ const battle = computed(() => battleStatus.value?.inBattle ?? false);
 const siblings = computed(() => fetchedSiblings.value || []);
 
 // Use the fetched killmail directly instead of a separate reactive ref
-const killmail = computed(() => fetchedKillmail.value || null);
+const killmail = computed(() => {
+    const result = fetchedKillmail.value || null;
+    return result;
+});
 
 // Privacy settings computed property - use SSR data directly to prevent flash
 const shouldHideFitting = computed(() => {

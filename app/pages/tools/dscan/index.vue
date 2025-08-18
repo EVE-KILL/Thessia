@@ -19,29 +19,21 @@ const processDscanAndSubmit = async (text: string) => {
         isLoading.value = true;
         error.value = null;
 
-        // Send to API
-        const { data, error: fetchError } = await useFetch('/api/tools/dscan', {
+        // Send to API with $fetch
+        const data = await $fetch('/api/tools/dscan', {
             method: 'POST',
             body: { dscan: text }
         });
 
-        if (fetchError.value) {
-            // Try to get a more specific error message if available
-            const errorDetail = fetchError.value.data?.message || t('tools.dscan.error_processing');
-            error.value = errorDetail;
-            console.error('DScan API error:', fetchError.value);
-            return;
-        }
-
         // Navigate to result page with hash
-        if (data.value && data.value.hash) {
-            await router.push(`/tools/dscan/${data.value.hash}`);
+        if (data && data.hash) {
+            await router.push(`/tools/dscan/${data.hash}`);
         } else {
             error.value = t('tools.dscan.invalid_response');
         }
-    } catch (e) {
+    } catch (e: any) {
         console.error('Error processing DScan:', e);
-        error.value = t('tools.dscan.error_processing'); // Generic error for unexpected issues
+        error.value = e?.data?.message || t('tools.dscan.error_processing');
     } finally {
         isLoading.value = false;
     }
