@@ -1,15 +1,10 @@
 <template>
-    <div class="markdown-content prose prose-sm dark:prose-invert max-w-none" v-html="finalRenderMarkdown(safeComment)">
-    </div>
+    <div class="markdown-content prose prose-sm dark:prose-invert max-w-none" v-html="renderedComment"></div>
 </template>
 
 <script setup lang="ts">
 import DOMPurify from 'isomorphic-dompurify';
-import { marked } from 'marked';
-import { nextTick, ref } from 'vue';
-
-// Composables
-const { replaceEmojis, loadEmojiManifest } = useEmoji();
+import MarkdownIt from 'markdown-it';
 
 // Props
 const props = defineProps({
@@ -24,800 +19,252 @@ const safeComment = computed(() => {
     return typeof props.comment === 'string' ? props.comment : String(props.comment || '');
 });
 
-// Load emoji manifest when component mounts
-onMounted(() => {
-    loadEmojiManifest();
-});
+// Client-side rendered markdown content
+const renderedComment = ref('');
 
-// SERVER-SIDE PROTECTION: Only set up markdown processing on client-side
-let clientRenderMarkdown: (text: string) => string;
+// Enhanced media detection functions
+const detectMediaType = (url: string): 'image' | 'video' | 'youtube' | 'giphy' | 'tenor' | 'link' => {
+    if (!url || typeof url !== 'string') return 'link';
 
-if (!import.meta.server) {
-    // CRITICAL SAFETY FIX: Add comprehensive protection against startsWith errors
-    // This addresses the production error: "h.props.content?.startsWith is not a function"
+    const lowerUrl = url.toLowerCase();
 
-    // Override Object.prototype.startsWith for any non-string objects that might get it called
-    const originalStartsWith = String.prototype.startsWith;
-
-    // Add a defensive startsWith to Object prototype ONLY during markdown processing
-    const installStartsWithProtection = () => {
-        if (!(Object.prototype as any).startsWith) {
-            (Object.prototype as any).startsWith = function (searchString: string) {
-                // If this is actually a string, use the normal method
-                if (typeof this === 'string') {
-                    return originalStartsWith.call(this, searchString);
-                }
-                // If this object has a content property that's a string, use that
-                if (this && typeof this.content === 'string') {
-                    return this.content.startsWith(searchString);
-                }
-                // If this object has an href property that's a string, use that
-                if (this && typeof this.href === 'string') {
-                    return this.href.startsWith(searchString);
-                }
-                // Otherwise, return false to prevent the error
-                console.warn('startsWith called on non-string object:', this, 'searching for:', searchString);
-                return false;
-            };
-        }
-    };
-
-    const removeStartsWithProtection = () => {
-        if ((Object.prototype as any).startsWith) {
-            delete (Object.prototype as any).startsWith;
-        }
-    };
-
-    // Markdown rendering - exact copy from KillComments
-    type MediaType = "image" | "video" | "gif" | "iframe" | "unknown";
-
-    /**
-     * Add autolink extension to handle raw URLs in text
-     */
-    marked.use({
-        extensions: [
-            {
-                name: "autolink",
-                level: "inline",
-                start(src) {
-                    if (typeof src !== 'string') return -1;
-                    return src.indexOf("http");
-                },
-                tokenizer(src) {
-                    if (typeof src !== 'string' || typeof src.match !== 'function') return undefined;
-                    const urlRegex = /^(https?:\/\/[^\s<]+[^<.,:;"')\]\s])/;
-                    const match = src.match(urlRegex);
-                    if (match && match[0] && typeof match[0] === 'string') {
-                        return {
-                            type: "link",
-                            raw: match[0],
-                            text: match[0],
-                            href: match[0],
-                            tokens: [
-                                {
-                                    type: "text",
-                                    raw: match[0],
-                                    text: match[0],
-                                },
-                            ],
-                        };
-                    }
-                    return undefined;
-                },
-            },
-        ],
-    });
-
-
-
-    /**
-     * Detect media type from URL
-     * @param url - URL to analyze
-     * @returns Media type and additional metadata
-     */
-    function detectMediaType(url: string): {
-        type: MediaType;
-        id?: string;
-        matches?: RegExpMatchArray | null;
-    } {
-        // Simple input validation
-        if (!url || typeof url !== "string" || !url.trim()) {
-            return { type: "unknown" };
-        }
-
-        const trimmedUrl = url.trim();
-
-        // Ensure the URL starts with http/https for security
-        // Additional safety check to ensure startsWith method exists
-        if (typeof trimmedUrl.startsWith !== 'function' ||
-            (!trimmedUrl.startsWith("http://") && !trimmedUrl.startsWith("https://"))) {
-            return { type: "unknown" };
-        }
-        // YouTube (including shorts)
-        const youtubeMatch =
-            trimmedUrl.match(/^https?:\/\/(www\.)?youtube\.com\/watch\?v=([a-zA-Z0-9_-]+)/) ||
-            trimmedUrl.match(/^https?:\/\/(www\.)?youtu\.be\/([a-zA-Z0-9_-]+)/) ||
-            trimmedUrl.match(/^https?:\/\/(www\.)?youtube\.com\/shorts\/([a-zA-Z0-9_-]+)/);
-        if (youtubeMatch) {
-            return { type: "iframe", id: youtubeMatch[2], matches: youtubeMatch };
-        }
-
-        // Imgur direct
-        const imgurDirectMatch = trimmedUrl.match(
-            /^https?:\/\/(i\.)?imgur\.com\/([a-zA-Z0-9]+)(\.(jpeg|jpg|png|gif|mp4|webm))?$/i,
-        );
-        if (imgurDirectMatch) {
-            const extension = imgurDirectMatch[3] || ".jpg";
-            const mediaType = extension.match(/\.(mp4|webm)$/i) ? "video" : "image";
-            return { type: mediaType as MediaType, id: imgurDirectMatch[2], matches: imgurDirectMatch };
-        }
-
-        // Imgur gallery
-        const imgurGalleryMatch = trimmedUrl.match(/^https?:\/\/(www\.)?imgur\.com\/(gallery|a)\/([^\/\s]+)/i);
-        if (imgurGalleryMatch) {
-            return { type: "iframe", id: imgurGalleryMatch[3], matches: imgurGalleryMatch };
-        }
-
-        // Giphy complex URL
-        const complexGiphyMatch = trimmedUrl.match(
-            /^https?:\/\/media[0-9]?\.giphy\.com\/media\/v[0-9]\..*?\/.*?\/giphy\.gif/,
-        );
-        if (complexGiphyMatch) {
-            return { type: "image", matches: complexGiphyMatch };
-        }
-
-        // Giphy simple URL
-        const simpleGiphyMatch =
-            !complexGiphyMatch &&
-            (trimmedUrl.match(/^https?:\/\/(www\.)?giphy\.com\/gifs\/([a-zA-Z0-9]+-)*([a-zA-Z0-9]+)/) ||
-                trimmedUrl.match(/^https?:\/\/media[0-9]?\.giphy\.com\/media\/([a-zA-Z0-9]+)/));
-        if (simpleGiphyMatch) {
-            const giphyId = simpleGiphyMatch[simpleGiphyMatch.length - 1];
-            return { type: "image", id: giphyId, matches: simpleGiphyMatch };
-        }
-
-        // Tenor
-        const tenorMatch = trimmedUrl.match(/^https?:\/\/(www\.)?tenor\.com\/view\/[a-zA-Z0-9-]+-([0-9]+)/);
-        if (tenorMatch) {
-            return { type: "iframe", id: tenorMatch[2], matches: tenorMatch };
-        }
-
-        // Standard image
-        const imageMatch = trimmedUrl.match(/\.(jpeg|jpg|gif|png)$/i);
-        if (imageMatch) {
-            return { type: "image", matches: imageMatch };
-        }
-
-        // Standard video
-        const videoMatch = trimmedUrl.match(/\.(mp4|webm)$/i);
-        if (videoMatch) {
-            return { type: "video", matches: videoMatch };
-        }
-
-        // Default - regular link
-        return { type: "unknown" };
+    // YouTube detection
+    if (lowerUrl.includes('youtube.com/watch') || lowerUrl.includes('youtu.be/')) {
+        return 'youtube';
     }
 
-    // Create a reactive map to store resolved Imgur URLs with media type information
-    const resolvedImgurMedia = ref(new Map<string, { url: string; type: string }>());
+    // Giphy detection
+    if (lowerUrl.includes('giphy.com') || lowerUrl.includes('gph.is')) {
+        return 'giphy';
+    }
 
-    // Function to resolve an Imgur gallery/album URL to its media
-    async function resolveImgurUrl(url: string): Promise<{ url: string; type: string } | null> {
-        try {
-            // Generate a unique cache key for this specific URL
-            const cacheKey = url.trim();
+    // Tenor detection
+    if (lowerUrl.includes('tenor.com')) {
+        return 'tenor';
+    }
 
-            // Don't re-fetch URLs we've already resolved in this session
-            if (resolvedImgurMedia.value.has(cacheKey)) {
-                return resolvedImgurMedia.value.get(cacheKey) || null;
-            }
+    // Video file extensions
+    if (lowerUrl.match(/\.(mp4|webm|ogg|avi|mov)$/)) {
+        return 'video';
+    }
 
-            // Use server proxy to fetch Imgur data (avoids CORS issues)
-            const data = await $fetch("/api/proxy/imgur", {
-                method: "POST",
-                body: { url: cacheKey },
-                headers: {
-                    "Content-Type": "application/json",
-                },
-            }) as any;
+    // Image file extensions
+    if (lowerUrl.match(/\.(jpg|jpeg|png|gif|webp|svg)$/)) {
+        return 'image';
+    }
 
-            if (data?.mediaUrl) {
-                const result = {
-                    url: data.mediaUrl,
-                    type: data.mediaType || "image",
-                };
+    return 'link';
+};
 
-                // Cache the resolved media info in the component
-                resolvedImgurMedia.value.set(cacheKey, result);
+const extractYouTubeId = (url: string): string | null => {
+    if (!url || typeof url !== 'string') return null;
 
-                return result;
-            }
+    const match = url.match(/(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/);
+    return match?.[1] ?? null;
+};
 
-            return null;
-        } catch (error) {
-            return null;
+const convertGiphyUrl = (url: string): string => {
+    if (!url || typeof url !== 'string') return url;
+
+    // Convert various Giphy URLs to embed format
+    if (url.includes('giphy.com/gifs/') || url.includes('gph.is/')) {
+        const gifId = url.split('/').pop()?.split('-').pop();
+        if (gifId) {
+            return `https://i.giphy.com/media/${gifId}/giphy.gif`;
         }
     }
 
-    /**
-     * Generate HTML for YouTube embed
-     */
-    function renderYouTube(videoId: string): string {
-        return `<div class="video-container">
-            <iframe width="100%" height="315"
-              src="https://www.youtube.com/embed/${videoId}"
-              frameborder="0"
-              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-              allowfullscreen>
-            </iframe>
-          </div>`;
+    // Handle direct Giphy media URLs
+    if (url.includes('media.giphy.com') || url.includes('i.giphy.com')) {
+        return url;
     }
 
-    /**
-     * Generate HTML for Imgur direct media
-     */
-    function renderImgurDirect(imgurId: string, extension: string, originalUrl: string): string {
-        // Check if it's a video
-        if (extension.match(/\.(mp4|webm)$/i)) {
-            return `<div class="video-container">
-              <video autoplay loop muted playsinline controls class="max-w-full">
-                <source src="https://i.imgur.com/${imgurId}${extension}" type="video/mp4">
-                Your browser doesn't support HTML5 video.
-              </video>
-              <div class="media-source">
-                <a href="${originalUrl}" target="_blank" rel="noopener noreferrer" class="source-link">
-                  <span class="flex items-center"><svg class="w-4 h-4 mr-1" viewBox="0 0 24 24" fill="currentColor"><path d="M22 16V5c0-1.1-.9-2-2-2H8c-1.1 0-2 .9-2 2v11c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2zm-11 5v-1h-4v1c0 .55.45 1 1 1h2c.55 0 1-.45 1-1zm7 0v-1h-4v1c0 .55.45 1 1 1h2c.55 0 1-.45 1-1z"></path></svg>View on Imgur</span>
-                </a>
-              </div>
-            </div>`;
-        }
-        return `<div class="image-container">
-              <img src="https://i.imgur.com/${imgurId}${extension}" alt="Imgur Image" class="max-w-full h-auto" />
-              <div class="media-source">
-                <a href="${originalUrl}" target="_blank" rel="noopener noreferrer" class="source-link">
-                  <span class="flex items-center"><svg class="w-4 h-4 mr-1" viewBox="0 0 24 24" fill="currentColor"><path d="M22 16V5c0-1.1-.9-2-2-2H8c-1.1 0-2 .9-2 2v11c0 1.1.9 2 2 2h12c.1 0 2-.9 2-2zm-11 5v-1h-4v1c0 .55.45 1 1 1h2c.55 0 1-.45 1-1zm7 0v-1h-4v1c0 .55.45 1 1 1h2c.55 0 1-.45 1-1z"></path></svg>View on Imgur</span>
-                </a>
-              </div>
-            </div>`;
+    return url;
+};
+
+const convertTenorUrl = (url: string): string => {
+    if (!url || typeof url !== 'string') return url;
+
+    // Convert Tenor URLs to direct GIF URLs
+    const match = url.match(/tenor\.com\/view\/[^-]*-(\d+)/);
+    if (match) {
+        const gifId = match[1];
+        return `https://media.tenor.com/${gifId}/tenor.gif`;
     }
 
-    /**
-     * Generate HTML for Imgur gallery/album with async loading
-     */
-    function renderImgurGallery(originalUrl: string): string {
-        const uniqueId = `imgur-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
+    // Handle direct Tenor media URLs
+    if (url.includes('media.tenor.com')) {
+        return url;
+    }
 
-        // Create an async function to fetch and update the media URL later
-        nextTick(async () => {
-            const placeholder = document.getElementById(uniqueId);
-            if (!placeholder) return;
+    return url;
+};
 
-            // Show loading state
-            placeholder.innerHTML = `<div class="flex items-center justify-center p-4">
-                            <div class="animate-spin h-8 w-8 border-b-2 border-primary-500"></div>
-                            <span class="ml-2">Loading content from Imgur...</span>
-                          </div>`;
+// Enhanced markdown renderer with media support
+const renderCommentMarkdown = (content: string): string => {
+    if (!content || typeof content !== 'string') return '';
 
-            try {
-                // Use the proxy to fetch the media data
-                const media = await resolveImgurUrl(originalUrl);
-
-                // Update the placeholder with the resolved media
-                if (placeholder) {
-                    if (media) {
-                        if (media.type === "video") {
-                            placeholder.innerHTML = `<video autoplay loop muted playsinline controls class="max-w-full">
-                                    <source src="${media.url}" type="video/mp4">
-                                    Your browser doesn't support HTML5 video.
-                                   </video>`;
-                        } else if (media.type === "gif") {
-                            placeholder.innerHTML = `<img src="${media.url}" alt="Imgur GIF" class="max-w-full h-auto" />`;
-                        } else {
-                            placeholder.innerHTML = `<img src="${media.url}" alt="Imgur Image" class="max-w-full h-auto" />`;
-                        }
-                    } else {
-                        placeholder.innerHTML = `<div class="p-4 text-center">
-                                  <p>Imgur content could not be loaded</p>
-                                  <a href="${originalUrl}" target="_blank" rel="noopener noreferrer" class="text-primary-500">View on Imgur</a>
-                                 </div>`;
-                    }
-                }
-            } catch (error) {
-                if (placeholder) {
-                    placeholder.innerHTML = `<div class="p-4 text-center">
-                                <p>Error loading Imgur content</p>
-                                <a href="${originalUrl}" target="_blank" rel="noopener noreferrer" class="text-primary-500">View on Imgur</a>
-                               </div>`;
-                }
-            }
+    try {
+        const md = new MarkdownIt({
+            html: true,
+            xhtmlOut: false,
+            breaks: true,
+            langPrefix: 'language-',
+            linkify: true,
+            typographer: true,
         });
 
-        return `<div class="media-container">
-          <div id="${uniqueId}" class="imgur-content bg-light-dark-input rounded-md min-h-32 flex items-center justify-center" data-url="${originalUrl}">
-            <span>Loading Imgur content...</span>
-          </div>
-          <div class="media-source">
-            <a href="${originalUrl}" target="_blank" rel="noopener noreferrer" class="source-link">
-              <span class="flex items-center"><svg class="w-4 h-4 mr-1" viewBox="0 0 24 24" fill="currentColor"><path d="M22 16V5c0-1.1-.9-2-2-2H8c-1.1 0-2 .9-2 2v11c0 1.1.9 2 2 2h12c.1 0 2-.9 2-2zm-11 5v-1h-4v1c0 .55.45 1 1 1h2c.55 0 1-.45 1-1zm7 0v-1h-4v1c0 .55.45 1 1 1h2c.55 0 1-.45 1-1z"></path></svg>View on Imgur</span>
-            </a>
-          </div>
-        </div>`;
-    }
+        // Pre-process content to replace media URLs with HTML directly
+        let processedContent = content;
 
-    /**
-     * Generate HTML for Giphy media
-     */
-    function renderGiphy(url: string, giphyId?: string): string {
-        const imgSrc = giphyId ? `https://media.giphy.com/media/${giphyId}/giphy.gif` : url;
+        // Find URLs and replace media URLs with their HTML embeds
+        const urlRegex = /https?:\/\/[^\s<>'"]+/g;
 
-        return `<div class="gif-container">
-            <img src="${imgSrc}" alt="GIPHY" class="max-w-full h-auto" />
-            <div class="media-source">
-              <a href="${url}" target="_blank" rel="noopener noreferrer" class="source-link">
-              </a>
-            </div>
-          </div>`;
-    }
+        processedContent = processedContent.replace(urlRegex, (url) => {
+            const cleanUrl = url.trim();
+            const mediaType = detectMediaType(cleanUrl);
 
-    /**
-     * Generate HTML for Tenor embed
-     */
-    function renderTenor(tenorId: string, url: string): string {
-        return `<div class="gif-container">
-            <iframe src="https://tenor.com/embed/${tenorId}" frameBorder="0" width="100%" height="300px"></iframe>
-            <div class="media-source">
-              <a href="${url}" target="_blank" rel="noopener noreferrer" class="source-link">
-                <span class="flex items-center"><svg class="w-4 h-4 mr-1" viewBox="0 0 24 24" fill="currentColor"><path d="M19.975 8.484L5.717 2.677a.421.421 0 0 0-.58.557l2.879 6.172a.41.41 0 0 1 0 .338L5.16 15.982a.422.422 0 0 0 .58.558l14.257-5.807a.422.422 0 0 0 0-.783l-.022-.466z"></path></svg>View on Tenor</span>
-              </a>
-            </div>
-          </div>`;
-    }
-
-    /**
-     * Generate HTML for standard image
-     */
-    function renderImage(url: string, altText: string): string {
-        return `<div class="image-container">
-            <img src="${url}" alt="${altText}" class="max-w-full h-auto" />
-          </div>`;
-    }
-
-    /**
-     * Generate HTML for standard video
-     */
-    function renderVideo(url: string): string {
-        return `<div class="video-container">
-            <video autoplay loop muted playsinline controls class="max-w-full">
-              <source src="${url}" type="video/mp4">
-              Your browser doesn't support HTML5 video.
-            </video>
-          </div>`;
-    }
-
-    // Create the custom renderer
-    const renderer = new marked.Renderer();
-
-    // Simplified link renderer
-    renderer.link = ({ href, title, tokens }: any): string => {
-        try {
-            // Robust href extraction - only proceed if we get a valid string
-            let url = "";
-
-            if (typeof href === "string") {
-                url = href.trim();
-            } else if (href && typeof href === "object") {
-                // Try to extract string from object - but be very defensive
-                if (typeof href.href === "string") {
-                    url = href.href.trim();
-                } else if (href.props && typeof href.props.content === "string") {
-                    url = href.props.content.trim();
-                } else if (typeof href.text === "string") {
-                    url = href.text.trim();
-                }
-                // If none of these work, url stays ""
-            }
-
-            // If we don't have a valid string URL, bail out early
-            // Additional safety check to ensure it's really a string with expected methods
-            if (!url || typeof url !== "string" || typeof url.startsWith !== 'function') {
-                return `<span>link</span>`;
-            }
-
-            // Extract link text safely
-            let linkText = "";
-            if (tokens && tokens[0] && typeof tokens[0].text === "string") {
-                linkText = tokens[0].text;
-            } else if (tokens && tokens[0] && typeof tokens[0].raw === "string") {
-                linkText = tokens[0].raw;
-            } else {
-                linkText = url || "link";
-            }
-
-            // Only call startsWith if we're absolutely sure url is a string
-            if (typeof url !== "string" || typeof url.startsWith !== 'function' || !url.startsWith("http")) {
-                return `<span>${linkText}</span>`;
-            }
-
-            const linkTitle = (title && typeof title === "string") ? title : "";
-
-            // Detect media type and render accordingly - with additional safety check
-            try {
-                // Ensure url is definitely a string before passing to detectMediaType
-                if (typeof url === "string" && url.trim()) {
-                    const result = detectMediaType(url);
-                    const { type, id, matches } = result;
-
-                    switch (type) {
-                        case "iframe":
-                            if (url.includes("youtube.com") || url.includes("youtu.be")) {
-                                return id ? renderYouTube(id) : renderImage(url, linkText);
-                            }
-                            if (url.includes("tenor.com") && id) {
-                                return renderTenor(id, url);
-                            }
-                            if (url.includes("imgur.com") && !url.includes("i.imgur.com")) {
-                                return renderImgurGallery(url);
-                            }
-                            break;
-
-                        case "video":
-                            return renderVideo(url);
-
-                        case "image":
-                            if (url.includes("imgur.com") && matches) {
-                                const imgurId = matches[2] || '';
-                                const extension = matches[3] || ".jpg";
-                                return renderImgurDirect(imgurId, extension, url);
-                            }
-                            if (url.includes("giphy.com") || url.includes("media.giphy.com")) {
-                                return renderGiphy(url, id);
-                            }
-                            return renderImage(url, linkText);
+            if (mediaType !== 'link') {
+                switch (mediaType) {
+                    case 'youtube': {
+                        const videoId = extractYouTubeId(cleanUrl);
+                        if (videoId) {
+                            return `<div class="youtube-container"><iframe src="https://www.youtube.com/embed/${videoId}" frameborder="0" allowfullscreen></iframe></div>`;
+                        }
+                        break;
+                    }
+                    case 'giphy': {
+                        const gifUrl = convertGiphyUrl(cleanUrl);
+                        return `<img src="${gifUrl}" alt="Giphy GIF" style="max-width: 100%; height: auto;" />`;
+                    }
+                    case 'tenor': {
+                        const gifUrl = convertTenorUrl(cleanUrl);
+                        return `<img src="${gifUrl}" alt="Tenor GIF" style="max-width: 100%; height: auto;" />`;
+                    }
+                    case 'image': {
+                        return `<img src="${cleanUrl}" alt="Image" style="max-width: 100%; height: auto;" />`;
+                    }
+                    case 'video': {
+                        return `<video controls style="max-width: 100%; height: auto;"><source src="${cleanUrl}" /></video>`;
                     }
                 }
-
-                // Default: regular link
-                return `<a href="${url}" title="${linkTitle}" target="_blank" rel="noopener noreferrer">${linkText}</a>`;
-
-            } catch (mediaError) {
-                // If media detection fails, just return a regular link
-                return `<a href="${url}" title="${linkTitle}" target="_blank" rel="noopener noreferrer">${linkText}</a>`;
             }
 
-        } catch (error) {
-            // Final fallback for any unexpected errors
-            console.error('Error in link renderer:', error);
-            return `<span>link</span>`;
-        }
-    };
+            // Return original URL for non-media links (they'll be processed by markdown-it)
+            return url;
+        });
 
-    // Apply the custom renderer to marked
-    marked.use({ renderer });
-
-    // Override marked's internal methods to add defensive programming
-    const originalTokenizer = marked.Tokenizer.prototype.url;
-    if (originalTokenizer) {
-        marked.Tokenizer.prototype.url = function (src: string) {
-            try {
-                const result = originalTokenizer.call(this, src);
-                if (result && result.href && typeof result.href !== 'string') {
-                    // Ensure href is always a string
-                    result.href = String(result.href);
-                }
-                return result;
-            } catch (error) {
-                console.warn('Tokenizer URL processing failed:', error);
-                return false;
-            }
+        // Custom link renderer for remaining links
+        const defaultLinkRender = md.renderer.rules.link_open || function (tokens, idx, options, env, self) {
+            return self.renderToken(tokens, idx, options);
         };
+
+        md.renderer.rules.link_open = function (tokens, idx, options, env, self) {
+            const token = tokens[idx];
+            if (!token || !token.attrs) {
+                return defaultLinkRender(tokens, idx, options, env, self);
+            }
+
+            const hrefIndex = token.attrIndex('href');
+            if (hrefIndex >= 0 && token.attrs[hrefIndex]) {
+                const href = token.attrs[hrefIndex][1];
+
+                // Ensure href is a string
+                if (typeof href === 'string' && href.trim()) {
+                    // External links
+                    if (href.startsWith('http://') || href.startsWith('https://')) {
+                        token.attrPush(['target', '_blank']);
+                        token.attrPush(['rel', 'noopener noreferrer']);
+                    }
+                }
+            }
+
+            return defaultLinkRender(tokens, idx, options, env, self);
+        };
+
+        const rawHTML = md.render(processedContent);
+
+        // Sanitize HTML with media support
+        return DOMPurify.sanitize(rawHTML, {
+            ADD_TAGS: ['iframe', 'video', 'source', 'div'],
+            ADD_ATTR: [
+                'src', 'frameborder', 'allowfullscreen', 'controls', 'style',
+                'alt', 'target', 'rel', 'href', 'class'
+            ],
+            FORBID_TAGS: ['script', 'style', 'form', 'input', 'button', 'textarea', 'select', 'option'],
+            FORBID_ATTR: ['onerror', 'onload', 'onclick', 'onmouseover', 'onmouseout', 'eval']
+        });
+
+    } catch (error) {
+        console.error('Error rendering comment markdown:', error);
+        // Fallback to sanitized plain text
+        return DOMPurify.sanitize(content);
     }
+};
 
-    // Additional safety override for any marked tokenizers that might call startsWith
-    const originalParse = marked.parse;
-    marked.parse = (...args: any[]) => {
+// Render markdown on client-side only to avoid SSR issues
+onMounted(() => {
+    const updateRenderedContent = () => {
+        if (!safeComment.value) {
+            renderedComment.value = '';
+            return;
+        }
+
         try {
-            return originalParse.apply(marked, args);
+            renderedComment.value = renderCommentMarkdown(safeComment.value);
         } catch (error) {
-            // If there's any error during parsing (including the startsWith issue),
-            // return escaped plain text as fallback
-            console.warn('Markdown parsing failed, falling back to plain text:', error);
-            const plainText = args[0] || '';
-            return DOMPurify.sanitize(String(plainText).replace(/</g, '&lt;').replace(/>/g, '&gt;'));
+            console.error('Error rendering comment markdown:', error);
+            // Fallback to sanitized plain text
+            renderedComment.value = DOMPurify.sanitize(safeComment.value);
         }
     };
 
-    const renderMarkdown = (text: string) => {
-        if (!text) return "";
+    // Initial render
+    updateRenderedContent();
 
-        // Install protection before processing
-        installStartsWithProtection();
-
-        try {
-            // Pre-process the text to escape any potentially problematic patterns
-            const cleanedText = text.replace(/[^\x00-\x7F]/g, '').trim();
-
-            // Convert markdown to HTML and sanitize with comprehensive error handling
-            const rawHTML = marked.parse(cleanedText) as string;
-
-            // Process emojis in the HTML
-            const htmlWithEmojis = replaceEmojis(rawHTML);
-
-            return DOMPurify.sanitize(htmlWithEmojis, {
-                ADD_TAGS: ["iframe", "blockquote", "video", "source", "img"],
-                ADD_ATTR: [
-                    "allow",
-                    "allowfullscreen",
-                    "frameborder",
-                    "scrolling",
-                    "target",
-                    "rel",
-                    "async",
-                    "charset",
-                    "data-id",
-                    "lang",
-                    "controls",
-                    "loop",
-                    "muted",
-                    "playsinline",
-                    "type",
-                    "src",
-                    "alt",
-                    "title",
-                    "class",
-                    "loading",
-                ],
-                FORBID_TAGS: ["script", "style", "form", "input", "button", "textarea", "select", "option"],
-                FORBID_ATTR: ["onerror", "onload", "onclick", "onmouseover", "onmouseout", "eval"],
-            });
-        } catch (error) {
-            // Comprehensive error logging to help debug the root cause
-            console.error('Markdown rendering error:', error);
-            console.error('Original text:', text);
-
-            // Return escaped plain text as ultimate fallback
-            return DOMPurify.sanitize(String(text).replace(/</g, '&lt;').replace(/>/g, '&gt;'));
-        } finally {
-            // Always remove protection after processing
-            removeStartsWithProtection();
-        }
-    };
-
-    // Assign to the variable that will be exported
-    clientRenderMarkdown = renderMarkdown;
-
-} else {
-    // Server-side fallback
-    clientRenderMarkdown = (text: string) => DOMPurify.sanitize(text || '');
-}
-
-// Export the final function
-const finalRenderMarkdown = clientRenderMarkdown;
+    // Watch for comment changes
+    watch(safeComment, updateRenderedContent, { immediate: false });
+});
 </script>
 
-<style>
-/* Note: Not scoped so that styles can apply to v-html content */
-.markdown-content.prose {
-    color: inherit;
-    max-width: none;
+<style scoped>
+.markdown-content {
+    word-wrap: break-word;
+    overflow-wrap: break-word;
 }
 
-.markdown-content.prose h1 {
-    font-size: 1.875rem;
-    font-weight: 800;
-    line-height: 2.25rem;
-    margin-bottom: 0.75rem;
-    margin-top: 1.5rem;
-}
-
-.markdown-content.prose h2 {
-    font-size: 1.5rem;
-    font-weight: 700;
-    line-height: 2rem;
-    margin-bottom: 0.5rem;
-    margin-top: 1.25rem;
-}
-
-.markdown-content.prose h3 {
-    font-size: 1.25rem;
-    font-weight: 600;
-    line-height: 1.75rem;
-    margin-bottom: 0.5rem;
-    margin-top: 1rem;
-}
-
-.markdown-content.prose h4 {
-    font-size: 1.125rem;
-    font-weight: 600;
-    line-height: 1.5rem;
-    margin-bottom: 0.25rem;
-    margin-top: 0.75rem;
-}
-
-.markdown-content.prose h5,
-.markdown-content.prose h6 {
-    font-size: 1rem;
-    font-weight: 600;
-    line-height: 1.5rem;
-    margin-bottom: 0.25rem;
-    margin-top: 0.75rem;
-}
-
-.markdown-content.prose p {
-    margin-bottom: 1rem;
-    line-height: 1.75;
-}
-
-.markdown-content.prose strong {
-    font-weight: 700;
-}
-
-.markdown-content.prose em {
-    font-style: italic;
-}
-
-.markdown-content.prose blockquote {
-    border-left: 4px solid #e5e7eb;
-    padding-left: 1rem;
-    margin: 1rem 0;
-    font-style: italic;
-    color: #6b7280;
-}
-
-.dark .markdown-content.prose blockquote {
-    border-left-color: #374151;
-    color: #9ca3af;
-}
-
-.markdown-content.prose code {
-    background-color: #f3f4f6;
-    padding: 0.125rem 0.25rem;
-    border-radius: 0.25rem;
-    font-family: ui-monospace, SFMono-Regular, "SF Mono", Consolas, "Liberation Mono", Menlo, monospace;
-    font-size: 0.875em;
-}
-
-.dark .markdown-content.prose code {
-    background-color: #374151;
-}
-
-.markdown-content.prose pre {
-    background-color: #f3f4f6;
-    padding: 1rem;
-    border-radius: 0.5rem;
-    overflow-x: auto;
-    margin: 1rem 0;
-}
-
-.dark .markdown-content.prose pre {
-    background-color: #1f2937;
-}
-
-.markdown-content.prose pre code {
-    background-color: transparent;
-    padding: 0;
-}
-
-.markdown-content.prose ul,
-.markdown-content.prose ol {
-    margin: 1rem 0;
-    padding-left: 1.5rem;
-}
-
-.markdown-content.prose li {
-    margin: 0.25rem 0;
-}
-
-.markdown-content.prose a {
-    color: #3b82f6;
-    text-decoration: underline;
-}
-
-.markdown-content.prose a:hover {
-    color: #1d4ed8;
-}
-
-.dark .markdown-content.prose a {
-    color: #60a5fa;
-}
-
-.dark .markdown-content.prose a:hover {
-    color: #3b82f6;
-}
-
-.markdown-content.prose img {
+.markdown-content :deep(img) {
     max-width: 100%;
     height: auto;
-    border-radius: 0.5rem;
-    margin: 1rem 0;
-}
-
-.markdown-content.prose table {
-    width: 100%;
-    border-collapse: collapse;
-    margin: 1rem 0;
-}
-
-.markdown-content.prose th,
-.markdown-content.prose td {
-    border: 1px solid #e5e7eb;
-    padding: 0.5rem;
-    text-align: left;
-}
-
-.dark .markdown-content.prose th,
-.dark .markdown-content.prose td {
-    border-color: #374151;
-}
-
-.markdown-content.prose th {
-    background-color: #f9fafb;
-    font-weight: 600;
-}
-
-.dark .markdown-content.prose th {
-    background-color: #1f2937;
-}
-
-/* Media container styles - exact copy from KillComments but without width constraints */
-.markdown-content .video-container,
-.markdown-content .gif-container {
-    position: relative;
-    width: 100%;
-    margin: 1em auto;
-}
-
-.markdown-content .image-container,
-.markdown-content .embed-container {
-    margin: 1em 0;
-    position: relative;
-}
-
-.markdown-content .media-source {
-    margin-top: 0.5rem;
-    font-size: 0.75rem;
-    text-align: right;
-}
-
-.markdown-content .source-link {
-    display: inline-flex;
-    align-items: center;
-    color: #9ca3af;
-    text-decoration: none;
-}
-
-.markdown-content .source-link:hover {
-    color: #4fc3f7;
-    text-decoration: underline;
-}
-
-.markdown-content .video-container iframe {
-    width: 100%;
-    height: 315px;
-    border: none;
-}
-
-.markdown-content .image-container img,
-.markdown-content .gif-container img {
-    max-width: 100%;
-    height: auto;
-    border-radius: 0.25rem;
-}
-
-.markdown-content .gif-container iframe {
-    width: 100%;
-    border: none;
-    border-radius: 0.25rem;
-}
-
-.markdown-content .video-container video {
-    max-width: 100%;
-    max-height: 80vh;
-    margin: 0 auto;
     display: block;
+    margin: 0.5rem 0;
 }
 
-.markdown-content .media-container {
-    margin: 1em 0;
+.markdown-content :deep(video) {
+    max-width: 100%;
+    height: auto;
+    display: block;
+    margin: 0.5rem 0;
+}
+
+.markdown-content :deep(iframe) {
+    max-width: 100%;
+    margin: 0.5rem 0;
+}
+
+.markdown-content :deep(.youtube-container) {
     position: relative;
+    padding-bottom: 56.25%;
+    height: 0;
+    overflow: hidden;
+    margin: 0.5rem 0;
+}
+
+.markdown-content :deep(.youtube-container iframe) {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
 }
 </style>

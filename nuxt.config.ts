@@ -261,7 +261,7 @@ export default defineNuxtConfig({
                         // Separate vendor chunks for better caching (client-safe only)
                         "vue-vendor": ["vue", "vue-router"],
                         charts: ["echarts", "vue-echarts"],
-                        utils: ["date-fns", "marked", "dompurify"],
+                        utils: ["date-fns", "dompurify", "markdown-it"],
                         "eve-specific": ["moment", "moment-timezone"], // EVE-specific utilities
                     },
                 },
@@ -425,8 +425,8 @@ export default defineNuxtConfig({
     // Partytown configuration
     partytown: {
         // Enable debug mode in development
-        debug: process.env.NODE_ENV === 'development',
+        debug: process.env.NODE_ENV === "development",
         // Forward events to main thread
-        forward: ['dataLayer.push'],
+        forward: ["dataLayer.push"],
     },
 });
