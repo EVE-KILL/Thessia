@@ -286,7 +286,7 @@ useSeoMeta({
                             <div class="p-3 rounded-md"
                                 style="background-color: light-dark(rgba(245, 245, 245, 0.1), rgba(26, 26, 26, 0.4))">
                                 <div class="text-sm text-gray-500 dark:text-gray-400">{{ t('tools.localscan.alliances')
-                                }}</div>
+                                    }}</div>
                                 <div class="text-lg font-semibold">{{ alliancesData.length }}</div>
                             </div>
                             <div class="p-3 rounded-md"
@@ -301,7 +301,7 @@ useSeoMeta({
                             <div class="p-3 rounded-md"
                                 style="background-color: light-dark(rgba(245, 245, 245, 0.1), rgba(26, 26, 26, 0.4))">
                                 <div class="text-sm text-gray-500 dark:text-gray-400">{{ t('tools.localscan.characters')
-                                }}</div>
+                                    }}</div>
                                 <div class="text-lg font-semibold">{{ totalCharacterCount }}</div>
                             </div>
                         </div>

@@ -69,6 +69,7 @@
     "corporation": "Corporation",
     "alliances": "Alliances",
     "alliance": "Alliance",
+    "information": "Information",
     "ship": "Ship",
     "Ships": "Ships",
     "item": "Item",
@@ -2097,6 +2098,12 @@
                 "description": "Redact the fitting in the fitting wheel and items list for one hour after a killmail is posted. Note: this only applies to the UI display, the complete data remains fully available in the API for third-party tools and applications.",
                 "title": "Redact fitting for 1 hour after killmail posting"
             }
+        }
+    },
+    "pages": {
+        "alliance": {
+            "comingSoon": "Coming Soon",
+            "alliancePage": "Alliance"
         }
     }
 }

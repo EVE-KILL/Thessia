@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onMounted } from "vue";
+import { computed } from "vue";
 import { useI18n } from "vue-i18n";
 
 const { getSiteBackground } = siteBackground();
@@ -16,21 +16,8 @@ useHead({
     ],
 });
 
-// Only preload the background image when it's actually needed
-if (import.meta.client) {
-    onMounted(() => {
-        // Preload the background image after a short delay to ensure it will be used
-        setTimeout(() => {
-            if (backgroundUrl.value && backgroundUrl.value !== '/images/default-bg.jpg') {
-                const link = document.createElement('link');
-                link.rel = 'preload';
-                link.as = 'image';
-                link.href = backgroundUrl.value;
-                document.head.appendChild(link);
-            }
-        }, 100);
-    });
-}
+// Background handling without preload to avoid browser warnings
+// Modern browsers are efficient at loading images when needed
 
 useSeoMeta({
     titleTemplate: "EVE-KILL | %s",

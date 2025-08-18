@@ -7,13 +7,8 @@
                 {{ $t('stats') }} ({{ activePeriodLabel }})
             </h2>
             <div class="flex gap-2">
-                <UButton
-                    v-for="period in periods"
-                    :key="period.value"
-                    size="sm"
-                    :variant="activePeriod === period.value ? 'solid' : 'outline'"
-                    @click="changePeriod(period.value)"
-                >
+                <UButton v-for="period in periods" :key="period.value" size="sm"
+                    :variant="activePeriod === period.value ? 'solid' : 'outline'" @click="changePeriod(period.value)">
                     {{ period.label }}
                 </UButton>
             </div>

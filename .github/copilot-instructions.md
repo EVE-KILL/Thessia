@@ -169,26 +169,24 @@ When implementing components like search functionality, data tables, forms, or o
             <USkeleton class="h-8 w-full mb-4" />
             <USkeleton class="h-4 w-3/4" />
         </template>
-        
+
         <!-- Show content when loaded -->
         <div v-else-if="data">
             <h1>{{ data.title }}</h1>
             <p>{{ data.description }}</p>
         </div>
-        
+
         <!-- Show error state -->
-        <div v-else-if="error">
-            Error loading content: {{ error }}
-        </div>
+        <div v-else-if="error">Error loading content: {{ error }}</div>
     </div>
 </template>
 
 <script setup>
-const { data, pending, error, refresh } = await useFetch('/api/content', {
-    key: 'content-data',
-    server: true,    // Enable SSR for SEO
-    lazy: false,     // Don't delay initial render
-    default: () => null,  // Fallback for SSR failures
+const { data, pending, error, refresh } = await useFetch("/api/content", {
+    key: "content-data",
+    server: true, // Enable SSR for SEO
+    lazy: false, // Don't delay initial render
+    default: () => null, // Fallback for SSR failures
 });
 </script>
 ```
@@ -198,11 +196,11 @@ const { data, pending, error, refresh } = await useFetch('/api/content', {
 ```vue
 <script setup>
 // For reactive data fetching based on user input/filters
-const { data, pending, error } = await useFetch('/api/search', {
-    query: searchParams,  // Reactive query params
-    key: 'search-results',
-    server: false,        // Client-side only
-    default: () => [],    // Empty array fallback
+const { data, pending, error } = await useFetch("/api/search", {
+    query: searchParams, // Reactive query params
+    key: "search-results",
+    server: false, // Client-side only
+    default: () => [], // Empty array fallback
     watch: [searchParams], // Refetch when params change
 });
 </script>
@@ -220,12 +218,12 @@ const handleSubmit = async () => {
     try {
         isLoading.value = true;
         error.value = null;
-        
-        const result = await $fetch('/api/submit', {
-            method: 'POST',
+
+        const result = await $fetch("/api/submit", {
+            method: "POST",
             body: formData.value,
         });
-        
+
         // Handle success
         await navigateTo(`/success/${result.id}`);
     } catch (err) {

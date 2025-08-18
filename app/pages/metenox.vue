@@ -373,7 +373,7 @@ useSeoMeta({
             <div class="mb-4">
                 <div class="mb-2">
                     <span class="text-sm text-gray-300">{{ t('metenoxMoons.filter.moonGooTypes')
-                    }}:</span>
+                        }}:</span>
                 </div>
                 <div class="flex gap-2 flex-wrap">
                     <UButton v-for="gooType in availableMoonGooTypes" :key="gooType.value"

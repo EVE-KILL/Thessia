@@ -991,7 +991,7 @@ export const useStructuredData = () => {
     };
 
     /**
-     * Add structured data to the page head
+     * Add structured data to the document head
      * @param structuredData Single structured data object or array of objects
      */
     const addStructuredDataToHead = (structuredData: object | object[]) => {
@@ -999,12 +999,23 @@ export const useStructuredData = () => {
             ? structuredData
             : [structuredData];
 
-        useHead({
-            script: dataArray.map((data) => ({
-                type: "application/ld+json",
-                innerHTML: JSON.stringify(data),
-            })),
-        });
+        if (import.meta.server) {
+            // On server-side, use useHead for SSR
+            useHead({
+                script: dataArray.map((data) => ({
+                    type: "application/ld+json",
+                    innerHTML: JSON.stringify(data),
+                })),
+            });
+        } else {
+            // On client-side, add script tags directly to head
+            dataArray.forEach((data) => {
+                const script = document.createElement("script");
+                script.type = "application/ld+json";
+                script.textContent = JSON.stringify(data);
+                document.head.appendChild(script);
+            });
+        }
     };
 
     return {

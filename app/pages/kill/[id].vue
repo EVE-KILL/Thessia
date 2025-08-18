@@ -687,24 +687,40 @@ useSeoMeta({
     twitterCreator: "@eve_kill",
 });
 
-// Add structured data when killmail is available
+// Generate structured data when killmail is available (works on both server and client)
+const structuredDataScript = computed(() => {
+    if (!fetchedKillmail.value) return [];
+
+    try {
+        const killmailWithUrl = {
+            ...fetchedKillmail.value,
+            url: `https://eve-kill.com/kill/${fetchedKillmail.value.killmail_id}`
+        };
+
+        const structuredData = generateKillmailDatasetStructuredData(killmailWithUrl);
+
+        return [
+            {
+                type: "application/ld+json",
+                innerHTML: JSON.stringify(structuredData),
+            }
+        ];
+    } catch (error) {
+        console.error("Error generating killmail structured data:", error);
+        return [];
+    }
+});
+
+// Add structured data using useHead at the top level for proper SSR
+useHead({
+    script: structuredDataScript,
+});
+
+// Handle client-side navigation and fragments
 watch(
     () => killmail.value,
-    async (newKillmail) => {
+    (newKillmail) => {
         if (newKillmail && import.meta.client) {
-            // Generate and add dataset structured data
-            try {
-                const killmailWithUrl = {
-                    ...newKillmail,
-                    url: `https://eve-kill.com/kill/${newKillmail.killmail_id}`
-                };
-
-                const datasetStructuredData = generateKillmailDatasetStructuredData(killmailWithUrl);
-                addStructuredDataToHead(datasetStructuredData);
-            } catch (error) {
-                console.error("Error generating killmail structured data:", error);
-            }
-
             // Handle comment fragment navigation
             nextTick(() => {
                 handleCommentFragment();
