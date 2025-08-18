@@ -68,9 +68,6 @@ export default defineCachedEventHandler(
         maxAge: 86400, // Using a maxAge of 86400 seconds for static solar system data
         staleMaxAge: -1,
         swr: true,
-        shouldBypassCache: (event) => {
-            return process.env.NODE_ENV !== "production";
-        },
         getKey: (event) => {
             const systemId = (event as any).context.params?.id;
             const query = getQuery(event as any);

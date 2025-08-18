@@ -61,8 +61,5 @@ export default defineCachedEventHandler(
             const idParam = event.context.params?.id;
             return `corporations:${idParam}:alliancehistory`;
         },
-        shouldBypassCache: (event) => {
-            return process.env.NODE_ENV !== "production";
-        },
     }
 );

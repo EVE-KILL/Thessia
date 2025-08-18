@@ -169,9 +169,6 @@ export default defineCachedEventHandler(
         maxAge: 1800, // Cache for 30 minutes since we're returning all images
         staleMaxAge: -1,
         swr: true,
-        shouldBypassCache: (event) => {
-            return process.env.NODE_ENV !== "production";
-        },
         getKey: (event) => {
             // Static key since we're returning all images, not random ones
             return `site:backgrounds:reddit:all`;

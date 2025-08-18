@@ -62,9 +62,6 @@ export default defineCachedEventHandler(
         maxAge: 3600,
         staleMaxAge: -1,
         swr: true,
-        shouldBypassCache: (event) => {
-            return process.env.NODE_ENV !== "production";
-        },
         getKey: (event) => {
             const characterId = event.context.params?.id;
             // Check for query parameters if needed, but based on the handler code, none are used.

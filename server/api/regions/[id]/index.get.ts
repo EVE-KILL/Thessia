@@ -47,9 +47,6 @@ export default defineCachedEventHandler(
         maxAge: 86400,
         staleMaxAge: -1,
         swr: true,
-        shouldBypassCache: (event) => {
-            return process.env.NODE_ENV !== "production";
-        },
         getKey: (event) => {
             const param = event.context.params?.id;
             return `regions:id:${param}`;

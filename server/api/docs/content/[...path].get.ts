@@ -132,9 +132,6 @@ export default defineCachedEventHandler(
     },
     {
         maxAge: 60 * 5, // Cache for 5 minutes
-        shouldBypassCache: (event) => {
-            return process.env.NODE_ENV !== "production";
-        },
         getKey: (event) => {
             const params = getRouterParams(event);
             let path = params.path;

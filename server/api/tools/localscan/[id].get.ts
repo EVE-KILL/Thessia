@@ -41,9 +41,6 @@ export default defineCachedEventHandler(
         maxAge: 86400, // Using a maxAge of 86400 seconds for static Local Scan results
         staleMaxAge: -1,
         swr: true,
-        shouldBypassCache: (event) => {
-            return process.env.NODE_ENV !== "production";
-        },
         getKey: (event) => {
             const localscanId = event.context.params?.id;
             // No query parameters are used in this handler, so the key only needs the ID.

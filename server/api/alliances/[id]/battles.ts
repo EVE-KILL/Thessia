@@ -74,8 +74,5 @@ export default defineCachedEventHandler(
             const limit = query.limit?.toString() || "20";
             return `alliances:${idParam}:battles:page:${page}:limit:${limit}`;
         },
-        shouldBypassCache: (event) => {
-            return process.env.NODE_ENV !== "production";
-        },
     }
 );

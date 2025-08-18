@@ -20,9 +20,6 @@ export default defineCachedEventHandler(
         maxAge: 300,
         staleMaxAge: -1,
         swr: true,
-        shouldBypassCache: (event) => {
-            return process.env.NODE_ENV !== "production";
-        },
         getKey: (event) => {
             const idParam = event.context.params?.id;
             return `battles:killmail:${idParam}:inbattle`;

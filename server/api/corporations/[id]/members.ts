@@ -51,8 +51,5 @@ export default defineCachedEventHandler(
             const limit = query.limit?.toString() || "1000";
             return `corporations:${idParam}:members:page:${page}:limit:${limit}`;
         },
-        shouldBypassCache: (event) => {
-            return process.env.NODE_ENV !== "production";
-        },
     }
 );

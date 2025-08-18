@@ -58,8 +58,5 @@ export default defineCachedEventHandler(
             const idParam = event.context.params?.id;
             return `killmail:${idParam}:sibling`;
         },
-        shouldBypassCache: (event) => {
-            return process.env.NODE_ENV !== "production";
-        },
     }
 );

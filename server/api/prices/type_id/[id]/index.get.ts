@@ -47,8 +47,5 @@ export default defineCachedEventHandler(
                 dateQuery || "null"
             }`;
         },
-        shouldBypassCache: (event) => {
-            return process.env.NODE_ENV !== "production";
-        },
     }
 );

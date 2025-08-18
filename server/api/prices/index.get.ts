@@ -28,9 +28,6 @@ export default defineCachedEventHandler(
         maxAge: 300,
         staleMaxAge: -1,
         swr: true,
-        shouldBypassCache: (event) => {
-            return process.env.NODE_ENV !== "production";
-        },
         getKey: (event) => {
             // This endpoint does not use query parameters for filtering or pagination.
             return `prices:index:all`;

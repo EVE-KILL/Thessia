@@ -175,8 +175,5 @@ export default defineCachedEventHandler(
 
             return `stats:${type}:${id}:days:${days}:dataType:${dataType}`;
         },
-        shouldBypassCache: (event) => {
-            return process.env.NODE_ENV !== "production";
-        },
     }
 );

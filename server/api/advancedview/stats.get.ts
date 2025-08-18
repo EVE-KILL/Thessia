@@ -417,9 +417,6 @@ export default defineCachedEventHandler(
         maxAge: 3600, // 1 hour cache
         staleMaxAge: -1,
         swr: true,
-        shouldBypassCache: (event) => {
-            return process.env.NODE_ENV !== "production";
-        },
         getKey: (event) => {
             const query = getQuery(event);
             const filtersParam = query?.filters || query?.filter || "";

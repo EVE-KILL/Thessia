@@ -39,8 +39,5 @@ export default defineCachedEventHandler(
                 includeKillmails ? "with-killmails" : "index"
             }`;
         },
-        shouldBypassCache: (event) => {
-            return process.env.NODE_ENV !== "production";
-        },
     }
 );

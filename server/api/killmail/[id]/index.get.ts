@@ -63,8 +63,5 @@ export default defineCachedEventHandler(
             const fields = query.fields as string | undefined;
             return `killmail:${idParam}:fields:${fields || "all"}`;
         },
-        shouldBypassCache: (event) => {
-            return process.env.NODE_ENV !== "production";
-        },
     }
 );

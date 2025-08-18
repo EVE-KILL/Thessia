@@ -76,9 +76,6 @@ export default defineCachedEventHandler(
         maxAge: 30,
         staleMaxAge: 0,
         swr: true,
-        shouldBypassCache: (event) => {
-            return process.env.NODE_ENV !== "production";
-        },
         getKey: (event: any) => {
             if (!event.context.params) {
                 return "killlist:constellation:undefined";

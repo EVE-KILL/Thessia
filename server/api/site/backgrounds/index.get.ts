@@ -82,9 +82,6 @@ export default defineCachedEventHandler(
         maxAge: 86400, // Using a maxAge of 86400 seconds for static backgrounds
         staleMaxAge: -1,
         swr: true,
-        shouldBypassCache: (event) => {
-            return process.env.NODE_ENV !== "production";
-        },
         getKey: (event) => {
             // This endpoint does not use query parameters, so a static key is sufficient.
             return `site:backgrounds:index`;
