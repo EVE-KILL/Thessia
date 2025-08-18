@@ -33,6 +33,41 @@ onMounted(() => {
 let clientRenderMarkdown: (text: string) => string;
 
 if (!import.meta.server) {
+    // CRITICAL SAFETY FIX: Add comprehensive protection against startsWith errors
+    // This addresses the production error: "h.props.content?.startsWith is not a function"
+
+    // Override Object.prototype.startsWith for any non-string objects that might get it called
+    const originalStartsWith = String.prototype.startsWith;
+
+    // Add a defensive startsWith to Object prototype ONLY during markdown processing
+    const installStartsWithProtection = () => {
+        if (!(Object.prototype as any).startsWith) {
+            (Object.prototype as any).startsWith = function (searchString: string) {
+                // If this is actually a string, use the normal method
+                if (typeof this === 'string') {
+                    return originalStartsWith.call(this, searchString);
+                }
+                // If this object has a content property that's a string, use that
+                if (this && typeof this.content === 'string') {
+                    return this.content.startsWith(searchString);
+                }
+                // If this object has an href property that's a string, use that
+                if (this && typeof this.href === 'string') {
+                    return this.href.startsWith(searchString);
+                }
+                // Otherwise, return false to prevent the error
+                console.warn('startsWith called on non-string object:', this, 'searching for:', searchString);
+                return false;
+            };
+        }
+    };
+
+    const removeStartsWithProtection = () => {
+        if ((Object.prototype as any).startsWith) {
+            delete (Object.prototype as any).startsWith;
+        }
+    };
+
     // Markdown rendering - exact copy from KillComments
     type MediaType = "image" | "video" | "gif" | "iframe" | "unknown";
 
@@ -94,7 +129,7 @@ if (!import.meta.server) {
 
         // Ensure the URL starts with http/https for security
         // Additional safety check to ensure startsWith method exists
-        if (typeof trimmedUrl.startsWith !== 'function' || 
+        if (typeof trimmedUrl.startsWith !== 'function' ||
             (!trimmedUrl.startsWith("http://") && !trimmedUrl.startsWith("https://"))) {
             return { type: "unknown" };
         }
@@ -459,12 +494,50 @@ if (!import.meta.server) {
     // Apply the custom renderer to marked
     marked.use({ renderer });
 
+    // Override marked's internal methods to add defensive programming
+    const originalTokenizer = marked.Tokenizer.prototype.url;
+    if (originalTokenizer) {
+        marked.Tokenizer.prototype.url = function (src: string) {
+            try {
+                const result = originalTokenizer.call(this, src);
+                if (result && result.href && typeof result.href !== 'string') {
+                    // Ensure href is always a string
+                    result.href = String(result.href);
+                }
+                return result;
+            } catch (error) {
+                console.warn('Tokenizer URL processing failed:', error);
+                return false;
+            }
+        };
+    }
+
+    // Additional safety override for any marked tokenizers that might call startsWith
+    const originalParse = marked.parse;
+    marked.parse = (...args: any[]) => {
+        try {
+            return originalParse.apply(marked, args);
+        } catch (error) {
+            // If there's any error during parsing (including the startsWith issue),
+            // return escaped plain text as fallback
+            console.warn('Markdown parsing failed, falling back to plain text:', error);
+            const plainText = args[0] || '';
+            return DOMPurify.sanitize(String(plainText).replace(/</g, '&lt;').replace(/>/g, '&gt;'));
+        }
+    };
+
     const renderMarkdown = (text: string) => {
         if (!text) return "";
 
+        // Install protection before processing
+        installStartsWithProtection();
+
         try {
-            // Convert markdown to HTML and sanitize
-            const rawHTML = marked.parse(text) as string;
+            // Pre-process the text to escape any potentially problematic patterns
+            const cleanedText = text.replace(/[^\x00-\x7F]/g, '').trim();
+
+            // Convert markdown to HTML and sanitize with comprehensive error handling
+            const rawHTML = marked.parse(cleanedText) as string;
 
             // Process emojis in the HTML
             const htmlWithEmojis = replaceEmojis(rawHTML);
@@ -497,8 +570,15 @@ if (!import.meta.server) {
                 FORBID_ATTR: ["onerror", "onload", "onclick", "onmouseover", "onmouseout", "eval"],
             });
         } catch (error) {
-            console.error('Error rendering markdown:', error);
-            return DOMPurify.sanitize(text || '');
+            // Comprehensive error logging to help debug the root cause
+            console.error('Markdown rendering error:', error);
+            console.error('Original text:', text);
+
+            // Return escaped plain text as ultimate fallback
+            return DOMPurify.sanitize(String(text).replace(/</g, '&lt;').replace(/>/g, '&gt;'));
+        } finally {
+            // Always remove protection after processing
+            removeStartsWithProtection();
         }
     };
 

@@ -53,7 +53,7 @@
                         {{ killmail.victim.character_name }}
                     </NuxtLink>
                     <span v-else>{{ killmail?.victim?.character_name || getLocalizedString(killmail?.victim?.ship_name)
-                        }}</span>
+                    }}</span>
                 </div>
                 <div v-if="killmail?.victim?.corporation_name" class="entity-name-line name-corporation truncate">
                     <NuxtLink v-if="killmail.victim.corporation_id"
