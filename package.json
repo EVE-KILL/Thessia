@@ -40,7 +40,7 @@
         "date-fns": "^4.1.0",
         "discord.js": "^14.21.0",
         "dompurify": "^3.2.6",
-        "echarts": "^5.6.0",
+        "echarts": "^6.0.0",
         "helix-ts": "^1.0.5",
         "ioredis": "^5.7.0",
         "isbot": "^5.1.30",
