@@ -49,10 +49,10 @@ if (!import.meta.server) {
                     return src.indexOf("http");
                 },
                 tokenizer(src) {
-                    if (typeof src !== 'string') return undefined;
+                    if (typeof src !== 'string' || typeof src.match !== 'function') return undefined;
                     const urlRegex = /^(https?:\/\/[^\s<]+[^<.,:;"')\]\s])/;
                     const match = src.match(urlRegex);
-                    if (match) {
+                    if (match && match[0] && typeof match[0] === 'string') {
                         return {
                             type: "link",
                             raw: match[0],
@@ -93,7 +93,9 @@ if (!import.meta.server) {
         const trimmedUrl = url.trim();
 
         // Ensure the URL starts with http/https for security
-        if (!trimmedUrl.startsWith("http://") && !trimmedUrl.startsWith("https://")) {
+        // Additional safety check to ensure startsWith method exists
+        if (typeof trimmedUrl.startsWith !== 'function' || 
+            (!trimmedUrl.startsWith("http://") && !trimmedUrl.startsWith("https://"))) {
             return { type: "unknown" };
         }
         // YouTube (including shorts)
@@ -381,7 +383,8 @@ if (!import.meta.server) {
             }
 
             // If we don't have a valid string URL, bail out early
-            if (!url || typeof url !== "string") {
+            // Additional safety check to ensure it's really a string with expected methods
+            if (!url || typeof url !== "string" || typeof url.startsWith !== 'function') {
                 return `<span>link</span>`;
             }
 
@@ -396,43 +399,46 @@ if (!import.meta.server) {
             }
 
             // Only call startsWith if we're absolutely sure url is a string
-            if (typeof url !== "string" || !url.startsWith("http")) {
+            if (typeof url !== "string" || typeof url.startsWith !== 'function' || !url.startsWith("http")) {
                 return `<span>${linkText}</span>`;
             }
 
             const linkTitle = (title && typeof title === "string") ? title : "";
 
-            // Detect media type and render accordingly
+            // Detect media type and render accordingly - with additional safety check
             try {
-                const result = detectMediaType(url);
-                const { type, id, matches } = result;
+                // Ensure url is definitely a string before passing to detectMediaType
+                if (typeof url === "string" && url.trim()) {
+                    const result = detectMediaType(url);
+                    const { type, id, matches } = result;
 
-                switch (type) {
-                    case "iframe":
-                        if (url.includes("youtube.com") || url.includes("youtu.be")) {
-                            return id ? renderYouTube(id) : renderImage(url, linkText);
-                        }
-                        if (url.includes("tenor.com") && id) {
-                            return renderTenor(id, url);
-                        }
-                        if (url.includes("imgur.com") && !url.includes("i.imgur.com")) {
-                            return renderImgurGallery(url);
-                        }
-                        break;
+                    switch (type) {
+                        case "iframe":
+                            if (url.includes("youtube.com") || url.includes("youtu.be")) {
+                                return id ? renderYouTube(id) : renderImage(url, linkText);
+                            }
+                            if (url.includes("tenor.com") && id) {
+                                return renderTenor(id, url);
+                            }
+                            if (url.includes("imgur.com") && !url.includes("i.imgur.com")) {
+                                return renderImgurGallery(url);
+                            }
+                            break;
 
-                    case "video":
-                        return renderVideo(url);
+                        case "video":
+                            return renderVideo(url);
 
-                    case "image":
-                        if (url.includes("imgur.com") && matches) {
-                            const imgurId = matches[2] || '';
-                            const extension = matches[3] || ".jpg";
-                            return renderImgurDirect(imgurId, extension, url);
-                        }
-                        if (url.includes("giphy.com") || url.includes("media.giphy.com")) {
-                            return renderGiphy(url, id);
-                        }
-                        return renderImage(url, linkText);
+                        case "image":
+                            if (url.includes("imgur.com") && matches) {
+                                const imgurId = matches[2] || '';
+                                const extension = matches[3] || ".jpg";
+                                return renderImgurDirect(imgurId, extension, url);
+                            }
+                            if (url.includes("giphy.com") || url.includes("media.giphy.com")) {
+                                return renderGiphy(url, id);
+                            }
+                            return renderImage(url, linkText);
+                    }
                 }
 
                 // Default: regular link
