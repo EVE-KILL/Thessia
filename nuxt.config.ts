@@ -261,7 +261,7 @@ export default defineNuxtConfig({
                         // Separate vendor chunks for better caching (client-safe only)
                         "vue-vendor": ["vue", "vue-router"],
                         charts: ["echarts", "vue-echarts"],
-                        utils: ["date-fns", "dompurify", "markdown-it"],
+                        utils: ["date-fns", "dompurify", "micromark"],
                         "eve-specific": ["moment", "moment-timezone"], // EVE-specific utilities
                     },
                 },

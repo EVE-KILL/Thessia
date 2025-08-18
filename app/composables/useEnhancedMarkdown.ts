@@ -1,5 +1,6 @@
 import DOMPurify from "isomorphic-dompurify";
-import MarkdownIt from "markdown-it";
+import { micromark } from "micromark";
+import { gfm, gfmHtml } from "micromark-extension-gfm";
 
 // Import PrismJS core and some common languages
 import Prism from "prismjs";
@@ -12,142 +13,107 @@ import "prismjs/components/prism-typescript";
 import "prismjs/components/prism-yaml";
 
 /**
- * Enhanced markdown renderer with PrismJS syntax highlighting
+ * Enhanced markdown renderer with micromark and PrismJS syntax highlighting
  * Designed for documentation and comment rendering
- * CLIENT-SIDE ONLY - Do not use on server
+ * Renders on both server and client, with syntax highlighting only on client
  */
 export const useEnhancedMarkdown = () => {
-    // Prevent execution on server-side
-    if (import.meta.server) {
-        return {
-            renderMarkdown: () => "",
-            renderSimpleMarkdown: () => "",
-        };
-    }
     /**
-     * Initialize the markdown renderer with plugins
+     * Post-process HTML to add PrismJS syntax highlighting (client-side only)
      */
-    const initializeRenderer = (currentPath: string = "") => {
-        const md = new MarkdownIt({
-            html: true, // Enable HTML tags in source
-            xhtmlOut: false, // Use ">" for single tags (<br>)
-            breaks: true, // Convert '\n' in paragraphs into <br>
-            langPrefix: "language-", // CSS language prefix for fenced blocks
-            linkify: true, // Autoconvert URL-like text to links
-            typographer: true, // Enable some language-neutral replacement + quotes beautification
-        });
+    const addSyntaxHighlighting = (html: string): string => {
+        if (!html || import.meta.server) return html;
 
-        // Add custom PrismJS syntax highlighting
-        const defaultFence =
-            md.renderer.rules.fence ||
-            function (tokens, idx, options, env, self) {
-                return self.renderToken(tokens, idx, options);
-            };
+        try {
+            // Create a temporary DOM to process the HTML
+            const parser = new DOMParser();
+            const doc = parser.parseFromString(html, "text/html");
 
-        md.renderer.rules.fence = function (tokens, idx, options, env, self) {
-            const token = tokens[idx];
-            if (!token) return defaultFence(tokens, idx, options, env, self);
+            // Find all code blocks with language classes
+            const codeBlocks = doc.querySelectorAll(
+                'pre code[class*="language-"]'
+            );
 
-            const info = token.info ? token.info.trim() : "";
-            const langName = info ? info.split(/\s+/g)[0] : "";
+            codeBlocks.forEach((codeElement) => {
+                const classes = codeElement.className;
+                const langMatch = classes.match(/language-(\w+)/);
 
-            if (langName && Prism.languages[langName]) {
-                try {
-                    const grammar = Prism.languages[langName];
-                    if (grammar) {
-                        const highlighted = Prism.highlight(
-                            token.content,
-                            grammar,
-                            langName
-                        );
-                        return `<pre class="language-${langName}"><code class="language-${langName}">${highlighted}</code></pre>`;
+                if (langMatch?.[1]) {
+                    const langName = langMatch[1];
+                    const code = codeElement.textContent || "";
+
+                    if (langName && Prism.languages[langName]) {
+                        try {
+                            const grammar = Prism.languages[langName];
+                            if (grammar) {
+                                const highlighted = Prism.highlight(
+                                    code,
+                                    grammar,
+                                    langName
+                                );
+                                codeElement.innerHTML = highlighted;
+                            }
+                        } catch (err) {
+                            console.warn(
+                                "PrismJS highlighting failed for language:",
+                                langName,
+                                err
+                            );
+                        }
                     }
-                } catch (err) {
-                    console.warn(
-                        "PrismJS highlighting failed for language:",
-                        langName,
-                        err
-                    );
                 }
-            }
+            });
 
-            // Fallback to default renderer
-            return defaultFence(tokens, idx, options, env, self);
-        };
+            // Find inline code that might benefit from highlighting
+            const inlineCodes = doc.querySelectorAll("code:not(pre code)");
+            inlineCodes.forEach((codeElement) => {
+                const code = codeElement.textContent || "";
 
-        // Add highlighting for inline code
-        const defaultCodeInline =
-            md.renderer.rules.code_inline ||
-            function (tokens, idx, options, env, self) {
-                return self.renderToken(tokens, idx, options);
-            };
-
-        md.renderer.rules.code_inline = function (
-            tokens,
-            idx,
-            options,
-            env,
-            self
-        ) {
-            const token = tokens[idx];
-            if (!token)
-                return defaultCodeInline(tokens, idx, options, env, self);
-
-            // Simple inline code highlighting for common patterns
-            if (
-                token.content &&
-                (token.content.includes("function") ||
-                    token.content.includes("const") ||
-                    token.content.includes("let"))
-            ) {
-                try {
-                    const jsGrammar = Prism.languages.javascript;
-                    if (jsGrammar) {
-                        const highlighted = Prism.highlight(
-                            token.content,
-                            jsGrammar,
-                            "javascript"
-                        );
-                        return `<code class="language-javascript">${highlighted}</code>`;
+                // Simple inline code highlighting for common patterns
+                if (
+                    code.includes("function") ||
+                    code.includes("const") ||
+                    code.includes("let")
+                ) {
+                    try {
+                        const jsGrammar = Prism.languages.javascript;
+                        if (jsGrammar) {
+                            const highlighted = Prism.highlight(
+                                code,
+                                jsGrammar,
+                                "javascript"
+                            );
+                            codeElement.innerHTML = highlighted;
+                            codeElement.classList.add("language-javascript");
+                        }
+                    } catch (err) {
+                        // Fallback to default
                     }
-                } catch (err) {
-                    // Fallback to default
                 }
-            }
+            });
 
-            return defaultCodeInline(tokens, idx, options, env, self);
-        };
-        if (currentPath) {
-            const defaultRender =
-                md.renderer.rules.link_open ||
-                function (tokens, idx, options, env, self) {
-                    return self.renderToken(tokens, idx, options);
-                };
+            return doc.body.innerHTML;
+        } catch (error) {
+            console.error("Error adding syntax highlighting:", error);
+            return html;
+        }
+    };
 
-            md.renderer.rules.link_open = function (
-                tokens,
-                idx,
-                options,
-                env,
-                self
-            ) {
-                const token = tokens[idx];
-                if (!token || !token.attrs)
-                    return defaultRender(tokens, idx, options, env, self);
+    /**
+     * Post-process HTML to handle docs-specific link transformations (works on both server and client)
+     */
+    const processDocsLinks = (
+        html: string,
+        currentPath: string = ""
+    ): string => {
+        if (!html || !currentPath) return html;
 
-                const hrefIndex = token.attrIndex("href");
-                if (hrefIndex >= 0 && token.attrs && token.attrs[hrefIndex]) {
-                    const href = token.attrs[hrefIndex][1];
-
-                    // Simple: if it's not a string, skip processing
-                    if (typeof href !== "string" || !href.trim()) {
-                        return defaultRender(tokens, idx, options, env, self);
-                    }
-
-                    // Update the token's href attribute with the cleaned string value
-                    if (token.attrs && token.attrs[hrefIndex]) {
-                        token.attrs[hrefIndex][1] = href;
-                    }
+        try {
+            // On server, use a simple regex approach since DOMParser isn't available
+            if (import.meta.server) {
+                // Simple regex-based link transformation for server-side
+                return html.replace(/<a href="([^"]+)"/g, (match, href) => {
+                    if (!href || typeof href !== "string") return match;
 
                     let transformedHref = href;
 
@@ -159,7 +125,6 @@ export const useEnhancedMarkdown = () => {
                     ) {
                         // Handle relative paths
                         if (href.startsWith("./")) {
-                            // Same directory: ./file.md -> current_path/file
                             const currentDir = currentPath
                                 ? currentPath.split("/").slice(0, -1).join("/")
                                 : "";
@@ -170,19 +135,16 @@ export const useEnhancedMarkdown = () => {
                                 transformedHref = `${currentDir}/${transformedHref}`;
                             }
                         } else if (href.startsWith("../")) {
-                            // Parent directory: ../file.md -> parent_path/file
                             const currentParts = currentPath
                                 ? currentPath.split("/")
                                 : [];
                             let pathParts = [...currentParts];
                             let relativePath = href;
 
-                            // Remove current file from path
                             if (pathParts.length > 0) {
                                 pathParts.pop();
                             }
 
-                            // Process ../ segments
                             while (relativePath.startsWith("../")) {
                                 relativePath = relativePath.substring(3);
                                 if (pathParts.length > 0) {
@@ -197,49 +159,111 @@ export const useEnhancedMarkdown = () => {
                                 )}/${transformedHref}`;
                             }
                         } else if (href.endsWith(".md")) {
-                            // Direct .md file: file.md -> file
                             transformedHref = href.replace(".md", "");
                         }
 
-                        // Create internal link to docs viewer
                         const docsUrl = `/docs/${transformedHref}`;
-                        if (token.attrs && token.attrs[hrefIndex]) {
-                            token.attrs[hrefIndex][1] = docsUrl;
-                        }
-
-                        // Add special classes for internal docs links
-                        const classIndex = token.attrIndex("class");
-                        if (
-                            classIndex >= 0 &&
-                            token.attrs &&
-                            token.attrs[classIndex]
-                        ) {
-                            token.attrs[classIndex][1] += " internal-docs-link";
-                        } else {
-                            token.attrPush(["class", "internal-docs-link"]);
-                        }
-
-                        // Add data attribute for Vue Router handling
-                        token.attrPush(["data-docs-path", transformedHref]);
+                        return `<a href="${docsUrl}" class="internal-docs-link" data-docs-path="${transformedHref}"`;
                     }
 
-                    // External links - add target and rel attributes
-                    // Additional type safety check before calling startsWith
+                    // External links
                     if (
-                        typeof href === "string" &&
-                        (href.startsWith("http://") ||
-                            href.startsWith("https://"))
+                        href.startsWith("http://") ||
+                        href.startsWith("https://")
                     ) {
-                        token.attrPush(["target", "_blank"]);
-                        token.attrPush(["rel", "noopener noreferrer"]);
+                        return `<a href="${href}" target="_blank" rel="noopener noreferrer"`;
                     }
+
+                    return match;
+                });
+            }
+
+            // Client-side DOM processing
+            const parser = new DOMParser();
+            const doc = parser.parseFromString(html, "text/html");
+
+            // Find all links
+            const links = doc.querySelectorAll("a[href]");
+
+            links.forEach((linkElement) => {
+                const href = linkElement.getAttribute("href");
+                if (!href || typeof href !== "string") return;
+
+                let transformedHref = href;
+
+                // Transform internal documentation links
+                if (
+                    href.startsWith("./") ||
+                    href.startsWith("../") ||
+                    href.endsWith(".md")
+                ) {
+                    // Handle relative paths
+                    if (href.startsWith("./")) {
+                        // Same directory: ./file.md -> current_path/file
+                        const currentDir = currentPath
+                            ? currentPath.split("/").slice(0, -1).join("/")
+                            : "";
+                        transformedHref = href
+                            .replace("./", "")
+                            .replace(".md", "");
+                        if (currentDir) {
+                            transformedHref = `${currentDir}/${transformedHref}`;
+                        }
+                    } else if (href.startsWith("../")) {
+                        // Parent directory: ../file.md -> parent_path/file
+                        const currentParts = currentPath
+                            ? currentPath.split("/")
+                            : [];
+                        let pathParts = [...currentParts];
+                        let relativePath = href;
+
+                        // Remove current file from path
+                        if (pathParts.length > 0) {
+                            pathParts.pop();
+                        }
+
+                        // Process ../ segments
+                        while (relativePath.startsWith("../")) {
+                            relativePath = relativePath.substring(3);
+                            if (pathParts.length > 0) {
+                                pathParts.pop();
+                            }
+                        }
+
+                        transformedHref = relativePath.replace(".md", "");
+                        if (pathParts.length > 0) {
+                            transformedHref = `${pathParts.join(
+                                "/"
+                            )}/${transformedHref}`;
+                        }
+                    } else if (href.endsWith(".md")) {
+                        // Direct .md file: file.md -> file
+                        transformedHref = href.replace(".md", "");
+                    }
+
+                    // Create internal link to docs viewer
+                    const docsUrl = `/docs/${transformedHref}`;
+                    linkElement.setAttribute("href", docsUrl);
+
+                    // Add special classes for internal docs links
+                    linkElement.classList.add("internal-docs-link");
+
+                    // Add data attribute for Vue Router handling
+                    linkElement.setAttribute("data-docs-path", transformedHref);
                 }
 
-                return defaultRender(tokens, idx, options, env, self);
-            };
-        }
+                // External links - add target and rel attributes
+                if (href.startsWith("http://") || href.startsWith("https://")) {
+                    linkElement.setAttribute("target", "_blank");
+                    linkElement.setAttribute("rel", "noopener noreferrer");
+                }
+            });
 
-        return md;
+            return doc.body.innerHTML;
+        } catch (error) {
+            console.error("Error processing docs links:", error);
+            return html;
+        }
     };
 
     /**
@@ -264,8 +288,20 @@ export const useEnhancedMarkdown = () => {
                 allowHtml = true,
             } = options;
 
-            const md = initializeRenderer(currentPath);
-            const rawHTML = md.render(content);
+            // Use micromark to render markdown with GitHub Flavored Markdown
+            let rawHTML = micromark(content, {
+                extensions: [gfm()],
+                htmlExtensions: [gfmHtml()],
+                allowDangerousHtml: allowHtml,
+            });
+
+            // Add syntax highlighting
+            rawHTML = addSyntaxHighlighting(rawHTML);
+
+            // Process docs-specific links if currentPath is provided
+            if (currentPath) {
+                rawHTML = processDocsLinks(rawHTML, currentPath);
+            }
 
             // Sanitize HTML
             const sanitizedHTML = DOMPurify.sanitize(rawHTML, {

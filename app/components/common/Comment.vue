@@ -1,10 +1,12 @@
 <template>
-    <div class="markdown-content prose prose-sm dark:prose-invert max-w-none" v-html="renderedComment"></div>
+    <div ref="commentContainer" class="markdown-content prose prose-sm dark:prose-invert max-w-none"
+        v-html="renderedComment"></div>
 </template>
 
 <script setup lang="ts">
 import DOMPurify from 'isomorphic-dompurify';
-import MarkdownIt from 'markdown-it';
+import { micromark } from 'micromark';
+import { gfm, gfmHtml } from 'micromark-extension-gfm';
 
 // Props
 const props = defineProps({
@@ -14,13 +16,16 @@ const props = defineProps({
     }
 });
 
+// Template refs
+const commentContainer = ref<HTMLElement>();
+
+// Composables
+const { observeGifs, stopObserving } = useGifPause();
+
 // Ensure comment is always a string
 const safeComment = computed(() => {
     return typeof props.comment === 'string' ? props.comment : String(props.comment || '');
 });
-
-// Client-side rendered markdown content
-const renderedComment = ref('');
 
 // Enhanced media detection functions
 const detectMediaType = (url: string): 'image' | 'video' | 'youtube' | 'giphy' | 'tenor' | 'link' => {
@@ -100,92 +105,57 @@ const convertTenorUrl = (url: string): string => {
     return url;
 };
 
-// Enhanced markdown renderer with media support
+// Simple and safe markdown renderer using micromark
 const renderCommentMarkdown = (content: string): string => {
     if (!content || typeof content !== 'string') return '';
 
     try {
-        const md = new MarkdownIt({
-            html: true,
-            xhtmlOut: false,
-            breaks: true,
-            langPrefix: 'language-',
-            linkify: true,
-            typographer: true,
+        // First, render markdown with micromark
+        const rawHTML = micromark(content, {
+            extensions: [gfm()],
+            htmlExtensions: [gfmHtml()]
         });
 
-        // Pre-process content to replace media URLs with HTML directly
-        let processedContent = content;
+        // Then post-process to replace link elements that contain media URLs with HTML embeds
+        const linkRegex = /<a href="([^"]+)">([^<]+)<\/a>/g;
 
-        // Find URLs and replace media URLs with their HTML embeds
-        const urlRegex = /https?:\/\/[^\s<>'"]+/g;
-
-        processedContent = processedContent.replace(urlRegex, (url) => {
-            const cleanUrl = url.trim();
-            const mediaType = detectMediaType(cleanUrl);
+        const processedHTML = rawHTML.replace(linkRegex, (match, href, linkText) => {
+            // Check if the href or linkText is a media URL
+            const urlToCheck = href || linkText;
+            const mediaType = detectMediaType(urlToCheck);
 
             if (mediaType !== 'link') {
                 switch (mediaType) {
                     case 'youtube': {
-                        const videoId = extractYouTubeId(cleanUrl);
+                        const videoId = extractYouTubeId(urlToCheck);
                         if (videoId) {
                             return `<div class="youtube-container"><iframe src="https://www.youtube.com/embed/${videoId}" frameborder="0" allowfullscreen></iframe></div>`;
                         }
                         break;
                     }
                     case 'giphy': {
-                        const gifUrl = convertGiphyUrl(cleanUrl);
+                        const gifUrl = convertGiphyUrl(urlToCheck);
                         return `<img src="${gifUrl}" alt="Giphy GIF" style="max-width: 100%; height: auto;" />`;
                     }
                     case 'tenor': {
-                        const gifUrl = convertTenorUrl(cleanUrl);
+                        const gifUrl = convertTenorUrl(urlToCheck);
                         return `<img src="${gifUrl}" alt="Tenor GIF" style="max-width: 100%; height: auto;" />`;
                     }
                     case 'image': {
-                        return `<img src="${cleanUrl}" alt="Image" style="max-width: 100%; height: auto;" />`;
+                        return `<img src="${urlToCheck}" alt="Image" style="max-width: 100%; height: auto;" />`;
                     }
                     case 'video': {
-                        return `<video controls style="max-width: 100%; height: auto;"><source src="${cleanUrl}" /></video>`;
+                        return `<video controls style="max-width: 100%; height: auto;"><source src="${urlToCheck}" /></video>`;
                     }
                 }
             }
 
-            // Return original URL for non-media links (they'll be processed by markdown-it)
-            return url;
+            // Return original link for non-media URLs
+            return match;
         });
 
-        // Custom link renderer for remaining links
-        const defaultLinkRender = md.renderer.rules.link_open || function (tokens, idx, options, env, self) {
-            return self.renderToken(tokens, idx, options);
-        };
-
-        md.renderer.rules.link_open = function (tokens, idx, options, env, self) {
-            const token = tokens[idx];
-            if (!token || !token.attrs) {
-                return defaultLinkRender(tokens, idx, options, env, self);
-            }
-
-            const hrefIndex = token.attrIndex('href');
-            if (hrefIndex >= 0 && token.attrs[hrefIndex]) {
-                const href = token.attrs[hrefIndex][1];
-
-                // Ensure href is a string
-                if (typeof href === 'string' && href.trim()) {
-                    // External links
-                    if (href.startsWith('http://') || href.startsWith('https://')) {
-                        token.attrPush(['target', '_blank']);
-                        token.attrPush(['rel', 'noopener noreferrer']);
-                    }
-                }
-            }
-
-            return defaultLinkRender(tokens, idx, options, env, self);
-        };
-
-        const rawHTML = md.render(processedContent);
-
         // Sanitize HTML with media support
-        return DOMPurify.sanitize(rawHTML, {
+        return DOMPurify.sanitize(processedHTML, {
             ADD_TAGS: ['iframe', 'video', 'source', 'div'],
             ADD_ATTR: [
                 'src', 'frameborder', 'allowfullscreen', 'controls', 'style',
@@ -202,28 +172,42 @@ const renderCommentMarkdown = (content: string): string => {
     }
 };
 
-// Render markdown on client-side only to avoid SSR issues
-onMounted(() => {
-    const updateRenderedContent = () => {
-        if (!safeComment.value) {
-            renderedComment.value = '';
-            return;
-        }
+// Server and client rendered markdown content
+const renderedComment = computed(() => {
+    if (!safeComment.value) return '';
 
-        try {
-            renderedComment.value = renderCommentMarkdown(safeComment.value);
-        } catch (error) {
-            console.error('Error rendering comment markdown:', error);
-            // Fallback to sanitized plain text
-            renderedComment.value = DOMPurify.sanitize(safeComment.value);
-        }
-    };
+    try {
+        return renderCommentMarkdown(safeComment.value);
+    } catch (error) {
+        console.error('Error rendering comment markdown:', error);
+        // Fallback to sanitized plain text
+        return DOMPurify.sanitize(safeComment.value);
+    }
+});
 
-    // Initial render
-    updateRenderedContent();
+// Watch for content changes and re-observe GIFs
+watch(renderedComment, async () => {
+    if (!commentContainer.value) return;
 
-    // Watch for comment changes
-    watch(safeComment, updateRenderedContent, { immediate: false });
+    // Wait for DOM update
+    await nextTick();
+
+    // Stop observing old GIFs
+    stopObserving(commentContainer.value);
+
+    // Start observing new GIFs
+    observeGifs(commentContainer.value);
+});
+
+// Initialize GIF observation on mount
+onMounted(async () => {
+    if (!commentContainer.value) return;
+
+    // Wait for DOM to be fully rendered
+    await nextTick();
+
+    // Start observing GIFs
+    observeGifs(commentContainer.value);
 });
 </script>
 
