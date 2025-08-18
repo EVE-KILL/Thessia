@@ -59,10 +59,11 @@ const {
     data: constellation,
     pending,
     error,
-} = useAsyncData(fetchKey.value, () =>
-    $fetch(`/api/constellations/${id}`), {
-    lazy: true,
+} = await useFetch(`/api/constellations/${id}`, {
+    key: fetchKey,
     server: true,
+    lazy: false,  // Don't delay initial render
+    default: () => null,
     watch: [() => route.params.id],
 });
 

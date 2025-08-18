@@ -18,6 +18,8 @@ const id = route.params.id as string;
 
 const { data, pending, error } = await useFetch(`/api/tools/localscan/${id}`, {
     key: `localscan-${id}`,
+    server: true, // Enable SSR rendering for SEO
+    lazy: false, // Show immediately
 });
 
 // Calculate counts and structure alliance data

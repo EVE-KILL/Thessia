@@ -49,6 +49,8 @@ const {
 } = useFetch<ITopEntity[]>(props.apiUrl, {
     query: queryParams,
     key: `top-${props.dataType}-${props.limit}-${props.days}-${props.apiUrl}`,
+    server: true, // Enable SSR rendering
+    lazy: false, // Don't delay rendering, show immediately
 });
 
 const getLocalizedString = (obj: any, locale: string): string => {

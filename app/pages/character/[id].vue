@@ -634,9 +634,11 @@ const {
     pending,
     error,
     refresh,
-} = useAsyncData(fetchKey.value, () =>
-    $fetch<ICharacter | { error: string } | null>(`/api/characters/${id}`), {
+} = await useFetch(`/api/characters/${id}`, {
+    key: fetchKey,
     server: true, // Fetch on server for SSR
+    lazy: false,  // Don't delay initial render
+    default: () => null,
     watch: [() => route.params.id],
 });
 
@@ -661,9 +663,11 @@ interface IShortStats {
 const {
     data: shortStatsData,
     pending: shortStatsLoading,
-} = useAsyncData(`character-stats-${id}`, () =>
-    $fetch<IShortStats | { error: string } | null>(`/api/stats/character_id/${id}?dataType=basic&days=0`), {
+} = await useFetch(`/api/stats/character_id/${id}?dataType=basic&days=0`, {
+    key: `character-stats-${id}`,
     server: true, // Fetch on server for SSR
+    lazy: false,  // Don't delay initial render
+    default: () => null,
     watch: [() => route.params.id],
 });
 

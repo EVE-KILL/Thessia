@@ -42,20 +42,13 @@ interface Fitting {
 }
 
 // Improved data fetching with proper caching
-const { data, pending, error: fetchError } = await useAsyncData(
-    () => `item-fittings-${props.item?.type_id}`,
-    async () => {
-        if (!props.item?.type_id) {
-            return [];
-        }
-
-        return await $fetch<Fitting[]>(`/api/fitting/${props.item.type_id}?limit=10`);
-    },
+const { data, pending, error: fetchError } = await useFetch(
+    () => props.item?.type_id ? `/api/fitting/${props.item.type_id}?limit=10` : null,
     {
-        lazy: true,
-        server: false,
-        watch: [() => props.item?.type_id],
+        key: () => `item-fittings-${props.item?.type_id}`,
+        server: false, // Client-side only component
         default: () => [],
+        watch: [() => props.item?.type_id],
     },
 );
 

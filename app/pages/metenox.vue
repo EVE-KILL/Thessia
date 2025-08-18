@@ -48,12 +48,11 @@ const apiEndpoint = computed(() => {
     return '/api/intel/metenox';
 });
 
-const { data, pending, error, refresh } = useAsyncData<IMetenoxMoonResult[]>('metenox-list', () => $fetch(apiEndpoint.value), {
-    // Use lazy to not block initial render
-    lazy: true,
-    server: false,
-    // Watch for changes to the endpoint
-    watch: [apiEndpoint],
+const { data, pending, error, refresh } = await useFetch<IMetenoxMoonResult[]>(apiEndpoint, {
+    key: 'metenox-list',
+    server: false, // Client-side only for filtered data
+    default: () => [],
+    watch: [apiEndpoint], // Re-fetch when endpoint changes
 });
 
 // Use computed values that fall back to empty array when real data isn't loaded yet
@@ -115,7 +114,7 @@ const loadData = async () => {
 
 // On component mount, trigger the data fetch
 onMounted(() => {
-    // useAsyncData will handle the initial load automatically with lazy: true
+    // useFetch will handle the initial load automatically
     // No need for manual loading management
     isClient.value = true;
 });

@@ -354,9 +354,11 @@ const formatDate = (dateString: string) => {
 
 const fetchKey = computed(() => `alliance-${allianceId}`);
 
-const { data: alliance, pending, error } = useAsyncData(fetchKey.value, () =>
-    $fetch(`/api/alliances/${allianceId}`), {
+const { data: alliance, pending, error } = await useFetch(`/api/alliances/${allianceId}`, {
+    key: fetchKey,
     server: true,
+    lazy: false,  // Don't delay initial render
+    default: () => null,
     watch: [() => route.params.id],
 });
 
@@ -428,10 +430,11 @@ interface IShortStats {
 const {
     data: shortStatsData,
     pending: shortStatsLoading,
-} = useAsyncData(`alliance-stats-${allianceId}`, () =>
-    $fetch<IShortStats | { error: string } | null>(`/api/stats/alliance_id/${allianceId}?dataType=basic&days=0`), {
-    lazy: true,
+} = await useFetch(`/api/stats/alliance_id/${allianceId}?dataType=basic&days=0`, {
+    key: `alliance-stats-${allianceId}`,
     server: true,
+    lazy: false,  // Don't delay initial render
+    default: () => null,
     watch: [() => route.params.id],
 });
 

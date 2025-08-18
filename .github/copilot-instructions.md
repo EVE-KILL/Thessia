@@ -148,23 +148,93 @@ When implementing components like search functionality, data tables, forms, or o
 
 ## Data Fetching Best Practices
 
--   **Prefer `useAsyncData` over `useFetch`** for better SSR control and loading state management
--   **Always use `lazy: true`** in useAsyncData options to prevent blocking initial render
--   **Set `server: false`** for client-side only data fetching (useful for filtered/search data)
--   **Use `watch` property** to automatically refetch when dependencies change (e.g., `watch: [apiEndpoint]`)
--   **Use the `pending` state** from useAsyncData instead of manual loading state management
--   **Avoid manual timeout logic** - let useAsyncData handle loading states naturally
--   **Structure for immediate rendering** with fallback data or skeleton states
+-   **Prefer `useFetch` over `useAsyncData`** for better SSR/client coordination and hydration reliability
+-   **Use `server: true, lazy: false`** for critical content that needs SSR (pages, SEO content)
+-   **Use `server: false`** for user-triggered actions or client-side only data fetching
+-   **Always provide `default()` fallback** to prevent hydration mismatches and improve reliability
+-   **Use the `pending` state** from useFetch instead of manual loading state management
+-   **Structure templates to handle loading states** with skeleton components during `pending`
 -   **Use computed API endpoints** that react to filter changes for dynamic data fetching
--   **Handle errors** with the `error` state returned from useAsyncData
+-   **Handle errors** with the `error` state returned from useFetch
 -   **Use `refresh()` function** for manual data refetching instead of re-calling $fetch
+-   **Never use useFetch inside functions** - for on-demand requests use `$fetch` directly
 
-Example pattern:
+### SSR-Optimized Pattern (for pages, components):
 
 ```vue
-const { data, pending, error, refresh } = useAsyncData('unique-key', () =>
-$fetch(apiEndpoint.value), { lazy: true, server: false, watch: [apiEndpoint] }
-);
+<template>
+    <div>
+        <!-- Show skeleton while loading -->
+        <template v-if="pending">
+            <USkeleton class="h-8 w-full mb-4" />
+            <USkeleton class="h-4 w-3/4" />
+        </template>
+        
+        <!-- Show content when loaded -->
+        <div v-else-if="data">
+            <h1>{{ data.title }}</h1>
+            <p>{{ data.description }}</p>
+        </div>
+        
+        <!-- Show error state -->
+        <div v-else-if="error">
+            Error loading content: {{ error }}
+        </div>
+    </div>
+</template>
+
+<script setup>
+const { data, pending, error, refresh } = await useFetch('/api/content', {
+    key: 'content-data',
+    server: true,    // Enable SSR for SEO
+    lazy: false,     // Don't delay initial render
+    default: () => null,  // Fallback for SSR failures
+});
+</script>
+```
+
+### Client-Side Only Pattern (for user actions):
+
+```vue
+<script setup>
+// For reactive data fetching based on user input/filters
+const { data, pending, error } = await useFetch('/api/search', {
+    query: searchParams,  // Reactive query params
+    key: 'search-results',
+    server: false,        // Client-side only
+    default: () => [],    // Empty array fallback
+    watch: [searchParams], // Refetch when params change
+});
+</script>
+```
+
+### On-Demand Pattern (for form submissions, actions):
+
+```vue
+<script setup>
+// For user-triggered actions, use $fetch directly
+const isLoading = ref(false);
+const error = ref(null);
+
+const handleSubmit = async () => {
+    try {
+        isLoading.value = true;
+        error.value = null;
+        
+        const result = await $fetch('/api/submit', {
+            method: 'POST',
+            body: formData.value,
+        });
+        
+        // Handle success
+        await navigateTo(`/success/${result.id}`);
+    } catch (err) {
+        error.value = err.message;
+    } finally {
+        isLoading.value = false;
+    }
+};
+</script>
 ```
 
 ## Security and CSP Compliance
@@ -246,7 +316,7 @@ bun run build:loaders         # Regenerate loader files
 ## Copilot-Specific Instructions
 
 -   Follow project structure and conventions.
--   Use `useFetch` or `useAsyncData` for API calls. (Prefer `useAsyncData` for SSR control)
+-   Use `useFetch` for API calls (preferred for reliability and SSR coordination)
 -   Handle errors with try-catch blocks.
 -   Use `cliLogger` for logging. (cliLogger.info('message') for example)
 -   Implement proper TypeScript typing for all functions and variables.

@@ -159,32 +159,25 @@ const getCurrentDocPath = () => {
 
 const currentDocPath = ref<string>(getCurrentDocPath());
 
-// Fetch documentation structure using useAsyncData to avoid caching issues
+// Fetch documentation structure using useFetch for better SSR handling
 const {
     data: structureData,
     pending: structurePending,
     error: structureError,
     refresh: refreshStructure
-} = await useAsyncData<{ structure: DocFile[]; error: string | null }>(
-    'docs-structure',
-    async () => {
-        try {
-            // Add cache busting only in development
-            const isDev = process.env.NODE_ENV === 'development';
-            const url = isDev
-                ? `/api/docs/structure?_t=${Date.now()}`
-                : '/api/docs/structure';
-
-            const response = await $fetch<{ structure: DocFile[]; error: string | null }>(url);
-            return response;
-        } catch (error) {
-            console.error('Error fetching docs structure:', error);
-            return { structure: [], error: 'Failed to load documentation structure' };
-        }
+} = await useFetch<{ structure: DocFile[]; error: string | null }>(
+    () => {
+        // Add cache busting only in development
+        const isDev = process.env.NODE_ENV === 'development';
+        return isDev
+            ? `/api/docs/structure?_t=${Date.now()}`
+            : '/api/docs/structure';
     },
     {
+        key: 'docs-structure',
         server: true, // Ensure this runs on the server
-        lazy: false // Don't delay the initial render
+        lazy: false, // Don't delay the initial render
+        default: () => ({ structure: [], error: null }),
     }
 );
 
@@ -193,35 +186,27 @@ const docsStructure = computed(() => structureData.value?.structure || []);
 // Computed current path for reactive navigation
 const currentPath = computed(() => currentDocPath.value || 'index');
 
-// Fetch current document content using useAsyncData like the kill page
+// Fetch current document content using useFetch for better SSR handling
 const {
     data: currentDoc,
     pending: contentPending,
     error: contentError,
     refresh: refreshContent
-} = await useAsyncData<DocContent | null>(
-    `doc-content-${currentDocPath.value || 'index'}`,
-    async () => {
+} = await useFetch<DocContent | null>(
+    () => {
         const path = currentDocPath.value || 'index';
-
-        try {
-            // Add cache busting only in development
-            const isDev = process.env.NODE_ENV === 'development';
-            const url = isDev
-                ? `/api/docs/content/${path}?_t=${Date.now()}`
-                : `/api/docs/content/${path}`;
-
-            const response = await $fetch<DocContent>(url);
-            return response;
-        } catch (error) {
-            console.error('Error fetching content for:', path, error);
-            return null;
-        }
+        // Add cache busting only in development
+        const isDev = process.env.NODE_ENV === 'development';
+        return isDev
+            ? `/api/docs/content/${path}?_t=${Date.now()}`
+            : `/api/docs/content/${path}`;
     },
     {
+        key: () => `doc-content-${currentDocPath.value || 'index'}`,
         server: true, // Ensure this runs on the server
         lazy: false, // Don't delay the initial render
-        watch: [currentDocPath] // Re-fetch when currentDocPath changes
+        default: () => null,
+        watch: [currentDocPath], // Re-fetch when currentDocPath changes
     }
 );
 
@@ -287,7 +272,7 @@ const handleNavigation = async (path: string) => {
     // Navigate to the new route
     await router.push(`/docs/${path}`);
 
-    // The useAsyncData will automatically re-fetch due to the watch on currentDocPath
+    // The useFetch will automatically re-fetch due to the watch on currentDocPath
 };
 
 // Handle clicks on internal docs links
@@ -324,7 +309,7 @@ watch(() => route.params.path, async (newPath) => {
         console.log('Route changed, updating path from:', currentDocPath.value, 'to:', newDocPath);
         currentDocPath.value = newDocPath;
 
-        // The useAsyncData will automatically re-fetch due to the watch on currentDocPath
+        // The useFetch will automatically re-fetch due to the watch on currentDocPath
     }
 }, { immediate: true });
 

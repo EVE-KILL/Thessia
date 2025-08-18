@@ -76,14 +76,18 @@ const changePeriod = async (period: string) => {
 const { data: shipStats, pending: shipStatsLoading, refresh: refreshShipStats } = useFetch(() => `/api/stats/character_id/${characterId}?dataType=shipGroupStats&days=${activeDays.value}`, {
     key: () => `character-ship-stats-${characterId}-${activePeriod.value}`,
     default: () => ({ shipGroupStats: [] }),
-    watch: [activeDays]
+    watch: [activeDays],
+    server: true, // Enable SSR rendering
+    lazy: false, // Show immediately
 });
 
 // Fetch monthly stats - reactive to period changes
 const { data: monthlyStats, pending: monthlyStatsLoading, refresh: refreshMonthlyStats } = useFetch(() => `/api/stats/character_id/${characterId}?dataType=monthlyStats&days=${activeDays.value}`, {
     key: () => `character-monthly-stats-${characterId}-${activePeriod.value}`,
     default: () => ({ monthlyStats: [] }),
-    watch: [activeDays]
+    watch: [activeDays],
+    server: true, // Enable SSR rendering
+    lazy: false, // Show immediately
 });
 </script>
 

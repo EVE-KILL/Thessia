@@ -250,6 +250,8 @@ const { data: battle, pending, error, refresh } = await useFetch(() => apiUrl.va
         ? `battle-${isKillmailMode.value ? 'killmail-' : ''}${battleId.value}`
         : null),
     enabled: computed(() => !!battleId.value && !isInvalidId.value),
+    server: true, // Enable SSR rendering for SEO
+    lazy: false, // Show immediately
 });
 
 // Function to refresh data

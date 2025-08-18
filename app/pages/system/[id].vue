@@ -81,10 +81,11 @@ const {
     data: system,
     pending,
     error,
-} = useAsyncData(fetchKey.value, () =>
-    $fetch(`/api/solarsystems/${id}`), {
-    lazy: true,
+} = await useFetch(`/api/solarsystems/${id}`, {
+    key: fetchKey,
     server: true,
+    lazy: false,  // Don't delay initial render
+    default: () => null,
     watch: [() => route.params.id],
 });
 

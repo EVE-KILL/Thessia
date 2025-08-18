@@ -68,12 +68,12 @@ const route = useRoute();
 const { id } = route.params;
 
 // Fetch all item data in a single optimized request
-const { data: itemSummary, pending } = await useAsyncData(
-    () => `item-summary-${id}`,
-    () => $fetch(`/api/items/${id}?killmailLimit=20&regionId=10000002&priceDays=30`),
+const { data: itemSummary, pending } = await useFetch(
+    () => `/api/items/${id}?killmailLimit=20&regionId=10000002&priceDays=30`,
     {
-        lazy: true,
-        server: false,
+        key: () => `item-summary-${id}`,
+        server: false, // Client-side only for user-triggered navigation
+        default: () => null,
         watch: [() => route.params.id],
     },
 );

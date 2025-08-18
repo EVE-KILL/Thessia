@@ -580,9 +580,11 @@ const {
     pending,
     error,
     refresh,
-} = useAsyncData(fetchKey.value, () =>
-    $fetch<ICorporation | { error: string } | null>(`/api/corporations/${id}`), {
+} = await useFetch(`/api/corporations/${id}`, {
+    key: fetchKey,
     server: true, // Fetch on server for SSR
+    lazy: false,  // Don't delay initial render
+    default: () => null,
     watch: [() => route.params.id],
 });
 
@@ -607,9 +609,11 @@ interface IShortStats {
 const {
     data: shortStatsData,
     pending: shortStatsLoading,
-} = useAsyncData(`corporation-stats-${id}`, () =>
-    $fetch<IShortStats | { error: string } | null>(`/api/stats/corporation_id/${id}?dataType=basic&days=0`), {
+} = await useFetch(`/api/stats/corporation_id/${id}?dataType=basic&days=0`, {
+    key: `corporation-stats-${id}`,
     server: true, // Fetch on server for SSR
+    lazy: false,  // Don't delay initial render
+    default: () => null,
     watch: [() => route.params.id],
 });
 

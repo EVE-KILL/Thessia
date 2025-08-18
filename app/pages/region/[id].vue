@@ -78,10 +78,11 @@ const {
     data: region,
     pending,
     error,
-} = useAsyncData(fetchKey.value, () =>
-    $fetch(`/api/regions/${id}`), {
-    lazy: true,
+} = await useFetch(`/api/regions/${id}`, {
+    key: fetchKey,
     server: true,
+    lazy: false,  // Don't delay initial render
+    default: () => null,
     watch: [() => route.params.id],
 });
 

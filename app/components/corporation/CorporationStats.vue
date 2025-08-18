@@ -68,22 +68,26 @@ const changePeriod = async (period: string) => {
 };
 
 // Fetch ship stats - reactive to period changes
-const { data: shipStats, pending: shipStatsLoading, refresh: refreshShipStats } = useAsyncData(() => `corporation-ship-stats-${corporationId}-${activePeriod.value}`, () =>
-    $fetch(`/api/stats/corporation_id/${corporationId}?dataType=shipGroupStats&days=${activeDays.value}`), {
-    lazy: true,
-    server: true,
-    default: () => ({ shipGroupStats: [] }),
-    watch: [activeDays]
-});
+const { data: shipStats, pending: shipStatsLoading, refresh: refreshShipStats } = await useFetch(
+    () => `/api/stats/corporation_id/${corporationId}?dataType=shipGroupStats&days=${activeDays.value}`,
+    {
+        key: () => `corporation-ship-stats-${corporationId}-${activePeriod.value}`,
+        server: false, // Client-side only for stats components
+        default: () => ({ shipGroupStats: [] }),
+        watch: [activeDays]
+    }
+);
 
 // Fetch monthly stats - reactive to period changes
-const { data: monthlyStats, pending: monthlyStatsLoading, refresh: refreshMonthlyStats } = useAsyncData(() => `corporation-monthly-stats-${corporationId}-${activePeriod.value}`, () =>
-    $fetch(`/api/stats/corporation_id/${corporationId}?dataType=monthlyStats&days=${activeDays.value}`), {
-    lazy: true,
-    server: true,
-    default: () => ({ monthlyStats: [] }),
-    watch: [activeDays]
-});
+const { data: monthlyStats, pending: monthlyStatsLoading, refresh: refreshMonthlyStats } = await useFetch(
+    () => `/api/stats/corporation_id/${corporationId}?dataType=monthlyStats&days=${activeDays.value}`,
+    {
+        key: () => `corporation-monthly-stats-${corporationId}-${activePeriod.value}`,
+        server: false, // Client-side only for stats components
+        default: () => ({ monthlyStats: [] }),
+        watch: [activeDays]
+    }
+);
 </script>
 
 <style scoped>

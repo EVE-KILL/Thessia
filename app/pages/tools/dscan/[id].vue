@@ -9,6 +9,8 @@ const id = route.params.id as string;
 
 const { data, pending, error } = await useFetch(`/api/tools/dscan/${id}`, {
     key: `dscan-${id}`,
+    server: true, // Enable SSR rendering for SEO
+    lazy: false, // Show immediately
 });
 
 // Sort ships by count (descending)

@@ -588,96 +588,29 @@ const mobileTabs = computed(() => [
     },
 ]);
 
-// Fetch killmail with proper SSR blocking
-const { data: fetchedKillmail, pending } = await useAsyncData<IKillmail | null>(
-    `killmail-${route.params.id || "none"}`,
-    async () => {
-        if (!route.params.id) return null;
-
-        try {
-            const response = await $fetch<IKillmail>(`/api/killmail/${route.params.id}`);
-            return response;
-        } catch (error) {
-            console.error("Error fetching killmail:", error);
-            return null;
-        }
-    },
-    {
-        server: true, // Ensure this runs on the server
-        lazy: false, // Don't delay the initial render
-    },
-);
+// Fetch killmail with useFetch for better SSR handling
+const { data: fetchedKillmail, pending, error: fetchError } = await useFetch<IKillmail | null>(`/api/killmail/${route.params.id}`, {
+    key: `killmail-${route.params.id || "none"}`,
+    server: true, // Try SSR first, fallback to client
+    lazy: false, // Don't delay initial render
+    default: () => null, // Provide fallback for SSR failures
+});
 
 // Fetch battle status independently
-const { data: battleStatus } = await useAsyncData<{ inBattle: boolean }>(
-    `battle-status-${route.params.id || "none"}`,
-    async () => {
-        if (!route.params.id) return { inBattle: false };
-        try {
-            const result = await $fetch<{ inBattle: boolean }>(`/api/battles/killmail/${route.params.id}/inbattle`);
-            return result;
-        } catch (error) {
-            return { inBattle: false };
-        }
-    },
-    {
-        server: true,
-        lazy: false,
-    },
-);
+const { data: battleStatus } = await useFetch<{ inBattle: boolean }>(`/api/battles/killmail/${route.params.id}/inbattle`, {
+    key: `battle-status-${route.params.id || "none"}`,
+    server: true,
+    lazy: false,
+    default: () => ({ inBattle: false }),
+});
 
-// Fetch sibling killmails during SSR to prevent hydration mismatches
-const { data: fetchedSiblings } = await useAsyncData<Array<{ killmail_id: number; victim: { ship_id: number; ship_name: any } }>>(
-    `siblings-${route.params.id || "none"}`,
-    async () => {
-        if (!route.params.id) return [];
-        try {
-            const siblingResponse = await $fetch<Array<{ killmail_id: number; victim: { ship_id: number; ship_name: any } }>>(
-                `/api/killmail/${route.params.id}/sibling`
-            );
-            return Array.isArray(siblingResponse) ? siblingResponse : [];
-        } catch (error) {
-            console.error("Error fetching sibling killmails:", error);
-            return [];
-        }
-    },
-    {
-        server: true,
-        lazy: false,
-    },
-);
-
-// Fetch configuration data during SSR to prevent flash of unhidden content
-const { data: configurationData } = await useAsyncData<{ configurations: any[] }>(
-    `configuration-${route.params.id || "none"}`,
-    async () => {
-        if (!route.params.id) return { configurations: [] };
-
-        try {
-            // First get the killmail to extract the victim's character ID
-            const killmailResponse = await $fetch<IKillmail>(`/api/killmail/${route.params.id}`);
-            if (!killmailResponse?.victim?.character_id) {
-                return { configurations: [] };
-            }
-
-            // Then fetch configurations for that character
-            const configResponse = await $fetch<{ configurations: any[] }>(`/api/configurations`, {
-                query: {
-                    characterId: killmailResponse.victim.character_id
-                }
-            });
-
-            return configResponse;
-        } catch (error) {
-            console.error("Error fetching configuration data:", error);
-            return { configurations: [] };
-        }
-    },
-    {
-        server: true,
-        lazy: false,
-    },
-);
+// Fetch sibling killmails for related kills
+const { data: fetchedSiblings } = await useFetch<Array<{ killmail_id: number; victim: { ship_id: number; ship_name: any } }>>(`/api/killmail/${route.params.id}/sibling`, {
+    key: `siblings-${route.params.id || "none"}`,
+    server: true,
+    lazy: false,
+    default: () => [],
+});
 
 const battle = computed(() => battleStatus.value?.inBattle ?? false);
 const siblings = computed(() => fetchedSiblings.value || []);
@@ -688,17 +621,8 @@ const killmail = computed(() => {
     return result;
 });
 
-// Privacy settings computed property - use SSR data directly to prevent flash
+// Privacy settings computed property - use store approach
 const shouldHideFitting = computed(() => {
-    // First try to get from SSR configuration data
-    const configs = configurationData.value?.configurations || [];
-    const hideFittingConfig = configs.find(config => config.key === 'hideFitting');
-
-    if (hideFittingConfig) {
-        return hideFittingConfig.value;
-    }
-
-    // Fallback to store (for when store is populated on client)
     return configStore.getConfiguration('hideFitting', false);
 });
 

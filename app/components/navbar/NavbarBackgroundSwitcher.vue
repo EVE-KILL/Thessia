@@ -11,7 +11,10 @@ const {
 } = siteBackground();
 
 // Get the backgrounds that are available from the API
-const { data: backgrounds, pending: loading } = await useFetch("/api/site/backgrounds");
+const { data: backgrounds, pending: loading } = await useFetch("/api/site/backgrounds", {
+    server: true, // Enable SSR rendering
+    lazy: false, // Show immediately
+});
 
 // Track dropdown state
 const isDropdownOpen = ref(false);
