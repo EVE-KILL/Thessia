@@ -169,7 +169,6 @@ export default defineCachedEventHandler(
         maxAge: 1800, // Cache for 30 minutes since we're returning all images
         staleMaxAge: -1,
         swr: true,
-        base: "redis",
         shouldBypassCache: (event) => {
             return process.env.NODE_ENV !== "production";
         },

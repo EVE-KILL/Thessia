@@ -42,7 +42,6 @@ export default defineCachedEventHandler(
         maxAge: 86400,
         staleMaxAge: -1,
         swr: true,
-        base: "redis",
         shouldBypassCache: (event: any) => {
             // Cast event to any
             return process.env.NODE_ENV !== "production";

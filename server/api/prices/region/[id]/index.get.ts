@@ -38,7 +38,6 @@ export default defineCachedEventHandler(
         maxAge: 300,
         staleMaxAge: -1,
         swr: true,
-        base: "redis",
         shouldBypassCache: (event: H3Event) => {
             return process.env.NODE_ENV !== "production";
         },

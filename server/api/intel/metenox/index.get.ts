@@ -22,7 +22,6 @@ export default defineCachedEventHandler(
         maxAge: 86400, // Cache for 24 hours
         staleMaxAge: -1,
         swr: true,
-        base: "redis",
         shouldBypassCache: (event) => {
             return process.env.NODE_ENV !== "production";
         },

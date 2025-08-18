@@ -6,8 +6,7 @@ export default defineCachedEventHandler(
     {
         maxAge: 300, // Use the maxAge from nuxt.config.ts
         staleMaxAge: -1,
-        swr: true,
-        base: "redis", // As specified in nuxt.config.ts
+        swr: true, // As specified in nuxt.config.ts
         shouldBypassCache: (event) => {
             return process.env.NODE_ENV !== "production";
         },
