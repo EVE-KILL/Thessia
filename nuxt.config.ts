@@ -44,17 +44,17 @@ export default defineNuxtConfig({
         // use preset: bun to get working WS, but broken SSE https://github.com/nitrojs/nitro/issues/2171
         preset: "node-server",
         srcDir: "server",
-        minify: true,
+        minify: false,
         esbuild: {
             options: {
                 target: "esnext",
-                minify: true,
-                minifySyntax: true,
-                minifyWhitespace: true,
-                minifyIdentifiers: true,
+                minify: false,
+                minifySyntax: false,
+                minifyWhitespace: false,
+                minifyIdentifiers: false,
                 treeShaking: true,
                 charset: "utf8",
-                keepNames: false,
+                keepNames: true,
             },
         },
 
@@ -255,6 +255,7 @@ export default defineNuxtConfig({
     // Vite configuration for bundle optimization
     vite: {
         build: {
+            minify: false,
             rollupOptions: {
                 output: {
                     manualChunks: {
