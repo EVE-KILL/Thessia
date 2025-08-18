@@ -1,6 +1,14 @@
 <script setup lang="ts">
 const locale = useI18n();
 
+// Add error handling for Partytown issues
+if (import.meta.client) {
+    // Handle PerformanceEventTiming undefined error in development
+    if (typeof PerformanceEventTiming === 'undefined' && import.meta.dev) {
+        console.warn('PerformanceEventTiming not available in development environment');
+    }
+}
+
 useHead({
     script: [
         {

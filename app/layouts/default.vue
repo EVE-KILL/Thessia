@@ -11,11 +11,26 @@ const { t } = useI18n();
 
 useHead({
     link: [
-        { rel: "preload", as: "image", href: backgroundUrl.value },
         { rel: "icon", type: "image/png", href: "/favicon.svg" },
         { rel: "search", type: "application/opensearchdescription+xml", href: "/search.xml" },
     ],
 });
+
+// Only preload the background image when it's actually needed
+if (import.meta.client) {
+    onMounted(() => {
+        // Preload the background image after a short delay to ensure it will be used
+        setTimeout(() => {
+            if (backgroundUrl.value && backgroundUrl.value !== '/images/default-bg.jpg') {
+                const link = document.createElement('link');
+                link.rel = 'preload';
+                link.as = 'image';
+                link.href = backgroundUrl.value;
+                document.head.appendChild(link);
+            }
+        }, 100);
+    });
+}
 
 useSeoMeta({
     titleTemplate: "EVE-KILL | %s",

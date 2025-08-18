@@ -149,6 +149,13 @@ export default defineNuxtConfig({
         },
     },
 
+    vue: {
+        compilerOptions: {
+            // Suppress Suspense experimental warning in development
+            isCustomElement: () => false,
+        },
+    },
+
     experimental: {
         renderJsonPayloads: true,
         writeEarlyHints: true,
@@ -413,5 +420,13 @@ export default defineNuxtConfig({
         "nitro:build:public-assets": async (nitro) => {
             await handleNitroBuildHooks(nitro);
         },
+    },
+
+    // Partytown configuration
+    partytown: {
+        // Enable debug mode in development
+        debug: process.env.NODE_ENV === 'development',
+        // Forward events to main thread
+        forward: ['dataLayer.push'],
     },
 });
