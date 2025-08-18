@@ -89,8 +89,7 @@ const {
     fetchKey,
     () => shouldFetch.value ? $fetch<IKillList[]>(props.apiEndpoint, { query: queryParams.value }) : null,
     {
-        lazy: true,
-        server: false,
+        server: true,
         watch: [queryParams, shouldFetch],
         default: () => []
     }
@@ -972,7 +971,11 @@ onUpdated(() => {
             <!-- Details column -->
             <template #cell-details="{ item }">
                 <div class="flex flex-col items-end w-full">
-                    <div class="text-sm text-black dark:text-white">{{ formatDate(item.kill_time) }}</div>
+                    <div class="text-sm text-black dark:text-white">
+                        <ClientOnly>
+                            {{ formatDate(item.kill_time) }}
+                        </ClientOnly>
+                    </div>
                     <div class="flex gap-1 items-center">
                         <span class="text-xs text-gray-600 dark:text-gray-400">{{ item.attackerCount }}</span>
                         <img src="/images/involved.png" width="16" height="16" :alt="`${item.attackerCount} Involved`"
@@ -1050,7 +1053,7 @@ onUpdated(() => {
                         <!-- System/Region Info -->
                         <div class="text-xs">
                             <span>{{ item.system_name }} / {{ getLocalizedString(item.region_name, currentLocale)
-                                }}</span>
+                            }}</span>
                             <span class="ml-1">(</span>
                             <span :class="getSecurityColor(item.system_security)">
                                 {{ item.system_security.toFixed(1) }}
@@ -1060,7 +1063,9 @@ onUpdated(() => {
 
                         <!-- Time Info -->
                         <span class="text-xs text-gray-600 dark:text-gray-400">
-                            {{ formatDate(item.kill_time) }}
+                            <ClientOnly>
+                                {{ formatDate(item.kill_time) }}
+                            </ClientOnly>
                         </span>
                     </div>
                 </div>

@@ -226,10 +226,9 @@ export const useEnhancedMarkdown = () => {
                     // External links - add target and rel attributes
                     // Additional type safety check before calling startsWith
                     if (
-                        typeof href === "string" && (
-                            href.startsWith("http://") ||
-                            href.startsWith("https://")
-                        )
+                        typeof href === "string" &&
+                        (href.startsWith("http://") ||
+                            href.startsWith("https://"))
                     ) {
                         token.attrPush(["target", "_blank"]);
                         token.attrPush(["rel", "noopener noreferrer"]);
