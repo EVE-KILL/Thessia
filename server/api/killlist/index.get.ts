@@ -235,81 +235,92 @@ export default defineCachedEventHandler(
             };
         }
 
-        // Stream through killmails using cursor and format on-the-fly
-        const result: any[] = [];
-        let cursor: any;
+        // Use aggregation pipeline for efficient processing
+        let pipeline: any[];
 
         if (finalConfig.aggregate) {
-            // Handle aggregation pipeline
-            const pipeline = [...finalConfig.aggregate];
-
-            // Add skip and limit to the pipeline
-            pipeline.push({ $skip: skip });
-            pipeline.push({ $limit: limit });
-
-            // Add hint if provided
-            const aggregateOptions: any = {};
-            if (finalConfig.hint) {
-                aggregateOptions.hint = finalConfig.hint;
-            }
-
-            cursor = Killmails.aggregate(pipeline, aggregateOptions);
+            // Handle existing aggregation pipeline
+            pipeline = [...finalConfig.aggregate];
         } else {
-            // Handle traditional find query
-            const projection = finalConfig.projection || {};
-
-            cursor = Killmails.find(finalConfig.find!, projection as any, {
-                sort: finalConfig.sort || { kill_time: -1 },
-                skip: skip,
-                limit: limit,
-                hint: finalConfig.hint || "kill_time_-1",
-            });
-        }
-        for await (const killmail of cursor) {
-            const finalBlowAttacker = killmail.attackers.find(
-                (a: any) => a.final_blow
-            );
-
-            result.push({
-                killmail_id: killmail.killmail_id,
-                total_value: killmail.total_value,
-                system_id: killmail.system_id,
-                system_name: killmail.system_name,
-                system_security: killmail.system_security,
-                region_id: killmail.region_id,
-                region_name: killmail.region_name,
-                kill_time: killmail.kill_time,
-                attackerCount: killmail.attackers.length,
-                commentCount: 0,
-                is_npc: killmail.is_npc,
-                is_solo: killmail.is_solo,
-                victim: {
-                    ship_id: killmail.victim.ship_id,
-                    ship_name: killmail.victim.ship_name,
-                    ship_group_name: killmail.victim.ship_group_name,
-                    character_id: killmail.victim.character_id,
-                    character_name: killmail.victim.character_name,
-                    corporation_id: killmail.victim.corporation_id,
-                    corporation_name: killmail.victim.corporation_name,
-                    alliance_id: killmail.victim.alliance_id,
-                    alliance_name: killmail.victim.alliance_name,
-                    faction_id: killmail.victim.faction_id,
-                    faction_name: killmail.victim.faction_name,
-                },
-                finalblow: {
-                    character_id: finalBlowAttacker?.character_id,
-                    character_name: finalBlowAttacker?.character_name,
-                    corporation_id: finalBlowAttacker?.corporation_id,
-                    corporation_name: finalBlowAttacker?.corporation_name,
-                    alliance_id: finalBlowAttacker?.alliance_id,
-                    alliance_name: finalBlowAttacker?.alliance_name,
-                    faction_id: finalBlowAttacker?.faction_id,
-                    faction_name: finalBlowAttacker?.faction_name,
-                    ship_group_name: finalBlowAttacker?.ship_group_name,
-                },
-            });
+            // Convert find query to aggregation pipeline for consistent processing
+            pipeline = [
+                { $match: finalConfig.find || {} },
+                { $sort: finalConfig.sort || { kill_time: -1 } },
+            ];
         }
 
+        // Add data transformation pipeline stages
+        pipeline.push(
+            { $skip: skip },
+            { $limit: limit },
+            {
+                $addFields: {
+                    finalBlowAttacker: {
+                        $arrayElemAt: [
+                            {
+                                $filter: {
+                                    input: "$attackers",
+                                    as: "attacker",
+                                    cond: {
+                                        $eq: ["$$attacker.final_blow", true],
+                                    },
+                                },
+                            },
+                            0,
+                        ],
+                    },
+                    attackerCount: { $size: "$attackers" },
+                },
+            },
+            {
+                $project: {
+                    killmail_id: 1,
+                    total_value: 1,
+                    system_id: 1,
+                    system_name: 1,
+                    system_security: 1,
+                    region_id: 1,
+                    region_name: 1,
+                    kill_time: 1,
+                    attackerCount: 1,
+                    is_npc: 1,
+                    is_solo: 1,
+                    commentCount: { $literal: 0 },
+                    victim: {
+                        ship_id: "$victim.ship_id",
+                        ship_name: "$victim.ship_name",
+                        ship_group_name: "$victim.ship_group_name",
+                        character_id: "$victim.character_id",
+                        character_name: "$victim.character_name",
+                        corporation_id: "$victim.corporation_id",
+                        corporation_name: "$victim.corporation_name",
+                        alliance_id: "$victim.alliance_id",
+                        alliance_name: "$victim.alliance_name",
+                        faction_id: "$victim.faction_id",
+                        faction_name: "$victim.faction_name",
+                    },
+                    finalblow: {
+                        character_id: "$finalBlowAttacker.character_id",
+                        character_name: "$finalBlowAttacker.character_name",
+                        corporation_id: "$finalBlowAttacker.corporation_id",
+                        corporation_name: "$finalBlowAttacker.corporation_name",
+                        alliance_id: "$finalBlowAttacker.alliance_id",
+                        alliance_name: "$finalBlowAttacker.alliance_name",
+                        faction_id: "$finalBlowAttacker.faction_id",
+                        faction_name: "$finalBlowAttacker.faction_name",
+                        ship_group_name: "$finalBlowAttacker.ship_group_name",
+                    },
+                },
+            }
+        );
+
+        // Add hint if provided
+        const aggregateOptions: any = {};
+        if (finalConfig.hint) {
+            aggregateOptions.hint = finalConfig.hint;
+        }
+
+        const result = await Killmails.aggregate(pipeline, aggregateOptions);
         return result;
     },
     {

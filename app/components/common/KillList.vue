@@ -85,12 +85,13 @@ const {
     pending,
     error,
     refresh,
-} = await useAsyncData(
-    fetchKey,
-    () => shouldFetch.value ? $fetch<IKillList[]>(props.apiEndpoint, { query: queryParams.value }) : null,
+} = await useFetch<IKillList[]>(
+    () => shouldFetch.value ? props.apiEndpoint : null,
     {
+        key: fetchKey,
+        query: queryParams,
         server: true,
-        watch: [queryParams, shouldFetch],
+        lazy: false,
         default: () => []
     }
 );
@@ -99,6 +100,20 @@ const {
 const killlistData = computed(() => {
     return useExternalData.value ? props.externalKilllistData : fetchedData.value || [];
 });
+
+// Track if we have a fetch error and empty data (potential timeout scenario)
+const hasFetchError = computed(() => {
+    return !useExternalData.value && error.value && (!fetchedData.value || fetchedData.value.length === 0);
+});
+
+// Retry function for failed fetches
+const retryFetch = async () => {
+    try {
+        await refresh();
+    } catch (err) {
+        console.error("Error retrying killlist fetch:", err);
+    }
+};
 
 // Update local data when external data changes
 watch(
@@ -813,10 +828,24 @@ onUpdated(() => {
             </UPagination>
         </div>
 
+        <!-- Error state with retry option -->
+        <div v-if="hasFetchError" class="text-center py-8">
+            <div class="text-red-500 dark:text-red-400 mb-4">
+                <Icon name="i-lucide-alert-circle" class="w-8 h-8 mx-auto mb-2" />
+                <p class="text-lg font-medium">{{ t('errorLoadingKills') }}</p>
+                <p class="text-sm text-gray-600 dark:text-gray-400 mt-1">{{ t('databaseTimeout') }}</p>
+            </div>
+            <button @click="retryFetch"
+                class="px-4 py-2 bg-primary-500 text-white rounded-md hover:bg-primary-600 transition-colors">
+                <Icon name="i-lucide-refresh-cw" class="w-4 h-4 inline mr-2" />
+                {{ t('errors.whatToDo.tryAgain') }}
+            </button>
+        </div>
+
         <!-- Use our enhanced EkTable component with specialized headers -->
-        <Table :columns="tableColumns" :items="killlistData" :loading="pending" :skeleton-count="selectedPageSize"
-            :empty-text="t('noKills')" :row-class="getRowClass" :special-header="true" :bordered="true"
-            :link-fn="generateKillLink" background="transparent">
+        <Table v-else :columns="tableColumns" :items="killlistData" :loading="pending"
+            :skeleton-count="selectedPageSize" :empty-text="t('noKills')" :row-class="getRowClass"
+            :special-header="true" :bordered="true" :link-fn="generateKillLink" background="transparent">
             <!-- Ship column -->
             <template #cell-ship="{ item }">
                 <div class="flex items-center py-1">
@@ -1053,7 +1082,7 @@ onUpdated(() => {
                         <!-- System/Region Info -->
                         <div class="text-xs">
                             <span>{{ item.system_name }} / {{ getLocalizedString(item.region_name, currentLocale)
-                            }}</span>
+                                }}</span>
                             <span class="ml-1">(</span>
                             <span :class="getSecurityColor(item.system_security)">
                                 {{ item.system_security.toFixed(1) }}

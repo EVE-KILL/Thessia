@@ -554,6 +554,8 @@
     "errorServerError": "Error: Server Error",
     "errorMaintenance": "Service Temporarily Unavailable",
     "errorGeneric": "Error: Generic Error",
+    "errorLoadingKills": "Failed to load killmails",
+    "databaseTimeout": "The database took too long to respond. Please try again.",
     "backToHome": "Back to Frontpage",
     "errors": {
         "titles": {

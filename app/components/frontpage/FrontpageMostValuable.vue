@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, ref, watch } from "vue";
+import { computed, ref } from "vue";
 
 interface IMostValuableItem {
     killmail_id: number;
@@ -45,40 +45,28 @@ const queryParams = computed(() => ({
     dataType: activeTabId.value, // Use dataType instead of type
     days: props.days,
     limit: props.limit,
+    type: activeTabId.value, // Also include type for API compatibility
 }));
 
-const cachedData = ref<Record<string, IMostValuableItem[]>>({});
-const isLoading = ref(false);
-const fetchError = ref<Error | null>(null);
-
-const currentTabItems = computed(() => {
-    return cachedData.value[activeTabId.value] || [];
+// Use useFetch for better SSR and loading state management
+const {
+    data: fetchedData,
+    pending: isLoading,
+    error: fetchError,
+    refresh
+} = await useFetch<IMostValuableItem[]>("/api/stats", {
+    key: () => `most-valuable-${activeTabId.value}-${props.days}-${props.limit}`,
+    query: queryParams,
+    server: true,
+    lazy: true,  // Progressive loading for tab switching
+    default: () => [],
+    watch: [activeTabId, () => props.days, () => props.limit]
 });
 
-watch(activeTabId, async (newTabId) => {
-    if (cachedData.value[newTabId]) {
-        // Data already cached, currentTabItems will update automatically
-        fetchError.value = null; // Clear previous errors
-        isLoading.value = false; // Ensure loading is false if data is cached
-        return;
-    }
-
-    isLoading.value = true;
-    fetchError.value = null;
-    try {
-        // Use $fetch for manual data fetching
-        const data = await $fetch<IMostValuableItem[]>("/api/stats", {
-            query: { ...queryParams.value, type: newTabId }, // Ensure query uses the newTabId
-        });
-        cachedData.value[newTabId] = data || [];
-    } catch (err) {
-        console.error(`Failed to fetch data for tab ${newTabId}:`, err);
-        fetchError.value = err as Error;
-        cachedData.value[newTabId] = []; // Store empty array on error or handle differently
-    } finally {
-        isLoading.value = false;
-    }
-}, { immediate: true }); // immediate: true to load data for the initial tab
+// Current tab items - directly from useFetch data
+const currentTabItems = computed(() => {
+    return fetchedData.value || [];
+});
 
 // Helper functions for data formatting and display
 const getLocalizedString = (obj: any, locale: string): string => {
