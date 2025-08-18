@@ -370,13 +370,9 @@ export default defineNuxtConfig({
                 href: "/",
             },
             link: [
-                {
-                    rel: "preconnect",
-                    href: "https://images.eve-kill.com",
-                    crossorigin: "anonymous",
-                },
-
                 // DNS prefetch for external domains
+                { rel: "dns-prefetch", href: "//images.eve-kill.com" },
+                { rel: "dns-prefetch", href: "//eve-kill.com" },
                 { rel: "dns-prefetch", href: "//images.evetech.net" },
                 { rel: "dns-prefetch", href: "//i.imgur.com" },
                 { rel: "dns-prefetch", href: "//i.redd.it" },
@@ -384,7 +380,12 @@ export default defineNuxtConfig({
                 // Preconnect to critical external resources
                 {
                     rel: "preconnect",
-                    href: "https://images.evetech.net",
+                    href: "https://images.eve-kill.com",
+                    crossorigin: "anonymous",
+                },
+                {
+                    rel: "preconnect",
+                    href: "https://eve-kill.com",
                     crossorigin: "anonymous",
                 },
                 { rel: "icon", type: "image/png", href: "/favicon.svg" },
