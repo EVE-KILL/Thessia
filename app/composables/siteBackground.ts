@@ -3,7 +3,7 @@ export function siteBackground() {
 
     const currentBackground = useState<string>(
         "currentBackground",
-        () => cookie.value || "/backgrounds/bg2.png"
+        () => cookie.value || "/backgrounds/bg2.webp"
     );
 
     // Track if current background is from Reddit
