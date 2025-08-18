@@ -730,8 +730,8 @@ useSeoMeta({
     ogDescription: computed(() => seoData.value?.description || "EVE Online killmail details"),
     twitterDescription: computed(() => seoData.value?.description || "EVE Online killmail details"),
 
-    ogImage: computed(() => seoData.value?.ogImage || ""),
-    twitterImage: computed(() => seoData.value?.ogImage || ""),
+    ogImage: computed(() => seoData.value?.ogImage || "https://eve-kill.com/icon.png"),
+    twitterImage: computed(() => seoData.value?.ogImage || "https://eve-kill.com/icon.png"),
 
     // Keep the rest of your meta tags
     ogType: "website",
