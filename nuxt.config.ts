@@ -45,6 +45,7 @@ export default defineNuxtConfig({
         preset: "node-server",
         srcDir: "server",
         minify: true,
+        sourceMap: true,
         esbuild: {
             options: {
                 target: "esnext",
@@ -256,6 +257,7 @@ export default defineNuxtConfig({
     vite: {
         build: {
             minify: true,
+            sourcemap: true,
             rollupOptions: {
                 output: {
                     manualChunks: {
