@@ -2155,9 +2155,43 @@
             "finished": "Recently Finished",
             "finishedDesc": "Wars that recently ended"
         },
+        "filters": {
+            "title": "Filters",
+            "ongoing": "Ongoing Wars",
+            "mutual": "Mutual Wars",
+            "openToAllies": "Open to Allies",
+            "hasActivity": "Has Combat Activity",
+            "clear": "Clear Filters"
+        },
         "error": {
             "loadFailed": "Failed to load wars",
             "loadRecentFailed": "Failed to load recent wars data"
+        }
+    },
+    "war": {
+        "title": "War",
+        "started": "Started",
+        "finished": "Finished",
+        "aggressor": "Aggressor",
+        "defender": "Defender",
+        "allies": "Allies",
+        "totalDestroyed": "Total ISK Destroyed",
+        "kills": "Kills",
+        "participants": "Participants",
+        "iskDestroyed": "ISK Destroyed",
+        "shipsKilled": "Ships Killed",
+        "killmails": "Killmails",
+        "killmailsDesc": "Combat losses during this war",
+        "topKillers": "Top Killers",
+        "mostValuable": "Most Valuable Kills",
+        "shipTypes": "Ship Types Destroyed",
+        "seo": {
+            "description": "Details and combat statistics for EVE Online War #{warId}"
+        },
+        "error": {
+            "title": "War Not Found",
+            "notFound": "The requested war could not be found.",
+            "backToWars": "← Back to Wars"
         }
     }
 }

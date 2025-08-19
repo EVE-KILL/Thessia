@@ -12,6 +12,12 @@ export default defineCachedEventHandler(
         const entityType = query.entityType as string;
         const tab = (query.tab as string) || "all";
 
+        // Extract filter parameters
+        const ongoing = query.ongoing === "true";
+        const mutual = query.mutual === "true";
+        const openToAllies = query.openToAllies === "true";
+        const hasActivity = query.hasActivity === "true";
+
         try {
             let filterQuery: any = {};
             let sortQuery: any = { started: -1 }; // Default sort by started date descending
@@ -56,6 +62,27 @@ export default defineCachedEventHandler(
                 default:
                     // All wars, default sorting
                     break;
+            }
+
+            // Apply additional filters
+            if (ongoing) {
+                filterQuery.finished = null; // Only wars that haven't finished
+            }
+
+            if (mutual) {
+                filterQuery.mutual = true;
+            }
+
+            if (openToAllies) {
+                filterQuery.open_for_allies = true;
+            }
+
+            if (hasActivity) {
+                filterQuery.$or = [
+                    ...(filterQuery.$or || []),
+                    { "aggressor.ships_killed": { $gt: 0 } },
+                    { "defender.ships_killed": { $gt: 0 } },
+                ];
             }
 
             // Get wars with pagination
