@@ -10,8 +10,11 @@ let prismLoading = false;
  * Enhanced markdown renderer with micromark and PrismJS syntax highlighting
  * Designed for documentation and comment rendering
  * Renders on both server and client, with syntax highlighting only on client
+ * Includes emoji processing for :emojiname: syntax
  */
 export const useEnhancedMarkdown = () => {
+    // Use emoji composable for processing emojis
+    const { processText: processEmojis } = useEmoji();
     /**
      * Load PrismJS dynamically on client-side
      */
@@ -335,6 +338,9 @@ export const useEnhancedMarkdown = () => {
             // Add syntax highlighting (async)
             rawHTML = await addSyntaxHighlighting(rawHTML);
 
+            // Process emojis in the HTML (replace :emojiname: with <img> tags)
+            rawHTML = await processEmojis(rawHTML);
+
             // Process docs-specific links if currentPath is provided
             if (currentPath) {
                 rawHTML = processDocsLinks(rawHTML, currentPath);
@@ -362,6 +368,7 @@ export const useEnhancedMarkdown = () => {
                           "code",
                           "span",
                           "div",
+                          "img",
                       ]
                     : [
                           "blockquote",
@@ -380,6 +387,7 @@ export const useEnhancedMarkdown = () => {
                           "pre",
                           "code",
                           "span",
+                          "img",
                       ],
                 ADD_ATTR: [
                     "target",
@@ -393,6 +401,7 @@ export const useEnhancedMarkdown = () => {
                     "data-docs-path",
                     "data-lang",
                     "data-line",
+                    "loading",
                 ],
                 FORBID_TAGS: [
                     "script",
