@@ -57,6 +57,7 @@ export default defineCachedEventHandler(
         maxAge: 3600,
         staleMaxAge: -1,
         swr: true,
+        base: "redis",
         getKey: (event) => {
             const idParam = event.context.params?.id;
             return `corporations:${idParam}:alliancehistory`;

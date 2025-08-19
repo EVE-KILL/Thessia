@@ -6,7 +6,8 @@ export default defineCachedEventHandler(
     {
         maxAge: 300, // Use the maxAge from nuxt.config.ts
         staleMaxAge: -1,
-        swr: true, // As specified in nuxt.config.ts
+        swr: true,
+        base: "redis", // As specified in nuxt.config.ts
         getKey: (event) => {
             // Construct a unique key for this endpoint.
             // For `server/api/prices/count.get.ts`, if it takes no parameters,

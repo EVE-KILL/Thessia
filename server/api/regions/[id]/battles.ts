@@ -66,6 +66,7 @@ export default defineCachedEventHandler(
         maxAge: 86400,
         staleMaxAge: -1,
         swr: true,
+        base: "redis",
         getKey: (event) => {
             const regionId = event.context.params?.id;
             if (!regionId) {

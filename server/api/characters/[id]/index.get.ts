@@ -62,6 +62,7 @@ export default defineCachedEventHandler(
         maxAge: 3600,
         staleMaxAge: -1,
         swr: true,
+        base: "redis",
         getKey: (event) => {
             const characterId = event.context.params?.id;
             // Check for query parameters if needed, but based on the handler code, none are used.

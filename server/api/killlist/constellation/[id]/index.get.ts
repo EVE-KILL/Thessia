@@ -76,6 +76,7 @@ export default defineCachedEventHandler(
         maxAge: 30,
         staleMaxAge: 0,
         swr: true,
+        base: "redis",
         getKey: (event: any) => {
             if (!event.context.params) {
                 return "killlist:constellation:undefined";

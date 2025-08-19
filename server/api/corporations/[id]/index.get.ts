@@ -37,6 +37,7 @@ export default defineCachedEventHandler(
         maxAge: 3600,
         staleMaxAge: -1,
         swr: true,
+        base: "redis",
         getKey: (event) => {
             const idParam = event.context.params?.id;
             // No query parameters are used in this handler, so only include the id and the endpoint suffix.

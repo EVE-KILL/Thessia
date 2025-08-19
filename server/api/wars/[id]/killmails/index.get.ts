@@ -19,6 +19,7 @@ export default defineCachedEventHandler(
         maxAge: 300, // Using a maxAge of 300 seconds for war killmail data
         staleMaxAge: -1,
         swr: true,
+        base: "redis",
         getKey: (event) => {
             // Construct a unique key for this endpoint.
             // This file uses a dynamic parameter `[id]`, likely representing a war ID.

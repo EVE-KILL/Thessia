@@ -78,6 +78,7 @@ export default defineCachedEventHandler(
         maxAge: 300,
         staleMaxAge: -1,
         swr: true,
+        base: "redis",
         getKey: (event) => {
             const query = getQuery(event);
             const celestialId = query.celestial_id as string;

@@ -28,6 +28,7 @@ export default defineCachedEventHandler(
         maxAge: 300,
         staleMaxAge: -1,
         swr: true,
+        base: "redis",
         getKey: (event) => {
             // This endpoint does not use query parameters for filtering or pagination.
             return `prices:index:all`;

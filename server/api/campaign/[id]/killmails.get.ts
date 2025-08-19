@@ -163,6 +163,7 @@ export default defineCachedEventHandler(
         maxAge: 3600,
         staleMaxAge: -1,
         swr: true,
+        base: "redis",
         getKey: (event: any) => {
             const campaignId = getRouterParam(event, "id");
             const query = getQuery(event);

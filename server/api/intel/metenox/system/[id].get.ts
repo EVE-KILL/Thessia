@@ -32,6 +32,7 @@ export default defineCachedEventHandler(
         maxAge: 3600, // Cache for 1 hour
         staleMaxAge: -1,
         swr: true,
+        base: "redis",
         getKey: (event) => {
             // @ts-ignore - Type compatibility issue with nitro/h3 versions
             const systemId = getRouterParam(event, "id");

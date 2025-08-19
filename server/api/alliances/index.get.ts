@@ -11,6 +11,7 @@ export default defineCachedEventHandler(
         maxAge: 3600,
         staleMaxAge: -1,
         swr: true,
+        base: "redis",
         getKey: (event) => {
             // This endpoint does not use query parameters for filtering or pagination,
             // so a static key is sufficient.

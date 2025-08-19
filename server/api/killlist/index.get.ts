@@ -327,6 +327,7 @@ export default defineCachedEventHandler(
         maxAge: 30,
         staleMaxAge: 0,
         swr: true,
+        base: "redis",
         getKey: (event) => {
             const query = getQuery(event);
             const type = (query.type as string) || "latest";

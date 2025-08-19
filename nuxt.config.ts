@@ -432,7 +432,7 @@ export default defineNuxtConfig({
             base: {
                 href: "/",
             },
-        link: [
+            link: [
                 // DNS prefetch for external domains
                 { rel: "dns-prefetch", href: "//images.eve-kill.com" },
                 { rel: "dns-prefetch", href: "//eve-kill.com" },
@@ -461,17 +461,17 @@ export default defineNuxtConfig({
                 // Canonical URL support
                 { rel: "canonical", href: "https://eve-kill.com" },
                 // Preload most common background images
-                { 
-                    rel: "preload", 
-                    as: "image", 
+                {
+                    rel: "preload",
+                    as: "image",
                     href: "/backgrounds/bg2.webp",
-                    media: "(min-width: 768px)" 
+                    media: "(min-width: 768px)",
                 },
-                { 
-                    rel: "preload", 
-                    as: "image", 
+                {
+                    rel: "preload",
+                    as: "image",
                     href: "/backgrounds/bg1.webp",
-                    media: "(min-width: 768px)" 
+                    media: "(min-width: 768px)",
                 },
             ],
         },

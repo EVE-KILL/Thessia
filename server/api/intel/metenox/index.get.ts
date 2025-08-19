@@ -22,6 +22,7 @@ export default defineCachedEventHandler(
         maxAge: 86400, // Cache for 24 hours
         staleMaxAge: -1,
         swr: true,
+        base: "redis",
         getKey: (event) => {
             return "intel:metenox:all";
         },

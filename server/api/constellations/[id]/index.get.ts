@@ -47,6 +47,7 @@ export default defineCachedEventHandler(
         maxAge: 86400, // Using a maxAge of 86400 seconds for constellation data
         staleMaxAge: -1,
         swr: true,
+        base: "redis",
         getKey: (event) => {
             const param = event.context.params?.id;
             return `constellations:${param}:index`;

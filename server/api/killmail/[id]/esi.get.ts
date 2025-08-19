@@ -22,6 +22,7 @@ export default defineCachedEventHandler(
         maxAge: 300,
         staleMaxAge: -1,
         swr: true,
+        base: "redis",
         getKey: (event) => {
             const idParam = event.context.params?.id;
             return `killmail:${idParam}:esi`;

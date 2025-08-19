@@ -177,6 +177,7 @@ export default defineCachedEventHandler(
         maxAge: 60,
         staleMaxAge: -1,
         swr: true,
+        base: "redis",
         getKey: (event) => {
             const searchTerm = decodeURIComponent(
                 event.context.params?.searchTerm || ""

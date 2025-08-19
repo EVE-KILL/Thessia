@@ -47,6 +47,7 @@ export default defineCachedEventHandler(
         maxAge: 86400,
         staleMaxAge: -1,
         swr: true,
+        base: "redis",
         getKey: (event) => {
             const param = event.context.params?.id;
             return `regions:id:${param}`;

@@ -82,6 +82,7 @@ export default defineCachedEventHandler(
         maxAge: 30,
         staleMaxAge: 0,
         swr: true,
+        base: "redis",
         getKey: (event: any) => {
             const systemId = event.context.params?.id;
             if (!systemId) {

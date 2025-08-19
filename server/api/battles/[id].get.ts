@@ -62,6 +62,7 @@ export default defineCachedEventHandler(
         maxAge: 300,
         staleMaxAge: -1,
         swr: true,
+        base: "redis",
         getKey: (event) => {
             const battleId = event.context.params?.id;
             const includeKillmails =

@@ -417,6 +417,7 @@ export default defineCachedEventHandler(
         maxAge: 3600, // 1 hour cache
         staleMaxAge: -1,
         swr: true,
+        base: "redis",
         getKey: (event) => {
             const query = getQuery(event);
             const filtersParam = query?.filters || query?.filter || "";

@@ -285,7 +285,7 @@ const calculateViewportPosition = () => {
 const effectivePriority = computed(() => {
     // If explicit fetchpriority prop is set, use that
     if (props.fetchpriority) return props.fetchpriority;
-    
+
     // If priority prop is explicitly set, use that
     if (props.priority) return "high";
 

@@ -206,6 +206,7 @@ export default defineCachedEventHandler(
         maxAge: 3600,
         staleMaxAge: -1,
         swr: true,
+        base: "redis",
         getKey: (event) => {
             const query = getQuery(event) as QueryParams;
             const { listType, limit, offset } = query;
