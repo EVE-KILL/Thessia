@@ -3,10 +3,43 @@ import { generateAllLoaders, handleNitroBuildHooks } from "./build";
 
 // https://nuxt.com/docs/api/configuration/nuxt-config
 export default defineNuxtConfig({
-    css: [`~/assets/main.css`],
+    css: ["~/assets/main.css"],
 
-    fonts: {
-        devtools: false,
+    // Enable built-in critical CSS optimization
+    features: {
+        // Let critters handle critical CSS detection automatically
+        inlineStyles: true,
+    },
+
+    // Modules with automatic TypeScript support
+    modules: [
+        "nuxt-security",
+        "@nuxt/ui",
+        "@nuxt/icon",
+        "@nuxtjs/i18n",
+        "@nuxtjs/sitemap",
+        "@nuxtjs/seo",
+        "@nuxtjs/color-mode",
+        "@nuxtjs/device",
+        "@nuxtjs/partytown",
+        "@nuxtjs/critters",
+        "@pinia/nuxt",
+        "@vueuse/nuxt",
+    ],
+
+    critters: {
+        config: {
+            mergeStylesheets: true,
+            inlineFonts: true,
+            preloadFonts: true,
+            compress: true,
+            preload: "body",
+            // More aggressive critical CSS detection
+            inlineThreshold: 0, // Inline all critical CSS regardless of size
+            minimumExternalSize: 0, // Inline everything possible
+            pruneSource: false, // Keep original CSS for non-critical parts
+            logLevel: "info", // See what critters is doing
+        },
     },
 
     components: [
@@ -189,21 +222,6 @@ export default defineNuxtConfig({
         },
     },
 
-    // Modules with automatic TypeScript support
-    modules: [
-        "nuxt-security",
-        "@nuxt/ui",
-        "@nuxt/icon",
-        "@nuxtjs/i18n",
-        "@nuxtjs/sitemap",
-        "@nuxtjs/seo",
-        "@nuxtjs/color-mode",
-        "@nuxtjs/device",
-        "@nuxtjs/partytown",
-        "@vueuse/nuxt",
-        "@pinia/nuxt",
-    ],
-
     // Security module configuration
     security: {
         hidePoweredBy: true,
@@ -288,6 +306,23 @@ export default defineNuxtConfig({
                     safari10: true,
                 },
                 sourceMap: true, // Always generate source maps
+            },
+            // Force CSS consolidation to reduce render-blocking resources
+            cssCodeSplit: false, // This will bundle all CSS into fewer files
+            rollupOptions: {
+                output: {
+                    // Force consolidation of CSS files
+                    manualChunks: undefined, // Let Vite handle chunking automatically
+                },
+            },
+        },
+        css: {
+            // CSS processing optimization
+            devSourcemap: true,
+            // Optimize CSS modules for better critical CSS detection
+            modules: {
+                localsConvention: "camelCase",
+                generateScopedName: "[name]__[local]___[hash:base64:5]",
             },
         },
         // Optimize dependencies for better bundling
