@@ -1,43 +1,28 @@
 <template>
     <!-- Mobile Full Screen Modal -->
-    <MobileFullscreen 
-        v-if="isMobile"
-        :open="isOpen"
-        :title="t('search.title', 'Search')"
-        @close="closeSearch"
-    >
+    <MobileFullscreen v-if="isMobile" :open="isOpen" :title="t('search.title', 'Search')" @close="closeSearch">
         <template #header>
             <h2 class="text-xl font-bold text-gray-900 dark:text-white">
                 {{ t('search.title', 'Search') }}
             </h2>
         </template>
-        
+
         <!-- Mobile Search Content -->
         <div class="mobile-search-content">
             <!-- Search Input -->
             <div class="mobile-search-wrapper">
                 <UIcon name="lucide:search" class="mobile-search-icon" />
-                <input 
-                    ref="searchInput" 
-                    v-model="searchQuery" 
-                    type="text"
+                <input ref="searchInput" v-model="searchQuery" type="text"
                     :placeholder="t('search.placeholder', 'Search characters, corporations, alliances...')"
-                    class="mobile-search-input"
-                    @input="handleSearch"
-                />
+                    class="mobile-search-input" @input="handleSearch" />
             </div>
 
             <!-- Mobile Search Results -->
             <div v-if="searchQuery && !isLoading && results.length > 0" class="mobile-search-results">
                 <!-- Category Summary Buttons -->
                 <div v-if="categorizedResults.length > 0" class="mobile-category-summary">
-                    <button
-                        v-for="category in categorizedResults"
-                        :key="category.type"
-                        class="mobile-category-button"
-                        :data-type="category.type"
-                        @click="scrollToCategory(category.type)"
-                    >
+                    <button v-for="category in categorizedResults" :key="category.type" class="mobile-category-button"
+                        :data-type="category.type" @click="scrollToCategory(category.type)">
                         <UIcon :name="category.icon" />
                         <span>{{ category.title }}: {{ category.items.length }}</span>
                     </button>
@@ -45,62 +30,29 @@
 
                 <!-- Results List -->
                 <div class="mobile-results-container">
-                    <div v-for="category in categorizedResults" :key="category.type" class="mobile-category" :data-category="category.type">
+                    <div v-for="category in categorizedResults" :key="category.type" class="mobile-category"
+                        :data-category="category.type">
                         <h4 class="mobile-section-title">
                             <UIcon :name="category.icon" class="mobile-section-icon" />
                             {{ category.title }} ({{ category.items.length }})
                         </h4>
                         <div class="mobile-results-list">
-                            <NuxtLink
-                                v-for="(result, index) in category.items"
-                                :key="result.id"
-                                :to="result.url"
-                                class="mobile-result-item"
-                                @click="selectResult(result)"
-                            >
+                            <NuxtLink v-for="(result, index) in category.items" :key="result.id" :to="result.url"
+                                class="mobile-result-item" @click="selectResult(result)">
                                 <!-- Same image logic as desktop -->
                                 <div class="mobile-result-avatar">
-                                    <Image
-                                        v-if="result.type === 'character'"
-                                        :id="result.id"
-                                        type="character"
-                                        :size="40"
-                                        class="mobile-result-image"
-                                    />
-                                    <Image
-                                        v-else-if="result.type === 'corporation'"
-                                        :id="result.id"
-                                        type="corporation"
-                                        :size="40"
-                                        class="mobile-result-image"
-                                    />
-                                    <Image
-                                        v-else-if="result.type === 'alliance'"
-                                        :id="result.id"
-                                        type="alliance"
-                                        :size="40"
-                                        class="mobile-result-image"
-                                    />
-                                    <Image
-                                        v-else-if="result.type === 'ship'"
-                                        :id="result.id"
-                                        type="type-icon"
-                                        :size="40"
-                                        class="mobile-result-image"
-                                    />
-                                    <Image
-                                        v-else-if="result.type === 'item'"
-                                        :id="result.id"
-                                        type="type-icon"
-                                        :size="40"
-                                        class="mobile-result-image"
-                                    />
-                                    <img
-                                        v-else-if="result.type === 'system' || result.type === 'region'"
-                                        src="/map.png"
-                                        alt="Map"
-                                        class="mobile-result-image mobile-map-image"
-                                    />
+                                    <Image v-if="result.type === 'character'" :id="result.id" type="character"
+                                        :size="40" class="mobile-result-image" />
+                                    <Image v-else-if="result.type === 'corporation'" :id="result.id" type="corporation"
+                                        :size="40" class="mobile-result-image" />
+                                    <Image v-else-if="result.type === 'alliance'" :id="result.id" type="alliance"
+                                        :size="40" class="mobile-result-image" />
+                                    <Image v-else-if="result.type === 'ship'" :id="result.id" type="type-icon"
+                                        :size="40" class="mobile-result-image" />
+                                    <Image v-else-if="result.type === 'item'" :id="result.id" type="type-icon"
+                                        :size="40" class="mobile-result-image" />
+                                    <img v-else-if="result.type === 'system' || result.type === 'region'" src="/map.png"
+                                        alt="Map" class="mobile-result-image mobile-map-image" />
                                     <div v-else class="mobile-result-fallback">
                                         <UIcon :name="category.icon" />
                                     </div>
@@ -129,7 +81,7 @@
             <!-- Mobile Empty State -->
             <div v-else class="mobile-empty-state">
                 <p class="mobile-empty-title">{{ t('search.title', 'Search') }}</p>
-                <p class="mobile-empty-subtitle">{{ t('search.subtitle', 'Find characters, corporations, alliances, and more') }}</p>
+                <p class="mobile-empty-subtitle">{{ t('search.subtitle') }}</p>
             </div>
         </div>
     </MobileFullscreen>
@@ -301,7 +253,7 @@ onMounted(() => {
         };
         checkMobile();
         window.addEventListener('resize', checkMobile);
-        
+
         onUnmounted(() => {
             window.removeEventListener('resize', checkMobile);
         });
@@ -1252,14 +1204,53 @@ html.dark .spotlight-container .spotlight-map-image {
 }
 
 /* Apply the same colorful gradients as desktop */
-.mobile-category-button[data-type="character"] { background: linear-gradient(135deg, #3b82f6, #1d4ed8); border-color: #2563eb; color: white; }
-.mobile-category-button[data-type="corporation"] { background: linear-gradient(135deg, #10b981, #059669); border-color: #047857; color: white; }
-.mobile-category-button[data-type="alliance"] { background: linear-gradient(135deg, #8b5cf6, #7c3aed); border-color: #6d28d9; color: white; }
-.mobile-category-button[data-type="ship"] { background: linear-gradient(135deg, #f59e0b, #d97706); border-color: #b45309; color: white; }
-.mobile-category-button[data-type="item"] { background: linear-gradient(135deg, #ef4444, #dc2626); border-color: #b91c1c; color: white; }
-.mobile-category-button[data-type="system"] { background: linear-gradient(135deg, #06b6d4, #0891b2); border-color: #0e7490; color: white; }
-.mobile-category-button[data-type="region"] { background: linear-gradient(135deg, #84cc16, #65a30d); border-color: #4d7c0f; color: white; }
-.mobile-category-button[data-type="faction"] { background: linear-gradient(135deg, #ec4899, #db2777); border-color: #be185d; color: white; }
+.mobile-category-button[data-type="character"] {
+    background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+    border-color: #2563eb;
+    color: white;
+}
+
+.mobile-category-button[data-type="corporation"] {
+    background: linear-gradient(135deg, #10b981, #059669);
+    border-color: #047857;
+    color: white;
+}
+
+.mobile-category-button[data-type="alliance"] {
+    background: linear-gradient(135deg, #8b5cf6, #7c3aed);
+    border-color: #6d28d9;
+    color: white;
+}
+
+.mobile-category-button[data-type="ship"] {
+    background: linear-gradient(135deg, #f59e0b, #d97706);
+    border-color: #b45309;
+    color: white;
+}
+
+.mobile-category-button[data-type="item"] {
+    background: linear-gradient(135deg, #ef4444, #dc2626);
+    border-color: #b91c1c;
+    color: white;
+}
+
+.mobile-category-button[data-type="system"] {
+    background: linear-gradient(135deg, #06b6d4, #0891b2);
+    border-color: #0e7490;
+    color: white;
+}
+
+.mobile-category-button[data-type="region"] {
+    background: linear-gradient(135deg, #84cc16, #65a30d);
+    border-color: #4d7c0f;
+    color: white;
+}
+
+.mobile-category-button[data-type="faction"] {
+    background: linear-gradient(135deg, #ec4899, #db2777);
+    border-color: #be185d;
+    color: white;
+}
 
 .mobile-results-container {
     flex: 1;

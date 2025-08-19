@@ -19,23 +19,24 @@ export const useSpotlightSearch = () => {
     // Keyboard shortcut handling
     const handleKeyboard = (event: KeyboardEvent) => {
         // Cmd/Ctrl + K to open search
-        if ((event.metaKey || event.ctrlKey) && event.key === 'k') {
+        if ((event.metaKey || event.ctrlKey) && event.key === "k") {
             event.preventDefault();
             event.stopPropagation();
-            
+
             // Don't open if user is typing in an input/textarea
             const target = event.target as HTMLElement;
-            const isTyping = target?.tagName === 'INPUT' || 
-                           target?.tagName === 'TEXTAREA' || 
-                           target?.contentEditable === 'true';
-            
+            const isTyping =
+                target?.tagName === "INPUT" ||
+                target?.tagName === "TEXTAREA" ||
+                target?.contentEditable === "true";
+
             if (!isTyping) {
                 toggleSearch();
             }
         }
-        
+
         // Escape to close search
-        if (event.key === 'Escape' && isOpen.value) {
+        if (event.key === "Escape" && isOpen.value) {
             closeSearch();
         }
     };
@@ -43,13 +44,13 @@ export const useSpotlightSearch = () => {
     // Setup keyboard listeners on client side only
     onMounted(() => {
         if (process.client) {
-            document.addEventListener('keydown', handleKeyboard);
+            document.addEventListener("keydown", handleKeyboard);
         }
     });
 
     onUnmounted(() => {
         if (process.client) {
-            document.removeEventListener('keydown', handleKeyboard);
+            document.removeEventListener("keydown", handleKeyboard);
         }
     });
 
