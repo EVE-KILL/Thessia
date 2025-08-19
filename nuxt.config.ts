@@ -460,13 +460,6 @@ export default defineNuxtConfig({
                 },
                 // Canonical URL support
                 { rel: "canonical", href: "https://eve-kill.com" },
-                // Preload critical background image directory for faster switching
-                { 
-                    rel: "prefetch", 
-                    href: "/backgrounds/", 
-                    as: "document",
-                    media: "(min-width: 768px)" 
-                },
                 // Preload most common background images
                 { 
                     rel: "preload", 

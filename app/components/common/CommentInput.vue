@@ -376,9 +376,12 @@ function positionEmojiAutocomplete(textarea: HTMLTextAreaElement, cursorPos: num
     temp.style.position = 'absolute';
     temp.style.visibility = 'hidden';
     temp.style.whiteSpace = 'pre-wrap';
-    temp.style.font = window.getComputedStyle(textarea).font;
-    temp.style.padding = window.getComputedStyle(textarea).padding;
-    temp.style.border = window.getComputedStyle(textarea).border;
+    
+    // Batch all computed style queries to avoid forced reflows
+    const computedStyle = window.getComputedStyle(textarea);
+    temp.style.font = computedStyle.font;
+    temp.style.padding = computedStyle.padding;
+    temp.style.border = computedStyle.border;
     temp.style.width = textarea.offsetWidth + 'px';
 
     // Get text up to cursor position

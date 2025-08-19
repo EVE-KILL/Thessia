@@ -117,6 +117,12 @@ const props = defineProps({
         type: Boolean,
         default: false,
     },
+    // Explicit fetchpriority attribute (high, low, auto)
+    fetchpriority: {
+        type: String as () => 'high' | 'low' | 'auto',
+        default: undefined,
+        validator: (value: string | undefined) => value === undefined || ['high', 'low', 'auto'].includes(value),
+    },
     // Preload the image (high priority images)
     preload: {
         type: Boolean,
@@ -275,10 +281,20 @@ const calculateViewportPosition = () => {
     }
 };
 
-// Determine effective priority based on viewport position
+// Determine effective priority based on viewport position and smart LCP detection
 const effectivePriority = computed(() => {
+    // If explicit fetchpriority prop is set, use that
+    if (props.fetchpriority) return props.fetchpriority;
+    
     // If priority prop is explicitly set, use that
     if (props.priority) return "high";
+
+    // Smart LCP detection: For large images (>= 128px) that are likely to be above the fold
+    const sizeNum = typeof props.size === 'string' ? parseInt(props.size) : props.size;
+    const isLargeLcpCandidate = sizeNum >= 128 && props.type === 'type-render';
+    if (isLargeLcpCandidate && props.autoPrioritize && isAboveFold.value) {
+        return "high";
+    }
 
     // If we're using auto-prioritization and the image is initially above the fold
     if (props.autoPrioritize && isAboveFold.value && initialViewportPosition.value !== null) {
@@ -288,19 +304,26 @@ const effectivePriority = computed(() => {
     // For preloaded images
     if (props.preload) return "high";
 
-    // Default to auto
+    // Default to auto for most images to let browser decide
     return "auto";
 });
 
-// Simplify image loading strategy - more reliable approach
+// Simplify image loading strategy - more reliable approach with smart LCP detection
 const effectiveLoading = computed((): 'lazy' | 'eager' => {
-    // If priority or preload is set, or image is above fold, use eager loading
-    if (
-        props.priority ||
-        props.preload ||
-        props.forceEager ||
-        (props.autoPrioritize && isAboveFold.value && initialViewportPosition.value !== null)
-    ) {
+    // If priority or preload is set, use eager loading
+    if (props.priority || props.preload || props.forceEager) {
+        return "eager";
+    }
+
+    // Smart LCP detection for large ship renders above the fold
+    const sizeNum = typeof props.size === 'string' ? parseInt(props.size) : props.size;
+    const isLargeLcpCandidate = sizeNum >= 128 && props.type === 'type-render';
+    if (isLargeLcpCandidate && props.autoPrioritize && isAboveFold.value) {
+        return "eager";
+    }
+
+    // If auto-prioritize is on and image is above fold, use eager loading
+    if (props.autoPrioritize && isAboveFold.value && initialViewportPosition.value !== null) {
         return "eager";
     }
 
