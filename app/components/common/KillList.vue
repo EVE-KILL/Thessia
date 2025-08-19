@@ -1,9 +1,11 @@
 <script setup lang="ts">
-import moment from "moment";
 import { computed, getCurrentInstance, onBeforeUnmount } from 'vue';
 
 const { t, locale } = useI18n();
 const currentLocale = computed(() => locale.value);
+
+// Use the centralized date formatting composable
+const { formatTimeAgo } = useDateFormatting();
 
 // Define emits
 const emit = defineEmits(['update:page', 'update:limit']);
@@ -464,8 +466,7 @@ const formatIsk = (value: number): string => {
 };
 
 const formatDate = (date: string): string => {
-    moment.locale(currentLocale.value);
-    return moment.utc(date).fromNow();
+    return formatTimeAgo(date);
 };
 
 const truncateString = (str: any, num: number): string => {
@@ -1082,7 +1083,7 @@ onUpdated(() => {
                         <!-- System/Region Info -->
                         <div class="text-xs">
                             <span>{{ item.system_name }} / {{ getLocalizedString(item.region_name, currentLocale)
-                                }}</span>
+                            }}</span>
                             <span class="ml-1">(</span>
                             <span :class="getSecurityColor(item.system_security)">
                                 {{ item.system_security.toFixed(1) }}

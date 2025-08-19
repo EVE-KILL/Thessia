@@ -161,6 +161,8 @@ export default defineNuxtConfig({
         renderJsonPayloads: true,
         writeEarlyHints: true,
         viewTransition: true,
+        // Optimize payload extraction
+        payloadExtraction: false, // Disable if causing hydration issues
     },
 
     // Ensure modern compatibility mode
@@ -220,6 +222,8 @@ export default defineNuxtConfig({
                 ],
                 "connect-src": [
                     "'self'",
+                    "https://images.eve-kill.com",
+                    "https://eve-kill.com",
                     "https://images.evetech.net",
                     "https://api.iconify.design",
                     "wss://ws.eve-kill.com",
@@ -253,28 +257,36 @@ export default defineNuxtConfig({
         },
     },
 
-    // Vite configuration for bundle optimization
+    // Vite configuration
     vite: {
         build: {
-            minify: true,
+            minify: process.env.NODE_ENV === "production" ? "terser" : false,
             sourcemap: true,
-            rollupOptions: {
-                output: {
-                    manualChunks: {
-                        // Separate vendor chunks for better caching (client-safe only)
-                        "vue-vendor": ["vue", "vue-router"],
-                        charts: ["echarts", "vue-echarts"],
-                        utils: ["date-fns", "dompurify", "micromark"],
-                        "eve-specific": ["moment", "moment-timezone"], // EVE-specific utilities
-                    },
+            terserOptions: {
+                compress: {
+                    drop_console: process.env.NODE_ENV === "production",
+                    drop_debugger: process.env.NODE_ENV === "production",
+                    pure_funcs:
+                        process.env.NODE_ENV === "production"
+                            ? ["console.log", "console.info", "console.debug"]
+                            : [],
+                },
+                mangle: {
+                    safari10: true,
                 },
             },
         },
-        // Optimize dependencies (exclude server-side only packages)
+        // Optimize dependencies for better bundling
         optimizeDeps: {
-            include: ["vue", "vue-router", "echarts"],
+            include: [
+                "vue",
+                "vue-router",
+                "date-fns",
+                "@vueuse/core",
+                "dompurify",
+                "isomorphic-dompurify",
+            ],
             exclude: [
-                // Exclude Node.js/server-side packages that caused issues before
                 "mongoose",
                 "ioredis",
                 "bullmq",
@@ -284,8 +296,8 @@ export default defineNuxtConfig({
                 "discord.js",
                 "commander",
                 "chalk",
-                "@nuxt/ui", // Exclude Nuxt UI as it has server-side dependencies
-                "@nuxt/kit", // Exclude Nuxt kit modules
+                "@nuxt/ui",
+                "@nuxt/kit",
             ],
         },
     },
@@ -308,7 +320,7 @@ export default defineNuxtConfig({
 
     // i18n configuration
     i18n: {
-        vueI18n: "i18n.config.ts", // No need to change this, it knows it's supposed to look in the ./i18n directory for it
+        vueI18n: "i18n/i18n.config.ts",
         locales: [
             {
                 code: "en",
@@ -421,7 +433,7 @@ export default defineNuxtConfig({
         },
 
         // Process Cloudflare beacon and copy docs during build
-        "nitro:build:public-assets": async (nitro) => {
+        "nitro:build:public-assets": async (nitro: any) => {
             await handleNitroBuildHooks(nitro);
         },
     },

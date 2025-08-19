@@ -215,7 +215,7 @@ const renderedContent = ref('');
 
 // Render markdown on client-side only
 onMounted(() => {
-    const updateRenderedContent = () => {
+    const updateRenderedContent = async () => {
         if (!currentDoc.value?.content) {
             renderedContent.value = '';
             return;
@@ -223,7 +223,7 @@ onMounted(() => {
 
         try {
             // Use enhanced markdown renderer with docs-specific features
-            renderedContent.value = renderMarkdown(currentDoc.value.content, {
+            renderedContent.value = await renderMarkdown(currentDoc.value.content, {
                 currentPath: currentDocPath.value,
                 allowDiagrams: true,
                 allowHtml: true
@@ -238,7 +238,7 @@ onMounted(() => {
     updateRenderedContent();
 
     // Watch for content changes
-    watch([currentDoc, currentDocPath], updateRenderedContent, { immediate: false });
+    watch([currentDoc, currentDocPath], () => updateRenderedContent(), { immediate: false });
 });
 
 const breadcrumbs = computed<BreadcrumbItem[]>(() => {

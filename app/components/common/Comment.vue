@@ -4,10 +4,6 @@
 </template>
 
 <script setup lang="ts">
-import DOMPurify from 'isomorphic-dompurify';
-import { micromark } from 'micromark';
-import { gfm, gfmHtml } from 'micromark-extension-gfm';
-
 // Props
 const props = defineProps({
     comment: {
@@ -19,7 +15,8 @@ const props = defineProps({
 // Template refs
 const commentContainer = ref<HTMLElement>();
 
-// Composables
+// Use composables
+const { renderMarkdown } = useEnhancedMarkdown();
 const { observeGifs, stopObserving } = useGifPause();
 
 // Ensure comment is always a string
@@ -105,21 +102,86 @@ const convertTenorUrl = (url: string): string => {
     return url;
 };
 
-// Simple and safe markdown renderer using micromark
-const renderCommentMarkdown = (content: string): string => {
+// Process images in HTML to handle special URL formats
+const processImages = (html: string): string => {
+    if (!html) return html;
+
+    try {
+        // Create a temporary DOM to process images
+        const tempDiv = document.createElement('div');
+        tempDiv.innerHTML = html;
+
+        // Find all img elements
+        const images = tempDiv.querySelectorAll('img[src]');
+
+        images.forEach((img) => {
+            const src = img.getAttribute('src');
+            if (!src) return;
+
+            // Process Imgur URLs
+            if (src.includes('imgur.com')) {
+                const processedSrc = processImgurUrl(src);
+                img.setAttribute('src', processedSrc);
+            }
+            // Process Giphy URLs
+            else if (src.includes('giphy.com')) {
+                const processedSrc = convertGiphyUrl(src);
+                img.setAttribute('src', processedSrc);
+            }
+            // Process Tenor URLs
+            else if (src.includes('tenor.com')) {
+                const processedSrc = convertTenorUrl(src);
+                img.setAttribute('src', processedSrc);
+            }
+
+            // Add responsive styling
+            img.setAttribute('style', 'max-width: 100%; height: auto;');
+            img.setAttribute('loading', 'lazy');
+        });
+
+        return tempDiv.innerHTML;
+    } catch (error) {
+        console.error('Error processing images:', error);
+        return html;
+    }
+};
+
+// Process Imgur URLs to direct image URLs
+const processImgurUrl = (url: string): string => {
+    if (!url || typeof url !== 'string') return url;
+
+    // Direct image URLs are fine as-is
+    if (url.includes('i.imgur.com') && /\.(jpg|jpeg|png|gif|webp)$/i.test(url)) {
+        return url;
+    }
+
+    // Convert gallery/post URLs to direct image URLs
+    const match = url.match(/imgur\.com\/([a-zA-Z0-9]+)/);
+    if (match) {
+        const hash = match[1];
+        return `https://i.imgur.com/${hash}.jpg`;
+    }
+
+    return url;
+};
+
+// Simple and safe markdown renderer using enhanced markdown composable
+const renderCommentMarkdown = async (content: string): Promise<string> => {
     if (!content || typeof content !== 'string') return '';
 
     try {
-        // First, render markdown with micromark
-        const rawHTML = micromark(content, {
-            extensions: [gfm()],
-            htmlExtensions: [gfmHtml()]
+        // Use the enhanced markdown composable for basic markdown
+        let processedHTML = await renderMarkdown(content, {
+            allowHtml: false
         });
+
+        // Process images in the HTML to handle special URLs (Imgur, etc.)
+        processedHTML = processImages(processedHTML);
 
         // Then post-process to replace link elements that contain media URLs with HTML embeds
         const linkRegex = /<a href="([^"]+)">([^<]+)<\/a>/g;
 
-        const processedHTML = rawHTML.replace(linkRegex, (match, href, linkText) => {
+        processedHTML = processedHTML.replace(linkRegex, (match: string, href: string, linkText: string) => {
             // Check if the href or linkText is a media URL
             const urlToCheck = href || linkText;
             const mediaType = detectMediaType(urlToCheck);
@@ -154,36 +216,54 @@ const renderCommentMarkdown = (content: string): string => {
             return match;
         });
 
-        // Sanitize HTML with media support
-        return DOMPurify.sanitize(processedHTML, {
-            ADD_TAGS: ['iframe', 'video', 'source', 'div'],
-            ADD_ATTR: [
-                'src', 'frameborder', 'allowfullscreen', 'controls', 'style',
-                'alt', 'target', 'rel', 'href', 'class'
-            ],
-            FORBID_TAGS: ['script', 'style', 'form', 'input', 'button', 'textarea', 'select', 'option'],
-            FORBID_ATTR: ['onerror', 'onload', 'onclick', 'onmouseover', 'onmouseout', 'eval']
-        });
+        return processedHTML;
+
+        return processedHTML;
 
     } catch (error) {
         console.error('Error rendering comment markdown:', error);
-        // Fallback to sanitized plain text
-        return DOMPurify.sanitize(content);
+        // Fallback to escaped plain text
+        return content.replace(/[&<>"']/g, (match) => {
+            const escapes: Record<string, string> = {
+                '&': '&amp;',
+                '<': '&lt;',
+                '>': '&gt;',
+                '"': '&quot;',
+                "'": '&#x27;'
+            };
+            return escapes[match] || match;
+        }).replace(/\n/g, '<br>');
     }
 };
 
 // Server and client rendered markdown content
-const renderedComment = computed(() => {
-    if (!safeComment.value) return '';
+// Reactive rendered comment
+const renderedComment = ref('');
+
+// Watch for changes to safeComment and re-render
+watch(safeComment, async (newComment) => {
+    if (!newComment) {
+        renderedComment.value = '';
+        return;
+    }
 
     try {
-        return renderCommentMarkdown(safeComment.value);
+        renderedComment.value = await renderCommentMarkdown(newComment);
     } catch (error) {
         console.error('Error rendering comment markdown:', error);
-        // Fallback to sanitized plain text
-        return DOMPurify.sanitize(safeComment.value);
+        // Fallback to escaped plain text
+        renderedComment.value = newComment.replace(/[&<>"']/g, (match) => {
+            const escapes: Record<string, string> = {
+                '&': '&amp;',
+                '<': '&lt;',
+                '>': '&gt;',
+                '"': '&quot;',
+                "'": '&#x27;'
+            };
+            return escapes[match] || match;
+        }).replace(/\n/g, '<br>');
     }
-});
+}, { immediate: true });
 
 // Watch for content changes and re-observe GIFs
 watch(renderedComment, async () => {

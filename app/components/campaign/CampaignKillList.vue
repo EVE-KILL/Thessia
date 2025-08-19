@@ -1,8 +1,9 @@
 <script setup lang="ts">
-import moment from "moment";
-
 const { t, locale } = useI18n();
 const currentLocale = computed(() => locale.value);
+
+// Use the centralized date formatting composable
+const { formatTimeAgo } = useDateFormatting();
 
 // Define props with campaign-specific defaults
 const props = defineProps({
@@ -179,11 +180,8 @@ const formatIsk = (value: number): string => {
 };
 
 const formatDate = (date: string): string => {
-    moment.locale(currentLocale.value);
-    return moment.utc(date).fromNow();
-};
-
-const truncateString = (str: any, num: number): string => {
+    return formatTimeAgo(date);
+}; const truncateString = (str: any, num: number): string => {
     const stringifiedStr = String(str || "");
     return stringifiedStr.length <= num ? stringifiedStr : `${stringifiedStr.slice(0, num)}...`;
 };

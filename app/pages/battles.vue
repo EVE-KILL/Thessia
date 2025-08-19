@@ -1,10 +1,19 @@
 <script setup lang="ts">
-import moment from 'moment';
 import { computed, ref, watch } from 'vue';
 
 const { t, locale } = useI18n();
 const router = useRouter();
 const currentLocale = computed(() => locale.value);
+
+// Use the centralized date formatting composable
+const {
+    formatTimeAgo,
+    formatDateDisplay,
+    formatYear,
+    formatTimeRange,
+    formatDateTime,
+    formatDuration
+} = useDateFormatting();
 
 // Filter and search state
 const searchQuery = ref('');
@@ -111,7 +120,6 @@ const loadData = async () => {
 
 // Watch for changes to pagination params, search, filter, and locale, and refresh the data
 watch([currentPage, selectedPageSize, searchQuery, filter, currentLocale], () => {
-    moment.locale(currentLocale.value);
     refresh();
 });
 
@@ -121,47 +129,6 @@ const columns = [
     { id: 'stats', header: computed(() => t('stats', 'Stats')), width: '25%' },
     { id: 'involved', header: computed(() => t('involved', 'Involved')), width: '30%' },
 ];
-
-moment.locale(currentLocale.value); // Set locale once
-
-const formatTimeAgo = (date: string | Date): string => {
-    moment.locale(currentLocale.value);
-    return moment.utc(date).fromNow();
-};
-
-const formatDateDisplay = (date: string | Date): string => {
-    moment.locale(currentLocale.value);
-    return moment.utc(date).format('Do MMMM');
-};
-
-const formatYearDisplay = (date: string | Date): string => {
-    moment.locale(currentLocale.value);
-    return moment.utc(date).format('YYYY');
-};
-
-const formatTimeRange = (startTime: string | Date, endTime: string | Date | undefined): string => {
-    moment.locale(currentLocale.value);
-    const start = moment.utc(startTime).format('HH:mm');
-    if (!endTime) return start;
-    const end = moment.utc(endTime).format('HH:mm');
-    return `${start} to ${end}`;
-};
-
-const formatDuration = (durationMs: number | undefined | null): string => {
-    if (typeof durationMs !== 'number' || durationMs <= 0) return '-';
-    const duration = moment.duration(durationMs);
-    const hours = Math.floor(duration.asHours());
-    const minutes = duration.minutes();
-    let formatted = '';
-    if (hours > 0) {
-        formatted += `${hours}h`;
-    }
-    if (minutes > 0) {
-        if (formatted) formatted += ' ';
-        formatted += `${minutes}m`;
-    }
-    return formatted || '-';
-};
 
 const getInvolvedCounts = (battle: IBattlesDocument): { alliances: number; corps: number; chars: number } => {
     return {
@@ -362,10 +329,10 @@ const getSystemsDisplay = (battle: IBattlesDocument) => {
                 <!-- Custom Cell Rendering -->
                 <template #cell-time="{ item }">
                     <div class="text-sm space-y-0.5">
-                        <UTooltip :text="moment.utc(item.start_time).format('YYYY-MM-DD HH:mm:ss UTC')">
+                        <UTooltip :text="formatDateTime(item.start_time)">
                             <div>{{ formatTimeAgo(item.start_time) }}</div>
                         </UTooltip>
-                        <div>{{ formatDateDisplay(item.start_time) }}, {{ formatYearDisplay(item.start_time) }}</div>
+                        <div>{{ formatDateDisplay(item.start_time) }}, {{ formatYear(item.start_time) }}</div>
                         <div>{{ formatTimeRange(item.start_time, item.end_time) }}</div>
                         <div>{{ t('duration', 'Duration') }}: {{ formatDuration(item.duration_ms) }}</div>
                     </div>

@@ -2,15 +2,9 @@ import DOMPurify from "isomorphic-dompurify";
 import { micromark } from "micromark";
 import { gfm, gfmHtml } from "micromark-extension-gfm";
 
-// Import PrismJS core and some common languages
-import Prism from "prismjs";
-import "prismjs/components/prism-bash";
-import "prismjs/components/prism-css";
-import "prismjs/components/prism-javascript";
-import "prismjs/components/prism-json";
-import "prismjs/components/prism-markdown";
-import "prismjs/components/prism-typescript";
-import "prismjs/components/prism-yaml";
+// PrismJS will be loaded dynamically on client-side when needed
+let Prism: any = null;
+let prismLoading = false;
 
 /**
  * Enhanced markdown renderer with micromark and PrismJS syntax highlighting
@@ -19,10 +13,49 @@ import "prismjs/components/prism-yaml";
  */
 export const useEnhancedMarkdown = () => {
     /**
+     * Load PrismJS dynamically on client-side
+     */
+    const loadPrismJS = async () => {
+        if (Prism || prismLoading || import.meta.server) return;
+
+        prismLoading = true;
+        try {
+            const prismModule = await import("prismjs");
+            Prism = prismModule.default || prismModule;
+
+            // Load additional languages
+            // @ts-ignore - PrismJS components don't have type definitions
+            await import("prismjs/components/prism-bash");
+            // @ts-ignore
+            await import("prismjs/components/prism-css");
+            // @ts-ignore
+            await import("prismjs/components/prism-javascript");
+            // @ts-ignore
+            await import("prismjs/components/prism-json");
+            // @ts-ignore
+            await import("prismjs/components/prism-markdown");
+            // @ts-ignore
+            await import("prismjs/components/prism-typescript");
+            // @ts-ignore
+            await import("prismjs/components/prism-yaml");
+        } catch (error) {
+            console.warn("Failed to load PrismJS:", error);
+            Prism = null;
+        } finally {
+            prismLoading = false;
+        }
+    };
+
+    /**
      * Post-process HTML to add PrismJS syntax highlighting (client-side only)
      */
-    const addSyntaxHighlighting = (html: string): string => {
+    const addSyntaxHighlighting = async (html: string): Promise<string> => {
         if (!html || import.meta.server) return html;
+
+        // Load PrismJS if not already loaded
+        await loadPrismJS();
+
+        if (!Prism) return html;
 
         try {
             // Create a temporary DOM to process the HTML
@@ -42,7 +75,11 @@ export const useEnhancedMarkdown = () => {
                     const langName = langMatch[1];
                     const code = codeElement.textContent || "";
 
-                    if (langName && Prism.languages[langName]) {
+                    if (
+                        langName &&
+                        Prism.languages &&
+                        Prism.languages[langName]
+                    ) {
                         try {
                             const grammar = Prism.languages[langName];
                             if (grammar) {
@@ -271,7 +308,7 @@ export const useEnhancedMarkdown = () => {
      * @param content - Markdown content to render
      * @param options - Rendering options
      */
-    const renderMarkdown = (
+    const renderMarkdown = async (
         content: string,
         options: {
             currentPath?: string;
@@ -295,8 +332,8 @@ export const useEnhancedMarkdown = () => {
                 allowDangerousHtml: allowHtml,
             });
 
-            // Add syntax highlighting
-            rawHTML = addSyntaxHighlighting(rawHTML);
+            // Add syntax highlighting (async)
+            rawHTML = await addSyntaxHighlighting(rawHTML);
 
             // Process docs-specific links if currentPath is provided
             if (currentPath) {
@@ -388,8 +425,8 @@ export const useEnhancedMarkdown = () => {
      * Simple markdown renderer without docs-specific features
      * Useful for comments and general content
      */
-    const renderSimpleMarkdown = (content: string) => {
-        return renderMarkdown(content, {
+    const renderSimpleMarkdown = async (content: string) => {
+        return await renderMarkdown(content, {
             currentPath: "",
             allowDiagrams: false,
             allowHtml: false,

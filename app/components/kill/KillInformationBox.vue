@@ -53,7 +53,7 @@
                         {{ killmail.victim.character_name }}
                     </NuxtLink>
                     <span v-else>{{ killmail?.victim?.character_name || getLocalizedString(killmail?.victim?.ship_name)
-                    }}</span>
+                        }}</span>
                 </div>
                 <div v-if="killmail?.victim?.corporation_name" class="entity-name-line name-corporation truncate">
                     <NuxtLink v-if="killmail.victim.corporation_id"
@@ -161,12 +161,14 @@
 </template>
 
 <script setup lang="ts">
-import moment from "moment";
-import { computed, watch } from "vue";
+import { computed } from "vue";
 
 // i18n setup
 const { t, locale } = useI18n();
 const currentLocale = computed(() => locale.value);
+
+// Use the centralized date formatting composable
+const { formatSimpleDateTime, formatTimeAgo: formatTimeAgoUtil } = useDateFormatting();
 
 // Props definition
 const props = defineProps<{
@@ -282,8 +284,7 @@ function getSecurityClass(security: number | undefined): string {
  */
 function formatDateTime(dateTime: string | undefined): string {
     if (!dateTime) return "";
-    moment.locale(currentLocale.value);
-    return moment.utc(dateTime).local().format("YYYY-MM-DD HH:mm:ss");
+    return formatSimpleDateTime(dateTime);
 }
 
 /**
@@ -291,18 +292,8 @@ function formatDateTime(dateTime: string | undefined): string {
  */
 function formatTimeAgo(dateTime: string | undefined): string {
     if (!dateTime) return "";
-    moment.locale(currentLocale.value);
-    return moment.utc(dateTime).fromNow();
+    return formatTimeAgoUtil(dateTime);
 }
-
-// Watch for locale changes to update moment locale
-watch(
-    locale,
-    (newLocale) => {
-        moment.locale(newLocale);
-    },
-    { immediate: true },
-);
 </script>
 
 <style scoped>

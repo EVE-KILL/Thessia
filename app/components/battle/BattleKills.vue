@@ -122,7 +122,7 @@
                                 <div class="killmail-damage">
                                     <Icon name="lucide:zap" class="damage-icon" />
                                     <span class="damage-value">{{ formatNumberWithLocale(item.victim.damage_taken || 0)
-                                        }}</span>
+                                    }}</span>
                                 </div>
 
                                 <!-- Value -->
@@ -147,11 +147,13 @@
 </template>
 
 <script setup lang="ts">
-import moment from 'moment';
 import { computed, ref } from 'vue';
 import { useI18n } from 'vue-i18n';
 
 const { t } = useI18n();
+
+// Use the centralized date formatting utility
+const { formatSimpleDateTime } = useDateFormatting();
 
 // Define interfaces for props
 interface AttackerData {
@@ -251,8 +253,7 @@ const formatIsk = (isk: number): string => {
 
 // Format time
 const formatTime = (timeString: string): string => {
-    const date = moment.utc(timeString).local();
-    return date.format('YYYY-MM-DD HH:mm');
+    return formatSimpleDateTime(timeString);
 };
 
 // Format numbers with locale

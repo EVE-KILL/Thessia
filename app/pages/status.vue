@@ -1,16 +1,6 @@
 <script setup lang="ts">
 import { useDocumentVisibility, useIntervalFn } from "@vueuse/core";
-import { BarChart } from "echarts/charts";
-import {
-    GridComponent,
-    LegendComponent,
-    TitleComponent,
-    TooltipComponent,
-} from "echarts/components";
-import { use } from "echarts/core";
-import { CanvasRenderer } from "echarts/renderers";
 import { computed, nextTick, onMounted, onUnmounted, ref, watch } from "vue";
-import VChart from "vue-echarts";
 
 // Get i18n instance
 const { t } = useI18n();
@@ -26,8 +16,14 @@ const checkIfMobile = () => {
     isMobile.value = window.innerWidth < 768;
 };
 
-// Register ECharts components
-use([CanvasRenderer, BarChart, TitleComponent, TooltipComponent, LegendComponent, GridComponent]);
+// Chart data for our custom chart component
+const chartData = ref<{ name: string; value: number }[]>([]);
+
+// Chart title based on selected period
+const chartTitle = computed(() => {
+    const period = timePeriods.find(p => p.value === selectedTimePeriod.value);
+    return t('processingStatisticsTitle') + (period ? ` (${period.label})` : '');
+});
 
 // Chart options
 const chartOptions = ref({});
@@ -241,81 +237,25 @@ const parseFormattedNumber = (value: string | number): number => {
     return 0;
 };
 
-// Function to update chart options
-const updateChartOptions = () => {
-    if (!statusData.value) return;
+// Function to update chart data
+const updateChartData = () => {
+    if (!statusData.value) {
+        chartData.value = [];
+        return;
+    }
 
     const period = selectedTimePeriod.value;
     const processedCounts = statusData.value.processedCounts;
     const categories = Object.keys(processedCounts);
 
     // Extract data for the selected time period
-    const dataPoints = categories.map((category) => {
+    chartData.value = categories.map((category) => {
         const value = processedCounts[category][period];
         return {
             name: category,
             value: parseFormattedNumber(value),
         };
     });
-
-    // Sort by value (descending order) - keeping value-based sorting for chart visualization
-    dataPoints.sort((a, b) => b.value - a.value);
-
-    // Colors for the bars
-    const colors = [
-        "#FF6384",
-        "#36A2EB",
-        "#FFCE56",
-        "#4BC0C0",
-        "#9966FF",
-        "#FF9F40",
-        "#C7C7C7",
-        "#8AC926",
-        "#1982C4",
-        "#6A4C93",
-        "#FFCA3A",
-        "#FF595E",
-    ];
-
-    // Create chart options
-    chartOptions.value = {
-        title: {
-            text: t("processedItems", { period: period }),
-            left: "center",
-        },
-        tooltip: {
-            trigger: "axis",
-            axisPointer: { type: "shadow" },
-            formatter: (params) => {
-                const data = params[0];
-                return `${data.name}: ${data.value}`;
-            },
-        },
-        grid: {
-            left: "5%",
-            right: "20%",
-            bottom: "5%",
-            containLabel: true,
-        },
-        xAxis: {
-            type: "value",
-            axisLabel: { formatter: (value) => value },
-        },
-        yAxis: {
-            type: "category",
-            data: dataPoints.map((item) => item.name),
-            axisLabel: { formatter: (value) => value.charAt(0).toUpperCase() + value.slice(1) },
-        },
-        series: [
-            {
-                type: "bar",
-                data: dataPoints.map((item, index) => ({
-                    value: item.value,
-                    itemStyle: { color: colors[index % colors.length] },
-                })),
-            },
-        ],
-    };
 };
 
 // Watch for changes in data and time period
@@ -323,7 +263,7 @@ watch(
     [statusData, selectedTimePeriod],
     () => {
         if (statusData.value) {
-            updateChartOptions();
+            updateChartData();
         }
     },
     { immediate: true },
@@ -339,7 +279,7 @@ watch(isVisible, (newValue) => {
 });
 
 // Setup when mounted
-onMounted(() => {
+onMounted(async () => {
     if (autoRefresh.value) {
         resume();
     }
@@ -716,27 +656,35 @@ const hasKeyspaceInfo = computed(() => {
                                             <UIcon name="lucide:bar-chart-2" class="mr-2" />
                                             <h3 class="font-bold">{{ $t('processingStatisticsTitle') }}</h3>
                                         </div>
-                                        <div class="flex items-center gap-2">
-                                            <USwitch v-model="detailed" size="sm" />
-                                            <span class="text-xs">{{ detailed ? $t('detailed') : $t('simplified')
-                                                }}</span>
+                                        <div class="flex items-center gap-4">
+                                            <!-- Time Period Selector -->
+                                            <div class="flex items-center gap-2">
+                                                <label for="timePeriod" class="text-xs font-medium whitespace-nowrap">{{
+                                                    $t('selectTimePeriod') }}:</label>
+                                                <select id="timePeriod" v-model="selectedTimePeriod"
+                                                    class="px-2 py-1 text-xs border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:ring-1 focus:ring-blue-500 focus:border-blue-500 min-w-[120px]">
+                                                    <option value="" disabled>Select time</option>
+                                                    <option v-for="period in timePeriods" :key="period.value"
+                                                        :value="period.value">
+                                                        {{ period.label }}
+                                                    </option>
+                                                </select>
+                                            </div>
+                                            <!-- Detailed/Simplified Toggle -->
+                                            <div class="flex items-center gap-2">
+                                                <USwitch v-model="detailed" size="sm" />
+                                                <span class="text-xs whitespace-nowrap">{{ detailed ? $t('detailed') :
+                                                    $t('simplified') }}</span>
+                                            </div>
                                         </div>
                                     </div>
                                 </template>
 
-                                <div class="mb-4">
-                                    <label for="timePeriod" class="block text-xs font-medium mb-1">{{
-                                        $t('selectTimePeriod') }}:</label>
-                                    <USelect id="timePeriod" v-model="selectedTimePeriod" :items="timePeriods" size="sm"
-                                        placeholder="Select time period" icon="lucide:clock" />
-                                </div>
-
-                                <div class="h-64 relative mb-4">
-                                    <div v-if="loading"
-                                        class="absolute inset-0 flex items-center justify-center bg-gray-50/50 dark:bg-gray-800/50 backdrop-blur-sm z-10">
-                                        <UIcon name="lucide:loader" class="animate-spin h-6 w-6" />
-                                    </div>
-                                    <v-chart class="w-full h-full" :option="chartOptions" autoresize />
+                                <div class="relative min-h-[300px] mb-4">
+                                    <!-- Chart with proper container -->
+                                    <SimpleBarChart :data="chartData" :title="chartTitle"
+                                        :loading="loading || !statusData"
+                                        :height="Math.max(300, chartData.length * 40 + 100)" class="w-full" />
                                 </div> <!-- Show detailed stats directly when detailed is true -->
                                 <div v-if="detailed" class="mt-4">
                                     <h4 class="font-medium text-sm mb-2">{{ $t('detailedStats') }}</h4>

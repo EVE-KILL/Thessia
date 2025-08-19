@@ -1,10 +1,12 @@
 <script setup lang="ts">
-import moment from 'moment';
 import { computed, onMounted, ref, watch } from 'vue';
 
 const { t, locale } = useI18n();
 const router = useRouter();
 const currentLocale = computed(() => locale.value);
+
+// Use the centralized date formatting composable
+const { formatTimeAgo, formatDateDisplay } = useDateFormatting();
 
 const currentPage = ref(1);
 const pageSizeItems = [
@@ -132,11 +134,6 @@ watch(searchQuery, (newTerm) => {
     selectedLocationResultIndex.value = -1;
 });
 
-// Watch for locale changes to update moment
-watch(currentLocale, () => {
-    moment.locale(currentLocale.value);
-});
-
 // Watch for search query changes and reset page
 watch(searchQuery, () => {
     currentPage.value = 1;
@@ -147,18 +144,6 @@ const columns = [
     { id: 'location', header: t('metenoxMoons.location', 'Location'), width: '35%' },
     { id: 'moonType', header: t('metenoxMoons.moonType', 'Moon Goo'), width: '35%' },
 ];
-
-moment.locale(currentLocale.value); // Set locale once
-
-const formatTimeAgo = (date: string | Date): string => {
-    moment.locale(currentLocale.value);
-    return moment.utc(date).fromNow();
-};
-
-const formatDateDisplay = (date: string | Date): string => {
-    moment.locale(currentLocale.value);
-    return moment.utc(date).format('Do MMMM YYYY');
-};
 
 const linkFn = (item: IMetenoxMoonResult) => {
     if (!item || !item.killmail_id) {

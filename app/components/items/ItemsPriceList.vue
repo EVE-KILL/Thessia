@@ -55,7 +55,8 @@
 </template>
 
 <script setup lang="ts">
-import moment from "moment";
+// Use the centralized date formatting utility
+const { formatShortDate } = useDateFormatting();
 
 const props = defineProps({
     prices: {
@@ -99,8 +100,7 @@ const tableColumns = [
  * Format date for display
  */
 function formatDate(dateString: string): string {
-    const date = moment(dateString);
-    return date.format('MMM DD');
+    return formatShortDate(dateString);
 }
 
 /**
