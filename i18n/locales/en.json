@@ -59,6 +59,8 @@
     "search.corporation": "Search for a corporation..",
     "search.alliance": "Search for an alliance..",
     "search.faction": "Search for a faction..",
+    "search.searching": "Searching...",
+    "search.noResults": "No results found",
     "all": "All",
     "status": "Status",
     "searchShowMoreCategoryXCountY": "Show more {category} ({count})",
@@ -270,6 +272,10 @@
         "campaign": {
             "title": "{campaignName}",
             "description": "EVE Online campaign '{campaignName}' covering {duration} with {killCount} kills and {iskDestroyed} ISK destroyed. Comprehensive combat analytics."
+        },
+        "wars": {
+            "title": "EVE Online Wars",
+            "description": "Browse active and historical wars between EVE Online corporations and alliances. Track ongoing conflicts, recent declarations, and war statistics."
         }
     },
     "topDamage": "Top Damage",
@@ -2109,6 +2115,49 @@
         "alliance": {
             "comingSoon": "Coming Soon",
             "alliancePage": "Alliance"
+        }
+    },
+    "wars": {
+        "title": "Wars",
+        "description": "Browse active and recent EVE Online wars between corporations and alliances.",
+        "searchPlaceholder": "Search for corporation or alliance...",
+        "noWarsFound": "No wars found",
+        "noActivity": "No combat activity",
+        "tabs": {
+            "all": "All Wars",
+            "recent": "Recent Activity"
+        },
+        "table": {
+            "warId": "War ID",
+            "war": "War",
+            "aggressor": "Aggressor",
+            "defender": "Defender",
+            "started": "Started",
+            "declared": "Declared",
+            "finished": "Finished",
+            "status": "Status",
+            "efficiency": "ISK Lost"
+        },
+        "status": {
+            "active": "Active",
+            "ongoing": "Ongoing",
+            "finished": "Finished",
+            "mutual": "Mutual",
+            "openToAllies": "Open to Allies"
+        },
+        "recent": {
+            "openToAllies": "Open to Allies",
+            "openToAlliesDesc": "Recent wars that allow allies to join",
+            "mutual": "Mutual Wars",
+            "mutualDesc": "Recent mutual wars between entities",
+            "other": "Other Wars",
+            "otherDesc": "Recent wars not open to allies",
+            "finished": "Recently Finished",
+            "finishedDesc": "Wars that recently ended"
+        },
+        "error": {
+            "loadFailed": "Failed to load wars",
+            "loadRecentFailed": "Failed to load recent wars data"
         }
     }
 }

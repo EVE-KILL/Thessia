@@ -120,7 +120,7 @@ const props = withDefaults(defineProps<SearchProps>(), {
     disabled: false,
     debounceMs: 300,
     minLength: 2,
-    maxResults: 10,
+    maxResults: 25,
     resultKey: 'id',
     resultName: 'name',
     loadingText: 'Searching...',
