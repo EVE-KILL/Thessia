@@ -543,8 +543,8 @@ onUpdated(() => {
                             <div class="text-sm text-black dark:text-white">{{ formatDate(item.kill_time) }}</div>
                             <div class="flex gap-1 items-center">
                                 <span class="text-xs text-gray-600 dark:text-gray-400">{{ item.attackerCount }}</span>
-                                <UIcon name="lucide:users" class="h-4 w-4 text-gray-600 dark:text-gray-400" 
-                                       :aria-label="`${item.attackerCount} Involved`" />
+                                <UIcon name="lucide:users" class="h-4 w-4 text-gray-600 dark:text-gray-400"
+                                    :aria-label="`${item.attackerCount} Involved`" />
                             </div>
                         </div>
                     </template>
@@ -597,9 +597,9 @@ onUpdated(() => {
                                         formatDate(item.kill_time) }}</span>
                                     <div class="attacker-count flex items-center gap-1">
                                         <span class="text-xs text-gray-600 dark:text-gray-400">{{ item.attackerCount
-                                            }}</span>
-                                        <UIcon name="lucide:users" class="h-3 w-3 text-gray-600 dark:text-gray-400" 
-                                               :aria-label="`${item.attackerCount} Involved`" />
+                                        }}</span>
+                                        <UIcon name="lucide:users" class="h-3 w-3 text-gray-600 dark:text-gray-400"
+                                            :aria-label="`${item.attackerCount} Involved`" />
                                     </div>
                                 </div>
                             </div>

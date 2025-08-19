@@ -785,7 +785,7 @@ onUpdated(() => {
                     ]" :title="wsStatusMessage" @click="toggleWebSocketMode"></div>
 
                     <span v-if="wsNewKillCount > 0"
-                        class="ml-1 px-1.5 py-0 bg-primary-500 text-black dark:text-white text-2xs cursor-pointer kill-count-badge"
+                        class="ml-1 px-1.5 py-0 bg-primary-500 text-white text-2xs cursor-pointer kill-count-badge"
                         @click="resetNewKillCount">
                         +{{ wsNewKillCount }}
                     </span>
@@ -976,11 +976,11 @@ onUpdated(() => {
                     </div>
                     <div class="flex gap-1 items-center">
                         <span class="text-xs text-gray-600 dark:text-gray-400">{{ item.attackerCount }}</span>
-                        <UIcon name="lucide:users" class="h-4 w-4 text-gray-600 dark:text-gray-400" 
-                               :aria-label="`${item.attackerCount} Involved`" />
+                        <UIcon name="lucide:users" class="h-4 w-4 text-gray-600 dark:text-gray-400"
+                            :aria-label="`${item.attackerCount} Involved`" />
                         <span class="text-xs text-gray-600 dark:text-gray-400">{{ item.commentCount || 0 }}</span>
-                        <UIcon name="lucide:message-circle" class="h-4 w-4 text-gray-600 dark:text-gray-400" 
-                               aria-label="Comments" />
+                        <UIcon name="lucide:message-circle" class="h-4 w-4 text-gray-600 dark:text-gray-400"
+                            aria-label="Comments" />
                     </div>
                 </div>
             </template>
@@ -1052,7 +1052,7 @@ onUpdated(() => {
                         <!-- System/Region Info -->
                         <div class="text-xs">
                             <span>{{ item.system_name }} / {{ getLocalizedString(item.region_name, currentLocale)
-                                }}</span>
+                            }}</span>
                             <span class="ml-1">(</span>
                             <span :class="getSecurityColor(item.system_security)">
                                 {{ item.system_security.toFixed(1) }}
