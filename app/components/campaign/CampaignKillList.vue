@@ -347,7 +347,7 @@ onUpdated(() => {
                 <div class="flex items-center w-full sm:w-auto">
                     <!-- Limit selector -->
                     <div class="relative w-24">
-                        <select v-model="pageSize"
+                        <select v-model="pageSize" :aria-label="t('itemsPerPage')"
                             class="custom-select w-full appearance-none rounded-md border border-gray-300 dark:border-gray-700 pl-3 pr-8 py-1.5 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 text-sm font-medium shadow-sm">
                             <option v-for="item in pageSizeItemsFormatted" :key="item.value" :value="item.value">
                                 {{ item.label }}

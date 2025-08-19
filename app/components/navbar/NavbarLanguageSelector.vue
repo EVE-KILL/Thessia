@@ -3,7 +3,7 @@
         <!-- Desktop dropdown with Dropdown -->
         <Dropdown v-model="isDropdownOpen" :smart-position="true" position="bottom" align="end">
             <template #trigger>
-                <UButton color="neutral" variant="ghost" size="sm" class="language-trigger">
+                <UButton color="neutral" variant="ghost" size="sm" class="language-trigger" :aria-label="t('changeLanguage')">
                     <!-- Language icon - using the standard translate icon -->
                     <UIcon name="lucide:languages" class="language-icon" />
                 </UButton>
@@ -53,7 +53,7 @@ const props = defineProps({
 });
 
 // Use the i18n composable
-const { locale: currentLocale, locales, setLocale } = useI18n();
+const { locale: currentLocale, locales, setLocale, t } = useI18n();
 
 // Dropdown state
 const isDropdownOpen = ref(false);

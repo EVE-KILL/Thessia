@@ -16,7 +16,7 @@
 
                     <div class="control-group">
                         <label>{{ t('admin.accessLogs.method') }}:</label>
-                        <select v-model="filters.method" class="filter-select">
+                        <select v-model="filters.method" class="filter-select" :aria-label="'Filter by HTTP method'">
                             <option value="">{{ t('admin.accessLogs.allMethods') }}</option>
                             <option value="GET">GET</option>
                             <option value="POST">POST</option>
@@ -28,7 +28,7 @@
 
                     <div class="control-group">
                         <label>{{ t('admin.accessLogs.statusCode') }}:</label>
-                        <select v-model="filters.statusCode" class="filter-select">
+                        <select v-model="filters.statusCode" class="filter-select" :aria-label="'Filter by status code'">
                             <option value="">{{ t('admin.accessLogs.allStatus') }}</option>
                             <option value="2xx">2xx Success</option>
                             <option value="3xx">3xx Redirect</option>
@@ -39,7 +39,7 @@
 
                     <div class="control-group">
                         <label>{{ t('admin.accessLogs.logTypeFilter') }}:</label>
-                        <select v-model="filters.logType" class="filter-select">
+                        <select v-model="filters.logType" class="filter-select" :aria-label="'Filter by log type'">
                             <option value="">{{ t('admin.accessLogs.allLogTypes') }}</option>
                             <option value="server">{{ t('admin.accessLogs.serverLogs') }}</option>
                             <option value="client">{{ t('admin.accessLogs.clientLogs') }}</option>
@@ -48,7 +48,7 @@
 
                     <div class="control-group">
                         <label>{{ t('admin.accessLogs.botFilter') }}:</label>
-                        <select v-model="filters.isBot" class="filter-select">
+                        <select v-model="filters.isBot" class="filter-select" :aria-label="'Filter by bot status'">
                             <option value="">{{ t('admin.accessLogs.allTraffic') }}</option>
                             <option value="false">{{ t('admin.accessLogs.humanTraffic') }}</option>
                             <option value="true">{{ t('admin.accessLogs.botTraffic') }}</option>

@@ -152,7 +152,7 @@
                         <!-- Entries per page -->
                         <div class="filter-group">
                             <label class="filter-label">{{ t('admin.analytics.esiLogs.showEntries') }}</label>
-                            <select v-model="limit" class="filter-select">
+                            <select v-model="limit" class="filter-select" :aria-label="'Limit results'">
                                 <option value="25">25</option>
                                 <option value="50">50</option>
                                 <option value="100">100</option>
@@ -163,7 +163,7 @@
                         <!-- Data Type Filter -->
                         <div class="filter-group">
                             <label class="filter-label">{{ t('admin.analytics.esiLogs.filterByType') }}</label>
-                            <select v-model="selectedDataType" class="filter-select">
+                            <select v-model="selectedDataType" class="filter-select" :aria-label="'Filter by data type'">
                                 <option value="all">{{ t('admin.analytics.esiLogs.allTypes') }}</option>
                                 <option v-for="dataType in data?.data?.filters?.dataTypes || []" :key="dataType"
                                     :value="dataType">
@@ -175,7 +175,7 @@
                         <!-- Source Filter -->
                         <div class="filter-group">
                             <label class="filter-label">{{ t('admin.analytics.esiLogs.filterBySource') }}</label>
-                            <select v-model="selectedSource" class="filter-select">
+                            <select v-model="selectedSource" class="filter-select" :aria-label="'Filter by source'">
                                 <option value="all">{{ t('admin.analytics.esiLogs.allSources') }}</option>
                                 <option v-for="source in data?.data?.filters?.sources || []" :key="source"
                                     :value="source">
@@ -187,7 +187,7 @@
                         <!-- Status Filter -->
                         <div class="filter-group">
                             <label class="filter-label">{{ t('admin.analytics.esiLogs.filterByStatus') }}</label>
-                            <select v-model="selectedStatus" class="filter-select">
+                            <select v-model="selectedStatus" class="filter-select" :aria-label="'Filter by status'">
                                 <option value="all">{{ t('admin.analytics.esiLogs.allStatuses') }}</option>
                                 <option value="success">{{ t('admin.analytics.esiLogs.success') }}</option>
                                 <option value="error">{{ t('admin.analytics.esiLogs.error') }}</option>

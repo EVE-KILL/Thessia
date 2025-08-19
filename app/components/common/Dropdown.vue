@@ -427,7 +427,8 @@ const contentStyle = computed(() => {
     @mouseleave="handleMouseLeave"
   >
     <!-- Use stopPropagation to prevent click events from bubbling -->
-    <div ref="triggerRef" @click.stop="toggleDropdown" class="cursor-pointer">
+    <div ref="triggerRef" @click.stop="toggleDropdown" @keydown.enter.space.prevent="toggleDropdown" 
+         class="cursor-pointer" :tabindex="0" role="button" :aria-expanded="isOpen" aria-haspopup="true">
       <slot name="trigger"></slot>
     </div>
 

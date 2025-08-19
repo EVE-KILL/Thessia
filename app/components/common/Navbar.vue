@@ -285,7 +285,7 @@ const closeMobileMenu = () => {
                 <template v-for="(link, index) in leftNavItems" :key="index">
                     <!-- Regular links -->
                     <NuxtLink v-if="link.to && !link.children" :to="link.to" class="button-base navbar-button"
-                        :aria-label="link.label">
+                        :aria-label="link.label || link.name">
                         <UIcon v-if="link.icon" :name="link.icon" class="navbar-icon" />
                         <span class="navbar-text">{{ link.name }}</span>
                     </NuxtLink>

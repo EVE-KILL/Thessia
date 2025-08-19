@@ -23,7 +23,7 @@
             </div>
 
             <div class="controls-right">
-                <select v-model="pageSize" class="page-size-select" @change="handlePageSizeChange">
+                <select v-model="pageSize" class="page-size-select" :aria-label="t('itemsPerPage')" @change="handlePageSizeChange">
                     <option value="10">10 {{ t('admin.collection.perPage') }}</option>
                     <option value="25">25 {{ t('admin.collection.perPage') }}</option>
                     <option value="50">50 {{ t('admin.collection.perPage') }}</option>
