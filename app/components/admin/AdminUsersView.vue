@@ -33,7 +33,8 @@
                         {{ t('admin.users.adminsOnly') }}
                     </button>
                 </div>
-                <select v-model="pageSize" class="page-size-select" :aria-label="t('itemsPerPage')" @change="handlePageSizeChange">
+                <select v-model="pageSize" class="page-size-select" :aria-label="t('itemsPerPage')"
+                    @change="handlePageSizeChange">
                     <option value="10">10 {{ t('admin.users.perPage') }}</option>
                     <option value="25">25 {{ t('admin.users.perPage') }}</option>
                     <option value="50">50 {{ t('admin.users.perPage') }}</option>

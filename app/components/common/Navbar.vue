@@ -205,6 +205,7 @@ const centerNavItems = computed(() => [
 const rightNavItems = computed(() => [
     {
         icon: "lucide:upload",
+        label: t("killmail.submit"),
         position: "right",
         mobile: false,
         to: "/killmail"
@@ -216,6 +217,7 @@ const rightNavItems = computed(() => [
     },
     {
         icon: "lucide:sun-moon",
+        label: t("toggleTheme"),
         position: "right",
         mobile: true,
         onClick: () => {
@@ -224,12 +226,14 @@ const rightNavItems = computed(() => [
     },
     {
         icon: "lucide:book-image",
+        label: t("changeBackground"),
         component: NavbarBackgroundSwitcher,
         position: "right",
         mobile: true,
     },
     {
         icon: "lucide:info",
+        label: t("informationMenu"),
         position: "right",
         collapse: false,
         children: [

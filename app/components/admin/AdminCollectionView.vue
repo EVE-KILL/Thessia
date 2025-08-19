@@ -23,7 +23,8 @@
             </div>
 
             <div class="controls-right">
-                <select v-model="pageSize" class="page-size-select" :aria-label="t('itemsPerPage')" @change="handlePageSizeChange">
+                <select v-model="pageSize" class="page-size-select" :aria-label="t('itemsPerPage')"
+                    @change="handlePageSizeChange">
                     <option value="10">10 {{ t('admin.collection.perPage') }}</option>
                     <option value="25">25 {{ t('admin.collection.perPage') }}</option>
                     <option value="50">50 {{ t('admin.collection.perPage') }}</option>
@@ -54,7 +55,7 @@
                         <div class="card-id">
                             <Icon name="heroicons:document" class="id-icon" />
                             <span class="id-text">{{ formatCellValue(document._id || document.id || `Item ${index + 1}`)
-                                }}</span>
+                            }}</span>
                         </div>
                         <div class="card-actions">
                             <button @click="editDocument(document)" class="action-btn edit-btn"

@@ -38,7 +38,8 @@
                         {{ t('admin.apiKeys.activeOnly') }}
                     </button>
                 </div>
-                <select v-model="pageSize" class="page-size-select" :aria-label="t('itemsPerPage')" @change="handlePageSizeChange">
+                <select v-model="pageSize" class="page-size-select" :aria-label="t('itemsPerPage')"
+                    @change="handlePageSizeChange">
                     <option value="10">10 {{ t('admin.apiKeys.perPage') }}</option>
                     <option value="25">25 {{ t('admin.apiKeys.perPage') }}</option>
                     <option value="50">50 {{ t('admin.apiKeys.perPage') }}</option>
@@ -188,7 +189,7 @@
 
                 <div class="form-group">
                     <label for="apiKeyDescription" class="form-label">{{ t('admin.apiKeys.create.description')
-                        }}</label>
+                    }}</label>
                     <textarea id="apiKeyDescription" v-model="createForm.description" class="form-textarea"
                         :placeholder="t('admin.apiKeys.create.descriptionPlaceholder')" rows="3"></textarea>
                 </div>
@@ -217,7 +218,7 @@
 
                 <div class="form-group">
                     <label for="editApiKeyDescription" class="form-label">{{ t('admin.apiKeys.edit.description')
-                        }}</label>
+                    }}</label>
                     <textarea id="editApiKeyDescription" v-model="editForm.description" class="form-textarea"
                         rows="3"></textarea>
                 </div>

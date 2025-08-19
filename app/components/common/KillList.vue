@@ -634,9 +634,9 @@ const mouseX = ref(0);
 const mouseY = ref(0);
 const tooltipText = ref('');
 const showTooltip = ref(false);
- /**
- * Updates fade effect on elements that over low
- */
+/**
+* Updates fade effect on elements that over low
+*/
 const updateTextFade = (refMap: Map<number, HTMLElement>) => {
     refMap.forEach((el) => {
         if (el && el.scrollWidth > el.clientWidth) {
@@ -666,9 +666,9 @@ const updateTextFade = (refMap: Map<number, HTMLElement>) => {
         }
     });
 };
- /**
- * Update all text fade eff cts
- */
+/**
+* Update all text fade eff cts
+*/
 const updateAllFades = () => {
     updateTextFade(shipNameRefs.value);
     updateTextFade(characterNameRefs.value);
@@ -678,9 +678,9 @@ const updateAllFades = () => {
     updateTextFade(finalBlowCorpRefs.value);
     updateTextFade(finalBlowAllianceRefs.value);
 };
- /**
- * Set reference for an element by killmai  ID
- */
+/**
+* Set reference for an element by killmai  ID
+*/
 const setElementRef = (el: HTMLElement | null, id: number, refMap: Map<number, HTMLElement>) => {
     if (el) {
         refMap.set(id, el);
@@ -762,8 +762,7 @@ onUpdated(() => {
             <div class="flex items-center w-full sm:w-auto mb-3 sm:mb-0">
                 <!-- Limit selector -->
                 <div class="relative w-24">
-                    <select :value="selectedPageSize" @change="handlePageSizeChange"
-                        :aria-label="t('itemsPerPage')"
+                    <select :value="selectedPageSize" @change="handlePageSizeChange" :aria-label="t('itemsPerPage')"
                         class="custom-select w-full appearance-none rounded-md border border-gray-300 dark:border-gray-700 pl-3 pr-8 py-1.5 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 text-sm font-medium shadow-sm">
                         <option v-for="item in pageSizeItemsFormatted" :key="item.value" :value="item.value">
                             {{ item.label }}
@@ -844,7 +843,7 @@ onUpdated(() => {
         <!-- Use our enhanced EkTable component with specialized headers -->
         <Table v-else :columns="tableColumns" :items="killlistData" :loading="pending"
             :skeleton-count="selectedPageSize" :empty-text="t('noKills')" :row-class="getRowClass"
-            :special-header="true" :bordered="true" :link-fn="generateKillLink" background="transparent">
+            :special-header="true" :bordered="true" :link-fn="generateKillLink" :hover="true" background="transparent">
             <!-- Ship column -->
             <template #cell-ship="{ item }">
                 <div class="flex items-center py-1">
@@ -878,36 +877,23 @@ onUpdated(() => {
                         <!-- Character Name -->
                         <span class="text-sm text-black dark:text-white truncate max-w-full"
                             :ref="(el) => setElementRef(el, item.killmail_id, characterNameRefs)">
-                            <NuxtLink v-if="item.victim.character_id" :to="`/character/${item.victim.character_id}`">
-                                {{ item.victim.character_name }}
-                            </NuxtLink>
-                            <span v-else>{{ item.victim.character_name }}</span>
+                            {{ item.victim.character_name }}
                         </span>
                         <!-- Corporation Name (without ticker) -->
                         <span class="text-xs text-gray-600 dark:text-gray-400 truncate max-w-full"
                             :ref="(el) => setElementRef(el, item.killmail_id, corporationNameRefs)">
-                            <NuxtLink v-if="item.victim.corporation_id"
-                                :to="`/corporation/${item.victim.corporation_id}`">
-                                {{ item.victim.corporation_name }}
-                            </NuxtLink>
-                            <span v-else>{{ item.victim.corporation_name }}</span>
+                            {{ item.victim.corporation_name }}
                         </span>
                         <!-- Alliance Name (without ticker) -->
                         <span v-if="item.victim.alliance_name"
                             class="text-xs text-gray-500 dark:text-gray-500 truncate max-w-full"
                             :ref="(el) => setElementRef(el, item.killmail_id, allianceNameRefs)">
-                            <NuxtLink v-if="item.victim.alliance_id" :to="`/alliance/${item.victim.alliance_id}`">
-                                {{ item.victim.alliance_name }}
-                            </NuxtLink>
-                            <span v-else>{{ item.victim.alliance_name }}</span>
+                            {{ item.victim.alliance_name }}
                         </span>
                         <!-- Faction Name (when no alliance) -->
                         <span v-else-if="item.victim.faction_name"
                             class="text-xs text-gray-500 dark:text-gray-500 truncate max-w-full">
-                            <NuxtLink v-if="item.victim.faction_id" :to="`/faction/${item.victim.faction_id}`">
-                                {{ item.victim.faction_name }}
-                            </NuxtLink>
-                            <span v-else>{{ item.victim.faction_name }}</span>
+                            {{ item.victim.faction_name }}
                         </span>
                     </div>
                 </div>
@@ -924,39 +910,23 @@ onUpdated(() => {
                             <!-- Character Name -->
                             <span class="text-sm text-black dark:text-white truncate max-w-full"
                                 :ref="(el) => setElementRef(el, `fb-${item.killmail_id}`, finalBlowNameRefs)">
-                                <NuxtLink v-if="item.finalblow.character_id"
-                                    :to="`/character/${item.finalblow.character_id}`">
-                                    {{ item.finalblow.character_name }}
-                                </NuxtLink>
-                                <span v-else>{{ item.finalblow.character_name }}</span>
+                                {{ item.finalblow.character_name }}
                             </span>
                             <!-- Corporation Name (without ticker) -->
                             <span class="text-xs text-gray-600 dark:text-gray-400 truncate max-w-full"
                                 :ref="(el) => setElementRef(el, `fb-${item.killmail_id}`, finalBlowCorpRefs)">
-                                <NuxtLink v-if="item.finalblow.corporation_id"
-                                    :to="`/corporation/${item.finalblow.corporation_id}`">
-                                    {{ item.finalblow.corporation_name }}
-                                </NuxtLink>
-                                <span v-else>{{ item.finalblow.corporation_name }}</span>
+                                {{ item.finalblow.corporation_name }}
                             </span>
                             <!-- Alliance Name (without ticker) -->
                             <span v-if="item.finalblow.alliance_name"
                                 class="text-xs text-gray-500 dark:text-gray-500 truncate max-w-full"
                                 :ref="(el) => setElementRef(el, `fb-${item.killmail_id}`, finalBlowAllianceRefs)">
-                                <NuxtLink v-if="item.finalblow.alliance_id"
-                                    :to="`/alliance/${item.finalblow.alliance_id}`">
-                                    {{ item.finalblow.alliance_name }}
-                                </NuxtLink>
-                                <span v-else>{{ item.finalblow.alliance_name }}</span>
+                                {{ item.finalblow.alliance_name }}
                             </span>
                             <!-- Faction Name (when no alliance) -->
                             <span v-else-if="item.finalblow.faction_name"
                                 class="text-xs text-gray-500 dark:text-gray-500 truncate max-w-full">
-                                <NuxtLink v-if="item.finalblow.faction_id"
-                                    :to="`/faction/${item.finalblow.faction_id}`">
-                                    {{ item.finalblow.faction_name }}
-                                </NuxtLink>
-                                <span v-else>{{ item.finalblow.faction_name }}</span>
+                                {{ item.finalblow.faction_name }}
                             </span>
                         </div>
                     </template>
@@ -1006,10 +976,11 @@ onUpdated(() => {
                     </div>
                     <div class="flex gap-1 items-center">
                         <span class="text-xs text-gray-600 dark:text-gray-400">{{ item.attackerCount }}</span>
-                        <img src="/images/involved.png" width="16" height="16" :alt="`${item.attackerCount} Involved`"
-                            class="h-4" />
+                        <UIcon name="lucide:users" class="h-4 w-4 text-gray-600 dark:text-gray-400" 
+                               :aria-label="`${item.attackerCount} Involved`" />
                         <span class="text-xs text-gray-600 dark:text-gray-400">{{ item.commentCount || 0 }}</span>
-                        <img src="/images/comment.gif" width="16" height="16" alt="Comments" class="h-4" />
+                        <UIcon name="lucide:message-circle" class="h-4 w-4 text-gray-600 dark:text-gray-400" 
+                               aria-label="Comments" />
                     </div>
                 </div>
             </template>

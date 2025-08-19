@@ -3,7 +3,8 @@
         <!-- Desktop dropdown with Dropdown -->
         <Dropdown v-model="isDropdownOpen" :smart-position="true" position="bottom" align="end">
             <template #trigger>
-                <UButton color="neutral" variant="ghost" size="sm" class="language-trigger" :aria-label="t('changeLanguage')">
+                <UButton color="neutral" variant="ghost" size="sm" class="language-trigger"
+                    :aria-label="t('changeLanguage')">
                     <!-- Language icon - using the standard translate icon -->
                     <UIcon name="lucide:languages" class="language-icon" />
                 </UButton>

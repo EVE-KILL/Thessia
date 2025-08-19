@@ -30,7 +30,8 @@
             </div>
 
             <div class="controls-right">
-                <select v-model="pageSize" class="page-size-select" :aria-label="t('itemsPerPage')" @change="handlePageSizeChange">
+                <select v-model="pageSize" class="page-size-select" :aria-label="t('itemsPerPage')"
+                    @change="handlePageSizeChange">
                     <option value="10">10 {{ t('admin.customPrices.perPage') }}</option>
                     <option value="25">25 {{ t('admin.customPrices.perPage') }}</option>
                     <option value="50">50 {{ t('admin.customPrices.perPage') }}</option>
@@ -105,7 +106,8 @@
             <span class="pagination-info">
                 {{ t('admin.customPrices.pageInfo', {
                     current: data.pagination.currentPage, total:
-                        data.pagination.totalPages })
+                        data.pagination.totalPages
+                })
                 }}
             </span>
             <button @click="changePage(data.pagination.currentPage + 1)" :disabled="!data.pagination.hasNextPage"
@@ -182,7 +184,7 @@
                 <div class="form-group">
                     <label for="date" class="form-label">{{ t('admin.customPrices.date') }} ({{
                         t('admin.customPrices.optional')
-                        }})</label>
+                    }})</label>
                     <input id="date" v-model="formData.date" type="date" class="form-input" />
                 </div>
 

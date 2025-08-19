@@ -28,7 +28,8 @@
 
                     <div class="control-group">
                         <label>{{ t('admin.accessLogs.statusCode') }}:</label>
-                        <select v-model="filters.statusCode" class="filter-select" :aria-label="'Filter by status code'">
+                        <select v-model="filters.statusCode" class="filter-select"
+                            :aria-label="'Filter by status code'">
                             <option value="">{{ t('admin.accessLogs.allStatus') }}</option>
                             <option value="2xx">2xx Success</option>
                             <option value="3xx">3xx Redirect</option>
