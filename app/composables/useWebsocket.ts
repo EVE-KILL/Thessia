@@ -136,16 +136,20 @@ export function useWebSocket(options: {
                     setGlobalInstance(globalRefKey, newSocket);
                 }
             } catch (wsErr) {
-                console.error(
-                    `WebSocket(${globalRefKey}): Failed to create connection:`,
-                    wsErr
-                );
                 errorMessage.value = "Failed to create WebSocket connection";
                 isConnected.value = false;
                 onError({
                     message: "Failed to create WebSocket connection",
                     error: wsErr,
                 });
+                
+                // Only log in development
+                if (debug || import.meta.dev) {
+                    console.error(
+                        `WebSocket(${globalRefKey}): Failed to create connection:`,
+                        wsErr
+                    );
+                }
                 return;
             }
 
@@ -184,9 +188,13 @@ export function useWebSocket(options: {
             };
 
             socket.value.onerror = (error) => {
-                console.error(`WebSocket(${globalRefKey}): Error:`, error);
                 errorMessage.value = "Connection error";
                 onError({ error });
+                
+                // Only log in development or debug mode
+                if (debug || import.meta.dev) {
+                    console.error(`WebSocket(${globalRefKey}): Error:`, error);
+                }
             };
 
             socket.value.onclose = (event) => {
@@ -213,13 +221,17 @@ export function useWebSocket(options: {
                 }
             };
         } catch (err) {
-            console.error(
-                `WebSocket(${globalRefKey}): Error establishing connection:`,
-                err
-            );
             isConnected.value = false;
-            errorMessage.value = "Failed to establish connection";
+            errorMessage.value = "Error establishing connection";
             onError({ message: "Failed to establish connection", error: err });
+            
+            // Only log in development or debug mode
+            if (debug || import.meta.dev) {
+                console.error(
+                    `WebSocket(${globalRefKey}): Error establishing connection:`,
+                    err
+                );
+            }
         }
     };
 

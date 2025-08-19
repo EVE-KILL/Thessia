@@ -634,9 +634,8 @@ const mouseX = ref(0);
 const mouseY = ref(0);
 const tooltipText = ref('');
 const showTooltip = ref(false);
-
-/**
- * Updates fade effect on elements that overflow
+ /**
+ * Updates fade effect on elements that over low
  */
 const updateTextFade = (refMap: Map<number, HTMLElement>) => {
     refMap.forEach((el) => {
@@ -667,9 +666,8 @@ const updateTextFade = (refMap: Map<number, HTMLElement>) => {
         }
     });
 };
-
-/**
- * Update all text fade effects
+ /**
+ * Update all text fade eff cts
  */
 const updateAllFades = () => {
     updateTextFade(shipNameRefs.value);
@@ -680,9 +678,8 @@ const updateAllFades = () => {
     updateTextFade(finalBlowCorpRefs.value);
     updateTextFade(finalBlowAllianceRefs.value);
 };
-
-/**
- * Set reference for an element by killmail ID
+ /**
+ * Set reference for an element by killmai  ID
  */
 const setElementRef = (el: HTMLElement | null, id: number, refMap: Map<number, HTMLElement>) => {
     if (el) {
@@ -1083,7 +1080,7 @@ onUpdated(() => {
                         <!-- System/Region Info -->
                         <div class="text-xs">
                             <span>{{ item.system_name }} / {{ getLocalizedString(item.region_name, currentLocale)
-                            }}</span>
+                                }}</span>
                             <span class="ml-1">(</span>
                             <span :class="getSecurityColor(item.system_security)">
                                 {{ item.system_security.toFixed(1) }}

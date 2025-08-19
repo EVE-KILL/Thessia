@@ -123,14 +123,16 @@ export const useWebSocketStore = defineStore("websocket", {
             connection.state = "connecting";
 
             try {
-                // Use the dedicated WebSocket server with specific endpoints
+                // Build WebSocket URL based on connection type  
                 const wsUrl = `wss://ws.eve-kill.com/${connectionType}`;
 
                 const socket = new WebSocket(wsUrl);
                 connection.socket = socket;
 
                 socket.onopen = () => {
-                    console.log(`WebSocket connected for ${connectionType}`);
+                    if (import.meta.dev) {
+                        console.log(`WebSocket connected for ${connectionType}`);
+                    }
                     connection.state = "connected";
                     connection.reconnectAttempts = 0;
 
@@ -152,15 +154,19 @@ export const useWebSocketStore = defineStore("websocket", {
                         const data = JSON.parse(event.data) as SiteEvent;
                         this.handleMessage(connectionType, data);
                     } catch (error) {
-                        console.error(
-                            "Failed to parse WebSocket message:",
-                            error
-                        );
+                        if (import.meta.dev) {
+                            console.error(
+                                "Failed to parse WebSocket message:",
+                                error
+                            );
+                        }
                     }
                 };
 
                 socket.onclose = () => {
-                    console.log(`WebSocket disconnected for ${connectionType}`);
+                    if (import.meta.dev) {
+                        console.log(`WebSocket disconnected for ${connectionType}`);
+                    }
                     connection.state = "disconnected";
                     connection.socket = null;
 
@@ -186,18 +192,20 @@ export const useWebSocketStore = defineStore("websocket", {
                 };
 
                 socket.onerror = (error) => {
-                    console.error(
-                        `WebSocket error for ${connectionType}:`,
-                        error
-                    );
                     connection.state = "error";
+                    
+                    // Only log detailed error in development
+                    if (import.meta.dev) {
+                        console.warn(`WebSocket error for ${connectionType}:`, error);
+                    }
                 };
             } catch (error) {
-                console.error(
-                    `Failed to connect WebSocket for ${connectionType}:`,
-                    error
-                );
                 connection.state = "error";
+                
+                // Only log errors in development
+                if (import.meta.dev) {
+                    console.warn(`Failed to connect WebSocket for ${connectionType}:`, error);
+                }
             }
         },
 

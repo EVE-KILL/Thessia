@@ -110,6 +110,13 @@ export default defineNuxtConfig({
                     "cache-control": "s-maxage=31536000, immutable",
                 },
             },
+            // Serve source maps with proper headers
+            "/_nuxt/**/*.map": {
+                headers: {
+                    "content-type": "application/json",
+                    "cache-control": "s-maxage=31536000, immutable",
+                },
+            },
             "/_healthcheck": {
                 security: {
                     rateLimiter: false, // Disable rate limiting for health checks
@@ -274,6 +281,7 @@ export default defineNuxtConfig({
                 mangle: {
                     safari10: true,
                 },
+                sourceMap: true, // Always generate source maps
             },
         },
         // Optimize dependencies for better bundling
