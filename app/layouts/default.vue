@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed } from "vue";
+import { computed, ref, onMounted } from "vue";
 import { useI18n } from "vue-i18n";
 
 const { getSiteBackground } = siteBackground();
@@ -9,15 +9,55 @@ const backgroundUrl = computed(() => {
 });
 const { t } = useI18n();
 
+// Lazy loading for background image
+const isBackgroundLoaded = ref(false);
+const backgroundImageUrl = ref('');
+
+const loadBackgroundImage = async () => {
+    if (backgroundUrl.value) {
+        const img = new Image();
+        img.onload = () => {
+            backgroundImageUrl.value = backgroundUrl.value;
+            isBackgroundLoaded.value = true;
+        };
+        img.onerror = () => {
+            // Fallback to default background if image fails to load
+            backgroundImageUrl.value = '/backgrounds/bg2.webp';
+            isBackgroundLoaded.value = true;
+        };
+        // Preload the image
+        img.src = backgroundUrl.value;
+    }
+};
+
+// Load background after component is mounted (non-blocking)
+onMounted(() => {
+    // Use requestIdleCallback for better performance if available
+    if (typeof requestIdleCallback !== 'undefined') {
+        requestIdleCallback(() => {
+            loadBackgroundImage();
+        });
+    } else {
+        // Fallback for browsers without requestIdleCallback
+        setTimeout(() => {
+            loadBackgroundImage();
+        }, 100);
+    }
+});
+
 useHead({
     link: [
         { rel: "icon", type: "image/png", href: "/favicon.svg" },
         { rel: "search", type: "application/opensearchdescription+xml", href: "/search.xml" },
+        // Preload critical background image (but not blocking render)
+        { 
+            rel: "preload", 
+            as: "image", 
+            href: "/backgrounds/bg2.webp",
+            media: "(min-width: 768px)" // Only preload on larger screens
+        }
     ],
 });
-
-// Background handling without preload to avoid browser warnings
-// Modern browsers are efficient at loading images when needed
 
 useSeoMeta({
     titleTemplate: "EVE-KILL | %s",
@@ -41,7 +81,12 @@ useSeoMeta({
 </script>
 
 <template>
-    <div id="main-scroller" class="main-scroller" :style="{ backgroundImage: `url(${backgroundUrl})` }">
+    <div 
+        id="main-scroller" 
+        class="main-scroller" 
+        :class="{ 'background-loaded': isBackgroundLoaded }"
+        :style="isBackgroundLoaded ? { backgroundImage: `url(${backgroundImageUrl})` } : {}"
+    >
         <div class="vignette-overlay"></div>
 
         <Navbar />
@@ -66,3 +111,26 @@ useSeoMeta({
         <SiteWebSocketManager />
     </div>
 </template>
+
+<style scoped>
+.main-scroller {
+    /* Fallback gradient background while lazy-loading */
+    background: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #334155 100%);
+    transition: background-image 0.5s ease-in-out;
+}
+
+.main-scroller.background-loaded {
+    /* Smooth transition when background image loads */
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+}
+
+/* Optimize background loading for different screen sizes */
+@media (max-width: 768px) {
+    .main-scroller {
+        /* On mobile, use a lighter fallback since background might not load */
+        background: linear-gradient(135deg, #1e293b 0%, #334155 100%);
+    }
+}
+</style>
