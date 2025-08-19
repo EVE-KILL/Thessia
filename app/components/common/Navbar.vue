@@ -5,10 +5,27 @@ const colorMode = useColorMode();
 import NavbarBackgroundSwitcher from "../navbar/NavbarBackgroundSwitcher.vue";
 import NavbarLanguageSelector from "../navbar/NavbarLanguageSelector.vue";
 import NavbarUser from "../navbar/NavbarUser.vue";
-import SpotlightSearch from "../search/SpotlightSearch.vue";
+// Import SpotlightSearch and MobileSearch - Conditional loading
+import MobileSearch from '~/components/search/MobileSearch.vue';
+import SpotlightSearch from '~/components/search/SpotlightSearch.vue';
 
 // Global spotlight search state
 const { isOpen: isSearchOpen, openSearch, closeSearch } = useSpotlightSearch();
+
+// Mobile detection for conditional search component rendering
+const isMobile = ref(false);
+
+onMounted(() => {
+    const checkMobile = () => {
+        isMobile.value = window.innerWidth < 768; // Tailwind md breakpoint
+    };
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+
+    onUnmounted(() => {
+        window.removeEventListener('resize', checkMobile);
+    });
+});
 
 // Mobile menu state
 const isMobileMenuOpen = ref(false);
@@ -66,7 +83,7 @@ interface NavLink {
 }
 
 /**
- * Left navigation items
+ * L ft navigation items
  */
 const leftNavItems = computed(() => [
     {
@@ -217,7 +234,7 @@ const leftNavItems = computed(() => [
 ]);
 
 /**
- * Center navigation items
+ * C nter navigation items
  */
 const centerNavItems = computed(() => [
     {
@@ -229,7 +246,7 @@ const centerNavItems = computed(() => [
 ]);
 
 /**
- * Right navigation items
+ * R ght navigation items
  */
 const rightNavItems = computed(() => [
     {
@@ -280,7 +297,7 @@ const rightNavItems = computed(() => [
 ]);
 
 /**
- * All navigation items combined
+ * A l navigation items combined
  */
 const allNavItems = computed(() => [
     ...leftNavItems.value,
@@ -626,7 +643,9 @@ const closeMobileMenu = () => {
     </MobileFullscreen>
 
     <!-- Global Spotlight Search Modal -->
-    <SpotlightSearch :open="isSearchOpen" @close="closeSearch" />
+    <!-- Conditional Search Components -->
+    <MobileSearch v-if="isMobile" :open="isSearchOpen" @close="closeSearch" />
+    <SpotlightSearch v-else :open="isSearchOpen" @close="closeSearch" />
 </template>
 
 <style scoped>

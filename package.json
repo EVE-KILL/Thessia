@@ -6,6 +6,7 @@
     "license": "MIT",
     "type": "module",
     "scripts": {
+        "fastbuild": "nuxt build",
         "build": "nuxt build && bun run build.ts all",
         "dev": "nuxt dev",
         "generate": "nuxt generate",
