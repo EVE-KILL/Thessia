@@ -107,14 +107,14 @@ export default defineNuxtConfig({
             // Cache static assets for 1 year with immutable flag
             "/_nuxt/**": {
                 headers: {
-                    "cache-control": "s-maxage=31536000, immutable",
+                    "cache-control": "public, max-age=31536000, immutable",
                 },
             },
             // Serve source maps with proper headers
             "/_nuxt/**/*.map": {
                 headers: {
                     "content-type": "application/json",
-                    "cache-control": "s-maxage=31536000, immutable",
+                    "cache-control": "public, max-age=31536000, immutable",
                 },
             },
             "/_healthcheck": {
@@ -124,18 +124,24 @@ export default defineNuxtConfig({
             },
             "/images/**": {
                 headers: {
-                    "cache-control": "s-maxage=31536000, immutable",
+                    "cache-control": "public, max-age=31536000, immutable",
+                },
+            },
+            // Cache background images
+            "/backgrounds/**": {
+                headers: {
+                    "cache-control": "public, max-age=31536000, immutable",
                 },
             },
             // Cache favicon and other root assets
             "/favicon.*": {
                 headers: {
-                    "cache-control": "s-maxage=31536000, immutable",
+                    "cache-control": "public, max-age=31536000, immutable",
                 },
             },
             "/icon.*": {
                 headers: {
-                    "cache-control": "s-maxage=31536000, immutable",
+                    "cache-control": "public, max-age=31536000, immutable",
                 },
             },
             // Admin routes - no caching
