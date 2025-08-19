@@ -87,155 +87,157 @@
     </MobileFullscreen>
 
     <!-- Desktop Teleport Modal -->
-    <Teleport v-else to="body">
-        <div v-if="isOpen" class="spotlight-overlay" @click="closeSearch" @keydown.escape="closeSearch">
-            <div class="spotlight-container" @click.stop>
-                <!-- Search Header -->
-                <div class="spotlight-header">
-                    <div class="spotlight-search-wrapper">
-                        <UIcon name="lucide:search" class="spotlight-search-icon" />
-                        <input ref="searchInput" v-model="searchQuery" type="text"
-                            :placeholder="t('search.placeholder', 'Search characters, corporations, alliances...')"
-                            class="spotlight-input" @input="handleSearch" @keydown="handleKeydown" />
-                        <div class="spotlight-shortcut">
-                            <span class="spotlight-key">ESC</span>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Search Results -->
-                <div class="spotlight-content" :class="{ 'spotlight-content-loading': isLoading }">
-                    <!-- Loading State -->
-                    <div v-if="isLoading" class="spotlight-loading">
-                        <div class="spotlight-loading-spinner">
-                            <UIcon name="lucide:loader-2" class="animate-spin" />
-                        </div>
-                        <p class="spotlight-loading-text">{{ t('search.searching', 'Searching...') }}</p>
-                    </div>
-
-                    <!-- Empty State -->
-                    <div v-else-if="!searchQuery" class="spotlight-empty">
-                        <div class="spotlight-empty-icon">
-                            <UIcon name="lucide:search" />
-                        </div>
-                        <h3 class="spotlight-empty-title">{{ t('search.title', 'Search EVE-KILL') }}</h3>
-                        <p class="spotlight-empty-subtitle">{{ t('search.subtitle') }}</p>
-
-                        <!-- Quick Actions -->
-                        <div class="spotlight-quick-actions">
-                            <h4 class="spotlight-section-title">{{ t('search.quickActions', 'Quick Actions') }}</h4>
-                            <div class="spotlight-quick-grid">
-                                <NuxtLink v-for="action in quickActions" :key="action.to" :to="action.to"
-                                    class="spotlight-quick-item" :data-type="action.type" @click="closeSearch">
-                                    <UIcon :name="action.icon" class="spotlight-quick-icon" />
-                                    <span>{{ action.label }}</span>
-                                </NuxtLink>
+    <ClientOnly>
+        <Teleport v-if="!isMobile" to="body">
+            <div v-if="isOpen" class="spotlight-overlay" @click="closeSearch" @keydown.escape="closeSearch">
+                <div class="spotlight-container" @click.stop>
+                    <!-- Search Header -->
+                    <div class="spotlight-header">
+                        <div class="spotlight-search-wrapper">
+                            <UIcon name="lucide:search" class="spotlight-search-icon" />
+                            <input ref="searchInput" v-model="searchQuery" type="text"
+                                :placeholder="t('search.placeholder', 'Search characters, corporations, alliances...')"
+                                class="spotlight-input" @input="handleSearch" @keydown="handleKeydown" />
+                            <div class="spotlight-shortcut">
+                                <span class="spotlight-key">ESC</span>
                             </div>
                         </div>
-
-                        <!-- Recent Searches -->
-                        <div v-if="recentSearches.length > 0" class="spotlight-recent">
-                            <h4 class="spotlight-section-title">{{ t('search.recent', 'Recent Searches') }}</h4>
-                            <div class="spotlight-recent-list">
-                                <button v-for="(recent, index) in recentSearches" :key="index"
-                                    class="spotlight-recent-item" @click="selectRecentSearch(recent)">
-                                    <UIcon name="lucide:clock" class="spotlight-recent-icon" />
-                                    <span>{{ recent }}</span>
-                                    <UIcon name="lucide:x" class="spotlight-recent-remove"
-                                        @click.stop="removeRecentSearch(index)" />
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- No Results -->
-                    <div v-else-if="!isLoading && searchQuery && results.length === 0" class="spotlight-no-results">
-                        <div class="spotlight-no-results-icon">
-                            <UIcon name="lucide:search-x" />
-                        </div>
-                        <h3 class="spotlight-no-results-title">{{ t('search.noResults', 'No results found') }}</h3>
-                        <p class="spotlight-no-results-subtitle">
-                            {{ t('search.noResultsFor', 'No results found for') }} "{{ searchQuery }}"
-                        </p>
                     </div>
 
                     <!-- Search Results -->
-                    <div v-else-if="results.length > 0" class="spotlight-results">
-                        <!-- Category Summary Buttons -->
-                        <div v-if="categorizedResults.length > 0" class="spotlight-category-summary">
-                            <button v-for="category in categorizedResults" :key="category.type"
-                                class="spotlight-category-button" :data-type="category.type"
-                                @click="scrollToCategory(category.type)">
-                                <UIcon :name="category.icon" />
-                                <span>{{ category.title }}: {{ category.items.length }}</span>
-                            </button>
+                    <div class="spotlight-content" :class="{ 'spotlight-content-loading': isLoading }">
+                        <!-- Loading State -->
+                        <div v-if="isLoading" class="spotlight-loading">
+                            <div class="spotlight-loading-spinner">
+                                <UIcon name="lucide:loader-2" class="animate-spin" />
+                            </div>
+                            <p class="spotlight-loading-text">{{ t('search.searching', 'Searching...') }}</p>
                         </div>
 
-                        <!-- Scrollable Results Container -->
-                        <div class="spotlight-results-container">
-                            <!-- Results by category -->
-                            <div v-for="category in categorizedResults" :key="category.type" class="spotlight-category"
-                                :data-category="category.type">
-                                <h4 class="spotlight-section-title">
-                                    <UIcon :name="category.icon" class="spotlight-section-icon" />
-                                    {{ category.title }} ({{ category.items.length }})
-                                </h4>
-                                <div class="spotlight-results-list">
-                                    <NuxtLink v-for="(result, index) in category.items" :key="result.id"
-                                        :to="result.url" class="spotlight-result-item"
-                                        :class="{ 'spotlight-result-selected': selectedIndex === getGlobalIndex(category.type, index) }"
-                                        @click="selectResult(result)">
-                                        <div class="spotlight-result-avatar">
-                                            <Image v-if="result.type === 'character'" :id="result.id" type="character"
-                                                :size="32" class="spotlight-result-image" />
-                                            <Image v-else-if="result.type === 'corporation'" :id="result.id"
-                                                type="corporation" :size="32" class="spotlight-result-image" />
-                                            <Image v-else-if="result.type === 'alliance'" :id="result.id"
-                                                type="alliance" :size="32" class="spotlight-result-image" />
-                                            <Image v-else-if="result.type === 'ship'" :id="result.id" type="type-icon"
-                                                :size="32" class="spotlight-result-image" />
-                                            <Image v-else-if="result.type === 'item'" :id="result.id" type="type-icon"
-                                                :size="32" class="spotlight-result-image" />
-                                            <img v-else-if="result.type === 'system' || result.type === 'region'"
-                                                src="/map.png" alt="Map"
-                                                class="spotlight-result-image spotlight-map-image" />
-                                            <div v-else class="spotlight-result-fallback">
-                                                <UIcon :name="category.icon" />
-                                            </div>
-                                        </div>
-                                        <div class="spotlight-result-content">
-                                            <div class="spotlight-result-name">{{ result.name }}</div>
-                                            <div class="spotlight-result-meta">{{ result.meta }}</div>
-                                        </div>
-                                        <UIcon name="lucide:arrow-up-right" class="spotlight-result-arrow" />
+                        <!-- Empty State -->
+                        <div v-else-if="!searchQuery" class="spotlight-empty">
+                            <div class="spotlight-empty-icon">
+                                <UIcon name="lucide:search" />
+                            </div>
+                            <h3 class="spotlight-empty-title">{{ t('search.title', 'Search EVE-KILL') }}</h3>
+                            <p class="spotlight-empty-subtitle">{{ t('search.subtitle') }}</p>
+
+                            <!-- Quick Actions -->
+                            <div class="spotlight-quick-actions">
+                                <h4 class="spotlight-section-title">{{ t('search.quickActions', 'Quick Actions') }}</h4>
+                                <div class="spotlight-quick-grid">
+                                    <NuxtLink v-for="action in quickActions" :key="action.to" :to="action.to"
+                                        class="spotlight-quick-item" :data-type="action.type" @click="closeSearch">
+                                        <UIcon :name="action.icon" class="spotlight-quick-icon" />
+                                        <span>{{ action.label }}</span>
                                     </NuxtLink>
                                 </div>
                             </div>
-                        </div> <!-- End spotlight-results-container -->
-                    </div>
-                </div>
 
-                <!-- Footer -->
-                <div class="spotlight-footer">
-                    <div class="spotlight-footer-shortcuts">
-                        <div class="spotlight-shortcut-group">
-                            <span class="spotlight-key">↑</span>
-                            <span class="spotlight-key">↓</span>
-                            <span class="spotlight-key-label">{{ t('search.navigate', 'Navigate') }}</span>
+                            <!-- Recent Searches -->
+                            <div v-if="recentSearches.length > 0" class="spotlight-recent">
+                                <h4 class="spotlight-section-title">{{ t('search.recent', 'Recent Searches') }}</h4>
+                                <div class="spotlight-recent-list">
+                                    <button v-for="(recent, index) in recentSearches" :key="index"
+                                        class="spotlight-recent-item" @click="selectRecentSearch(recent)">
+                                        <UIcon name="lucide:clock" class="spotlight-recent-icon" />
+                                        <span>{{ recent }}</span>
+                                        <UIcon name="lucide:x" class="spotlight-recent-remove"
+                                            @click.stop="removeRecentSearch(index)" />
+                                    </button>
+                                </div>
+                            </div>
                         </div>
-                        <div class="spotlight-shortcut-group">
-                            <span class="spotlight-key">↵</span>
-                            <span class="spotlight-key-label">{{ t('search.select', 'Select') }}</span>
+
+                        <!-- No Results -->
+                        <div v-else-if="!isLoading && searchQuery && results.length === 0" class="spotlight-no-results">
+                            <div class="spotlight-no-results-icon">
+                                <UIcon name="lucide:search-x" />
+                            </div>
+                            <h3 class="spotlight-no-results-title">{{ t('search.noResults', 'No results found') }}</h3>
+                            <p class="spotlight-no-results-subtitle">
+                                {{ t('search.noResultsFor', 'No results found for') }} "{{ searchQuery }}"
+                            </p>
                         </div>
-                        <div class="spotlight-shortcut-group">
-                            <span class="spotlight-key">ESC</span>
-                            <span class="spotlight-key-label">{{ t('search.close', 'Close') }}</span>
+
+                        <!-- Search Results -->
+                        <div v-else-if="results.length > 0" class="spotlight-results">
+                            <!-- Category Summary Buttons -->
+                            <div v-if="categorizedResults.length > 0" class="spotlight-category-summary">
+                                <button v-for="category in categorizedResults" :key="category.type"
+                                    class="spotlight-category-button" :data-type="category.type"
+                                    @click="scrollToCategory(category.type)">
+                                    <UIcon :name="category.icon" />
+                                    <span>{{ category.title }}: {{ category.items.length }}</span>
+                                </button>
+                            </div>
+
+                            <!-- Scrollable Results Container -->
+                            <div class="spotlight-results-container">
+                                <!-- Results by category -->
+                                <div v-for="category in categorizedResults" :key="category.type"
+                                    class="spotlight-category" :data-category="category.type">
+                                    <h4 class="spotlight-section-title">
+                                        <UIcon :name="category.icon" class="spotlight-section-icon" />
+                                        {{ category.title }} ({{ category.items.length }})
+                                    </h4>
+                                    <div class="spotlight-results-list">
+                                        <NuxtLink v-for="(result, index) in category.items" :key="result.id"
+                                            :to="result.url" class="spotlight-result-item"
+                                            :class="{ 'spotlight-result-selected': selectedIndex === getGlobalIndex(category.type, index) }"
+                                            @click="selectResult(result)">
+                                            <div class="spotlight-result-avatar">
+                                                <Image v-if="result.type === 'character'" :id="result.id"
+                                                    type="character" :size="32" class="spotlight-result-image" />
+                                                <Image v-else-if="result.type === 'corporation'" :id="result.id"
+                                                    type="corporation" :size="32" class="spotlight-result-image" />
+                                                <Image v-else-if="result.type === 'alliance'" :id="result.id"
+                                                    type="alliance" :size="32" class="spotlight-result-image" />
+                                                <Image v-else-if="result.type === 'ship'" :id="result.id"
+                                                    type="type-icon" :size="32" class="spotlight-result-image" />
+                                                <Image v-else-if="result.type === 'item'" :id="result.id"
+                                                    type="type-icon" :size="32" class="spotlight-result-image" />
+                                                <img v-else-if="result.type === 'system' || result.type === 'region'"
+                                                    src="/map.png" alt="Map"
+                                                    class="spotlight-result-image spotlight-map-image" />
+                                                <div v-else class="spotlight-result-fallback">
+                                                    <UIcon :name="category.icon" />
+                                                </div>
+                                            </div>
+                                            <div class="spotlight-result-content">
+                                                <div class="spotlight-result-name">{{ result.name }}</div>
+                                                <div class="spotlight-result-meta">{{ result.meta }}</div>
+                                            </div>
+                                            <UIcon name="lucide:arrow-up-right" class="spotlight-result-arrow" />
+                                        </NuxtLink>
+                                    </div>
+                                </div>
+                            </div> <!-- End spotlight-results-container -->
+                        </div>
+                    </div>
+
+                    <!-- Footer -->
+                    <div class="spotlight-footer">
+                        <div class="spotlight-footer-shortcuts">
+                            <div class="spotlight-shortcut-group">
+                                <span class="spotlight-key">↑</span>
+                                <span class="spotlight-key">↓</span>
+                                <span class="spotlight-key-label">{{ t('search.navigate', 'Navigate') }}</span>
+                            </div>
+                            <div class="spotlight-shortcut-group">
+                                <span class="spotlight-key">↵</span>
+                                <span class="spotlight-key-label">{{ t('search.select', 'Select') }}</span>
+                            </div>
+                            <div class="spotlight-shortcut-group">
+                                <span class="spotlight-key">ESC</span>
+                                <span class="spotlight-key-label">{{ t('search.close', 'Close') }}</span>
+                            </div>
                         </div>
                     </div>
                 </div>
             </div>
-        </div>
-    </Teleport>
+        </Teleport>
+    </ClientOnly>
 </template>
 
 <script setup lang="ts">
