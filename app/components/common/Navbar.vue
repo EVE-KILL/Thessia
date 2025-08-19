@@ -1,14 +1,14 @@
 <script lang="ts" setup>
-import { markRaw } from "vue";
 const { t } = useI18n();
 const colorMode = useColorMode();
 
 import NavbarBackgroundSwitcher from "../navbar/NavbarBackgroundSwitcher.vue";
 import NavbarLanguageSelector from "../navbar/NavbarLanguageSelector.vue";
-import SearchComponent from "../navbar/NavbarSearch.vue";
 import NavbarUser from "../navbar/NavbarUser.vue";
+import SpotlightSearch from "../search/SpotlightSearch.vue";
 
-const Search = markRaw(SearchComponent);
+// Global spotlight search state
+const { isOpen: isSearchOpen, openSearch, closeSearch } = useSpotlightSearch();
 
 // Mobile menu state
 const isMobileMenuOpen = ref(false);
@@ -81,33 +81,61 @@ const leftNavItems = computed(() => [
         label: t("kills"),
         position: "left",
         children: [
+            // Recent Activity
             { name: t("latest"), label: t("latest"), to: "/kills/latest" },
-            { name: t("abyssal"), label: t("abyssal"), to: "/kills/abyssal" },
-            { name: t("wspace"), label: t("wspace"), to: "/kills/wspace" },
-            { name: t("highsec"), label: t("highsec"), to: "/kills/highsec" },
-            { name: t("lowsec"), label: t("lowsec"), to: "/kills/lowsec" },
-            { name: t("nullsec"), label: t("nullsec"), to: "/kills/nullsec" },
-            { name: t("pochven"), label: t("pochven"), to: "/kills/pochven" },
             { name: t("big"), label: t("big"), to: "/kills/big" },
             { name: t("solo"), label: t("solo"), to: "/kills/solo" },
             { name: t("npc"), label: t("npc"), to: "/kills/npc" },
+
+            // Separator
+            { name: "---", label: "separator", to: "#" },
+
+            // By Location
+            { name: t("highsec"), label: t("highsec"), to: "/kills/highsec" },
+            { name: t("lowsec"), label: t("lowsec"), to: "/kills/lowsec" },
+            { name: t("nullsec"), label: t("nullsec"), to: "/kills/nullsec" },
+            { name: t("wspace"), label: t("wspace"), to: "/kills/wspace" },
+            { name: t("abyssal"), label: t("abyssal"), to: "/kills/abyssal" },
+            { name: t("pochven"), label: t("pochven"), to: "/kills/pochven" },
+
+            // Separator
+            { name: "---", label: "separator", to: "#" },
+
+            // By Value
             { name: t("5b"), label: t("5b"), to: "/kills/5b" },
             { name: t("10b"), label: t("10b"), to: "/kills/10b" },
-            { name: t("citadels"), label: t("citadels"), to: "/kills/citadels" },
-            { name: t("t1"), label: t("t1"), to: "/kills/t1" },
-            { name: t("t2"), label: t("t2"), to: "/kills/t2" },
-            { name: t("t3"), label: t("t3"), to: "/kills/t3" },
+
+            // Separator
+            { name: "---", label: "separator", to: "#" },
+
+            // By Ship Class
             { name: t("frigates"), label: t("frigates"), to: "/kills/frigates" },
             { name: t("destroyers"), label: t("destroyers"), to: "/kills/destroyers" },
             { name: t("cruisers"), label: t("cruisers"), to: "/kills/cruisers" },
             { name: t("battlecruisers"), label: t("battlecruisers"), to: "/kills/battlecruisers" },
             { name: t("battleships"), label: t("battleships"), to: "/kills/battleships" },
             { name: t("capitals"), label: t("capitals"), to: "/kills/capitals" },
-            { name: t("freighters"), label: t("freighters"), to: "/kills/freighters" },
             { name: t("supercarriers"), label: t("supercarriers"), to: "/kills/supercarriers" },
             { name: t("titans"), label: t("titans"), to: "/kills/titans" },
-            { name: t("structureboys"), label: t("structureboys"), to: "/kills/structureboys" }
+            { name: t("freighters"), label: t("freighters"), to: "/kills/freighters" },
+
+            // Separator
+            { name: "---", label: "separator", to: "#" },
+
+            // Structures & Tech
+            { name: t("citadels"), label: t("citadels"), to: "/kills/citadels" },
+            { name: t("structureboys"), label: t("structureboys"), to: "/kills/structureboys" },
+            { name: t("t1"), label: t("t1"), to: "/kills/t1" },
+            { name: t("t2"), label: t("t2"), to: "/kills/t2" },
+            { name: t("t3"), label: t("t3"), to: "/kills/t3" }
         ],
+    },
+    {
+        name: t("wars.title"),
+        label: t("wars.title"),
+        position: "left",
+        to: "/wars",
+        icon: "lucide:swords",
     },
     {
         name: t("battles"),
@@ -121,7 +149,7 @@ const leftNavItems = computed(() => [
         label: t("campaigns"),
         position: "left",
         to: "/campaigns",
-        icon: "lucide:shield",
+        icon: "lucide:flag",
     },
     {
         name: t("stats"),
@@ -193,9 +221,10 @@ const leftNavItems = computed(() => [
  */
 const centerNavItems = computed(() => [
     {
-        component: Search,
-        inline: true,
+        icon: "lucide:search",
+        label: t("search.title", "Search"),
         position: "center",
+        onClick: openSearch,
     },
 ]);
 
@@ -308,7 +337,10 @@ const closeMobileMenu = () => {
 
                         <!-- Column item slot for menu items -->
                         <template #column-item="{ item }">
-                            <NuxtLink :to="item.to" class="dropdown-item" :aria-label="item.label"
+                            <!-- Separator -->
+                            <div v-if="item.name === '---'" class="dropdown-separator"></div>
+                            <!-- Regular item -->
+                            <NuxtLink v-else :to="item.to" class="dropdown-item" :aria-label="item.label"
                                 @click="dropdownStates[link.name || link.label || ''] = false">
                                 {{ item.name }}
                             </NuxtLink>
@@ -330,11 +362,14 @@ const closeMobileMenu = () => {
             <!-- Center items - takes all available space -->
             <div class="navbar-section-center">
                 <template v-for="(link, index) in centerNavItems" :key="index">
-                    <component v-if="link.component && link.inline" :is="link.component" class="navbar-search" />
-                    <button v-else-if="link.onClick" class="button-base navbar-button" :aria-label="link.label"
+                    <button v-if="link.onClick" class="button-base navbar-search-button" :aria-label="link.label"
                         @click="link.onClick">
-                        <UIcon v-if="link.icon" :name="link.icon" class="navbar-icon" />
-                        <span class="navbar-text">{{ link.name }}</span>
+                        <UIcon v-if="link.icon" :name="link.icon" class="navbar-search-icon" />
+                        <span class="navbar-search-text">{{ t('search.placeholder', 'Search...') }}</span>
+                        <div class="navbar-search-shortcut">
+                            <span class="navbar-key">⌘</span>
+                            <span class="navbar-key">K</span>
+                        </div>
                     </button>
                 </template>
             </div>
@@ -397,10 +432,14 @@ const closeMobileMenu = () => {
                 <Icon name="lucide:house" class="navbar-mobile-logo-icon" />
             </NuxtLink>
 
-            <!-- Center mobile items (typically search) -->
+            <!-- Center mobile items (search button) -->
             <div class="navbar-mobile-center">
                 <template v-for="(link, index) in centerNavItems" :key="index">
-                    <component v-if="link.component && link.inline" :is="link.component" class="navbar-mobile-search" />
+                    <button v-if="link.onClick" class="navbar-mobile-search-button" :aria-label="link.label"
+                        @click="link.onClick">
+                        <UIcon v-if="link.icon" :name="link.icon" class="navbar-mobile-search-icon" />
+                        <span class="navbar-mobile-search-text">{{ t('search.short', 'Search') }}</span>
+                    </button>
                 </template>
             </div>
 
@@ -585,6 +624,9 @@ const closeMobileMenu = () => {
             </div>
         </div>
     </MobileFullscreen>
+
+    <!-- Global Spotlight Search Modal -->
+    <SpotlightSearch :open="isSearchOpen" @close="closeSearch" />
 </template>
 
 <style scoped>
@@ -702,6 +744,134 @@ html.dark .navbar-desktop.navbar-scrolled {
     width: 100%;
     max-width: 48rem;
     /* 3xl */
+}
+
+/* Spotlight search button styling */
+.navbar-search-button {
+    display: flex !important;
+    align-items: center !important;
+    width: 100% !important;
+    max-width: 32rem !important;
+    height: 2.75rem !important;
+    padding: 0 var(--space-4) !important;
+    background: rgba(0, 0, 0, 0.05) !important;
+    border: 1px solid rgba(0, 0, 0, 0.1) !important;
+    border-radius: var(--radius-lg) !important;
+    color: var(--color-text-muted) !important;
+    font-size: var(--text-sm) !important;
+    transition: all 0.2s ease !important;
+    justify-content: flex-start !important;
+    text-align: left !important;
+    gap: var(--space-3) !important;
+    cursor: pointer !important;
+}
+
+.navbar-search-button:hover {
+    background: rgba(0, 0, 0, 0.1) !important;
+    border-color: rgba(0, 0, 0, 0.2) !important;
+    color: var(--color-text-primary) !important;
+}
+
+:global(.dark) .navbar-search-button {
+    background: rgba(255, 255, 255, 0.05) !important;
+    border: 1px solid rgba(255, 255, 255, 0.1) !important;
+    color: var(--color-text-muted) !important;
+}
+
+:global(.dark) .navbar-search-button:hover {
+    background: rgba(255, 255, 255, 0.1) !important;
+    border-color: rgba(255, 255, 255, 0.2) !important;
+    color: var(--color-text-primary) !important;
+}
+
+.navbar-search-icon {
+    font-size: var(--text-base) !important;
+    color: var(--color-text-muted) !important;
+    margin-right: 0 !important;
+}
+
+.navbar-search-text {
+    flex: 1 !important;
+    font-weight: var(--font-normal) !important;
+    text-align: left !important;
+}
+
+.navbar-search-shortcut {
+    display: flex !important;
+    align-items: center !important;
+    gap: 2px !important;
+    margin-left: auto !important;
+}
+
+.navbar-key {
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    min-width: 1.25rem !important;
+    height: 1.25rem !important;
+    padding: 0 2px !important;
+    background: rgba(0, 0, 0, 0.1) !important;
+    border: 1px solid rgba(0, 0, 0, 0.2) !important;
+    border-radius: 2px !important;
+    font-size: 10px !important;
+    font-weight: var(--font-medium) !important;
+    color: var(--color-text-muted) !important;
+    box-shadow: inset 0 -1px 0 rgba(0, 0, 0, 0.1) !important;
+}
+
+:global(.dark) .navbar-key {
+    background: rgba(255, 255, 255, 0.1) !important;
+    border: 1px solid rgba(255, 255, 255, 0.2) !important;
+    box-shadow: inset 0 -1px 0 rgba(255, 255, 255, 0.1) !important;
+}
+
+/* Mobile search button styling */
+.navbar-mobile-search-button {
+    display: flex;
+    align-items: center;
+    padding: var(--space-2) var(--space-3);
+    background: rgba(0, 0, 0, 0.05);
+    border: 1px solid rgba(0, 0, 0, 0.1);
+    border-radius: var(--radius-base);
+    color: var(--color-text-muted);
+    font-size: var(--text-sm);
+    transition: all 0.2s ease;
+    gap: var(--space-2);
+    flex: 1;
+    margin: 0 var(--space-2);
+    cursor: pointer;
+}
+
+.navbar-mobile-search-button:hover {
+    background: rgba(0, 0, 0, 0.1);
+    color: var(--color-text-primary);
+}
+
+:global(.dark) .navbar-mobile-search-button {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+:global(.dark) .navbar-mobile-search-button:hover {
+    background: rgba(255, 255, 255, 0.1);
+}
+
+.navbar-mobile-search-icon {
+    font-size: var(--text-base);
+    color: var(--color-text-muted);
+}
+
+.navbar-mobile-search-text {
+    font-size: var(--text-sm);
+    color: var(--color-text-muted);
+}
+
+/* Dropdown separator styling */
+.dropdown-separator {
+    height: 1px;
+    background: var(--color-border);
+    margin: var(--space-2) 0;
+    opacity: 0.5;
 }
 
 /* Standardize all navbar component buttons to match .button-base */
