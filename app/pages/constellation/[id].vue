@@ -8,7 +8,8 @@
 
         <!-- Main content - only show when data is ready -->
         <div v-else-if="constellation" class="mx-auto p-4 text-white">
-            <div class="constellation-header rounded-lg overflow-hidden mb-6 bg-gray-100 bg-opacity-90 dark:bg-gray-900 dark:bg-opacity-30 border border-gray-300 dark:border-gray-800">
+            <div
+                class="constellation-header rounded-lg overflow-hidden mb-6 bg-gray-100 bg-opacity-90 dark:bg-gray-900 dark:bg-opacity-30 border border-gray-300 dark:border-gray-800">
                 <!-- Constellation summary section with image and basic info -->
                 <div class="p-6">
                     <div class="flex flex-col md:flex-row gap-6">
@@ -31,13 +32,16 @@
                                     <div class="flex items-center gap-2">
                                         <UIcon name="i-lucide-hash" class="flex-shrink-0 w-4 h-4 text-gray-500" />
                                         <span class="text-gray-600 dark:text-gray-400">Constellation ID:</span>
-                                        <span class="font-medium text-gray-900 dark:text-gray-300">{{ (constellation as any).constellation_id }}</span>
+                                        <span class="font-medium text-gray-900 dark:text-gray-300">{{ (constellation as
+                                            any).constellation_id }}</span>
                                     </div>
 
-                                    <div v-if="(constellation as any).region_id !== undefined" class="flex items-center gap-2">
+                                    <div v-if="(constellation as any).region_id !== undefined"
+                                        class="flex items-center gap-2">
                                         <UIcon name="i-lucide-globe" class="flex-shrink-0 w-4 h-4 text-gray-500" />
                                         <span class="text-gray-600 dark:text-gray-400">Region ID:</span>
-                                        <span class="font-medium text-gray-900 dark:text-gray-300">{{ (constellation as any).region_id }}</span>
+                                        <span class="font-medium text-gray-900 dark:text-gray-300">{{ (constellation as
+                                            any).region_id }}</span>
                                     </div>
                                 </div>
                             </div>

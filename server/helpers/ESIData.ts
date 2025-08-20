@@ -175,8 +175,11 @@ async function getCharacter(
             { upsert: true }
         );
     } catch (error) {
-        const errorMessage = error instanceof Error ? error.message : String(error);
-        throw new Error(`Failed to save character ${character_id}: ${errorMessage}`);
+        const errorMessage =
+            error instanceof Error ? error.message : String(error);
+        throw new Error(
+            `Failed to save character ${character_id}: ${errorMessage}`
+        );
     }
 
     // Return character
@@ -335,11 +338,11 @@ async function getCorporationHistory(
     const corporation = await Corporations.findOne({
         corporation_id: corporation_id,
     });
-    
+
     if (!corporation) {
         return [];
     }
-    
+
     const history = await esiFetcher(
         `${
             process.env.ESI_URL || "https://esi.evetech.net/"
@@ -476,69 +479,75 @@ async function getWarKillmails(
 
 async function getSovereigntyMap(): Promise<any[]> {
     const cacheKey = "esi:sovereignty:map";
-    
+
     try {
         // Try to get from cache first using Nuxt storage
-        const cached = await useStorage('redis').getItem(cacheKey);
+        const cached = await useStorage("redis").getItem(cacheKey);
         if (cached && Array.isArray(cached)) {
             return cached as any[];
         }
 
         const data = await esiFetcher(
-            `${process.env.ESI_URL || "https://esi.evetech.net/"}latest/sovereignty/map/?datasource=tranquility`
+            `${
+                process.env.ESI_URL || "https://esi.evetech.net/"
+            }latest/sovereignty/map/?datasource=tranquility`
         );
 
         // Cache for 1 hour (3600 seconds)
-        await useStorage('redis').setItem(cacheKey, data, { ttl: 3600 });
+        await useStorage("redis").setItem(cacheKey, data, { ttl: 3600 });
         return data;
     } catch (error) {
-        console.warn('Failed to fetch sovereignty map:', error);
+        console.warn("Failed to fetch sovereignty map:", error);
         return [];
     }
 }
 
 async function getSystemJumps(): Promise<any[]> {
     const cacheKey = "esi:universe:system_jumps";
-    
+
     try {
         // Try to get from cache first using Nuxt storage
-        const cached = await useStorage('redis').getItem(cacheKey);
+        const cached = await useStorage("redis").getItem(cacheKey);
         if (cached && Array.isArray(cached)) {
             return cached as any[];
         }
 
         const data = await esiFetcher(
-            `${process.env.ESI_URL || "https://esi.evetech.net/"}latest/universe/system_jumps/?datasource=tranquility`
+            `${
+                process.env.ESI_URL || "https://esi.evetech.net/"
+            }latest/universe/system_jumps/?datasource=tranquility`
         );
 
         // Cache for 1 hour (3600 seconds)
-        await useStorage('redis').setItem(cacheKey, data, { ttl: 3600 });
+        await useStorage("redis").setItem(cacheKey, data, { ttl: 3600 });
         return data;
     } catch (error) {
-        console.warn('Failed to fetch system jumps:', error);
+        console.warn("Failed to fetch system jumps:", error);
         return [];
     }
 }
 
 async function getSystemKills(): Promise<any[]> {
     const cacheKey = "esi:universe:system_kills";
-    
+
     try {
         // Try to get from cache first using Nuxt storage
-        const cached = await useStorage('redis').getItem(cacheKey);
+        const cached = await useStorage("redis").getItem(cacheKey);
         if (cached && Array.isArray(cached)) {
             return cached as any[];
         }
 
         const data = await esiFetcher(
-            `${process.env.ESI_URL || "https://esi.evetech.net/"}latest/universe/system_kills/?datasource=tranquility`
+            `${
+                process.env.ESI_URL || "https://esi.evetech.net/"
+            }latest/universe/system_kills/?datasource=tranquility`
         );
 
         // Cache for 1 hour (3600 seconds)
-        await useStorage('redis').setItem(cacheKey, data, { ttl: 3600 });
+        await useStorage("redis").setItem(cacheKey, data, { ttl: 3600 });
         return data;
     } catch (error) {
-        console.warn('Failed to fetch system kills:', error);
+        console.warn("Failed to fetch system kills:", error);
         return [];
     }
 }
@@ -552,9 +561,9 @@ export {
     getCorporationHistory,
     getFaction,
     getItem,
-    getWar,
-    getWarKillmails,
     getSovereigntyMap,
     getSystemJumps,
     getSystemKills,
+    getWar,
+    getWarKillmails,
 };

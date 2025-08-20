@@ -1,9 +1,15 @@
-import { SolarSystems } from '../../../models/SolarSystems';
-import { Constellations } from '../../../models/Constellations';
-import { Regions } from '../../../models/Regions';
-import { Factions } from '../../../models/Factions';
-import { Celestials } from '../../../models/Celestials';
-import { getSovereigntyMap, getSystemJumps, getSystemKills, getAlliance, getCorporation } from '../../../helpers/ESIData';
+import {
+    getAlliance,
+    getCorporation,
+    getSovereigntyMap,
+    getSystemJumps,
+    getSystemKills,
+} from "../../../helpers/ESIData";
+import { Celestials } from "../../../models/Celestials";
+import { Constellations } from "../../../models/Constellations";
+import { Factions } from "../../../models/Factions";
+import { Regions } from "../../../models/Regions";
+import { SolarSystems } from "../../../models/SolarSystems";
 
 export default defineCachedEventHandler(
     async (event) => {
@@ -58,7 +64,8 @@ export default defineCachedEventHandler(
                 { constellation_name: 1, region_id: 1, faction_id: 1, _id: 0 }
             ).lean();
             if (constellation) {
-                enrichedSystem.constellation_name = constellation.constellation_name;
+                enrichedSystem.constellation_name =
+                    constellation.constellation_name;
             }
         }
 
@@ -88,7 +95,7 @@ export default defineCachedEventHandler(
         // Get celestials in the system
         const celestials = await Celestials.find(
             { solar_system_id: system.system_id },
-            { 
+            {
                 item_id: 1,
                 item_name: 1,
                 type_id: 1,
@@ -96,16 +103,17 @@ export default defineCachedEventHandler(
                 x: 1,
                 y: 1,
                 z: 1,
-                _id: 0
+                _id: 0,
             }
         ).lean();
 
         enrichedSystem.celestials = celestials;
 
         // Find regional jump connections by looking for stargates
-        const stargates = celestials.filter(celestial => 
-            celestial.type_name === 'Stargate' || 
-            celestial.item_name?.includes('Stargate')
+        const stargates = celestials.filter(
+            (celestial) =>
+                celestial.type_name === "Stargate" ||
+                celestial.item_name?.includes("Stargate")
         );
 
         // For each stargate, try to find where it leads to
@@ -118,21 +126,29 @@ export default defineCachedEventHandler(
                 const destinationSystemName = match[1];
                 const destinationSystem = await SolarSystems.findOne(
                     { system_name: destinationSystemName },
-                    { system_id: 1, system_name: 1, region_id: 1, constellation_id: 1, _id: 0 }
+                    {
+                        system_id: 1,
+                        system_name: 1,
+                        region_id: 1,
+                        constellation_id: 1,
+                        _id: 0,
+                    }
                 );
-                
+
                 if (destinationSystem) {
                     // Check if this is a regional jump (different region)
-                    const isRegionalJump = destinationSystem.region_id !== system.region_id;
-                    
+                    const isRegionalJump =
+                        destinationSystem.region_id !== system.region_id;
+
                     jumpConnections.push({
                         stargate_id: stargate.item_id,
                         stargate_name: stargate.item_name,
                         destination_system_id: destinationSystem.system_id,
                         destination_system_name: destinationSystem.system_name,
                         destination_region_id: destinationSystem.region_id,
-                        destination_constellation_id: destinationSystem.constellation_id,
-                        is_regional_jump: isRegionalJump
+                        destination_constellation_id:
+                            destinationSystem.constellation_id,
+                        is_regional_jump: isRegionalJump,
                     });
                 }
             }
@@ -142,9 +158,9 @@ export default defineCachedEventHandler(
 
         // Add neighboring systems (same constellation)
         const neighboringSystems = await SolarSystems.find(
-            { 
+            {
                 constellation_id: system.constellation_id,
-                system_id: { $ne: system.system_id } // Exclude current system
+                system_id: { $ne: system.system_id }, // Exclude current system
             },
             { system_id: 1, system_name: 1, security: 1, _id: 0 }
         ).lean();
@@ -155,39 +171,49 @@ export default defineCachedEventHandler(
         try {
             // Fetch sovereignty data
             const sovereigntyData = await getSovereigntyMap();
-            const systemSovereignty = sovereigntyData.find((entry: any) => entry.system_id === system.system_id);
+            const systemSovereignty = sovereigntyData.find(
+                (entry: any) => entry.system_id === system.system_id
+            );
             enrichedSystem.sovereignty = systemSovereignty || null;
 
             // Resolve alliance and corporation names if we have IDs
             if (systemSovereignty?.alliance_id) {
                 try {
-                    const allianceData = await getAlliance(systemSovereignty.alliance_id);
-                    enrichedSystem.sovereignty.alliance_name = allianceData.name;
+                    const allianceData = await getAlliance(
+                        systemSovereignty.alliance_id
+                    );
+                    enrichedSystem.sovereignty.alliance_name =
+                        allianceData.name;
                 } catch (error) {
-                    console.warn('Failed to fetch alliance name:', error);
+                    console.warn("Failed to fetch alliance name:", error);
                 }
             }
 
             if (systemSovereignty?.corporation_id) {
                 try {
-                    const corpData = await getCorporation(systemSovereignty.corporation_id);
+                    const corpData = await getCorporation(
+                        systemSovereignty.corporation_id
+                    );
                     enrichedSystem.sovereignty.corporation_name = corpData.name;
                 } catch (error) {
-                    console.warn('Failed to fetch corporation name:', error);
+                    console.warn("Failed to fetch corporation name:", error);
                 }
             }
 
             // Fetch system activity data
             const jumpData = await getSystemJumps();
-            const systemJumps = jumpData.find((entry: any) => entry.system_id === system.system_id);
+            const systemJumps = jumpData.find(
+                (entry: any) => entry.system_id === system.system_id
+            );
             enrichedSystem.jumps = systemJumps || null;
 
             const killData = await getSystemKills();
-            const systemKills = killData.find((entry: any) => entry.system_id === system.system_id);
+            const systemKills = killData.find(
+                (entry: any) => entry.system_id === system.system_id
+            );
             enrichedSystem.kills = systemKills || null;
-
         } catch (error) {
-            console.warn('Failed to fetch ESI data:', error);
+            console.warn("Failed to fetch ESI data:", error);
             // Set fallback values
             enrichedSystem.sovereignty = null;
             enrichedSystem.jumps = null;
