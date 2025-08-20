@@ -95,11 +95,7 @@ export const USER_SETTING_VALIDATION = {
     },
     defaultSystemPage: {
         type: "string" as const,
-        allowedValues: [
-            "overview",
-            "kills",
-            "battles",
-        ],
+        allowedValues: ["overview", "kills", "battles"],
         required: false,
     },
 } as const;

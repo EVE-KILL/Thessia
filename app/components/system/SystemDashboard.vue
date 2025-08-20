@@ -245,7 +245,7 @@
                     </div>
                     <div class="stat-body">
                         <!-- Images at top -->
-                        <div v-if="sovereignty?.alliance_id || sovereignty?.corporation_id"
+                        <div v-if="sovereignty?.alliance_id || sovereignty?.corporation_id || sovereignty?.faction_id"
                             class="flex justify-center gap-3 mb-4">
                             <!-- Alliance image -->
                             <div v-if="sovereignty.alliance_id" class="flex flex-col items-center">
@@ -255,6 +255,11 @@
                             <!-- Corporation image -->
                             <div v-if="sovereignty.corporation_id" class="flex flex-col items-center">
                                 <Image type="corporation" :id="sovereignty.corporation_id" class="w-16 h-16 rounded"
+                                    size="64" />
+                            </div>
+                            <!-- Faction image -->
+                            <div v-if="sovereignty.faction_id && !sovereignty.alliance_id && !sovereignty.corporation_id" class="flex flex-col items-center">
+                                <Image type="faction" :id="sovereignty.faction_id" class="w-16 h-16 rounded"
                                     size="64" />
                             </div>
                         </div>
@@ -275,14 +280,19 @@
                             </div>
                         </div>
 
-                        <!-- NPC Faction or Unclaimed -->
-                        <div v-if="!sovereignty?.alliance_id && !sovereignty?.corporation_id"
+                        <!-- Faction name (for NPC sovereignty) -->
+                        <div v-if="sovereignty?.faction_id && !sovereignty?.alliance_id && !sovereignty?.corporation_id" class="stat-row">
+                            <div class="stat-label text-gray-600 dark:text-gray-400">Faction:</div>
+                            <div class="stat-value text-orange-600 dark:text-orange-400 truncate">
+                                {{ sovereignty.faction_name || `Faction ID: ${sovereignty.faction_id}` }}
+                            </div>
+                        </div>
+
+                        <!-- Unclaimed systems -->
+                        <div v-if="!sovereignty?.alliance_id && !sovereignty?.corporation_id && !sovereignty?.faction_id"
                             class="flex flex-col items-center text-center">
                             <UIcon name="i-lucide-shield-off" class="w-16 h-16 mb-3 text-gray-400" />
-                            <div v-if="sovereignty?.faction_id" class="stat-value text-orange-600 dark:text-orange-400">
-                                NPC Faction
-                            </div>
-                            <div v-else class="stat-value text-gray-500 dark:text-gray-400">
+                            <div class="stat-value text-gray-500 dark:text-gray-400">
                                 Unclaimed
                             </div>
                         </div>
@@ -327,6 +337,7 @@ interface SovereigntyData {
     corporation_id?: number;
     corporation_name?: string;
     faction_id?: number;
+    faction_name?: string;
 }
 
 interface ActivityData {

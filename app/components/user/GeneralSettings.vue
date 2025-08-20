@@ -247,8 +247,7 @@ onMounted(() => {
                 <div class="space-y-3">
                     <div class="flex items-center space-x-2">
                         <Icon name="lucide:map-pin" class="h-4 w-4 text-red-500" />
-                        <label for="defaultSystemPage"
-                            class="block text-sm font-medium text-gray-900 dark:text-white">
+                        <label for="defaultSystemPage" class="block text-sm font-medium text-gray-900 dark:text-white">
                             {{ t("settings.defaultPages.system", "System Pages") }}
                         </label>
                         <Icon v-if="isUpdatingSettings" name="lucide:loader-2"

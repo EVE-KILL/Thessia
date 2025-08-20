@@ -181,7 +181,19 @@ export default defineCachedEventHandler(
                     corporation_id: sovereigntyDoc.corporation_id,
                     corporation_name: sovereigntyDoc.corporation_name,
                     faction_id: sovereigntyDoc.faction_id,
+                    faction_name: undefined as string | undefined,
                 };
+
+                // Get faction name if faction_id exists
+                if (sovereigntyDoc.faction_id) {
+                    const sovereigntyFaction = await Factions.findOne(
+                        { faction_id: sovereigntyDoc.faction_id },
+                        { name: 1, _id: 0 }
+                    ).lean();
+                    if (sovereigntyFaction) {
+                        systemSovereignty.faction_name = sovereigntyFaction.name;
+                    }
+                }
             }
 
             // Get activity data from system document (this already exists in SolarSystems collection)
