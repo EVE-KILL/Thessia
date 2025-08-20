@@ -1,4 +1,5 @@
 // Import build system
+import { generateAllLoaders, handleNitroBuildHooks } from "./build";
 
 // https://nuxt.com/docs/api/configuration/nuxt-config
 export default defineNuxtConfig({
@@ -480,22 +481,22 @@ export default defineNuxtConfig({
         buildAssetsDir: "/_nuxt/",
     },
 
-    // hooks: {
-    //     // Generate loaders before build
-    //     "build:before": async () => {
-    //         generateAllLoaders();
-    //     },
+    hooks: {
+        // Generate loaders before build
+        "build:before": async () => {
+            generateAllLoaders();
+        },
 
-    //     // Also generate loaders on dev server start
-    //     "app:resolve": async () => {
-    //         generateAllLoaders();
-    //     },
+        // Also generate loaders on dev server start
+        "app:resolve": async () => {
+            generateAllLoaders();
+        },
 
-    //     // Process Cloudflare beacon and copy docs during build
-    //     "nitro:build:public-assets": async (nitro: any) => {
-    //         await handleNitroBuildHooks(nitro);
-    //     },
-    // },
+        // Process Cloudflare beacon and copy docs during build
+        "nitro:build:public-assets": async (nitro: any) => {
+            await handleNitroBuildHooks(nitro);
+        },
+    },
 
     // Partytown configuration
     partytown: {
