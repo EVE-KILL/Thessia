@@ -80,7 +80,7 @@
         "@nuxt/icon": "2.0.0",
         "@nuxt/ui": "^3.3.2",
         "@nuxtjs/critters": "^0.9.0",
-        "@nuxtjs/i18n": "^10.0.5",
+        "@nuxtjs/i18n": "^10.0.6",
         "@nuxtjs/sitemap": "^7.4.3",
         "@nuxtjs/tailwindcss": "^6.14.0",
         "@types/bun": "^1.2.20",
