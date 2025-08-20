@@ -7,9 +7,19 @@ interface IMostValuableItem {
     victim: {
         ship_id: number;
         ship_name: string | Record<string, string>;
-        [key: string]: any;
+        character_id?: number;
+        character_name?: string;
+        corporation_id?: number;
+        corporation_name?: string;
+        alliance_id?: number;
+        alliance_name?: string;
     };
-    [key: string]: any;
+    final_blow?: {
+        character_id?: number;
+        character_name?: string;
+        ship_id: number;
+        ship_name: string | Record<string, string>;
+    };
 }
 
 const props = defineProps({
@@ -55,7 +65,7 @@ const {
     error: fetchError,
     refresh
 } = await useFetch<IMostValuableItem[]>("/api/stats", {
-    key: () => `most-valuable-${activeTabId.value}-${props.days}-${props.limit}`,
+    key: () => `most-valuable-v3-${activeTabId.value}-${props.days}-${props.limit}`, // Updated cache key again
     query: queryParams,
     server: true,
     lazy: true,  // Progressive loading for tab switching
@@ -154,6 +164,21 @@ const generateKillLink = (item: IMostValuableItem): string | null => {
                     <div class="text-center text-xs mt-1 text-gray-500 dark:text-background-300">
                         {{ formatIsk(item.total_value) }} ISK
                     </div>
+                    <!-- Show victim name if available -->
+                    <div v-if="item.victim.character_name"
+                        class="text-center text-xs mt-1 text-black dark:text-white truncate max-w-full">
+                        {{ item.victim.character_name }}
+                    </div>
+                    <!-- Show corporation name if available -->
+                    <div v-if="item.victim.corporation_name"
+                        class="text-center text-xs mt-1 text-gray-600 dark:text-gray-400 truncate max-w-full">
+                        {{ item.victim.corporation_name }}
+                    </div>
+                    <!-- Show alliance name if available -->
+                    <div v-if="item.victim.alliance_name"
+                        class="text-center text-xs mt-1 text-gray-500 dark:text-gray-500 truncate max-w-full">
+                        {{ item.victim.alliance_name }}
+                    </div>
                 </div>
             </template>
 
@@ -167,6 +192,9 @@ const generateKillLink = (item: IMostValuableItem): string | null => {
                             </div>
                             <div class="h-4 w-20 mt-1 bg-gray-200 dark:bg-gray-700 rounded animate-pulse"></div>
                             <div class="h-3 w-16 mt-1 bg-gray-200 dark:bg-gray-700 rounded animate-pulse"></div>
+                            <div class="h-2 w-14 mt-1 bg-gray-200 dark:bg-gray-700 rounded animate-pulse"></div>
+                            <div class="h-2 w-16 mt-1 bg-gray-200 dark:bg-gray-700 rounded animate-pulse"></div>
+                            <div class="h-2 w-12 mt-1 bg-gray-200 dark:bg-gray-700 rounded animate-pulse"></div>
                         </div>
                     </div>
                 </div>

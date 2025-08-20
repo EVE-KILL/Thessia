@@ -713,7 +713,7 @@ async function mostValuableKills(days: number | null = 7, limit = 10) {
         calculatedTime = new Date(Date.now() - days * 86400 * 1000);
     }
 
-    // Use explicit projection to only fetch the fields we need
+    // Use explicit projection to include all victim information we need for consistency
     // Use index hint to ensure the best index is used
     return await Killmails.find(
         { kill_time: { $gte: calculatedTime } },
@@ -723,6 +723,12 @@ async function mostValuableKills(days: number | null = 7, limit = 10) {
             total_value: 1,
             "victim.ship_id": 1,
             "victim.ship_name": 1,
+            "victim.character_id": 1,
+            "victim.character_name": 1,
+            "victim.corporation_id": 1,
+            "victim.corporation_name": 1,
+            "victim.alliance_id": 1,
+            "victim.alliance_name": 1,
         }
     )
         .sort({ total_value: -1 })
@@ -742,7 +748,7 @@ async function mostValuableStructures(days: number | null = 7, limit = 10) {
     }
     const structureGroupIDs = [1657, 1406, 1404, 1408, 2017, 2016];
 
-    // Use explicit projection to only fetch the fields we need
+    // Use explicit projection to include all victim information we need for consistency
     return await Killmails.find(
         {
             kill_time: { $gte: calculatedTime },
@@ -754,6 +760,12 @@ async function mostValuableStructures(days: number | null = 7, limit = 10) {
             total_value: 1,
             "victim.ship_id": 1,
             "victim.ship_name": 1,
+            "victim.character_id": 1,
+            "victim.character_name": 1,
+            "victim.corporation_id": 1,
+            "victim.corporation_name": 1,
+            "victim.alliance_id": 1,
+            "victim.alliance_name": 1,
         }
     )
         .sort({ total_value: -1 })
@@ -778,7 +790,7 @@ async function mostValuableShips(days: number | null = 7, limit = 10) {
         832, 900, 834, 380, 963, 1305,
     ];
 
-    // Use explicit projection to only fetch the fields we need
+    // Use explicit projection to include all victim information we need for consistency
     // Use index hint to ensure the best index is used
     return await Killmails.find(
         {
@@ -791,6 +803,12 @@ async function mostValuableShips(days: number | null = 7, limit = 10) {
             total_value: 1,
             "victim.ship_id": 1,
             "victim.ship_name": 1,
+            "victim.character_id": 1,
+            "victim.character_name": 1,
+            "victim.corporation_id": 1,
+            "victim.corporation_name": 1,
+            "victim.alliance_id": 1,
+            "victim.alliance_name": 1,
         }
     )
         .sort({ total_value: -1 })

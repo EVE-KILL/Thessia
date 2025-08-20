@@ -96,19 +96,30 @@ const isPriorityImage = (index: number): boolean => {
             <!-- Custom horizontal item template -->
             <template #horizontal-item="{ item, index }">
                 <div class="flex flex-col items-center p-2">
-                    <Image type="type-render" :id="item.victim.ship_id" :alt="`Ship: ${getShipName(item)}`"
+                    <Image type="type-render" :id="(item as IMostValuableKill).victim.ship_id"
+                        :alt="`Ship: ${getShipName(item as IMostValuableKill)}`"
                         class="rounded w-20 h-20 md:w-24 md:h-24 object-contain mb-2" size="128"
                         :loading="index < 7 ? 'eager' : 'lazy'" :priority="isPriorityImage(index)" />
                     <div class="text-center text-xs mt-1 max-w-full truncate text-gray-900 dark:text-white">
-                        {{ getShipName(item) }}
+                        {{ getShipName(item as IMostValuableKill) }}
                     </div>
                     <div class="text-center text-xs mt-1 text-gray-500 dark:text-background-300">
-                        {{ formatIsk(item.total_value) }} ISK
+                        {{ formatIsk((item as IMostValuableKill).total_value) }} ISK
                     </div>
                     <!-- Show victim name if available -->
-                    <div v-if="item.victim.character_name"
-                        class="text-center text-xs mt-1 text-gray-400 dark:text-background-400 truncate max-w-full">
-                        {{ item.victim.character_name }}
+                    <div v-if="(item as IMostValuableKill).victim.character_name"
+                        class="text-center text-xs mt-1 text-black dark:text-white truncate max-w-full">
+                        {{ (item as IMostValuableKill).victim.character_name }}
+                    </div>
+                    <!-- Show corporation name if available -->
+                    <div v-if="(item as IMostValuableKill).victim.corporation_name"
+                        class="text-center text-xs mt-1 text-gray-600 dark:text-gray-400 truncate max-w-full">
+                        {{ (item as IMostValuableKill).victim.corporation_name }}
+                    </div>
+                    <!-- Show alliance name if available -->
+                    <div v-if="(item as IMostValuableKill).victim.alliance_name"
+                        class="text-center text-xs mt-1 text-gray-500 dark:text-gray-500 truncate max-w-full">
+                        {{ (item as IMostValuableKill).victim.alliance_name }}
                     </div>
                 </div>
             </template>
@@ -124,6 +135,8 @@ const isPriorityImage = (index: number): boolean => {
                             <div class="h-3 w-16 mt-1 bg-gray-200 dark:bg-gray-700 rounded animate-pulse"></div>
                             <div class="h-3 w-12 mt-1 bg-gray-200 dark:bg-gray-700 rounded animate-pulse"></div>
                             <div class="h-2 w-14 mt-1 bg-gray-200 dark:bg-gray-700 rounded animate-pulse"></div>
+                            <div class="h-2 w-16 mt-1 bg-gray-200 dark:bg-gray-700 rounded animate-pulse"></div>
+                            <div class="h-2 w-12 mt-1 bg-gray-200 dark:bg-gray-700 rounded animate-pulse"></div>
                         </div>
                     </div>
                 </div>
