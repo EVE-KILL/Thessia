@@ -68,6 +68,58 @@
                             </button>
                         </div>
                     </div>
+
+                    <!-- EVE Tools -->
+                    <div class="spotlight-eve-tools">
+                        <h4 class="spotlight-section-title">{{ t('search.eveTools') || 'EVE Tools' }}</h4>
+                        <div class="spotlight-eve-tools-grid">
+                            <a href="https://evemaps.dotlan.net/" target="_blank" rel="noopener noreferrer" 
+                                class="spotlight-eve-tool" title="DOTLAN - EVE Maps & Intel" @click="closeSearch">
+                                <img src="https://evemaps.dotlan.net/favicon.ico" alt="DOTLAN" class="spotlight-eve-tool-icon">
+                                <span>DOTLAN</span>
+                            </a>
+                            <a href="https://eveeye.com/" target="_blank" rel="noopener noreferrer" 
+                                class="spotlight-eve-tool" title="EVEEye - Interactive Maps" @click="closeSearch">
+                                <img src="https://eveeye.com/img/eveeye.svg" alt="EVEEye" class="spotlight-eve-tool-icon">
+                                <span>EVEEye</span>
+                            </a>
+                            <a href="https://evemissioneer.com/" target="_blank" rel="noopener noreferrer" 
+                                class="spotlight-eve-tool" title="EVE Missioneer - Mission & Market Intel" @click="closeSearch">
+                                <img src="https://evemissioneer.com/favicon.png" alt="EVE Missioneer" class="spotlight-eve-tool-icon">
+                                <span>EVE Missioneer</span>
+                            </a>
+                            <a href="https://eveship.fit/" target="_blank" rel="noopener noreferrer" 
+                                class="spotlight-eve-tool" title="EveShip.fit - Ship Fitting Tool" @click="closeSearch">
+                                <img src="https://eveship.fit/favicon.ico" alt="EveShip.fit" class="spotlight-eve-tool-icon">
+                                <span>EveShip.fit</span>
+                            </a>
+                            <a href="https://everef.net/" target="_blank" rel="noopener noreferrer" 
+                                class="spotlight-eve-tool" title="EVERef - Game Reference" @click="closeSearch">
+                                <img src="https://everef.net/favicon.ico" alt="EVERef" class="spotlight-eve-tool-icon">
+                                <span>EVERef</span>
+                            </a>
+                            <a href="https://jita.space/" target="_blank" rel="noopener noreferrer" 
+                                class="spotlight-eve-tool" title="Jita.Space - Market Analysis" @click="closeSearch">
+                                <img src="https://www.jita.space/favicon.ico" alt="Jita.Space" class="spotlight-eve-tool-icon">
+                                <span>Jita.Space</span>
+                            </a>
+                            <a href="https://evewho.com/" target="_blank" rel="noopener noreferrer" 
+                                class="spotlight-eve-tool" title="EVEWho - Character & Corporation Intel" @click="closeSearch">
+                                <img src="https://evewho.com/favicon.ico" alt="EVEWho" class="spotlight-eve-tool-icon">
+                                <span>EVEWho</span>
+                            </a>
+                            <a href="https://zkillboard.com/" target="_blank" rel="noopener noreferrer" 
+                                class="spotlight-eve-tool" title="zKillboard - Killmail Database" @click="closeSearch">
+                                <img src="https://zkillboard.com/img/wreck.png" alt="zKillboard" class="spotlight-eve-tool-icon">
+                                <span>zKillboard</span>
+                            </a>
+                            <a href="https://riftforeve.online/" target="_blank" rel="noopener noreferrer" 
+                                class="spotlight-eve-tool" title="RIFT Intel Fusion - Intelligence Platform" @click="closeSearch">
+                                <img src="/images/rift-intel-fusion-tool-256.png" alt="RIFT Intel Fusion" class="spotlight-eve-tool-icon">
+                                <span>RIFT Intel</span>
+                            </a>
+                        </div>
+                    </div>
                 </div>
 
                 <!-- No Results -->
@@ -739,6 +791,84 @@ watch(isOpen, (open) => {
 
 .spotlight-recent-item:hover .spotlight-recent-remove {
     opacity: 1;
+}
+
+/* EVE Tools Section */
+.spotlight-eve-tools {
+    margin-top: var(--space-6);
+}
+
+.spotlight-eve-tools-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: var(--space-2);
+    margin-top: var(--space-3);
+}
+
+.spotlight-eve-tool {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: var(--space-3) var(--space-2);
+    background: var(--color-surface-tertiary);
+    border: 1px solid rgba(128, 128, 128, 0.2);
+    border-radius: var(--radius-base);
+    text-decoration: none;
+    color: var(--color-text-primary);
+    transition: all 0.3s ease;
+    font-size: var(--text-xs);
+    font-weight: 500;
+    gap: var(--space-2);
+    opacity: 1;
+    text-align: center;
+}
+
+.spotlight-eve-tool:hover {
+    background: var(--color-surface-secondary);
+    border-color: var(--color-primary-400);
+    color: var(--color-primary-600);
+    transform: translateY(-1px);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+:global(.dark) .spotlight-eve-tool {
+    background: rgba(255, 255, 255, 0.05);
+    border-color: rgba(255, 255, 255, 0.1);
+    color: var(--color-text-primary);
+}
+
+:global(.dark) .spotlight-eve-tool:hover {
+    background: rgba(255, 255, 255, 0.1);
+    border-color: var(--color-primary-500);
+    color: var(--color-primary-400);
+}
+
+.spotlight-eve-tool-icon {
+    width: 20px;
+    height: 20px;
+    flex-shrink: 0;
+    opacity: 1;
+    transition: opacity 0.3s ease;
+}
+
+.spotlight-eve-tool:hover .spotlight-eve-tool-icon {
+    opacity: 1;
+}
+
+@media (max-width: 640px) {
+    .spotlight-eve-tools-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+    
+    .spotlight-eve-tool {
+        padding: var(--space-2);
+        font-size: 10px;
+    }
+    
+    .spotlight-eve-tool-icon {
+        width: 16px;
+        height: 16px;
+    }
 }
 
 .spotlight-results {
