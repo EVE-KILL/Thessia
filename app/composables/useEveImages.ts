@@ -136,7 +136,9 @@ export function useEveImages() {
         systemId: number | null,
         size = 64
     ): string | null => {
-        return "/map.png";
+        if (!systemId) return null;
+        const validSize = normalizeSize(size);
+        return `https://images.eve-kill.com/systems/${systemId}?size=${validSize}`;
     };
 
     /**
@@ -149,7 +151,9 @@ export function useEveImages() {
         constellationId: number | null,
         size = 64
     ): string | null => {
-        return "/map.png";
+        if (!constellationId) return null;
+        const validSize = normalizeSize(size);
+        return `https://images.eve-kill.com/constellations/${constellationId}?size=${validSize}`;
     };
 
     /**
@@ -162,7 +166,9 @@ export function useEveImages() {
         regionId: number | null,
         size = 64
     ): string | null => {
-        return "/map.png";
+        if (!regionId) return null;
+        const validSize = normalizeSize(size);
+        return `https://images.eve-kill.com/regions/${regionId}?size=${validSize}`;
     };
 
     /**

@@ -8,25 +8,334 @@
 
         <!-- Main content - only show when data is ready -->
         <div v-else-if="system" class="mx-auto p-4 text-white">
-            <UCard class="mb-4 bg-black bg-opacity-30 dark:bg-gray-900 dark:bg-opacity-30">
-                <div class="flex flex-col gap-2">
-                    <h1 class="text-2xl font-bold">{{ (system as any)?.system_name }}</h1>
-                    <div class="text-gray-400 text-sm">
-                        System ID: {{ (system as any)?.system_id }}
-                        <span v-if="(system as any)?.security !== undefined">
-                            &mdash; Security: <span
-                                :style="{ color: getSecurityStatusColor((system as any)?.security) }">{{
-                                    (system as any)?.security?.toFixed(2) }}</span>
-                        </span>
+            <div class="system-header rounded-lg overflow-hidden mb-6 bg-gray-100 bg-opacity-90 dark:bg-gray-900 dark:bg-opacity-30 border border-gray-300 dark:border-gray-800">
+                <!-- System summary section with image and basic info -->
+                <div class="p-6">
+                    <div class="flex flex-col md:flex-row gap-6">
+                        <!-- Left: System image -->
+                        <div class="system-image-container">
+                            <Image type="system" :id="(system as any)?.system_id"
+                                :alt="`System: ${(system as any)?.system_name}`"
+                                class="system-image rounded-lg shadow-lg w-32 h-32" size="128" />
+                        </div>
+
+                        <!-- Right: System details -->
+                        <div class="flex-grow">
+                            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                                <!-- Left column: Basic system info -->
+                                <div class="system-info">
+                                    <h1 class="text-2xl md:text-3xl font-bold mb-3 text-gray-900 dark:text-white">
+                                        {{ (system as any)?.system_name }}
+                                    </h1>
+
+                                    <!-- System basic details -->
+                                    <div class="space-y-2 text-sm">
+                                        <div v-if="(system as any)?.region_name" class="flex items-center gap-2">
+                                            <Image type="region" :id="(system as any)?.region_id" class="w-4 h-4" size="32" />
+                                            <span class="text-gray-600 dark:text-gray-400">Region:</span>
+                                            <NuxtLink :to="`/region/${(system as any)?.region_id}`"
+                                                class="font-medium text-gray-900 dark:text-white hover:text-blue-600 dark:hover:text-blue-400 transition-colors">
+                                                {{ getRegionName((system as any)?.region_name) }}
+                                            </NuxtLink>
+                                        </div>
+
+                                        <div v-if="(system as any)?.constellation_name" class="flex items-center gap-2">
+                                            <Image type="constellation" :id="(system as any)?.constellation_id" class="w-4 h-4" size="32" />
+                                            <span class="text-gray-600 dark:text-gray-400">Constellation:</span>
+                                            <NuxtLink :to="`/constellation/${(system as any)?.constellation_id}`"
+                                                class="font-medium text-gray-900 dark:text-white hover:text-blue-600 dark:hover:text-blue-400 transition-colors">
+                                                {{ (system as any)?.constellation_name }}
+                                            </NuxtLink>
+                                        </div>
+
+                                        <div v-if="(system as any)?.security !== undefined" class="flex items-center gap-2">
+                                            <UIcon name="i-lucide-shield" class="flex-shrink-0 w-4 h-4 text-gray-500" />
+                                            <span class="text-gray-600 dark:text-gray-400">Security Level:</span>
+                                            <span class="font-medium"
+                                                :style="{ color: getSecurityStatusColor((system as any)?.security) }">
+                                                {{ (system as any)?.security?.toFixed(2) }}
+                                            </span>
+                                        </div>
+
+                                        <!-- Placeholder for Alliance/Corp ownership -->
+                                        <div class="flex items-center gap-2">
+                                            <UIcon name="i-lucide-flag" class="flex-shrink-0 w-4 h-4 text-gray-500" />
+                                            <span class="text-gray-600 dark:text-gray-400">Sovereignty:</span>
+                                            <span class="font-medium text-gray-500 dark:text-gray-400 italic">
+                                                <UIcon name="i-lucide-loader-2" class="w-3 h-3 animate-spin inline mr-1" />
+                                                Loading...
+                                            </span>
+                                        </div>
+
+                                        <!-- System type badges -->
+                                        <div class="flex flex-wrap gap-1 mt-3">
+                                            <span v-if="(system as any)?.corridor" 
+                                                class="inline-flex items-center px-2 py-1 text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200 rounded-md">
+                                                <UIcon name="i-lucide-arrow-right" class="w-3 h-3 mr-1" />
+                                                Corridor
+                                            </span>
+                                            <span v-if="(system as any)?.hub" 
+                                                class="inline-flex items-center px-2 py-1 text-xs font-medium bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200 rounded-md">
+                                                <UIcon name="i-lucide-network" class="w-3 h-3 mr-1" />
+                                                Hub
+                                            </span>
+                                            <span v-if="(system as any)?.fringe" 
+                                                class="inline-flex items-center px-2 py-1 text-xs font-medium bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200 rounded-md">
+                                                <UIcon name="i-lucide-compass" class="w-3 h-3 mr-1" />
+                                                Fringe
+                                            </span>
+                                            <span v-if="(system as any)?.international" 
+                                                class="inline-flex items-center px-2 py-1 text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200 rounded-md">
+                                                <UIcon name="i-lucide-globe-2" class="w-3 h-3 mr-1" />
+                                                International
+                                            </span>
+                                            <span v-if="(system as any)?.regional" 
+                                                class="inline-flex items-center px-2 py-1 text-xs font-medium bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200 rounded-md">
+                                                <UIcon name="i-lucide-external-link" class="w-3 h-3 mr-1" />
+                                                Regional
+                                            </span>
+                                            <span v-if="(system as any)?.border" 
+                                                class="inline-flex items-center px-2 py-1 text-xs font-medium bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200 rounded-md">
+                                                <UIcon name="i-lucide-map-pin" class="w-3 h-3 mr-1" />
+                                                Border
+                                            </span>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Middle column: System composition -->
+                                <div class="system-composition">
+                                    <h3 class="text-lg font-semibold mb-3 text-gray-900 dark:text-white">System Composition</h3>
+                                    
+                                    <div class="space-y-2 text-sm">
+                                        <div class="flex items-center justify-between">
+                                            <div class="flex items-center gap-2">
+                                                <UIcon name="i-lucide-globe" class="flex-shrink-0 w-4 h-4 text-blue-500" />
+                                                <span class="text-gray-600 dark:text-gray-400">Planets:</span>
+                                            </div>
+                                            <span class="font-medium text-gray-900 dark:text-gray-300">
+                                                {{ getCelestialCount('Planet') }}
+                                            </span>
+                                        </div>
+
+                                        <div class="flex items-center justify-between">
+                                            <div class="flex items-center gap-2">
+                                                <UIcon name="i-lucide-circle" class="flex-shrink-0 w-4 h-4 text-gray-500" />
+                                                <span class="text-gray-600 dark:text-gray-400">Moons:</span>
+                                            </div>
+                                            <span class="font-medium text-gray-900 dark:text-gray-300">
+                                                {{ getCelestialCount('Moon') }}
+                                            </span>
+                                        </div>
+
+                                        <div class="flex items-center justify-between">
+                                            <div class="flex items-center gap-2">
+                                                <UIcon name="i-lucide-hexagon" class="flex-shrink-0 w-4 h-4 text-yellow-600" />
+                                                <span class="text-gray-600 dark:text-gray-400">Belts/Ice:</span>
+                                            </div>
+                                            <span class="font-medium text-gray-900 dark:text-gray-300">
+                                                {{ getCelestialCount(['Asteroid Belt', 'Ice Belt']) }}
+                                            </span>
+                                        </div>
+
+                                        <div class="flex items-center justify-between">
+                                            <div class="flex items-center gap-2">
+                                                <UIcon name="i-lucide-shield" class="flex-shrink-0 w-4 h-4 text-green-500" />
+                                                <span class="text-gray-600 dark:text-gray-400">Security Class:</span>
+                                            </div>
+                                            <span class="font-medium" 
+                                                :style="{ color: getSecurityStatusColor((system as any)?.security || 0) }">
+                                                {{ getSecurityClass((system as any)?.security || 0) }}
+                                            </span>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Right column: Activity stats -->
+                                <div class="system-activity">
+                                    <h3 class="text-lg font-semibold mb-3 text-gray-900 dark:text-white">Activity Stats</h3>
+                                    
+                                    <div class="space-y-2 text-sm">
+                                        <!-- Placeholder for ESI data -->
+                                        <div class="flex items-center justify-between">
+                                            <div class="flex items-center gap-2">
+                                                <UIcon name="i-lucide-zap" class="flex-shrink-0 w-4 h-4 text-orange-500" />
+                                                <span class="text-gray-600 dark:text-gray-400">Jumps 1h:</span>
+                                            </div>
+                                            <span class="font-medium text-gray-500 dark:text-gray-400 italic text-xs">
+                                                <UIcon name="i-lucide-loader-2" class="w-3 h-3 animate-spin inline mr-1" />
+                                                ESI
+                                            </span>
+                                        </div>
+
+                                        <div class="flex items-center justify-between">
+                                            <div class="flex items-center gap-2">
+                                                <UIcon name="i-lucide-activity" class="flex-shrink-0 w-4 h-4 text-orange-400" />
+                                                <span class="text-gray-600 dark:text-gray-400">Jumps 24h:</span>
+                                            </div>
+                                            <span class="font-medium text-gray-500 dark:text-gray-400 italic text-xs">
+                                                <UIcon name="i-lucide-loader-2" class="w-3 h-3 animate-spin inline mr-1" />
+                                                ESI
+                                            </span>
+                                        </div>
+
+                                        <div class="flex items-center justify-between">
+                                            <div class="flex items-center gap-2">
+                                                <UIcon name="i-lucide-crosshair" class="flex-shrink-0 w-4 h-4 text-red-500" />
+                                                <span class="text-gray-600 dark:text-gray-400">Ship Kills:</span>
+                                            </div>
+                                            <span class="font-medium text-gray-500 dark:text-gray-400 italic text-xs">
+                                                <UIcon name="i-lucide-loader-2" class="w-3 h-3 animate-spin inline mr-1" />
+                                                ESI
+                                            </span>
+                                        </div>
+
+                                        <div class="flex items-center justify-between">
+                                            <div class="flex items-center gap-2">
+                                                <UIcon name="i-lucide-bot" class="flex-shrink-0 w-4 h-4 text-blue-600" />
+                                                <span class="text-gray-600 dark:text-gray-400">NPC Kills:</span>
+                                            </div>
+                                            <span class="font-medium text-gray-500 dark:text-gray-400 italic text-xs">
+                                                <UIcon name="i-lucide-loader-2" class="w-3 h-3 animate-spin inline mr-1" />
+                                                ESI
+                                            </span>
+                                        </div>
+
+                                        <div class="flex items-center justify-between">
+                                            <div class="flex items-center gap-2">
+                                                <UIcon name="i-lucide-skull" class="flex-shrink-0 w-4 h-4 text-purple-600" />
+                                                <span class="text-gray-600 dark:text-gray-400">Pod Kills:</span>
+                                            </div>
+                                            <span class="font-medium text-gray-500 dark:text-gray-400 italic text-xs">
+                                                <UIcon name="i-lucide-loader-2" class="w-3 h-3 animate-spin inline mr-1" />
+                                                ESI
+                                            </span>
+                                        </div>
+
+                                        <div class="flex items-center justify-between">
+                                            <div class="flex items-center gap-2">
+                                                <UIcon name="i-lucide-users" class="flex-shrink-0 w-4 h-4 text-red-700" />
+                                                <span class="text-gray-600 dark:text-gray-400">Pirates:</span>
+                                            </div>
+                                            <span class="font-medium text-gray-500 dark:text-gray-400 italic text-xs">
+                                                <UIcon name="i-lucide-loader-2" class="w-3 h-3 animate-spin inline mr-1" />
+                                                ESI
+                                            </span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Affiliation logos at bottom right -->
+                            <div v-if="(system as any)?.constellation_id || (system as any)?.region_id" 
+                                class="flex gap-3 justify-end mt-6">
+                                <NuxtLink v-if="(system as any)?.constellation_id" :to="`/constellation/${(system as any)?.constellation_id}`"
+                                    class="affiliation-logo-container">
+                                    <Image type="constellation" :id="(system as any)?.constellation_id"
+                                        :alt="`Constellation: ${(system as any)?.constellation_name}`"
+                                        class="rounded-lg w-16 h-16 md:w-20 md:h-20" size="128" />
+                                </NuxtLink>
+
+                                <NuxtLink v-if="(system as any)?.region_id" :to="`/region/${(system as any)?.region_id}`"
+                                    class="affiliation-logo-container">
+                                    <Image type="region" :id="(system as any)?.region_id"
+                                        :alt="`Region: ${getRegionName((system as any)?.region_name)}`"
+                                        class="rounded-lg w-16 h-16 md:w-20 md:h-20" size="128" />
+                                </NuxtLink>
+                            </div>
+                        </div>
                     </div>
                 </div>
-            </UCard>
+            </div>
             <Tabs :items="tabItems" v-model="activeTabId" class="space-y-4">
                 <template #overview>
                     <div class="tab-content">
                         <KillList killlistType="latest" :limit="100"
                             :apiEndpoint="`/api/killlist/system/${(system as any)?.system_id}`"
                             :wsFilter="`system.${(system as any)?.system_id}`" />
+                    </div>
+                </template>
+                <template #info>
+                    <div class="tab-content">
+                        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                            <!-- Jump Connections -->
+                            <div v-if="(system as any)?.jump_connections?.length > 0" class="space-y-4">
+                                <h3 class="text-lg font-semibold text-gray-900 dark:text-white flex items-center gap-2">
+                                    <UIcon name="i-lucide-external-link" class="w-5 h-5" />
+                                    Jump Connections
+                                </h3>
+                                <div class="space-y-2">
+                                    <div v-for="connection in (system as any)?.jump_connections" :key="connection.stargate_id"
+                                        class="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
+                                        <div class="flex items-center gap-2">
+                                            <Image type="system" :id="connection.destination_system_id" class="w-6 h-6" size="64" />
+                                            <div>
+                                                <NuxtLink :to="`/system/${connection.destination_system_id}`"
+                                                    class="font-medium text-gray-900 dark:text-white hover:text-blue-600 dark:hover:text-blue-400">
+                                                    {{ connection.destination_system_name }}
+                                                </NuxtLink>
+                                                <div class="text-xs text-gray-500">via {{ connection.stargate_name }}</div>
+                                            </div>
+                                        </div>
+                                        <div class="flex items-center gap-1">
+                                            <span v-if="connection.is_regional_jump" 
+                                                class="inline-flex items-center px-2 py-1 text-xs font-medium bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200 rounded-md">
+                                                Regional
+                                            </span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Neighboring Systems -->
+                            <div v-if="(system as any)?.neighboring_systems?.length > 0" class="space-y-4">
+                                <h3 class="text-lg font-semibold text-gray-900 dark:text-white flex items-center gap-2">
+                                    <UIcon name="i-lucide-map" class="w-5 h-5" />
+                                    Neighboring Systems
+                                </h3>
+                                <div class="space-y-2">
+                                    <div v-for="neighbor in (system as any)?.neighboring_systems" :key="neighbor.system_id"
+                                        class="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
+                                        <div class="flex items-center gap-2">
+                                            <Image type="system" :id="neighbor.system_id" class="w-6 h-6" size="64" />
+                                            <NuxtLink :to="`/system/${neighbor.system_id}`"
+                                                class="font-medium text-gray-900 dark:text-white hover:text-blue-600 dark:hover:text-blue-400">
+                                                {{ neighbor.system_name }}
+                                            </NuxtLink>
+                                        </div>
+                                        <span v-if="neighbor.security !== undefined"
+                                            class="text-sm font-medium"
+                                            :style="{ color: getSecurityStatusColor(neighbor.security) }">
+                                            {{ neighbor.security?.toFixed(2) }}
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Celestials -->
+                            <div v-if="(system as any)?.celestials?.length > 0" class="space-y-4 lg:col-span-2">
+                                <h3 class="text-lg font-semibold text-gray-900 dark:text-white flex items-center gap-2">
+                                    <UIcon name="i-lucide-star" class="w-5 h-5" />
+                                    Celestials ({{ (system as any)?.celestials?.length }})
+                                </h3>
+                                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+                                    <div v-for="celestial in (system as any)?.celestials" :key="celestial.item_id"
+                                        class="flex items-center gap-2 p-2 bg-gray-50 dark:bg-gray-800 rounded-lg text-sm">
+                                        <div class="flex-shrink-0">
+                                            <div class="w-2 h-2 rounded-full bg-blue-500"></div>
+                                        </div>
+                                        <div class="min-w-0">
+                                            <div class="font-medium text-gray-900 dark:text-white truncate">
+                                                {{ celestial.item_name }}
+                                            </div>
+                                            <div class="text-xs text-gray-500 truncate">
+                                                {{ celestial.type_name }}
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </template>
                 <template #battles>
@@ -120,8 +429,49 @@ const getSecurityStatusColor = (security: number): string => {
     return "#FF0000";
 };
 
+const getSecurityClass = (security: number, securityClass?: string): string => {
+    // Use the database security_class if available
+    if (securityClass) {
+        return securityClass;
+    }
+    
+    // Fallback to security level calculation
+    if (security >= 0.5) return "High-Sec";
+    if (security >= 0.0) return "Low-Sec";
+    return "Null-Sec";
+};
+
+const getRegionName = (regionName: any): string => {
+    if (typeof regionName === 'object' && regionName !== null) {
+        return regionName.en || regionName.en_us || 'Unknown Region';
+    }
+    return regionName || 'Unknown Region';
+};
+
+const getTranslatedName = (name: any): string => {
+    if (typeof name === 'object' && name !== null) {
+        return name[locale.value] || name.en || name.en_us || 'Unknown';
+    }
+    return name || 'Unknown';
+};
+
+const getCelestialCount = (types: string | string[]): number => {
+    if (!system.value || !(system.value as any).celestials) return 0;
+    
+    const celestials = (system.value as any).celestials;
+    const searchTypes = Array.isArray(types) ? types : [types];
+    
+    return celestials.filter((celestial: any) => {
+        return searchTypes.some(type => 
+            celestial.type_name?.toLowerCase().includes(type.toLowerCase()) ||
+            celestial.item_name?.toLowerCase().includes(type.toLowerCase())
+        );
+    }).length;
+};
+
 const tabItems = [
     { id: "overview", label: t("overview"), icon: "i-lucide-home", slot: "overview" as const },
+    { id: "info", label: t("information"), icon: "i-lucide-info", slot: "info" as const },
     { id: "battles", label: t("battles"), icon: "i-lucide-swords", slot: "battles" as const },
 ];
 

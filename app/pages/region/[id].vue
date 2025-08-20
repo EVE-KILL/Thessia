@@ -8,16 +8,37 @@
 
         <!-- Main content - only show when data is ready -->
         <div v-else-if="region" class="mx-auto p-4 text-white">
-            <UCard class="mb-4 bg-black bg-opacity-30 dark:bg-gray-900 dark:bg-opacity-30">
-                <div class="flex flex-col gap-2">
-                    <h1 class="text-2xl font-bold">{{ (region as any)?.name?.en || (region as any)?.name?.en_us ||
-                        (region as any)?.name_id ||
-                        'Region' }}</h1>
-                    <div class="text-gray-400 text-sm">
-                        Region ID: {{ (region as any)?.region_id }}
+            <div class="region-header rounded-lg overflow-hidden mb-6 bg-gray-100 bg-opacity-90 dark:bg-gray-900 dark:bg-opacity-30 border border-gray-300 dark:border-gray-800">
+                <!-- Region summary section with image and basic info -->
+                <div class="p-6">
+                    <div class="flex flex-col md:flex-row gap-6">
+                        <!-- Left: Region image -->
+                        <div class="region-image-container">
+                            <Image type="region" :id="(region as any)?.region_id"
+                                :alt="`Region: ${(region as any)?.name?.en || (region as any)?.name?.en_us || 'Region'}`"
+                                class="region-image rounded-lg shadow-lg w-32 h-32" size="128" />
+                        </div>
+
+                        <!-- Right: Region details -->
+                        <div class="flex-grow">
+                            <div class="region-info">
+                                <h1 class="text-2xl md:text-3xl font-bold mb-2 text-gray-900 dark:text-white">
+                                    {{ (region as any)?.name?.en || (region as any)?.name?.en_us || (region as any)?.name_id || 'Region' }}
+                                </h1>
+
+                                <!-- Region details -->
+                                <div class="region-details space-y-2 text-sm">
+                                    <div class="flex items-center gap-2">
+                                        <UIcon name="i-lucide-hash" class="flex-shrink-0 w-4 h-4 text-gray-500" />
+                                        <span class="text-gray-600 dark:text-gray-400">Region ID:</span>
+                                        <span class="font-medium text-gray-900 dark:text-gray-300">{{ (region as any)?.region_id }}</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
-            </UCard>
+            </div>
             <Tabs :items="tabItems" v-model="activeTabId" class="space-y-4">
                 <template #overview>
                     <div class="tab-content">

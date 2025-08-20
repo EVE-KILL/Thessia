@@ -8,17 +8,43 @@
 
         <!-- Main content - only show when data is ready -->
         <div v-else-if="constellation" class="mx-auto p-4 text-white">
-            <UCard class="mb-4 bg-black bg-opacity-30 dark:bg-gray-900 dark:bg-opacity-30">
-                <div class="flex flex-col gap-2">
-                    <h1 class="text-2xl font-bold">{{ (constellation as any).constellation_name }}</h1>
-                    <div class="text-gray-400 text-sm">
-                        Constellation ID: {{ (constellation as any).constellation_id }}
-                        <span v-if="(constellation as any).region_id !== undefined">
-                            &mdash; Region ID: {{ (constellation as any).region_id }}
-                        </span>
+            <div class="constellation-header rounded-lg overflow-hidden mb-6 bg-gray-100 bg-opacity-90 dark:bg-gray-900 dark:bg-opacity-30 border border-gray-300 dark:border-gray-800">
+                <!-- Constellation summary section with image and basic info -->
+                <div class="p-6">
+                    <div class="flex flex-col md:flex-row gap-6">
+                        <!-- Left: Constellation image -->
+                        <div class="constellation-image-container">
+                            <Image type="constellation" :id="(constellation as any).constellation_id"
+                                :alt="`Constellation: ${(constellation as any).constellation_name}`"
+                                class="constellation-image rounded-lg shadow-lg w-32 h-32" size="128" />
+                        </div>
+
+                        <!-- Right: Constellation details -->
+                        <div class="flex-grow">
+                            <div class="constellation-info">
+                                <h1 class="text-2xl md:text-3xl font-bold mb-2 text-gray-900 dark:text-white">
+                                    {{ (constellation as any).constellation_name }}
+                                </h1>
+
+                                <!-- Constellation details -->
+                                <div class="constellation-details space-y-2 text-sm">
+                                    <div class="flex items-center gap-2">
+                                        <UIcon name="i-lucide-hash" class="flex-shrink-0 w-4 h-4 text-gray-500" />
+                                        <span class="text-gray-600 dark:text-gray-400">Constellation ID:</span>
+                                        <span class="font-medium text-gray-900 dark:text-gray-300">{{ (constellation as any).constellation_id }}</span>
+                                    </div>
+
+                                    <div v-if="(constellation as any).region_id !== undefined" class="flex items-center gap-2">
+                                        <UIcon name="i-lucide-globe" class="flex-shrink-0 w-4 h-4 text-gray-500" />
+                                        <span class="text-gray-600 dark:text-gray-400">Region ID:</span>
+                                        <span class="font-medium text-gray-900 dark:text-gray-300">{{ (constellation as any).region_id }}</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
-            </UCard>
+            </div>
             <KillList killlistType="latest" :limit="100"
                 :apiEndpoint="`/api/killlist/constellation/${(constellation as any).constellation_id}`"
                 :wsFilter="`constellation.${(constellation as any).constellation_id}`" />
