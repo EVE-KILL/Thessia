@@ -258,7 +258,8 @@
                                     size="64" />
                             </div>
                             <!-- Faction image -->
-                            <div v-if="sovereignty.faction_id && !sovereignty.alliance_id && !sovereignty.corporation_id" class="flex flex-col items-center">
+                            <div v-if="sovereignty.faction_id && !sovereignty.alliance_id && !sovereignty.corporation_id"
+                                class="flex flex-col items-center">
                                 <Image type="faction" :id="sovereignty.faction_id" class="w-16 h-16 rounded"
                                     size="64" />
                             </div>
@@ -281,7 +282,8 @@
                         </div>
 
                         <!-- Faction name (for NPC sovereignty) -->
-                        <div v-if="sovereignty?.faction_id && !sovereignty?.alliance_id && !sovereignty?.corporation_id" class="stat-row">
+                        <div v-if="sovereignty?.faction_id && !sovereignty?.alliance_id && !sovereignty?.corporation_id"
+                            class="stat-row">
                             <div class="stat-label text-gray-600 dark:text-gray-400">Faction:</div>
                             <div class="stat-value text-orange-600 dark:text-orange-400 truncate">
                                 {{ sovereignty.faction_name || `Faction ID: ${sovereignty.faction_id}` }}

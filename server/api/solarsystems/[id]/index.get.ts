@@ -191,7 +191,8 @@ export default defineCachedEventHandler(
                         { name: 1, _id: 0 }
                     ).lean();
                     if (sovereigntyFaction) {
-                        systemSovereignty.faction_name = sovereigntyFaction.name;
+                        systemSovereignty.faction_name =
+                            sovereigntyFaction.name;
                     }
                 }
             }

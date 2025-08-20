@@ -288,16 +288,33 @@ async function findDailyFiles(
     baseUrl: string,
     dateStr: string
 ): Promise<string[]> {
+    const year = parseInt(dateStr.split("-")[0]);
+
     try {
-        // Get directory listing and find all files matching the date pattern
-        const { stdout } = await execAsync(
-            `curl -s "${baseUrl}" | grep -o 'sovereignty-map-${dateStr}_[^"]*\\.json\\.bz2' | sort`
-        );
-        const files = stdout
-            .trim()
-            .split("\n")
-            .filter((f) => f.length > 0);
-        return files;
+        if (year >= 2023) {
+            // For 2023+, files are organized in year/date/ folders
+            const yearFolderUrl = `${baseUrl}${year}/${dateStr}/`;
+
+            // Get directory listing and find all files matching the date pattern
+            const { stdout } = await execAsync(
+                `curl -s "${yearFolderUrl}" | grep -o 'sovereignty-map-${dateStr}_[^"]*\\.json\\.bz2' | sort`
+            );
+            const files = stdout
+                .trim()
+                .split("\n")
+                .filter((f) => f.length > 0);
+            return files;
+        } else {
+            // For 2022 and earlier, files are in the base directory
+            const { stdout } = await execAsync(
+                `curl -s "${baseUrl}" | grep -o 'sovereignty-map-${dateStr}_[^"]*\\.json\\.bz2' | sort`
+            );
+            const files = stdout
+                .trim()
+                .split("\n")
+                .filter((f) => f.length > 0);
+            return files;
+        }
     } catch (error) {
         cliLogger.warn(
             `Failed to list files for ${dateStr}, trying fallback patterns`
@@ -313,9 +330,15 @@ async function findDailyFiles(
         const existingFiles: string[] = [];
         for (const pattern of commonPatterns) {
             try {
+                // Build the correct URL based on year
+                const fileUrl =
+                    year >= 2023
+                        ? `${baseUrl}${year}/${dateStr}/${pattern}`
+                        : `${baseUrl}${pattern}`;
+
                 // Test if the file exists with a HEAD request
                 await execAsync(
-                    `curl -I "${baseUrl}${pattern}" 2>/dev/null | grep -q "200 OK"`
+                    `curl -I "${fileUrl}" 2>/dev/null | grep -q "200 OK"`
                 );
                 existingFiles.push(pattern);
                 break; // Only need one file per day for sovereignty
@@ -336,7 +359,14 @@ async function processDailyFile(
     startDate: Date | null = null,
     endDate: Date | null = null
 ): Promise<void> {
-    const url = `${baseUrl}${fileName}`;
+    const year = parseInt(dateStr.split("-")[0]);
+
+    // Build the correct URL based on year structure
+    const url =
+        year >= 2023
+            ? `${baseUrl}${year}/${dateStr}/${fileName}`
+            : `${baseUrl}${fileName}`;
+
     const filePath = path.join(tmpDir, fileName);
     const jsonPath = path.join(tmpDir, fileName.replace(".bz2", ""));
 

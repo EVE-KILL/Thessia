@@ -1,3 +1,4 @@
+import { IESIKillmail } from "~/server/interfaces/IESIKillmail";
 import { cliLogger } from "../server/helpers/Logger";
 import { KillmailsESI } from "../server/models/KillmailsESI";
 import { addKillmail } from "../server/queue/Killmail";
@@ -19,12 +20,25 @@ export default {
                     const killmailHash = data.package.zkb.hash;
 
                     // Check if killmail already exists in database
-                    const existingKillmail = await KillmailsESI.findOne({
-                        killmail_id: killmailId,
-                        killmail_hash: killmailHash,
-                    });
+                    const existingKillmail: IESIKillmail | null =
+                        await KillmailsESI.findOne({
+                            killmail_id: killmailId,
+                            killmail_hash: killmailHash,
+                        });
 
                     if (existingKillmail) {
+                        const shortDate = new Date(
+                            existingKillmail.killmail_time
+                        ).toLocaleDateString("da-DK", {
+                            year: "numeric",
+                            month: "2-digit",
+                            day: "2-digit",
+                            hour: "2-digit",
+                            minute: "2-digit",
+                        });
+                        cliLogger.info(
+                            `ℹ️  Killmail already exists: ${killmailId} - ${killmailHash} - Timestamp ${shortDate}`
+                        );
                         return;
                     }
 
