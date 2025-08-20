@@ -100,8 +100,8 @@ const isPriorityImage = (index: number): boolean => {
                         :alt="`Ship: ${getShipName(item as IMostValuableKill)}`"
                         class="rounded w-20 h-20 md:w-24 md:h-24 object-contain mb-2" size="128"
                         :loading="index < 7 ? 'eager' : 'lazy'" :priority="isPriorityImage(index)" />
-                    <div class="text-center text-xs mt-1 w-full truncate text-gray-900 dark:text-white" 
-                         :title="getShipName(item as IMostValuableKill)">
+                    <div class="text-center text-xs mt-1 w-full truncate text-gray-900 dark:text-white"
+                        :title="getShipName(item as IMostValuableKill)">
                         {{ getShipName(item as IMostValuableKill) }}
                     </div>
                     <div class="text-center text-xs mt-1 text-gray-500 dark:text-background-300">

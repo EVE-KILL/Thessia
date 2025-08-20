@@ -159,7 +159,7 @@ const generateKillLink = (item: IMostValuableItem): string | null => {
                         class="rounded w-24 h-24 md:w-32 md:h-32 object-contain mb-2" size="128"
                         :loading="index < 7 ? 'eager' : 'lazy'" />
                     <div class="text-center text-sm mt-1 w-full truncate text-gray-900 dark:text-white"
-                         :title="getShipName(item)">
+                        :title="getShipName(item)">
                         {{ getShipName(item) }}
                     </div>
                     <div class="text-center text-xs mt-1 text-gray-500 dark:text-background-300">

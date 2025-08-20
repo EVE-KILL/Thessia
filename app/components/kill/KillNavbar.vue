@@ -23,6 +23,8 @@ interface NavLink {
     children?: NavLink[];
     disabled?: boolean;
     description?: string;
+    logo?: string;
+    iconOnly?: boolean; // Show only icon, no text
 }
 
 /**
@@ -35,6 +37,7 @@ const leftNavItems = computed(() => {
         {
             name: "DOTLAN",
             position: "left",
+            logo: "https://evemaps.dotlan.net/favicon.ico",
             children: [
                 {
                     name: "System",
@@ -55,6 +58,7 @@ const leftNavItems = computed(() => {
         {
             name: "EVEEye",
             position: "left",
+            logo: "https://eveeye.com/img/eveeye.svg",
             children: [
                 {
                     name: "Region",
@@ -68,6 +72,7 @@ const leftNavItems = computed(() => {
         {
             name: "EVE Missioneer",
             position: "left",
+            logo: "https://evemissioneer.com/favicon.png",
             children: [
                 {
                     name: "System",
@@ -88,6 +93,7 @@ const leftNavItems = computed(() => {
         {
             name: "EveShip.fit",
             position: "left",
+            logo: "https://eveship.fit/favicon.ico",
             children: [
                 {
                     name: "Fitting",
@@ -101,6 +107,7 @@ const leftNavItems = computed(() => {
         {
             name: "EVERef",
             position: "left",
+            logo: "https://everef.net/favicon.ico",
             children: [
                 {
                     name: "Ship Group",
@@ -121,6 +128,7 @@ const leftNavItems = computed(() => {
         {
             name: "Jita.Space",
             position: "left",
+            logo: "https://www.jita.space/favicon.ico",
             children: [
                 {
                     name: "System",
@@ -141,6 +149,7 @@ const leftNavItems = computed(() => {
         {
             name: "EVEWho",
             position: "left",
+            logo: "https://evewho.com/favicon.ico",
             children: [
                 {
                     name: "Character",
@@ -168,6 +177,7 @@ const leftNavItems = computed(() => {
         {
             name: "zKillboard",
             position: "left",
+            logo: "https://zkillboard.com/img/wreck.png",
             children: [
                 {
                     name: "Killmail",
@@ -227,6 +237,13 @@ const leftNavItems = computed(() => {
                 },
             ],
         },
+        {
+            name: "RIFT Intel Fusion",
+            position: "left",
+            to: 'https://riftforeve.online/',
+            target: '_blank',
+            logo: '/images/rift-intel-fusion-tool-256.png'
+        },
     ];
 });
 
@@ -273,17 +290,30 @@ const rightNavItems = computed<NavLink[]>(() => {
 </script>
 
 <template>
-    <nav class="flex items-center justify-between w-full gap-2 py-1">
+    <nav class="flex items-center justify-between w-full gap-1 py-1">
         <!-- Left items -->
-        <div class="flex items-center space-x-2">
+        <div class="flex items-center space-x-1">
             <template v-for="(link, index) in leftNavItems" :key="index">
+                <!-- Direct link -->
+                <NuxtLink v-if="link.to" :to="link.to" :target="link.target" rel="noopener noreferrer" :class="[
+                    'flex items-center rounded-md hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors cursor-pointer text-gray-700 dark:text-gray-200',
+                    link.iconOnly ? 'p-1.5' : 'py-1.5 px-2'
+                ]" :title="link.name">
+                    <img v-if="link.logo" :src="link.logo" :alt="`${link.name} logo`"
+                        :class="link.iconOnly ? 'w-4 h-4' : 'w-4 h-4 mr-2 flex-shrink-0'">
+                    <span v-if="!link.iconOnly" class="text-sm font-medium">{{ link.name }}</span>
+                </NuxtLink>
                 <!-- Dropdown menus -->
-                <Dropdown v-if="link.children" v-model="dropdownStates[link.name]" position="bottom" align="start"
+                <Dropdown v-else-if="link.children" v-model="dropdownStates[link.name]" position="bottom" align="start"
                     :max-height="60" width="auto" close-on-inner-click smart-position open-on-hover :hover-delay="100">
                     <template #trigger>
-                        <div class="flex items-center py-1.5 px-2 rounded-md hover:bg-gray-100 dark:hover:bg-gray-800
-                    transition-colors cursor-pointer text-gray-700 dark:text-gray-200" :title="link.name">
-                            <span class="text-sm font-medium">{{ link.name }}</span>
+                        <div :class="[
+                            'flex items-center rounded-md hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors cursor-pointer text-gray-700 dark:text-gray-200',
+                            link.iconOnly ? 'p-1.5' : 'py-1.5 px-2'
+                        ]" :title="link.name">
+                            <img v-if="link.logo" :src="link.logo" :alt="`${link.name} logo`"
+                                :class="link.iconOnly ? 'w-4 h-4' : 'w-4 h-4 mr-2 flex-shrink-0'">
+                            <span v-if="!link.iconOnly" class="text-sm font-medium">{{ link.name }}</span>
                         </div>
                     </template>
 
@@ -311,20 +341,28 @@ const rightNavItems = computed<NavLink[]>(() => {
         </div>
 
         <!-- Right items -->
-        <div class="flex items-center space-x-2">
+        <div class="flex items-center space-x-1">
             <template v-for="(link, index) in rightNavItems" :key="index">
                 <!-- Direct link -->
-                <NuxtLink v-if="link.to" :to="link.to" class="flex items-center py-1.5 px-2 rounded-md hover:bg-gray-100 dark:hover:bg-gray-800
-                    transition-colors cursor-pointer text-gray-700 dark:text-gray-200" :title="link.name">
-                    <span class="text-sm font-medium">{{ link.name }}</span>
+                <NuxtLink v-if="link.to" :to="link.to" :class="[
+                    'flex items-center rounded-md hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors cursor-pointer text-gray-700 dark:text-gray-200',
+                    link.iconOnly ? 'p-1.5' : 'py-1.5 px-2'
+                ]" :title="link.name">
+                    <img v-if="link.logo" :src="link.logo" :alt="`${link.name} logo`"
+                        :class="link.iconOnly ? 'w-4 h-4' : 'w-4 h-4 mr-2 flex-shrink-0'">
+                    <span v-if="!link.iconOnly" class="text-sm font-medium">{{ link.name }}</span>
                 </NuxtLink>
                 <!-- Dropdown menus -->
                 <Dropdown v-if="link.children" v-model="dropdownStates[link.name]" position="bottom" align="end"
                     :max-height="60" width="auto" close-on-inner-click smart-position open-on-hover :hover-delay="100">
                     <template #trigger>
-                        <div class="flex items-center py-1.5 px-2 rounded-md hover:bg-gray-100 dark:hover:bg-gray-800
-                    transition-colors cursor-pointer text-gray-700 dark:text-gray-200" :title="link.name">
-                            <span class="text-sm font-medium">{{ link.name }}</span>
+                        <div :class="[
+                            'flex items-center rounded-md hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors cursor-pointer text-gray-700 dark:text-gray-200',
+                            link.iconOnly ? 'p-1.5' : 'py-1.5 px-2'
+                        ]" :title="link.name">
+                            <img v-if="link.logo" :src="link.logo" :alt="`${link.name} logo`"
+                                :class="link.iconOnly ? 'w-4 h-4' : 'w-4 h-4 mr-2 flex-shrink-0'">
+                            <span v-if="!link.iconOnly" class="text-sm font-medium">{{ link.name }}</span>
                         </div>
                     </template>
 
