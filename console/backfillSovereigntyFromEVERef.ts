@@ -15,8 +15,53 @@ export default {
     name: "backfill:sovereignty_everef",
     description: "Backfill historical sovereignty data from EVERef",
     longRunning: true,
-    run: async () => {
+    options: [
+        {
+            flags: "-s, --start-date <date>",
+            description:
+                "Start processing from this date (YYYY-MM-DD format). Will skip any data before this date.",
+            defaultValue: null,
+        },
+        {
+            flags: "-e, --end-date <date>",
+            description:
+                "Stop processing at this date (YYYY-MM-DD format). Will not process data after this date.",
+            defaultValue: null,
+        },
+    ],
+    examples: [
+        "bin/console backfill:sovereignty_everef                           # Process all available data",
+        'bin/console backfill:sovereignty_everef -s "2023-01-01"          # Start from January 1, 2023',
+        'bin/console backfill:sovereignty_everef -s "2022-12-16" -e "2023-12-31" # Process only 2023 data',
+    ],
+    run: async (args: string[] = [], cmdOptions: any = {}) => {
         cliLogger.info("Starting sovereignty backfill from EVERef...");
+
+        // Parse date options
+        let startDate: Date | null = null;
+        let endDate: Date | null = null;
+
+        if (cmdOptions.startDate) {
+            startDate = new Date(cmdOptions.startDate);
+            if (isNaN(startDate.getTime())) {
+                throw new Error(`Invalid start date format: ${cmdOptions.startDate}. Use YYYY-MM-DD format.`);
+            }
+            cliLogger.info(`Starting from date: ${startDate.toISOString().split('T')[0]}`);
+        }
+
+        if (cmdOptions.endDate) {
+            endDate = new Date(cmdOptions.endDate);
+            if (isNaN(endDate.getTime())) {
+                throw new Error(`Invalid end date format: ${cmdOptions.endDate}. Use YYYY-MM-DD format.`);
+            }
+            // Set end date to end of day
+            endDate.setHours(23, 59, 59, 999);
+            cliLogger.info(`Ending at date: ${endDate.toISOString().split('T')[0]}`);
+        }
+
+        if (startDate && endDate && startDate > endDate) {
+            throw new Error("Start date cannot be after end date");
+        }
 
         const baseUrl = "https://data.everef.net/sovereignty-map/history/";
         const tmpDir = "/tmp/everef_sovereignty";
@@ -27,22 +72,33 @@ export default {
         }
 
         try {
-            // Process yearly archives first (2017-2022)
+            // Process yearly archives first (2017-2019, 2021-2022) - 2020 doesn't exist
             const yearlyFiles = [
-                "sovereignty-map-2017.tar.bz2",
-                "sovereignty-map-2018.tar.bz2",
-                "sovereignty-map-2019.tar.bz2",
-                "sovereignty-map-2020.tar.bz2",
-                "sovereignty-map-2021.tar.bz2",
-                "sovereignty-map-2022.tar.bz2",
+                { file: "sovereignty-map-2017.tar.bz2", year: 2017 },
+                { file: "sovereignty-map-2018.tar.bz2", year: 2018 },
+                { file: "sovereignty-map-2019.tar.bz2", year: 2019 },
+                { file: "sovereignty-map-2021.tar.bz2", year: 2021 },
+                { file: "sovereignty-map-2022.tar.bz2", year: 2022 },
             ];
 
-            for (const fileName of yearlyFiles) {
-                await processYearlyFile(baseUrl, fileName, tmpDir);
+            for (const { file: fileName, year } of yearlyFiles) {
+                // Skip entire year if it's before our start date
+                if (startDate && year < startDate.getFullYear()) {
+                    cliLogger.info(`Skipping ${fileName} - year ${year} is before start date`);
+                    continue;
+                }
+                
+                // Skip entire year if it's after our end date
+                if (endDate && year > endDate.getFullYear()) {
+                    cliLogger.info(`Skipping ${fileName} - year ${year} is after end date`);
+                    continue;
+                }
+
+                await processYearlyFile(baseUrl, fileName, tmpDir, startDate, endDate);
             }
 
             // Process daily files for 2022 (starting from 2022-12-16), 2023, 2024, 2025
-            await processDailyFiles(baseUrl, tmpDir);
+            await processDailyFiles(baseUrl, tmpDir, startDate, endDate);
 
             cliLogger.info("Sovereignty backfill completed successfully!");
         } catch (error) {
@@ -71,7 +127,9 @@ export default {
 async function processYearlyFile(
     baseUrl: string,
     fileName: string,
-    tmpDir: string
+    tmpDir: string,
+    startDate: Date | null = null,
+    endDate: Date | null = null
 ): Promise<void> {
     cliLogger.info(`Processing yearly file: ${fileName}`);
 
@@ -90,7 +148,7 @@ async function processYearlyFile(
         await execAsync(`tar -xjf "${filePath}" -C "${extractDir}"`);
 
         // Process all JSON files in the extracted directory
-        await processJsonFiles(extractDir);
+        await processJsonFiles(extractDir, startDate, endDate);
 
         // Clean up this year's files
         fs.rmSync(extractDir, { recursive: true });
@@ -109,7 +167,9 @@ async function processYearlyFile(
 
 async function processDailyFiles(
     baseUrl: string,
-    tmpDir: string
+    tmpDir: string,
+    startDate: Date | null = null,
+    endDate: Date | null = null
 ): Promise<void> {
     cliLogger.info("Processing daily files...");
 
@@ -121,14 +181,28 @@ async function processDailyFiles(
     ];
 
     for (const range of dailyRanges) {
-        await processDailyRange(baseUrl, tmpDir, range);
+        // Skip entire year if it's before our start date
+        if (startDate && range.year < startDate.getFullYear()) {
+            cliLogger.info(`Skipping daily files for ${range.year} - year is before start date`);
+            continue;
+        }
+        
+        // Skip entire year if it's after our end date
+        if (endDate && range.year > endDate.getFullYear()) {
+            cliLogger.info(`Skipping daily files for ${range.year} - year is after end date`);
+            continue;
+        }
+
+        await processDailyRange(baseUrl, tmpDir, range, startDate, endDate);
     }
 }
 
 async function processDailyRange(
     baseUrl: string,
     tmpDir: string,
-    range: any
+    range: any,
+    startDate: Date | null = null,
+    endDate: Date | null = null
 ): Promise<void> {
     cliLogger.info(`Processing daily files for ${range.year}...`);
 
@@ -144,6 +218,16 @@ async function processDailyRange(
                 .toString()
                 .padStart(2, "0")}-${day.toString().padStart(2, "0")}`;
 
+            const currentDate = new Date(dateStr);
+            
+            // Skip if before start date or after end date
+            if (startDate && currentDate < startDate) {
+                continue;
+            }
+            if (endDate && currentDate > endDate) {
+                continue;
+            }
+
             try {
                 // Get all files for this date
                 const dailyFiles = await findDailyFiles(baseUrl, dateStr);
@@ -158,7 +242,9 @@ async function processDailyRange(
                             baseUrl,
                             fileName,
                             tmpDir,
-                            dateStr
+                            dateStr,
+                            startDate,
+                            endDate
                         );
                     }
                 } else {
@@ -224,7 +310,9 @@ async function processDailyFile(
     baseUrl: string,
     fileName: string,
     tmpDir: string,
-    dateStr: string
+    dateStr: string,
+    startDate: Date | null = null,
+    endDate: Date | null = null
 ): Promise<void> {
     const url = `${baseUrl}${fileName}`;
     const filePath = path.join(tmpDir, fileName);
@@ -239,7 +327,7 @@ async function processDailyFile(
 
         // Process the JSON file
         if (fs.existsSync(jsonPath)) {
-            await processJsonFile(jsonPath, dateStr);
+            await processJsonFile(jsonPath, dateStr, startDate, endDate);
             fs.unlinkSync(jsonPath);
         }
     } catch (error) {
@@ -251,7 +339,11 @@ async function processDailyFile(
     }
 }
 
-async function processJsonFiles(directory: string): Promise<void> {
+async function processJsonFiles(
+    directory: string, 
+    startDate: Date | null = null, 
+    endDate: Date | null = null
+): Promise<void> {
     const files = fs.readdirSync(directory);
 
     // Separate JSON files from directories and sort JSON files chronologically
@@ -289,20 +381,30 @@ async function processJsonFiles(directory: string): Promise<void> {
     // Process directories first (recursively)
     for (const dir of directories) {
         const dirPath = path.join(directory, dir);
-        await processJsonFiles(dirPath);
+        await processJsonFiles(dirPath, startDate, endDate);
     }
 
     // Process JSON files in chronological order
     for (const { file, timestamp } of jsonFiles) {
+        // Skip if before start date or after end date
+        if (startDate && timestamp < startDate) {
+            continue;
+        }
+        if (endDate && timestamp > endDate) {
+            continue;
+        }
+        
         const filePath = path.join(directory, file);
         const dateStr = timestamp.toISOString().split("T")[0]; // Convert to YYYY-MM-DD format
-        await processJsonFile(filePath, dateStr);
+        await processJsonFile(filePath, dateStr, startDate, endDate);
     }
 }
 
 async function processJsonFile(
     filePath: string,
-    dateStr: string | null
+    dateStr: string | null,
+    startDate: Date | null = null,
+    endDate: Date | null = null
 ): Promise<void> {
     try {
         const data = fs.readFileSync(filePath, "utf8");
@@ -344,6 +446,16 @@ async function processJsonFile(
             } else {
                 timestamp = new Date(); // Fallback to current time
             }
+        }
+
+        // Skip if timestamp is outside of our date range
+        if (startDate && timestamp < startDate) {
+            cliLogger.info(`Skipping ${path.basename(filePath)} - before start date`);
+            return;
+        }
+        if (endDate && timestamp > endDate) {
+            cliLogger.info(`Skipping ${path.basename(filePath)} - after end date`);
+            return;
         }
 
         const bulkOps: any[] = [];
@@ -490,7 +602,7 @@ async function processJsonFile(
                     );
 
                     // Find the closest existing entry by date
-                    let closestEntry = null;
+                    let closestEntry: any = null;
                     let closestTimeDiff = Infinity;
 
                     for (const entry of allSovereignty) {

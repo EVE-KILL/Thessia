@@ -5,7 +5,7 @@ import { queueAchievementProcessingBulk } from "../server/queue/Achievement";
 export default {
     name: "processAchievements",
     description: "Queue achievement processing for characters that need it",
-    schedule: "0 * * * *", // Run every hour at minute 0
+    schedule: "0 0 * * *", // Run every 24h
     run: async () => {
         cliLogger.info("Processing achievements that need processing...");
 

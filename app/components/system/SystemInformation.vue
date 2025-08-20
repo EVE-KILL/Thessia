@@ -8,12 +8,10 @@
                     Jump Connections
                 </h3>
                 <div class="space-y-2">
-                    <div v-for="connection in system.jump_connections"
-                        :key="connection.stargate_id"
+                    <div v-for="connection in system.jump_connections" :key="connection.stargate_id"
                         class="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
                         <div class="flex items-center gap-2">
-                            <Image type="system" :id="connection.destination_system_id" class="w-6 h-6"
-                                size="64" />
+                            <Image type="system" :id="connection.destination_system_id" class="w-6 h-6" size="64" />
                             <div>
                                 <NuxtLink :to="`/system/${connection.destination_system_id}`"
                                     class="font-medium text-gray-900 dark:text-white hover:text-blue-600 dark:hover:text-blue-400">
@@ -39,8 +37,7 @@
                     Neighboring Systems
                 </h3>
                 <div class="space-y-2">
-                    <div v-for="neighbor in system.neighboring_systems"
-                        :key="neighbor.system_id"
+                    <div v-for="neighbor in system.neighboring_systems" :key="neighbor.system_id"
                         class="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
                         <div class="flex items-center gap-2">
                             <Image type="system" :id="neighbor.system_id" class="w-6 h-6" size="64" />

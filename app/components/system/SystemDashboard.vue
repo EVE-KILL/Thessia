@@ -245,14 +245,17 @@
                     </div>
                     <div class="stat-body">
                         <!-- Images at top -->
-                        <div v-if="sovereignty?.alliance_id || sovereignty?.corporation_id" class="flex justify-center gap-3 mb-4">
+                        <div v-if="sovereignty?.alliance_id || sovereignty?.corporation_id"
+                            class="flex justify-center gap-3 mb-4">
                             <!-- Alliance image -->
                             <div v-if="sovereignty.alliance_id" class="flex flex-col items-center">
-                                <Image type="alliance" :id="sovereignty.alliance_id" class="w-16 h-16 rounded" size="64" />
+                                <Image type="alliance" :id="sovereignty.alliance_id" class="w-16 h-16 rounded"
+                                    size="64" />
                             </div>
                             <!-- Corporation image -->
                             <div v-if="sovereignty.corporation_id" class="flex flex-col items-center">
-                                <Image type="corporation" :id="sovereignty.corporation_id" class="w-16 h-16 rounded" size="64" />
+                                <Image type="corporation" :id="sovereignty.corporation_id" class="w-16 h-16 rounded"
+                                    size="64" />
                             </div>
                         </div>
 
@@ -273,7 +276,8 @@
                         </div>
 
                         <!-- NPC Faction or Unclaimed -->
-                        <div v-if="!sovereignty?.alliance_id && !sovereignty?.corporation_id" class="flex flex-col items-center text-center">
+                        <div v-if="!sovereignty?.alliance_id && !sovereignty?.corporation_id"
+                            class="flex flex-col items-center text-center">
                             <UIcon name="i-lucide-shield-off" class="w-16 h-16 mb-3 text-gray-400" />
                             <div v-if="sovereignty?.faction_id" class="stat-value text-orange-600 dark:text-orange-400">
                                 NPC Faction

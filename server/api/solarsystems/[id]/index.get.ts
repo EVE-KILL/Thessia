@@ -187,14 +187,20 @@ export default defineCachedEventHandler(
             // Get activity data from system document (this already exists in SolarSystems collection)
             if (system.jumps_24h && system.jumps_24h.length > 0) {
                 // Get latest entry (1h data) and 24h cumulative
-                const latestJump = system.jumps_24h[system.jumps_24h.length - 1];
-                
+                const latestJump =
+                    system.jumps_24h[system.jumps_24h.length - 1];
+
                 // Calculate 24h cumulative by summing all entries from last 24 hours
                 const now = new Date();
-                const twentyFourHoursAgo = new Date(now.getTime() - 24 * 60 * 60 * 1000);
-                
+                const twentyFourHoursAgo = new Date(
+                    now.getTime() - 24 * 60 * 60 * 1000
+                );
+
                 const jumps24h = system.jumps_24h
-                    .filter(entry => new Date(entry.timestamp) >= twentyFourHoursAgo)
+                    .filter(
+                        (entry) =>
+                            new Date(entry.timestamp) >= twentyFourHoursAgo
+                    )
                     .reduce((sum, entry) => sum + (entry.ship_jumps || 0), 0);
 
                 systemJumps = {
@@ -212,17 +218,31 @@ export default defineCachedEventHandler(
 
             if (system.kills_24h && system.kills_24h.length > 0) {
                 // Get latest entry (1h data) and 24h cumulative
-                const latestKill = system.kills_24h[system.kills_24h.length - 1];
-                
+                const latestKill =
+                    system.kills_24h[system.kills_24h.length - 1];
+
                 // Calculate 24h cumulative by summing all entries from last 24 hours
                 const now = new Date();
-                const twentyFourHoursAgo = new Date(now.getTime() - 24 * 60 * 60 * 1000);
-                
-                const kills24h = system.kills_24h.filter(entry => new Date(entry.timestamp) >= twentyFourHoursAgo);
-                
-                const shipKills24h = kills24h.reduce((sum, entry) => sum + (entry.ship_kills || 0), 0);
-                const npcKills24h = kills24h.reduce((sum, entry) => sum + (entry.npc_kills || 0), 0);
-                const podKills24h = kills24h.reduce((sum, entry) => sum + (entry.pod_kills || 0), 0);
+                const twentyFourHoursAgo = new Date(
+                    now.getTime() - 24 * 60 * 60 * 1000
+                );
+
+                const kills24h = system.kills_24h.filter(
+                    (entry) => new Date(entry.timestamp) >= twentyFourHoursAgo
+                );
+
+                const shipKills24h = kills24h.reduce(
+                    (sum, entry) => sum + (entry.ship_kills || 0),
+                    0
+                );
+                const npcKills24h = kills24h.reduce(
+                    (sum, entry) => sum + (entry.npc_kills || 0),
+                    0
+                );
+                const podKills24h = kills24h.reduce(
+                    (sum, entry) => sum + (entry.pod_kills || 0),
+                    0
+                );
 
                 systemKills = {
                     system_id: system.system_id,

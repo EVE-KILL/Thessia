@@ -9,12 +9,8 @@
         <!-- Main content - system data -->
         <div v-else-if="system" class="mx-auto p-4 text-gray-900 dark:text-white">
             <!-- System Dashboard Component -->
-            <SystemDashboard 
-                :system="system as any"
-                :sovereignty="systemSovereignty"
-                :jumps="systemJumpData"
-                :kills="systemKillData"
-            />
+            <SystemDashboard :system="system as any" :sovereignty="systemSovereignty" :jumps="systemJumpData"
+                :kills="systemKillData" />
 
             <Tabs :items="tabItems" v-model="activeTabId" class="space-y-4">
                 <template #overview>
@@ -22,7 +18,8 @@
                         <div class="text-center p-8">
                             <div class="max-w-md mx-auto">
                                 <UIcon name="i-lucide-construction" class="w-16 h-16 text-gray-400 mx-auto mb-4" />
-                                <h3 class="text-lg font-medium text-gray-900 dark:text-white mb-2">{{ t('comingSoon') }}</h3>
+                                <h3 class="text-lg font-medium text-gray-900 dark:text-white mb-2">{{ t('comingSoon') }}
+                                </h3>
                                 <p class="text-gray-500 dark:text-gray-400">{{ t('systemOverviewComingSoon') }}</p>
                             </div>
                         </div>
@@ -51,8 +48,8 @@ import { computed, nextTick, onMounted, ref, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useRoute, useRouter } from 'vue-router';
 import SystemDashboard from '~/components/system/SystemDashboard.vue';
-import SystemKills from '~/components/system/SystemKills.vue';
 import SystemInformation from '~/components/system/SystemInformation.vue';
+import SystemKills from '~/components/system/SystemKills.vue';
 
 const { t, locale } = useI18n();
 const route = useRoute();

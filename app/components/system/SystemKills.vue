@@ -1,7 +1,6 @@
 <template>
     <div class="tab-content">
-        <KillList killlistType="latest" :limit="100"
-            :apiEndpoint="`/api/killlist/system/${systemId}`"
+        <KillList killlistType="latest" :limit="100" :apiEndpoint="`/api/killlist/system/${systemId}`"
             :wsFilter="`system.${systemId}`" />
     </div>
 </template>
