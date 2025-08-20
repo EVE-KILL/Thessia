@@ -2,6 +2,26 @@ import { type Document, type Model, Schema, model } from "mongoose";
 
 export interface ISolarSystemDocument extends ISolarSystem, Document {}
 
+// Define sub-schemas
+
+const activityEntrySchema = new Schema(
+    {
+        timestamp: { type: Date, required: true },
+        ship_jumps: { type: Number, required: true },
+    },
+    { _id: false }
+);
+
+const killsEntrySchema = new Schema(
+    {
+        timestamp: { type: Date, required: true },
+        ship_kills: { type: Number, required: true },
+        npc_kills: { type: Number, required: true },
+        pod_kills: { type: Number, required: true },
+    },
+    { _id: false }
+);
+
 const solarSystemsSchema = new Schema<ISolarSystemDocument>(
     {
         region_id: { type: Number },
@@ -30,6 +50,11 @@ const solarSystemsSchema = new Schema<ISolarSystemDocument>(
         radius: { type: Number },
         sun_type_id: { type: Number },
         security_class: { type: String },
+
+        // New fields for activity tracking
+        jumps_24h: { type: [activityEntrySchema], default: [] },
+        kills_24h: { type: [killsEntrySchema], default: [] },
+
         updatedAt: { type: Date },
         createdAt: { type: Date },
     },
@@ -48,6 +73,8 @@ const solarSystemsSchema = new Schema<ISolarSystemDocument>(
 // Define indexes for the schema
 solarSystemsSchema.index({ constellation_id: 1 }, { sparse: true });
 solarSystemsSchema.index({ region_id: 1 }, { sparse: true });
+solarSystemsSchema.index({ "jumps_24h.timestamp": 1 }, { sparse: true });
+solarSystemsSchema.index({ "kills_24h.timestamp": 1 }, { sparse: true });
 
 export const SolarSystems: Model<ISolarSystemDocument> =
     model<ISolarSystemDocument>(

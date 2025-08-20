@@ -121,7 +121,8 @@
 
                                     <!-- Sovereignty section -->
                                     <div class="mt-6">
-                                        <h4 class="text-sm font-semibold mb-2 text-gray-900 dark:text-white flex items-center gap-2">
+                                        <h4
+                                            class="text-sm font-semibold mb-2 text-gray-900 dark:text-white flex items-center gap-2">
                                             <UIcon name="i-lucide-flag" class="flex-shrink-0 w-4 h-4 text-gray-500" />
                                             Sovereignty
                                         </h4>
@@ -129,35 +130,44 @@
                                         <div class="space-y-2 text-sm">
                                             <!-- Alliance info -->
                                             <div v-if="systemSovereignty?.alliance_id" class="flex items-center gap-2">
-                                                <Image type="alliance" :id="systemSovereignty.alliance_id" 
+                                                <Image type="alliance" :id="systemSovereignty.alliance_id"
                                                     class="w-6 h-6 rounded flex-shrink-0" size="32" />
                                                 <div class="flex flex-col min-w-0">
-                                                    <span class="text-xs text-gray-500 dark:text-gray-400">Alliance:</span>
+                                                    <span
+                                                        class="text-xs text-gray-500 dark:text-gray-400">Alliance:</span>
                                                     <span class="font-medium text-gray-900 dark:text-gray-300 truncate">
-                                                        {{ systemSovereignty.alliance_name || `Alliance ID: ${systemSovereignty.alliance_id}` }}
+                                                        {{ systemSovereignty.alliance_name || `Alliance ID:
+                                                        ${systemSovereignty.alliance_id}` }}
                                                     </span>
                                                 </div>
                                             </div>
 
                                             <!-- Corporation info -->
-                                            <div v-if="systemSovereignty?.corporation_id" class="flex items-center gap-2">
-                                                <Image type="corporation" :id="systemSovereignty.corporation_id" 
+                                            <div v-if="systemSovereignty?.corporation_id"
+                                                class="flex items-center gap-2">
+                                                <Image type="corporation" :id="systemSovereignty.corporation_id"
                                                     class="w-6 h-6 rounded flex-shrink-0" size="32" />
                                                 <div class="flex flex-col min-w-0">
-                                                    <span class="text-xs text-gray-500 dark:text-gray-400">Corporation:</span>
+                                                    <span
+                                                        class="text-xs text-gray-500 dark:text-gray-400">Corporation:</span>
                                                     <span class="font-medium text-gray-900 dark:text-gray-300 truncate">
-                                                        {{ systemSovereignty.corporation_name || `Corporation ID: ${systemSovereignty.corporation_id}` }}
+                                                        {{ systemSovereignty.corporation_name || `Corporation ID:
+                                                        ${systemSovereignty.corporation_id}` }}
                                                     </span>
                                                 </div>
                                             </div>
 
                                             <!-- NPC Faction -->
-                                            <div v-if="systemSovereignty?.faction_id && !systemSovereignty?.alliance_id && !systemSovereignty?.corporation_id">
-                                                <span class="text-orange-600 dark:text-orange-400 text-sm font-medium">NPC Faction</span>
+                                            <div
+                                                v-if="systemSovereignty?.faction_id && !systemSovereignty?.alliance_id && !systemSovereignty?.corporation_id">
+                                                <span
+                                                    class="text-orange-600 dark:text-orange-400 text-sm font-medium">NPC
+                                                    Faction</span>
                                             </div>
 
                                             <!-- Unclaimed -->
-                                            <div v-if="!systemSovereignty?.alliance_id && !systemSovereignty?.corporation_id && !systemSovereignty?.faction_id">
+                                            <div
+                                                v-if="!systemSovereignty?.alliance_id && !systemSovereignty?.corporation_id && !systemSovereignty?.faction_id">
                                                 <span class="text-gray-500 dark:text-gray-400 text-sm">Unclaimed</span>
                                             </div>
                                         </div>
@@ -310,7 +320,7 @@
                                                     {{ connection.destination_system_name }}
                                                 </NuxtLink>
                                                 <div class="text-xs text-gray-500">via {{ connection.stargate_name
-                                                }}</div>
+                                                    }}</div>
                                             </div>
                                         </div>
                                         <div class="flex items-center gap-1">

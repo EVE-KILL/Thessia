@@ -478,23 +478,13 @@ async function getWarKillmails(
 }
 
 async function getSovereigntyMap(): Promise<any[]> {
-    const cacheKey = "esi:sovereignty:map";
-
     try {
-        // Try to get from cache first using Nuxt storage
-        const cached = await useStorage("redis").getItem(cacheKey);
-        if (cached && Array.isArray(cached)) {
-            return cached as any[];
-        }
-
         const data = await esiFetcher(
             `${
                 process.env.ESI_URL || "https://esi.evetech.net/"
             }latest/sovereignty/map/?datasource=tranquility`
         );
 
-        // Cache for 1 hour (3600 seconds)
-        await useStorage("redis").setItem(cacheKey, data, { ttl: 3600 });
         return data;
     } catch (error) {
         console.warn("Failed to fetch sovereignty map:", error);
@@ -503,23 +493,13 @@ async function getSovereigntyMap(): Promise<any[]> {
 }
 
 async function getSystemJumps(): Promise<any[]> {
-    const cacheKey = "esi:universe:system_jumps";
-
     try {
-        // Try to get from cache first using Nuxt storage
-        const cached = await useStorage("redis").getItem(cacheKey);
-        if (cached && Array.isArray(cached)) {
-            return cached as any[];
-        }
-
         const data = await esiFetcher(
             `${
                 process.env.ESI_URL || "https://esi.evetech.net/"
             }latest/universe/system_jumps/?datasource=tranquility`
         );
 
-        // Cache for 1 hour (3600 seconds)
-        await useStorage("redis").setItem(cacheKey, data, { ttl: 3600 });
         return data;
     } catch (error) {
         console.warn("Failed to fetch system jumps:", error);
@@ -528,23 +508,13 @@ async function getSystemJumps(): Promise<any[]> {
 }
 
 async function getSystemKills(): Promise<any[]> {
-    const cacheKey = "esi:universe:system_kills";
-
     try {
-        // Try to get from cache first using Nuxt storage
-        const cached = await useStorage("redis").getItem(cacheKey);
-        if (cached && Array.isArray(cached)) {
-            return cached as any[];
-        }
-
         const data = await esiFetcher(
             `${
                 process.env.ESI_URL || "https://esi.evetech.net/"
             }latest/universe/system_kills/?datasource=tranquility`
         );
 
-        // Cache for 1 hour (3600 seconds)
-        await useStorage("redis").setItem(cacheKey, data, { ttl: 3600 });
         return data;
     } catch (error) {
         console.warn("Failed to fetch system kills:", error);

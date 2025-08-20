@@ -1,15 +1,10 @@
-import {
-    getAlliance,
-    getCorporation,
-    getSovereigntyMap,
-    getSystemJumps,
-    getSystemKills,
-} from "../../../helpers/ESIData";
+import { getSystemJumps, getSystemKills } from "../../../helpers/ESIData";
 import { Celestials } from "../../../models/Celestials";
 import { Constellations } from "../../../models/Constellations";
 import { Factions } from "../../../models/Factions";
 import { Regions } from "../../../models/Regions";
 import { SolarSystems } from "../../../models/SolarSystems";
+import { Sovereignty } from "../../../models/Sovereignty";
 
 export default defineCachedEventHandler(
     async (event) => {
@@ -167,53 +162,71 @@ export default defineCachedEventHandler(
 
         enrichedSystem.neighboring_systems = neighboringSystems;
 
-        // Fetch ESI data to add sovereignty and activity information
+        // Fetch system data to add sovereignty and activity information
         try {
-            // Fetch sovereignty data
-            const sovereigntyData = await getSovereigntyMap();
-            const systemSovereignty = sovereigntyData.find(
-                (entry: any) => entry.system_id === system.system_id
-            );
-            enrichedSystem.sovereignty = systemSovereignty || null;
+            let systemSovereignty = null;
+            let systemJumps = null;
+            let systemKills = null;
 
-            // Resolve alliance and corporation names if we have IDs
-            if (systemSovereignty?.alliance_id) {
-                try {
-                    const allianceData = await getAlliance(
-                        systemSovereignty.alliance_id
-                    );
-                    enrichedSystem.sovereignty.alliance_name =
-                        allianceData.name;
-                } catch (error) {
-                    console.warn("Failed to fetch alliance name:", error);
-                }
+            // Get sovereignty from our database
+            const sovereigntyDoc = await Sovereignty.findOne(
+                { system_id: system.system_id },
+                { _id: 0, __v: 0, history: 0 } // Exclude unnecessary fields
+            ).lean();
+
+            if (sovereigntyDoc) {
+                systemSovereignty = {
+                    system_id: sovereigntyDoc.system_id,
+                    alliance_id: sovereigntyDoc.alliance_id,
+                    alliance_name: sovereigntyDoc.alliance_name,
+                    corporation_id: sovereigntyDoc.corporation_id,
+                    corporation_name: sovereigntyDoc.corporation_name,
+                    faction_id: sovereigntyDoc.faction_id,
+                };
             }
 
-            if (systemSovereignty?.corporation_id) {
-                try {
-                    const corpData = await getCorporation(
-                        systemSovereignty.corporation_id
-                    );
-                    enrichedSystem.sovereignty.corporation_name = corpData.name;
-                } catch (error) {
-                    console.warn("Failed to fetch corporation name:", error);
-                }
+            // Get activity data from system document (this already exists in SolarSystems collection)
+            if (system.jumps_24h && system.jumps_24h.length > 0) {
+                // Use latest entry from database
+                const latestJump =
+                    system.jumps_24h[system.jumps_24h.length - 1];
+                systemJumps = {
+                    system_id: system.system_id,
+                    ship_jumps: latestJump.ship_jumps,
+                };
+            } else {
+                // Fallback to ESI
+                const jumpData = await getSystemJumps();
+                systemJumps =
+                    jumpData.find(
+                        (entry: any) => entry.system_id === system.system_id
+                    ) || null;
             }
 
-            // Fetch system activity data
-            const jumpData = await getSystemJumps();
-            const systemJumps = jumpData.find(
-                (entry: any) => entry.system_id === system.system_id
-            );
-            enrichedSystem.jumps = systemJumps || null;
+            if (system.kills_24h && system.kills_24h.length > 0) {
+                // Use latest entry from database
+                const latestKill =
+                    system.kills_24h[system.kills_24h.length - 1];
+                systemKills = {
+                    system_id: system.system_id,
+                    ship_kills: latestKill.ship_kills,
+                    npc_kills: latestKill.npc_kills,
+                    pod_kills: latestKill.pod_kills,
+                };
+            } else {
+                // Fallback to ESI
+                const killData = await getSystemKills();
+                systemKills =
+                    killData.find(
+                        (entry: any) => entry.system_id === system.system_id
+                    ) || null;
+            }
 
-            const killData = await getSystemKills();
-            const systemKills = killData.find(
-                (entry: any) => entry.system_id === system.system_id
-            );
-            enrichedSystem.kills = systemKills || null;
+            enrichedSystem.sovereignty = systemSovereignty;
+            enrichedSystem.jumps = systemJumps;
+            enrichedSystem.kills = systemKills;
         } catch (error) {
-            console.warn("Failed to fetch ESI data:", error);
+            console.warn("Failed to fetch system data:", error);
             // Set fallback values
             enrichedSystem.sovereignty = null;
             enrichedSystem.jumps = null;
