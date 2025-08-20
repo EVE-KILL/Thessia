@@ -44,19 +44,27 @@ export default {
         if (cmdOptions.startDate) {
             startDate = new Date(cmdOptions.startDate);
             if (isNaN(startDate.getTime())) {
-                throw new Error(`Invalid start date format: ${cmdOptions.startDate}. Use YYYY-MM-DD format.`);
+                throw new Error(
+                    `Invalid start date format: ${cmdOptions.startDate}. Use YYYY-MM-DD format.`
+                );
             }
-            cliLogger.info(`Starting from date: ${startDate.toISOString().split('T')[0]}`);
+            cliLogger.info(
+                `Starting from date: ${startDate.toISOString().split("T")[0]}`
+            );
         }
 
         if (cmdOptions.endDate) {
             endDate = new Date(cmdOptions.endDate);
             if (isNaN(endDate.getTime())) {
-                throw new Error(`Invalid end date format: ${cmdOptions.endDate}. Use YYYY-MM-DD format.`);
+                throw new Error(
+                    `Invalid end date format: ${cmdOptions.endDate}. Use YYYY-MM-DD format.`
+                );
             }
             // Set end date to end of day
             endDate.setHours(23, 59, 59, 999);
-            cliLogger.info(`Ending at date: ${endDate.toISOString().split('T')[0]}`);
+            cliLogger.info(
+                `Ending at date: ${endDate.toISOString().split("T")[0]}`
+            );
         }
 
         if (startDate && endDate && startDate > endDate) {
@@ -84,17 +92,27 @@ export default {
             for (const { file: fileName, year } of yearlyFiles) {
                 // Skip entire year if it's before our start date
                 if (startDate && year < startDate.getFullYear()) {
-                    cliLogger.info(`Skipping ${fileName} - year ${year} is before start date`);
-                    continue;
-                }
-                
-                // Skip entire year if it's after our end date
-                if (endDate && year > endDate.getFullYear()) {
-                    cliLogger.info(`Skipping ${fileName} - year ${year} is after end date`);
+                    cliLogger.info(
+                        `Skipping ${fileName} - year ${year} is before start date`
+                    );
                     continue;
                 }
 
-                await processYearlyFile(baseUrl, fileName, tmpDir, startDate, endDate);
+                // Skip entire year if it's after our end date
+                if (endDate && year > endDate.getFullYear()) {
+                    cliLogger.info(
+                        `Skipping ${fileName} - year ${year} is after end date`
+                    );
+                    continue;
+                }
+
+                await processYearlyFile(
+                    baseUrl,
+                    fileName,
+                    tmpDir,
+                    startDate,
+                    endDate
+                );
             }
 
             // Process daily files for 2022 (starting from 2022-12-16), 2023, 2024, 2025
@@ -183,13 +201,17 @@ async function processDailyFiles(
     for (const range of dailyRanges) {
         // Skip entire year if it's before our start date
         if (startDate && range.year < startDate.getFullYear()) {
-            cliLogger.info(`Skipping daily files for ${range.year} - year is before start date`);
+            cliLogger.info(
+                `Skipping daily files for ${range.year} - year is before start date`
+            );
             continue;
         }
-        
+
         // Skip entire year if it's after our end date
         if (endDate && range.year > endDate.getFullYear()) {
-            cliLogger.info(`Skipping daily files for ${range.year} - year is after end date`);
+            cliLogger.info(
+                `Skipping daily files for ${range.year} - year is after end date`
+            );
             continue;
         }
 
@@ -219,7 +241,7 @@ async function processDailyRange(
                 .padStart(2, "0")}-${day.toString().padStart(2, "0")}`;
 
             const currentDate = new Date(dateStr);
-            
+
             // Skip if before start date or after end date
             if (startDate && currentDate < startDate) {
                 continue;
@@ -340,8 +362,8 @@ async function processDailyFile(
 }
 
 async function processJsonFiles(
-    directory: string, 
-    startDate: Date | null = null, 
+    directory: string,
+    startDate: Date | null = null,
     endDate: Date | null = null
 ): Promise<void> {
     const files = fs.readdirSync(directory);
@@ -393,7 +415,7 @@ async function processJsonFiles(
         if (endDate && timestamp > endDate) {
             continue;
         }
-        
+
         const filePath = path.join(directory, file);
         const dateStr = timestamp.toISOString().split("T")[0]; // Convert to YYYY-MM-DD format
         await processJsonFile(filePath, dateStr, startDate, endDate);
@@ -450,11 +472,15 @@ async function processJsonFile(
 
         // Skip if timestamp is outside of our date range
         if (startDate && timestamp < startDate) {
-            cliLogger.info(`Skipping ${path.basename(filePath)} - before start date`);
+            cliLogger.info(
+                `Skipping ${path.basename(filePath)} - before start date`
+            );
             return;
         }
         if (endDate && timestamp > endDate) {
-            cliLogger.info(`Skipping ${path.basename(filePath)} - after end date`);
+            cliLogger.info(
+                `Skipping ${path.basename(filePath)} - after end date`
+            );
             return;
         }
 

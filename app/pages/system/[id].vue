@@ -14,22 +14,10 @@
 
             <Tabs :items="tabItems" v-model="activeTabId" class="space-y-4">
                 <template #overview>
-                    <div class="tab-content">
-                        <div class="text-center p-8">
-                            <div class="max-w-md mx-auto">
-                                <UIcon name="i-lucide-construction" class="w-16 h-16 text-gray-400 mx-auto mb-4" />
-                                <h3 class="text-lg font-medium text-gray-900 dark:text-white mb-2">{{ t('comingSoon') }}
-                                </h3>
-                                <p class="text-gray-500 dark:text-gray-400">{{ t('systemOverviewComingSoon') }}</p>
-                            </div>
-                        </div>
-                    </div>
+                    <SystemOverview :system="system as any" />
                 </template>
                 <template #kills>
                     <SystemKills :system-id="(system as any)?.system_id" />
-                </template>
-                <template #info>
-                    <SystemInformation :system="system as any" />
                 </template>
                 <template #battles>
                     <div class="tab-content">
@@ -47,9 +35,6 @@
 import { computed, nextTick, onMounted, ref, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useRoute, useRouter } from 'vue-router';
-import SystemDashboard from '~/components/system/SystemDashboard.vue';
-import SystemInformation from '~/components/system/SystemInformation.vue';
-import SystemKills from '~/components/system/SystemKills.vue';
 
 const { t, locale } = useI18n();
 const route = useRoute();
@@ -116,9 +101,8 @@ useSeoMeta({
 });
 
 const tabItems = [
-    { id: "overview", label: t("overview"), icon: "i-lucide-home", slot: "overview" as const },
+    { id: "overview", label: t("overview"), icon: "i-lucide-info", slot: "overview" as const },
     { id: "kills", label: t("kills"), icon: "i-lucide-crosshair", slot: "kills" as const },
-    { id: "info", label: t("information"), icon: "i-lucide-info", slot: "info" as const },
     { id: "battles", label: t("battles"), icon: "i-lucide-swords", slot: "battles" as const },
 ];
 
