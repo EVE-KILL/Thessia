@@ -44,7 +44,8 @@
                         <td class="px-4 py-2">{{ formatDuration(battle.duration_ms) }}</td>
                         <td class="px-4 py-2">{{ formatNumber(battle.killmailsCount) }} kills</td>
                         <td class="px-4 py-2">
-                            {{ (battle.alliancesInvolved?.length || 0) + (battle.corporationsInvolved?.length || 0) }} orgs
+                            {{ (battle.alliancesInvolved?.length || 0) + (battle.corporationsInvolved?.length || 0) }}
+                            orgs
                         </td>
                     </tr>
                 </tbody>

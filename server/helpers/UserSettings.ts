@@ -127,7 +127,8 @@ export class UserSettingsHelper {
         } else if (
             key === "defaultCharacterPage" ||
             key === "defaultCorporationPage" ||
-            key === "defaultAlliancePage"
+            key === "defaultAlliancePage" ||
+            key === "defaultSystemPage"
         ) {
             if (typeof value !== "string") return false;
             if (

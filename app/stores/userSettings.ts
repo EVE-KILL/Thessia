@@ -5,6 +5,7 @@ export interface UserSettings {
     defaultCharacterPage: string;
     defaultCorporationPage: string;
     defaultAlliancePage: string;
+    defaultSystemPage: string;
 }
 
 interface UserSettingsResponse {
@@ -28,6 +29,7 @@ const defaultSettings: UserSettings = {
     defaultCharacterPage: "dashboard",
     defaultCorporationPage: "dashboard",
     defaultAlliancePage: "dashboard",
+    defaultSystemPage: "overview",
 };
 
 export const useUserSettingsStore = defineStore("userSettings", {
@@ -88,6 +90,13 @@ export const useUserSettingsStore = defineStore("userSettings", {
             return (
                 state.settings?.defaultAlliancePage ??
                 defaultSettings.defaultAlliancePage
+            );
+        },
+
+        defaultSystemPage: (state) => {
+            return (
+                state.settings?.defaultSystemPage ??
+                defaultSettings.defaultSystemPage
             );
         },
     },

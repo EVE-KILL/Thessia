@@ -3,7 +3,7 @@
  * Handles fallback to first available tab if user setting is invalid
  */
 export const useDefaultTab = (
-    pageType: "character" | "corporation" | "alliance",
+    pageType: "character" | "corporation" | "alliance" | "system",
     availableTabs: Array<{ id: string }>
 ) => {
     const userSettingsStore = useUserSettingsStore();
@@ -30,6 +30,9 @@ export const useDefaultTab = (
                 break;
             case "alliance":
                 userPreferredTab = userSettingsStore.defaultAlliancePage;
+                break;
+            case "system":
+                userPreferredTab = userSettingsStore.defaultSystemPage;
                 break;
             default:
                 userPreferredTab = "dashboard";

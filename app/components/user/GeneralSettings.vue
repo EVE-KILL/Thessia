@@ -5,6 +5,7 @@ interface Props {
         defaultCharacterPage: string;
         defaultCorporationPage: string;
         defaultAlliancePage: string;
+        defaultSystemPage: string;
     };
     isUpdatingSettings: boolean;
 }
@@ -18,6 +19,7 @@ const emit = defineEmits<{
         defaultCharacterPage: string;
         defaultCorporationPage: string;
         defaultAlliancePage: string;
+        defaultSystemPage: string;
     }];
 }>();
 
@@ -60,15 +62,21 @@ const pageOptions = {
         { value: "top", label: t("top", "Top") },
         { value: "stats", label: t("stats", "Stats") },
         { value: "battles", label: t("battles", "Battles") },
+    ],
+    system: [
+        { value: "overview", label: t("system.overview", "Overview") },
+        { value: "kills", label: t("kills", "Kills") },
+        { value: "battles", label: t("battles", "Battles") },
     ]
 };
 
 // Generic handler for default page updates
-const updateDefaultPage = async (pageType: 'character' | 'corporation' | 'alliance', value: string) => {
+const updateDefaultPage = async (pageType: 'character' | 'corporation' | 'alliance' | 'system', value: string) => {
     const settingKeys = {
         character: 'defaultCharacterPage',
         corporation: 'defaultCorporationPage',
-        alliance: 'defaultAlliancePage'
+        alliance: 'defaultAlliancePage',
+        system: 'defaultSystemPage'
     } as const;
 
     const settingKey = settingKeys[pageType];
@@ -164,7 +172,7 @@ onMounted(() => {
             </div>
 
             <!-- Default Page Options -->
-            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <div class="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-4 gap-6">
                 <!-- Character Default Page -->
                 <div class="space-y-3">
                     <div class="flex items-center space-x-2">
@@ -232,6 +240,29 @@ onMounted(() => {
                     </select>
                     <p class="text-xs text-gray-500 dark:text-gray-400">
                         {{ t("settings.defaultPages.allianceDesc", "Default tab when viewing alliance profiles") }}
+                    </p>
+                </div>
+
+                <!-- System Default Page -->
+                <div class="space-y-3">
+                    <div class="flex items-center space-x-2">
+                        <Icon name="lucide:map-pin" class="h-4 w-4 text-red-500" />
+                        <label for="defaultSystemPage"
+                            class="block text-sm font-medium text-gray-900 dark:text-white">
+                            {{ t("settings.defaultPages.system", "System Pages") }}
+                        </label>
+                        <Icon v-if="isUpdatingSettings" name="lucide:loader-2"
+                            class="h-3 w-3 animate-spin text-blue-500" />
+                    </div>
+                    <select id="defaultSystemPage" :value="userSettings.defaultSystemPage"
+                        @change="(e) => updateDefaultPage('system', (e.target as HTMLSelectElement).value)"
+                        :disabled="isUpdatingSettings" class="setting-select">
+                        <option v-for="option in pageOptions.system" :key="option.value" :value="option.value">
+                            {{ option.label }}
+                        </option>
+                    </select>
+                    <p class="text-xs text-gray-500 dark:text-gray-400">
+                        {{ t("settings.defaultPages.systemDesc", "Default tab when viewing system pages") }}
                     </p>
                 </div>
             </div>
@@ -329,7 +360,13 @@ input[type="checkbox"]:focus {
 
 /* Better spacing for responsive design */
 @media (max-width: 1023px) {
-    .grid.lg\:grid-cols-3 {
+    .grid.lg\:grid-cols-2 {
+        gap: 1rem;
+    }
+}
+
+@media (max-width: 1279px) {
+    .grid.xl\:grid-cols-4 {
         gap: 1rem;
     }
 }

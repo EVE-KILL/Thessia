@@ -15,6 +15,7 @@ export interface IUserSettingsMap {
     defaultCharacterPage: string;
     defaultCorporationPage: string;
     defaultAlliancePage: string;
+    defaultSystemPage: string;
     // Future settings can be added here
     // emailNotifications: boolean;
     // theme: 'light' | 'dark' | 'auto';
@@ -34,6 +35,7 @@ export const DEFAULT_USER_SETTINGS: IUserSettingsMap = {
     defaultCharacterPage: "dashboard",
     defaultCorporationPage: "dashboard",
     defaultAlliancePage: "dashboard",
+    defaultSystemPage: "overview",
 };
 
 /**
@@ -87,6 +89,15 @@ export const USER_SETTING_VALIDATION = {
             "characterMembers",
             "top",
             "stats",
+            "battles",
+        ],
+        required: false,
+    },
+    defaultSystemPage: {
+        type: "string" as const,
+        allowedValues: [
+            "overview",
+            "kills",
             "battles",
         ],
         required: false,
