@@ -3,6 +3,7 @@ import { Constellations } from '../../../models/Constellations';
 import { Regions } from '../../../models/Regions';
 import { Factions } from '../../../models/Factions';
 import { Celestials } from '../../../models/Celestials';
+import { getSovereigntyMap, getSystemJumps, getSystemKills, getAlliance, getCorporation } from '../../../helpers/ESIData';
 
 export default defineCachedEventHandler(
     async (event) => {
@@ -149,6 +150,49 @@ export default defineCachedEventHandler(
         ).lean();
 
         enrichedSystem.neighboring_systems = neighboringSystems;
+
+        // Fetch ESI data to add sovereignty and activity information
+        try {
+            // Fetch sovereignty data
+            const sovereigntyData = await getSovereigntyMap();
+            const systemSovereignty = sovereigntyData.find((entry: any) => entry.system_id === system.system_id);
+            enrichedSystem.sovereignty = systemSovereignty || null;
+
+            // Resolve alliance and corporation names if we have IDs
+            if (systemSovereignty?.alliance_id) {
+                try {
+                    const allianceData = await getAlliance(systemSovereignty.alliance_id);
+                    enrichedSystem.sovereignty.alliance_name = allianceData.name;
+                } catch (error) {
+                    console.warn('Failed to fetch alliance name:', error);
+                }
+            }
+
+            if (systemSovereignty?.corporation_id) {
+                try {
+                    const corpData = await getCorporation(systemSovereignty.corporation_id);
+                    enrichedSystem.sovereignty.corporation_name = corpData.name;
+                } catch (error) {
+                    console.warn('Failed to fetch corporation name:', error);
+                }
+            }
+
+            // Fetch system activity data
+            const jumpData = await getSystemJumps();
+            const systemJumps = jumpData.find((entry: any) => entry.system_id === system.system_id);
+            enrichedSystem.jumps = systemJumps || null;
+
+            const killData = await getSystemKills();
+            const systemKills = killData.find((entry: any) => entry.system_id === system.system_id);
+            enrichedSystem.kills = systemKills || null;
+
+        } catch (error) {
+            console.warn('Failed to fetch ESI data:', error);
+            // Set fallback values
+            enrichedSystem.sovereignty = null;
+            enrichedSystem.jumps = null;
+            enrichedSystem.kills = null;
+        }
 
         return enrichedSystem;
     },

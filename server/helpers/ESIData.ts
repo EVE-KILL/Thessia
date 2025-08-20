@@ -335,6 +335,11 @@ async function getCorporationHistory(
     const corporation = await Corporations.findOne({
         corporation_id: corporation_id,
     });
+    
+    if (!corporation) {
+        return [];
+    }
+    
     const history = await esiFetcher(
         `${
             process.env.ESI_URL || "https://esi.evetech.net/"
@@ -427,7 +432,7 @@ async function getFaction(faction_id: number): Promise<IFaction | null> {
     return faction;
 }
 
-async function getItem(item_id: number): Promise<IItem> {
+async function getItem(item_id: number): Promise<IItem | null> {
     return await InvTypes.findOne(
         { type_id: item_id },
         { _id: 0, __v: 0, createdAt: 0, updatedAt: 0 }
@@ -469,6 +474,75 @@ async function getWarKillmails(
     return data;
 }
 
+async function getSovereigntyMap(): Promise<any[]> {
+    const cacheKey = "esi:sovereignty:map";
+    
+    try {
+        // Try to get from cache first using Nuxt storage
+        const cached = await useStorage('redis').getItem(cacheKey);
+        if (cached && Array.isArray(cached)) {
+            return cached as any[];
+        }
+
+        const data = await esiFetcher(
+            `${process.env.ESI_URL || "https://esi.evetech.net/"}latest/sovereignty/map/?datasource=tranquility`
+        );
+
+        // Cache for 1 hour (3600 seconds)
+        await useStorage('redis').setItem(cacheKey, data, { ttl: 3600 });
+        return data;
+    } catch (error) {
+        console.warn('Failed to fetch sovereignty map:', error);
+        return [];
+    }
+}
+
+async function getSystemJumps(): Promise<any[]> {
+    const cacheKey = "esi:universe:system_jumps";
+    
+    try {
+        // Try to get from cache first using Nuxt storage
+        const cached = await useStorage('redis').getItem(cacheKey);
+        if (cached && Array.isArray(cached)) {
+            return cached as any[];
+        }
+
+        const data = await esiFetcher(
+            `${process.env.ESI_URL || "https://esi.evetech.net/"}latest/universe/system_jumps/?datasource=tranquility`
+        );
+
+        // Cache for 1 hour (3600 seconds)
+        await useStorage('redis').setItem(cacheKey, data, { ttl: 3600 });
+        return data;
+    } catch (error) {
+        console.warn('Failed to fetch system jumps:', error);
+        return [];
+    }
+}
+
+async function getSystemKills(): Promise<any[]> {
+    const cacheKey = "esi:universe:system_kills";
+    
+    try {
+        // Try to get from cache first using Nuxt storage
+        const cached = await useStorage('redis').getItem(cacheKey);
+        if (cached && Array.isArray(cached)) {
+            return cached as any[];
+        }
+
+        const data = await esiFetcher(
+            `${process.env.ESI_URL || "https://esi.evetech.net/"}latest/universe/system_kills/?datasource=tranquility`
+        );
+
+        // Cache for 1 hour (3600 seconds)
+        await useStorage('redis').setItem(cacheKey, data, { ttl: 3600 });
+        return data;
+    } catch (error) {
+        console.warn('Failed to fetch system kills:', error);
+        return [];
+    }
+}
+
 export {
     fetchESIKillmail,
     getAlliance,
@@ -480,4 +554,7 @@ export {
     getItem,
     getWar,
     getWarKillmails,
+    getSovereigntyMap,
+    getSystemJumps,
+    getSystemKills,
 };
