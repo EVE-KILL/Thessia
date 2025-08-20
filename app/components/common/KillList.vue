@@ -475,12 +475,18 @@ const truncateString = (str: any, num: number): string => {
 };
 
 const isCombinedLoss = (kill: any): boolean => {
-    if (!kill || !props.combinedKillsAndLosses) return false;
+    if (!kill || !props.combinedKillsAndLosses || !props.combinedVictimId) return false;
 
     const victimIdProp = `${props.combinedVictimType}_id`;
-    const victimId = kill.victim[victimIdProp];
+    const victimId = kill.victim?.[victimIdProp];
 
-    return victimId === props.combinedVictimId;
+    if (!victimId) return false;
+
+    // Ensure both values are numbers for comparison
+    const victimIdNum = Number(victimId);
+    const combinedVictimIdNum = Number(props.combinedVictimId);
+
+    return victimIdNum === combinedVictimIdNum;
 };
 
 // Get row class based on whether it's a combined loss
@@ -1249,29 +1255,36 @@ onUpdated(() => {
     /* Ensure XS size */
 }
 
-/* Enhanced Custom color class for combined losses */
-.bg-darkred {
-    background-color: rgba(139, 0, 0, 0.4) !important;
-    /* Darker red with more opacity */
-}
-
-/* Add an additional class to ensure it gets applied with higher specificity */
-.combined-loss-row {
-    background-color: rgba(139, 0, 0, 0.4) !important;
+/* Combined Loss Row Styling - Single source of truth */
+.combined-loss-row,
+.bg-darkred,
+:deep(.combined-loss-row),
+:deep(.bg-darkred) {
+    background-color: rgba(220, 38, 38, 0.15) !important;
     border-left: 3px solid rgb(220, 38, 38) !important;
-    /* Add a left border for extra visibility */
 }
 
-/* Make sure our class overrides table row styles */
-:deep(tr.combined-loss-row),
-:deep(tr.combined-loss-row td),
-:deep(tr.combined-loss-row:hover) {
-    background-color: rgba(139, 0, 0, 0.4) !important;
+/* Table rows (div elements) */
+:deep(div.combined-loss-row),
+:deep(div.bg-darkred),
+:deep(.table-row.combined-loss-row),
+:deep(.table-row.bg-darkred) {
+    background-color: rgba(220, 38, 38, 0.15) !important;
+    border-left: 3px solid rgb(220, 38, 38) !important;
 }
 
-/* For mobile view */
-:deep(.mobile-container.combined-loss-row) {
-    background-color: rgba(139, 0, 0, 0.4) !important;
+/* Hover states */
+:deep(div.combined-loss-row:hover),
+:deep(div.bg-darkred:hover),
+:deep(.table-row.combined-loss-row:hover),
+:deep(.table-row.bg-darkred:hover) {
+    background-color: rgba(220, 38, 38, 0.25) !important;
+}
+
+/* Mobile view */
+:deep(.mobile-container.combined-loss-row),
+:deep(.mobile-container.bg-darkred) {
+    background-color: rgba(220, 38, 38, 0.15) !important;
     border-left: 3px solid rgb(220, 38, 38) !important;
 }
 
@@ -1438,55 +1451,6 @@ onUpdated(() => {
     50% {
         opacity: 0.4;
     }
-}
-
-/* Direct targeting of the table row elements with more muted red */
-.bg-darkred,
-.combined-loss-row,
-:deep(a.table-row.bg-darkred),
-:deep(a.table-row.combined-loss-row) {
-    background-color: rgba(80, 0, 0, 0.6) !important;
-    border-left: 3px solid rgba(139, 46, 46, 0.8) !important;
-}
-
-/* Target hover states with a slightly darker but still muted red */
-:deep(a.table-row.bg-darkred:hover),
-:deep(a.table-row.combined-loss-row:hover) {
-    background-color: rgba(90, 0, 0, 0.65) !important;
-}
-
-/* Target mobile view as well */
-:deep(.mobile-container.bg-darkred),
-:deep(.mobile-container.combined-loss-row) {
-    background-color: rgba(80, 0, 0, 0.6) !important;
-    border-left: 3px solid rgba(139, 46, 46, 0.8) !important;
-}
-
-/* Target any other nested elements to ensure the background is visible */
-:deep(.table-row.bg-darkred *),
-:deep(.table-row.combined-loss-row *) {
-    position: relative;
-    z-index: 1;
-}
-
-/* Target the specific layout of table rows with more muted pseudo-element background */
-:deep(a.table-row.bg-darkred),
-:deep(a.table-row.combined-loss-row) {
-    position: relative;
-}
-
-:deep(a.table-row.bg-darkred)::before,
-:deep(a.table-row.combined-loss-row)::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background-color: rgba(80, 0, 0, 0.6);
-    opacity: 0.7;
-    z-index: 0;
-    pointer-events: none;
 }
 
 /* Add truncation with fade effect */
