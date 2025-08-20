@@ -1,4 +1,3 @@
-import { getSystemJumps, getSystemKills } from "../../../helpers/ESIData";
 import { Celestials } from "../../../models/Celestials";
 import { Constellations } from "../../../models/Constellations";
 import { Factions } from "../../../models/Factions";
@@ -187,39 +186,63 @@ export default defineCachedEventHandler(
 
             // Get activity data from system document (this already exists in SolarSystems collection)
             if (system.jumps_24h && system.jumps_24h.length > 0) {
-                // Use latest entry from database
-                const latestJump =
-                    system.jumps_24h[system.jumps_24h.length - 1];
+                // Get latest entry (1h data) and 24h cumulative
+                const latestJump = system.jumps_24h[system.jumps_24h.length - 1];
+                
+                // Calculate 24h cumulative by summing all entries from last 24 hours
+                const now = new Date();
+                const twentyFourHoursAgo = new Date(now.getTime() - 24 * 60 * 60 * 1000);
+                
+                const jumps24h = system.jumps_24h
+                    .filter(entry => new Date(entry.timestamp) >= twentyFourHoursAgo)
+                    .reduce((sum, entry) => sum + (entry.ship_jumps || 0), 0);
+
                 systemJumps = {
                     system_id: system.system_id,
-                    ship_jumps: latestJump.ship_jumps,
+                    ship_jumps_1h: latestJump.ship_jumps || 0,
+                    ship_jumps: jumps24h,
                 };
             } else {
-                // Fallback to ESI
-                const jumpData = await getSystemJumps();
-                systemJumps =
-                    jumpData.find(
-                        (entry: any) => entry.system_id === system.system_id
-                    ) || null;
+                systemJumps = {
+                    system_id: system.system_id,
+                    ship_jumps_1h: 0,
+                    ship_jumps: 0,
+                };
             }
 
             if (system.kills_24h && system.kills_24h.length > 0) {
-                // Use latest entry from database
-                const latestKill =
-                    system.kills_24h[system.kills_24h.length - 1];
+                // Get latest entry (1h data) and 24h cumulative
+                const latestKill = system.kills_24h[system.kills_24h.length - 1];
+                
+                // Calculate 24h cumulative by summing all entries from last 24 hours
+                const now = new Date();
+                const twentyFourHoursAgo = new Date(now.getTime() - 24 * 60 * 60 * 1000);
+                
+                const kills24h = system.kills_24h.filter(entry => new Date(entry.timestamp) >= twentyFourHoursAgo);
+                
+                const shipKills24h = kills24h.reduce((sum, entry) => sum + (entry.ship_kills || 0), 0);
+                const npcKills24h = kills24h.reduce((sum, entry) => sum + (entry.npc_kills || 0), 0);
+                const podKills24h = kills24h.reduce((sum, entry) => sum + (entry.pod_kills || 0), 0);
+
                 systemKills = {
                     system_id: system.system_id,
-                    ship_kills: latestKill.ship_kills,
-                    npc_kills: latestKill.npc_kills,
-                    pod_kills: latestKill.pod_kills,
+                    ship_kills_1h: latestKill.ship_kills || 0,
+                    npc_kills_1h: latestKill.npc_kills || 0,
+                    pod_kills_1h: latestKill.pod_kills || 0,
+                    ship_kills: shipKills24h,
+                    npc_kills: npcKills24h,
+                    pod_kills: podKills24h,
                 };
             } else {
-                // Fallback to ESI
-                const killData = await getSystemKills();
-                systemKills =
-                    killData.find(
-                        (entry: any) => entry.system_id === system.system_id
-                    ) || null;
+                systemKills = {
+                    system_id: system.system_id,
+                    ship_kills_1h: 0,
+                    npc_kills_1h: 0,
+                    pod_kills_1h: 0,
+                    ship_kills: 0,
+                    npc_kills: 0,
+                    pod_kills: 0,
+                };
             }
 
             enrichedSystem.sovereignty = systemSovereignty;
