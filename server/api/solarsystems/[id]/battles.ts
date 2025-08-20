@@ -2,7 +2,7 @@ import type { PipelineStage } from "mongoose";
 
 export default defineCachedEventHandler(
     async (event) => {
-        const query = getQuery(event);
+        const query = getQuery(event as any);
         const idParam = event.context.params?.id;
         // The idParam is guaranteed by the route to be digits.
         const systemId = idParam ? parseInt(idParam.toString(), 10) : NaN;
@@ -33,7 +33,7 @@ export default defineCachedEventHandler(
 
         try {
             const matchStage: PipelineStage = {
-                $match: { system_id: systemId },
+                $match: { "systems.system_id": systemId },
             };
             const pipeline: PipelineStage[] = [
                 matchStage,
@@ -45,7 +45,7 @@ export default defineCachedEventHandler(
 
             const [results, totalItems] = await Promise.all([
                 Battles.aggregate(pipeline),
-                Battles.countDocuments({ system_id: systemId }),
+                Battles.countDocuments({ "systems.system_id": systemId }),
             ]);
 
             const totalPages = Math.ceil(totalItems / limit);

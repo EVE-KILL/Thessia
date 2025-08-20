@@ -20,11 +20,7 @@
                     <SystemKills :system-id="(system as any)?.system_id" />
                 </template>
                 <template #battles>
-                    <div class="tab-content">
-                        <div class="text-center p-8">
-                            <p class="text-gray-400">System battles component coming soon...</p>
-                        </div>
-                    </div>
+                    <SystemBattles :system-id="(system as any)?.system_id" />
                 </template>
             </Tabs>
         </div>
