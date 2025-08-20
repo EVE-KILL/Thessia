@@ -95,12 +95,13 @@ const isPriorityImage = (index: number): boolean => {
             hover>
             <!-- Custom horizontal item template -->
             <template #horizontal-item="{ item, index }">
-                <div class="flex flex-col items-center p-2">
+                <div class="flex flex-col items-center p-2 w-24 md:w-32">
                     <Image type="type-render" :id="(item as IMostValuableKill).victim.ship_id"
                         :alt="`Ship: ${getShipName(item as IMostValuableKill)}`"
                         class="rounded w-20 h-20 md:w-24 md:h-24 object-contain mb-2" size="128"
                         :loading="index < 7 ? 'eager' : 'lazy'" :priority="isPriorityImage(index)" />
-                    <div class="text-center text-xs mt-1 max-w-full truncate text-gray-900 dark:text-white">
+                    <div class="text-center text-xs mt-1 w-full truncate text-gray-900 dark:text-white" 
+                         :title="getShipName(item as IMostValuableKill)">
                         {{ getShipName(item as IMostValuableKill) }}
                     </div>
                     <div class="text-center text-xs mt-1 text-gray-500 dark:text-background-300">
@@ -108,17 +109,20 @@ const isPriorityImage = (index: number): boolean => {
                     </div>
                     <!-- Show victim name if available -->
                     <div v-if="(item as IMostValuableKill).victim.character_name"
-                        class="text-center text-xs mt-1 text-black dark:text-white truncate max-w-full">
+                        class="text-center text-xs mt-1 w-full truncate text-black dark:text-white"
+                        :title="(item as IMostValuableKill).victim.character_name">
                         {{ (item as IMostValuableKill).victim.character_name }}
                     </div>
                     <!-- Show corporation name if available -->
                     <div v-if="(item as IMostValuableKill).victim.corporation_name"
-                        class="text-center text-xs mt-1 text-gray-600 dark:text-gray-400 truncate max-w-full">
+                        class="text-center text-xs mt-1 w-full truncate text-gray-600 dark:text-gray-400"
+                        :title="(item as IMostValuableKill).victim.corporation_name">
                         {{ (item as IMostValuableKill).victim.corporation_name }}
                     </div>
                     <!-- Show alliance name if available -->
                     <div v-if="(item as IMostValuableKill).victim.alliance_name"
-                        class="text-center text-xs mt-1 text-gray-500 dark:text-gray-500 truncate max-w-full">
+                        class="text-center text-xs mt-1 w-full truncate text-gray-500 dark:text-gray-500"
+                        :title="(item as IMostValuableKill).victim.alliance_name">
                         {{ (item as IMostValuableKill).victim.alliance_name }}
                     </div>
                 </div>

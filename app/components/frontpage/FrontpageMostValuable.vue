@@ -154,11 +154,12 @@ const generateKillLink = (item: IMostValuableItem): string | null => {
             :link-fn="generateKillLink" background="transparent" hover>
             <!-- Custom horizontal item template -->
             <template #horizontal-item="{ item, index }">
-                <div class="flex flex-col items-center">
+                <div class="flex flex-col items-center w-24 md:w-32">
                     <Image type="type-render" :id="item.victim.ship_id" :alt="`Ship: ${getShipName(item)}`"
                         class="rounded w-24 h-24 md:w-32 md:h-32 object-contain mb-2" size="128"
                         :loading="index < 7 ? 'eager' : 'lazy'" />
-                    <div class="text-center text-sm mt-1 max-w-full truncate text-gray-900 dark:text-white">
+                    <div class="text-center text-sm mt-1 w-full truncate text-gray-900 dark:text-white"
+                         :title="getShipName(item)">
                         {{ getShipName(item) }}
                     </div>
                     <div class="text-center text-xs mt-1 text-gray-500 dark:text-background-300">
@@ -166,17 +167,20 @@ const generateKillLink = (item: IMostValuableItem): string | null => {
                     </div>
                     <!-- Show victim name if available -->
                     <div v-if="item.victim.character_name"
-                        class="text-center text-xs mt-1 text-black dark:text-white truncate max-w-full">
+                        class="text-center text-xs mt-1 w-full truncate text-black dark:text-white"
+                        :title="item.victim.character_name">
                         {{ item.victim.character_name }}
                     </div>
                     <!-- Show corporation name if available -->
                     <div v-if="item.victim.corporation_name"
-                        class="text-center text-xs mt-1 text-gray-600 dark:text-gray-400 truncate max-w-full">
+                        class="text-center text-xs mt-1 w-full truncate text-gray-600 dark:text-gray-400"
+                        :title="item.victim.corporation_name">
                         {{ item.victim.corporation_name }}
                     </div>
                     <!-- Show alliance name if available -->
                     <div v-if="item.victim.alliance_name"
-                        class="text-center text-xs mt-1 text-gray-500 dark:text-gray-500 truncate max-w-full">
+                        class="text-center text-xs mt-1 w-full truncate text-gray-500 dark:text-gray-500"
+                        :title="item.victim.alliance_name">
                         {{ item.victim.alliance_name }}
                     </div>
                 </div>
