@@ -988,8 +988,9 @@ watch(isOpen, (open) => {
 }
 
 .spotlight-results-list {
-    display: flex;
-    flex-direction: column;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0;
 }
 
 .spotlight-result-item {
