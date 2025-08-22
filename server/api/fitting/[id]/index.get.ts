@@ -54,101 +54,102 @@ export default defineCachedEventHandler(
             limit = 50;
         }
 
-        const ship = await InvTypes.findOne({ type_id: shipId });
+        // Optimized ship validation with group filter
+        const ship = await InvTypes.findOne({
+            type_id: shipId,
+            group_id: { $in: shipGroupIds },
+        });
+
         if (!ship) {
-            return { error: "Ship not found" };
+            return { error: "Ship not found or not a valid ship type" };
         }
 
-        // Ensure it's a ship, meaning the group_id is in the allowed list
-        const shipGroupId = ship.group_id;
-        if (!shipGroupIds.includes(shipGroupId)) {
-            return { error: "Not a ship type" };
-        }
-
-        // Find killmails in the last 30 days where the ship was destroyed
+        // Optimized query with better date filtering and projection
+        const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
         const killmails = await Killmails.find(
             {
-                kill_time: {
-                    $gte: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000),
-                    $lte: new Date(),
-                },
                 "victim.ship_id": shipId,
+                kill_time: { $gte: thirtyDaysAgo },
             },
             {
                 _id: 0,
+                killmail_id: 1,
+                killmail_hash: 1,
+                ship_value: 1,
                 "items.type_id": 1,
-                "items.name": 1,
-                "items.group_id": 1,
-                "items.group_name": 1,
                 "items.flag": 1,
                 "items.qty_dropped": 1,
                 "items.qty_destroyed": 1,
-                killmail_id: 1,
-                killmail_hash: 1,
-                total_value: 1,
-                ship_value: 1,
             }
-        );
+        )
+            .sort({ kill_time: -1 })
+            .limit(600) // Reduced limit for better performance
+            .lean();
 
-        // Process killmails concurrently
-        const fittingResults = await Promise.all(
-            killmails.map(async (killmail) => {
-                const fitting = await generateFitting(killmail.items);
-                const fittingCost = await generateFittingCost(fitting);
-                // Prune fitting for hash: only keep slot and type_id
-                const filteredFitting = pruneFittingForHash(fitting);
-                const fittingHash = crypto
-                    .createHash("md5")
-                    .update(stableStringify(filteredFitting))
-                    .digest("hex");
-                return {
-                    killmail_id: killmail.killmail_id,
-                    killmail_hash: killmail.killmail_hash,
-                    fitting,
-                    fitting_cost: fittingCost,
-                    fitting_hash: fittingHash,
-                    ship_value: killmail.ship_value,
-                };
-            })
-        );
+        if (killmails.length === 0) {
+            return [];
+        }
 
-        // Group the fitted results, propagating total_value and ship_value from first occurrence
-        const fittings: { [key: number]: any } = {}; // Use index signature
-        const fittingGroups: { [key: string]: IFittingGroup } = {}; // Use index signature and defined type
-        for (const result of fittingResults) {
-            fittings[result.killmail_id] = result;
-            if (!fittingGroups[result.fitting_hash]) {
-                fittingGroups[result.fitting_hash] = {
-                    killmail_id: result.killmail_id,
-                    killmail_hash: result.killmail_hash,
-                    fitting: result.fitting,
-                    fitting_cost: result.fitting_cost,
-                    count: 1,
-                    ship_value: result.ship_value,
-                };
-            } else {
-                fittingGroups[result.fitting_hash].count++;
+        // Process killmails in batches for better memory usage
+        const fittingGroups: { [key: string]: IFittingGroup } = {};
+        const batchSize = 30;
+
+        for (let i = 0; i < killmails.length; i += batchSize) {
+            const batch = killmails.slice(i, i + batchSize);
+            const batchResults = await Promise.all(
+                batch.map(async (killmail) => {
+                    const fitting = await generateFitting(killmail.items);
+                    const fittingCost = await generateFittingCost(fitting);
+                    const filteredFitting = pruneFittingForHash(fitting);
+                    const fittingHash = crypto
+                        .createHash("md5")
+                        .update(stableStringify(filteredFitting))
+                        .digest("hex");
+                    return {
+                        killmail_id: killmail.killmail_id,
+                        killmail_hash: killmail.killmail_hash,
+                        fitting,
+                        fitting_cost: fittingCost,
+                        fitting_hash: fittingHash,
+                        ship_value: killmail.ship_value,
+                    };
+                })
+            );
+
+            // Group results efficiently
+            for (const result of batchResults) {
+                if (!fittingGroups[result.fitting_hash]) {
+                    fittingGroups[result.fitting_hash] = {
+                        killmail_id: result.killmail_id,
+                        killmail_hash: result.killmail_hash,
+                        fitting: result.fitting,
+                        fitting_cost: result.fitting_cost,
+                        count: 1,
+                        ship_value: result.ship_value,
+                    };
+                } else {
+                    fittingGroups[result.fitting_hash].count++;
+                }
             }
         }
 
-        // Sort fittings and return data without SVG generation
-        const sortedFittings = Object.values(fittingGroups).sort(
-            (a, b) => b.count - a.count
-        );
-        const finalFittings = sortedFittings.slice(0, limit);
+        // Sort fittings and return top results
+        const sortedFittings = Object.values(fittingGroups)
+            .sort((a, b) => b.count - a.count)
+            .slice(0, limit);
 
-        return finalFittings;
+        return sortedFittings;
     },
     {
-        maxAge: 86400,
+        maxAge: 1800, // Reduced from 86400 to 30 minutes
         staleMaxAge: -1,
         swr: true,
         base: "redis",
         getKey: (event) => {
-            const shipId = event.context.params?.id; // Add check for params
+            const shipId = event.context.params?.id;
             const query = getQuery(event);
-            const limit = query.limit || "10"; // Default limit is 10
-            return `fitting:${shipId}:limit:${limit}`;
+            const limit = query.limit || "10";
+            return `fitting-data-v2:${shipId}:${limit}`;
         },
     }
 );
@@ -173,23 +174,47 @@ function stableStringify(obj: any, seen = new WeakSet()): string {
         .join(",")}}`;
 }
 
+// Optimized fitting cost calculation with batch pricing lookup
 async function generateFittingCost(fitting: IFittingSlots): Promise<number> {
-    // Use defined type
-    let cost = 0;
+    // Collect all unique type IDs first
+    const typeIds = new Set<number>();
     for (const slot in fitting) {
         for (const item of fitting[slot as keyof IFittingSlots]) {
-            // Add type assertion
-            const price = await Prices.findOne({
-                type_id: item.type_id,
-                region_id: 10000002,
-            }).sort({
-                date: -1,
-            });
-            if (price?.average) {
-                cost += price.average * (item.qty_dropped + item.qty_destroyed);
+            if (item.type_id) {
+                typeIds.add(item.type_id);
             }
         }
     }
+
+    if (typeIds.size === 0) return 0;
+
+    // Single batch query for all prices
+    const prices = await Prices.find({
+        type_id: { $in: Array.from(typeIds) },
+        region_id: 10000002,
+    })
+        .sort({ date: -1 })
+        .lean();
+
+    // Create efficient price lookup map
+    const priceMap = new Map<number, number>();
+    for (const price of prices) {
+        if (!priceMap.has(price.type_id) && price.average > 0) {
+            priceMap.set(price.type_id, price.average);
+        }
+    }
+
+    // Calculate total cost
+    let cost = 0;
+    for (const slot in fitting) {
+        for (const item of fitting[slot as keyof IFittingSlots]) {
+            const price = priceMap.get(item.type_id) || 0;
+            const quantity =
+                (item.qty_dropped || 0) + (item.qty_destroyed || 0);
+            cost += price * Math.max(quantity, 1);
+        }
+    }
+
     return cost;
 }
 

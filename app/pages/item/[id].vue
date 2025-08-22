@@ -64,7 +64,7 @@
                                         {{ $t('recentKills') }}</div>
                                     <div class="text-2xl font-bold text-red-700 dark:text-red-300">{{
                                         itemStats?.summary?.recentKills || 0
-                                        }}</div>
+                                    }}</div>
                                 </div>
                             </div>
                         </div>
@@ -245,10 +245,10 @@
 
             <!-- Right Column: Fittings and Prices - Increased to 3/7 (43%) -->
             <div class="xl:col-span-3 flex flex-col space-y-6">
-                <!-- Fittings component - still uses its own API call since it's complex -->
+                <!-- Fittings component - now fully async and client-side -->
                 <div
                     class="rounded-lg overflow-hidden bg-gradient-to-b from-gray-100/90 to-gray-200/50 dark:from-gray-900/30 dark:to-gray-900/50 border border-gray-300 dark:border-gray-800">
-                    <ItemsFittings :item="item" :loading="loading" :key="`fittings-${$route.params.id}`" />
+                    <ItemsFittings :item="item" :key="`fittings-${$route.params.id}`" />
                 </div>
 
                 <!-- Price list component - now with pre-fetched data -->
