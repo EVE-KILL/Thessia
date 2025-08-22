@@ -103,8 +103,8 @@
                             <!-- Ship Details -->
                             <div class="ship-details">
                                 <div class="ship-image-container">
-                                    <Image :type="'type-render'" :id="item.victim.ship_id" :size="40" class="ship-image"
-                                        :style="{ maxWidth: '40px', maxHeight: '40px' }" />
+                                    <Image :type="'type-overlay-render'" :id="item.victim.ship_id" :size="40"
+                                        class="ship-image" :style="{ maxWidth: '40px', maxHeight: '40px' }" />
                                 </div>
                                 <div class="ship-info">
                                     <div class="ship-name text-red-500 dark:text-red-400">
@@ -122,7 +122,7 @@
                                 <div class="killmail-damage">
                                     <Icon name="lucide:zap" class="damage-icon" />
                                     <span class="damage-value">{{ formatNumberWithLocale(item.victim.damage_taken || 0)
-                                    }}</span>
+                                        }}</span>
                                 </div>
 
                                 <!-- Value -->

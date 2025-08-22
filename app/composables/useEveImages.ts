@@ -97,6 +97,21 @@ export function useEveImages() {
     };
 
     /**
+     * Get type overview render URL (3D rendering)
+     * @param typeId - EVE type ID
+     * @param size - Image size (default: 512, will be normalized to nearest valid size)
+     * @returns Type render URL
+     */
+    const getTypeOverlayRender = (
+        typeId: number | null,
+        size = 512
+    ): string | null => {
+        if (!typeId) return null;
+        const validSize = normalizeSize(size);
+        return `https://images.eve-kill.com/types/${typeId}/overlayrender?size=${validSize}`;
+    };
+
+    /**
      * Get blueprint icon URL
      * @param typeId - EVE type ID
      * @param size - Image size (default: 64, will be normalized to nearest valid size)
@@ -228,6 +243,7 @@ export function useEveImages() {
         getAllianceLogo,
         getTypeIcon,
         getTypeRender,
+        getTypeOverlayRender,
         getBlueprintIcon,
         getBlueprintCopyIcon,
         getSystemImage,

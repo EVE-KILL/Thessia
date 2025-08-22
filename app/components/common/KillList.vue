@@ -853,7 +853,7 @@ onUpdated(() => {
             <!-- Ship column -->
             <template #cell-ship="{ item }">
                 <div class="flex items-center py-1">
-                    <Image type="type-render" :id="item.victim.ship_id"
+                    <Image type="type-overlay-render" :id="item.victim.ship_id"
                         :alt="`Ship: ${getLocalizedString(item.victim.ship_name, currentLocale)}`"
                         class="rounded w-16 h-16 mx-2" size="64" />
                     <div class="flex flex-col items-start">
@@ -997,7 +997,7 @@ onUpdated(() => {
                     <!-- Top Section: Ship Image and Details -->
                     <div class="flex mb-2">
                         <!-- Ship Image -->
-                        <Image type="type-render" :id="item.victim.ship_id"
+                        <Image type="type-overlay-render" :id="item.victim.ship_id"
                             :alt="`Ship: ${getLocalizedString(item.victim.ship_name, currentLocale)}`"
                             class="rounded w-16 h-16" size="64" />
 

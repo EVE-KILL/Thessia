@@ -62,7 +62,7 @@
 
                                     <!-- Ship Info -->
                                     <div class="kill-ship">
-                                        <Image :type="'type-render'" :id="kill.victim.ship_id" :size="20"
+                                        <Image :type="'type-overlay-render'" :id="kill.victim.ship_id" :size="20"
                                             class="ship-image" />
                                         <div class="ship-name">{{
                                             getShortShipName(getLocalizedString(kill.victim.ship_name, locale)) }}</div>
@@ -79,7 +79,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref } from 'vue';
+import { computed } from 'vue';
 
 interface KillmailVictim {
     ship_id: number | string;

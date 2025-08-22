@@ -8,7 +8,7 @@
             <!-- Ship column -->
             <template #cell-ship="{ item }">
                 <div class="flex items-center">
-                    <Image type="type-render" :id="item.victim.ship_id"
+                    <Image type="type-overlay-render" :id="item.victim.ship_id"
                         :alt="`Ship: ${getLocalizedString(item.victim.ship_name, currentLocale)}`"
                         class="rounded w-16 h-16 m-1" size="64" />
                 </div>

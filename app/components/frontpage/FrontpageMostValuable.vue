@@ -155,7 +155,7 @@ const generateKillLink = (item: IMostValuableItem): string | null => {
             <!-- Custom horizontal item template -->
             <template #horizontal-item="{ item, index }">
                 <div class="flex flex-col items-center w-24 md:w-32">
-                    <Image type="type-render" :id="item.victim.ship_id" :alt="`Ship: ${getShipName(item)}`"
+                    <Image type="type-overlay-render" :id="item.victim.ship_id" :alt="`Ship: ${getShipName(item)}`"
                         class="rounded w-24 h-24 md:w-32 md:h-32 object-contain mb-2" size="128"
                         :loading="index < 7 ? 'eager' : 'lazy'" />
                     <div class="text-center text-sm mt-1 w-full truncate text-gray-900 dark:text-white"

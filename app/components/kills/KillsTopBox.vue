@@ -68,7 +68,7 @@ const imageTypeMap = {
     character: "character",
     corporation: "corporation",
     alliance: "alliance",
-    ship: "type-render",
+    ship: "type-overlay-render",
     solarsystem: "system",
     constellation: "constellation",
     region: "region",

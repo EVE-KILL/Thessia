@@ -91,7 +91,7 @@ const isPriorityImage = (index: number): boolean => {
             <!-- Custom horizontal item template -->
             <template #horizontal-item="{ item, index }">
                 <div class="flex flex-col items-center p-2 w-20 md:w-24">
-                    <Image type="type-render" :id="(item as IMostValuableKill).victim.ship_id"
+                    <Image type="type-overlay-render" :id="(item as IMostValuableKill).victim.ship_id"
                         :alt="`Ship: ${getShipName(item as IMostValuableKill)}`"
                         class="rounded w-20 h-20 md:w-24 md:h-24 object-contain mb-2" size="128"
                         :loading="index < 7 ? 'eager' : 'lazy'" :priority="isPriorityImage(index)" />

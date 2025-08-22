@@ -36,8 +36,8 @@
 
                             <!-- Ship Image -->
                             <div class="ship-container">
-                                <Image :type="'type-render'" :id="item.ship_type_id" :size="64" class="ship-image"
-                                    :style="{ maxWidth: '64px', maxHeight: '64px' }" />
+                                <Image :type="'type-overlay-render'" :id="item.ship_type_id" :size="64"
+                                    class="ship-image" :style="{ maxWidth: '64px', maxHeight: '64px' }" />
                             </div>
 
                             <!-- Name Information -->

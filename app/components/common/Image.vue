@@ -14,6 +14,7 @@ type EveImageType =
     | "alliance"
     | "type-icon"
     | "type-render"
+    | "type-overlay-render"
     | "blueprint"
     | "blueprint-copy"
     | "item"
@@ -34,6 +35,7 @@ const props = defineProps({
                 "alliance",
                 "type-icon",
                 "type-render",
+                "type-overlay-render",
                 "blueprint",
                 "blueprint-copy",
                 "item",
@@ -161,6 +163,7 @@ const eveSize = computed(() => {
         alliance: 64,
         "type-icon": 64,
         "type-render": 512,
+        "type-overlay-render": 512,
         blueprint: 64,
         "blueprint-copy": 64,
         item: 64,
@@ -203,6 +206,8 @@ const src = computed(() => {
             return eveImages.getTypeIcon(idAsNumber, eveSize.value);
         case "type-render":
             return eveImages.getTypeRender(idAsNumber, eveSize.value);
+        case "type-overlay-render":
+            return eveImages.getTypeOverlayRender(idAsNumber, eveSize.value);
         case "blueprint":
             return eveImages.getBlueprintIcon(idAsNumber, eveSize.value);
         case "blueprint-copy":
@@ -291,7 +296,7 @@ const effectivePriority = computed(() => {
 
     // Smart LCP detection: For large images (>= 128px) that are likely to be above the fold
     const sizeNum = typeof props.size === 'string' ? parseInt(props.size) : props.size;
-    const isLargeLcpCandidate = sizeNum >= 128 && props.type === 'type-render';
+    const isLargeLcpCandidate = sizeNum >= 128 && (props.type === 'type-render' || props.type === 'type-overlay-render');
     if (isLargeLcpCandidate && props.autoPrioritize && isAboveFold.value) {
         return "high";
     }
@@ -317,7 +322,7 @@ const effectiveLoading = computed((): 'lazy' | 'eager' => {
 
     // Smart LCP detection for large ship renders above the fold
     const sizeNum = typeof props.size === 'string' ? parseInt(props.size) : props.size;
-    const isLargeLcpCandidate = sizeNum >= 128 && props.type === 'type-render';
+    const isLargeLcpCandidate = sizeNum >= 128 && (props.type === 'type-render' || props.type === 'type-overlay-render');
     if (isLargeLcpCandidate && props.autoPrioritize && isAboveFold.value) {
         return "eager";
     }

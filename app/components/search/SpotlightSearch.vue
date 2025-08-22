@@ -491,7 +491,7 @@ const getCurrentPosition = (globalIndex: number) => {
     for (let catIndex = 0; catIndex < categorizedResults.value.length; catIndex++) {
         const category = categorizedResults.value[catIndex];
         const categorySize = category.items.length;
-        
+
         if (globalIndex >= currentGlobalIndex && globalIndex < currentGlobalIndex + categorySize) {
             const localIndex = globalIndex - currentGlobalIndex;
             return {
@@ -529,7 +529,7 @@ const getNextIndex = (direction: 'up' | 'down' | 'left' | 'right'): number => {
             if (nextRowLocalIndex < categorySize) {
                 return globalStartIndex + nextRowLocalIndex;
             }
-            
+
             // Move to next category, same column preference
             if (categoryIndex < categorizedResults.value.length - 1) {
                 const nextCategoryStartIndex = globalStartIndex + categorySize;
@@ -537,7 +537,7 @@ const getNextIndex = (direction: 'up' | 'down' | 'left' | 'right'): number => {
                 const targetIndex = column; // Maintain column preference
                 return nextCategoryStartIndex + (targetIndex < nextCategorySize ? targetIndex : 0);
             }
-            
+
             // Wrap to beginning, maintain column
             return column < categorizedResults.value[0].items.length ? column : 0;
 
@@ -547,19 +547,19 @@ const getNextIndex = (direction: 'up' | 'down' | 'left' | 'right'): number => {
             if (prevRowLocalIndex >= 0) {
                 return globalStartIndex + prevRowLocalIndex;
             }
-            
+
             // Move to previous category, same column preference
             if (categoryIndex > 0) {
                 const prevCategory = categorizedResults.value[categoryIndex - 1];
                 const prevCategorySize = prevCategory.items.length;
                 const prevCategoryStartIndex = globalStartIndex - prevCategorySize;
-                
+
                 // Find the last row in the previous category that has our preferred column
                 const lastRowStart = Math.floor((prevCategorySize - 1) / 2) * 2;
                 const targetIndex = lastRowStart + column;
                 return prevCategoryStartIndex + (targetIndex < prevCategorySize ? targetIndex : lastRowStart);
             }
-            
+
             // Wrap to end, maintain column
             const lastCategory = categorizedResults.value[categorizedResults.value.length - 1];
             const lastCategorySize = lastCategory.items.length;
@@ -572,18 +572,18 @@ const getNextIndex = (direction: 'up' | 'down' | 'left' | 'right'): number => {
             if (column === 0 && localIndex + 1 < categorySize) {
                 return selectedIndex.value + 1;
             }
-            
+
             // If already in right column or no right item, move to next row left column
             const nextRowLeft = localIndex + (column === 0 ? 2 : 1);
             if (nextRowLeft < categorySize) {
                 return globalStartIndex + nextRowLeft;
             }
-            
+
             // Move to next category, left column
             if (categoryIndex < categorizedResults.value.length - 1) {
                 return globalStartIndex + categorySize;
             }
-            
+
             // Wrap to beginning
             return 0;
 
@@ -592,13 +592,13 @@ const getNextIndex = (direction: 'up' | 'down' | 'left' | 'right'): number => {
             if (column === 1) {
                 return selectedIndex.value - 1;
             }
-            
+
             // If already in left column, move to previous row right column
             const prevRowRight = localIndex - 1;
             if (prevRowRight >= 0) {
                 return globalStartIndex + prevRowRight;
             }
-            
+
             // Move to previous category, right column of last row
             if (categoryIndex > 0) {
                 const prevCategory = categorizedResults.value[categoryIndex - 1];
@@ -606,7 +606,7 @@ const getNextIndex = (direction: 'up' | 'down' | 'left' | 'right'): number => {
                 const prevCategoryStartIndex = globalStartIndex - prevCategorySize;
                 return prevCategoryStartIndex + prevCategorySize - 1;
             }
-            
+
             // Wrap to end
             return results.value.length - 1;
     }
