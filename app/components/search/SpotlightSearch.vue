@@ -170,7 +170,8 @@
                                 <a v-for="(result, index) in category.items" :key="result.id" :href="result.url"
                                     class="spotlight-result-item"
                                     :class="{ 'spotlight-result-selected': selectedIndex === getGlobalIndex(category.type, index) }"
-                                    @click="selectResult(result, $event)">
+                                    @click="selectResult(result, $event)"
+                                    @mouseenter="selectedIndex = getGlobalIndex(category.type, index)">
                                     <div class="spotlight-result-avatar">
                                         <Image v-if="result.type === 'character'" :id="result.id" type="character"
                                             :size="32" class="spotlight-result-image" />
@@ -207,6 +208,8 @@
                     <div class="spotlight-shortcut-group">
                         <span class="spotlight-key">↑</span>
                         <span class="spotlight-key">↓</span>
+                        <span class="spotlight-key">←</span>
+                        <span class="spotlight-key">→</span>
                         <span class="spotlight-key-label">{{ t('search.navigate') }}</span>
                     </div>
                     <div class="spotlight-shortcut-group">
@@ -426,12 +429,46 @@ const handleKeydown = (event: KeyboardEvent) => {
     switch (event.key) {
         case 'ArrowDown':
             event.preventDefault();
-            selectedIndex.value = selectedIndex.value < totalResults - 1 ? selectedIndex.value + 1 : 0;
+            if (selectedIndex.value === -1) {
+                // First navigation - start at item1 (index 0, left column)
+                selectedIndex.value = 0;
+            } else {
+                selectedIndex.value = getNextIndex('down');
+            }
+            scrollToSelectedResult();
             break;
 
         case 'ArrowUp':
             event.preventDefault();
-            selectedIndex.value = selectedIndex.value > 0 ? selectedIndex.value - 1 : totalResults - 1;
+            if (selectedIndex.value === -1) {
+                // First navigation - start at last item in left column
+                selectedIndex.value = getLastLeftColumnIndex();
+            } else {
+                selectedIndex.value = getNextIndex('up');
+            }
+            scrollToSelectedResult();
+            break;
+
+        case 'ArrowRight':
+            event.preventDefault();
+            if (selectedIndex.value === -1) {
+                // First navigation - start at item2 (index 1, right column) if it exists
+                selectedIndex.value = totalResults > 1 ? 1 : 0;
+            } else {
+                selectedIndex.value = getNextIndex('right');
+            }
+            scrollToSelectedResult();
+            break;
+
+        case 'ArrowLeft':
+            event.preventDefault();
+            if (selectedIndex.value === -1) {
+                // First navigation - start at item1 (index 0, left column)
+                selectedIndex.value = 0;
+            } else {
+                selectedIndex.value = getNextIndex('left');
+            }
+            scrollToSelectedResult();
             break;
 
         case 'Enter':
@@ -446,6 +483,149 @@ const handleKeydown = (event: KeyboardEvent) => {
             }
             break;
     }
+};
+
+// Helper function to get the current category and position info
+const getCurrentPosition = (globalIndex: number) => {
+    let currentGlobalIndex = 0;
+    for (let catIndex = 0; catIndex < categorizedResults.value.length; catIndex++) {
+        const category = categorizedResults.value[catIndex];
+        const categorySize = category.items.length;
+        
+        if (globalIndex >= currentGlobalIndex && globalIndex < currentGlobalIndex + categorySize) {
+            const localIndex = globalIndex - currentGlobalIndex;
+            return {
+                categoryIndex: catIndex,
+                localIndex: localIndex,
+                column: localIndex % 2, // 0 = left, 1 = right
+                row: Math.floor(localIndex / 2),
+                categorySize: categorySize,
+                globalStartIndex: currentGlobalIndex
+            };
+        }
+        currentGlobalIndex += categorySize;
+    }
+    return null;
+};
+
+// Helper function to get the last item in left column
+const getLastLeftColumnIndex = () => {
+    const totalResults = results.value.length;
+    // Find the last even index (left column)
+    return totalResults % 2 === 1 ? totalResults - 1 : totalResults - 2;
+};
+
+// Navigation logic that respects category boundaries and column preferences
+const getNextIndex = (direction: 'up' | 'down' | 'left' | 'right'): number => {
+    const currentPos = getCurrentPosition(selectedIndex.value);
+    if (!currentPos) return selectedIndex.value;
+
+    const { categoryIndex, localIndex, column, row, categorySize, globalStartIndex } = currentPos;
+
+    switch (direction) {
+        case 'down':
+            // Try to move down 2 positions (same column, next row) within current category
+            const nextRowLocalIndex = localIndex + 2;
+            if (nextRowLocalIndex < categorySize) {
+                return globalStartIndex + nextRowLocalIndex;
+            }
+            
+            // Move to next category, same column preference
+            if (categoryIndex < categorizedResults.value.length - 1) {
+                const nextCategoryStartIndex = globalStartIndex + categorySize;
+                const nextCategorySize = categorizedResults.value[categoryIndex + 1].items.length;
+                const targetIndex = column; // Maintain column preference
+                return nextCategoryStartIndex + (targetIndex < nextCategorySize ? targetIndex : 0);
+            }
+            
+            // Wrap to beginning, maintain column
+            return column < categorizedResults.value[0].items.length ? column : 0;
+
+        case 'up':
+            // Try to move up 2 positions (same column, previous row) within current category
+            const prevRowLocalIndex = localIndex - 2;
+            if (prevRowLocalIndex >= 0) {
+                return globalStartIndex + prevRowLocalIndex;
+            }
+            
+            // Move to previous category, same column preference
+            if (categoryIndex > 0) {
+                const prevCategory = categorizedResults.value[categoryIndex - 1];
+                const prevCategorySize = prevCategory.items.length;
+                const prevCategoryStartIndex = globalStartIndex - prevCategorySize;
+                
+                // Find the last row in the previous category that has our preferred column
+                const lastRowStart = Math.floor((prevCategorySize - 1) / 2) * 2;
+                const targetIndex = lastRowStart + column;
+                return prevCategoryStartIndex + (targetIndex < prevCategorySize ? targetIndex : lastRowStart);
+            }
+            
+            // Wrap to end, maintain column
+            const lastCategory = categorizedResults.value[categorizedResults.value.length - 1];
+            const lastCategorySize = lastCategory.items.length;
+            const lastRowStart = Math.floor((lastCategorySize - 1) / 2) * 2;
+            const totalResultsBeforeLast = results.value.length - lastCategorySize;
+            return totalResultsBeforeLast + lastRowStart + (column < lastCategorySize - lastRowStart ? column : 0);
+
+        case 'right':
+            // Move to right column in same row
+            if (column === 0 && localIndex + 1 < categorySize) {
+                return selectedIndex.value + 1;
+            }
+            
+            // If already in right column or no right item, move to next row left column
+            const nextRowLeft = localIndex + (column === 0 ? 2 : 1);
+            if (nextRowLeft < categorySize) {
+                return globalStartIndex + nextRowLeft;
+            }
+            
+            // Move to next category, left column
+            if (categoryIndex < categorizedResults.value.length - 1) {
+                return globalStartIndex + categorySize;
+            }
+            
+            // Wrap to beginning
+            return 0;
+
+        case 'left':
+            // Move to left column in same row
+            if (column === 1) {
+                return selectedIndex.value - 1;
+            }
+            
+            // If already in left column, move to previous row right column
+            const prevRowRight = localIndex - 1;
+            if (prevRowRight >= 0) {
+                return globalStartIndex + prevRowRight;
+            }
+            
+            // Move to previous category, right column of last row
+            if (categoryIndex > 0) {
+                const prevCategory = categorizedResults.value[categoryIndex - 1];
+                const prevCategorySize = prevCategory.items.length;
+                const prevCategoryStartIndex = globalStartIndex - prevCategorySize;
+                return prevCategoryStartIndex + prevCategorySize - 1;
+            }
+            
+            // Wrap to end
+            return results.value.length - 1;
+    }
+
+    return selectedIndex.value;
+};
+
+// Scroll the selected result into view
+const scrollToSelectedResult = () => {
+    nextTick(() => {
+        const selectedElement = document.querySelector('.spotlight-result-selected');
+        if (selectedElement) {
+            selectedElement.scrollIntoView({
+                behavior: 'smooth',
+                block: 'nearest',
+                inline: 'nearest'
+            });
+        }
+    });
 };
 
 // Select a result
@@ -1005,7 +1185,14 @@ watch(isOpen, (open) => {
 
 .spotlight-result-item:hover,
 .spotlight-result-selected {
-    background: var(--color-surface-secondary);
+    background: rgba(59, 130, 246, 0.08);
+    border-left: 3px solid var(--color-primary-500);
+}
+
+:global(.dark) .spotlight-result-item:hover,
+:global(.dark) .spotlight-result-selected {
+    background: rgba(59, 130, 246, 0.15);
+    border-left: 3px solid var(--color-primary-400);
 }
 
 .spotlight-result-avatar {
