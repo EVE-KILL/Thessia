@@ -8,7 +8,7 @@
                     <div class="flex flex-col lg:flex-row gap-6">
                         <!-- Left: Large Item Image -->
                         <div class="item-image-container flex-shrink-0">
-                            <Image :type="itemStats?.isShip ? 'type-render' : 'item'" :id="item.type_id"
+                            <Image :type="itemStats?.isShip ? 'type-overlay-render' : 'item'" :id="item.type_id"
                                 :alt="getLocalizedString(item.name, currentLocale)"
                                 class="item-image rounded-lg shadow-lg" :size="itemStats?.isShip ? '256' : '256'"
                                 :variant="item.name?.en?.includes('Blueprint') ? 'bp' : 'icon'" />
@@ -64,7 +64,7 @@
                                         {{ $t('recentKills') }}</div>
                                     <div class="text-2xl font-bold text-red-700 dark:text-red-300">{{
                                         itemStats?.summary?.recentKills || 0
-                                    }}</div>
+                                        }}</div>
                                 </div>
                             </div>
                         </div>
