@@ -57,7 +57,7 @@
         "neo4j-driver": "^5.28.1",
         "node-gyp": "^11.3.0",
         "nuxt": "^4.0.3",
-        "nuxt-security": "2.3.0",
+        "nuxt-security": "2.4.0",
         "pinia": "^3.0.3",
         "prismjs": "^1.30.0",
         "server-health": "^6.0.2",
