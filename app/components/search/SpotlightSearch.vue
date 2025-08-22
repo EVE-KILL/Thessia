@@ -710,12 +710,6 @@ watch(isOpen, (open) => {
     gap: var(--space-2);
 }
 
-@media (max-width: 640px) {
-    .spotlight-quick-grid {
-        grid-template-columns: repeat(2, 1fr);
-    }
-}
-
 .spotlight-quick-item {
     display: flex;
     align-items: center;
@@ -819,13 +813,6 @@ watch(isOpen, (open) => {
     margin-top: var(--space-6);
 }
 
-@media (max-width: 768px) {
-    .spotlight-bottom-sections {
-        grid-template-columns: 1fr;
-        gap: var(--space-4);
-    }
-}
-
 /* EVE Tools Section */
 .spotlight-eve-tools-grid {
     display: grid;
@@ -882,22 +869,6 @@ watch(isOpen, (open) => {
 
 .spotlight-eve-tool:hover .spotlight-eve-tool-icon {
     opacity: 1;
-}
-
-@media (max-width: 640px) {
-    .spotlight-eve-tools-grid {
-        grid-template-columns: repeat(2, 1fr);
-    }
-
-    .spotlight-eve-tool {
-        padding: var(--space-2);
-        font-size: 10px;
-    }
-
-    .spotlight-eve-tool-icon {
-        width: 16px;
-        height: 16px;
-    }
 }
 
 .spotlight-results {
