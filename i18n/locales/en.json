@@ -2236,5 +2236,57 @@
             "notFound": "The requested war could not be found.",
             "backToWars": "← Back to Wars"
         }
+    },
+    "maps": {
+        "loading": "Loading map data...",
+        "systems": "systems",
+        "hasStations": "Has stations",
+        "legend": {
+            "title": "Map Legend",
+            "security": "Security Status",
+            "highSec": "High Security",
+            "lowSec": "Low Security",
+            "nullSec": "Null Security",
+            "sovereignty": "Sovereignty",
+            "playerAlliance": "Player Alliance",
+            "npcFaction": "NPC Faction",
+            "noSovereignty": "No Sovereignty",
+            "stations": "Stations",
+            "hasStations": "Has Stations",
+            "connections": "Gate Connections",
+            "regionalGate": "Regional Gate",
+            "externalGate": "External Gate",
+            "external": "External Connections",
+            "externalConnection": "External Connection"
+        },
+        "stats": {
+            "title": "Region Statistics",
+            "overview": "Overview",
+            "totalSystems": "Total Systems",
+            "constellations": "Constellations",
+            "systemsWithStations": "Systems with Stations",
+            "security": "Security Distribution",
+            "sovereignty": "Sovereignty Control",
+            "connections": "Connections",
+            "externalConnections": "External Connections",
+            "mostActive": "Most Active Systems",
+            "error": "Failed to load statistics"
+        },
+        "page": {
+            "title": "Region Map",
+            "subtitle": "Interactive Solar System Map",
+            "mapTitle": "Interactive Region Map",
+            "info": "Information",
+            "infoText": "This interactive map shows all solar systems in the region with their stargate connections, security levels, and sovereignty information.",
+            "controls": "Controls",
+            "clickSystem": "Click a system to view details",
+            "hoverDetails": "Hover over systems for quick info",
+            "description": "{regionName} region map showing {systemCount} solar systems with their connections and sovereignty",
+            "defaultDescription": "Interactive EVE Online region maps showing solar systems, stargate connections, and sovereignty information"
+        },
+        "error": {
+            "title": "Map Not Available",
+            "message": "Unable to load the region map. Please try again."
+        }
     }
 }

@@ -64,7 +64,7 @@
                                         {{ $t('recentKills') }}</div>
                                     <div class="text-2xl font-bold text-red-700 dark:text-red-300">{{
                                         itemStats?.summary?.recentKills || 0
-                                    }}</div>
+                                        }}</div>
                                 </div>
                             </div>
                         </div>
@@ -553,12 +553,34 @@ function truncateText(text: string, length: number): string {
     display: flex;
     align-items: center;
     justify-content: center;
+
+    /* Prevent anti-aliasing at container level */
+    image-rendering: pixelated;
+    -webkit-font-smoothing: none;
+    -moz-osx-font-smoothing: unset;
+
+    /* Ensure pixel-perfect positioning */
+    transform: translateZ(0);
 }
 
 /* Dynamic sizing for item images */
 .item-image {
     object-fit: contain;
-    /* Size will be controlled by the :size prop dynamically */
+    image-rendering: pixelated;
+    /* Alternative fallbacks for broader browser support */
+    image-rendering: -webkit-optimize-contrast;
+    image-rendering: -webkit-crisp-edges;
+    image-rendering: -moz-crisp-edges;
+    image-rendering: crisp-edges;
+    image-rendering: pixelated;
+
+    /* Prevent sub-pixel positioning which can cause blurriness */
+    transform: translateZ(0);
+    backface-visibility: hidden;
+
+    /* Ensure pixel-perfect scaling by preventing fractional pixels */
+    image-rendering: pixelated;
+    -ms-interpolation-mode: nearest-neighbor;
 }
 
 /* Stat card styles matching SystemDashboard pattern */

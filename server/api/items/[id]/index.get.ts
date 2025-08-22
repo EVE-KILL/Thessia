@@ -71,10 +71,16 @@ export default defineCachedEventHandler(
                     let queryCondition = {};
 
                     if (typeGroupId && shipGroupIds.includes(typeGroupId)) {
-                        // If it's a ship, search for victim.ship_id
-                        queryCondition = { "victim.ship_id": typeId };
+                        // If it's a ship, search for both victim.ship_id AND items.type_id
+                        // This catches both ships being destroyed and ships being transported as cargo
+                        queryCondition = {
+                            $or: [
+                                { "victim.ship_id": typeId },
+                                { "items.type_id": typeId },
+                            ],
+                        };
                     } else {
-                        // For non-ship items, search for items.type_id
+                        // For non-ship items, search for items.type_id only
                         queryCondition = { "items.type_id": typeId };
                     }
 
