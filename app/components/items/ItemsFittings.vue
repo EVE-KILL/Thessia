@@ -1,5 +1,5 @@
 <template>
-    <div v-if="fittings && fittings.length > 0" class="rounded bg-background-800 bg-opacity-75">
+    <div v-if="fittings && fittings.length > 0" class="rounded bg-background-800 bg-opacity-75 p-6">
         <h2 class="text-xl font-bold mb-4">{{ $t('topFittings') }}</h2>
 
         <!-- Loading state -->
@@ -41,11 +41,11 @@ interface Fitting {
     svg: string;
 }
 
-// Improved data fetching with proper caching
+// Improved data fetching with proper caching - using SVG endpoint
 const { data, pending, error: fetchError } = await useFetch(
-    () => props.item?.type_id ? `/api/fitting/${props.item.type_id}?limit=10` : null,
+    () => props.item?.type_id ? `/api/fitting/${props.item.type_id}/svg?limit=10` : null,
     {
-        key: () => `item-fittings-${props.item?.type_id}`,
+        key: () => `item-fittings-svg-${props.item?.type_id}`,
         server: false, // Client-side only component
         default: () => [],
         watch: [() => props.item?.type_id],
@@ -62,9 +62,18 @@ function generateEveShipFitUrl(killmailId: number, killmailHash: string): string
 </script>
 
 <style scoped>
+.fitting-svg {
+    /* Remove height constraints and centering - let SVG display naturally */
+    width: 100%;
+    overflow: visible;
+    /* Ensure no clipping */
+}
+
 .fitting-svg :deep(svg) {
     width: 100%;
-    height: 100%;
-    max-height: 250px;
+    height: 50px;
+    /* Fixed height matching the generated SVG */
+    display: block;
+    /* Remove any inline spacing */
 }
 </style>

@@ -83,14 +83,27 @@ export default defineCachedEventHandler(
                         killmail_id: 1,
                         kill_time: 1,
                         total_value: 1,
+                        system_id: 1,
+                        system_name: 1,
+                        region_name: 1,
                         "victim.ship_id": 1,
                         "victim.ship_name": 1,
+                        "victim.ship_group_name": 1,
                         "victim.character_id": 1,
                         "victim.character_name": 1,
                         "victim.corporation_id": 1,
                         "victim.corporation_name": 1,
                         "victim.alliance_id": 1,
                         "victim.alliance_name": 1,
+                        "victim.faction_name": 1,
+                        "attackers.final_blow": 1,
+                        "attackers.character_id": 1,
+                        "attackers.character_name": 1,
+                        "attackers.corporation_id": 1,
+                        "attackers.corporation_name": 1,
+                        "attackers.alliance_id": 1,
+                        "attackers.alliance_name": 1,
+                        "attackers.faction_name": 1,
                     })
                         .sort({ kill_time: -1 })
                         .limit(killmailLimit)
@@ -129,21 +142,45 @@ export default defineCachedEventHandler(
             }
 
             // Format killmails data
-            const formattedKillmails = killmails.map((killmail) => ({
-                killmail_id: killmail.killmail_id,
-                kill_time: killmail.kill_time,
-                total_value: killmail.total_value,
-                victim: {
-                    ship_id: killmail.victim.ship_id,
-                    ship_name: killmail.victim.ship_name,
-                    character_id: killmail.victim.character_id,
-                    character_name: killmail.victim.character_name,
-                    corporation_id: killmail.victim.corporation_id,
-                    corporation_name: killmail.victim.corporation_name,
-                    alliance_id: killmail.victim.alliance_id,
-                    alliance_name: killmail.victim.alliance_name,
-                },
-            }));
+            const formattedKillmails = killmails.map((killmail) => {
+                // Find final blow attacker
+                const finalBlowAttacker = killmail.attackers?.find(
+                    (attacker) => attacker.final_blow === true
+                );
+
+                return {
+                    killmail_id: killmail.killmail_id,
+                    kill_time: killmail.kill_time,
+                    total_value: killmail.total_value,
+                    system_id: killmail.system_id,
+                    system_name: killmail.system_name,
+                    region_name: killmail.region_name,
+                    victim: {
+                        ship_id: killmail.victim.ship_id,
+                        ship_name: killmail.victim.ship_name,
+                        ship_group_name: killmail.victim.ship_group_name,
+                        character_id: killmail.victim.character_id,
+                        character_name: killmail.victim.character_name,
+                        corporation_id: killmail.victim.corporation_id,
+                        corporation_name: killmail.victim.corporation_name,
+                        alliance_id: killmail.victim.alliance_id,
+                        alliance_name: killmail.victim.alliance_name,
+                        faction_name: killmail.victim.faction_name,
+                    },
+                    finalblow: finalBlowAttacker
+                        ? {
+                              character_id: finalBlowAttacker.character_id,
+                              character_name: finalBlowAttacker.character_name,
+                              corporation_id: finalBlowAttacker.corporation_id,
+                              corporation_name:
+                                  finalBlowAttacker.corporation_name,
+                              alliance_id: finalBlowAttacker.alliance_id,
+                              alliance_name: finalBlowAttacker.alliance_name,
+                              faction_name: finalBlowAttacker.faction_name,
+                          }
+                        : null,
+                };
+            });
 
             return {
                 item,

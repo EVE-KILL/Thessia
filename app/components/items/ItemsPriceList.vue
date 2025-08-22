@@ -1,5 +1,5 @@
 <template>
-    <div class="rounded bg-background-800 bg-opacity-75">
+    <div class="rounded bg-background-800 bg-opacity-75 p-6">
         <h2 class="text-xl font-bold mb-4">{{ $t('marketPricesX', { region: 'The Forge' }) }}</h2>
 
         <Table :columns="tableColumns" :items="prices" :loading="loading" :skeleton-count="10"

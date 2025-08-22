@@ -1,6 +1,7 @@
 import crypto from "node:crypto";
+import formatIsk from "../../../utils/formatIsk";
 
-// Define types for better type safety
+// Define types for better type safety (copied from main fitting API)
 interface IFittingSlots {
     high_slot: IItem[];
     medium_slot: IItem[];
@@ -18,9 +19,10 @@ interface IFittingGroup {
     fitting_cost: number;
     count: number;
     ship_value: number;
+    svg?: string;
 }
 
-// Allowed ship groups
+// Allowed ship groups (copied from main fitting API)
 const shipGroupIds = [
     25, 26, 27, 28, 29, 30, 31, 237, 324, 358, 380, 381, 419, 420, 463, 485,
     513, 540, 541, 543, 547, 659, 830, 831, 832, 833, 834, 883, 893, 894, 898,
@@ -47,55 +49,37 @@ export default defineCachedEventHandler(
             return { error: "Ship ID not provided" };
         }
         const query = getQuery(event);
-        let limit = Number.parseInt((query.limit as string) || "10", 10);
-        if (Number.isNaN(limit) || limit < 1) {
-            limit = 1;
-        } else if (limit > 50) {
-            limit = 50;
-        }
+        const limit: number = Number(query.limit || 10);
 
-        const ship = await InvTypes.findOne({ type_id: shipId });
-        if (!ship) {
-            return { error: "Ship not found" };
-        }
-
-        // Ensure it's a ship, meaning the group_id is in the allowed list
-        const shipGroupId = ship.group_id;
-        if (!shipGroupIds.includes(shipGroupId)) {
-            return { error: "Not a ship type" };
-        }
-
-        // Find killmails in the last 30 days where the ship was destroyed
-        const killmails = await Killmails.find(
-            {
-                kill_time: {
-                    $gte: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000),
-                    $lte: new Date(),
-                },
-                "victim.ship_id": shipId,
-            },
-            {
-                _id: 0,
-                "items.type_id": 1,
-                "items.name": 1,
-                "items.group_id": 1,
-                "items.group_name": 1,
-                "items.flag": 1,
-                "items.qty_dropped": 1,
-                "items.qty_destroyed": 1,
-                killmail_id: 1,
-                killmail_hash: 1,
-                total_value: 1,
-                ship_value: 1,
-            }
+        // Ship validation - check if ship is valid
+        const ship = await InvTypes.findOne(
+            { type_id: shipId },
+            { group_id: 1, name: 1 }
         );
 
-        // Process killmails concurrently
+        if (!ship || !shipGroupIds.includes(ship.group_id)) {
+            return { error: "Invalid ship type or ship not found" };
+        }
+
+        // Get killmails for this ship and generate fittings data
+        const killmails = await Killmails.find(
+            { "victim.ship_id": shipId },
+            { killmail_id: 1, killmail_hash: 1, items: 1, ship_value: 1 }
+        )
+            .sort({ kill_time: -1 })
+            .limit(1000)
+            .lean();
+
+        if (killmails.length === 0) {
+            return [];
+        }
+
+        // Process fittings and generate hashes
         const fittingResults = await Promise.all(
             killmails.map(async (killmail) => {
-                const fitting = await generateFitting(killmail.items);
+                const items = killmail.items || [];
+                const fitting = await generateFitting(items);
                 const fittingCost = await generateFittingCost(fitting);
-                // Prune fitting for hash: only keep slot and type_id
                 const filteredFitting = pruneFittingForHash(fitting);
                 const fittingHash = crypto
                     .createHash("md5")
@@ -112,11 +96,9 @@ export default defineCachedEventHandler(
             })
         );
 
-        // Group the fitted results, propagating total_value and ship_value from first occurrence
-        const fittings: { [key: number]: any } = {}; // Use index signature
-        const fittingGroups: { [key: string]: IFittingGroup } = {}; // Use index signature and defined type
+        // Group the fitted results
+        const fittingGroups: { [key: string]: IFittingGroup } = {};
         for (const result of fittingResults) {
-            fittings[result.killmail_id] = result;
             if (!fittingGroups[result.fitting_hash]) {
                 fittingGroups[result.fitting_hash] = {
                     killmail_id: result.killmail_id,
@@ -131,11 +113,21 @@ export default defineCachedEventHandler(
             }
         }
 
-        // Sort fittings and return data without SVG generation
+        // Sort fittings and generate SVGs
         const sortedFittings = Object.values(fittingGroups).sort(
             (a, b) => b.count - a.count
         );
-        const finalFittings = sortedFittings.slice(0, limit);
+        const finalFittings = sortedFittings
+            .slice(0, limit)
+            .map((fit: IFittingGroup, index: number) => {
+                fit.svg = generateSvg(
+                    `https://images.evetech.net/types/${shipId}/render`,
+                    fit.fitting_cost,
+                    fit.ship_value,
+                    index + 1
+                );
+                return fit;
+            });
 
         return finalFittings;
     },
@@ -145,15 +137,15 @@ export default defineCachedEventHandler(
         swr: true,
         base: "redis",
         getKey: (event) => {
-            const shipId = event.context.params?.id; // Add check for params
+            const shipId = event.context.params?.id;
             const query = getQuery(event);
-            const limit = query.limit || "10"; // Default limit is 10
-            return `fitting:${shipId}:limit:${limit}`;
+            const limit = query.limit || "10";
+            return `fitting-svg:${shipId}:limit:${limit}`;
         },
     }
 );
 
-// Updated stableStringify to handle circular references
+// Helper functions (copied from main fitting API)
 function stableStringify(obj: any, seen = new WeakSet()): string {
     if (obj === null || typeof obj !== "object") {
         return JSON.stringify(obj);
@@ -174,11 +166,9 @@ function stableStringify(obj: any, seen = new WeakSet()): string {
 }
 
 async function generateFittingCost(fitting: IFittingSlots): Promise<number> {
-    // Use defined type
     let cost = 0;
     for (const slot in fitting) {
         for (const item of fitting[slot as keyof IFittingSlots]) {
-            // Add type assertion
             const price = await Prices.findOne({
                 type_id: item.type_id,
                 region_id: 10000002,
@@ -194,9 +184,7 @@ async function generateFittingCost(fitting: IFittingSlots): Promise<number> {
 }
 
 async function generateFitting(items: IItem[]): Promise<IFittingSlots> {
-    // Use defined type
     const fitting: IFittingSlots = {
-        // Use defined type
         high_slot: [],
         medium_slot: [],
         low_slot: [],
@@ -232,14 +220,34 @@ async function generateFitting(items: IItem[]): Promise<IFittingSlots> {
     return fitting;
 }
 
-// Helper to remove all item properties except type_id for each slot
 function pruneFittingForHash(fitting: IFittingSlots): any {
-    // Use defined type
     const pruned: any = {};
     for (const slot in fitting) {
-        pruned[slot] = fitting[slot as keyof IFittingSlots] // Add type assertion
+        pruned[slot] = fitting[slot as keyof IFittingSlots]
             .map((item: any) => ({ type_id: item.type_id }))
             .sort((a: any, b: any) => a.type_id - b.type_id);
     }
     return pruned;
+}
+
+// SVG generation function
+function generateSvg(
+    shipImageUrl: string,
+    fitCost: number,
+    shipCost: number,
+    rank: number
+): string {
+    const totalCost = fitCost + shipCost;
+    return `<svg width="280" height="50" xmlns="http://www.w3.org/2000/svg">
+  <image href="${shipImageUrl}" x="0" y="0" height="50" width="50"/>
+  <text x="60" y="15" font-family="Arial" font-size="12" font-weight="bold" fill="white">Rank ${rank} (Total: ${formatIsk(
+        totalCost
+    )})</text>
+  <text x="60" y="30" font-family="Arial" font-size="11" fill="white">Fit: ${formatIsk(
+      fitCost
+  )}</text>
+  <text x="60" y="45" font-family="Arial" font-size="11" fill="white">Ship: ${formatIsk(
+      shipCost
+  )}</text>
+</svg>`;
 }
