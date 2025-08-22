@@ -49,79 +49,87 @@
                         </div>
                     </div>
 
-                    <!-- Recent Searches -->
-                    <div v-if="recentSearches.length > 0" class="spotlight-recent">
-                        <h4 class="spotlight-section-title">{{ t('search.recent') }}</h4>
-                        <div class="spotlight-recent-list">
-                            <button v-for="(recent, index) in recentSearches" :key="index" class="spotlight-recent-item"
-                                @click="selectRecentSearch(recent)">
-                                <UIcon name="lucide:clock" class="spotlight-recent-icon" />
-                                <span>{{ recent }}</span>
-                                <UIcon name="lucide:x" class="spotlight-recent-remove"
-                                    @click.stop="removeRecentSearch(index)" />
-                            </button>
+                    <!-- Recent Searches and EVE Tools Side by Side -->
+                    <div class="spotlight-bottom-sections">
+                        <!-- Recent Searches -->
+                        <div v-if="recentSearches.length > 0" class="spotlight-recent">
+                            <h4 class="spotlight-section-title">{{ t('search.recent') }}</h4>
+                            <div class="spotlight-recent-list">
+                                <button v-for="(recent, index) in recentSearches" :key="index"
+                                    class="spotlight-recent-item" @click="selectRecentSearch(recent)">
+                                    <UIcon name="lucide:clock" class="spotlight-recent-icon" />
+                                    <span>{{ recent }}</span>
+                                    <UIcon name="lucide:x" class="spotlight-recent-remove"
+                                        @click.stop="removeRecentSearch(index)" />
+                                </button>
+                            </div>
                         </div>
-                    </div>
 
-                    <!-- EVE Tools -->
-                    <div class="spotlight-eve-tools">
-                        <h4 class="spotlight-section-title">{{ t('search.eveTools') || 'EVE Tools' }}</h4>
-                        <div class="spotlight-eve-tools-grid">
-                            <a href="https://evemaps.dotlan.net/" target="_blank" rel="noopener noreferrer"
-                                class="spotlight-eve-tool" title="DOTLAN - EVE Maps & Intel" @click="closeSearch">
-                                <img src="https://evemaps.dotlan.net/favicon.ico" alt="DOTLAN"
-                                    class="spotlight-eve-tool-icon">
-                                <span>DOTLAN</span>
-                            </a>
-                            <a href="https://eveeye.com/" target="_blank" rel="noopener noreferrer"
-                                class="spotlight-eve-tool" title="EVEEye - Interactive Maps" @click="closeSearch">
-                                <img src="https://eveeye.com/img/eveeye.svg" alt="EVEEye"
-                                    class="spotlight-eve-tool-icon">
-                                <span>EVEEye</span>
-                            </a>
-                            <a href="https://evemissioneer.com/" target="_blank" rel="noopener noreferrer"
-                                class="spotlight-eve-tool" title="EVE Missioneer - Mission & Market Intel"
-                                @click="closeSearch">
-                                <img src="https://evemissioneer.com/favicon.png" alt="EVE Missioneer"
-                                    class="spotlight-eve-tool-icon">
-                                <span>EVE Missioneer</span>
-                            </a>
-                            <a href="https://eveship.fit/" target="_blank" rel="noopener noreferrer"
-                                class="spotlight-eve-tool" title="EveShip.fit - Ship Fitting Tool" @click="closeSearch">
-                                <img src="https://eveship.fit/favicon.ico" alt="EveShip.fit"
-                                    class="spotlight-eve-tool-icon">
-                                <span>EveShip.fit</span>
-                            </a>
-                            <a href="https://everef.net/" target="_blank" rel="noopener noreferrer"
-                                class="spotlight-eve-tool" title="EVERef - Game Reference" @click="closeSearch">
-                                <img src="https://everef.net/favicon.ico" alt="EVERef" class="spotlight-eve-tool-icon">
-                                <span>EVERef</span>
-                            </a>
-                            <a href="https://jita.space/" target="_blank" rel="noopener noreferrer"
-                                class="spotlight-eve-tool" title="Jita.Space - Market Analysis" @click="closeSearch">
-                                <img src="https://www.jita.space/favicon.ico" alt="Jita.Space"
-                                    class="spotlight-eve-tool-icon">
-                                <span>Jita.Space</span>
-                            </a>
-                            <a href="https://evewho.com/" target="_blank" rel="noopener noreferrer"
-                                class="spotlight-eve-tool" title="EVEWho - Character & Corporation Intel"
-                                @click="closeSearch">
-                                <img src="https://evewho.com/favicon.ico" alt="EVEWho" class="spotlight-eve-tool-icon">
-                                <span>EVEWho</span>
-                            </a>
-                            <a href="https://zkillboard.com/" target="_blank" rel="noopener noreferrer"
-                                class="spotlight-eve-tool" title="zKillboard - Killmail Database" @click="closeSearch">
-                                <img src="https://zkillboard.com/img/wreck.png" alt="zKillboard"
-                                    class="spotlight-eve-tool-icon">
-                                <span>zKillboard</span>
-                            </a>
-                            <a href="https://riftforeve.online/" target="_blank" rel="noopener noreferrer"
-                                class="spotlight-eve-tool" title="RIFT Intel Fusion - Intelligence Platform"
-                                @click="closeSearch">
-                                <img src="/images/rift-intel-fusion-tool-256.png" alt="RIFT Intel Fusion"
-                                    class="spotlight-eve-tool-icon">
-                                <span>RIFT Intel</span>
-                            </a>
+                        <!-- EVE Tools -->
+                        <div class="spotlight-eve-tools">
+                            <h4 class="spotlight-section-title">{{ t('search.eveTools') || 'EVE Tools' }}</h4>
+                            <div class="spotlight-eve-tools-grid">
+                                <a href="https://evemaps.dotlan.net/" target="_blank" rel="noopener noreferrer"
+                                    class="spotlight-eve-tool" title="DOTLAN - EVE Maps & Intel" @click="closeSearch">
+                                    <img src="https://evemaps.dotlan.net/favicon.ico" alt="DOTLAN"
+                                        class="spotlight-eve-tool-icon">
+                                    <span>DOTLAN</span>
+                                </a>
+                                <a href="https://eveeye.com/" target="_blank" rel="noopener noreferrer"
+                                    class="spotlight-eve-tool" title="EVEEye - Interactive Maps" @click="closeSearch">
+                                    <img src="https://eveeye.com/img/eveeye.svg" alt="EVEEye"
+                                        class="spotlight-eve-tool-icon">
+                                    <span>EVEEye</span>
+                                </a>
+                                <a href="https://evemissioneer.com/" target="_blank" rel="noopener noreferrer"
+                                    class="spotlight-eve-tool" title="EVE Missioneer - Mission & Market Intel"
+                                    @click="closeSearch">
+                                    <img src="https://evemissioneer.com/favicon.png" alt="EVE Missioneer"
+                                        class="spotlight-eve-tool-icon">
+                                    <span>EVE Missioneer</span>
+                                </a>
+                                <a href="https://eveship.fit/" target="_blank" rel="noopener noreferrer"
+                                    class="spotlight-eve-tool" title="EveShip.fit - Ship Fitting Tool"
+                                    @click="closeSearch">
+                                    <img src="https://eveship.fit/favicon.ico" alt="EveShip.fit"
+                                        class="spotlight-eve-tool-icon">
+                                    <span>EveShip.fit</span>
+                                </a>
+                                <a href="https://everef.net/" target="_blank" rel="noopener noreferrer"
+                                    class="spotlight-eve-tool" title="EVERef - Game Reference" @click="closeSearch">
+                                    <img src="https://everef.net/favicon.ico" alt="EVERef"
+                                        class="spotlight-eve-tool-icon">
+                                    <span>EVERef</span>
+                                </a>
+                                <a href="https://jita.space/" target="_blank" rel="noopener noreferrer"
+                                    class="spotlight-eve-tool" title="Jita.Space - Market Analysis"
+                                    @click="closeSearch">
+                                    <img src="https://www.jita.space/favicon.ico" alt="Jita.Space"
+                                        class="spotlight-eve-tool-icon">
+                                    <span>Jita.Space</span>
+                                </a>
+                                <a href="https://evewho.com/" target="_blank" rel="noopener noreferrer"
+                                    class="spotlight-eve-tool" title="EVEWho - Character & Corporation Intel"
+                                    @click="closeSearch">
+                                    <img src="https://evewho.com/favicon.ico" alt="EVEWho"
+                                        class="spotlight-eve-tool-icon">
+                                    <span>EVEWho</span>
+                                </a>
+                                <a href="https://zkillboard.com/" target="_blank" rel="noopener noreferrer"
+                                    class="spotlight-eve-tool" title="zKillboard - Killmail Database"
+                                    @click="closeSearch">
+                                    <img src="https://zkillboard.com/img/wreck.png" alt="zKillboard"
+                                        class="spotlight-eve-tool-icon">
+                                    <span>zKillboard</span>
+                                </a>
+                                <a href="https://riftforeve.online/" target="_blank" rel="noopener noreferrer"
+                                    class="spotlight-eve-tool" title="RIFT Intel Fusion - Intelligence Platform"
+                                    @click="closeSearch">
+                                    <img src="/images/rift-intel-fusion-tool-256.png" alt="RIFT Intel Fusion"
+                                        class="spotlight-eve-tool-icon">
+                                    <span>RIFT Intel</span>
+                                </a>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -698,8 +706,14 @@ watch(isOpen, (open) => {
 
 .spotlight-quick-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    grid-template-columns: repeat(4, 1fr);
     gap: var(--space-2);
+}
+
+@media (max-width: 640px) {
+    .spotlight-quick-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
 }
 
 .spotlight-quick-item {
@@ -797,11 +811,22 @@ watch(isOpen, (open) => {
     opacity: 1;
 }
 
-/* EVE Tools Section */
-.spotlight-eve-tools {
+/* Bottom sections side-by-side layout */
+.spotlight-bottom-sections {
+    display: grid;
+    grid-template-columns: 1fr 2fr;
+    gap: var(--space-6);
     margin-top: var(--space-6);
 }
 
+@media (max-width: 768px) {
+    .spotlight-bottom-sections {
+        grid-template-columns: 1fr;
+        gap: var(--space-4);
+    }
+}
+
+/* EVE Tools Section */
 .spotlight-eve-tools-grid {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
