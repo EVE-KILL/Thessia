@@ -44,8 +44,8 @@ const editingSideD = ref(false);
 // Define reactive state
 const systemSearchTerm = ref('');
 const selectedSystems = ref<SelectedSystem[]>([]);
-const startTime = ref();
-const endTime = ref();
+const startTime = ref(''); // ISO string format from datetime-local
+const endTime = ref('');   // ISO string format from datetime-local
 const loading = ref(false);
 const error = ref('');
 const showGeneratedData = ref(false); // Hide generated data by default
@@ -176,17 +176,34 @@ const loadEntities = async () => {
         error.value = t('battleGenerator.errors.endTimeRequired');
         return;
     }
+
+    // Validate datetime format
+    const startDate = new Date(startTime.value);
+    const endDate = new Date(endTime.value);
+
+    if (isNaN(startDate.getTime())) {
+        error.value = t('battleGenerator.errors.invalidStartTime');
+        return;
+    }
+
+    if (isNaN(endDate.getTime())) {
+        error.value = t('battleGenerator.errors.invalidEndTime');
+        return;
+    }
+
     // Enforce max timespan of 36 hours
-    {
-        const start = new Date(startTime.value);
-        const end = new Date(endTime.value);
-        const diff = end.getTime() - start.getTime();
-        const maxMs = 36 * 60 * 60 * 1000;
-        if (diff > maxMs) {
-            error.value = t('battleGenerator.errors.maxTimespan');
-            loading.value = false;
-            return;
-        }
+    const timeDiff = endDate.getTime() - startDate.getTime();
+    const maxTimespan = 36 * 60 * 60 * 1000; // 36 hours in milliseconds
+
+    if (timeDiff > maxTimespan) {
+        error.value = t('battleGenerator.errors.maxTimespan');
+        loading.value = false;
+        return;
+    }
+
+    if (timeDiff <= 0) {
+        error.value = t('battleGenerator.errors.endTimeBeforeStart');
+        return;
     }
 
     error.value = '';
@@ -201,8 +218,8 @@ const loadEntities = async () => {
             },
             body: JSON.stringify({
                 systemIds,
-                startTime: startTime.value,
-                endTime: endTime.value,
+                startTime: formatDatetimeForAPI(startTime.value),
+                endTime: formatDatetimeForAPI(endTime.value),
             }),
         });
 
@@ -599,8 +616,8 @@ const updateGeneratedData = () => {
     const data = {
         systems: selectedSystems.value.map(system => ({ system_id: system.id })),
         sides: sides,
-        startTime: startTime.value,
-        endTime: endTime.value,
+        startTime: formatDatetimeForAPI(startTime.value),
+        endTime: formatDatetimeForAPI(endTime.value),
     };
 
     generatedData.value = JSON.stringify(data, null, 2);
@@ -662,7 +679,7 @@ watch(() => route.hash, (newHash) => {
             activeTabId.value = tabIdFromHash;
         } else if (!tabIdFromHash && tabs.value.length > 0) {
             // If hash is removed, select default tab without changing URL
-            activeTabId.value = tabs.value[0].id;
+            activeTabId.value = tabs.value[0]?.id || '';
         }
     }
 });
@@ -670,7 +687,7 @@ watch(() => route.hash, (newHash) => {
 watch(activeTabId, (newId, oldId) => {
     if (previewData.value && newId && oldId && newId !== oldId &&
         route.hash !== `#${newId}` &&
-        (route.hash || newId !== tabs.value[0].id)) {
+        (route.hash || newId !== tabs.value[0]?.id)) {
         router.push({ hash: `#${newId}` });
     }
 });
@@ -785,6 +802,25 @@ const previewBattle = async () => {
         return;
     }
 
+    // Validate datetime format
+    const startDate = new Date(startTime.value);
+    const endDate = new Date(endTime.value);
+
+    if (isNaN(startDate.getTime())) {
+        error.value = t('battleGenerator.errors.invalidStartTime');
+        return;
+    }
+
+    if (isNaN(endDate.getTime())) {
+        error.value = t('battleGenerator.errors.invalidEndTime');
+        return;
+    }
+
+    if (endDate <= startDate) {
+        error.value = t('battleGenerator.errors.endTimeBeforeStart');
+        return;
+    }
+
     if (sideA.value.length === 0 || sideB.value.length === 0) {
         error.value = t('battleGenerator.errors.bothSidesRequired');
         return;
@@ -858,8 +894,8 @@ const previewBattle = async () => {
             body: JSON.stringify({
                 systems,
                 sides,
-                startTime: startTime.value,
-                endTime: endTime.value,
+                startTime: formatDatetimeForAPI(startTime.value),
+                endTime: formatDatetimeForAPI(endTime.value),
             }),
         });
 
@@ -1020,7 +1056,7 @@ const previewBattle = async () => {
                             <UBadge v-for="system in selectedSystems" :key="system.id" color="primary"
                                 class="flex items-center gap-1">
                                 {{ system.name }}
-                                <UButton color="white" variant="ghost" icon="i-lucide-x" size="xs" class="p-0"
+                                <UButton color="neutral" variant="ghost" icon="i-lucide-x" size="xs" class="p-0"
                                     @click="removeSystem(system.id)" />
                             </UBadge>
                         </div>
@@ -1148,7 +1184,7 @@ const previewBattle = async () => {
                         class="flex items-center justify-between p-2 bg-white dark:bg-gray-700 rounded">
                         <div class="flex items-center space-x-2">
                             <UButton v-if="(numSides >= 4) && (entity.type === 'alliance' || !entity.alliance_id)"
-                                icon="i-heroicons-arrow-left" color="yellow" variant="ghost" size="xs"
+                                icon="i-heroicons-arrow-left" color="warning" variant="ghost" size="xs"
                                 @click="moveToSideD(entity)" />
                             <UButton v-if="entity.type === 'alliance' || !entity.alliance_id"
                                 icon="i-heroicons-arrow-left" color="primary" variant="ghost" size="xs"
@@ -1171,7 +1207,7 @@ const previewBattle = async () => {
                                 icon="i-heroicons-arrow-right" color="error" variant="ghost" size="xs"
                                 @click="moveToSideB(entity)" />
                             <UButton v-if="(numSides >= 3) && (entity.type === 'alliance' || !entity.alliance_id)"
-                                icon="i-heroicons-arrow-right" color="green" variant="ghost" size="xs"
+                                icon="i-heroicons-arrow-right" color="success" variant="ghost" size="xs"
                                 @click="moveToSideC(entity)" />
                         </div>
                     </div>

@@ -351,13 +351,11 @@ function populateFormFields(campaignData: any) {
 
     // Format dates for datetime-local inputs
     if (campaignData.startTime) {
-        const startDate = new Date(campaignData.startTime);
-        campaignStartTime.value = startDate.toISOString().slice(0, 16); // Format as YYYY-MM-DDThh:mm
+        campaignStartTime.value = formatDatetimeForInput(campaignData.startTime);
     }
 
     if (campaignData.endTime) {
-        const endDate = new Date(campaignData.endTime);
-        campaignEndTime.value = endDate.toISOString().slice(0, 16);
+        campaignEndTime.value = formatDatetimeForInput(campaignData.endTime);
     }
 
     // Reset all filter values
@@ -565,6 +563,44 @@ const handleCreateCampaign = async () => {
             timeout: 5000
         });
         return;
+    }
+
+    // Validate datetime format
+    const startDate = new Date(campaignStartTime.value);
+    if (isNaN(startDate.getTime())) {
+        toast.add({
+            title: t('error'),
+            description: t('campaignCreator.invalidStartTime'),
+            color: 'error',
+            icon: 'i-lucide-alert-circle',
+            timeout: 5000
+        });
+        return;
+    }
+
+    if (campaignEndTime.value) {
+        const endDate = new Date(campaignEndTime.value);
+        if (isNaN(endDate.getTime())) {
+            toast.add({
+                title: t('error'),
+                description: t('campaignCreator.invalidEndTime'),
+                color: 'error',
+                icon: 'i-lucide-alert-circle',
+                timeout: 5000
+            });
+            return;
+        }
+
+        if (endDate <= startDate) {
+            toast.add({
+                title: t('error'),
+                description: t('campaignCreator.endTimeBeforeStart'),
+                color: 'error',
+                icon: 'i-lucide-alert-circle',
+                timeout: 5000
+            });
+            return;
+        }
     }
 
     if (!campaignQuery.value || Object.keys(campaignQuery.value).length === 0) {

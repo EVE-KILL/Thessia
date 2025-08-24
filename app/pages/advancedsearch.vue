@@ -654,6 +654,49 @@ const clearTimeFilter = () => {
 
 const clearTimeFilterOnCustomInput = () => {
     filters.value.timeFilter = null
+    // Clear any validation errors when user types
+    if (error.value && error.value.includes('datetime')) {
+        error.value = null
+    }
+}
+
+// Validate datetime inputs to prevent API errors
+const validateDatetimeInputs = (): string | null => {
+    // Check if custom time range has valid datetime inputs
+    if (filters.value.customTimeRange.from || filters.value.customTimeRange.to) {
+        if (filters.value.customTimeRange.from && !isValidDatetime(filters.value.customTimeRange.from)) {
+            return 'Invalid "From" datetime format'
+        }
+
+        if (filters.value.customTimeRange.to && !isValidDatetime(filters.value.customTimeRange.to)) {
+            return 'Invalid "To" datetime format'
+        }
+
+        // Validate datetime range order
+        if (filters.value.customTimeRange.from && filters.value.customTimeRange.to) {
+            const fromDate = new Date(filters.value.customTimeRange.from)
+            const toDate = new Date(filters.value.customTimeRange.to)
+
+            if (fromDate >= toDate) {
+                return '"From" datetime must be before "To" datetime'
+            }
+        }
+    }
+
+    return null
+}
+
+// Helper function to validate datetime-local format
+const isValidDatetime = (datetime: string): boolean => {
+    if (!datetime) return false
+
+    // Check if it matches datetime-local format (YYYY-MM-DDTHH:mm)
+    const datetimeRegex = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/
+    if (!datetimeRegex.test(datetime)) return false
+
+    // Check if it creates a valid date
+    const date = new Date(datetime)
+    return !isNaN(date.getTime())
 }
 
 const removeFacet = (index: number) => {
@@ -853,9 +896,26 @@ const executeSearch = async () => {
         isLoading.value = true
         error.value = null
 
+        // Validate datetime inputs before sending to API
+        const validationError = validateDatetimeInputs()
+        if (validationError) {
+            error.value = validationError
+            return
+        }
+
+        // Create a copy of the query to modify datetime formats
+        const queryToSend = JSON.parse(JSON.stringify(generatedQuery.value))
+
+        // Format datetime inputs for API if they exist in the filter
+        if (queryToSend.filter) {
+            // The datetime conversion happens in the server-side AdvancedSearch helper
+            // but we need to ensure consistent format is sent
+            // No additional client-side formatting needed as server handles Date() conversion
+        }
+
         const response = await $fetch("/api/query", {
             method: "POST",
-            body: generatedQuery.value,
+            body: queryToSend,
         })
 
         // Handle the response structure - it might be the data directly or wrapped
