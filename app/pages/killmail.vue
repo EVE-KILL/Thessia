@@ -186,13 +186,21 @@ const processAndSubmit = async (url: string) => {
         // Handling the response based on the redirect preference
         if (data.value?.error) {
             // If there's an error but it's just that the killmail already exists,
-            // we still want to add it to the processed list if not redirecting
+            // redirect to the killmail page instead of showing an error
             if (data.value.error === "Killmail already exists") {
+                // If redirect is enabled, go directly to the killmail
+                if (shouldRedirect.value) {
+                    router.push(`/killmail/${killmailInfo.killmail_id}`);
+                    return;
+                }
+
+                // If redirect is disabled, add to processed list and allow user to view it manually
                 processedKillmails.value.unshift({
                     id: killmailInfo.killmail_id,
                     status: 'existing',
                     message: t('killmail.already_exists')
                 });
+                return;
             } else {
                 errorMessage.value = data.value.error;
             }

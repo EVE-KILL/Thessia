@@ -162,12 +162,15 @@ export function formatDuration(durationMs: number | undefined | null): string {
  * @param dateValue - Date string or Date object from API (assumed to be UTC)
  * @returns String in YYYY-MM-DDThh:mm format
  */
-export function formatDatetimeForInput(dateValue: string | Date | null | undefined): string {
-    if (!dateValue) return '';
-    
-    const date = typeof dateValue === 'string' ? new Date(dateValue) : dateValue;
-    if (isNaN(date.getTime())) return '';
-    
+export function formatDatetimeForInput(
+    dateValue: string | Date | null | undefined
+): string {
+    if (!dateValue) return "";
+
+    const date =
+        typeof dateValue === "string" ? new Date(dateValue) : dateValue;
+    if (isNaN(date.getTime())) return "";
+
     // Since users think in EVE time (UTC), display the UTC time
     return date.toISOString().slice(0, 16); // Format as YYYY-MM-DDThh:mm
 }
@@ -179,27 +182,28 @@ export function formatDatetimeForInput(dateValue: string | Date | null | undefin
  * @returns ISO string suitable for MongoDB queries, or null if invalid
  */
 export function formatDatetimeForAPI(datetime: string): string | null {
-    if (!datetime) return null
-    
+    if (!datetime) return null;
+
     try {
-        // datetime-local format is "YYYY-MM-DDTHH:mm" 
+        // datetime-local format is "YYYY-MM-DDTHH:mm"
         // Users think in EVE time (UTC), so treat input as UTC directly
         // Add seconds if not present and append 'Z' to indicate UTC
-        const normalizedDatetime = datetime.includes(':') && datetime.split(':').length === 2 
-            ? `${datetime}:00Z`  // Add seconds, mark as UTC
-            : `${datetime}Z`     // Mark as UTC
-        
-        const date = new Date(normalizedDatetime)
-        
+        const normalizedDatetime =
+            datetime.includes(":") && datetime.split(":").length === 2
+                ? `${datetime}:00Z` // Add seconds, mark as UTC
+                : `${datetime}Z`; // Mark as UTC
+
+        const date = new Date(normalizedDatetime);
+
         // Validate the date is actually valid
         if (isNaN(date.getTime())) {
-            return null
+            return null;
         }
-        
-        return date.toISOString()
+
+        return date.toISOString();
     } catch (error) {
-        console.warn('Error formatting datetime for API:', error)
-        return null
+        console.warn("Error formatting datetime for API:", error);
+        return null;
     }
 }
 
@@ -210,27 +214,28 @@ export function formatDatetimeForAPI(datetime: string): string | null {
  * @returns Validation result with isValid flag and error message
  */
 export function validateDatetimeInput(
-    inputValue: string, 
+    inputValue: string,
     maxHoursFromNow: number = 720
 ): { isValid: boolean; error?: string } {
     if (!inputValue) {
-        return { isValid: false, error: 'Date is required' };
+        return { isValid: false, error: "Date is required" };
     }
-    
+
     const date = new Date(inputValue);
     if (isNaN(date.getTime())) {
-        return { isValid: false, error: 'Invalid date format' };
+        return { isValid: false, error: "Invalid date format" };
     }
-    
+
     const now = new Date();
-    const diffHours = Math.abs(date.getTime() - now.getTime()) / (1000 * 60 * 60);
-    
+    const diffHours =
+        Math.abs(date.getTime() - now.getTime()) / (1000 * 60 * 60);
+
     if (diffHours > maxHoursFromNow) {
-        return { 
-            isValid: false, 
-            error: `Date must be within ${maxHoursFromNow} hours of current time` 
+        return {
+            isValid: false,
+            error: `Date must be within ${maxHoursFromNow} hours of current time`,
         };
     }
-    
+
     return { isValid: true };
 }
