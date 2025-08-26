@@ -254,7 +254,7 @@ const handleRowClick = (item: any, event: MouseEvent) => {
         return;
     }
 
-    // For Ctrl/Cmd + click, we'll handle this manually since our anchor is at row level
+    // For Ctrl/Cmd + click or openInNewTab, we'll handle this manually
     const url = props.linkFn(item);
     if (!url) return;
 
@@ -265,9 +265,59 @@ const handleRowClick = (item: any, event: MouseEvent) => {
         // For ctrl/cmd clicks or when openInNewTab is true, open in new tab
         window.open(url, "_blank");
     } else {
-        // For normal clicks, use navigateTo to trigger Nuxt page hooks
+        // For normal left clicks, use navigateTo to trigger Nuxt page hooks
         navigateTo(url);
     }
+};
+
+/**
+ * Handle auxiliary clicks (middle-click, right-click, etc.)
+ * @param item - The clicked data item
+ * @param event - The mouse event
+ */
+const handleAuxClick = (item: any, event: MouseEvent) => {
+    // Emit row click event for custom handling if needed
+    emit("row-click", { item, event });
+
+    // Only handle middle-click (button 1)
+    if (
+        event.button !== 1 ||
+        !props.linkFn ||
+        event.target instanceof HTMLAnchorElement ||
+        (event.target as Element).closest("a")
+    ) {
+        return;
+    }
+
+    const url = props.linkFn(item);
+    if (!url) return;
+
+    // Prevent default behavior for middle-click
+    event.preventDefault();
+
+    // Simply open in new tab - most modern browsers handle this reasonably
+    window.open(url, '_blank', 'noopener');
+};
+
+/**
+ * Handle mousedown events - specifically for Firefox middle-click support
+ * @param item - The clicked data item
+ * @param event - The mouse event
+ */
+const handleMouseDown = (item: any, event: MouseEvent) => {
+    // Only handle middle-click (button 1)
+    if (event.button !== 1) return;
+
+    // Check if we have a valid link function and URL
+    if (!props.linkFn) return;
+
+    const url = props.linkFn(item);
+    if (!url) return;
+
+    // ONLY prevent the default behavior (Firefox scroll helper)
+    // Don't open the URL here - let auxclick handle that
+    event.preventDefault();
+    event.stopPropagation();
 };
 
 // Get CSS class for a row
@@ -432,7 +482,8 @@ const getRowUrl = (item: any): string | null => {
                     tableRowClasses,
                     getRowClasses(item, index),
                     { 'has-link': props.linkFn && props.linkFn(item) }
-                ]" @click="(e) => handleRowClick(item, e)">
+                ]" @click="(e) => handleRowClick(item, e)" @auxclick="(e) => handleAuxClick(item, e)"
+                @mousedown="(e) => handleMouseDown(item, e)">
                 <!-- Mobile View -->
                 <template v-if="useMobileView">
                     <slot name="mobile-row" :item="item" :index="index">
@@ -498,7 +549,8 @@ const getRowUrl = (item: any): string | null => {
                     :target="getRowUrl(item) && props.openInNewTab ? '_blank' : undefined"
                     :rel="getRowUrl(item) && props.openInNewTab ? 'noopener' : undefined" class="horizontal-item"
                     :class="[getRowClasses(item, index), { 'has-link': !!getRowUrl(item) }]"
-                    @click="(e) => handleRowClick(item, e)">
+                    @click="(e) => handleRowClick(item, e)" @auxclick="(e) => handleAuxClick(item, e)"
+                    @mousedown="(e) => handleMouseDown(item, e)">
                     <slot name="horizontal-item" :item="item" :index="index">
                         <div class="horizontal-item-content">
                             {{ item.name || 'Item' }}
