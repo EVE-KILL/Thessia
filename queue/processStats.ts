@@ -59,7 +59,7 @@ export default {
                 );
             },
             {
-                concurrency: 2,
+                concurrency: 3,
             }
         )
             .on("failed", (job: Job | undefined, err: Error) => {
