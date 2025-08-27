@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, getCurrentInstance, onBeforeUnmount } from 'vue';
+import { computed, getCurrentInstance, nextTick, onBeforeUnmount } from 'vue';
 
 const { t, locale } = useI18n();
 const currentLocale = computed(() => locale.value);
@@ -214,7 +214,10 @@ const {
 const pauseWebSocket = (reason = "hover") => {
     if (props.wsDisabled || useExternalData.value) return;
 
-    pauseWs(); // Call the composable's pause function
+    // Use silent pause to keep connection alive for automatic pauses (hover, pagination),
+    // but regular pause for manual/component deactivation
+    const useSilentPause = reason !== "manual" && reason !== "component_deactivated";
+    pauseWs(useSilentPause);
 
     if (reason === "manual") {
         manuallyPaused.value = true;
@@ -233,6 +236,12 @@ const resumeWebSocket = () => {
     }
 
     resumeWs(); // This will trigger onConnected -> handleWebSocketReconnect if connection is successful
+
+    // Since silent pause keeps the connection alive, we need to manually process pending messages
+    // when resuming from a paused state
+    nextTick(() => {
+        handleWebSocketReconnect();
+    });
 };
 
 // Watch page changes to control WebSocket pausing
@@ -784,7 +793,7 @@ onUpdated(() => {
                     </div>
                 </div>
 
-                <!-- WebSocket status indicator with clearer state indication -->
+                <!-- WebSocket status indicator -->
                 <div v-if="!wsDisabled && !useExternalData" class="flex items-center ml-4">
                     <div :class="[
                         'w-3 h-3 mr-1 cursor-pointer',
@@ -796,10 +805,6 @@ onUpdated(() => {
                         class="ml-1 px-1.5 py-0 bg-primary-500 text-white text-2xs cursor-pointer kill-count-badge"
                         @click="resetNewKillCount">
                         +{{ wsNewKillCount }}
-                    </span>
-
-                    <span v-if="isWebSocketPaused && pendingMessages.length > 0" class="ml-1 text-xs text-yellow-400">
-                        {{ pendingMessages.length }}
                     </span>
 
                     <!-- Show reconnection status if applicable -->
@@ -1060,7 +1065,7 @@ onUpdated(() => {
                         <!-- System/Region Info -->
                         <div class="text-xs">
                             <span>{{ item.system_name }} / {{ getLocalizedString(item.region_name, currentLocale)
-                            }}</span>
+                                }}</span>
                             <span class="ml-1">(</span>
                             <span :class="getSecurityColor(item.system_security)">
                                 {{ item.system_security.toFixed(1) }}

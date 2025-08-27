@@ -142,7 +142,7 @@ export function useWebSocket(options: {
                     message: "Failed to create WebSocket connection",
                     error: wsErr,
                 });
-                
+
                 // Only log in development
                 if (debug || import.meta.dev) {
                     console.error(
@@ -180,9 +180,11 @@ export function useWebSocket(options: {
 
                 try {
                     const data = JSON.parse(event.data);
+                    // Always call onMessage, even if paused - let the component decide what to do
                     onMessage(data);
                 } catch (err) {
                     // If not JSON, emit the raw data
+                    // Always call onMessage, even if paused - let the component decide what to do
                     onMessage(event.data);
                 }
             };
@@ -190,7 +192,7 @@ export function useWebSocket(options: {
             socket.value.onerror = (error) => {
                 errorMessage.value = "Connection error";
                 onError({ error });
-                
+
                 // Only log in development or debug mode
                 if (debug || import.meta.dev) {
                     console.error(`WebSocket(${globalRefKey}): Error:`, error);
@@ -224,7 +226,7 @@ export function useWebSocket(options: {
             isConnected.value = false;
             errorMessage.value = "Error establishing connection";
             onError({ message: "Failed to establish connection", error: err });
-            
+
             // Only log in development or debug mode
             if (debug || import.meta.dev) {
                 console.error(
@@ -355,8 +357,13 @@ export function useWebSocket(options: {
     /**
      * Pause WebSocket processing
      */
-    const pause = () => {
+    const pause = (silent = false) => {
         isPaused.value = true;
+
+        // If silent pause, keep connection alive but mark as paused
+        if (silent) {
+            return;
+        }
 
         // Don't close the connection if it's a global instance being used by others
         if (useGlobalInstance) {
@@ -417,7 +424,7 @@ export function useWebSocket(options: {
         log(
             `WebSocket(${globalRefKey}): Page hide event (persisted: ${event.persisted})`
         );
-        pause();
+        pause(false); // Use regular pause for page hide to close connection
     };
 
     /**
@@ -449,7 +456,7 @@ export function useWebSocket(options: {
      */
     const handleVisibilityChange = () => {
         if (document.visibilityState === "hidden") {
-            pause();
+            pause(false); // Use regular pause for visibility change to close connection
         } else if (document.visibilityState === "visible" && !isPaused.value) {
             resume();
         }
@@ -582,7 +589,7 @@ export function useWebSocket(options: {
 
     // Handle component deactivation (keep-alive)
     onDeactivated(() => {
-        pause();
+        pause(false); // Use regular pause for component deactivation
     });
 
     // Handle component activation (keep-alive)
