@@ -214,7 +214,7 @@ imageserver:
             memory: 256Mi
         limits:
             cpu: 8000m
-            memory: 1024Mi
+            memory: 2048Mi
     image:
         repository: ghcr.io/eve-kill/imageserver
         tag: latest
