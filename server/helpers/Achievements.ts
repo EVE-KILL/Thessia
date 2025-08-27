@@ -2569,9 +2569,9 @@ export class AchievementService {
         const regularAchievements = activeAchievements.filter(
             (a) => !a.customFunction
         );
-        const customFunctionAchievements = activeAchievements.filter(
-            (a) => a.customFunction
-        );
+        // const customFunctionAchievements = activeAchievements.filter(
+        //     (a) => a.customFunction
+        // );
 
         // Build achievement results map
         const achievementResults: Record<
@@ -2580,52 +2580,52 @@ export class AchievementService {
         > = {};
 
         // First, process achievements with custom functions in parallel for better performance
-        const customFunctionPromises = customFunctionAchievements.map(
-            async (achievement) => {
-                try {
-                    if (achievement.customFunction) {
-                        console.log(
-                            `🔧 Processing custom function achievement: ${achievement.name}`
-                        );
-                        const result = await achievement.customFunction(
-                            characterId
-                        );
-                        const achievementResult =
-                            typeof result === "number"
-                                ? { count: result, killmailIds: [] }
-                                : {
-                                      count: result.count,
-                                      killmailIds: result.killmailIds,
-                                  };
+        // const customFunctionPromises = customFunctionAchievements.map(
+        //     async (achievement) => {
+        //         try {
+        //             if (achievement.customFunction) {
+        //                 console.log(
+        //                     `🔧 Processing custom function achievement: ${achievement.name}`
+        //                 );
+        //                 const result = await achievement.customFunction(
+        //                     characterId
+        //                 );
+        //                 const achievementResult =
+        //                     typeof result === "number"
+        //                         ? { count: result, killmailIds: [] }
+        //                         : {
+        //                               count: result.count,
+        //                               killmailIds: result.killmailIds,
+        //                           };
 
-                        return {
-                            id: achievement.id,
-                            result: achievementResult,
-                        };
-                    }
-                    return null;
-                } catch (error) {
-                    console.error(
-                        `Error calculating custom function achievement ${achievement.id} for character ${characterId}:`,
-                        error
-                    );
-                    return {
-                        id: achievement.id,
-                        result: { count: 0, killmailIds: [] },
-                    };
-                }
-            }
-        );
+        //                 return {
+        //                     id: achievement.id,
+        //                     result: achievementResult,
+        //                 };
+        //             }
+        //             return null;
+        //         } catch (error) {
+        //             console.error(
+        //                 `Error calculating custom function achievement ${achievement.id} for character ${characterId}:`,
+        //                 error
+        //             );
+        //             return {
+        //                 id: achievement.id,
+        //                 result: { count: 0, killmailIds: [] },
+        //             };
+        //         }
+        //     }
+        // );
 
         // Wait for all custom function achievements to complete in parallel
-        const customFunctionResults = await Promise.all(customFunctionPromises);
+        //const customFunctionResults = await Promise.all(customFunctionPromises);
 
         // Add results to achievementResults
-        for (const result of customFunctionResults) {
-            if (result) {
-                achievementResults[result.id] = result.result;
-            }
-        }
+        //for (const result of customFunctionResults) {
+        //    if (result) {
+        //        achievementResults[result.id] = result.result;
+        //    }
+        //}
 
         // Process regular achievements using faceted aggregation
         if (regularAchievements.length > 0) {
@@ -2993,54 +2993,50 @@ export class AchievementService {
             let killmailIds: number[] = [];
 
             // Handle achievements with custom functions (like temporal achievements)
-            if (achievement.customFunction) {
+            //if (achievement.customFunction) {
+            //    console.log(
+            //        `� Running custom function for achievement: ${achievement.name}`
+            //    );
+            //    const result = await achievement.customFunction(characterId);
+            //    if (typeof result === "number") {
+            //        count = result;
+            //    } else {
+            //        count = result.count;
+            //        killmailIds = result.killmailIds;
+            //    }
+            //} else {
+            console.log(
+                `🔍 Running query for achievement: ${achievement.name}`
+            );
+
+            // Skip achievements without query (should not happen here, but safety check)
+            if (!achievement.query) {
                 console.log(
-                    `� Running custom function for achievement: ${achievement.name}`
+                    `⚠️ Achievement ${achievement.name} has no query, skipping`
                 );
-                const result = await achievement.customFunction(characterId);
-                if (typeof result === "number") {
-                    count = result;
-                } else {
-                    count = result.count;
-                    killmailIds = result.killmailIds;
-                }
+                count = 0;
             } else {
-                console.log(
-                    `🔍 Running query for achievement: ${achievement.name}`
+                // Replace placeholder in query with actual character ID
+                const query = this.replaceCharacterIdInQuery(
+                    achievement.query,
+                    characterId
                 );
 
-                // Skip achievements without query (should not happen here, but safety check)
-                if (!achievement.query) {
-                    console.log(
-                        `⚠️ Achievement ${achievement.name} has no query, skipping`
-                    );
-                    count = 0;
-                } else {
-                    // Replace placeholder in query with actual character ID
-                    const query = this.replaceCharacterIdInQuery(
-                        achievement.query,
-                        characterId
-                    );
+                // Execute the aggregation query
+                const queryResult = await Killmails.aggregate(query, {
+                    allowDiskUse: true,
+                });
+                const resultKeys =
+                    queryResult.length > 0 ? Object.keys(queryResult[0]) : [];
 
-                    // Execute the aggregation query
-                    const queryResult = await Killmails.aggregate(query, {
-                        allowDiskUse: true,
-                    });
-                    const resultKeys =
-                        queryResult.length > 0
-                            ? Object.keys(queryResult[0])
-                            : [];
-
-                    // Default handling for regular count results
-                    if (queryResult.length > 0) {
-                        const result = queryResult[0];
-                        count =
-                            resultKeys.length > 0
-                                ? result[resultKeys[0]!] || 0
-                                : 0;
-                    }
+                // Default handling for regular count results
+                if (queryResult.length > 0) {
+                    const result = queryResult[0];
+                    count =
+                        resultKeys.length > 0 ? result[resultKeys[0]!] || 0 : 0;
                 }
             }
+            //}
 
             // All achievements return empty killmailIds array - can be recreated via search
             killmailIds = [];
