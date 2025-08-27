@@ -747,7 +747,7 @@ const tooltipText = ref('');
 const showTooltip = ref(false);
 
 // Mobile cycling content state management
-const mobileContentStates = ['victim', 'attacker', 'location', 'time'] as const;
+const mobileContentStates = ['victim', 'attacker', 'ship', 'location', 'time'] as const;
 type MobileContentState = typeof mobileContentStates[number];
 
 // Create a reactive map to track cycling state for each killmail
@@ -1301,11 +1301,11 @@ onUpdated(() => {
 
                     <!-- Sliding Content Container -->
                     <div class="relative h-full w-full max-w-full overflow-hidden">
-                        <div class="flex transition-transform duration-300 ease-in-out h-full w-[400%]"
-                            :style="{ transform: `translateX(-${(cyclingStateMap.get(item.killmail_id)?.currentStateIndex || 0) * 25}%)` }">
+                        <div class="flex transition-transform duration-300 ease-in-out h-full w-[500%]"
+                            :style="{ transform: `translateX(-${(cyclingStateMap.get(item.killmail_id)?.currentStateIndex || 0) * 20}%)` }">
 
                             <!-- Victim Content -->
-                            <div class="w-1/4 flex-shrink-0 space-y-1 pr-8">
+                            <div class="w-1/5 flex-shrink-0 space-y-1 pr-8">
                                 <div class="text-sm text-black dark:text-white truncate mt-2">{{
                                     item.victim.character_name }}</div>
                                 <div class="text-xs text-gray-600 dark:text-gray-400 truncate">{{
@@ -1316,7 +1316,7 @@ onUpdated(() => {
                             </div>
 
                             <!-- Attacker Content -->
-                            <div class="w-1/4 flex-shrink-0 space-y-1 pr-8">
+                            <div class="w-1/5 flex-shrink-0 space-y-1 pr-8">
                                 <div class="text-sm text-black dark:text-white truncate mt-2">{{
                                     item.finalblow.character_name || item.finalblow.faction_name }}</div>
                                 <div v-if="item.finalblow.corporation_name"
@@ -1327,8 +1327,18 @@ onUpdated(() => {
                                         item.finalblow.alliance_name }}</div>
                             </div>
 
+                            <!-- Ship Content -->
+                            <div class="w-1/5 flex-shrink-0 space-y-1 pr-8">
+                                <div class="text-sm text-black dark:text-white truncate mt-2">{{
+                                    getLocalizedString(item.victim.ship_name, currentLocale) }}</div>
+                                <div class="text-xs text-gray-600 dark:text-gray-400 truncate">{{
+                                    getLocalizedString(item.victim.ship_group_name || {}, currentLocale) }}</div>
+                                <div v-if="item.total_value > 50" class="text-xs text-gray-600 dark:text-gray-400">{{
+                                    formatIsk(item.total_value) }} ISK</div>
+                            </div>
+
                             <!-- Location Content -->
-                            <div class="w-1/4 flex-shrink-0 space-y-1 pr-8">
+                            <div class="w-1/5 flex-shrink-0 space-y-1 pr-8">
                                 <div class="text-sm text-black dark:text-white truncate mt-2">{{
                                     getLocalizedString(item.region_name, currentLocale) }}</div>
                                 <div class="text-xs text-gray-600 dark:text-gray-400 truncate">{{ item.system_name }}
@@ -1341,7 +1351,7 @@ onUpdated(() => {
                             </div>
 
                             <!-- Time Content -->
-                            <div class="w-1/4 flex-shrink-0 space-y-1 pr-8">
+                            <div class="w-1/5 flex-shrink-0 space-y-1 pr-8">
                                 <div class="text-sm text-black dark:text-white mt-2">
                                     <ClientOnly>
                                         {{ formatDate(item.kill_time) }}
@@ -1350,8 +1360,6 @@ onUpdated(() => {
                                         </template>
                                     </ClientOnly>
                                 </div>
-                                <div v-if="item.total_value > 50" class="text-xs text-gray-600 dark:text-gray-400">{{
-                                    formatIsk(item.total_value) }} ISK</div>
                                 <div class="text-xs text-gray-600 dark:text-gray-400">{{ item.attackerCount }} attackers
                                 </div>
                             </div>
@@ -1959,8 +1967,8 @@ onUpdated(() => {
 
 /* Ensure sliding content stays within bounds */
 .mobile-cycling-content .flex {
-    width: 400%;
-    /* 4 slides × 100% each */
+    width: 500%;
+    /* 5 slides × 100% each */
 }
 
 /* Create a new stacking context for status labels */
