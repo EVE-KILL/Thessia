@@ -538,10 +538,6 @@ const formatIsk = (value: number): string => {
     return value.toString();
 };
 
-const formatDate = (date: string): string => {
-    return formatTimeAgo(date);
-};
-
 const truncateString = (str: any, num: number): string => {
     const stringifiedStr = String(str || "");
     return stringifiedStr.length <= num ? stringifiedStr : `${stringifiedStr.slice(0, num)}...`;
@@ -746,8 +742,8 @@ const mouseY = ref(0);
 const tooltipText = ref('');
 const showTooltip = ref(false);
 
-// Mobile cycling content state management
-const mobileContentStates = ['victim', 'attacker', 'ship', 'location', 'time'] as const;
+// Mobile cycling content state management  
+const mobileContentStates = ['ship', 'victim', 'attacker', 'location', 'time'] as const;
 type MobileContentState = typeof mobileContentStates[number];
 
 // Create a reactive map to track cycling state for each killmail
@@ -1223,7 +1219,7 @@ onUpdated(() => {
                 <div class="flex flex-col items-end w-full min-w-0 px-2">
                     <div class="text-sm xs:text-xs text-black dark:text-white">
                         <ClientOnly>
-                            {{ formatDate(item.kill_time) }}
+                            {{ formatTimeAgo(item.kill_time) }}
                             <template #fallback>
                                 <span class="text-gray-400">Loading...</span>
                             </template>
@@ -1304,6 +1300,16 @@ onUpdated(() => {
                         <div class="flex transition-transform duration-300 ease-in-out h-full w-[500%]"
                             :style="{ transform: `translateX(-${(cyclingStateMap.get(item.killmail_id)?.currentStateIndex || 0) * 20}%)` }">
 
+                            <!-- Ship Content -->
+                            <div class="w-1/5 flex-shrink-0 space-y-1 pr-8">
+                                <div class="text-sm text-black dark:text-white truncate mt-2">{{
+                                    getLocalizedString(item.victim.ship_name, currentLocale) }}</div>
+                                <div class="text-xs text-gray-600 dark:text-gray-400 truncate">{{
+                                    getLocalizedString(item.victim.ship_group_name || {}, currentLocale) }}</div>
+                                <div v-if="item.total_value > 50" class="text-xs text-gray-600 dark:text-gray-400">{{
+                                    formatIsk(item.total_value) }} ISK</div>
+                            </div>
+
                             <!-- Victim Content -->
                             <div class="w-1/5 flex-shrink-0 space-y-1 pr-8">
                                 <div class="text-sm text-black dark:text-white truncate mt-2">{{
@@ -1327,16 +1333,6 @@ onUpdated(() => {
                                         item.finalblow.alliance_name }}</div>
                             </div>
 
-                            <!-- Ship Content -->
-                            <div class="w-1/5 flex-shrink-0 space-y-1 pr-8">
-                                <div class="text-sm text-black dark:text-white truncate mt-2">{{
-                                    getLocalizedString(item.victim.ship_name, currentLocale) }}</div>
-                                <div class="text-xs text-gray-600 dark:text-gray-400 truncate">{{
-                                    getLocalizedString(item.victim.ship_group_name || {}, currentLocale) }}</div>
-                                <div v-if="item.total_value > 50" class="text-xs text-gray-600 dark:text-gray-400">{{
-                                    formatIsk(item.total_value) }} ISK</div>
-                            </div>
-
                             <!-- Location Content -->
                             <div class="w-1/5 flex-shrink-0 space-y-1 pr-8">
                                 <div class="text-sm text-black dark:text-white truncate mt-2">{{
@@ -1354,7 +1350,7 @@ onUpdated(() => {
                             <div class="w-1/5 flex-shrink-0 space-y-1 pr-8">
                                 <div class="text-sm text-black dark:text-white mt-2">
                                     <ClientOnly>
-                                        {{ formatDate(item.kill_time) }}
+                                        {{ formatTimeAgo(item.kill_time) }}
                                         <template #fallback>
                                             <span class="text-gray-400">Loading...</span>
                                         </template>
