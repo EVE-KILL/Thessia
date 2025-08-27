@@ -29,6 +29,7 @@ export const CACHE_NAMESPACES = {
     CORPORATION: "corporation",
     ALLIANCE: "alliance",
     SHIP_TYPE_LISTS: "shipTypeLists",
+    ACHIEVEMENTS: "achievements",
 };
 
 // Primary cache using Maps or LRU for fast access
@@ -43,6 +44,13 @@ export const customPriceCache = new Map<number, ICustomPrice>();
 
 // Ship type lists cache for killlist queries
 export const shipTypeListsCache = new Map<string, number[]>();
+
+// Achievement cache for achievement definitions
+export const achievementsCache = new LRUCache<string, any>({
+    max: 100,
+    ttl: 1000 * 60 * 60, // 1 hour
+    allowStale: true,
+});
 
 // For the LRU caches for dynamic data
 export const priceCache = new LRUCache<string, number>({
