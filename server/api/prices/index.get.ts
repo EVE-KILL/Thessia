@@ -1,20 +1,8 @@
+import { getCachedPriceAggregation } from "../../helpers/RuntimeCache";
+
 export default defineCachedEventHandler(
     async (event) => {
-        const pipeline = [
-            {
-                $group: {
-                    _id: {
-                        $dateToString: { format: "%Y-%m-%d", date: "$date" },
-                    },
-                    count: { $sum: 1 },
-                },
-            },
-            {
-                $sort: { _id: -1 as const },
-            },
-        ];
-
-        const result = await Prices.aggregate(pipeline).exec();
+        const result = await getCachedPriceAggregation();
 
         // Transform the result to the desired format
         const formattedResult = result.reduce((acc, item) => {

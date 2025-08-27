@@ -1,7 +1,9 @@
+import { getCachedPricesForType } from "../../../../helpers/RuntimeCache";
+
 export default defineCachedEventHandler(
     async (event) => {
         const query = getQuery(event);
-        const typeId = event.context.params?.id;
+        const typeId = Number(event.context.params?.id);
         const days = new Date(
             Date.now() -
                 1000 *
@@ -20,17 +22,11 @@ export default defineCachedEventHandler(
             date = new Date("2003-10-01");
         }
 
-        const mongoQuery = {
-            type_id: typeId,
-            date: { $gte: date || days },
-        };
-
-        const prices: IPrice[] = await Prices.find(mongoQuery, {
-            _id: 0,
-            __v: 0,
-            createdAt: 0,
-            updatedAt: 0,
-        });
+        const prices: IPrice[] = await getCachedPricesForType(
+            typeId,
+            date || days,
+            !!date
+        );
 
         return prices;
     },

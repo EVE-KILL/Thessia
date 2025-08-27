@@ -1,5 +1,6 @@
 import { MetricsTime } from "bullmq";
 import os from "node:os";
+import { getCachedPriceCount } from "../../helpers/RuntimeCache";
 
 const startTime = new Date();
 
@@ -240,7 +241,7 @@ export default defineEventHandler(async () => {
         Killmails.estimatedDocumentCount(),
         KillmailsESI.estimatedDocumentCount(),
         KillmailsESI.countDocuments({ processed: false }),
-        Prices.estimatedDocumentCount(),
+        getCachedPriceCount(),
         Regions.estimatedDocumentCount(),
         SolarSystems.estimatedDocumentCount(),
         Users.estimatedDocumentCount(),

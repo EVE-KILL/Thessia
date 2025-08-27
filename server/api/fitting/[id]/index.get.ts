@@ -219,9 +219,7 @@ async function generateFittingCost(fitting: IFittingSlots): Promise<number> {
 }
 
 async function generateFitting(items: IItem[]): Promise<IFittingSlots> {
-    // Use defined type
     const fitting: IFittingSlots = {
-        // Use defined type
         high_slot: [],
         medium_slot: [],
         low_slot: [],
@@ -259,10 +257,9 @@ async function generateFitting(items: IItem[]): Promise<IFittingSlots> {
 
 // Helper to remove all item properties except type_id for each slot
 function pruneFittingForHash(fitting: IFittingSlots): any {
-    // Use defined type
     const pruned: any = {};
     for (const slot in fitting) {
-        pruned[slot] = fitting[slot as keyof IFittingSlots] // Add type assertion
+        pruned[slot] = fitting[slot as keyof IFittingSlots]
             .map((item: any) => ({ type_id: item.type_id }))
             .sort((a: any, b: any) => a.type_id - b.type_id);
     }

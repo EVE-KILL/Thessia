@@ -1,3 +1,5 @@
+import { getCachedPricesForType } from "../../../helpers/RuntimeCache";
+
 /**
  * Optimized endpoint that fetches item details, recent killmails, and pricing data in a single request
  * This reduces the number of API calls and improves performance significantly
@@ -116,28 +118,13 @@ export default defineCachedEventHandler(
                         .lean();
                 })(),
 
-                // Get pricing data
-                Prices.find(
-                    {
-                        type_id: typeId,
-                        region_id: regionId,
-                        date: {
-                            $gte: new Date(
-                                Date.now() - priceDays * 24 * 60 * 60 * 1000
-                            ),
-                        },
-                    },
-                    {
-                        _id: 0,
-                        date: 1,
-                        lowest: 1,
-                        average: 1,
-                        highest: 1,
-                    }
-                )
-                    .sort({ date: -1 })
-                    .limit(30) // Limit to last 30 entries
-                    .lean(),
+                // Get pricing data using cached function
+                getCachedPricesForType(
+                    typeId,
+                    new Date(Date.now() - priceDays * 24 * 60 * 60 * 1000),
+                    true,
+                    regionId
+                ),
             ]);
 
             if (!item) {

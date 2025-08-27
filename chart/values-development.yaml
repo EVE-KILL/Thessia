@@ -2,172 +2,172 @@
 # Minimal configuration for development or testing environments
 
 global:
-  image:
-    repository: ghcr.io/eve-kill/thessia
-    tag: latest
-    pullPolicy: Always
+    image:
+        repository: ghcr.io/eve-kill/thessia
+        tag: latest
+        pullPolicy: Always
 
-  env:
-    # Database Configuration - adjust for your dev environment
-    mongoUri: "mongodb://mongodb.mongodb.svc.cluster.local:27017/thessia"
-    redisUri: "redis-master.redis.svc.cluster.local"
-    redisPort: 6379
-    redisDb: 1
+    env:
+        # Database Configuration - adjust for your dev environment
+        mongoUri: "mongodb://mongodb.mongodb.svc.cluster.local:27017/thessia"
+        redisUri: "redis-master.redis.svc.cluster.local"
+        redisPort: 6379
+        redisDb: 1
 
-    # EVE Online API
-    esiUrl: "https://esi.evetech.net/"
-    esiRateLimit: 25
-    enableRuntimeCache: false # Disable caching for development
+        # EVE Online API
+        esiUrl: "https://esi.evetech.net/"
+        esiRateLimit: 25
+        enableRuntimeCache: false # Disable caching for development
 
-    sensitive:
-      # REQUIRED: Get these from https://developers.eveonline.com/
-      eveClientId: "your-dev-client-id"
-      eveClientSecret: "your-dev-client-secret"
-      eveClientRedirect: "http://localhost:3000/auth/callback"
+        sensitive:
+            # REQUIRED: Get these from https://developers.eveonline.com/
+            eveClientId: "your-dev-client-id"
+            eveClientSecret: "your-dev-client-secret"
+            eveClientRedirect: "http://localhost:3000/auth/callback"
 
 # Namespace
 namespace:
-  create: true
-  name: "thessia-dev"
+    create: true
+    name: "thessia-dev"
 
 # Main application - minimal resources for development
 thessia:
-  enabled: true
-  replicas: 1
+    enabled: true
+    replicas: 1
 
-  autoscaling:
-    enabled: false
+    autoscaling:
+        enabled: false
 
-  resources:
-    requests:
-      cpu: 250m
-      memory: 512Mi
-    limits:
-      cpu: 1000m
-      memory: 2Gi
+    resources:
+        requests:
+            cpu: 250m
+            memory: 512Mi
+        limits:
+            cpu: 1000m
+            memory: 2Gi
 
-  persistence:
-    enabled: false # Disable for development
+    persistence:
+        enabled: false # Disable for development
 
 # Image server - minimal for development
 imageserver:
-  enabled: true
-  replicas: 1
+    enabled: true
+    replicas: 1
 
-  resources:
-    requests:
-      cpu: 100m
-      memory: 128Mi
-    limits:
-      cpu: 500m
-      memory: 512Mi
+    resources:
+        requests:
+            cpu: 100m
+            memory: 128Mi
+        limits:
+            cpu: 500m
+            memory: 512Mi
 
-  persistence:
-    enabled: false
+    persistence:
+        enabled: false
 
 # Processing services - minimal replicas for development
 processEntities:
-  enabled: true
-  replicas: 1
-  resources:
-    requests:
-      cpu: 100m
-      memory: 128Mi
-    limits:
-      cpu: 500m
-      memory: 512Mi
+    enabled: true
+    replicas: 1
+    resources:
+        requests:
+            cpu: 100m
+            memory: 128Mi
+        limits:
+            cpu: 500m
+            memory: 512Mi
 
 processKillmails:
-  enabled: true
-  replicas: 1
-  resources:
-    requests:
-      cpu: 100m
-      memory: 256Mi
-    limits:
-      cpu: 500m
-      memory: 1Gi
+    enabled: true
+    replicas: 1
+    resources:
+        requests:
+            cpu: 100m
+            memory: 256Mi
+        limits:
+            cpu: 500m
+            memory: 1Gi
 
 processCharacterKillmails:
-  enabled: true
-  replicas: 1
-  resources:
-    requests:
-      cpu: 50m
-      memory: 128Mi
-    limits:
-      cpu: 200m
-      memory: 512Mi
+    enabled: true
+    replicas: 1
+    resources:
+        requests:
+            cpu: 50m
+            memory: 128Mi
+        limits:
+            cpu: 200m
+            memory: 512Mi
 
 processStats:
-  enabled: false # Disable for development
+    enabled: false # Disable for development
 
 processCampaigns:
-  enabled: false # Disable for development
+    enabled: false # Disable for development
 
 processAchievements:
-  enabled: false # Disable for development
+    enabled: false # Disable for development
 
 processHistoricalStats:
-  enabled: false # Disable for development
+    enabled: false # Disable for development
 
 processWars:
-  enabled: false # Disable for development
+    enabled: false # Disable for development
 
 # RedisQ
 redisq:
-  enabled: true
-  replicas: 1
-  resources:
-    requests:
-      cpu: 50m
-      memory: 64Mi
-    limits:
-      cpu: 200m
-      memory: 256Mi
+    enabled: true
+    replicas: 1
+    resources:
+        requests:
+            cpu: 50m
+            memory: 64Mi
+        limits:
+            cpu: 200m
+            memory: 256Mi
 
 # Cron - less frequent for development
 cron:
-  enabled: true
-  schedule: "*/10 * * * *" # Run every 10 minutes
-  resources:
-    requests:
-      cpu: 100m
-      memory: 256Mi
-    limits:
-      cpu: 500m
-      memory: 1Gi
+    enabled: true
+    schedule: "*/10 * * * *" # Run every 10 minutes
+    resources:
+        requests:
+            cpu: 100m
+            memory: 256Mi
+        limits:
+            cpu: 500m
+            memory: 1Gi
 
 # Ingress - simple setup for development
 ingress:
-  enabled: true
-  className: nginx
+    enabled: true
+    className: nginx
 
-  annotations:
-    nginx.ingress.kubernetes.io/ssl-redirect: "false" # No SSL for dev
+    annotations:
+        nginx.ingress.kubernetes.io/ssl-redirect: "false" # No SSL for dev
 
-  hosts:
-  - host: "thessia-dev.local" # Use local domain or port-forward
-    paths:
-    - path: /
-      pathType: Prefix
-      serviceName: thessia
-      servicePort: 3000
+    hosts:
+      - host: "thessia-dev.local" # Use local domain or port-forward
+        paths:
+          - path: /
+            pathType: Prefix
+            serviceName: thessia
+            servicePort: 3000
 
-  tls: [] # No TLS for development
+    tls: [] # No TLS for development
 
 # Disable high availability features for development
 podDisruptionBudget:
-  enabled: false
+    enabled: false
 
 # Monitoring - minimal for development
 monitoring:
-  enabled: false
+    enabled: false
 
 # RBAC
 rbac:
-  create: true
+    create: true
 
 serviceAccount:
-  create: true
-  name: "thessia-dev"
+    create: true
+    name: "thessia-dev"

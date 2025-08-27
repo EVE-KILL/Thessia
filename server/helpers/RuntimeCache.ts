@@ -1,5 +1,8 @@
 import { LRUCache } from "lru-cache";
 
+// Import the Prices model for caching functions
+import { Prices } from "../models/Prices";
+
 // Lazy initialization for Redis client to avoid import issues
 let redis: any = null;
 function getRedisClient() {
@@ -444,5 +447,239 @@ export async function getCacheHitCount(namespace: string): Promise<number> {
     } catch (err) {
         cliLogger.error(`Failed to get hit count for ${namespace}:`, err);
         return 0;
+    }
+}
+
+/**
+ * Get cached price data for a specific type and date range
+ */
+export async function getCachedPricesForType(
+    typeId: number,
+    dateFilter: Date,
+    useDate = false,
+    regionId = 10000002
+): Promise<IPrice[]> {
+    const key = `${typeId}-${dateFilter.getTime()}-${useDate}-${regionId}`;
+
+    try {
+        return (
+            (await getCachedData<IPrice[]>({
+                namespace: "prices",
+                id: key,
+                localCache: new LRUCache<string, IPrice[]>({
+                    max: 1000,
+                    ttl: PRICE_DATA_TTL * 1000,
+                }),
+                fetchData: async () => {
+                    const mongoQuery = useDate
+                        ? {
+                              type_id: typeId,
+                              region_id: regionId,
+                              date: { $gte: dateFilter },
+                          }
+                        : {
+                              type_id: typeId,
+                              region_id: regionId,
+                              date: { $gte: dateFilter },
+                          };
+
+                    return await Prices.find(mongoQuery, {
+                        _id: 0,
+                        __v: 0,
+                        createdAt: 0,
+                        updatedAt: 0,
+                    })
+                        .sort({ date: -1 })
+                        .lean();
+                },
+                ttl: PRICE_DATA_TTL,
+            })) || []
+        );
+    } catch (error) {
+        cliLogger.error(
+            `Failed to get cached prices for type ${typeId}: ${error}`
+        );
+        return [];
+    }
+}
+
+/**
+ * Get cached price data for a specific region and date range
+ */
+export async function getCachedPricesForRegion(
+    regionId: number,
+    dateFilter: Date,
+    useDate = false
+): Promise<IPrice[]> {
+    const key = `${regionId}-${dateFilter.getTime()}-${useDate}`;
+
+    try {
+        return (
+            (await getCachedData<IPrice[]>({
+                namespace: "prices",
+                id: key,
+                localCache: new LRUCache<string, IPrice[]>({
+                    max: 1000,
+                    ttl: PRICE_DATA_TTL * 1000,
+                }),
+                fetchData: async () => {
+                    const mongoQuery = useDate
+                        ? { region_id: regionId, date: { $gte: dateFilter } }
+                        : { region_id: regionId, date: { $gte: dateFilter } };
+
+                    return await Prices.find(mongoQuery, {
+                        _id: 0,
+                        __v: 0,
+                        createdAt: 0,
+                        updatedAt: 0,
+                    })
+                        .sort({ date: -1 })
+                        .lean();
+                },
+                ttl: PRICE_DATA_TTL,
+            })) || []
+        );
+    } catch (error) {
+        cliLogger.error(
+            `Failed to get cached prices for region ${regionId}: ${error}`
+        );
+        return [];
+    }
+}
+
+/**
+ * Get cached aggregated price data (for general price statistics)
+ */
+export async function getCachedPriceAggregation(): Promise<any[]> {
+    try {
+        return (
+            (await getCachedData<any[]>({
+                namespace: "prices",
+                id: "aggregation",
+                localCache: new LRUCache<string, any[]>({
+                    max: 100,
+                    ttl: PRICE_DATA_TTL * 1000,
+                }),
+                fetchData: async () => {
+                    const pipeline: any[] = [
+                        {
+                            $group: {
+                                _id: {
+                                    $dateToString: {
+                                        format: "%Y-%m-%d",
+                                        date: "$date",
+                                    },
+                                },
+                                count: { $sum: 1 },
+                            },
+                        },
+                        { $sort: { _id: -1 } },
+                        { $limit: 30 },
+                    ];
+                    return await Prices.aggregate(pipeline).exec();
+                },
+                ttl: PRICE_DATA_TTL,
+            })) || []
+        );
+    } catch (error) {
+        cliLogger.error(`Failed to get cached price aggregation: ${error}`);
+        return [];
+    }
+}
+
+/**
+ * Get cached price count
+ */
+export async function getCachedPriceCount(): Promise<number> {
+    try {
+        return (
+            (await getCachedData<number>({
+                namespace: "prices",
+                id: "count",
+                localCache: new LRUCache<string, number>({
+                    max: 10,
+                    ttl: PRICE_DATA_TTL * 1000,
+                }),
+                fetchData: async () => {
+                    return await Prices.estimatedDocumentCount();
+                },
+                ttl: PRICE_DATA_TTL,
+            })) || 0
+        );
+    } catch (error) {
+        cliLogger.error(`Failed to get cached price count: ${error}`);
+        return 0;
+    }
+}
+
+/**
+ * Get cached market data for a specific item (for market stats)
+ */
+export async function getCachedItemMarketData(typeId: number): Promise<{
+    jitaPrice: any;
+    recentPrices: any[];
+}> {
+    const key = `market-${typeId}`;
+
+    try {
+        return (
+            (await getCachedData<{ jitaPrice: any; recentPrices: any[] }>({
+                namespace: "prices",
+                id: key,
+                localCache: new LRUCache<string, any>({
+                    max: 1000,
+                    ttl: PRICE_DATA_TTL * 1000,
+                }),
+                fetchData: async () => {
+                    const [jitaPrice, recentPrices] = await Promise.all([
+                        // Jita (The Forge) price - get most recent for this region
+                        Prices.findOne(
+                            {
+                                type_id: typeId,
+                                region_id: 10000002,
+                            },
+                            {
+                                average: 1,
+                                highest: 1,
+                                lowest: 1,
+                                volume: 1,
+                                order_count: 1,
+                                date: 1,
+                            }
+                        )
+                            .sort({ date: -1 })
+                            .lean(),
+
+                        // Get recent prices from all regions (last 7 days max) to find cheapest
+                        Prices.find(
+                            {
+                                type_id: typeId,
+                                date: {
+                                    $gte: new Date(
+                                        Date.now() - 7 * 24 * 60 * 60 * 1000
+                                    ),
+                                },
+                            },
+                            {
+                                average: 1,
+                                region_id: 1,
+                                date: 1,
+                            }
+                        )
+                            .sort({ average: 1 })
+                            .limit(10)
+                            .lean(),
+                    ]);
+
+                    return { jitaPrice, recentPrices };
+                },
+                ttl: PRICE_DATA_TTL,
+            })) || { jitaPrice: null, recentPrices: [] }
+        );
+    } catch (error) {
+        cliLogger.error(
+            `Failed to get cached market data for type ${typeId}: ${error}`
+        );
+        return { jitaPrice: null, recentPrices: [] };
     }
 }

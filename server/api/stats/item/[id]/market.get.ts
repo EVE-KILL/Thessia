@@ -1,4 +1,4 @@
-import { Prices } from "../../../../models/Prices";
+import { getCachedItemMarketData } from "../../../../helpers/RuntimeCache";
 import { Regions } from "../../../../models/Regions";
 
 /**
@@ -21,45 +21,10 @@ export default defineCachedEventHandler(
 
             const typeIdNum = parseInt(typeId);
 
-            // Execute optimized queries in parallel - get most recent data efficiently
-            const [jitaPrice, recentPrices] = await Promise.all([
-                // Jita (The Forge) price - get most recent for this region
-                Prices.findOne(
-                    {
-                        type_id: typeIdNum,
-                        region_id: 10000002,
-                    },
-                    {
-                        average: 1,
-                        highest: 1,
-                        lowest: 1,
-                        volume: 1,
-                        order_count: 1,
-                        date: 1,
-                    }
-                ).sort({ date: -1 }), // Get most recent Jita price
-
-                // Get recent prices from all regions (last 7 days max) to find cheapest
-                Prices.find(
-                    {
-                        type_id: typeIdNum,
-                        date: {
-                            $gte: new Date(
-                                Date.now() - 7 * 24 * 60 * 60 * 1000
-                            ), // Last 7 days only
-                        },
-                    },
-                    {
-                        average: 1,
-                        region_id: 1,
-                        volume: 1,
-                        order_count: 1,
-                        date: 1,
-                    }
-                )
-                    .sort({ average: 1 }) // Sort by price to get cheapest
-                    .limit(1), // Just get the cheapest one
-            ]);
+            // Get cached market data
+            const { jitaPrice, recentPrices } = await getCachedItemMarketData(
+                typeIdNum
+            );
 
             // Extract cheapest price from array
             const cheapestPrice = recentPrices?.[0] || null;

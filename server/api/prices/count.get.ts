@@ -1,6 +1,8 @@
+import { getCachedPriceCount } from "../../helpers/RuntimeCache";
+
 export default defineCachedEventHandler(
     async (event) => {
-        const count: number = await Prices.estimatedDocumentCount();
+        const count: number = await getCachedPriceCount();
         return { count: count };
     },
     {

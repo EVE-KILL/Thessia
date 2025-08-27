@@ -1,7 +1,9 @@
+import { getCachedPricesForRegion } from "../../../../helpers/RuntimeCache";
+
 export default defineCachedEventHandler(
     async (event) => {
         const query = getQuery(event);
-        const regionId = event.context.params?.id;
+        const regionId = Number(event.context.params?.id);
         const days = new Date(
             Date.now() -
                 1000 *
@@ -20,17 +22,11 @@ export default defineCachedEventHandler(
             date = new Date("2003-10-01");
         }
 
-        const mongoQuery = {
-            region_id: regionId,
-            date: { $gte: date || days },
-        };
-
-        const prices: IPrice[] = await Prices.find(mongoQuery, {
-            _id: 0,
-            __v: 0,
-            createdAt: 0,
-            updatedAt: 0,
-        });
+        const prices: IPrice[] = await getCachedPricesForRegion(
+            regionId,
+            date || days,
+            !!date
+        );
 
         return prices;
     },
@@ -39,10 +35,10 @@ export default defineCachedEventHandler(
         staleMaxAge: -1,
         swr: true,
         base: "redis",
-        shouldBypassCache: (event: H3Event) => {
+        shouldBypassCache: (event) => {
             return process.env.NODE_ENV !== "production";
         },
-        getKey: (event: H3Event) => {
+        getKey: (event) => {
             const regionId = event.context.params?.id;
             const query = getQuery(event);
             const days = (query?.days as string) || "1";

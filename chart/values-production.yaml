@@ -2,306 +2,305 @@
 # Copy this file and customize for your environment
 
 global:
-  image:
-    repository: ghcr.io/eve-kill/thessia
-    tag: latest
-    pullPolicy: Always
+    image:
+        repository: ghcr.io/eve-kill/thessia
+        tag: latest
+        pullPolicy: Always
 
-  env:
-    # Database Configuration - Update these for your environment
-    mongoUri: "mongodb://mongodb.mongodb.svc.cluster.local:27017/thessia"
-    redisUri: "redis-master.redis.svc.cluster.local"
-    redisPort: 6379
-    redisDb: 1
+    env:
+        # Database Configuration - Update these for your environment
+        mongoUri: "mongodb://mongodb.mongodb.svc.cluster.local:27017/thessia"
+        redisUri: "redis-master.redis.svc.cluster.local"
+        redisPort: 6379
+        redisDb: 1
 
-    # EVE Online API
-    esiUrl: "https://esi.evetech.net/"
-    esiRateLimit: 25
+        # EVE Online API
+        esiUrl: "https://esi.evetech.net/"
+        esiRateLimit: 25
 
-    # Enable caching for production
-    enableRuntimeCache: true
+        # Enable caching for production
+        enableRuntimeCache: true
 
-    # Sensitive configuration (store these securely)
-    sensitive:
-      # REQUIRED: EVE Online API Credentials
-      # Get these from https://developers.eveonline.com/
-      eveClientId: "your-eve-client-id-here"
-      eveClientSecret: "your-eve-client-secret-here"
-      eveClientRedirect: "https://your-domain.com/auth/callback"
+        # Sensitive configuration (store these securely)
+        sensitive:
+            # REQUIRED: EVE Online API Credentials
+            # Get these from https://developers.eveonline.com/
+            eveClientId: "your-eve-client-id-here"
+            eveClientSecret: "your-eve-client-secret-here"
+            eveClientRedirect: "https://your-domain.com/auth/callback"
 
-      # Optional: Development credentials for testing
-      eveClientIdDev: ""
-      eveClientSecretDev: ""
-      eveClientRedirectDev: "http://localhost:3000/auth/callback"
+            # Optional: Development credentials for testing
+            eveClientIdDev: ""
+            eveClientSecretDev: ""
+            eveClientRedirectDev: "http://localhost:3000/auth/callback"
 
-      # Optional: Discord webhooks for notifications
-      backendDiscordUrl: ""
-      discordNewComment: ""
-      discordReportComment: ""
+            # Optional: Discord webhooks for notifications
+            backendDiscordUrl: ""
+            discordNewComment: ""
+            discordReportComment: ""
 
-      # Optional: OpenAI for content moderation
-      openAIAPIKey: ""
+            # Optional: OpenAI for content moderation
+            openAIAPIKey: ""
 
-      # Optional: Tenor API for GIF support
-      tenorAPIKey: ""
+            # Optional: Tenor API for GIF support
+            tenorAPIKey: ""
 
-      # Optional: Sentry for error tracking
-      sentryDsn: ""
-      sentryOrg: "your-org"
-      sentryProject: "thessia"
-      sentryAuthToken: ""
+            # Optional: Sentry for error tracking
+            sentryDsn: ""
+            sentryOrg: "your-org"
+            sentryProject: "thessia"
+            sentryAuthToken: ""
 
-      # Optional: Cloudflare Analytics
-      cloudflareAnalyticsToken: ""
+            # Optional: Cloudflare Analytics
+            cloudflareAnalyticsToken: ""
 
 # Namespace configuration
 namespace:
-  create: true
-  name: "eve-kill"
+    create: true
+    name: "eve-kill"
 
 # Main Thessia application
 thessia:
-  enabled: true
-  replicas: 2
-
-  # Enable autoscaling for production
-  autoscaling:
     enabled: true
-    minReplicas: 2
-    maxReplicas: 10
-    targetCPUUtilizationPercentage: 70
+    replicas: 2
 
-  # Production resource allocation
-  resources:
-    requests:
-      cpu: 500m
-      memory: 1Gi
-    limits:
-      cpu: 4000m
-      memory: 4Gi
+    # Enable autoscaling for production
+    autoscaling:
+        enabled: true
+        minReplicas: 2
+        maxReplicas: 10
+        targetCPUUtilizationPercentage: 70
 
-  # Enable persistent storage for sitemaps
-  persistence:
-    enabled: true
-    storageClassName: "fast-ssd" # Use your storage class
-    accessModes:
-    - ReadWriteOnce
-    size: 20Gi
+    # Production resource allocation
+    resources:
+        requests:
+            cpu: 500m
+            memory: 1Gi
+        limits:
+            cpu: 4000m
+            memory: 4Gi
+
+    # Enable persistent storage for sitemaps
+    persistence:
+        enabled: true
+        storageClassName: "fast-ssd" # Use your storage class
+        accessModes:
+          - ReadWriteOnce
+        size: 20Gi
 
 # Image server for avatars and ship images
 imageserver:
-  enabled: true
-  replicas: 1
-
-  resources:
-    requests:
-      cpu: 250m
-      memory: 256Mi
-    limits:
-      cpu: 2000m
-      memory: 2Gi
-
-  # Enable persistent storage for image cache
-  persistence:
     enabled: true
-    storageClassName: "fast-ssd"
-    size: 100Gi
+    replicas: 1
+
+    resources:
+        requests:
+            cpu: 250m
+            memory: 256Mi
+        limits:
+            cpu: 2000m
+            memory: 2Gi
+
+    # Enable persistent storage for image cache
+    persistence:
+        enabled: true
+        storageClassName: "fast-ssd"
+        size: 100Gi
 
 # Processing services - adjust replicas based on load
 processEntities:
-  enabled: true
-  replicas: 1
-  resources:
-    requests:
-      cpu: 250m
-      memory: 256Mi
-    limits:
-      cpu: 2000m
-      memory: 1Gi
+    enabled: true
+    replicas: 1
+    resources:
+        requests:
+            cpu: 250m
+            memory: 256Mi
+        limits:
+            cpu: 2000m
+            memory: 1Gi
 
 processKillmails:
-  enabled: true
-  replicas: 2 # Scale up for high killmail volume
-  resources:
-    requests:
-      cpu: 500m
-      memory: 1Gi
-    limits:
-      cpu: 4000m
-      memory: 4Gi
+    enabled: true
+    replicas: 2 # Scale up for high killmail volume
+    resources:
+        requests:
+            cpu: 500m
+            memory: 1Gi
+        limits:
+            cpu: 4000m
+            memory: 4Gi
 
 processCharacterKillmails:
-  enabled: true
-  replicas: 3 # Scale up for character processing
-  resources:
-    requests:
-      cpu: 300m
-      memory: 512Mi
-    limits:
-      cpu: 2000m
-      memory: 2Gi
+    enabled: true
+    replicas: 3 # Scale up for character processing
+    resources:
+        requests:
+            cpu: 300m
+            memory: 512Mi
+        limits:
+            cpu: 2000m
+            memory: 2Gi
 
 processStats:
-  enabled: true
-  replicas: 1
-  resources:
-    requests:
-      cpu: 250m
-      memory: 256Mi
-    limits:
-      cpu: 2000m
-      memory: 1Gi
+    enabled: true
+    replicas: 1
+    resources:
+        requests:
+            cpu: 250m
+            memory: 256Mi
+        limits:
+            cpu: 2000m
+            memory: 1Gi
 
 processCampaigns:
-  enabled: true
-  replicas: 1
-  resources:
-    requests:
-      cpu: 250m
-      memory: 512Mi
-    limits:
-      cpu: 2000m
-      memory: 8Gi
+    enabled: true
+    replicas: 1
+    resources:
+        requests:
+            cpu: 250m
+            memory: 512Mi
+        limits:
+            cpu: 2000m
+            memory: 8Gi
 
 processAchievements:
-  enabled: true
-  replicas: 1
-  resources:
-    requests:
-      cpu: 250m
-      memory: 512Mi
-    limits:
-      cpu: 2000m
-      memory: 16Gi
+    enabled: true
+    replicas: 1
+    resources:
+        requests:
+            cpu: 250m
+            memory: 512Mi
+        limits:
+            cpu: 2000m
+            memory: 16Gi
 
 processHistoricalStats:
-  enabled: true
-  replicas: 1
-  resources:
-    requests:
-      cpu: 250m
-      memory: 512Mi
-    limits:
-      cpu: 2000m
-      memory: 8Gi
+    enabled: true
+    replicas: 1
+    resources:
+        requests:
+            cpu: 250m
+            memory: 512Mi
+        limits:
+            cpu: 2000m
+            memory: 8Gi
 
 processWars:
-  enabled: true
-  replicas: 1
-  resources:
-    requests:
-      cpu: 250m
-      memory: 256Mi
-    limits:
-      cpu: 2000m
-      memory: 1Gi
+    enabled: true
+    replicas: 1
+    resources:
+        requests:
+            cpu: 250m
+            memory: 256Mi
+        limits:
+            cpu: 2000m
+            memory: 1Gi
 
 # RedisQ for killmail streaming
 redisq:
-  enabled: true
-  replicas: 1
-  resources:
-    requests:
-      cpu: 100m
-      memory: 128Mi
-    limits:
-      cpu: 1000m
-      memory: 512Mi
+    enabled: true
+    replicas: 1
+    resources:
+        requests:
+            cpu: 100m
+            memory: 128Mi
+        limits:
+            cpu: 1000m
+            memory: 512Mi
 
 # Cron jobs for maintenance tasks
 cron:
-  enabled: true
-  schedule: "*/5 * * * *" # Run every 5 minutes
-  successfulJobsHistoryLimit: 5
-  failedJobsHistoryLimit: 5
-  resources:
-    requests:
-      cpu: 500m
-      memory: 512Mi
-    limits:
-      cpu: 4000m
-      memory: 2Gi
+    enabled: true
+    schedule: "*/5 * * * *" # Run every 5 minutes
+    successfulJobsHistoryLimit: 5
+    failedJobsHistoryLimit: 5
+    resources:
+        requests:
+            cpu: 500m
+            memory: 512Mi
+        limits:
+            cpu: 4000m
+            memory: 2Gi
 
 # Ingress configuration
 ingress:
-  enabled: true
-  className: nginx
+    enabled: true
+    className: nginx
 
-  annotations:
-    # SSL/TLS
-    cert-manager.io/cluster-issuer: letsencrypt
-    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+    annotations:
+        # SSL/TLS
+        cert-manager.io/cluster-issuer: letsencrypt
+        nginx.ingress.kubernetes.io/ssl-redirect: "true"
 
-    # Performance
-    nginx.ingress.kubernetes.io/proxy-read-timeout: "3600"
-    nginx.ingress.kubernetes.io/proxy-send-timeout: "3600"
-    nginx.ingress.kubernetes.io/enable-compression: "true"
+        # Performance
+        nginx.ingress.kubernetes.io/proxy-read-timeout: "3600"
+        nginx.ingress.kubernetes.io/proxy-send-timeout: "3600"
+        nginx.ingress.kubernetes.io/enable-compression: "true"
 
-    # WebSocket support for real-time features
-    nginx.ingress.kubernetes.io/use-forwarded-headers: "true"
-    nginx.ingress.kubernetes.io/proxy-real-ip-cidr: "0.0.0.0/0"
+        # WebSocket support for real-time features
+        nginx.ingress.kubernetes.io/use-forwarded-headers: "true"
+        nginx.ingress.kubernetes.io/proxy-real-ip-cidr: "0.0.0.0/0"
 
-    # Configuration for WebSocket endpoints
-    nginx.ingress.kubernetes.io/configuration-snippet: |
-      proxy_set_header X-Real-IP $remote_addr;
-      proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-      proxy_set_header X-Forwarded-Proto $scheme;
-      proxy_set_header X-Forwarded-Host $host;
+        # Configuration for WebSocket endpoints
+        nginx.ingress.kubernetes.io/configuration-snippet: |
+            proxy_set_header X-Real-IP $remote_addr;
+            proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+            proxy_set_header X-Forwarded-Proto $scheme;
+            proxy_set_header X-Forwarded-Host $host;
 
-    nginx.ingress.kubernetes.io/location-snippets: |
-      location /killmails {
-        proxy_set_header Upgrade "websocket";
-        proxy_set_header Connection "Upgrade";
-      }
+        nginx.ingress.kubernetes.io/location-snippets: |
+            location /killmails {
+              proxy_set_header Upgrade "websocket";
+              proxy_set_header Connection "Upgrade";
+            }
 
-  # IMPORTANT: Update this with your domain
-  hosts:
-  - host: "your-domain.com"
-    paths:
-    - path: /
-      pathType: Prefix
-      serviceName: thessia
-      servicePort: 3000
-
-  # SSL/TLS configuration
-  tls:
-  - secretName: "thessia-tls"
+    # IMPORTANT: Update this with your domain
     hosts:
-    - "your-domain.com"
+      - host: "your-domain.com"
+        paths:
+          - path: /
+            pathType: Prefix
+            serviceName: thessia
+            servicePort: 3000
+      # SSL/TLS configuration
+    tls:
+      - secretName: "thessia-tls"
+        hosts:
+          - "your-domain.com"
 
 # High availability configuration
 podDisruptionBudget:
-  enabled: true
-  minAvailable: 1
+    enabled: true
+    minAvailable: 1
 
 # Monitoring and observability
 monitoring:
-  enabled: true
-
-  # JSON exporter for Prometheus metrics
-  jsonExporter:
     enabled: true
-    resources:
-      requests:
-        cpu: 50m
-        memory: 64Mi
-      limits:
-        cpu: 200m
-        memory: 128Mi
 
-  # Enable if you have Prometheus Operator
-  serviceMonitor:
-    enabled: false # Set to true if you have Prometheus Operator
-    additionalLabels:
-      release: prometheus # Adjust based on your Prometheus setup
-    interval: 30s
-    scrapeTimeout: 10s
+    # JSON exporter for Prometheus metrics
+    jsonExporter:
+        enabled: true
+        resources:
+            requests:
+                cpu: 50m
+                memory: 64Mi
+            limits:
+                cpu: 200m
+                memory: 128Mi
+
+    # Enable if you have Prometheus Operator
+    serviceMonitor:
+        enabled: false # Set to true if you have Prometheus Operator
+        additionalLabels:
+            release: prometheus # Adjust based on your Prometheus setup
+        interval: 30s
+        scrapeTimeout: 10s
 
 # RBAC and Security
 rbac:
-  create: true
+    create: true
 
 serviceAccount:
-  create: true
-  name: "thessia"
-  annotations: {}
+    create: true
+    name: "thessia"
+    annotations: {}
