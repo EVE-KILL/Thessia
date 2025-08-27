@@ -4,15 +4,17 @@
 export const useEveHtmlParser = () => {
     // Define common EVE Online type IDs for proper link handling
     const STATION_TYPE_IDS = [
-        54, 56, 57, 58, 59, 1529, 1530, 1531, 1926, 1927, 1928, 1929, 1930, 1931, 1932, 2071, 2496,
-        2497, 2498, 2499, 2500, 2501, 2502, 3864, 3865, 3866, 3867, 3868, 3869, 3870, 3871, 3872, 4023,
-        4024, 9856, 9857, 9867, 9868, 9873, 10795, 12242, 12294, 12295, 19757, 21642, 21644, 21645,
-        21646, 22296, 22297, 22298, 29323, 29387, 29388, 29389, 29390, 34325, 34326, 52678, 59956,
-        71361, 74397,
+        54, 56, 57, 58, 59, 1529, 1530, 1531, 1926, 1927, 1928, 1929, 1930,
+        1931, 1932, 2071, 2496, 2497, 2498, 2499, 2500, 2501, 2502, 3864, 3865,
+        3866, 3867, 3868, 3869, 3870, 3871, 3872, 4023, 4024, 9856, 9857, 9867,
+        9868, 9873, 10795, 12242, 12294, 12295, 19757, 21642, 21644, 21645,
+        21646, 22296, 22297, 22298, 29323, 29387, 29388, 29389, 29390, 34325,
+        34326, 52678, 59956, 71361, 74397,
     ];
 
     const CHARACTER_TYPE_IDS = [
-        1373, 1374, 1375, 1376, 1377, 1378, 1379, 1380, 1381, 1382, 1383, 1384, 1385, 1386, 34574,
+        1373, 1374, 1375, 1376, 1377, 1378, 1379, 1380, 1381, 1382, 1383, 1384,
+        1385, 1386, 34574,
     ];
 
     /**
@@ -49,10 +51,12 @@ export const useEveHtmlParser = () => {
         const KILL_REPORT_PREFIX = "killReport:";
 
         if (href.startsWith(INVENTORY_INFO_PREFIX)) {
-            const targetType = href.slice(INVENTORY_INFO_PREFIX.length).split("//");
+            const targetType = href
+                .slice(INVENTORY_INFO_PREFIX.length)
+                .split("//");
 
             if (targetType.length === 1) {
-                return `/type/${targetType[0]}`;
+                return `/item/${targetType[0]}`;
             }
 
             // Handle different types based on the type ID
@@ -66,8 +70,10 @@ export const useEveHtmlParser = () => {
 
             // Handle special types
             const typeId = Number.parseInt(targetType[0] ?? "");
-            if (CHARACTER_TYPE_IDS.includes(typeId)) return `/character/${targetType[1]}`; // Character types
-            if (STATION_TYPE_IDS.includes(typeId)) return `/station/${targetType[1]}`; // Station types
+            if (CHARACTER_TYPE_IDS.includes(typeId))
+                return `/character/${targetType[1]}`; // Character types
+            if (STATION_TYPE_IDS.includes(typeId))
+                return `/station/${targetType[1]}`; // Station types
         }
 
         if (href.startsWith(WAR_REPORT_PREFIX)) {
@@ -253,19 +259,22 @@ export const useEveHtmlParser = () => {
                 // Font tags with color attribute
                 .replace(
                     /<font\s+color=["']?([^"'\s>]+)["']?>(.*?)<\/font>/gi,
-                    '<span style="color: $1">$2</span>',
+                    '<span style="color: $1">$2</span>'
                 )
 
                 // Font tags with hex color in more complex format
-                .replace(/<font[^>]*color="#([A-Fa-f0-9]{8})"[^>]*>/g, (_, hex) => {
-                    const color = `#${hex.slice(0, 6)}`; // Use only RGB part
-                    return `<span style="color:${color}">`;
-                })
+                .replace(
+                    /<font[^>]*color="#([A-Fa-f0-9]{8})"[^>]*>/g,
+                    (_, hex) => {
+                        const color = `#${hex.slice(0, 6)}`; // Use only RGB part
+                        return `<span style="color:${color}">`;
+                    }
+                )
 
                 // Size tags
                 .replace(
                     /<size=["']?([^"'\s>]+)["']?>(.*?)<\/size>/gi,
-                    '<span style="font-size: $1">$2</span>',
+                    '<span style="font-size: $1">$2</span>'
                 )
 
                 // Localized tags
@@ -274,13 +283,13 @@ export const useEveHtmlParser = () => {
                 // URL handling with target attribute
                 .replace(
                     /<url=(.*?)>(.*?)<\/url>/gi,
-                    '<a href="$1" target="_blank" rel="noopener noreferrer">$2</a>',
+                    '<a href="$1" target="_blank" rel="noopener noreferrer">$2</a>'
                 )
 
                 // Simple URL
                 .replace(
                     /<url>(.*?)<\/url>/gi,
-                    '<a href="$1" target="_blank" rel="noopener noreferrer">$1</a>',
+                    '<a href="$1" target="_blank" rel="noopener noreferrer">$1</a>'
                 )
 
                 // Close color tags properly
@@ -289,23 +298,24 @@ export const useEveHtmlParser = () => {
             // Handle killReport and warReport links with regex first
             content = content.replace(
                 /<a href="killReport:(\d+)(:[A-Fa-f0-9]+)?"[^>]*>([^<]+)<\/a>/g,
-                '<a href="/kill/$1">$3</a>',
+                '<a href="/kill/$1">$3</a>'
             );
             content = content.replace(
                 /<a href="warReport:(\d+)"[^>]*>([^<]+)<\/a>/g,
-                '<a href="/war/$1">$2</a>',
+                '<a href="/war/$1">$2</a>'
             );
 
             // Process showinfo links
             content = content.replace(
                 /<a href="(showinfo:[^"]+)"[^>]*>([^<]+)<\/a>/g,
-                (_, href, text) => `<a href="${renderEveHref(href)}">${text}</a>`,
+                (_, href, text) =>
+                    `<a href="${renderEveHref(href)}">${text}</a>`
             );
 
             // Handle external links (add target="_blank")
             content = content.replace(
                 /<a href="(https?:\/\/[^"]+)"[^>]*>([^<]+)<\/a>/g,
-                '<a href="$1" target="_blank" rel="noopener noreferrer">$2</a>',
+                '<a href="$1" target="_blank" rel="noopener noreferrer">$2</a>'
             );
 
             // Replace newlines with <br> tags
