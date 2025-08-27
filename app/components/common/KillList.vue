@@ -7,6 +7,9 @@ const currentLocale = computed(() => locale.value);
 // Use the centralized date formatting composable
 const { formatTimeAgo } = useDateFormatting();
 
+// Use responsive detection composable
+const { isMobile } = useResponsive();
+
 // Define emits
 const emit = defineEmits(['update:page', 'update:limit']);
 
@@ -323,6 +326,67 @@ const clearMouseMoveTimer = () => {
     }
 };
 
+// Touch event handling for mobile cycling
+const touchStartMap = ref<Map<number, { x: number; y: number; time: number }>>(new Map());
+
+const handleTouchStart = (event: TouchEvent, killmailId: number) => {
+    const touch = event.touches[0];
+    touchStartMap.value.set(killmailId, {
+        x: touch.clientX,
+        y: touch.clientY,
+        time: Date.now()
+    });
+};
+
+const handleTouchMove = (event: TouchEvent, killmailId: number) => {
+    // Prevent scroll when moving horizontally (for swiping)
+    const touch = event.touches[0];
+    const start = touchStartMap.value.get(killmailId);
+    if (!start) return;
+
+    const deltaX = Math.abs(touch.clientX - start.x);
+    const deltaY = Math.abs(touch.clientY - start.y);
+
+    // If horizontal movement is greater than vertical, prevent scroll
+    if (deltaX > deltaY && deltaX > 10) {
+        event.preventDefault();
+    }
+};
+
+const handleTouchEnd = (event: TouchEvent, killmailId: number) => {
+    const start = touchStartMap.value.get(killmailId);
+    if (!start) return;
+
+    const touch = event.changedTouches[0];
+    const deltaX = touch.clientX - start.x;
+    const deltaY = touch.clientY - start.y;
+    const deltaTime = Date.now() - start.time;
+
+    const absX = Math.abs(deltaX);
+    const absY = Math.abs(deltaY);
+
+    // Clean up
+    touchStartMap.value.delete(killmailId);
+
+    // Check if this was a swipe (horizontal movement > vertical, sufficient distance, fast enough)
+    if (absX > absY && absX > 30 && deltaTime < 300) {
+        // Prevent the row click
+        event.preventDefault();
+        event.stopPropagation();
+
+        // Swipe left = next, swipe right = previous
+        if (deltaX > 0) {
+            cycleMobileContent(killmailId, 'prev');
+        } else {
+            cycleMobileContent(killmailId, 'next');
+        }
+        return;
+    }
+
+    // If it was a tap (small movement, quick), allow the row click to proceed
+    // by not preventing default
+};
+
 // Handle WebSocket messages
 function handleWebSocketMessage(data) {
     try {
@@ -594,41 +658,66 @@ const resetWebSocketState = () => {
     }
 };
 
-// Define responsive table columns for the EkTable component
-const tableColumns = computed(() => [
-    {
-        id: "ship",
-        header: t("ship"),
-        width: "22%",
-        class: "min-w-0 max-w-[22%]", // Strict width constraints
-    },
-    {
-        id: "victim",
-        header: t("victim"),
-        width: "28%",
-        class: "min-w-0 max-w-[28%]", // Strict width constraints
-    },
-    {
-        id: "finalBlow",
-        header: t("finalBlow"),
-        width: "27%",
-        class: "min-w-0 max-w-[27%] hidden sm:table-cell", // Hide on mobile/small screens
-    },
-    {
-        id: "location",
-        header: t("location"),
-        width: "13%",
-        class: "min-w-0 max-w-[13%] hidden md:table-cell", // Hide on mobile and tablet
-    },
-    {
-        id: "details",
-        headerClass: "text-right",
-        width: "10%",
-        class: "text-right min-w-0 max-w-[10%]",
-    },
-]);
+// Track when component is mounted to prevent hydration mismatches
+const isMounted = ref(false);
 
-// WebSocket status message
+const tableColumns = computed(() => {
+    // Allow mobile layout to render on server side for proper SSR
+    const shouldUseMobileLayout = isMobile.value;
+
+    if (shouldUseMobileLayout) {
+        // Mobile layout: Images column + Cycling content column
+        // Need ~200px for 3×64px images + gaps, so use 55%/45% split
+        return [
+            {
+                id: "mobile-images",
+                header: "",
+                width: "55%",
+                class: "min-w-0 max-w-[55%]",
+            },
+            {
+                id: "mobile-content",
+                header: "",
+                width: "45%",
+                class: "min-w-0 max-w-[45%]",
+            },
+        ];
+    }
+
+    // Desktop layout
+    return [
+        {
+            id: "ship",
+            header: t("ship"),
+            width: "22%",
+            class: "min-w-0 max-w-[22%]",
+        },
+        {
+            id: "victim",
+            header: t("victim"),
+            width: "28%",
+            class: "min-w-0 max-w-[28%]",
+        },
+        {
+            id: "finalBlow",
+            header: t("finalBlow"),
+            width: "27%",
+            class: "min-w-0 max-w-[27%] hidden sm:table-cell",
+        },
+        {
+            id: "location",
+            header: t("location"),
+            width: "13%",
+            class: "min-w-0 max-w-[13%] hidden md:table-cell",
+        },
+        {
+            id: "details",
+            headerClass: "text-right",
+            width: "10%",
+            class: "text-right min-w-0 max-w-[10%]",
+        },
+    ];
+});// WebSocket status message
 const wsStatusMessage = computed(() => {
     if (!wsConnected.value) {
         return wsReconnectAttempts.value > 0 ? t("reconnecting") : t("disconnected");
@@ -656,6 +745,161 @@ const mouseX = ref(0);
 const mouseY = ref(0);
 const tooltipText = ref('');
 const showTooltip = ref(false);
+
+// Mobile cycling content state management
+const mobileContentStates = ['victim', 'attacker', 'location', 'time'] as const;
+type MobileContentState = typeof mobileContentStates[number];
+
+// Create a reactive map to track cycling state for each killmail
+const cyclingStateMap = ref<Map<number, {
+    currentStateIndex: number;
+    isPaused: boolean;
+    pauseTimeout: number | null;
+    cycleInterval: number | null;
+}>>(new Map());
+
+// Initialize cycling state for a killmail
+const initializeCyclingState = (killmailId: number) => {
+    if (!cyclingStateMap.value.has(killmailId)) {
+        cyclingStateMap.value.set(killmailId, {
+            currentStateIndex: 0,
+            isPaused: false,
+            pauseTimeout: null,
+            cycleInterval: null,
+        });
+        startCycling(killmailId);
+    }
+};
+
+// Start auto-cycling for a killmail
+const startCycling = (killmailId: number) => {
+    // Only run cycling on client side where window is available
+    if (typeof window === 'undefined') return;
+
+    const state = cyclingStateMap.value.get(killmailId);
+    if (!state || state.isPaused) return;
+
+    state.cycleInterval = window.setInterval(() => {
+        const currentState = cyclingStateMap.value.get(killmailId);
+        if (currentState && !currentState.isPaused) {
+            currentState.currentStateIndex = (currentState.currentStateIndex + 1) % mobileContentStates.length;
+        }
+    }, 3500); // 3.5 seconds
+};
+
+// Stop cycling for a killmail
+const stopCycling = (killmailId: number) => {
+    // Only run on client side where clearInterval is available
+    if (typeof window === 'undefined') return;
+
+    const state = cyclingStateMap.value.get(killmailId);
+    if (state?.cycleInterval) {
+        clearInterval(state.cycleInterval);
+        state.cycleInterval = null;
+    }
+};
+
+// Pause cycling after user interaction
+const pauseCycling = (killmailId: number) => {
+    // Only run on client side where setTimeout is available
+    if (typeof window === 'undefined') return;
+
+    const state = cyclingStateMap.value.get(killmailId);
+    if (!state) return;
+
+    state.isPaused = true;
+    stopCycling(killmailId);
+
+    // Clear existing pause timeout
+    if (state.pauseTimeout) {
+        clearTimeout(state.pauseTimeout);
+    }
+
+    // Resume after 10 seconds - only on client side
+    state.pauseTimeout = window.setTimeout(() => {
+        const currentState = cyclingStateMap.value.get(killmailId);
+        if (currentState) {
+            currentState.isPaused = false;
+            startCycling(killmailId);
+        }
+    }, 10000);
+};
+
+// Manual content cycling (for swipe/tap)
+const cycleMobileContent = (killmailId: number, direction: 'next' | 'prev' | number) => {
+    const state = cyclingStateMap.value.get(killmailId);
+    if (!state) return;
+
+    if (typeof direction === 'number') {
+        state.currentStateIndex = direction;
+    } else {
+        const change = direction === 'next' ? 1 : -1;
+        state.currentStateIndex = (state.currentStateIndex + change + mobileContentStates.length) % mobileContentStates.length;
+    }
+
+    pauseCycling(killmailId);
+};
+
+// Get current mobile content state for a killmail
+const getMobileContentState = (killmailId: number): MobileContentState => {
+    const state = cyclingStateMap.value.get(killmailId);
+    return mobileContentStates[state?.currentStateIndex || 0];
+};
+
+// Cleanup cycling timers
+onBeforeUnmount(() => {
+    cyclingStateMap.value.forEach((state, killmailId) => {
+        stopCycling(killmailId);
+        if (state.pauseTimeout) {
+            clearTimeout(state.pauseTimeout);
+        }
+    });
+});
+
+// Initialize cycling for visible items when data changes
+watch([killlistData, isMobile], ([newData, mobile]) => {
+    // Only initialize cycling on client side
+    if (typeof window !== 'undefined' && mobile && newData?.length) {
+        nextTick(() => {
+            newData.forEach(item => {
+                if (item.killmail_id) {
+                    initializeCyclingState(item.killmail_id);
+                }
+            });
+        });
+    }
+}, { immediate: true });
+
+// Also initialize cycling on mount for any existing data
+onMounted(() => {
+    // Set mounted flag for any remaining client-only logic
+    isMounted.value = true;
+
+    // Wait for next tick to ensure proper initialization
+    nextTick(() => {
+        // Initialize cycling for mobile if data is already available and we're on mobile
+        if (isMobile.value && killlistData.value?.length) {
+            killlistData.value.forEach((item: any) => {
+                if (item.killmail_id) {
+                    initializeCyclingState(item.killmail_id);
+                }
+            });
+        }
+
+        updateAllFades();
+        window.addEventListener('resize', updateAllFades);
+    });
+
+    // Set up mouse handlers for the table container
+    if (!props.wsDisabled && !useExternalData.value) {
+        const tableContainer = document.querySelector(".kill-list-container");
+        if (tableContainer) {
+            tableContainer.addEventListener("mouseenter", handleMouseEnter);
+            tableContainer.addEventListener("mouseleave", handleMouseLeave);
+            tableContainer.addEventListener("mousemove", handleMouseMove);
+        }
+    }
+});
 /**
 * Updates fade effect on elements that over low
 */
@@ -708,24 +952,6 @@ const setElementRef = (el: HTMLElement | null, id: number, refMap: Map<number, H
         refMap.set(id, el);
     }
 };
-
-// Consolidated Lifecycle Hooks
-onMounted(() => {
-    nextTick(() => {
-        updateAllFades();
-        window.addEventListener('resize', updateAllFades);
-    });
-
-    // Set up mouse handlers for the table container
-    if (!props.wsDisabled && !useExternalData.value) {
-        const tableContainer = document.querySelector(".kill-list-container");
-        if (tableContainer) {
-            tableContainer.addEventListener("mouseenter", handleMouseEnter);
-            tableContainer.addEventListener("mouseleave", handleMouseLeave);
-            tableContainer.addEventListener("mousemove", handleMouseMove);
-        }
-    }
-});
 
 onBeforeUnmount(() => {
     // Check if we're actually in a Vue component context
@@ -861,7 +1087,8 @@ onUpdated(() => {
         <!-- Use our enhanced EkTable component with specialized headers -->
         <Table v-else :columns="tableColumns" :items="killlistData" :loading="pending"
             :skeleton-count="selectedPageSize" :empty-text="t('noKills')" :row-class="getRowClass"
-            :special-header="true" :bordered="true" :link-fn="generateKillLink" :hover="true" background="transparent">
+            :special-header="true" :bordered="true" :link-fn="generateKillLink" :hover="true" background="transparent"
+            :force-desktop="true" :row-id="(item) => `killmail-row-${item.killmail_id}`">
             <!-- Ship column -->
             <template #cell-ship="{ item }">
                 <div class="flex items-center py-1 min-w-0 max-w-full overflow-hidden">
@@ -873,12 +1100,12 @@ onUpdated(() => {
                             :ref="(el) => setElementRef(el, item.killmail_id, shipNameRefs)">
                             {{ getLocalizedString(item.victim.ship_name, currentLocale) }}
                         </span>
-                        <span class="text-xs text-gray-500 dark:text-gray-400 truncate w-full">
+                        <span class="text-xs text-gray-500 dark:text-gray-400 truncate w-full hidden sm:block">
                             {{ getLocalizedString(item.victim.ship_group_name || {}, currentLocale) }}
                         </span>
-                        <!-- Hide ISK value on very small screens -->
+                        <!-- Hide ISK value on mobile screens -->
                         <span v-if="item.total_value > 50"
-                            class="text-xs text-gray-600 dark:text-gray-400 xs:hidden truncate w-full">
+                            class="text-xs text-gray-600 dark:text-gray-400 hidden sm:block truncate w-full">
                             {{ formatIsk(item.total_value) }} ISK
                         </span>
                     </div>
@@ -888,14 +1115,14 @@ onUpdated(() => {
             <!-- Victim column -->
             <template #cell-victim="{ item }">
                 <div class="flex items-center py-1 min-w-0 max-w-full overflow-hidden">
-                    <!-- Hide victim image on very small screens -->
+                    <!-- Hide victim image on mobile screens -->
                     <template v-if="item.victim.character_id > 0">
                         <Image type="character" :id="item.victim.character_id"
                             :alt="`Character: ${item.victim.character_name}`"
-                            class="w-16 h-16 mx-2 flex-shrink-0 xs:hidden" size="64" />
+                            class="w-16 h-16 mx-2 flex-shrink-0 hidden sm:block" size="64" />
                     </template>
                     <Image v-else type="character" :id="1" alt="Placeholder"
-                        class="w-16 h-16 mx-2 flex-shrink-0 xs:hidden" size="64" />
+                        class="w-16 h-16 mx-2 flex-shrink-0 hidden sm:block" size="64" />
                     <div class="flex flex-col items-start min-w-0 flex-1 overflow-hidden">
                         <!-- Character Name -->
                         <span class="text-sm xs:text-xs text-black dark:text-white truncate w-full"
@@ -929,7 +1156,7 @@ onUpdated(() => {
                     <template v-if="item.finalblow.character_id > 0">
                         <Image type="character" :id="item.finalblow.character_id"
                             :alt="`Character: ${item.finalblow.character_name}`"
-                            class="w-16 h-16 mx-2 flex-shrink-0 xs:hidden" size="64" />
+                            class="w-16 h-16 mx-2 flex-shrink-0 hidden sm:block" size="64" />
                         <div class="flex flex-col items-start min-w-0 flex-1">
                             <!-- Character Name -->
                             <span class="text-sm xs:text-xs text-black dark:text-white truncate w-full"
@@ -956,7 +1183,7 @@ onUpdated(() => {
                     </template>
                     <template v-else>
                         <Image type="character" :id="1" size="64" alt="NPC/Structure"
-                            class="w-16 h-16 mx-2 flex-shrink-0 xs:hidden" />
+                            class="w-16 h-16 mx-2 flex-shrink-0 hidden sm:block" />
                         <div class="flex flex-col items-start min-w-0 flex-1">
                             <span class="text-sm xs:text-xs text-black dark:text-white truncate w-full">
                                 {{ item.finalblow.faction_name || item.finalblow.character_name }}
@@ -995,7 +1222,12 @@ onUpdated(() => {
             <template #cell-details="{ item }">
                 <div class="flex flex-col items-end w-full min-w-0 px-2">
                     <div class="text-sm xs:text-xs text-black dark:text-white">
-                        {{ formatDate(item.kill_time) }}
+                        <ClientOnly>
+                            {{ formatDate(item.kill_time) }}
+                            <template #fallback>
+                                <span class="text-gray-400">Loading...</span>
+                            </template>
+                        </ClientOnly>
                     </div>
                     <div class="flex gap-1 items-center">
                         <span class="text-xs text-gray-600 dark:text-gray-400">{{ item.attackerCount }}</span>
@@ -1011,128 +1243,126 @@ onUpdated(() => {
                 </div>
             </template>
 
-            <!-- Mobile view -->
-            <template #mobile-row="{ item }">
-                <div class="mobile-container p-2">
-                    <!-- Top Section: Ship Image and Details -->
-                    <div class="flex mb-2">
-                        <!-- Ship Image -->
-                        <Image type="type-overlay-render" :id="item.victim.ship_id"
-                            :alt="`Ship: ${getLocalizedString(item.victim.ship_name, currentLocale)}`"
-                            class="rounded w-16 h-16" size="64" />
+            <!-- Mobile Images Column -->
+            <template #cell-mobile-images="{ item }">
+                <div class="relative flex items-center gap-0.5 py-1 min-w-[192px] mobile-images-container">
+                    <!-- Ship Image -->
+                    <Image type="type-overlay-render" :id="item.victim.ship_id"
+                        :alt="`Ship: ${getLocalizedString(item.victim.ship_name, currentLocale)}`"
+                        class="rounded w-16 h-16 flex-shrink-0" size="64" />
 
-                        <!-- Ship Details -->
-                        <div class="ml-2 flex flex-col justify-center">
-                            <div class="text-sm font-medium text-black dark:text-white">
-                                {{ getLocalizedString(item.victim.ship_name, currentLocale) }}
-                                <span class="text-xs text-gray-500 dark:text-gray-400">
-                                    ({{ getLocalizedString(item.victim.ship_group_name || {}, currentLocale) }})
-                                </span>
-                            </div>
-                            <div v-if="item.total_value > 50" class="text-xs text-gray-600 dark:text-gray-400 mt-1">
-                                {{ formatIsk(item.total_value) }} ISK
-                            </div>
-                        </div>
-                    </div>
+                    <!-- Victim Character Image -->
+                    <template v-if="item.victim.character_id > 0">
+                        <Image type="character" :id="item.victim.character_id"
+                            :alt="`Character: ${item.victim.character_name}`" class="w-16 h-16 flex-shrink-0"
+                            size="64" />
+                    </template>
+                    <Image v-else type="character" :id="1" alt="Placeholder" class="w-16 h-16 flex-shrink-0"
+                        size="64" />
 
-                    <!-- Middle Section: Character, Corp, Alliance -->
-                    <div class="flex mb-2">
-                        <!-- Entity Images - With no gap between corp/alli images -->
-                        <div class="flex items-start">
-                            <!-- Character Image -->
-                            <div class="character-portrait">
-                                <Image v-if="item.victim.character_id > 0" type="character"
-                                    :id="item.victim.character_id" :alt="`Character: ${item.victim.character_name}`"
-                                    class="w-16 h-16" size="64" />
-                                <Image v-else type="character" :id="1" alt="Placeholder" class="w-16 h-16" size="64" />
-                            </div>
+                    <!-- Final Blow Character Image -->
+                    <template v-if="item.finalblow.character_id > 0">
+                        <Image type="character" :id="item.finalblow.character_id"
+                            :alt="`Character: ${item.finalblow.character_name}`" class="w-16 h-16 flex-shrink-0"
+                            size="64" />
+                    </template>
+                    <Image v-else type="character" :id="1" size="64" alt="NPC/Structure"
+                        class="w-16 h-16 flex-shrink-0" />
 
-                            <!-- Stacked Corp/Alliance Images - Exact 32px height each with no gap -->
-                            <div class="flex flex-col h-16">
-                                <div v-if="item.victim.corporation_id" class="h-8">
-                                    <Image type="corporation" :id="item.victim.corporation_id" size="32"
-                                        class="w-8 h-8" />
-                                </div>
-                                <div v-if="item.victim.alliance_id" class="h-8">
-                                    <Image type="alliance" :id="item.victim.alliance_id" size="32" class="w-8 h-8" />
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Entity Names -->
-                        <div class="ml-2 flex flex-col justify-center flex-1">
-                            <div class="text-sm font-medium text-black dark:text-white">
-                                {{ item.victim.character_name }}
-                            </div>
-                            <div class="text-xs text-gray-600 dark:text-gray-400">
-                                {{ item.victim.corporation_name }}
-                            </div>
-                            <div v-if="item.victim.alliance_name" class="text-xs text-gray-500 dark:text-gray-400">
-                                {{ item.victim.alliance_name }}
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Bottom Section: System Info and Time -->
-                    <div class="flex justify-between items-center mt-1">
-                        <!-- System/Region Info -->
-                        <div class="text-xs">
-                            <span>{{ item.system_name }} / {{ getLocalizedString(item.region_name, currentLocale)
-                            }}</span>
-                            <span class="ml-1">(</span>
-                            <span :class="getSecurityColor(item.system_security)">
-                                {{ item.system_security.toFixed(1) }}
-                            </span>
-                            <span>)</span>
-                        </div>
-
-                        <!-- Time Info -->
-                        <span class="text-xs text-gray-600 dark:text-gray-400">
-                            <ClientOnly>
-                                {{ formatDate(item.kill_time) }}
-                            </ClientOnly>
+                    <!-- Status Dots and Label - Always render on mobile, separate positioning -->
+                    <div v-if="isMobile" class="absolute bottom-0 right-1 flex items-end gap-2 z-10">
+                        <!-- Current State Label - Position up and right from container bottom-right -->
+                        <span
+                            class="text-xs font-medium text-gray-600 dark:text-gray-400 bg-white dark:bg-gray-800 px-2 py-0.5 rounded shadow-sm border border-gray-200 dark:border-gray-700 capitalize translate-y-[-55px] translate-x-[230px] z-50">
+                            {{ mobileContentStates[cyclingStateMap.get(item.killmail_id)?.currentStateIndex || 0] }}
                         </span>
+
+                        <!-- Status Dots - Position down 5px from bottom -->
+                        <div class="flex gap-1 translate-y-[10px] translate-x-[55px]">
+                            <button v-for="(state, index) in mobileContentStates" :key="state"
+                                @click="cycleMobileContent(item.killmail_id, index)" :class="[
+                                    'w-2.5 h-2.5 rounded-full transition-all duration-200 shadow-md',
+                                    (cyclingStateMap.get(item.killmail_id)?.currentStateIndex || 0) === index
+                                        ? 'bg-primary-500 scale-110 shadow-primary-500/50'
+                                        : 'bg-gray-400 dark:bg-gray-600 hover:bg-gray-500 dark:hover:bg-gray-500'
+                                ]" :aria-label="`View ${state} information`"
+                                :title="state.charAt(0).toUpperCase() + state.slice(1)" />
+                        </div>
+                    </div>
+                </div>
+            </template>
+
+            <!-- Mobile Cycling Content Column -->
+            <template #cell-mobile-content="{ item }">
+                <div class="relative py-1 px-2 min-h-[80px] mobile-cycling-content w-full max-w-full"
+                    @touchstart="handleTouchStart($event, item.killmail_id)"
+                    @touchmove="handleTouchMove($event, item.killmail_id)"
+                    @touchend="handleTouchEnd($event, item.killmail_id)">
+
+                    <!-- Sliding Content Container -->
+                    <div class="relative h-full w-full max-w-full overflow-hidden">
+                        <div class="flex transition-transform duration-300 ease-in-out h-full w-[400%]"
+                            :style="{ transform: `translateX(-${(cyclingStateMap.get(item.killmail_id)?.currentStateIndex || 0) * 25}%)` }">
+
+                            <!-- Victim Content -->
+                            <div class="w-1/4 flex-shrink-0 space-y-1 pr-8">
+                                <div class="text-sm text-black dark:text-white truncate mt-2">{{
+                                    item.victim.character_name }}</div>
+                                <div class="text-xs text-gray-600 dark:text-gray-400 truncate">{{
+                                    item.victim.corporation_name }}</div>
+                                <div v-if="item.victim.alliance_name"
+                                    class="text-xs text-gray-500 dark:text-gray-500 truncate">{{
+                                        item.victim.alliance_name }}</div>
+                            </div>
+
+                            <!-- Attacker Content -->
+                            <div class="w-1/4 flex-shrink-0 space-y-1 pr-8">
+                                <div class="text-sm text-black dark:text-white truncate mt-2">{{
+                                    item.finalblow.character_name || item.finalblow.faction_name }}</div>
+                                <div v-if="item.finalblow.corporation_name"
+                                    class="text-xs text-gray-600 dark:text-gray-400 truncate">{{
+                                        item.finalblow.corporation_name }}</div>
+                                <div v-if="item.finalblow.alliance_name"
+                                    class="text-xs text-gray-500 dark:text-gray-500 truncate">{{
+                                        item.finalblow.alliance_name }}</div>
+                            </div>
+
+                            <!-- Location Content -->
+                            <div class="w-1/4 flex-shrink-0 space-y-1 pr-8">
+                                <div class="text-sm text-black dark:text-white truncate mt-2">{{
+                                    getLocalizedString(item.region_name, currentLocale) }}</div>
+                                <div class="text-xs text-gray-600 dark:text-gray-400 truncate">{{ item.system_name }}
+                                </div>
+                                <div class="text-xs">
+                                    <span>Security: </span>
+                                    <span :class="getSecurityColor(item.system_security)">{{
+                                        item.system_security.toFixed(1) }}</span>
+                                </div>
+                            </div>
+
+                            <!-- Time Content -->
+                            <div class="w-1/4 flex-shrink-0 space-y-1 pr-8">
+                                <div class="text-sm text-black dark:text-white mt-2">
+                                    <ClientOnly>
+                                        {{ formatDate(item.kill_time) }}
+                                        <template #fallback>
+                                            <span class="text-gray-400">Loading...</span>
+                                        </template>
+                                    </ClientOnly>
+                                </div>
+                                <div v-if="item.total_value > 50" class="text-xs text-gray-600 dark:text-gray-400">{{
+                                    formatIsk(item.total_value) }} ISK</div>
+                                <div class="text-xs text-gray-600 dark:text-gray-400">{{ item.attackerCount }} attackers
+                                </div>
+                            </div>
+
+                        </div>
                     </div>
                 </div>
             </template>
 
             <!-- Loading skeleton customization -->
             <template #loading="{ mobile }">
-                <template v-if="mobile">
-                    <!-- Mobile loading skeleton - this works fine, no changes needed -->
-                    <div class="mobile-container p-2">
-                        <!-- Ship Section Skeleton -->
-                        <div class="flex mb-2">
-                            <div class="rounded w-16 h-16 bg-gray-200 dark:bg-gray-700 animate-pulse"></div>
-                            <div class="ml-2 flex flex-col justify-center space-y-2 flex-1">
-                                <div class="h-4 bg-gray-200 dark:bg-gray-700 rounded w-5/6 animate-pulse"></div>
-                                <div class="h-3 bg-gray-200 dark:bg-gray-700 rounded w-1/4 animate-pulse"></div>
-                            </div>
-                        </div>
-
-                        <!-- Character Section Skeleton -->
-                        <div class="flex mb-2">
-                            <div class="flex items-start">
-                                <div class="w-16 h-16 bg-gray-200 dark:bg-gray-700 animate-pulse"></div>
-                                <div class="flex flex-col h-16">
-                                    <div class="h-8 w-8 bg-gray-200 dark:bg-gray-700 animate-pulse"></div>
-                                    <div class="h-8 w-8 bg-gray-200 dark:bg-gray-700 animate-pulse"></div>
-                                </div>
-                            </div>
-                            <div class="ml-2 flex flex-col justify-center space-y-1 flex-1">
-                                <div class="h-4 bg-gray-200 dark:bg-gray-700 rounded w-3/4 animate-pulse"></div>
-                                <div class="h-3 bg-gray-200 dark:bg-gray-700 rounded w-2/3 animate-pulse"></div>
-                                <div class="h-3 bg-gray-200 dark:bg-gray-700 rounded w-1/2 animate-pulse"></div>
-                            </div>
-                        </div>
-
-                        <!-- Bottom Section Skeleton -->
-                        <div class="flex justify-between mt-1">
-                            <div class="h-3 bg-gray-200 dark:bg-gray-700 rounded w-2/4 animate-pulse"></div>
-                            <div class="h-3 bg-gray-200 dark:bg-gray-700 rounded w-1/4 animate-pulse"></div>
-                        </div>
-                    </div>
-                </template>
             </template>
 
             <!-- Desktop column-specific loading templates -->
@@ -1242,7 +1472,7 @@ onUpdated(() => {
 </template>
 
 <style scoped>
-/* Additional mobile-specific styles for slots */
+/* Additional styles for slots */
 .victim-name {
     font-weight: 500;
     font-size: 0.875rem;
@@ -1255,24 +1485,6 @@ onUpdated(() => {
     font-size: 0.75rem;
     /* Small font for ISK */
     white-space: nowrap;
-}
-
-.mobile-corporation {
-    margin-bottom: 0.25rem;
-    font-size: 0.75rem;
-    /* Ensure XS size */
-}
-
-.mobile-meta {
-    margin-bottom: 0.25rem;
-    font-size: 0.75rem;
-    /* Ensure XS size */
-}
-
-.mobile-footer {
-    margin-top: 0.25rem;
-    font-size: 0.75rem;
-    /* Ensure XS size */
 }
 
 /* Combined Loss Row Styling - Single source of truth */
@@ -1360,46 +1572,6 @@ onUpdated(() => {
 
 :global(.dark) :deep(div.regular-row:hover),
 :global(.dark) :deep(.table-row.regular-row:hover) {
-    background-color: rgba(255, 255, 255, 0.15) !important;
-}
-
-/* Mobile view */
-:deep(.mobile-container.combined-loss-row),
-:deep(.mobile-container.bg-darkred) {
-    background-color: rgba(220, 38, 38, 0.15) !important;
-    border-left: 3px solid rgb(220, 38, 38) !important;
-}
-
-:deep(.mobile-container.alternate-row) {
-    background-color: rgba(0, 0, 0, 0.12) !important;
-}
-
-:global(.dark) :deep(.mobile-container.alternate-row) {
-    background-color: rgba(255, 255, 255, 0.12) !important;
-}
-
-:deep(.mobile-container.regular-row) {
-    background-color: rgba(0, 0, 0, 0.04) !important;
-}
-
-:global(.dark) :deep(.mobile-container.regular-row) {
-    background-color: rgba(255, 255, 255, 0.04) !important;
-}
-
-/* Mobile hover effects */
-:deep(.mobile-container.alternate-row:hover) {
-    background-color: rgba(255, 255, 255, 0.15) !important;
-}
-
-:global(.dark) :deep(.mobile-container.alternate-row:hover) {
-    background-color: rgba(255, 255, 255, 0.15) !important;
-}
-
-:deep(.mobile-container.regular-row:hover) {
-    background-color: rgba(255, 255, 255, 0.15) !important;
-}
-
-:global(.dark) :deep(.mobile-container.regular-row:hover) {
     background-color: rgba(255, 255, 255, 0.15) !important;
 }
 
@@ -1637,36 +1809,6 @@ onUpdated(() => {
     margin: 0 8px;
 }
 
-/* Enhanced mobile view styles */
-.mobile-container {
-    display: flex;
-    flex-direction: column;
-    width: 100%;
-    border-bottom: 1px solid light-dark(rgba(229, 231, 235, 0.3), rgba(75, 85, 99, 0.2));
-    padding: 0.75rem 0.5rem;
-}
-
-/* Enhanced mobile view styles - Updated for vertically stacked corp/alliance images */
-.mobile-container {
-    display: flex;
-    flex-direction: column;
-    width: 100%;
-    border-bottom: 1px solid light-dark(rgba(229, 231, 235, 0.3), rgba(75, 85, 99, 0.2));
-    padding: 0.75rem 0.5rem;
-}
-
-/* Make the container a flex row on wider mobile screens */
-@media (min-width: 480px) {
-    .mobile-container {
-        flex-direction: row;
-        align-items: flex-start;
-    }
-
-    .mobile-portraits-layout {
-        margin-bottom: 0;
-    }
-}
-
 /* Responsive table improvements */
 .kill-list-container {
     overflow-x: auto;
@@ -1777,16 +1919,93 @@ onUpdated(() => {
     }
 }
 
-/* Make the container a proper column on very small screens */
-@media (max-width: 360px) {
-    .mobile-portraits-layout {
-        align-items: center;
-        justify-content: center;
+/* Mobile cycling content styles */
+@media (max-width: 640px) {
+
+    .kill-list-container .Table th,
+    .kill-list-container .Table td {
+        border: none !important;
+        padding: 0.5rem 0.25rem !important;
     }
 
-    .mobile-content {
-        margin-top: 0.5rem;
-        margin-left: 0;
+    /* Hide headers on mobile */
+    .kill-list-container .Table thead {
+        display: none;
     }
+
+    /* Adjust mobile column widths to accommodate 64px images */
+    .kill-list-container .Table th:first-child,
+    .kill-list-container .Table td:first-child {
+        width: 55% !important;
+        max-width: 55% !important;
+        min-width: 192px !important;
+        /* Ensure space for 3×64px images */
+    }
+
+    .kill-list-container .Table th:last-child,
+    .kill-list-container .Table td:last-child {
+        width: 45% !important;
+        max-width: 45% !important;
+    }
+}
+
+/* Mobile content sliding animations */
+.mobile-cycling-content {
+    touch-action: pan-y;
+    /* Allow vertical scrolling but capture horizontal swipes */
+    user-select: none;
+    /* Prevent text selection during swipes */
+}
+
+/* Ensure sliding content stays within bounds */
+.mobile-cycling-content .flex {
+    width: 400%;
+    /* 4 slides × 100% each */
+}
+
+/* Create a new stacking context for status labels */
+.mobile-images-container {
+    z-index: 999;
+    position: relative;
+    overflow: visible !important;
+    /* Allow status elements to extend outside */
+}
+
+/* Ensure parent table cells don't clip the mobile status elements */
+:deep(.table-row .body-cell:first-child) {
+    overflow: visible !important;
+    position: relative;
+}
+
+:deep(.table-row) {
+    overflow: visible !important;
+}
+
+/* Status dots styling */
+.mobile-images-container .absolute {
+    z-index: 1001;
+}
+
+.mobile-images-container button {
+    transition: all 0.2s ease-in-out;
+    box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.1);
+}
+
+.mobile-images-container button:hover {
+    box-shadow: 0 2px 4px 0 rgba(0, 0, 0, 0.15);
+}
+
+.mobile-images-container button:focus {
+    outline: 2px solid #3b82f6;
+    outline-offset: 1px;
+}
+
+/* Status label styling - ensure it's always visible */
+.mobile-images-container span {
+    font-size: 0.75rem;
+    white-space: nowrap;
+    backdrop-filter: blur(4px);
+    z-index: 9999;
+    position: relative;
 }
 </style>
