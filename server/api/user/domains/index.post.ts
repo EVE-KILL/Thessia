@@ -61,6 +61,33 @@ export default defineEventHandler(async (event) => {
             });
         }
 
+        // Prevent main domain usage - block eve-kill.com but allow subdomains
+        const normalizedDomain = body.domain.toLowerCase().trim();
+        if (normalizedDomain === "eve-kill.com") {
+            throw createError({
+                statusCode: 400,
+                statusMessage:
+                    "Cannot use the main eve-kill.com domain as a custom domain. Subdomains are allowed (e.g., corp.eve-kill.com).",
+            });
+        }
+
+        // Additional blocked domains that should not be used as custom domains
+        const blockedDomains = [
+            "eve-kill.com",
+            "www.eve-kill.com",
+            "api.eve-kill.com",
+            "admin.eve-kill.com",
+            "cdn.eve-kill.com",
+            "static.eve-kill.com",
+        ];
+
+        if (blockedDomains.includes(normalizedDomain)) {
+            throw createError({
+                statusCode: 400,
+                statusMessage: `The domain ${body.domain} is reserved and cannot be used as a custom domain.`,
+            });
+        }
+
         // Validate entity type
         if (
             !["character", "corporation", "alliance"].includes(body.entity_type)
