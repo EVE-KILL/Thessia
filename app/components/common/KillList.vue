@@ -742,7 +742,7 @@ const mouseY = ref(0);
 const tooltipText = ref('');
 const showTooltip = ref(false);
 
-// Mobile cycling content state management  
+// Mobile cycling content state management
 const mobileContentStates = ['ship', 'victim', 'attacker', 'location', 'time'] as const;
 type MobileContentState = typeof mobileContentStates[number];
 
@@ -1264,17 +1264,27 @@ onUpdated(() => {
                     </template>
                     <Image v-else type="character" :id="1" size="64" alt="NPC/Structure"
                         class="w-16 h-16 flex-shrink-0" />
+                </div>
+            </template>
 
-                    <!-- Status Dots and Label - Always render on mobile, separate positioning -->
-                    <div v-if="isMobile" class="absolute bottom-0 right-1 flex items-end gap-2 z-10">
-                        <!-- Current State Label - Position up and right from container bottom-right -->
+            <!-- Mobile Cycling Content Column -->
+            <template #cell-mobile-content="{ item }">
+                <div class="relative py-1 pr-2 min-h-[80px] mobile-cycling-content w-full max-w-full"
+                    @touchstart="handleTouchStart($event, item.killmail_id)"
+                    @touchmove="handleTouchMove($event, item.killmail_id)"
+                    @touchend="handleTouchEnd($event, item.killmail_id)">
+
+                    <!-- Status Label - Positioned relative to content column, top right -->
+                    <div v-if="isMobile" class="absolute -top-1 -right-2 z-50">
                         <span
-                            class="text-xs font-medium text-gray-600 dark:text-gray-400 bg-white dark:bg-gray-800 px-2 py-0.5 rounded shadow-sm border border-gray-200 dark:border-gray-700 capitalize translate-y-[-55px] translate-x-[230px] z-50">
+                            class="text-xs font-medium text-gray-600 dark:text-gray-400 bg-white dark:bg-gray-800 px-2 py-0.5 rounded shadow-sm border border-gray-200 dark:border-gray-700 capitalize">
                             {{ mobileContentStates[cyclingStateMap.get(item.killmail_id)?.currentStateIndex || 0] }}
                         </span>
+                    </div>
 
-                        <!-- Status Dots - Position down 5px from bottom -->
-                        <div class="flex gap-1 translate-y-[10px] translate-x-[55px]">
+                    <!-- Status Dots - Positioned relative to content column, bottom right -->
+                    <div v-if="isMobile" class="absolute -bottom-1 -right-2 z-50">
+                        <div class="flex gap-1">
                             <button v-for="(state, index) in mobileContentStates" :key="state"
                                 @click="cycleMobileContent(item.killmail_id, index)" :class="[
                                     'w-2.5 h-2.5 rounded-full transition-all duration-200 shadow-md',
@@ -1285,15 +1295,6 @@ onUpdated(() => {
                                 :title="state.charAt(0).toUpperCase() + state.slice(1)" />
                         </div>
                     </div>
-                </div>
-            </template>
-
-            <!-- Mobile Cycling Content Column -->
-            <template #cell-mobile-content="{ item }">
-                <div class="relative py-1 px-2 min-h-[80px] mobile-cycling-content w-full max-w-full"
-                    @touchstart="handleTouchStart($event, item.killmail_id)"
-                    @touchmove="handleTouchMove($event, item.killmail_id)"
-                    @touchend="handleTouchEnd($event, item.killmail_id)">
 
                     <!-- Sliding Content Container -->
                     <div class="relative h-full w-full max-w-full overflow-hidden">
@@ -1968,7 +1969,7 @@ onUpdated(() => {
 }
 
 /* Create a new stacking context for status labels */
-.mobile-images-container {
+.mobile-cycling-content {
     z-index: 999;
     position: relative;
     overflow: visible !important;
@@ -1976,7 +1977,7 @@ onUpdated(() => {
 }
 
 /* Ensure parent table cells don't clip the mobile status elements */
-:deep(.table-row .body-cell:first-child) {
+:deep(.table-row .body-cell) {
     overflow: visible !important;
     position: relative;
 }
@@ -1985,27 +1986,27 @@ onUpdated(() => {
     overflow: visible !important;
 }
 
-/* Status dots styling */
-.mobile-images-container .absolute {
+/* Status dots and label styling */
+.mobile-cycling-content .absolute {
     z-index: 1001;
 }
 
-.mobile-images-container button {
+.mobile-cycling-content button {
     transition: all 0.2s ease-in-out;
     box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.1);
 }
 
-.mobile-images-container button:hover {
+.mobile-cycling-content button:hover {
     box-shadow: 0 2px 4px 0 rgba(0, 0, 0, 0.15);
 }
 
-.mobile-images-container button:focus {
+.mobile-cycling-content button:focus {
     outline: 2px solid #3b82f6;
     outline-offset: 1px;
 }
 
 /* Status label styling - ensure it's always visible */
-.mobile-images-container span {
+.mobile-cycling-content span {
     font-size: 0.75rem;
     white-space: nowrap;
     backdrop-filter: blur(4px);
