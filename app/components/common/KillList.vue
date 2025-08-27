@@ -594,34 +594,39 @@ const resetWebSocketState = () => {
     }
 };
 
-// Define table columns for the EkTable component
-const tableColumns = [
+// Define responsive table columns for the EkTable component
+const tableColumns = computed(() => [
     {
         id: "ship",
-        header: computed(() => t("ship")),
+        header: t("ship"),
         width: "22%",
+        class: "min-w-0 max-w-[22%]", // Strict width constraints
     },
     {
         id: "victim",
-        header: computed(() => t("victim")),
-        width: "27%",
+        header: t("victim"),
+        width: "28%",
+        class: "min-w-0 max-w-[28%]", // Strict width constraints
     },
     {
         id: "finalBlow",
-        header: computed(() => t("finalBlow")),
+        header: t("finalBlow"),
         width: "27%",
+        class: "min-w-0 max-w-[27%] hidden sm:table-cell", // Hide on mobile/small screens
     },
     {
         id: "location",
-        header: computed(() => t("location")),
-        width: "15%",
+        header: t("location"),
+        width: "13%",
+        class: "min-w-0 max-w-[13%] hidden md:table-cell", // Hide on mobile and tablet
     },
     {
         id: "details",
         headerClass: "text-right",
-        width: "9%",
+        width: "10%",
+        class: "text-right min-w-0 max-w-[10%]",
     },
-];
+]);
 
 // WebSocket status message
 const wsStatusMessage = computed(() => {
@@ -859,19 +864,21 @@ onUpdated(() => {
             :special-header="true" :bordered="true" :link-fn="generateKillLink" :hover="true" background="transparent">
             <!-- Ship column -->
             <template #cell-ship="{ item }">
-                <div class="flex items-center py-1">
+                <div class="flex items-center py-1 min-w-0 max-w-full overflow-hidden">
                     <Image type="type-overlay-render" :id="item.victim.ship_id"
                         :alt="`Ship: ${getLocalizedString(item.victim.ship_name, currentLocale)}`"
-                        class="rounded w-16 h-16 mx-2" size="64" />
-                    <div class="flex flex-col items-start">
-                        <span class="text-sm text-black dark:text-white truncate max-w-[150px]"
+                        class="rounded w-16 h-16 xs:w-12 xs:h-12 mx-2 xs:mx-1 flex-shrink-0" size="64" />
+                    <div class="flex flex-col items-start min-w-0 flex-1 overflow-hidden">
+                        <span class="text-sm xs:text-xs text-black dark:text-white truncate w-full"
                             :ref="(el) => setElementRef(el, item.killmail_id, shipNameRefs)">
                             {{ getLocalizedString(item.victim.ship_name, currentLocale) }}
                         </span>
-                        <span class="text-xs text-gray-500 dark:text-gray-400 truncate max-w-[150px]">
+                        <span class="text-xs text-gray-500 dark:text-gray-400 truncate w-full">
                             {{ getLocalizedString(item.victim.ship_group_name || {}, currentLocale) }}
                         </span>
-                        <span v-if="item.total_value > 50" class="text-xs text-gray-600 dark:text-gray-400">
+                        <!-- Hide ISK value on very small screens -->
+                        <span v-if="item.total_value > 50"
+                            class="text-xs text-gray-600 dark:text-gray-400 xs:hidden truncate w-full">
                             {{ formatIsk(item.total_value) }} ISK
                         </span>
                     </div>
@@ -880,32 +887,35 @@ onUpdated(() => {
 
             <!-- Victim column -->
             <template #cell-victim="{ item }">
-                <div class="flex items-center py-1">
+                <div class="flex items-center py-1 min-w-0 max-w-full overflow-hidden">
+                    <!-- Hide victim image on very small screens -->
                     <template v-if="item.victim.character_id > 0">
                         <Image type="character" :id="item.victim.character_id"
-                            :alt="`Character: ${item.victim.character_name}`" class="w-16 h-16 mx-2" size="64" />
+                            :alt="`Character: ${item.victim.character_name}`"
+                            class="w-16 h-16 mx-2 flex-shrink-0 xs:hidden" size="64" />
                     </template>
-                    <Image v-else type="character" :id="1" alt="Placeholder" class="w-16 h-16 mx-2" size="64" />
-                    <div class="flex flex-col items-start min-w-0 flex-1">
+                    <Image v-else type="character" :id="1" alt="Placeholder"
+                        class="w-16 h-16 mx-2 flex-shrink-0 xs:hidden" size="64" />
+                    <div class="flex flex-col items-start min-w-0 flex-1 overflow-hidden">
                         <!-- Character Name -->
-                        <span class="text-sm text-black dark:text-white truncate max-w-full"
+                        <span class="text-sm xs:text-xs text-black dark:text-white truncate w-full"
                             :ref="(el) => setElementRef(el, item.killmail_id, characterNameRefs)">
                             {{ item.victim.character_name }}
                         </span>
                         <!-- Corporation Name (without ticker) -->
-                        <span class="text-xs text-gray-600 dark:text-gray-400 truncate max-w-full"
+                        <span class="text-xs text-gray-600 dark:text-gray-400 truncate w-full"
                             :ref="(el) => setElementRef(el, item.killmail_id, corporationNameRefs)">
                             {{ item.victim.corporation_name }}
                         </span>
-                        <!-- Alliance Name (without ticker) -->
+                        <!-- Alliance Name (without ticker) - hide on small screens -->
                         <span v-if="item.victim.alliance_name"
-                            class="text-xs text-gray-500 dark:text-gray-500 truncate max-w-full"
+                            class="text-xs text-gray-500 dark:text-gray-500 truncate w-full xs:hidden"
                             :ref="(el) => setElementRef(el, item.killmail_id, allianceNameRefs)">
                             {{ item.victim.alliance_name }}
                         </span>
-                        <!-- Faction Name (when no alliance) -->
+                        <!-- Faction Name (when no alliance) - hide on small screens -->
                         <span v-else-if="item.victim.faction_name"
-                            class="text-xs text-gray-500 dark:text-gray-500 truncate max-w-full">
+                            class="text-xs text-gray-500 dark:text-gray-500 truncate w-full xs:hidden">
                             {{ item.victim.faction_name }}
                         </span>
                     </div>
@@ -914,47 +924,49 @@ onUpdated(() => {
 
             <!-- Final Blow column -->
             <template #cell-finalBlow="{ item }">
-                <div class="flex items-center py-1">
+                <div class="flex items-center py-1 min-w-0">
                     <!-- Character or placeholder when finalblow.character_id missing -->
                     <template v-if="item.finalblow.character_id > 0">
                         <Image type="character" :id="item.finalblow.character_id"
-                            :alt="`Character: ${item.finalblow.character_name}`" class="w-16 h-16 mx-2" size="64" />
+                            :alt="`Character: ${item.finalblow.character_name}`"
+                            class="w-16 h-16 mx-2 flex-shrink-0 xs:hidden" size="64" />
                         <div class="flex flex-col items-start min-w-0 flex-1">
                             <!-- Character Name -->
-                            <span class="text-sm text-black dark:text-white truncate max-w-full"
+                            <span class="text-sm xs:text-xs text-black dark:text-white truncate w-full"
                                 :ref="(el) => setElementRef(el, `fb-${item.killmail_id}`, finalBlowNameRefs)">
                                 {{ item.finalblow.character_name }}
                             </span>
                             <!-- Corporation Name (without ticker) -->
-                            <span class="text-xs text-gray-600 dark:text-gray-400 truncate max-w-full"
+                            <span class="text-xs text-gray-600 dark:text-gray-400 truncate w-full"
                                 :ref="(el) => setElementRef(el, `fb-${item.killmail_id}`, finalBlowCorpRefs)">
                                 {{ item.finalblow.corporation_name }}
                             </span>
-                            <!-- Alliance Name (without ticker) -->
+                            <!-- Alliance Name (without ticker) - hide on very small screens -->
                             <span v-if="item.finalblow.alliance_name"
-                                class="text-xs text-gray-500 dark:text-gray-500 truncate max-w-full"
+                                class="text-xs text-gray-500 dark:text-gray-500 truncate w-full xs:hidden"
                                 :ref="(el) => setElementRef(el, `fb-${item.killmail_id}`, finalBlowAllianceRefs)">
                                 {{ item.finalblow.alliance_name }}
                             </span>
-                            <!-- Faction Name (when no alliance) -->
+                            <!-- Faction Name (when no alliance) - hide on very small screens -->
                             <span v-else-if="item.finalblow.faction_name"
-                                class="text-xs text-gray-500 dark:text-gray-500 truncate max-w-full">
+                                class="text-xs text-gray-500 dark:text-gray-500 truncate w-full xs:hidden">
                                 {{ item.finalblow.faction_name }}
                             </span>
                         </div>
                     </template>
                     <template v-else>
-                        <Image type="character" :id="1" size="64" alt="NPC/Structure" class="w-16 h-16 mx-2" />
+                        <Image type="character" :id="1" size="64" alt="NPC/Structure"
+                            class="w-16 h-16 mx-2 flex-shrink-0 xs:hidden" />
                         <div class="flex flex-col items-start min-w-0 flex-1">
-                            <span class="text-sm text-black dark:text-white truncate max-w-full">
+                            <span class="text-sm xs:text-xs text-black dark:text-white truncate w-full">
                                 {{ item.finalblow.faction_name || item.finalblow.character_name }}
                             </span>
                             <span v-if="item.finalblow.corporation_name"
-                                class="text-xs text-gray-600 dark:text-gray-400 truncate max-w-full">
+                                class="text-xs text-gray-600 dark:text-gray-400 truncate w-full">
                                 {{ item.finalblow.corporation_name }}
                             </span>
                             <span v-if="item.finalblow.ship_group_name"
-                                class="text-xs text-gray-500 dark:text-gray-500 truncate max-w-full">
+                                class="text-xs text-gray-500 dark:text-gray-500 truncate w-full xs:hidden">
                                 {{ getLocalizedString(item.finalblow.ship_group_name, currentLocale) }}
                             </span>
                         </div>
@@ -964,11 +976,11 @@ onUpdated(() => {
 
             <!-- Location column -->
             <template #cell-location="{ item }">
-                <div class="flex flex-col items-start py-1 text-sm px-2">
-                    <span class="text-sm text-black dark:text-white whitespace-nowrap">
+                <div class="flex flex-col items-start py-1 text-sm px-2 min-w-0">
+                    <span class="text-sm text-black dark:text-white truncate w-full">
                         {{ getLocalizedString(item.region_name, currentLocale) }}
                     </span>
-                    <div class="text-xs text-gray-600 dark:text-gray-400 whitespace-nowrap">
+                    <div class="text-xs text-gray-600 dark:text-gray-400 truncate w-full">
                         <span>{{ item.system_name }}</span>
                         <span> (</span>
                         <span :class="getSecurityColor(item.system_security)">
@@ -981,19 +993,20 @@ onUpdated(() => {
 
             <!-- Details column -->
             <template #cell-details="{ item }">
-                <div class="flex flex-col items-end w-full">
-                    <div class="text-sm text-black dark:text-white">
-                        <ClientOnly>
-                            {{ formatDate(item.kill_time) }}
-                        </ClientOnly>
+                <div class="flex flex-col items-end w-full min-w-0 px-2">
+                    <div class="text-sm xs:text-xs text-black dark:text-white">
+                        {{ formatDate(item.kill_time) }}
                     </div>
                     <div class="flex gap-1 items-center">
                         <span class="text-xs text-gray-600 dark:text-gray-400">{{ item.attackerCount }}</span>
-                        <UIcon name="lucide:users" class="h-4 w-4 text-gray-600 dark:text-gray-400"
+                        <UIcon name="lucide:users" class="h-4 w-4 xs:h-3 xs:w-3 text-gray-600 dark:text-gray-400"
                             :aria-label="`${item.attackerCount} Involved`" />
-                        <span class="text-xs text-gray-600 dark:text-gray-400">{{ item.commentCount || 0 }}</span>
-                        <UIcon name="lucide:message-circle" class="h-4 w-4 text-gray-600 dark:text-gray-400"
-                            aria-label="Comments" />
+                        <!-- Show comment count, but only if there are comments -->
+                        <template v-if="item.commentCount && item.commentCount > 0">
+                            <span class="text-xs text-gray-600 dark:text-gray-400">{{ item.commentCount }}</span>
+                            <UIcon name="lucide:message-circle"
+                                class="h-4 w-4 xs:h-3 xs:w-3 text-gray-600 dark:text-gray-400" aria-label="Comments" />
+                        </template>
                     </div>
                 </div>
             </template>
@@ -1065,7 +1078,7 @@ onUpdated(() => {
                         <!-- System/Region Info -->
                         <div class="text-xs">
                             <span>{{ item.system_name }} / {{ getLocalizedString(item.region_name, currentLocale)
-                                }}</span>
+                            }}</span>
                             <span class="ml-1">(</span>
                             <span :class="getSecurityColor(item.system_security)">
                                 {{ item.system_security.toFixed(1) }}
@@ -1651,6 +1664,116 @@ onUpdated(() => {
 
     .mobile-portraits-layout {
         margin-bottom: 0;
+    }
+}
+
+/* Responsive table improvements */
+.kill-list-container {
+    overflow-x: auto;
+    max-width: 100%;
+}
+
+/* Ensure table columns don't break on narrow screens */
+.kill-list-container table {
+    min-width: 100%;
+    table-layout: fixed;
+    width: 100%;
+}
+
+/* Base column widths - rebalanced for better distribution */
+.kill-list-container .Table th:first-child,
+.kill-list-container .Table td:first-child {
+    width: 22%;
+    max-width: 22%;
+    overflow: hidden;
+}
+
+.kill-list-container .Table th:nth-child(2),
+.kill-list-container .Table td:nth-child(2) {
+    width: 28%;
+    max-width: 28%;
+    overflow: hidden;
+}
+
+.kill-list-container .Table th:nth-child(3),
+.kill-list-container .Table td:nth-child(3) {
+    width: 27%;
+    max-width: 27%;
+    overflow: hidden;
+}
+
+.kill-list-container .Table th:nth-child(4),
+.kill-list-container .Table td:nth-child(4) {
+    width: 13%;
+    max-width: 13%;
+    overflow: hidden;
+}
+
+.kill-list-container .Table th:last-child,
+.kill-list-container .Table td:last-child {
+    width: 10%;
+    max-width: 10%;
+    text-align: right;
+    overflow: hidden;
+}
+
+/* Force table to respect container width */
+.kill-list-container .Table {
+    max-width: 100%;
+}
+
+/* Progressive enhancement for small screens */
+@media (max-width: 475px) {
+
+    /* On very small screens, adjust column widths and ensure no overflow */
+    .kill-list-container table {
+        min-width: 0;
+        width: 100%;
+    }
+
+    .kill-list-container .Table th:first-child,
+    .kill-list-container .Table td:first-child {
+        width: 35%;
+        max-width: 35%;
+    }
+
+    .kill-list-container .Table th:nth-child(2),
+    .kill-list-container .Table td:nth-child(2) {
+        width: 50%;
+        max-width: 50%;
+    }
+
+    .kill-list-container .Table th:last-child,
+    .kill-list-container .Table td:last-child {
+        width: 15%;
+        max-width: 15%;
+    }
+}
+
+@media (max-width: 640px) and (min-width: 476px) {
+
+    /* Adjust for small screens but not tiny */
+    .kill-list-container table {
+        min-width: 0;
+        width: 100%;
+    }
+
+    .kill-list-container .Table th:first-child,
+    .kill-list-container .Table td:first-child {
+        width: 35%;
+        max-width: 35%;
+    }
+
+    .kill-list-container .Table th:nth-child(2),
+    .kill-list-container .Table td:nth-child(2) {
+        width: 45%;
+        max-width: 45%;
+    }
+
+    .kill-list-container .Table th:last-child,
+    .kill-list-container .Table td:last-child {
+        width: 20%;
+        max-width: 20%;
     }
 }
 
