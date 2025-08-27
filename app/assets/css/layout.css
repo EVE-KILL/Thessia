@@ -152,18 +152,18 @@ html.dark #content > #inner-content {
         -webkit-mask: none;
         mask: none;
     }
-    
+
     /* Remove padding and background on mobile for full-width content */
     .content {
         padding: 0;
         background-color: transparent !important;
     }
-    
+
     #content > #inner-content {
         padding: 0;
         background: transparent;
     }
-    
+
     /* Adjust main content padding on mobile */
     .main-content {
         padding: 4.5rem 0.5rem 1.25rem 0.5rem;
