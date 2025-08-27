@@ -186,7 +186,6 @@ OPENAI_API_KEY=your-openai-api-key
 TENOR_API_KEY=your-tenor-api-key
 
 # Runtime Configuration
-ENABLE_RUNTIME_CACHE=true
 THESSIA_CONTAINER=true
 ```
 

@@ -130,6 +130,17 @@ processKillmails:
       cpu: 4000m
       memory: 4Gi
 
+processCharacterKillmails:
+  enabled: true
+  replicas: 3 # Scale up for character processing
+  resources:
+    requests:
+      cpu: 300m
+      memory: 512Mi
+    limits:
+      cpu: 2000m
+      memory: 2Gi
+
 processStats:
   enabled: true
   replicas: 1

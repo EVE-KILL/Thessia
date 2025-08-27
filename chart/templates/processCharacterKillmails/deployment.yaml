@@ -1,13 +1,13 @@
-{{- if .Values.processKillmails.enabled }}
+{{- if .Values.processCharacterKillmails.enabled }}
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: process-killmails
+  name: process-character-killmails
   namespace: {{ .Values.namespace.name }}
   labels:
     {{- include "thessia.labels" . | nindent 4 }}
 spec:
-  replicas: {{ .Values.processKillmails.replicas }}
+  replicas: {{ .Values.processCharacterKillmails.replicas }}
   strategy:
     type: RollingUpdate
     rollingUpdate:
@@ -15,28 +15,28 @@ spec:
       maxUnavailable: 0
   selector:
     matchLabels:
-      app: process-killmails
+      app: process-character-killmails
       {{- include "thessia.selectorLabels" . | nindent 6 }}
   template:
     metadata:
       labels:
-        app: process-killmails
+        app: process-character-killmails
         {{- include "thessia.selectorLabels" . | nindent 8 }}
     spec:
       serviceAccountName: {{ include "thessia.serviceAccountName" . }}
       securityContext:
-        {{- toYaml .Values.processKillmails.securityContext | nindent 8 }}
+        {{- toYaml .Values.processCharacterKillmails.securityContext | nindent 8 }}
       containers:
-        - name: process-killmails
+        - name: process-character-killmails
           image: "{{ .Values.global.image.repository }}:{{ .Values.global.image.tag }}"
           imagePullPolicy: {{ .Values.global.image.pullPolicy }}
           command:
             - /bin/sh
             - -c
             - |
-              ./bin/queue processKillmails
+              ./bin/queue processCharacterKillmails
           resources:
-            {{- toYaml .Values.processKillmails.resources | nindent 12 }}
+            {{- toYaml .Values.processCharacterKillmails.resources | nindent 12 }}
           envFrom:
             - configMapRef:
                 name: config

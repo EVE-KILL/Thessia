@@ -380,6 +380,23 @@ processKillmails:
         fsGroup: 1000
         runAsNonRoot: true
 
+# Process Character Killmails
+processCharacterKillmails:
+    enabled: true
+    replicas: 1
+    resources:
+        requests:
+            cpu: 200m
+            memory: 512Mi
+        limits:
+            cpu: 2000m
+            memory: 2048Mi
+    securityContext:
+        runAsUser: 1000
+        runAsGroup: 1000
+        fsGroup: 1000
+        runAsNonRoot: true
+
 # RedisQ
 redisq:
     enabled: true

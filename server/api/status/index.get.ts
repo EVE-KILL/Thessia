@@ -161,6 +161,7 @@ export default defineEventHandler(async () => {
     const corporationQueue = createQueue("corporation");
     const characterQueue = createQueue("character");
     const characterHistoryQueue = createQueue("characterhistory");
+    const characterKillmailQueue = createQueue("character-killmails");
     const corporationHistoryQueue = createQueue("corporationhistory");
     const killmailQueue = createQueue("killmail");
     const warQueue = createQueue("war");
@@ -174,6 +175,7 @@ export default defineEventHandler(async () => {
         corporationQueueCount,
         characterQueueCount,
         characterHistoryQueueCount,
+        characterKillmailQueueCount,
         corporationHistoryQueueCount,
         killmailQueueCount,
         warQueueCount,
@@ -216,6 +218,7 @@ export default defineEventHandler(async () => {
         corporationQueue.count(),
         characterQueue.count(),
         characterHistoryQueue.count(),
+        characterKillmailQueue.count(),
         corporationHistoryQueue.count(),
         killmailQueue.count(),
         warQueue.count(),
@@ -384,6 +387,7 @@ export default defineEventHandler(async () => {
             corporation: corporationQueueCount,
             character: characterQueueCount,
             characterhistory: characterHistoryQueueCount,
+            "character-killmails": characterKillmailQueueCount,
             corporationhistory: corporationHistoryQueueCount,
             killmail: killmailQueueCount,
             war: warQueueCount,

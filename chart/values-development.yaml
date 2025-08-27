@@ -88,6 +88,17 @@ processKillmails:
       cpu: 500m
       memory: 1Gi
 
+processCharacterKillmails:
+  enabled: true
+  replicas: 1
+  resources:
+    requests:
+      cpu: 50m
+      memory: 128Mi
+    limits:
+      cpu: 200m
+      memory: 512Mi
+
 processStats:
   enabled: false # Disable for development
 
