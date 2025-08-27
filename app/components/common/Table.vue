@@ -336,7 +336,7 @@ const getRowClasses = (item: any, index: number) => {
 
     // Add user-defined classes
     if (typeof props.rowClass === "function") {
-        baseClasses.push(props.rowClass(item));
+        baseClasses.push(props.rowClass(item, index));
     } else if (props.rowClass) {
         baseClasses.push(props.rowClass);
     }

@@ -489,9 +489,11 @@ const isCombinedLoss = (kill: any): boolean => {
     return victimIdNum === combinedVictimIdNum;
 };
 
-// Get row class based on whether it's a combined loss
-const getRowClass = (item: IKillList) => {
-    return isCombinedLoss(item) ? "combined-loss-row bg-darkred" : "";
+// Get row class based on whether it's a combined loss and row index
+const getRowClass = (item: IKillList, index: number) => {
+    const combinedLossClass = isCombinedLoss(item) ? "combined-loss-row bg-darkred" : "";
+    const alternatingClass = index % 2 === 1 ? "alternate-row" : "regular-row";
+    return [combinedLossClass, alternatingClass].filter(Boolean).join(" ");
 };
 
 const getSecurityColor = (security: number): string => {
@@ -1264,6 +1266,28 @@ onUpdated(() => {
     border-left: 3px solid rgb(220, 38, 38) !important;
 }
 
+/* Alternating row colors for better visual separation */
+.alternate-row,
+:deep(.alternate-row) {
+    background-color: rgba(59, 130, 246, 0.08) !important;
+}
+
+:global(.dark) .alternate-row,
+:global(.dark) :deep(.alternate-row) {
+    background-color: rgba(59, 130, 246, 0.12) !important;
+}
+
+/* Regular rows (even rows) - light background for better separation */
+.regular-row,
+:deep(.regular-row) {
+    background-color: rgba(0, 0, 0, 0.04) !important;
+}
+
+:global(.dark) .regular-row,
+:global(.dark) :deep(.regular-row) {
+    background-color: rgba(255, 255, 255, 0.04) !important;
+}
+
 /* Table rows (div elements) */
 :deep(div.combined-loss-row),
 :deep(div.bg-darkred),
@@ -1271,6 +1295,26 @@ onUpdated(() => {
 :deep(.table-row.bg-darkred) {
     background-color: rgba(220, 38, 38, 0.15) !important;
     border-left: 3px solid rgb(220, 38, 38) !important;
+}
+
+:deep(div.alternate-row),
+:deep(.table-row.alternate-row) {
+    background-color: rgba(59, 130, 246, 0.08) !important;
+}
+
+:global(.dark) :deep(div.alternate-row),
+:global(.dark) :deep(.table-row.alternate-row) {
+    background-color: rgba(59, 130, 246, 0.12) !important;
+}
+
+:deep(div.regular-row),
+:deep(.table-row.regular-row) {
+    background-color: rgba(0, 0, 0, 0.04) !important;
+}
+
+:global(.dark) :deep(div.regular-row),
+:global(.dark) :deep(.table-row.regular-row) {
+    background-color: rgba(255, 255, 255, 0.04) !important;
 }
 
 /* Hover states */
@@ -1281,11 +1325,64 @@ onUpdated(() => {
     background-color: rgba(220, 38, 38, 0.25) !important;
 }
 
+:deep(div.alternate-row:hover),
+:deep(.table-row.alternate-row:hover) {
+    background-color: rgba(255, 255, 255, 0.15) !important;
+}
+
+:global(.dark) :deep(div.alternate-row:hover),
+:global(.dark) :deep(.table-row.alternate-row:hover) {
+    background-color: rgba(255, 255, 255, 0.15) !important;
+}
+
+:deep(div.regular-row:hover),
+:deep(.table-row.regular-row:hover) {
+    background-color: rgba(255, 255, 255, 0.15) !important;
+}
+
+:global(.dark) :deep(div.regular-row:hover),
+:global(.dark) :deep(.table-row.regular-row:hover) {
+    background-color: rgba(255, 255, 255, 0.15) !important;
+}
+
 /* Mobile view */
 :deep(.mobile-container.combined-loss-row),
 :deep(.mobile-container.bg-darkred) {
     background-color: rgba(220, 38, 38, 0.15) !important;
     border-left: 3px solid rgb(220, 38, 38) !important;
+}
+
+:deep(.mobile-container.alternate-row) {
+    background-color: rgba(0, 0, 0, 0.12) !important;
+}
+
+:global(.dark) :deep(.mobile-container.alternate-row) {
+    background-color: rgba(255, 255, 255, 0.12) !important;
+}
+
+:deep(.mobile-container.regular-row) {
+    background-color: rgba(0, 0, 0, 0.04) !important;
+}
+
+:global(.dark) :deep(.mobile-container.regular-row) {
+    background-color: rgba(255, 255, 255, 0.04) !important;
+}
+
+/* Mobile hover effects */
+:deep(.mobile-container.alternate-row:hover) {
+    background-color: rgba(255, 255, 255, 0.15) !important;
+}
+
+:global(.dark) :deep(.mobile-container.alternate-row:hover) {
+    background-color: rgba(255, 255, 255, 0.15) !important;
+}
+
+:deep(.mobile-container.regular-row:hover) {
+    background-color: rgba(255, 255, 255, 0.15) !important;
+}
+
+:global(.dark) :deep(.mobile-container.regular-row:hover) {
+    background-color: rgba(255, 255, 255, 0.15) !important;
 }
 
 /* Override pagination text size */
