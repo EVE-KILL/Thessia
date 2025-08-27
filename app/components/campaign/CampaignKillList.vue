@@ -597,7 +597,7 @@ onUpdated(() => {
                                         formatDate(item.kill_time) }}</span>
                                     <div class="attacker-count flex items-center gap-1">
                                         <span class="text-xs text-gray-600 dark:text-gray-400">{{ item.attackerCount
-                                        }}</span>
+                                            }}</span>
                                         <UIcon name="lucide:users" class="h-3 w-3 text-gray-600 dark:text-gray-400"
                                             :aria-label="`${item.attackerCount} Involved`" />
                                     </div>
@@ -822,6 +822,50 @@ onUpdated(() => {
     color: light-dark(#4b5563, #9ca3af) !important;
 }
 
+/* Alternating row colors for better visual separation */
+:deep(.table-row:nth-child(odd)),
+:deep(div.table-row:nth-child(odd)) {
+    background-color: rgba(59, 130, 246, 0.08) !important;
+}
+
+:global(.dark) :deep(.table-row:nth-child(odd)),
+:global(.dark) :deep(div.table-row:nth-child(odd)) {
+    background-color: rgba(59, 130, 246, 0.12) !important;
+}
+
+/* Regular rows (even rows) - light background for better separation */
+:deep(.table-row:nth-child(even)),
+:deep(div.table-row:nth-child(even)) {
+    background-color: rgba(0, 0, 0, 0.04) !important;
+}
+
+:global(.dark) :deep(.table-row:nth-child(even)),
+:global(.dark) :deep(div.table-row:nth-child(even)) {
+    background-color: rgba(255, 255, 255, 0.04) !important;
+}
+
+/* Hover states for alternating rows */
+:deep(.table-row:nth-child(odd):hover),
+:deep(div.table-row:nth-child(odd):hover) {
+    background-color: rgba(255, 255, 255, 0.15) !important;
+}
+
+:global(.dark) :deep(.table-row:nth-child(odd):hover),
+:global(.dark) :deep(div.table-row:nth-child(odd):hover) {
+    background-color: rgba(255, 255, 255, 0.15) !important;
+}
+
+/* Hover states for regular rows */
+:deep(.table-row:nth-child(even):hover),
+:deep(div.table-row:nth-child(even):hover) {
+    background-color: rgba(255, 255, 255, 0.15) !important;
+}
+
+:global(.dark) :deep(.table-row:nth-child(even):hover),
+:global(.dark) :deep(div.table-row:nth-child(even):hover) {
+    background-color: rgba(255, 255, 255, 0.15) !important;
+}
+
 /* Animation for loading indicator */
 @keyframes pulse {
 
@@ -839,55 +883,77 @@ onUpdated(() => {
     animation: pulse 1.5s ease-in-out infinite;
 }
 
-/* Enhanced Custom color class for combined losses */
-.bg-darkred {
-    background-color: rgba(139, 0, 0, 0.4) !important;
-}
-
-/* Add an additional class to ensure it gets applied with higher specificity */
-.combined-loss-row {
-    background-color: rgba(139, 0, 0, 0.4) !important;
+/* Enhanced Custom color class for combined losses - Higher specificity */
+.combined-loss-row,
+.bg-darkred,
+:deep(.combined-loss-row),
+:deep(.bg-darkred) {
+    background-color: rgba(220, 38, 38, 0.15) !important;
     border-left: 3px solid rgb(220, 38, 38) !important;
 }
 
-/* Make sure our class overrides table row styles */
-:deep(tr.combined-loss-row),
-:deep(tr.combined-loss-row td),
-:deep(tr.combined-loss-row:hover) {
-    background-color: rgba(139, 0, 0, 0.4) !important;
-}
-
-/* For mobile view */
-:deep(.mobile-container.combined-loss-row) {
-    background-color: rgba(139, 0, 0, 0.4) !important;
+/* Make sure combined loss rows override alternating row colors */
+:deep(.table-row.combined-loss-row),
+:deep(.table-row.bg-darkred),
+:deep(div.table-row.combined-loss-row),
+:deep(div.table-row.bg-darkred) {
+    background-color: rgba(220, 38, 38, 0.15) !important;
     border-left: 3px solid rgb(220, 38, 38) !important;
 }
 
-/* Target any other nested elements to ensure the background is visible */
-:deep(.table-row.bg-darkred *),
-:deep(.table-row.combined-loss-row *) {
-    position: relative;
-    z-index: 1;
+/* Combined loss hover states */
+:deep(.table-row.combined-loss-row:hover),
+:deep(.table-row.bg-darkred:hover),
+:deep(div.table-row.combined-loss-row:hover),
+:deep(div.table-row.bg-darkred:hover) {
+    background-color: rgba(220, 38, 38, 0.25) !important;
 }
 
-/* Target the specific layout of table rows with more muted pseudo-element background */
-:deep(a.table-row.bg-darkred),
-:deep(a.table-row.combined-loss-row) {
-    position: relative;
+/* For mobile view - combined loss rows */
+:deep(.mobile-container.combined-loss-row),
+:deep(.mobile-container.bg-darkred) {
+    background-color: rgba(220, 38, 38, 0.15) !important;
+    border-left: 3px solid rgb(220, 38, 38) !important;
 }
 
-:deep(a.table-row.bg-darkred)::before,
-:deep(a.table-row.combined-loss-row)::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background-color: rgba(80, 0, 0, 0.6);
-    opacity: 0.7;
-    z-index: 0;
-    pointer-events: none;
+/* Mobile alternating row colors */
+:deep(.mobile-container:nth-child(odd)) {
+    background-color: rgba(0, 0, 0, 0.12) !important;
+}
+
+:global(.dark) :deep(.mobile-container:nth-child(odd)) {
+    background-color: rgba(255, 255, 255, 0.12) !important;
+}
+
+:deep(.mobile-container:nth-child(even)) {
+    background-color: rgba(0, 0, 0, 0.04) !important;
+}
+
+:global(.dark) :deep(.mobile-container:nth-child(even)) {
+    background-color: rgba(255, 255, 255, 0.04) !important;
+}
+
+/* Mobile hover effects */
+:deep(.mobile-container:nth-child(odd):hover) {
+    background-color: rgba(255, 255, 255, 0.15) !important;
+}
+
+:global(.dark) :deep(.mobile-container:nth-child(odd):hover) {
+    background-color: rgba(255, 255, 255, 0.15) !important;
+}
+
+:deep(.mobile-container:nth-child(even):hover) {
+    background-color: rgba(255, 255, 255, 0.15) !important;
+}
+
+:global(.dark) :deep(.mobile-container:nth-child(even):hover) {
+    background-color: rgba(255, 255, 255, 0.15) !important;
+}
+
+/* Mobile combined loss hover */
+:deep(.mobile-container.combined-loss-row:hover),
+:deep(.mobile-container.bg-darkred:hover) {
+    background-color: rgba(220, 38, 38, 0.25) !important;
 }
 
 /* Add truncation with fade effect */

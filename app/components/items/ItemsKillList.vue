@@ -169,6 +169,7 @@ function generateKillLink(item: any): string {
 :deep(.table-header) {
     background-color: light-dark(rgba(245, 245, 245, 0.05), rgba(26, 26, 26, 0.5)) !important;
     padding: 0.5rem 1rem !important;
+    font-weight: 600;
 }
 
 :deep(.header-cell) {
@@ -181,6 +182,50 @@ function generateKillLink(item: any): string {
     height: auto;
     min-height: 3.5rem;
     vertical-align: middle;
+}
+
+/* Alternating row colors for better visual separation */
+:deep(.table-row:nth-child(odd)),
+:deep(div.table-row:nth-child(odd)) {
+    background-color: rgba(59, 130, 246, 0.08) !important;
+}
+
+:global(.dark) :deep(.table-row:nth-child(odd)),
+:global(.dark) :deep(div.table-row:nth-child(odd)) {
+    background-color: rgba(59, 130, 246, 0.12) !important;
+}
+
+/* Regular rows (even rows) - light background for better separation */
+:deep(.table-row:nth-child(even)),
+:deep(div.table-row:nth-child(even)) {
+    background-color: rgba(0, 0, 0, 0.04) !important;
+}
+
+:global(.dark) :deep(.table-row:nth-child(even)),
+:global(.dark) :deep(div.table-row:nth-child(even)) {
+    background-color: rgba(255, 255, 255, 0.04) !important;
+}
+
+/* Hover states for alternating rows */
+:deep(.table-row:nth-child(odd):hover),
+:deep(div.table-row:nth-child(odd):hover) {
+    background-color: rgba(255, 255, 255, 0.15) !important;
+}
+
+:global(.dark) :deep(.table-row:nth-child(odd):hover),
+:global(.dark) :deep(div.table-row:nth-child(odd):hover) {
+    background-color: rgba(255, 255, 255, 0.15) !important;
+}
+
+/* Hover states for regular rows */
+:deep(.table-row:nth-child(even):hover),
+:deep(div.table-row:nth-child(even):hover) {
+    background-color: rgba(255, 255, 255, 0.15) !important;
+}
+
+:global(.dark) :deep(.table-row:nth-child(even):hover),
+:global(.dark) :deep(div.table-row:nth-child(even):hover) {
+    background-color: rgba(255, 255, 255, 0.15) !important;
 }
 
 /* Fix nested links */
