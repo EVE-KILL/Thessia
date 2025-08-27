@@ -67,6 +67,11 @@ const props = defineProps({
         type: Number,
         default: 250, // ms
     },
+    // Whether to disable the click outside behavior
+    disableClickOutside: {
+        type: Boolean,
+        default: false,
+    },
 });
 
 const emit = defineEmits(["update:modelValue"]);
@@ -113,14 +118,16 @@ const handleMouseLeave = () => {
     }, props.hoverDelay);
 };
 
-// Handle click outside - MODIFY THIS FUNCTION
-onClickOutside(dropdownRef, (event) => {
-    // Only close if the click was not on the trigger element or its children
-    const triggerEl = triggerRef.value;
-    if (isOpen.value && triggerEl && !triggerEl.contains(event.target as Node)) {
-        isOpen.value = false;
-    }
-});
+// Handle click outside - conditionally apply based on prop
+if (!props.disableClickOutside) {
+    onClickOutside(dropdownRef, (event) => {
+        // Only close if the click was not on the trigger element or its children
+        const triggerEl = triggerRef.value;
+        if (isOpen.value && triggerEl && !triggerEl.contains(event.target as Node)) {
+            isOpen.value = false;
+        }
+    });
+}
 
 // Close dropdown when Escape key is pressed
 const handleKeydown = (e: KeyboardEvent) => {
@@ -131,6 +138,14 @@ const handleKeydown = (e: KeyboardEvent) => {
 
 // Toggle dropdown with improved behavior
 const toggleDropdown = () => {
+    // If click outside is disabled, only allow opening (hover-only mode)
+    if (props.disableClickOutside) {
+        if (!isOpen.value) {
+            isOpen.value = true;
+        }
+        return;
+    }
+
     // Simply toggle the state - we handle outside clicks separately
     isOpen.value = !isOpen.value;
 };
@@ -423,8 +438,9 @@ const contentStyle = computed(() => {
 <template>
     <div class="custom-dropdown-container" @mouseenter="handleMouseEnter" @mouseleave="handleMouseLeave">
         <!-- Use stopPropagation to prevent click events from bubbling -->
-        <div ref="triggerRef" @click.stop="toggleDropdown" @keydown.enter.space.prevent="toggleDropdown"
-            class="cursor-pointer" :tabindex="0" role="button" :aria-expanded="isOpen" aria-haspopup="true">
+        <div ref="triggerRef" @click.stop="toggleDropdown"
+            @keydown.enter.space.prevent="props.disableClickOutside ? null : toggleDropdown" class="cursor-pointer"
+            :tabindex="props.disableClickOutside ? -1 : 0" role="button" :aria-expanded="isOpen" aria-haspopup="true">
             <slot name="trigger"></slot>
         </div>
 

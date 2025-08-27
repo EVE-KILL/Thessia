@@ -7,8 +7,6 @@ const props = defineProps<{
     siblings?: Array<{ killmail_id: number; victim: { ship_id: number; ship_name: { [key: string]: string } } }>;
 }>();
 
-const { t, locale } = useI18n();
-
 // Track dropdown states for menus with children
 const dropdownStates = reactive<Record<string, boolean>>({});
 
@@ -297,23 +295,24 @@ const rightNavItems = computed<NavLink[]>(() => {
                 <!-- Direct link -->
                 <NuxtLink v-if="link.to" :to="link.to" :target="link.target" rel="noopener noreferrer" :class="[
                     'flex items-center rounded-md hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors cursor-pointer text-gray-700 dark:text-gray-200',
-                    link.iconOnly ? 'p-1.5' : 'py-1.5 px-2'
+                    (link as any).iconOnly ? 'p-1.5' : 'py-1.5 px-2'
                 ]" :title="link.name">
                     <img v-if="link.logo" :src="link.logo" :alt="`${link.name} logo`"
-                        :class="link.iconOnly ? 'w-4 h-4' : 'w-4 h-4 mr-2 flex-shrink-0'">
-                    <span v-if="!link.iconOnly" class="text-sm font-medium">{{ link.name }}</span>
+                        :class="(link as any).iconOnly ? 'w-4 h-4' : 'w-4 h-4 mr-2 flex-shrink-0'">
+                    <span v-if="!(link as any).iconOnly" class="text-sm font-medium">{{ link.name }}</span>
                 </NuxtLink>
                 <!-- Dropdown menus -->
                 <Dropdown v-else-if="link.children" v-model="dropdownStates[link.name]" position="bottom" align="start"
-                    :max-height="60" width="auto" close-on-inner-click smart-position open-on-hover :hover-delay="100">
+                    :max-height="60" width="auto" close-on-inner-click smart-position open-on-hover :hover-delay="100"
+                    disable-click-outside>
                     <template #trigger>
                         <div :class="[
                             'flex items-center rounded-md hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors cursor-pointer text-gray-700 dark:text-gray-200',
-                            link.iconOnly ? 'p-1.5' : 'py-1.5 px-2'
+                            (link as any).iconOnly ? 'p-1.5' : 'py-1.5 px-2'
                         ]" :title="link.name">
                             <img v-if="link.logo" :src="link.logo" :alt="`${link.name} logo`"
-                                :class="link.iconOnly ? 'w-4 h-4' : 'w-4 h-4 mr-2 flex-shrink-0'">
-                            <span v-if="!link.iconOnly" class="text-sm font-medium">{{ link.name }}</span>
+                                :class="(link as any).iconOnly ? 'w-4 h-4' : 'w-4 h-4 mr-2 flex-shrink-0'">
+                            <span v-if="!(link as any).iconOnly" class="text-sm font-medium">{{ link.name }}</span>
                         </div>
                     </template>
 
@@ -325,7 +324,7 @@ const rightNavItems = computed<NavLink[]>(() => {
                                     'flex px-4 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors',
                                     item.disabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'
                                 ]" :tabindex="item.disabled ? -1 : 0"
-                                @click="item.disabled ? $event.preventDefault() : null">
+                                @click="item.disabled ? $event.preventDefault() : (dropdownStates[link.name] = false)">
                                 <div class="flex flex-col">
                                     <span class="font-medium text-gray-700 dark:text-gray-200">{{ item.name }}</span>
                                     <span v-if="item.description"
@@ -354,7 +353,8 @@ const rightNavItems = computed<NavLink[]>(() => {
                 </NuxtLink>
                 <!-- Dropdown menus -->
                 <Dropdown v-if="link.children" v-model="dropdownStates[link.name]" position="bottom" align="end"
-                    :max-height="60" width="auto" close-on-inner-click smart-position open-on-hover :hover-delay="100">
+                    :max-height="60" width="auto" close-on-inner-click smart-position open-on-hover :hover-delay="100"
+                    disable-click-outside>
                     <template #trigger>
                         <div :class="[
                             'flex items-center rounded-md hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors cursor-pointer text-gray-700 dark:text-gray-200',
@@ -374,7 +374,7 @@ const rightNavItems = computed<NavLink[]>(() => {
                                     'flex px-4 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors',
                                     item.disabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'
                                 ]" :tabindex="item.disabled ? -1 : 0"
-                                @click="item.disabled ? $event.preventDefault() : null">
+                                @click="item.disabled ? $event.preventDefault() : (dropdownStates[link.name] = false)">
                                 <div class="flex flex-col">
                                     <span class="font-medium text-gray-700 dark:text-gray-200">{{ item.name }}</span>
                                     <span v-if="item.description"
