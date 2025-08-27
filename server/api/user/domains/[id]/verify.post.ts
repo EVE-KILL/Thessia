@@ -50,7 +50,7 @@ export default defineEventHandler(async (event) => {
     try {
         // Get the request body
         const body = await readBody(event);
-        const { method } = body;
+        const { method, token } = body;
 
         if (!method || !["dns", "meta", "file"].includes(method)) {
             throw createError({
@@ -85,15 +85,27 @@ export default defineEventHandler(async (event) => {
         let errorMessage = "";
 
         try {
+            // Use the token from the request if provided, otherwise use stored token
+            const verificationToken = token || domain.verification_token;
+
             switch (method) {
                 case "dns":
-                    verificationResult = await verifyDNSRecord(domain);
+                    verificationResult = await verifyDNSRecord(
+                        domain,
+                        verificationToken
+                    );
                     break;
                 case "meta":
-                    verificationResult = await verifyMetaTag(domain);
+                    verificationResult = await verifyMetaTag(
+                        domain,
+                        verificationToken
+                    );
                     break;
                 case "file":
-                    verificationResult = await verifyFile(domain);
+                    verificationResult = await verifyFile(
+                        domain,
+                        verificationToken
+                    );
                     break;
             }
         } catch (error: any) {
@@ -155,40 +167,83 @@ export default defineEventHandler(async (event) => {
 /**
  * Verify DNS TXT record
  */
-async function verifyDNSRecord(domain: any): Promise<boolean> {
+async function verifyDNSRecord(
+    domain: any,
+    verificationToken?: string
+): Promise<boolean> {
     try {
         const dns = await import("dns").then((m) => m.promises);
-        const txtRecords = await dns.resolveTxt(domain.domain);
+
+        // Extract root domain from the full domain
+        // For test.eve-kill.com -> eve-kill.com
+        // For subdomain.example.com -> example.com
+        const domainParts = domain.domain.split(".");
+        const rootDomain = domainParts.slice(-2).join(".");
+        const verificationDomain = `_evekill-verification.${rootDomain}`;
+
+        // Configure DNS to use Cloudflare's resolver (1.1.1.1) for fresh results
+        dns.setServers(["1.1.1.1", "1.0.0.1"]);
+
+        const txtRecords = await dns.resolveTxt(verificationDomain);
 
         // Look for our verification token in TXT records
-        const expectedRecord = `eve-kill-verification=${domain.verification_token}`;
+        const tokenToCheck = verificationToken || domain.verification_token;
 
         for (const recordSet of txtRecords) {
             for (const record of recordSet) {
-                if (record.includes(domain.verification_token)) {
+                // Check if the record matches the expected token
+                if (record.trim() === tokenToCheck) {
                     return true;
                 }
             }
         }
+        return false;
+    } catch (error: any) {
+        console.error(`DNS verification error for ${domain.domain}:`, error);
+        const domainParts = domain.domain.split(".");
+        const rootDomain = domainParts.slice(-2).join(".");
+        const verificationDomain = `_evekill-verification.${rootDomain}`;
 
-        return false;
-    } catch (error) {
-        console.error("DNS verification error:", error);
-        return false;
+        // Provide more specific error messages
+        if (error.code === "ENODATA") {
+            throw new Error(
+                `No TXT records found at ${verificationDomain}. Please add a TXT record with the value: ${domain.verification_token}`
+            );
+        } else if (error.code === "ENOTFOUND") {
+            throw new Error(
+                `DNS resolution failed for ${verificationDomain}. Please ensure the subdomain exists and has the required TXT record.`
+            );
+        } else if (error.code === "ETIMEOUT") {
+            throw new Error(
+                `DNS lookup timed out for ${verificationDomain}. Please try again later.`
+            );
+        } else {
+            throw new Error(
+                `DNS verification failed for ${verificationDomain}: ${error.message}`
+            );
+        }
     }
 }
 
 /**
  * Verify meta tag on website
  */
-async function verifyMetaTag(domain: any): Promise<boolean> {
+async function verifyMetaTag(
+    domain: any,
+    verificationToken?: string
+): Promise<boolean> {
     try {
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 10000);
+
         const response = await fetch(`https://${domain.domain}`, {
             headers: {
                 "User-Agent": "EVE-KILL Domain Verification Bot",
             },
-            timeout: 10000,
+            signal: controller.signal,
         });
+
+        clearTimeout(timeoutId);
 
         if (!response.ok) {
             return false;
@@ -201,9 +256,9 @@ async function verifyMetaTag(domain: any): Promise<boolean> {
             /<meta\s+name=["']eve-kill-verification["']\s+content=["']([^"']+)["']/i;
         const match = html.match(metaRegex);
 
-        return !!(match && match[1] === domain.verification_token);
+        const tokenToCheck = verificationToken || domain.verification_token;
+        return !!(match && match[1] === tokenToCheck);
     } catch (error) {
-        console.error("Meta tag verification error:", error);
         return false;
     }
 }
@@ -211,26 +266,34 @@ async function verifyMetaTag(domain: any): Promise<boolean> {
 /**
  * Verify file upload method
  */
-async function verifyFile(domain: any): Promise<boolean> {
+async function verifyFile(
+    domain: any,
+    verificationToken?: string
+): Promise<boolean> {
     try {
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 10000);
+
         const response = await fetch(
             `https://${domain.domain}/eve-kill-verification.txt`,
             {
                 headers: {
                     "User-Agent": "EVE-KILL Domain Verification Bot",
                 },
-                timeout: 10000,
+                signal: controller.signal,
             }
         );
+
+        clearTimeout(timeoutId);
 
         if (!response.ok) {
             return false;
         }
 
         const content = await response.text();
-        return content.trim() === domain.verification_token;
+        const tokenToCheck = verificationToken || domain.verification_token;
+        return content.trim() === tokenToCheck;
     } catch (error) {
-        console.error("File verification error:", error);
         return false;
     }
 }

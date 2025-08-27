@@ -1,6 +1,17 @@
 // Domain detection middleware for custom killboard domains
 import type { H3Event } from "h3";
+import {
+    createError,
+    defineEventHandler,
+    getHeader,
+    getRequestURL,
+    setHeader,
+} from "h3";
 import type { IDomainContext } from "../interfaces/ICustomDomain";
+import { Alliances } from "../models/Alliances";
+import { Characters } from "../models/Characters";
+import { Corporations } from "../models/Corporations";
+import { CustomDomains } from "../models/CustomDomains";
 
 // Cache for domain configurations to avoid database hits on every request
 const domainCache = new Map<string, any>();
@@ -35,46 +46,7 @@ async function getDomainConfig(domain: string) {
                   verified: true,
               };
 
-        console.log(`🔍 [DB DEBUG] Searching for domain: "${domain}"`);
-        console.log(`🔍 [DB DEBUG] Is localhost domain: ${isLocalhostDomain}`);
-        console.log(`🔍 [DB DEBUG] Query:`, JSON.stringify(query, null, 2));
-
         const config = await CustomDomains.findOne(query);
-        console.log(`🔍 [DB DEBUG] Found config:`, config ? "YES" : "NO");
-
-        if (config) {
-            console.log(`🔍 [DB DEBUG] Config details:`, {
-                domain: config.domain,
-                entity_type: config.entity_type,
-                entity_id: config.entity_id,
-                active: config.active,
-                verified: config.verified,
-            });
-        } else {
-            // Let's see what's actually in the database
-            console.log(
-                `🔍 [DB DEBUG] No config found. Let's check what domains exist...`
-            );
-            const allDomains = await CustomDomains.find({
-                domain: domain.toLowerCase(),
-            }).limit(5);
-            console.log(
-                `🔍 [DB DEBUG] All domains with name "${domain.toLowerCase()}":`,
-                allDomains.map((d) => ({
-                    domain: d.domain,
-                    active: d.active,
-                    verified: d.verified,
-                    _id: d._id,
-                }))
-            );
-
-            // Also check if there are any domains at all
-            const totalDomains = await CustomDomains.countDocuments({});
-            console.log(
-                `🔍 [DB DEBUG] Total domains in database:`,
-                totalDomains
-            );
-        }
 
         // Cache the result (including null results to avoid repeated DB queries)
         domainCache.set(cacheKey, {
@@ -82,7 +54,6 @@ async function getDomainConfig(domain: string) {
             timestamp: Date.now(),
         });
 
-        console.log(`🔍 [DB DEBUG] Returning config:`, config ? "YES" : "NO");
         return config;
     } catch (error) {
         console.error(
@@ -221,14 +192,7 @@ export default defineEventHandler(async (event: H3Event) => {
 
     const host = getHeader(event, "host");
 
-    // DEBUG: Log all domain detection attempts
-    console.log(`🔍 [DOMAIN DEBUG] Request to: ${url.pathname}`);
-    console.log(`🔍 [DOMAIN DEBUG] Host header: "${host}"`);
-
     if (!host) {
-        console.log(
-            `🔍 [DOMAIN DEBUG] No host header - setting default context`
-        );
         // No host header, set default context
         event.context.domainContext = {
             isCustomDomain: false,
@@ -238,50 +202,21 @@ export default defineEventHandler(async (event: H3Event) => {
 
     // Remove port from host if present
     const cleanHost = host.split(":")[0];
-    console.log(`🔍 [DOMAIN DEBUG] Clean host: "${cleanHost}"`);
 
     // Check if this is an eve-kill domain
     const isEveKill = isEveKillDomain(cleanHost);
-    console.log(`🔍 [DOMAIN DEBUG] Is eve-kill domain: ${isEveKill}`);
 
     if (isEveKill) {
-        console.log(
-            `🔍 [DOMAIN DEBUG] Treating as eve-kill domain - setting default context`
-        );
         event.context.domainContext = {
             isCustomDomain: false,
         } as IDomainContext;
         return;
     }
 
-    console.log(
-        `🔍 [DOMAIN DEBUG] Checking for custom domain config in database...`
-    );
     // This could be a custom domain, check our database
     const domainConfig = await getDomainConfig(cleanHost);
-    console.log(
-        `🔍 [DOMAIN DEBUG] getDomainConfig returned:`,
-        domainConfig ? "FOUND" : "NULL"
-    );
-    console.log(`🔍 [DOMAIN DEBUG] domainConfig type:`, typeof domainConfig);
-    console.log(`🔍 [DOMAIN DEBUG] domainConfig value:`, domainConfig);
-    console.log(
-        `🔍 [DOMAIN DEBUG] domainConfig === null:`,
-        domainConfig === null
-    );
-    console.log(
-        `🔍 [DOMAIN DEBUG] domainConfig === undefined:`,
-        domainConfig === undefined
-    );
-    console.log(
-        `🔍 [DOMAIN DEBUG] Boolean(domainConfig):`,
-        Boolean(domainConfig)
-    );
 
     if (!domainConfig) {
-        console.log(
-            `🔍 [DOMAIN DEBUG] No domain config found - treating as eve-kill domain`
-        );
         // Unknown domain, treat as eve-kill.com but log for monitoring
         console.log(`Unknown domain accessed: ${cleanHost}`);
         event.context.domainContext = {
@@ -289,15 +224,6 @@ export default defineEventHandler(async (event: H3Event) => {
         } as IDomainContext;
         return;
     }
-
-    console.log(`🔍 [DOMAIN DEBUG] Found domain config:`, {
-        domain: domainConfig.domain,
-        entity_type: domainConfig.entity_type,
-        entity_id: domainConfig.entity_id,
-        active: domainConfig.active,
-        verified: domainConfig.verified,
-        suspended: domainConfig.suspended,
-    });
 
     // Check if domain is suspended
     if (domainConfig.suspended) {

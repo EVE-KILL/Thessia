@@ -213,10 +213,12 @@ const verificationMethods = [
     { id: 'file', label: t('settings.domains.verification.file'), slot: 'file' }
 ]
 
-// Generate a unique verification token based on domain
+// Generate a consistent verification token based on domain
 const verificationToken = computed(() => {
     const domainId = props.domain.domain_id || props.domain.domain
-    return `evekill-${domainId}-${Date.now().toString(36)}`
+    // Use a hash of the domain ID to create a consistent token
+    const hash = btoa(domainId).replace(/[^a-zA-Z0-9]/g, '').substring(0, 8).toLowerCase()
+    return `evekill-${domainId}-${hash}`
 })
 
 const copyDnsRecord = async () => {
