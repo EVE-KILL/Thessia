@@ -35,7 +35,7 @@
                                         </div>
                                         <div class="flex-1 min-w-0">
                                             <div class="font-medium truncate">{{ formatSearchResultDisplayName(result)
-                                                }}</div>
+                                            }}</div>
                                         </div>
                                     </a>
                                 </template>
@@ -248,6 +248,138 @@
                                     <div v-if="item.aggressor.ships_killed > 0 || item.defender.ships_killed > 0"
                                         class="text-zinc-400">
                                         {{ item.aggressor.ships_killed }} vs {{ item.defender.ships_killed }} ships
+                                    </div>
+                                </div>
+                            </template>
+
+                            <!-- Mobile view template for card-based layout -->
+                            <template #mobile-content="{ item }">
+                                <div class="war-mobile-card" @click="navigateTo(`/war/${item.war_id}`)">
+                                    <!-- War Header -->
+                                    <div class="war-header">
+                                        <div class="war-title">
+                                            <Icon name="lucide:sword" class="war-icon" />
+                                            <span class="war-label">{{ t('wars.war') }} #{{ item.war_id }}</span>
+                                        </div>
+                                        <div class="war-date">
+                                            <div class="war-date-primary">{{ formatDateDisplay(item.started) }}</div>
+                                            <div class="war-date-secondary">{{ formatTimeAgo(item.started) }}</div>
+                                        </div>
+                                    </div>
+
+                                    <!-- VS Section -->
+                                    <div class="war-vs-section">
+                                        <!-- Aggressor Side -->
+                                        <div class="war-entity aggressor">
+                                            <div class="entity-header">
+                                                <span class="entity-role">{{ t('wars.table.aggressor') }}</span>
+                                            </div>
+                                            <div class="entity-content">
+                                                <div class="entity-image">
+                                                    <Image v-if="item.aggressor.alliance" :type="'alliance'"
+                                                        :id="item.aggressor.alliance_id" :size="48"
+                                                        :alt="item.aggressor.alliance.name" class="w-10 h-10 rounded" />
+                                                    <Image v-else-if="item.aggressor.corporation" :type="'corporation'"
+                                                        :id="item.aggressor.corporation_id" :size="48"
+                                                        :alt="item.aggressor.corporation.name"
+                                                        class="w-10 h-10 rounded" />
+                                                </div>
+                                                <div class="entity-info">
+                                                    <div v-if="item.aggressor.alliance" class="entity-name">
+                                                        {{ item.aggressor.alliance.name }}
+                                                    </div>
+                                                    <div v-else-if="item.aggressor.corporation" class="entity-name">
+                                                        {{ item.aggressor.corporation.name }}
+                                                    </div>
+                                                    <div v-if="item.aggressor.alliance && item.aggressor.corporation"
+                                                        class="entity-sub">
+                                                        {{ item.aggressor.corporation.name }}
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <!-- VS Divider -->
+                                        <div class="war-vs-divider">
+                                            <div class="vs-circle">
+                                                <span class="vs-text">VS</span>
+                                            </div>
+                                        </div>
+
+                                        <!-- Defender Side -->
+                                        <div class="war-entity defender">
+                                            <div class="entity-header">
+                                                <span class="entity-role">{{ t('wars.table.defender') }}</span>
+                                            </div>
+                                            <div class="entity-content">
+                                                <div class="entity-info">
+                                                    <div v-if="item.defender.alliance" class="entity-name">
+                                                        {{ item.defender.alliance.name }}
+                                                    </div>
+                                                    <div v-else-if="item.defender.corporation" class="entity-name">
+                                                        {{ item.defender.corporation.name }}
+                                                    </div>
+                                                    <div v-if="item.defender.alliance && item.defender.corporation"
+                                                        class="entity-sub">
+                                                        {{ item.defender.corporation.name }}
+                                                    </div>
+                                                </div>
+                                                <div class="entity-image">
+                                                    <Image v-if="item.defender.alliance" :type="'alliance'"
+                                                        :id="item.defender.alliance_id" :size="48"
+                                                        :alt="item.defender.alliance.name" class="w-10 h-10 rounded" />
+                                                    <Image v-else-if="item.defender.corporation" :type="'corporation'"
+                                                        :id="item.defender.corporation_id" :size="48"
+                                                        :alt="item.defender.corporation.name"
+                                                        class="w-10 h-10 rounded" />
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- War Stats Footer -->
+                                    <div class="war-stats-footer">
+                                        <!-- Status Badges -->
+                                        <div class="war-status-badges">
+                                            <UBadge v-if="item.finished" color="error" variant="soft" size="sm">
+                                                <UIcon name="lucide:x" class="w-3 h-3 mr-1" />
+                                                {{ t('wars.status.finished') }}
+                                            </UBadge>
+                                            <UBadge v-else color="success" variant="soft" size="sm">
+                                                <UIcon name="lucide:check" class="w-3 h-3 mr-1" />
+                                                {{ t('wars.status.ongoing') }}
+                                            </UBadge>
+
+                                            <!-- Additional status indicators -->
+                                            <UBadge v-if="!item.finished && item.mutual" color="warning" variant="soft"
+                                                size="xs">
+                                                {{ t('wars.status.mutual') }}
+                                            </UBadge>
+                                            <UBadge v-if="!item.finished && item.open_for_allies" color="info"
+                                                variant="soft" size="xs">
+                                                {{ t('wars.status.openToAllies') }}
+                                            </UBadge>
+                                        </div>
+
+                                        <!-- Activity Stats -->
+                                        <div class="war-activity"
+                                            v-if="item.aggressor.isk_destroyed > 0 || item.defender.isk_destroyed > 0">
+                                            <div class="activity-isk">
+                                                <Icon name="lucide:coins" class="activity-icon" />
+                                                <span>{{ formatIsk(item.aggressor.isk_destroyed +
+                                                    item.defender.isk_destroyed) }}</span>
+                                            </div>
+                                            <div class="activity-ships"
+                                                v-if="item.aggressor.ships_killed > 0 || item.defender.ships_killed > 0">
+                                                <Icon name="lucide:plane" class="activity-icon" />
+                                                <span>{{ item.aggressor.ships_killed + item.defender.ships_killed
+                                                    }}</span>
+                                            </div>
+                                        </div>
+                                        <div v-else class="war-no-activity">
+                                            <Icon name="lucide:activity" class="activity-icon inactive" />
+                                            <span>{{ t('wars.noActivity') }}</span>
+                                        </div>
                                     </div>
                                 </div>
                             </template>
@@ -590,5 +722,276 @@ watch(selectedEntity, () => {
 
 :deep(.wars-table .table-row:hover) {
     background-color: rgba(45, 45, 45, 0.6);
+}
+
+/* Mobile War Card Styling */
+.war-mobile-card {
+    background: linear-gradient(135deg, rgba(31, 31, 31, 0.8), rgba(45, 45, 45, 0.6));
+    border: 1px solid rgba(75, 85, 99, 0.3);
+    border-radius: 0.75rem;
+    padding: 1rem;
+    margin: 0.5rem 0;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.war-mobile-card:hover {
+    border-color: rgba(59, 130, 246, 0.5);
+    box-shadow: 0 8px 25px rgba(59, 130, 246, 0.15);
+    transform: translateY(-2px);
+}
+
+/* War Header */
+.war-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid rgba(75, 85, 99, 0.3);
+}
+
+.war-title {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.war-icon {
+    width: 18px;
+    height: 18px;
+    color: #ef4444;
+}
+
+.war-label {
+    font-weight: 600;
+    color: #f3f4f6;
+    font-size: 0.9rem;
+}
+
+.war-date {
+    text-align: right;
+}
+
+.war-date-primary {
+    font-size: 0.8rem;
+    color: #e5e7eb;
+    font-weight: 500;
+}
+
+.war-date-secondary {
+    font-size: 0.7rem;
+    color: #9ca3af;
+    margin-top: 0.125rem;
+}
+
+/* VS Section */
+.war-vs-section {
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    gap: 0.75rem;
+    align-items: center;
+    margin: 1rem 0;
+}
+
+.war-entity {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.entity-header {
+    text-align: center;
+}
+
+.entity-role {
+    font-size: 0.7rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: #9ca3af;
+}
+
+.aggressor .entity-role {
+    color: #ef4444;
+}
+
+.defender .entity-role {
+    color: #3b82f6;
+}
+
+.entity-content {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.aggressor .entity-content {
+    flex-direction: row;
+}
+
+.defender .entity-content {
+    flex-direction: row-reverse;
+}
+
+.entity-image {
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 48px;
+    height: 48px;
+    background: rgba(31, 31, 31, 0.5);
+    border-radius: 0.5rem;
+    border: 1px solid rgba(75, 85, 99, 0.3);
+}
+
+.entity-info {
+    flex: 1;
+    min-width: 0;
+}
+
+.aggressor .entity-info {
+    text-align: left;
+}
+
+.defender .entity-info {
+    text-align: right;
+}
+
+.entity-name {
+    font-weight: 600;
+    font-size: 0.85rem;
+    color: #f3f4f6;
+    line-height: 1.2;
+    word-break: break-word;
+    margin-bottom: 0.125rem;
+}
+
+.entity-sub {
+    font-size: 0.75rem;
+    color: #9ca3af;
+    line-height: 1.2;
+    word-break: break-word;
+}
+
+/* VS Divider */
+.war-vs-divider {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin: 0 0.5rem;
+}
+
+.vs-circle {
+    width: 36px;
+    height: 36px;
+    background: linear-gradient(135deg, #ef4444, #dc2626);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 2px solid rgba(239, 68, 68, 0.3);
+    box-shadow: 0 0 10px rgba(239, 68, 68, 0.3);
+}
+
+.vs-text {
+    font-size: 0.75rem;
+    font-weight: 800;
+    color: white;
+    letter-spacing: 0.1em;
+}
+
+/* War Stats Footer */
+.war-stats-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 1rem;
+    padding-top: 0.75rem;
+    border-top: 1px solid rgba(75, 85, 99, 0.3);
+    gap: 0.75rem;
+}
+
+.war-status-badges {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.375rem;
+    align-items: center;
+}
+
+.war-activity {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    flex-shrink: 0;
+}
+
+.activity-isk,
+.activity-ships {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+    font-size: 0.75rem;
+    color: #10b981;
+    font-weight: 600;
+}
+
+.war-no-activity {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+    font-size: 0.75rem;
+    color: #6b7280;
+    font-style: italic;
+}
+
+.activity-icon {
+    width: 14px;
+    height: 14px;
+    flex-shrink: 0;
+}
+
+.activity-icon.inactive {
+    color: #6b7280;
+}
+
+/* Responsive adjustments */
+@media (max-width: 480px) {
+    .war-mobile-card {
+        padding: 0.75rem;
+        margin: 0.375rem 0;
+    }
+
+    .war-vs-section {
+        gap: 0.5rem;
+    }
+
+    .entity-content {
+        gap: 0.5rem;
+    }
+
+    .entity-image {
+        width: 40px;
+        height: 40px;
+    }
+
+    .vs-circle {
+        width: 32px;
+        height: 32px;
+    }
+
+    .vs-text {
+        font-size: 0.7rem;
+    }
+
+    .entity-name {
+        font-size: 0.8rem;
+    }
+
+    .entity-sub {
+        font-size: 0.7rem;
+    }
 }
 </style>

@@ -423,102 +423,99 @@ const getSystemsDisplay = (battle: IBattlesDocument) => {
                     </div>
                 </template>
 
-                <!-- Custom mobile row template for battles -->
-                <template #mobile-row="{ item }">
-                    <div class="flex flex-col w-full p-2 gap-2">
-                        <!-- Battle ID, Time, and System - Top Row -->
-                        <div class="flex items-start justify-between">
-                            <!-- Left side: Battle ID & Time -->
-                            <div class="flex-1">
-                                <div class="flex items-center gap-2">
-                                    <span class="text-xs text-gray-500">{{ formatTimeAgo(item.start_time) }}</span>
-                                </div>
-                                <div class="text-xs text-gray-500">
-                                    {{ formatDateDisplay(item.start_time) }} ·
-                                    {{ formatTimeRange(item.start_time, item.end_time) }} ·
-                                    {{ formatDuration(item.duration_ms) }}
-                                </div>
+                <!-- Mobile Battle Cards -->
+                <template #mobile-content="{ item }">
+                    <div class="battle-mobile-card" @click="navigateTo(linkFn(item))">
+                        <!-- Battle Header -->
+                        <div class="battle-header">
+                            <div class="battle-time-info">
+                                <div class="battle-time-primary">{{ formatTimeAgo(item.start_time) }}</div>
+                                <div class="battle-time-secondary">{{ formatDateDisplay(item.start_time) }}</div>
+                                <div class="battle-duration">{{ formatDuration(item.duration_ms) }}</div>
                             </div>
-
-                            <!-- Right side: ISK destroyed - key stat -->
-                            <div class="flex-none text-right">
-                                <div class="font-semibold text-sm">{{ formatIsk(item.iskDestroyed) }}</div>
-                                <div class="text-xs text-gray-500">{{ t('iskDestroyedShort', 'ISK') }}</div>
+                            <div class="battle-isk-info">
+                                <div class="battle-isk-amount">{{ formatIsk(item.iskDestroyed) }}</div>
+                                <div class="battle-isk-label">{{ t('iskDestroyedShort', 'ISK') }}</div>
                             </div>
                         </div>
 
-                        <!-- Systems section -->
-                        <div class="flex flex-col space-y-1 text-sm">
-                            <template v-for="(system, index) in getSystemsDisplay(item)"
-                                :key="`system-${system.id}-${index}`">
-                                <div class="flex items-center gap-2 cursor-pointer">
-                                    <Image :id="system.id" type="system" size="24"
-                                        class="w-5 h-5 rounded flex-shrink-0" />
-                                    <div class="text-xs">
-                                        <span class="hover:underline">{{ system.name }}</span>
-                                        <span class="text-gray-500">({{ system.security }})</span>
-                                        <span class="text-gray-400 hidden sm:inline">({{ system.region }})</span>
+                        <!-- Systems Section -->
+                        <div class="battle-systems-section">
+                            <div class="flex flex-wrap gap-2">
+                                <template v-for="(system, index) in getSystemsDisplay(item).slice(0, 3)"
+                                    :key="`system-${system.id}-${index}`">
+                                    <div class="battle-system-item">
+                                        <Image :id="system.id" type="system" size="24"
+                                            class="w-5 h-5 rounded flex-shrink-0" />
+                                        <div class="battle-system-info">
+                                            <span class="battle-system-name">{{ system.name }}</span>
+                                            <span class="battle-system-sec">({{ system.security }})</span>
+                                        </div>
                                     </div>
+                                </template>
+                                <div v-if="getSystemsDisplay(item).length > 3" class="battle-system-more">
+                                    +{{ getSystemsDisplay(item).length - 3 }} more
                                 </div>
-                            </template>
+                            </div>
                         </div>
 
-                        <!-- Stats (Compact) -->
-                        <div class="grid grid-cols-3 gap-2 text-xs bg-background-700 bg-opacity-20 p-1 rounded">
-                            <div>
-                                <div class="font-semibold">{{ formatNumber(item.killmailsCount) }}</div>
-                                <div class="text-gray-500">{{ t('kmsShort', 'KMs') }}</div>
+                        <!-- Stats Grid -->
+                        <div class="battle-stats-grid">
+                            <div class="battle-stat-item">
+                                <div class="battle-stat-value">{{ formatNumber(item.killmailsCount) }}</div>
+                                <div class="battle-stat-label">{{ t('killmails', 'Killmails') }}</div>
                             </div>
-                            <div>
-                                <div class="font-semibold">{{ getInvolvedCounts(item).alliances ||
+                            <div class="battle-stat-item">
+                                <div class="battle-stat-value">{{ getInvolvedCounts(item).alliances ||
                                     getInvolvedCounts(item).corps }}</div>
-                                <div class="text-gray-500">
+                                <div class="battle-stat-label">
                                     {{ item.alliancesInvolved && item.alliancesInvolved.length > 0
-                                        ? t('alliancesShort', 'Alliances')
-                                        : t('corporationsShort', 'Corps') }}
+                                        ? t('alliances', 'Alliances')
+                                        : t('corporations', 'Corporations') }}
                                 </div>
                             </div>
-                            <div>
-                                <div class="font-semibold">{{ getInvolvedCounts(item).chars }}</div>
-                                <div class="text-gray-500">{{ t('charactersShort', 'Characters') }}</div>
+                            <div class="battle-stat-item">
+                                <div class="battle-stat-value">{{ getInvolvedCounts(item).chars }}</div>
+                                <div class="battle-stat-label">{{ t('pilots', 'Pilots') }}</div>
                             </div>
                         </div>
 
-                        <!-- Involved entities (compact) -->
-                        <div class="flex flex-col space-y-1">
-                            <!-- Entities (reduced count for mobile) -->
-                            <div class="flex flex-wrap gap-1">
+                        <!-- Involved Entities -->
+                        <div class="battle-involved-section">
+                            <!-- Alliances/Corporations -->
+                            <div class="battle-entities-row">
                                 <template v-if="item.alliancesInvolved && item.alliancesInvolved.length > 0">
-                                    <template v-for="alliance in item.top_alliances?.slice(0, 5) || []"
+                                    <template v-for="alliance in item.top_alliances?.slice(0, 6) || []"
                                         :key="`m-alliance-${alliance.id}`">
-                                        <div class="cursor-pointer">
+                                        <div class="battle-entity-logo">
                                             <Image :id="alliance.id" type="alliance"
                                                 :alt="getLocalizedString(alliance.name, currentLocale)" size="32"
-                                                class="w-6 h-6" :showCount="true" :count="alliance.count"
+                                                class="w-8 h-8" :showCount="true" :count="alliance.count"
                                                 countPosition="bottom-right" />
                                         </div>
                                     </template>
                                 </template>
                                 <template v-else>
-                                    <template v-for="corp in item.top_corporations?.slice(0, 5) || []"
+                                    <template v-for="corp in item.top_corporations?.slice(0, 6) || []"
                                         :key="`m-corp-${corp.id}`">
-                                        <div class="cursor-pointer">
+                                        <div class="battle-entity-logo">
                                             <Image :id="corp.id" type="corporation"
                                                 :alt="getLocalizedString(corp.name, currentLocale)" size="32"
-                                                class="w-6 h-6" :showCount="true" :count="corp.count"
+                                                class="w-8 h-8" :showCount="true" :count="corp.count"
                                                 countPosition="bottom-right" />
                                         </div>
                                     </template>
                                 </template>
-
-                                <!-- Ships (reduced count for mobile) -->
-                                <template v-for="ship in item.top_ship_types?.slice(0, 5) || []"
+                            </div>
+                            <!-- Ships -->
+                            <div class="battle-entities-row">
+                                <template v-for="ship in item.top_ship_types?.slice(0, 8) || []"
                                     :key="`m-ship-${ship.id}`">
-                                    <div class="cursor-pointer">
+                                    <div class="battle-entity-logo">
                                         <Image :id="ship.id" type="item"
                                             :name="getLocalizedString(ship.name, currentLocale)"
                                             :alt="getLocalizedString(ship.name, currentLocale)" size="32"
-                                            class="w-6 h-6" :showCount="true" :count="ship.count"
+                                            class="w-8 h-8" :showCount="true" :count="ship.count"
                                             countPosition="bottom-right" />
                                     </div>
                                 </template>
@@ -606,6 +603,202 @@ const getSystemsDisplay = (battle: IBattlesDocument) => {
     }
 }
 
+/* Battle Mobile Cards */
+.battle-mobile-card {
+    background: linear-gradient(135deg, rgba(31, 31, 31, 0.6), rgba(45, 45, 45, 0.4));
+    border: 1px solid rgba(75, 85, 99, 0.2);
+    border-radius: 0.75rem;
+    padding: 1rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    margin-bottom: 0.5rem;
+}
+
+.battle-mobile-card:hover {
+    border-color: rgba(59, 130, 246, 0.4);
+    box-shadow: 0 8px 25px rgba(59, 130, 246, 0.15);
+    transform: translateY(-2px);
+}
+
+/* Battle Header */
+.battle-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 1rem;
+    padding-bottom: 0.75rem;
+    border-bottom: 1px solid rgba(75, 85, 99, 0.2);
+}
+
+.battle-time-info {
+    flex: 1;
+}
+
+.battle-time-primary {
+    font-weight: 600;
+    color: #e5e7eb;
+    font-size: 0.95rem;
+    margin-bottom: 0.25rem;
+}
+
+.battle-time-secondary {
+    font-size: 0.8rem;
+    color: #9ca3af;
+    margin-bottom: 0.125rem;
+}
+
+.battle-duration {
+    font-size: 0.75rem;
+    color: #6b7280;
+}
+
+.battle-isk-info {
+    text-align: right;
+    flex-shrink: 0;
+}
+
+.battle-isk-amount {
+    font-weight: 700;
+    font-size: 1.1rem;
+    color: #10b981;
+    margin-bottom: 0.25rem;
+}
+
+.battle-isk-label {
+    font-size: 0.75rem;
+    color: #6b7280;
+    font-weight: 500;
+}
+
+/* Systems Section */
+.battle-systems-section {
+    margin-bottom: 1rem;
+}
+
+.battle-system-item {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    background: rgba(31, 31, 31, 0.3);
+    border: 1px solid rgba(75, 85, 99, 0.15);
+    border-radius: 0.5rem;
+    padding: 0.5rem 0.75rem;
+    font-size: 0.8rem;
+}
+
+.battle-system-info {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+}
+
+.battle-system-name {
+    color: #e5e7eb;
+    font-weight: 500;
+}
+
+.battle-system-sec {
+    color: #9ca3af;
+    font-size: 0.75rem;
+}
+
+.battle-system-more {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(75, 85, 99, 0.2);
+    border: 1px solid rgba(75, 85, 99, 0.3);
+    border-radius: 0.5rem;
+    padding: 0.5rem 0.75rem;
+    font-size: 0.75rem;
+    color: #9ca3af;
+    font-weight: 500;
+}
+
+/* Stats Grid */
+.battle-stats-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 0.75rem;
+    margin-bottom: 1rem;
+    background: rgba(31, 31, 31, 0.2);
+    border-radius: 0.5rem;
+    padding: 0.75rem;
+}
+
+.battle-stat-item {
+    text-align: center;
+}
+
+.battle-stat-value {
+    font-weight: 700;
+    font-size: 1rem;
+    color: #e5e7eb;
+    margin-bottom: 0.25rem;
+}
+
+.battle-stat-label {
+    font-size: 0.7rem;
+    color: #9ca3af;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+/* Involved Entities Section */
+.battle-involved-section {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.battle-entities-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    justify-content: center;
+}
+
+.battle-entity-logo {
+    flex-shrink: 0;
+    background: rgba(31, 31, 31, 0.3);
+    border-radius: 0.5rem;
+    padding: 0.25rem;
+    border: 1px solid rgba(75, 85, 99, 0.2);
+    transition: all 0.2s ease;
+}
+
+.battle-entity-logo:hover {
+    border-color: rgba(59, 130, 246, 0.3);
+    background: rgba(59, 130, 246, 0.1);
+}
+
+/* Responsive adjustments */
+@media (max-width: 400px) {
+    .battle-mobile-card {
+        padding: 0.75rem;
+    }
+
+    .battle-stats-grid {
+        gap: 0.5rem;
+        padding: 0.5rem;
+    }
+
+    .battle-stat-value {
+        font-size: 0.9rem;
+    }
+
+    .battle-isk-amount {
+        font-size: 1rem;
+    }
+
+    .battle-entities-row {
+        gap: 0.375rem;
+    }
+}
+
+/* Existing styles */
 .battles-skeleton-container {
     width: 100%;
 }
