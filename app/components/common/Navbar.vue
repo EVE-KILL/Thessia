@@ -12,6 +12,14 @@ import SpotlightSearch from '~/components/search/SpotlightSearch.vue';
 // Global spotlight search state
 const { isOpen: isSearchOpen, openSearch, closeSearch } = useSpotlightSearch();
 
+// Custom domain context for navbar
+const { isCustomDomain, entityUrl } = useDomainContext();
+
+// Computed home URL to ensure consistent SSR/client rendering
+const homeUrl = computed(() => {
+    return isCustomDomain.value ? entityUrl() : "/";
+});
+
 // Mobile detection for conditional search component rendering
 const isMobile = ref(false);
 
@@ -51,7 +59,7 @@ onMounted(() => {
 
     // Intersection observer with minimal options for performance
     observer = new IntersectionObserver((entries) => {
-        isScrolled.value = !entries[0].isIntersecting;
+        isScrolled.value = !entries[0]?.isIntersecting;
     }, {
         threshold: 0,
         rootMargin: '-1px 0px 0px 0px'
@@ -90,7 +98,7 @@ const leftNavItems = computed(() => [
         name: t("home"),
         label: t("home"),
         icon: "lucide:house",
-        to: "/",
+        to: homeUrl.value,
         position: "left",
     },
     {
@@ -307,7 +315,7 @@ const allNavItems = computed(() => [
 
 // Initialize expanded menus based on collapse property
 onMounted(() => {
-    allNavItems.value.forEach((link) => {
+    allNavItems.value.forEach((link: any) => {
         if (link.children && link.collapse !== false) {
             expandedMobileMenus.value[link.name || link.label || ""] = false; // Start collapsed by default
         }
@@ -445,7 +453,7 @@ const closeMobileMenu = () => {
     <nav class="navbar-mobile" :class="{ 'navbar-scrolled': isScrolled, 'navbar-hidden': isMobileMenuOpen }">
         <div class="navbar-mobile-header">
             <!-- Logo/Home link -->
-            <NuxtLink to="/" class="navbar-mobile-logo">
+            <NuxtLink :to="homeUrl" class="navbar-mobile-logo">
                 <Icon name="lucide:house" class="navbar-mobile-logo-icon" />
             </NuxtLink>
 
@@ -538,19 +546,19 @@ const closeMobileMenu = () => {
                             <!-- Collapsible header with toggle button -->
                             <button
                                 class="w-full flex items-center justify-between px-4 py-3 text-gray-700 dark:text-gray-300 transition-colors"
-                                @click="toggleMobileMenuSection(link.name)">
+                                @click="toggleMobileMenuSection(link.name || '')">
                                 <div class="flex items-center">
                                     <UIcon v-if="link.icon" :name="link.icon"
                                         class="mr-3 text-xl text-gray-700 dark:text-gray-300" />
                                     {{ link.name }}
                                 </div>
                                 <UIcon
-                                    :name="expandedMobileMenus[link.name] ? 'lucide:chevron-up' : 'lucide:chevron-down'"
+                                    :name="expandedMobileMenus[link.name || ''] ? 'lucide:chevron-up' : 'lucide:chevron-down'"
                                     class="text-lg text-gray-700 dark:text-gray-300" />
                             </button>
 
                             <!-- Collapsible content -->
-                            <div v-show="expandedMobileMenus[link.name]"
+                            <div v-show="expandedMobileMenus[link.name || '']"
                                 class="border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/70">
                                 <div class="py-2 space-y-1">
                                     <NuxtLink v-for="(child, childIndex) in link.children" :key="childIndex"
@@ -600,19 +608,19 @@ const closeMobileMenu = () => {
                             <!-- Collapsible header with toggle button -->
                             <button
                                 class="w-full flex items-center justify-between px-4 py-3 text-base font-medium text-gray-900 dark:text-gray-100 hover:bg-gray-100/50 dark:hover:bg-gray-800/50 transition-colors"
-                                @click="toggleMobileMenuSection(link.label)">
+                                @click="toggleMobileMenuSection(link.label || '')">
                                 <div class="flex items-center">
                                     <UIcon v-if="link.icon" :name="link.icon"
                                         class="mr-3 text-xl text-gray-700 dark:text-gray-300" />
                                     <span>{{ link.label }}</span>
                                 </div>
                                 <UIcon
-                                    :name="expandedMobileMenus[link.label] ? 'lucide:chevron-up' : 'lucide:chevron-down'"
+                                    :name="expandedMobileMenus[link.label || ''] ? 'lucide:chevron-up' : 'lucide:chevron-down'"
                                     class="text-lg text-gray-500 dark:text-gray-400" />
                             </button>
 
                             <!-- Collapsible content -->
-                            <div v-show="expandedMobileMenus[link.label]" class="bg-gray-50 dark:bg-gray-800/70">
+                            <div v-show="expandedMobileMenus[link.label || '']" class="bg-gray-50 dark:bg-gray-800/70">
                                 <div class="py-2 space-y-1">
                                     <NuxtLink v-for="(child, childIndex) in link.children" :key="childIndex"
                                         :to="child.to"

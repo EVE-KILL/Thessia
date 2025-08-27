@@ -67,6 +67,15 @@ const { t } = useI18n();
 const { isMobile } = useResponsive();
 const { generateWebsiteStructuredData, generateOrganizationStructuredData, addStructuredDataToHead } = useStructuredData();
 
+// Custom domain handling
+const { isCustomDomain, entityUrl } = useDomainContext();
+
+// Redirect to entity page if accessed via custom domain
+// This should work on both server and client
+if (isCustomDomain.value) {
+    await navigateTo(entityUrl());
+}
+
 // Initialize with a valid ID from our tabs
 const selectedTab = ref("kills");
 

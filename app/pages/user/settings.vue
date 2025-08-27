@@ -185,6 +185,12 @@ const checkIfMobile = () => {
                             slot: 'general'
                         },
                         {
+                            id: 'domains',
+                            label: t('settings.tabs.domains', 'Custom Domains'),
+                            icon: 'lucide:globe',
+                            slot: 'domains'
+                        },
+                        {
                             id: 'esi',
                             label: t('settings.tabs.esi', 'ESI'),
                             icon: 'lucide:key',
@@ -201,6 +207,10 @@ const checkIfMobile = () => {
                             <GeneralSettings v-model:user-settings="userSettings"
                                 :is-updating-settings="isUpdatingSettings" :settings-success="settingsSuccess"
                                 :settings-error="settingsError" @update-settings="updateSettings" />
+                        </template>
+
+                        <template #domains>
+                            <DomainSettings />
                         </template>
 
                         <template #esi>
