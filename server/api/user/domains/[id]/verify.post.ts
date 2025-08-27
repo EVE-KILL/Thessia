@@ -172,8 +172,6 @@ async function verifyDNSRecord(
     verificationToken?: string
 ): Promise<boolean> {
     try {
-        const dns = await import("dns").then((m) => m.promises);
-
         // Extract root domain from the full domain
         // For test.eve-kill.com -> eve-kill.com
         // For subdomain.example.com -> example.com
@@ -181,14 +179,66 @@ async function verifyDNSRecord(
         const rootDomain = domainParts.slice(-2).join(".");
         const verificationDomain = `_evekill-verification.${rootDomain}`;
 
-        // Configure DNS to use Cloudflare's resolver (1.1.1.1) for fresh results
-        dns.setServers(["1.1.1.1", "1.0.0.1"]);
-
-        const txtRecords = await dns.resolveTxt(verificationDomain);
-
-        // Look for our verification token in TXT records
+        // Try multiple DNS resolution methods for production reliability
+        let txtRecords: string[][] = [];
         const tokenToCheck = verificationToken || domain.verification_token;
 
+        try {
+            // Method 1: Use Node.js built-in DNS with Cloudflare servers
+            const dns = await import("dns").then((m) => m.promises);
+            dns.setServers(["1.1.1.1", "1.0.0.1"]);
+            txtRecords = await dns.resolveTxt(verificationDomain);
+        } catch (dnsError: any) {
+            console.warn(
+                `Built-in DNS failed for ${verificationDomain}, trying HTTP-based lookup:`,
+                dnsError.message
+            );
+
+            // Method 2: Use DNS over HTTPS (DoH) as fallback for production environments
+            try {
+                const controller = new AbortController();
+                const timeoutId = setTimeout(() => controller.abort(), 10000);
+
+                const dohResponse = await fetch(
+                    `https://1.1.1.1/dns-query?name=${verificationDomain}&type=TXT`,
+                    {
+                        headers: {
+                            Accept: "application/dns-json",
+                            "User-Agent": "EVE-KILL Domain Verification",
+                        },
+                        signal: controller.signal,
+                    }
+                );
+
+                clearTimeout(timeoutId);
+
+                if (dohResponse.ok) {
+                    const dnsData = await dohResponse.json();
+                    if (dnsData.Answer) {
+                        txtRecords = dnsData.Answer.filter(
+                            (record: any) => record.type === 16
+                        ) // TXT records
+                            .map((record: any) => [
+                                record.data.replace(/^"|"$/g, ""),
+                            ]); // Remove quotes
+                    }
+                } else {
+                    throw new Error(
+                        `DoH request failed with status ${dohResponse.status}`
+                    );
+                }
+            } catch (dohError: any) {
+                console.error(
+                    `DoH DNS lookup also failed for ${verificationDomain}:`,
+                    dohError.message
+                );
+                throw new Error(
+                    `DNS resolution failed: ${dnsError.message}. Fallback DoH also failed: ${dohError.message}`
+                );
+            }
+        }
+
+        // Look for our verification token in TXT records
         for (const recordSet of txtRecords) {
             for (const record of recordSet) {
                 // Check if the record matches the expected token
@@ -203,17 +253,24 @@ async function verifyDNSRecord(
         const domainParts = domain.domain.split(".");
         const rootDomain = domainParts.slice(-2).join(".");
         const verificationDomain = `_evekill-verification.${rootDomain}`;
+        const tokenToCheck = verificationToken || domain.verification_token;
 
         // Provide more specific error messages
-        if (error.code === "ENODATA") {
+        if (error.code === "ENODATA" || error.message.includes("ENODATA")) {
             throw new Error(
-                `No TXT records found at ${verificationDomain}. Please add a TXT record with the value: ${domain.verification_token}`
+                `No TXT records found at ${verificationDomain}. Please add a TXT record with the value: ${tokenToCheck}`
             );
-        } else if (error.code === "ENOTFOUND") {
+        } else if (
+            error.code === "ENOTFOUND" ||
+            error.message.includes("ENOTFOUND")
+        ) {
             throw new Error(
                 `DNS resolution failed for ${verificationDomain}. Please ensure the subdomain exists and has the required TXT record.`
             );
-        } else if (error.code === "ETIMEOUT") {
+        } else if (
+            error.code === "ETIMEOUT" ||
+            error.message.includes("timed out")
+        ) {
             throw new Error(
                 `DNS lookup timed out for ${verificationDomain}. Please try again later.`
             );
