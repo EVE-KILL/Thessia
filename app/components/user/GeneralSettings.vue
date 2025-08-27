@@ -27,6 +27,10 @@ const emit = defineEmits<{
 const { t } = useI18n();
 const configStore = useConfigurationStore();
 const authStore = useAuthStore();
+const toast = useToast();
+
+// ESI Data Management state
+const isRefreshingESI = ref(false);
 
 // Page options configuration
 const pageOptions = {
@@ -84,6 +88,55 @@ const updateDefaultPage = async (pageType: 'character' | 'corporation' | 'allian
     // Auto-save after updating the setting
     await nextTick();
     emit('updateSettings');
+};
+
+// ESI Data Management handlers
+const refreshESIData = async () => {
+    if (isRefreshingESI.value) return;
+
+    isRefreshingESI.value = true;
+
+    try {
+        const { data } = await $fetch('/api/user/refresh-character', {
+            method: 'POST'
+        });
+
+        // Show success toast with details
+        const refreshedItems = [];
+        if (data.character) refreshedItems.push('Character');
+        if (data.corporation) refreshedItems.push('Corporation');
+        if (data.alliance) refreshedItems.push('Alliance');
+
+        if (refreshedItems.length > 0) {
+            toast.add({
+                title: t('settings.esi.refresh.success', 'ESI Data Refreshed'),
+                description: t('settings.esi.refresh.successDesc', `Successfully refreshed: ${refreshedItems.join(', ')}`),
+                color: 'success',
+                timeout: 5000
+            });
+        }
+
+        // Show warnings for any errors
+        if (data.errors && data.errors.length > 0) {
+            toast.add({
+                title: t('settings.esi.refresh.partialWarning', 'Partial Refresh'),
+                description: t('settings.esi.refresh.partialWarningDesc', 'Some data could not be refreshed. Check console for details.'),
+                color: 'warning',
+                timeout: 7000
+            });
+        }
+    } catch (error: any) {
+        console.error('Failed to refresh ESI data:', error);
+
+        toast.add({
+            title: t('settings.esi.refresh.error', 'Refresh Failed'),
+            description: error?.data?.message || error?.message || t('settings.esi.refresh.errorDesc', 'Failed to refresh ESI data. Please try again.'),
+            color: 'error',
+            timeout: 7000
+        });
+    } finally {
+        isRefreshingESI.value = false;
+    }
 };
 
 // Privacy setting handlers
@@ -149,6 +202,69 @@ onMounted(() => {
                         </label>
                         <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
                             {{ t("settings.privacy.hideFitting.description") }}
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ESI Data Management Card -->
+        <div class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6">
+            <div class="flex items-center space-x-3 mb-6">
+                <div class="flex-shrink-0">
+                    <Icon name="lucide:refresh-cw" class="h-6 w-6 text-orange-600 dark:text-orange-400" />
+                </div>
+                <div>
+                    <h3 class="text-lg font-semibold text-gray-900 dark:text-white">
+                        {{ t("settings.esi.title", "ESI Data Management") }}
+                    </h3>
+                    <p class="text-sm text-gray-600 dark:text-gray-400">
+                        {{ t("settings.esi.description") }}
+                    </p>
+                </div>
+            </div>
+
+            <!-- ESI Refresh Options -->
+            <div class="space-y-4">
+                <!-- Refresh Button Section -->
+                <div class="flex items-start space-x-3 p-4 rounded-lg bg-gray-50 dark:bg-gray-700/50">
+                    <div class="flex-shrink-0">
+                        <Icon name="lucide:database" class="h-5 w-5 text-orange-600 dark:text-orange-400 mt-0.5" />
+                    </div>
+                    <div class="flex-1 min-w-0">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <h4 class="text-sm font-medium text-gray-900 dark:text-white">
+                                    {{ t("settings.esi.refresh.title", "Force Data Refresh") }}
+                                </h4>
+                                <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                                    {{ t("settings.esi.refresh.description") }}
+                                </p>
+                            </div>
+                            <UButton color="warning" variant="solid" size="sm" :loading="isRefreshingESI"
+                                :disabled="isRefreshingESI" @click="refreshESIData" class="ml-4 flex-shrink-0">
+                                <template v-if="isRefreshingESI">
+                                    <Icon name="lucide:loader-2" class="w-4 h-4 mr-2 animate-spin" />
+                                    {{ t("settings.esi.refresh.refreshing", "Refreshing...") }}
+                                </template>
+                                <template v-else>
+                                    <Icon name="lucide:refresh-cw" class="w-4 h-4 mr-2" />
+                                    {{ t("settings.esi.refresh.button", "Refresh Now") }}
+                                </template>
+                            </UButton>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Info Section -->
+                <div
+                    class="flex items-start space-x-3 p-4 rounded-lg bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800">
+                    <div class="flex-shrink-0">
+                        <Icon name="lucide:info" class="h-4 w-4 text-blue-600 dark:text-blue-400 mt-0.5" />
+                    </div>
+                    <div class="flex-1 min-w-0">
+                        <p class="text-xs text-blue-800 dark:text-blue-200">
+                            {{ t("settings.esi.refresh.note") }}
                         </p>
                     </div>
                 </div>

@@ -10,11 +10,15 @@ const props = defineProps<Props>();
 const { t } = useI18n();
 const authStore = useAuthStore();
 const { isAuthenticated, currentUser } = storeToRefs(authStore);
+const toast = useToast();
 
 // State for delete confirmation modal
 const isDeleteModalOpen = ref(false);
 const isDeletingAccount = ref(false);
 const deleteError = ref("");
+
+// State for ESI refresh
+const isRefreshingESI = ref(false);
 
 // Handle logout
 const handleLogout = async () => {
@@ -51,6 +55,52 @@ const handleDeleteAccount = async () => {
         deleteError.value = t("settings.deleteError", "Failed to delete account data");
     } finally {
         isDeletingAccount.value = false;
+    }
+};
+
+// ESI Data Management handlers
+const refreshESIData = async () => {
+    if (isRefreshingESI.value) return;
+
+    isRefreshingESI.value = true;
+
+    try {
+        const { data } = await $fetch('/api/user/refresh-character', {
+            method: 'POST'
+        });
+
+        // Show success toast with details
+        const refreshedItems = [];
+        if (data.character) refreshedItems.push('Character');
+        if (data.corporation) refreshedItems.push('Corporation');
+        if (data.alliance) refreshedItems.push('Alliance');
+
+        if (refreshedItems.length > 0) {
+            toast.add({
+                title: t('settings.esi.refresh.success', 'ESI Data Refreshed'),
+                description: t('settings.esi.refresh.successDesc', `Successfully refreshed: ${refreshedItems.join(', ')}`),
+                color: 'success'
+            });
+        }
+
+        // Show warnings for any errors
+        if (data.errors && data.errors.length > 0) {
+            toast.add({
+                title: t('settings.esi.refresh.partialWarning', 'Partial Refresh'),
+                description: t('settings.esi.refresh.partialWarningDesc', 'Some data could not be refreshed. Check console for details.'),
+                color: 'warning'
+            });
+        }
+    } catch (error: any) {
+        console.error('Failed to refresh ESI data:', error);
+
+        toast.add({
+            title: t('settings.esi.refresh.error', 'Refresh Failed'),
+            description: error?.data?.message || error?.message || t('settings.esi.refresh.errorDesc', 'Failed to refresh ESI data. Please try again.'),
+            color: 'error'
+        });
+    } finally {
+        isRefreshingESI.value = false;
     }
 };
 </script>
@@ -121,6 +171,13 @@ const handleDeleteAccount = async () => {
             <div class="flex flex-col gap-2">
                 <UButton color="secondary" variant="soft" size="sm" icon="lucide:log-out" @click="handleLogout">
                     {{ $t('user.logout') }}
+                </UButton>
+
+                <!-- ESI Data Refresh Button -->
+                <UButton color="warning" variant="soft" size="sm" icon="lucide:refresh-cw" :loading="isRefreshingESI"
+                    :disabled="isRefreshingESI" @click="refreshESIData">
+                    {{ isRefreshingESI ? $t('settings.esi.refresh.refreshing', 'Refreshing...') :
+                        $t('settings.esi.refresh.button', 'Refresh ESI Data') }}
                 </UButton>
 
                 <!-- Delete Account Modal -->

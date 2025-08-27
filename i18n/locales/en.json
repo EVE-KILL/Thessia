@@ -52,6 +52,8 @@
     "viewAllResults": "View all results",
     "clear_all_filters": "Clear all filters",
     "search": "Search",
+    "search.placeholder": "Search..",
+    "search.short": "Search",
     "search.region": "Search for a region..",
     "search.system": "Search for a system..",
     "search.constellation": "Search for a constellation..",
@@ -88,6 +90,7 @@
     "showMore": "Show {count} more",
     "showLess": "Show less",
     "characters": "Characters",
+    "Characters": "Characters",
     "character": "Character",
     "corporations": "Corporations",
     "corporation": "Corporation",
@@ -103,6 +106,7 @@
     "constellation": "Constellation",
     "regions": "Regions",
     "region": "Region",
+    "system.overview": "Overview",
     "factions": "Factions",
     "faction": {
         "title": "Faction",
@@ -842,6 +846,8 @@
     "common.hide": "Hide Details",
     "common.showMore": "Show Details",
     "common.mostValuableKills": "Most Valuable Kills",
+    "common.save": "Save Changes",
+    "common.saving": "Saving...",
     "corporation.noMembers": "No members found",
     "corporation.noAllianceHistory": "No alliance history found",
     "corporation.topShips": "Top Ships",
@@ -2148,10 +2154,36 @@
     "history": "History",
     "settings": {
         "privacy": {
+            "title": "Privacy Settings",
+            "description": "Control how your killmail data is displayed",
             "hideFitting": {
                 "description": "Redact the fitting in the fitting wheel and items list for one hour after a killmail is posted. Note: this only applies to the UI display, the complete data remains fully available in the API for third-party tools and applications.",
                 "title": "Redact fitting for 1 hour after killmail posting"
             }
+        },
+        "esi": {
+            "title": "ESI Data Management",
+            "description": "Force refresh your character, corporation, and alliance data from EVE's API",
+            "refresh": {
+                "title": "Force Data Refresh",
+                "description": "Updates your character, corporation, and alliance information from EVE's servers",
+                "note": "This will force update your character information, including corporation and alliance changes. Data is normally updated automatically every 30 days, or 24 hours for forced updates.",
+                "button": "Refresh ESI Data",
+                "refreshing": "Refreshing...",
+                "success": "ESI Data Refreshed",
+                "successDesc": "Successfully refreshed: {items}",
+                "partialWarning": "Partial Refresh",
+                "partialWarningDesc": "Some data could not be refreshed. Check console for details.",
+                "error": "Refresh Failed",
+                "errorDesc": "Failed to refresh ESI data. Please try again."
+            }
+        },
+        "defaultPages": {
+            "system": "System Pages",
+            "systemDesc": "Default tab when viewing system pages"
+        },
+        "autoSave": {
+            "note": "Settings are automatically saved when changed."
         }
     },
     "pages": {
