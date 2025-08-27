@@ -29,7 +29,7 @@ export default {
          * We need to limit the amount of characters we update at any one time.
          * To do this we have the updatedAt and last_active fields on the character document.
          * Using these we should follow these rules:
-         * 1. If the character has been active in the last 30 days - we update them daily
+         * 1. If the character has been active in the last 365 days - we update them daily
          * 2. If the character has been active in the last 60 days - we update them every 3 days
          * 3. If the character has been active in the last 90 days - we update them weekly
          * 4. If the character has been active in the last 180 days - we update them every two weeks
@@ -42,8 +42,8 @@ export default {
                 query: {
                     deleted: false, // Use exact match instead of $ne
                     last_active: {
-                        $gt: new Date(Date.now() - 1000 * 60 * 60 * 24 * 30),
-                    }, // Active in last 30 days
+                        $gt: new Date(Date.now() - 1000 * 60 * 60 * 24 * 365),
+                    }, // Active in last 365 days
                     updatedAt: {
                         $lt: new Date(Date.now() - 1000 * 60 * 60 * 24 * 1),
                     }, // Updated more than 1 day ago
@@ -53,8 +53,8 @@ export default {
                 query: {
                     deleted: false, // Use exact match instead of $ne
                     last_active: {
-                        $lte: new Date(Date.now() - 1000 * 60 * 60 * 24 * 30),
-                    }, // Not active in last 30 days
+                        $lte: new Date(Date.now() - 1000 * 60 * 60 * 24 * 365),
+                    }, // Not active in last 365 days
                     updatedAt: {
                         $lt: new Date(Date.now() - 1000 * 60 * 60 * 24 * 14),
                     }, // Updated more than 14 days ago
