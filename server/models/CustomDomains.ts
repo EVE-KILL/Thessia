@@ -253,29 +253,25 @@ const navigationSchema = new Schema<INavigationConfig>(
             type: Boolean,
             default: true,
         },
-        nav_style: {
-            type: String,
-            enum: ["horizontal", "sidebar", "dropdown"],
-            default: "horizontal",
-        },
-        custom_links: [customNavLinkSchema],
-        nav_position: {
-            type: String,
-            enum: ["top", "side", "bottom"],
-            default: "top",
-        },
-        show_search: {
-            type: Boolean,
-            default: true,
-        },
-        show_user_menu: {
-            type: Boolean,
-            default: true,
-        },
         sticky: {
             type: Boolean,
             default: true,
         },
+        // Per-icon visibility controls
+        show_home: { type: Boolean, default: true },
+        show_kills: { type: Boolean, default: true },
+        show_wars: { type: Boolean, default: true },
+        show_battles: { type: Boolean, default: true },
+        show_campaigns: { type: Boolean, default: true },
+        show_stats: { type: Boolean, default: true },
+        show_tools: { type: Boolean, default: true },
+        show_search: { type: Boolean, default: true },
+        show_upload: { type: Boolean, default: true },
+        show_theme_toggle: { type: Boolean, default: true },
+        show_background_switcher: { type: Boolean, default: true },
+        show_info_menu: { type: Boolean, default: true },
+        show_user_menu: { type: Boolean, default: true },
+        custom_links: [customNavLinkSchema],
     },
     { _id: false }
 );
@@ -334,7 +330,31 @@ const simplePageConfigSchema = new Schema<ISimplePageConfig>(
 // Sub-schema for domain features configuration
 const featuresSchema = new Schema<IDomainFeatures>(
     {
+        show_hero: {
+            type: Boolean,
+            default: true,
+        },
+        show_stats: {
+            type: Boolean,
+            default: true,
+        },
+        show_tracking_overview: {
+            type: Boolean,
+            default: true,
+        },
         show_campaigns: {
+            type: Boolean,
+            default: true,
+        },
+        show_most_valuable: {
+            type: Boolean,
+            default: true,
+        },
+        show_top_boxes: {
+            type: Boolean,
+            default: true,
+        },
+        show_ship_analysis: {
             type: Boolean,
             default: true,
         },
@@ -623,11 +643,6 @@ customDomainSchema.statics.countByOwner = function (characterId: number) {
 // Instance methods
 customDomainSchema.methods.getPrimaryEntity = function () {
     return this.entities.find((entity: IEntityConfig) => entity.primary);
-};
-
-customDomainSchema.methods.updateLastAccessed = function () {
-    this.last_accessed = new Date();
-    return this.save();
 };
 
 customDomainSchema.methods.addEntity = function (entityConfig: IEntityConfig) {

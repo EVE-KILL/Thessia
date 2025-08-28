@@ -57,12 +57,22 @@ export interface ICustomBranding {
 // Custom navigation configuration
 export interface INavigationConfig {
     show_default_nav: boolean;
-    nav_style: "horizontal" | "sidebar" | "dropdown";
-    custom_links: ICustomNavLink[];
-    nav_position: "top" | "side" | "bottom";
-    show_search: boolean;
-    show_user_menu: boolean;
     sticky: boolean;
+    // Per-icon visibility controls
+    show_home?: boolean;
+    show_kills?: boolean;
+    show_wars?: boolean;
+    show_battles?: boolean;
+    show_campaigns?: boolean;
+    show_stats?: boolean;
+    show_tools?: boolean;
+    show_search?: boolean;
+    show_upload?: boolean;
+    show_theme_toggle?: boolean;
+    show_background_switcher?: boolean;
+    show_info_menu?: boolean;
+    show_user_menu?: boolean;
+    custom_links: ICustomNavLink[];
 }
 
 export interface ICustomNavLink {
@@ -103,7 +113,13 @@ export interface ISimplePageConfig {
 
 // Domain features configuration
 export interface IDomainFeatures {
+    show_hero: boolean;
+    show_stats: boolean;
+    show_tracking_overview: boolean;
     show_campaigns: boolean;
+    show_most_valuable: boolean;
+    show_top_boxes: boolean;
+    show_ship_analysis: boolean;
     featured_campaign_id?: string;
 }
 

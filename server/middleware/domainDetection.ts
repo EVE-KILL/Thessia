@@ -39,17 +39,24 @@ async function getDomainConfig(domain: string) {
 
     // Fetch from database
     try {
-        // For localhost domains in development, skip verification requirement
-        const isLocalhostDomain = domain.includes(".localhost");
-        const query = isLocalhostDomain
-            ? { domain: domain.toLowerCase() }
-            : {
-                  domain: domain.toLowerCase(),
-                  active: true,
-                  verified: true,
-              };
+        // Always query by domain only - we'll check verification status later
+        const query = { domain: domain.toLowerCase() };
 
-        const config = await CustomDomains.findOne(query);
+        const config = await CustomDomains.findOne(query).select({
+            domain: 1,
+            entity_type: 1,
+            entity_id: 1,
+            entities: 1,
+            branding: 1,
+            navigation: 1,
+            page_config: 1,
+            features: 1,
+            verified: 1,
+            active: 1,
+            suspended: 1,
+            suspension_reason: 1,
+            expires_at: 1,
+        });
 
         // Cache the result (including null results to avoid repeated DB queries)
         domainCache.set(cacheKey, {
@@ -145,31 +152,12 @@ function isEveKillDomain(host: string): boolean {
     }
 
     // Check for localhost and development domains
-    // But allow subdomains of localhost to be treated as custom domains
-    if (
-        host === "localhost" ||
-        host.includes("127.0.0.1") ||
-        host.includes("0.0.0.0")
-    ) {
+    // Only exact localhost matches, not subdomains
+    if (host === "localhost" || host === "127.0.0.1" || host === "0.0.0.0") {
         return true;
     }
 
     return false;
-}
-
-/**
- * PHASE 2: Update domain last accessed time (simplified - no more analytics/rate limiting)
- */
-async function updateDomainAccess(domainConfig: any) {
-    if (!domainConfig) return;
-
-    try {
-        // Simply update last accessed time
-        await domainConfig.updateLastAccessed();
-    } catch (error) {
-        console.error("Error updating domain access time:", error);
-        // Don't block the request if update fails
-    }
 }
 
 /**
@@ -235,12 +223,66 @@ export default defineEventHandler(async (event: H3Event) => {
     const domainConfig = await getDomainConfig(cleanHost);
 
     if (!domainConfig) {
-        // Unknown domain, treat as eve-kill.com but log for monitoring
+        // Unknown domain - set error context for proper error handling
         console.log(`Unknown domain accessed: ${cleanHost}`);
         event.context.domainContext = {
-            isCustomDomain: false,
+            isCustomDomain: true,
+            domain: cleanHost,
+            error: {
+                type: "domain_not_found",
+                message: "Domain not found in system",
+            },
         } as IDomainContext;
         return;
+    }
+
+    // Check if domain exists but is not active or not verified
+    const isLocalhostDomain = cleanHost.includes(".localhost");
+
+    // For non-localhost domains, check both active and verified status
+    if (!isLocalhostDomain) {
+        if (!domainConfig.active) {
+            console.log(`Inactive domain accessed: ${cleanHost}`);
+            event.context.domainContext = {
+                isCustomDomain: true,
+                domain: cleanHost,
+                config: domainConfig,
+                error: {
+                    type: "domain_unverified",
+                    message: "Domain is not active",
+                },
+            } as IDomainContext;
+            return;
+        }
+
+        if (!domainConfig.verified) {
+            console.log(`Unverified domain accessed: ${cleanHost}`);
+            event.context.domainContext = {
+                isCustomDomain: true,
+                domain: cleanHost,
+                config: domainConfig,
+                error: {
+                    type: "domain_unverified",
+                    message: "Domain exists but is not verified",
+                },
+            } as IDomainContext;
+            return;
+        }
+    } else {
+        // For localhost domains, only check verification status (allow inactive for development)
+        if (!domainConfig.verified) {
+            console.log(`Unverified localhost domain accessed: ${cleanHost}`);
+            event.context.domainContext = {
+                isCustomDomain: true,
+                domain: cleanHost,
+                config: domainConfig,
+                error: {
+                    type: "domain_unverified",
+                    message: "Domain exists but is not verified",
+                },
+            } as IDomainContext;
+            return;
+        }
     }
 
     // Check if domain is suspended
@@ -278,11 +320,6 @@ export default defineEventHandler(async (event: H3Event) => {
         } as IDomainContext;
         return;
     }
-
-    // Update domain access in background (simplified - no more analytics/rate limiting)
-    updateDomainAccess(domainConfig).catch((err) => {
-        console.error("Background access update failed:", err);
-    });
 
     // PHASE 2: Set up enhanced domain context for the request
     event.context.domainContext = {

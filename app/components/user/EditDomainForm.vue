@@ -243,6 +243,60 @@
                 </p>
 
                 <div class="space-y-4">
+                    <!-- Show Hero Section -->
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <label class="text-sm font-medium text-gray-700 dark:text-gray-300">
+                                Show Hero Section
+                            </label>
+                            <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                                Display the main hero section with welcome message and entity showcase
+                            </p>
+                        </div>
+                        <label class="relative inline-flex items-center cursor-pointer">
+                            <input type="checkbox" v-model="state.features.show_hero" class="sr-only peer">
+                            <div
+                                class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-indigo-300 dark:peer-focus:ring-indigo-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-indigo-600">
+                            </div>
+                        </label>
+                    </div>
+
+                    <!-- Show Statistics Cards -->
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <label class="text-sm font-medium text-gray-700 dark:text-gray-300">
+                                Show Statistics Cards
+                            </label>
+                            <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                                Display the statistics highlight cards (kills, ISK, ships, entities)
+                            </p>
+                        </div>
+                        <label class="relative inline-flex items-center cursor-pointer">
+                            <input type="checkbox" v-model="state.features.show_stats" class="sr-only peer">
+                            <div
+                                class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-indigo-300 dark:peer-focus:ring-indigo-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-indigo-600">
+                            </div>
+                        </label>
+                    </div>
+
+                    <!-- Show Tracking Overview -->
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <label class="text-sm font-medium text-gray-700 dark:text-gray-300">
+                                Show Tracking Overview
+                            </label>
+                            <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                                Display the entity tracking overview section with entity list
+                            </p>
+                        </div>
+                        <label class="relative inline-flex items-center cursor-pointer">
+                            <input type="checkbox" v-model="state.features.show_tracking_overview" class="sr-only peer">
+                            <div
+                                class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-indigo-300 dark:peer-focus:ring-indigo-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-indigo-600">
+                            </div>
+                        </label>
+                    </div>
+
                     <!-- Show Campaigns -->
                     <div class="flex items-center justify-between">
                         <div>
@@ -255,6 +309,60 @@
                         </div>
                         <label class="relative inline-flex items-center cursor-pointer">
                             <input type="checkbox" v-model="state.features.show_campaigns" class="sr-only peer">
+                            <div
+                                class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-indigo-300 dark:peer-focus:ring-indigo-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-indigo-600">
+                            </div>
+                        </label>
+                    </div>
+
+                    <!-- Show Most Valuable Kills -->
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <label class="text-sm font-medium text-gray-700 dark:text-gray-300">
+                                Show Most Valuable Kills
+                            </label>
+                            <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                                Display the most valuable kills section with high-value killmails
+                            </p>
+                        </div>
+                        <label class="relative inline-flex items-center cursor-pointer">
+                            <input type="checkbox" v-model="state.features.show_most_valuable" class="sr-only peer">
+                            <div
+                                class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-indigo-300 dark:peer-focus:ring-indigo-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-indigo-600">
+                            </div>
+                        </label>
+                    </div>
+
+                    <!-- Show Top Boxes -->
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <label class="text-sm font-medium text-gray-700 dark:text-gray-300">
+                                Show Top Boxes
+                            </label>
+                            <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                                Display the top killers, corporations, and alliances boxes
+                            </p>
+                        </div>
+                        <label class="relative inline-flex items-center cursor-pointer">
+                            <input type="checkbox" v-model="state.features.show_top_boxes" class="sr-only peer">
+                            <div
+                                class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-indigo-300 dark:peer-focus:ring-indigo-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-indigo-600">
+                            </div>
+                        </label>
+                    </div>
+
+                    <!-- Show Ship Destruction Analysis -->
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <label class="text-sm font-medium text-gray-700 dark:text-gray-300">
+                                Show Ship Destruction Analysis
+                            </label>
+                            <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                                Display detailed ship destruction analysis and patterns
+                            </p>
+                        </div>
+                        <label class="relative inline-flex items-center cursor-pointer">
+                            <input type="checkbox" v-model="state.features.show_ship_analysis" class="sr-only peer">
                             <div
                                 class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-indigo-300 dark:peer-focus:ring-indigo-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-indigo-600">
                             </div>
@@ -312,73 +420,218 @@
                         <label class="relative inline-flex items-center cursor-pointer">
                             <input type="checkbox" v-model="state.navigation.show_default_nav" class="sr-only peer">
                             <div
-                                class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 dark:peer-focus:ring-blue-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-blue-600">
+                                class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 dark:peer-focus:ring-blue-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after-border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-blue-600">
                             </div>
                         </label>
                     </div>
 
-                    <!-- Navigation Position -->
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                                Navigation Position
-                            </label>
-                            <select v-model="state.navigation.nav_position"
-                                class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white">
-                                <option value="top">Top</option>
-                                <option value="side">Side</option>
-                                <option value="bottom">Bottom</option>
-                            </select>
-                        </div>
+                    <!-- Individual Navigation Icon Controls -->
+                    <div class="border-t border-gray-200 dark:border-gray-600 pt-4">
+                        <h4 class="text-sm font-medium text-gray-900 dark:text-white mb-3">Navigation Icon Visibility
+                        </h4>
+                        <p class="text-xs text-gray-500 dark:text-gray-400 mb-4">
+                            Control which navigation items are displayed. Home, User Menu, and Information Menu are
+                            always available but can be hidden.
+                        </p>
 
-                        <!-- Navigation Style -->
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                                Navigation Style
-                            </label>
-                            <select v-model="state.navigation.nav_style"
-                                class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white">
-                                <option value="horizontal">Horizontal</option>
-                                <option value="sidebar">Sidebar</option>
-                                <option value="dropdown">Dropdown</option>
-                            </select>
-                        </div>
-                    </div>
-
-                    <!-- Show Search -->
-                    <div class="flex items-center justify-between">
-                        <div>
-                            <label class="text-sm font-medium text-gray-700 dark:text-gray-300">
-                                Show Search
-                            </label>
-                            <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                                Display search functionality in navigation
-                            </p>
-                        </div>
-                        <label class="relative inline-flex items-center cursor-pointer">
-                            <input type="checkbox" v-model="state.navigation.show_search" class="sr-only peer">
-                            <div
-                                class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 dark:peer-focus:ring-blue-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-blue-600">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <!-- Home Button -->
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <label class="text-sm font-medium text-gray-700 dark:text-gray-300">Home</label>
+                                    <p class="text-xs text-gray-500 dark:text-gray-400">Main homepage link</p>
+                                </div>
+                                <label class="relative inline-flex items-center cursor-pointer">
+                                    <input type="checkbox" v-model="state.navigation.show_home" class="sr-only peer">
+                                    <div
+                                        class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 dark:peer-focus:ring-blue-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-blue-600">
+                                    </div>
+                                </label>
                             </div>
-                        </label>
-                    </div>
 
-                    <!-- Show User Menu -->
-                    <div class="flex items-center justify-between">
-                        <div>
-                            <label class="text-sm font-medium text-gray-700 dark:text-gray-300">
-                                Show User Menu
-                            </label>
-                            <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                                Display user login/profile menu
-                            </p>
-                        </div>
-                        <label class="relative inline-flex items-center cursor-pointer">
-                            <input type="checkbox" v-model="state.navigation.show_user_menu" class="sr-only peer">
-                            <div
-                                class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 dark:peer-focus:ring-blue-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-blue-600">
+                            <!-- Kills -->
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <label class="text-sm font-medium text-gray-700 dark:text-gray-300">Kills</label>
+                                    <p class="text-xs text-gray-500 dark:text-gray-400">Killmail navigation and filters
+                                    </p>
+                                </div>
+                                <label class="relative inline-flex items-center cursor-pointer">
+                                    <input type="checkbox" v-model="state.navigation.show_kills" class="sr-only peer">
+                                    <div
+                                        class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 dark:peer-focus:ring-blue-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-blue-600">
+                                    </div>
+                                </label>
                             </div>
-                        </label>
+
+                            <!-- Wars -->
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <label class="text-sm font-medium text-gray-700 dark:text-gray-300">Wars</label>
+                                    <p class="text-xs text-gray-500 dark:text-gray-400">War declarations and history</p>
+                                </div>
+                                <label class="relative inline-flex items-center cursor-pointer">
+                                    <input type="checkbox" v-model="state.navigation.show_wars" class="sr-only peer">
+                                    <div
+                                        class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 dark:peer-focus:ring-blue-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-blue-600">
+                                    </div>
+                                </label>
+                            </div>
+
+                            <!-- Battles -->
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <label class="text-sm font-medium text-gray-700 dark:text-gray-300">Battles</label>
+                                    <p class="text-xs text-gray-500 dark:text-gray-400">Battle reports and analysis</p>
+                                </div>
+                                <label class="relative inline-flex items-center cursor-pointer">
+                                    <input type="checkbox" v-model="state.navigation.show_battles" class="sr-only peer">
+                                    <div
+                                        class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 dark:peer-focus:ring-blue-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-blue-600">
+                                    </div>
+                                </label>
+                            </div>
+
+                            <!-- Campaigns -->
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <label
+                                        class="text-sm font-medium text-gray-700 dark:text-gray-300">Campaigns</label>
+                                    <p class="text-xs text-gray-500 dark:text-gray-400">Campaign tracking and management
+                                    </p>
+                                </div>
+                                <label class="relative inline-flex items-center cursor-pointer">
+                                    <input type="checkbox" v-model="state.navigation.show_campaigns"
+                                        class="sr-only peer">
+                                    <div
+                                        class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 dark:peer-focus:ring-blue-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-blue-600">
+                                    </div>
+                                </label>
+                            </div>
+
+                            <!-- Stats -->
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <label
+                                        class="text-sm font-medium text-gray-700 dark:text-gray-300">Statistics</label>
+                                    <p class="text-xs text-gray-500 dark:text-gray-400">Statistical analysis and charts
+                                    </p>
+                                </div>
+                                <label class="relative inline-flex items-center cursor-pointer">
+                                    <input type="checkbox" v-model="state.navigation.show_stats" class="sr-only peer">
+                                    <div
+                                        class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 dark:peer-focus:ring-blue-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-blue-600">
+                                    </div>
+                                </label>
+                            </div>
+
+                            <!-- Tools -->
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <label class="text-sm font-medium text-gray-700 dark:text-gray-300">Tools</label>
+                                    <p class="text-xs text-gray-500 dark:text-gray-400">EVE tools and utilities</p>
+                                </div>
+                                <label class="relative inline-flex items-center cursor-pointer">
+                                    <input type="checkbox" v-model="state.navigation.show_tools" class="sr-only peer">
+                                    <div
+                                        class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 dark:peer-focus:ring-blue-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-blue-600">
+                                    </div>
+                                </label>
+                            </div>
+
+                            <!-- Search -->
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <label class="text-sm font-medium text-gray-700 dark:text-gray-300">Search</label>
+                                    <p class="text-xs text-gray-500 dark:text-gray-400">Global search functionality</p>
+                                </div>
+                                <label class="relative inline-flex items-center cursor-pointer">
+                                    <input type="checkbox" v-model="state.navigation.show_search" class="sr-only peer">
+                                    <div
+                                        class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 dark:peer-focus:ring-blue-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-blue-600">
+                                    </div>
+                                </label>
+                            </div>
+
+                            <!-- Upload -->
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <label class="text-sm font-medium text-gray-700 dark:text-gray-300">Upload</label>
+                                    <p class="text-xs text-gray-500 dark:text-gray-400">Killmail upload functionality
+                                    </p>
+                                </div>
+                                <label class="relative inline-flex items-center cursor-pointer">
+                                    <input type="checkbox" v-model="state.navigation.show_upload" class="sr-only peer">
+                                    <div
+                                        class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 dark:peer-focus:ring-blue-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-blue-600">
+                                    </div>
+                                </label>
+                            </div>
+
+                            <!-- Theme Toggle -->
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <label class="text-sm font-medium text-gray-700 dark:text-gray-300">Theme
+                                        Toggle</label>
+                                    <p class="text-xs text-gray-500 dark:text-gray-400">Light/dark theme switcher</p>
+                                </div>
+                                <label class="relative inline-flex items-center cursor-pointer">
+                                    <input type="checkbox" v-model="state.navigation.show_theme_toggle"
+                                        class="sr-only peer">
+                                    <div
+                                        class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 dark:peer-focus:ring-blue-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-blue-600">
+                                    </div>
+                                </label>
+                            </div>
+
+                            <!-- Background Switcher -->
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <label class="text-sm font-medium text-gray-700 dark:text-gray-300">Background
+                                        Switcher</label>
+                                    <p class="text-xs text-gray-500 dark:text-gray-400">Background image selector</p>
+                                </div>
+                                <label class="relative inline-flex items-center cursor-pointer">
+                                    <input type="checkbox" v-model="state.navigation.show_background_switcher"
+                                        class="sr-only peer">
+                                    <div
+                                        class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 dark:peer-focus:ring-blue-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-blue-600">
+                                    </div>
+                                </label>
+                            </div>
+
+                            <!-- Information Menu -->
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <label class="text-sm font-medium text-gray-700 dark:text-gray-300">Information
+                                        Menu</label>
+                                    <p class="text-xs text-gray-500 dark:text-gray-400">FAQ, status, about, etc.</p>
+                                </div>
+                                <label class="relative inline-flex items-center cursor-pointer">
+                                    <input type="checkbox" v-model="state.navigation.show_info_menu"
+                                        class="sr-only peer">
+                                    <div
+                                        class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 dark:peer-focus:ring-blue-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-blue-600">
+                                    </div>
+                                </label>
+                            </div>
+
+                            <!-- User Menu -->
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <label class="text-sm font-medium text-gray-700 dark:text-gray-300">User
+                                        Menu</label>
+                                    <p class="text-xs text-gray-500 dark:text-gray-400">Login/profile menu</p>
+                                </div>
+                                <label class="relative inline-flex items-center cursor-pointer">
+                                    <input type="checkbox" v-model="state.navigation.show_user_menu"
+                                        class="sr-only peer">
+                                    <div
+                                        class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 dark:peer-focus:ring-blue-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-blue-600">
+                                    </div>
+                                </label>
+                            </div>
+                        </div>
                     </div>
 
                     <!-- Sticky Navigation -->
@@ -593,6 +846,8 @@
 </template>
 
 <script setup lang="ts">
+import { useDomainSettingsStore } from '~/stores/domainSettings';
+
 interface CustomLink {
     label: string;
     url: string;
@@ -616,6 +871,9 @@ const props = defineProps<Props>();
 const emit = defineEmits<Emits>();
 const { t } = useI18n();
 
+// Use the domain settings store for state management
+const domainStore = useDomainSettingsStore()
+
 const isSubmitting = ref(false);
 const campaignsLoading = ref(false);
 const availableCampaigns = ref<any[]>([]);
@@ -635,9 +893,18 @@ const state = reactive({
     },
     navigation: {
         show_default_nav: props.domain.navigation?.show_default_nav ?? true,
-        nav_style: props.domain.navigation?.nav_style || 'horizontal',
-        nav_position: props.domain.navigation?.nav_position || 'top',
+        show_home: props.domain.navigation?.show_home ?? true,
+        show_kills: props.domain.navigation?.show_kills ?? true,
+        show_wars: props.domain.navigation?.show_wars ?? true,
+        show_battles: props.domain.navigation?.show_battles ?? true,
+        show_campaigns: props.domain.navigation?.show_campaigns ?? true,
+        show_stats: props.domain.navigation?.show_stats ?? true,
+        show_tools: props.domain.navigation?.show_tools ?? true,
         show_search: props.domain.navigation?.show_search ?? true,
+        show_upload: props.domain.navigation?.show_upload ?? true,
+        show_theme_toggle: props.domain.navigation?.show_theme_toggle ?? true,
+        show_background_switcher: props.domain.navigation?.show_background_switcher ?? true,
+        show_info_menu: props.domain.navigation?.show_info_menu ?? true,
         show_user_menu: props.domain.navigation?.show_user_menu ?? true,
         sticky: props.domain.navigation?.sticky ?? true,
         custom_links: props.domain.navigation?.custom_links || []
@@ -656,7 +923,13 @@ const state = reactive({
         }
     },
     features: {
+        show_hero: props.domain.features?.show_hero ?? true,
+        show_stats: props.domain.features?.show_stats ?? true,
+        show_tracking_overview: props.domain.features?.show_tracking_overview ?? true,
         show_campaigns: props.domain.features?.show_campaigns ?? true,
+        show_most_valuable: props.domain.features?.show_most_valuable ?? true,
+        show_top_boxes: props.domain.features?.show_top_boxes ?? true,
+        show_ship_analysis: props.domain.features?.show_ship_analysis ?? true,
         featured_campaign_id: props.domain.features?.featured_campaign_id || ''
     }
 });
@@ -773,6 +1046,11 @@ const onSubmit = async () => {
         }) as { domain: any };
 
         console.log('🔍 Frontend Debug - API Response:', JSON.stringify(response, null, 2));
+
+        // Update the domain store with the new settings
+        if (response.domain) {
+            domainStore.initializeFromData(response.domain);
+        }
 
         emit('updated', response.domain);
     } catch (error: any) {

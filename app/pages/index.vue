@@ -75,7 +75,19 @@ const { isMobile } = useResponsive();
 const { generateWebsiteStructuredData, generateOrganizationStructuredData, addStructuredDataToHead } = useStructuredData();
 
 // Custom domain handling - Phase 2
-// Check if this is a custom domain to show the domain dashboard
+// For custom domains, redirect to the [domain] route which handles errors properly
+const hostname = process.client ? window.location.hostname : useRequestURL().hostname
+const isMainDomain = hostname === "eve-kill.com" ||
+    hostname === "www.eve-kill.com" ||
+    hostname === "localhost" ||
+    hostname === "127.0.0.1"
+
+if (!isMainDomain) {
+    // This is a custom domain, redirect to [domain].vue for proper error handling
+    await navigateTo(`/${hostname}`)
+}
+
+// Only use domain context for main domain routing logic
 const { isCustomDomain, customDomain } = useDomainContext();
 
 // Initialize with a valid ID from our tabs

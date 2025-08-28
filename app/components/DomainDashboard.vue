@@ -1,7 +1,7 @@
 <template>
     <div class="min-h-screen text-white">
         <!-- Hero Section -->
-        <div
+        <div v-if="showHeroSection"
             class="relative overflow-hidden bg-gradient-to-br from-gray-900/30 via-gray-800/20 to-gray-900/30 border-b border-gray-800">
             <div
                 class="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHZpZXdCb3g9IjAgMCA2MCA2MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZyBmaWxsPSJub25lIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiPjxnIGZpbGw9IiMxZjJhNDAiIGZpbGwtb3BhY2l0eT0iMC4xIj48Y2lyY2xlIGN4PSIzMCIgY3k9IjMwIiByPSIyIi8+PC9nPjwvZz48L3N2Zz4=')] opacity-20">
@@ -135,7 +135,7 @@
                 </div>
             </div>
             <!-- Statistics Highlight Cards -->
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
+            <div v-if="showStatsSection" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
                 <!-- Total Kills Card -->
                 <div
                     class="bg-gradient-to-br from-gray-900/40 to-gray-800/30 border border-gray-700/50 rounded-lg p-6 backdrop-blur-sm">
@@ -205,7 +205,7 @@
             </div>
 
             <!-- Entity Information Pane -->
-            <div class="mb-8">
+            <div v-if="showTrackingOverview" class="mb-8">
                 <div
                     class="bg-gradient-to-r from-gray-900/40 via-gray-800/30 to-gray-900/40 border border-gray-700/50 rounded-xl p-6 backdrop-blur-sm">
                     <div class="flex items-start justify-between mb-4">
@@ -299,7 +299,7 @@
             </div>
 
             <!-- Campaigns Grid -->
-            <div v-if="showCampaignSection" class="mb-12">
+            <div v-if="showCampaignSection && domainCampaigns.length > 0" class="mb-12">
                 <div class="mb-6">
                     <h3 class="text-2xl font-bold text-zinc-100 mb-2">Active Campaigns</h3>
                     <p class="text-zinc-400">
@@ -307,17 +307,83 @@
                     </p>
                 </div>
 
-                <!-- Use the CampaignsList component in grid mode -->
+                <!-- Direct campaigns rendering using SSR data -->
                 <div
                     class="bg-gradient-to-r from-gray-900/40 via-gray-800/30 to-gray-900/40 border border-gray-700/50 rounded-xl p-6 backdrop-blur-sm">
-                    <CampaignsList
-                        :entity-filter="selectedEntity ? `${selectedEntity.type}:${selectedEntity.id}` : null"
-                        :limit="4" :domain="props.domain || customDomain" :grid-layout="true" />
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                        <div v-for="campaign in domainCampaigns.slice(0, 4)" :key="campaign.campaign_id"
+                            class="bg-gradient-to-br from-gray-900/40 to-gray-800/30 border border-gray-700/50 rounded-lg p-4 backdrop-blur-sm hover:bg-gray-800/40 transition-all duration-200 group">
+                            <div class="flex flex-col h-full">
+                                <!-- Header -->
+                                <div class="campaign-header mb-3">
+                                    <div class="flex justify-between items-start pb-2 border-b border-gray-700/50">
+                                        <h4 class="font-semibold text-white text-sm truncate pr-2"
+                                            :title="campaign.name">
+                                            {{ campaign.name }}
+                                        </h4>
+                                        <UBadge :color="getCampaignStatusColor(campaign)" variant="subtle" size="xs">
+                                            {{ getCampaignStatusLabel(campaign) }}
+                                        </UBadge>
+                                    </div>
+                                </div>
+
+                                <!-- Description -->
+                                <div class="mb-3 flex-grow">
+                                    <p v-if="campaign.description"
+                                        class="text-xs text-zinc-400 line-clamp-2 leading-relaxed"
+                                        :title="campaign.description">
+                                        {{ campaign.description }}
+                                    </p>
+                                    <p v-else class="text-xs text-zinc-500 italic">No description available</p>
+                                </div>
+
+                                <!-- Stats -->
+                                <div class="stats-section mb-3 p-2 bg-gray-800/40 rounded border border-gray-700/30">
+                                    <div class="text-xs text-zinc-400 space-y-1">
+                                        <div v-if="campaign.startTime" class="flex items-center">
+                                            <svg class="w-3 h-3 mr-1 text-zinc-500" fill="currentColor"
+                                                viewBox="0 0 20 20">
+                                                <path fill-rule="evenodd"
+                                                    d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z"
+                                                    clip-rule="evenodd" />
+                                            </svg>
+                                            <span>{{ formatCampaignDate(campaign.startTime) }}</span>
+                                        </div>
+                                        <div v-if="campaign.stats" class="flex justify-between items-center">
+                                            <span class="flex items-center">
+                                                <svg class="w-3 h-3 mr-1 text-zinc-500" fill="currentColor"
+                                                    viewBox="0 0 20 20">
+                                                    <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                                </svg>
+                                                {{ campaign.stats.total_kills || 0 }}
+                                            </span>
+                                            <span class="flex items-center">
+                                                <svg class="w-3 h-3 mr-1 text-zinc-500" fill="currentColor"
+                                                    viewBox="0 0 20 20">
+                                                    <path
+                                                        d="M9 6a3 3 0 11-6 0 3 3 0 016 0zM17 6a3 3 0 11-6 0 3 3 0 016 0zM12.93 17c.046-.327.07-.66.07-1a6.97 6.97 0 00-1.5-4.33A5 5 0 0119 16v1h-6.07zM6 11a5 5 0 015 5v1H1v-1a5 5 0 015-5z" />
+                                                </svg>
+                                                {{ campaign.stats.participants || 0 }}
+                                            </span>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Action Button -->
+                                <div class="mt-auto">
+                                    <NuxtLink :to="`/campaigns/${campaign.campaign_id}`"
+                                        class="block w-full text-center px-3 py-2 text-xs font-medium text-zinc-300 bg-gray-700/40 hover:bg-gray-600/40 border border-gray-600/30 hover:border-gray-500/50 rounded transition-all duration-200 group-hover:text-white">
+                                        View Campaign
+                                    </NuxtLink>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
 
             <!-- Most Valuable Kills -->
-            <div class="mb-12">
+            <div v-if="showMostValuableSection" class="mb-12">
                 <div class="mb-6">
                     <h3 class="text-2xl font-bold text-zinc-100 mb-2">Most Valuable Kills</h3>
                     <p class="text-zinc-400">
@@ -329,7 +395,7 @@
             </div>
 
             <!-- Ship Statistics -->
-            <div class="mb-12">
+            <div v-if="showShipAnalysisSection" class="mb-12">
                 <div class="mb-6">
                     <h3 class="text-2xl font-bold text-zinc-100 mb-2">Ship Destruction Analysis</h3>
                     <p class="text-zinc-400">
@@ -342,9 +408,9 @@
             </div>
 
             <!-- Main Content: Killmails + Top Boxes -->
-            <div class="grid grid-cols-1 xl:grid-cols-5 gap-8">
+            <div class="grid grid-cols-1 gap-8" :class="showTopBoxesSection ? 'xl:grid-cols-5' : 'xl:grid-cols-1'">
                 <!-- Left Side: Killmails List (80% - 4 columns) -->
-                <div class="xl:col-span-4">
+                <div :class="showTopBoxesSection ? 'xl:col-span-4' : 'xl:col-span-1'">
                     <div class="mb-6">
                         <h3 class="text-2xl font-bold text-zinc-100 mb-2">Recent Activity</h3>
                         <p class="text-zinc-400">
@@ -359,7 +425,7 @@
                 </div>
 
                 <!-- Right Side: Top Boxes (20% - 1 column) -->
-                <div class="xl:col-span-1 space-y-6">
+                <div v-if="showTopBoxesSection" class="xl:col-span-1 space-y-6">
                     <!-- Top Killers by Character -->
                     <KillsTopBox title="Top Killers" :entities="stats?.topKillersByCharacter || []" countField="kills"
                         entityType="character" :loading="statsLoading" :days="getTimeRangeDays(selectedTimeRange)" />
@@ -379,34 +445,124 @@
 </template>
 
 <script setup lang="ts">
+import { useDomainSettingsStore } from '~/stores/domainSettings';
 
 const { t } = useI18n();
-const { customDomain, domainContext } = useDomainContext();
+const {
+    customDomain,
+    domainContext,
+    showHeroSection: contextShowHeroSection,
+    showStatsSection: contextShowStatsSection,
+    showTrackingOverview: contextShowTrackingOverview,
+    showCampaignSection: contextShowCampaignSection,
+    showMostValuableSection: contextShowMostValuableSection,
+    showTopBoxesSection: contextShowTopBoxesSection,
+    showShipAnalysisSection: contextShowShipAnalysisSection,
+} = useDomainContext();
 
-// Props for SSR data
+// Use the domain settings store
+const domainStore = useDomainSettingsStore()
+
+// Props for domain specification
 interface Props {
     domain?: string;
     initialStats?: any;
-    initialEntities?: any[];
-    initialCampaigns?: any[];
+    initialEntities?: any;
+    initialCampaigns?: any;
 }
 
 const props = withDefaults(defineProps<Props>(), {
     domain: '',
     initialStats: null,
-    initialEntities: () => [],
-    initialCampaigns: () => []
+    initialEntities: [],
+    initialCampaigns: []
 });
 
 // Reactive state
 const selectedEntity = ref<any>(null);
 const selectedTimeRange = ref('7d');
-const statsLoading = ref(false);
-const stats = ref<any>(props.initialStats);
-const campaignsLoading = ref(false);
-const domainCampaigns = ref<any[]>(props.initialCampaigns);
-const entitiesLoading = ref(false);
-const domainEntitiesWithNames = ref<any[]>(props.initialEntities);
+
+// Computed domain for API calls
+const currentDomain = computed(() => props.domain || customDomain.value);
+
+// Query parameters for stats API
+const statsQueryParams = computed(() => ({
+    timeRange: selectedTimeRange.value,
+    ...(selectedEntity.value ? {
+        entityType: selectedEntity.value.type,
+        entityId: selectedEntity.value.id.toString()
+    } : {})
+}));
+
+// Fetch key for stats (similar to KillList approach)
+const statsFetchKey = computed(() => {
+    return `domain-stats-${currentDomain.value}-${selectedTimeRange.value}-${selectedEntity.value?.type || 'all'}-${selectedEntity.value?.id || 'all'}`;
+});
+
+// Fetch domain stats using useFetch (like KillList)
+const shouldFetchStats = computed(() => !!currentDomain.value);
+const {
+    data: stats,
+    pending: statsLoading,
+    error: statsError,
+    refresh: refreshStats
+} = await useFetch(
+    () => shouldFetchStats.value ? `/api/domain/${currentDomain.value}/stats` : null,
+    {
+        key: statsFetchKey,
+        query: statsQueryParams,
+        server: true,
+        lazy: false,
+        default: () => ({})
+    }
+);
+
+// Fetch domain entities using useFetch
+const {
+    data: domainEntitiesResponse,
+    pending: entitiesLoading,
+    error: entitiesError
+} = await useFetch(
+    () => currentDomain.value ? `/api/domain/${currentDomain.value}/entities` : null,
+    {
+        key: `domain-entities-${currentDomain.value}`,
+        server: true,
+        lazy: false,
+        default: () => ({ success: false, entities: [] })
+    }
+);
+
+// Computed domain entities
+const domainEntitiesWithNames = computed(() => {
+    if (domainEntitiesResponse.value?.success && domainEntitiesResponse.value?.entities) {
+        return domainEntitiesResponse.value.entities;
+    }
+    return [];
+});
+
+// Fetch domain campaigns using useFetch
+const {
+    data: campaignsResponse,
+    pending: campaignsLoading,
+    error: campaignsError
+} = await useFetch(
+    () => currentDomain.value ? `/api/domain/${currentDomain.value}/campaigns` : null,
+    {
+        key: `domain-campaigns-${currentDomain.value}`,
+        query: { limit: 10 },
+        server: true,
+        lazy: false,
+        default: () => ({ campaigns: [] })
+    }
+);
+
+// Computed domain campaigns
+const domainCampaigns = computed(() => {
+    if (campaignsResponse.value?.campaigns) {
+        return campaignsResponse.value.campaigns;
+    }
+    return [];
+});
 
 // Time range options (matching kills page)
 const timeRanges = [
@@ -419,58 +575,45 @@ const timeRanges = [
 // Key to force KillList refresh when filters change
 const refreshKey = ref(0);
 
-// Entity options from domain context
+// Entity options from domain store
 const entityOptions = computed(() => {
     const options = [{ label: 'All Entities', value: null }];
 
-    if (domainContext.value?.config?.entities) {
-        for (const entityConfig of domainContext.value.config.entities) {
-            if (entityConfig.show_in_nav) {
-                options.push({
-                    label: entityConfig.display_name || `${entityConfig.entity_type} ${entityConfig.entity_id}`,
-                    value: {
-                        type: entityConfig.entity_type,
-                        id: entityConfig.entity_id
-                    }
-                });
-            }
+    for (const entityConfig of domainStore.entities) {
+        if (entityConfig.show_in_nav) {
+            options.push({
+                label: entityConfig.display_name || `${entityConfig.entity_type} ${entityConfig.entity_id}`,
+                value: {
+                    type: entityConfig.entity_type,
+                    id: entityConfig.entity_id
+                }
+            });
         }
     }
 
     return options;
 });
 
-// Domain branding and info
-const domainTitle = computed(() => {
-    return domainContext.value?.config?.branding?.header_title ||
-        `${customDomain.value || props.domain} Killboard`;
-});
+// Domain branding and info from store
+const domainTitle = computed(() => domainStore.domainTitle);
 
 const domainDescription = computed(() => {
-    const entityCount = domainContext.value?.config?.entities?.length || 0;
+    const entityCount = domainStore.entities.length || 0;
     return `Multi-entity killboard tracking ${entityCount} entities`;
 });
 
-// Domain entities (use fetched data with names, fallback to config)
+// Domain entities (use fetched data with names, fallback to store)
 const domainEntities = computed(() => {
     if (domainEntitiesWithNames.value.length > 0) {
         return domainEntitiesWithNames.value;
     }
-    return domainContext.value?.config?.entities || [];
+    return domainStore.entities || [];
 });
 
-// Welcome messages and custom content
-const customWelcomeMessage = computed(() => {
-    return domainContext.value?.config?.branding?.welcome_message;
-});
-
-const customSecondaryMessage = computed(() => {
-    return domainContext.value?.config?.branding?.secondary_message;
-});
-
-const customCTAButtons = computed(() => {
-    return domainContext.value?.config?.branding?.cta_buttons || [];
-});
+// Welcome messages and custom content from store
+const customWelcomeMessage = computed(() => domainStore.customWelcomeMessage);
+const customSecondaryMessage = computed(() => domainStore.customSecondaryMessage);
+const customCTAButtons = computed(() => domainStore.customCTAButtons);
 
 const defaultWelcomeMessage = computed(() => {
     const entityCount = domainEntities.value.length;
@@ -506,13 +649,60 @@ const entityStats = computed(() => {
     return statsMap;
 });
 
-// Campaign integration
+// Feature toggles - prioritize store data (for editing) or fallback to context (for display)
+const showHeroSection = computed(() => {
+    // If store has data (user is editing or store is loaded), use store
+    if (domainStore.currentDomain) {
+        return domainStore.showHeroSection;
+    }
+    // Otherwise use context from SSR middleware
+    return contextShowHeroSection.value;
+});
+
+const showStatsSection = computed(() => {
+    if (domainStore.currentDomain) {
+        return domainStore.showStatsSection;
+    }
+    return contextShowStatsSection.value;
+});
+
+const showTrackingOverview = computed(() => {
+    if (domainStore.currentDomain) {
+        return domainStore.showTrackingOverview;
+    }
+    return contextShowTrackingOverview.value;
+});
+
 const showCampaignSection = computed(() => {
-    return domainContext.value?.config?.features?.show_campaigns !== false;
+    if (domainStore.currentDomain) {
+        return domainStore.showCampaignSection;
+    }
+    return contextShowCampaignSection.value;
+});
+
+const showMostValuableSection = computed(() => {
+    if (domainStore.currentDomain) {
+        return domainStore.showMostValuableSection;
+    }
+    return contextShowMostValuableSection.value;
+});
+
+const showTopBoxesSection = computed(() => {
+    if (domainStore.currentDomain) {
+        return domainStore.showTopBoxesSection;
+    }
+    return contextShowTopBoxesSection.value;
+});
+
+const showShipAnalysisSection = computed(() => {
+    if (domainStore.currentDomain) {
+        return domainStore.showShipAnalysisSection;
+    }
+    return contextShowShipAnalysisSection.value;
 });
 
 const featuredCampaign = computed(() => {
-    const featuredId = domainContext.value?.config?.features?.featured_campaign_id;
+    const featuredId = domainStore.features.featured_campaign_id;
     if (featuredId && domainCampaigns.value.length > 0) {
         return domainCampaigns.value.find(campaign => campaign.campaign_id === featuredId);
     }
@@ -627,99 +817,52 @@ const campaignDuration = (campaign: any) => {
     return `${diffDays} day${diffDays !== 1 ? 's' : ''}`;
 };
 
-// Fetch domain statistics using domain-specific API
-const fetchStats = async () => {
-    const domain = props.domain || customDomain.value;
-    console.log('fetchStats called with domain:', domain);
-    console.log('props.domain:', props.domain);
-    console.log('customDomain.value:', customDomain.value);
+const formatCampaignDate = (date: string | Date): string => {
+    return new Date(date).toLocaleDateString('en-US', {
+        month: 'short',
+        day: 'numeric',
+        year: 'numeric'
+    });
+};
 
-    if (!domain) {
-        console.log('No domain found, returning early');
-        return;
-    }
-
-    statsLoading.value = true;
-    try {
-        // Use the domain-specific stats API that we already built
-        const params = new URLSearchParams({
-            timeRange: selectedTimeRange.value
-        });
-
-        if (selectedEntity.value) {
-            params.append('entityType', selectedEntity.value.type);
-            params.append('entityId', selectedEntity.value.id.toString());
-        }
-
-        const statsUrl = `/api/domain/${domain}/stats?${params.toString()}`;
-        console.log('Making stats API request to:', statsUrl);
-
-        const response = await $fetch(statsUrl);
-        console.log('Stats API response:', response);
-        stats.value = response;
-    } catch (error) {
-        console.error('Failed to fetch domain stats:', error);
-    } finally {
-        statsLoading.value = false;
+const getCampaignStatusColor = (campaign: any): 'error' | 'primary' | 'secondary' | 'success' | 'info' | 'warning' | 'neutral' => {
+    const status = getCampaignStatus(campaign);
+    switch (status) {
+        case 'active': return 'success';
+        case 'upcoming': return 'info';
+        case 'completed': return 'neutral';
+        default: return 'neutral';
     }
 };
 
-// Fetch domain entities with actual names (only if not already loaded from props)
-const fetchDomainEntities = async () => {
-    // Skip fetching if we already have initial data from SSR
-    if (domainEntitiesWithNames.value.length > 0) {
-        return;
-    }
-
-    const domain = props.domain || customDomain.value;
-    if (!domain) return;
-
-    entitiesLoading.value = true;
-    try {
-        const response = await $fetch(`/api/domain/${domain}/entities`);
-
-        if (response.success && response.entities) {
-            domainEntitiesWithNames.value = response.entities;
-        }
-    } catch (error) {
-        console.error('Failed to fetch domain entities:', error);
-        domainEntitiesWithNames.value = [];
-    } finally {
-        entitiesLoading.value = false;
+const getCampaignStatusLabel = (campaign: any): string => {
+    const status = getCampaignStatus(campaign);
+    switch (status) {
+        case 'active': return 'Active';
+        case 'upcoming': return 'Upcoming';
+        case 'completed': return 'Completed';
+        default: return 'Inactive';
     }
 };
 
-// Fetch domain campaigns (only if not already loaded from props)
-const fetchDomainCampaigns = async () => {
-    // Skip fetching if we already have initial data from SSR
-    if (domainCampaigns.value.length > 0) {
-        return;
-    }
+const getCampaignStatus = (campaign: any): string => {
+    // Use the status from the API if available
+    if (campaign.status) return campaign.status;
 
-    const domain = props.domain || customDomain.value;
-    if (!domain || !showCampaignSection.value) return;
+    // Calculate status from dates
+    const now = new Date();
+    const start = new Date(campaign.startTime);
+    const end = campaign.endTime ? new Date(campaign.endTime) : null;
 
-    campaignsLoading.value = true;
-    try {
-        const response = await $fetch(`/api/domain/${domain}/campaigns`, {
-            query: { limit: 10 } // Get up to 10 campaigns
-        });
-
-        if (response.campaigns) {
-            domainCampaigns.value = response.campaigns;
-        }
-    } catch (error) {
-        console.error('Failed to fetch domain campaigns:', error);
-        domainCampaigns.value = [];
-    } finally {
-        campaignsLoading.value = false;
-    }
+    if (start > now) return 'upcoming';
+    if (end && end < now) return 'completed';
+    return 'active';
 };
 
-// Refresh all data
+// Refresh all data using useFetch refresh methods
 const refreshData = async () => {
-    // Refresh stats
-    await fetchStats();
+    // Refresh stats using useFetch's built-in refresh
+    await refreshStats();
     // Force KillList refresh by updating key
     refreshKey.value++;
 };
@@ -735,12 +878,6 @@ useSeoMeta({
     description: domainDescription,
 });
 
-// Initial data fetch (only fetch what we don't already have from SSR)
-onMounted(() => {
-    fetchDomainEntities(); // Fetch entities with actual names
-    fetchStats(); // Only fetch stats if not already provided
-    fetchDomainCampaigns(); // Fetch campaigns for the domain
-});
 </script>
 
 <style scoped>

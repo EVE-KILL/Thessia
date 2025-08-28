@@ -1,4 +1,9 @@
 // Define interfaces locally since server types aren't directly accessible in client
+interface IDomainError {
+    type: "domain_not_found" | "domain_unverified";
+    message: string;
+}
+
 interface IDomainContext {
     isCustomDomain: boolean;
     domain?: string;
@@ -6,6 +11,9 @@ interface IDomainContext {
     entity?: any;
     entityType?: "character" | "corporation" | "alliance";
     navigation?: any;
+    features?: any;
+    page_config?: any;
+    error?: IDomainError;
 }
 
 /**
@@ -31,6 +39,12 @@ export const useDomainContext = () => {
                 entity: context.entity
                     ? JSON.parse(JSON.stringify(context.entity))
                     : null,
+                error: context.error
+                    ? {
+                          type: context.error.type,
+                          message: context.error.message,
+                      }
+                    : undefined,
                 config: context.config
                     ? {
                           entity_type: context.config.entity_type,
@@ -48,6 +62,16 @@ export const useDomainContext = () => {
                           navigation: context.config.navigation
                               ? JSON.parse(
                                     JSON.stringify(context.config.navigation)
+                                )
+                              : null,
+                          features: context.config.features
+                              ? JSON.parse(
+                                    JSON.stringify(context.config.features)
+                                )
+                              : null,
+                          page_config: context.config.page_config
+                              ? JSON.parse(
+                                    JSON.stringify(context.config.page_config)
                                 )
                               : null,
                       }
@@ -72,6 +96,9 @@ export const useDomainContext = () => {
     const entity = computed(() => domainContext.value.entity);
     const branding = computed(() => domainContext.value.config?.branding);
     const navigation = computed(() => domainContext.value.config?.navigation);
+    const features = computed(() => domainContext.value.config?.features);
+    const pageConfig = computed(() => domainContext.value.config?.page_config);
+    const domainError = computed(() => domainContext.value.error);
 
     /**
      * Generate entity-specific URL for custom domains
@@ -129,6 +156,27 @@ export const useDomainContext = () => {
         return branding.value.show_eve_kill_branding;
     });
 
+    // Feature toggle getters (with proper defaults matching the store)
+    const showHeroSection = computed(() => features.value?.show_hero !== false);
+    const showStatsSection = computed(
+        () => features.value?.show_stats !== false
+    );
+    const showTrackingOverview = computed(
+        () => features.value?.show_tracking_overview !== false
+    );
+    const showCampaignSection = computed(
+        () => features.value?.show_campaigns !== false
+    );
+    const showMostValuableSection = computed(
+        () => features.value?.show_most_valuable !== false
+    );
+    const showTopBoxesSection = computed(
+        () => features.value?.show_top_boxes !== false
+    );
+    const showShipAnalysisSection = computed(
+        () => features.value?.show_ship_analysis !== false
+    );
+
     return {
         // Core domain context
         domainContext: readonly(domainContext),
@@ -138,6 +186,9 @@ export const useDomainContext = () => {
         entity,
         branding,
         navigation,
+        features,
+        pageConfig,
+        domainError,
 
         // Helper functions
         entityUrl,
@@ -147,6 +198,15 @@ export const useDomainContext = () => {
         // Feature flags
         showCampaigns,
         showEveKillBranding,
+
+        // Feature toggles
+        showHeroSection,
+        showStatsSection,
+        showTrackingOverview,
+        showCampaignSection,
+        showMostValuableSection,
+        showTopBoxesSection,
+        showShipAnalysisSection,
     };
 };
 

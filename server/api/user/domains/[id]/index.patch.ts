@@ -58,11 +58,21 @@ const updateDomainSchema = z.object({
     navigation: z
         .object({
             show_default_nav: z.boolean().optional(),
-            nav_style: z.enum(["horizontal", "sidebar", "dropdown"]).optional(),
-            nav_position: z.enum(["top", "side", "bottom"]).optional(),
-            show_search: z.boolean().optional(),
-            show_user_menu: z.boolean().optional(),
             sticky: z.boolean().optional(),
+            // Per-icon visibility controls
+            show_home: z.boolean().optional(),
+            show_kills: z.boolean().optional(),
+            show_wars: z.boolean().optional(),
+            show_battles: z.boolean().optional(),
+            show_campaigns: z.boolean().optional(),
+            show_stats: z.boolean().optional(),
+            show_tools: z.boolean().optional(),
+            show_search: z.boolean().optional(),
+            show_upload: z.boolean().optional(),
+            show_theme_toggle: z.boolean().optional(),
+            show_background_switcher: z.boolean().optional(),
+            show_info_menu: z.boolean().optional(),
+            show_user_menu: z.boolean().optional(),
             custom_links: z
                 .array(
                     z.object({
@@ -117,7 +127,13 @@ const updateDomainSchema = z.object({
         .optional(),
     features: z
         .object({
+            show_hero: z.boolean().optional(),
+            show_stats: z.boolean().optional(),
+            show_tracking_overview: z.boolean().optional(),
             show_campaigns: z.boolean().optional(),
+            show_most_valuable: z.boolean().optional(),
+            show_top_boxes: z.boolean().optional(),
+            show_ship_analysis: z.boolean().optional(),
             featured_campaign_id: z.string().optional(),
         })
         .optional(),

@@ -18,11 +18,21 @@ const { isCustomDomain, entityUrl } = useDomainContext();
 // Custom navigation integration
 const {
     showDefaultNav,
+    showHome,
+    showKills,
+    showWars,
+    showBattles,
+    showCampaigns,
+    showStats,
+    showTools,
     showSearch,
+    showUpload,
+    showThemeToggle,
+    showBackgroundSwitcher,
+    showInfoMenu,
     showUserMenu,
     mergeNavigation,
     isNavbarSticky,
-    getNavStyle
 } = useCustomNavigation();
 
 // Computed home URL to ensure consistent SSR/client rendering
@@ -104,216 +114,278 @@ interface NavLink {
 /**
  * L ft navigation items
  */
-const defaultLeftNavItems = computed(() => [
-    {
-        name: t("home"),
-        label: t("home"),
-        icon: "lucide:house",
-        to: homeUrl.value,
-        position: "left",
-    },
-    {
-        name: t("kills"),
-        label: t("kills"),
-        position: "left",
-        children: [
-            // Recent Activity
-            { name: t("latest"), label: t("latest"), to: "/kills/latest" },
-            { name: t("big"), label: t("big"), to: "/kills/big" },
-            { name: t("solo"), label: t("solo"), to: "/kills/solo" },
-            { name: t("npc"), label: t("npc"), to: "/kills/npc" },
+const defaultLeftNavItems = computed(() => {
+    const items = [];
 
-            // Separator
-            { name: "---", label: "separator", to: "#" },
+    // Home - always visible but controlled by showHome
+    if (showHome.value) {
+        items.push({
+            name: t("home"),
+            label: t("home"),
+            icon: "lucide:house",
+            to: homeUrl.value,
+            position: "left",
+        });
+    }
 
-            // By Location
-            { name: t("highsec"), label: t("highsec"), to: "/kills/highsec" },
-            { name: t("lowsec"), label: t("lowsec"), to: "/kills/lowsec" },
-            { name: t("nullsec"), label: t("nullsec"), to: "/kills/nullsec" },
-            { name: t("wspace"), label: t("wspace"), to: "/kills/wspace" },
-            { name: t("abyssal"), label: t("abyssal"), to: "/kills/abyssal" },
-            { name: t("pochven"), label: t("pochven"), to: "/kills/pochven" },
+    // Kills section
+    if (showKills.value) {
+        items.push({
+            name: t("kills"),
+            label: t("kills"),
+            position: "left",
+            children: [
+                // Recent Activity
+                { name: t("latest"), label: t("latest"), to: "/kills/latest" },
+                { name: t("big"), label: t("big"), to: "/kills/big" },
+                { name: t("solo"), label: t("solo"), to: "/kills/solo" },
+                { name: t("npc"), label: t("npc"), to: "/kills/npc" },
 
-            // Separator
-            { name: "---", label: "separator", to: "#" },
+                // Separator
+                { name: "---", label: "separator", to: "#" },
 
-            // By Value
-            { name: t("5b"), label: t("5b"), to: "/kills/5b" },
-            { name: t("10b"), label: t("10b"), to: "/kills/10b" },
+                // By Location
+                { name: t("highsec"), label: t("highsec"), to: "/kills/highsec" },
+                { name: t("lowsec"), label: t("lowsec"), to: "/kills/lowsec" },
+                { name: t("nullsec"), label: t("nullsec"), to: "/kills/nullsec" },
+                { name: t("wspace"), label: t("wspace"), to: "/kills/wspace" },
+                { name: t("abyssal"), label: t("abyssal"), to: "/kills/abyssal" },
+                { name: t("pochven"), label: t("pochven"), to: "/kills/pochven" },
 
-            // Separator
-            { name: "---", label: "separator", to: "#" },
+                // Separator
+                { name: "---", label: "separator", to: "#" },
 
-            // By Ship Class
-            { name: t("frigates"), label: t("frigates"), to: "/kills/frigates" },
-            { name: t("destroyers"), label: t("destroyers"), to: "/kills/destroyers" },
-            { name: t("cruisers"), label: t("cruisers"), to: "/kills/cruisers" },
-            { name: t("battlecruisers"), label: t("battlecruisers"), to: "/kills/battlecruisers" },
-            { name: t("battleships"), label: t("battleships"), to: "/kills/battleships" },
-            { name: t("capitals"), label: t("capitals"), to: "/kills/capitals" },
-            { name: t("supercarriers"), label: t("supercarriers"), to: "/kills/supercarriers" },
-            { name: t("titans"), label: t("titans"), to: "/kills/titans" },
-            { name: t("freighters"), label: t("freighters"), to: "/kills/freighters" },
+                // By Value
+                { name: t("5b"), label: t("5b"), to: "/kills/5b" },
+                { name: t("10b"), label: t("10b"), to: "/kills/10b" },
 
-            // Separator
-            { name: "---", label: "separator", to: "#" },
+                // Separator
+                { name: "---", label: "separator", to: "#" },
 
-            // Structures & Tech
-            { name: t("citadels"), label: t("citadels"), to: "/kills/citadels" },
-            { name: t("structureboys"), label: t("structureboys"), to: "/kills/structureboys" },
-            { name: t("t1"), label: t("t1"), to: "/kills/t1" },
-            { name: t("t2"), label: t("t2"), to: "/kills/t2" },
-            { name: t("t3"), label: t("t3"), to: "/kills/t3" }
-        ],
-    },
-    {
-        name: t("wars.title"),
-        label: t("wars.title"),
-        position: "left",
-        to: "/wars",
-        icon: "lucide:swords",
-    },
-    {
-        name: t("battles"),
-        label: t("battles"),
-        position: "left",
-        to: "/battles",
-        icon: "lucide:shield",
-    },
-    {
-        name: t("campaigns"),
-        label: t("campaigns"),
-        position: "left",
-        to: "/campaigns",
-        icon: "lucide:flag",
-    },
-    {
-        name: t("stats"),
-        label: t("stats"),
-        position: "left",
-        to: "/stats",
-        icon: "lucide:chart-area",
-    },
-    {
-        name: t("tools"),
-        label: t("tools"),
-        position: "left",
-        children: [
-            {
-                name: t("Advanced Search"),
-                label: t("Advanced Search"),
-                position: "left",
-                to: "/advancedsearch",
-                icon: "lucide:search",
-            },
-            {
-                name: t("battlegenerator"),
-                label: t("battlegenerator"),
-                position: "left",
-                to: "/battlegenerator",
-                icon: "lucide:shield",
-            },
-            {
-                name: t("campaigncreator"),
-                label: t("campaigncreator"),
-                position: "left",
-                to: "/campaigncreator",
-                icon: "lucide:flag",
-            },
-            {
-                name: t("tools.localscan.title"),
-                label: t("tools.localscan.title"),
-                position: "left",
-                to: "/tools/localscan",
-                icon: "lucide:search",
-            },
-            {
-                name: t("tools.dscan.title"),
-                label: t("tools.dscan.title"),
-                position: "left",
-                to: "/tools/dscan",
-                icon: "lucide:search",
-            },
-            {
-                name: t("metenox", "Metenox"),
-                label: t("metenox", "Metenox"),
-                position: "left",
-                to: "/metenox",
-                icon: "lucide:mountain",
-            },
-            {
-                name: t('comments.list.title'),
-                label: t('comments.list.title'),
-                position: "left",
-                to: "/comments",
-                icon: "lucide:message-square",
-            }
-        ]
-    },
-]);
+                // By Ship Class
+                { name: t("frigates"), label: t("frigates"), to: "/kills/frigates" },
+                { name: t("destroyers"), label: t("destroyers"), to: "/kills/destroyers" },
+                { name: t("cruisers"), label: t("cruisers"), to: "/kills/cruisers" },
+                { name: t("battlecruisers"), label: t("battlecruisers"), to: "/kills/battlecruisers" },
+                { name: t("battleships"), label: t("battleships"), to: "/kills/battleships" },
+                { name: t("capitals"), label: t("capitals"), to: "/kills/capitals" },
+                { name: t("supercarriers"), label: t("supercarriers"), to: "/kills/supercarriers" },
+                { name: t("titans"), label: t("titans"), to: "/kills/titans" },
+                { name: t("freighters"), label: t("freighters"), to: "/kills/freighters" },
+
+                // Separator
+                { name: "---", label: "separator", to: "#" },
+
+                // Structures & Tech
+                { name: t("citadels"), label: t("citadels"), to: "/kills/citadels" },
+                { name: t("structureboys"), label: t("structureboys"), to: "/kills/structureboys" },
+                { name: t("t1"), label: t("t1"), to: "/kills/t1" },
+                { name: t("t2"), label: t("t2"), to: "/kills/t2" },
+                { name: t("t3"), label: t("t3"), to: "/kills/t3" }
+            ],
+        });
+    }
+
+    // Wars section
+    if (showWars.value) {
+        items.push({
+            name: t("wars.title"),
+            label: t("wars.title"),
+            position: "left",
+            to: "/wars",
+            icon: "lucide:swords",
+        });
+    }
+
+    // Battles section
+    if (showBattles.value) {
+        items.push({
+            name: t("battles"),
+            label: t("battles"),
+            position: "left",
+            to: "/battles",
+            icon: "lucide:shield",
+        });
+    }
+
+    // Campaigns section
+    if (showCampaigns.value) {
+        items.push({
+            name: t("campaigns"),
+            label: t("campaigns"),
+            position: "left",
+            to: "/campaigns",
+            icon: "lucide:flag",
+        });
+    }
+
+    // Stats section
+    if (showStats.value) {
+        items.push({
+            name: t("stats"),
+            label: t("stats"),
+            position: "left",
+            to: "/stats",
+            icon: "lucide:chart-area",
+        });
+    }
+
+    // Tools section
+    if (showTools.value) {
+        items.push({
+            name: t("tools"),
+            label: t("tools"),
+            position: "left",
+            children: [
+                {
+                    name: t("Advanced Search"),
+                    label: t("Advanced Search"),
+                    position: "left",
+                    to: "/advancedsearch",
+                    icon: "lucide:search",
+                },
+                {
+                    name: t("battlegenerator"),
+                    label: t("battlegenerator"),
+                    position: "left",
+                    to: "/battlegenerator",
+                    icon: "lucide:shield",
+                },
+                {
+                    name: t("campaigncreator"),
+                    label: t("campaigncreator"),
+                    position: "left",
+                    to: "/campaigncreator",
+                    icon: "lucide:flag",
+                },
+                {
+                    name: t("tools.localscan.title"),
+                    label: t("tools.localscan.title"),
+                    position: "left",
+                    to: "/tools/localscan",
+                    icon: "lucide:search",
+                },
+                {
+                    name: t("tools.dscan.title"),
+                    label: t("tools.dscan.title"),
+                    position: "left",
+                    to: "/tools/dscan",
+                    icon: "lucide:search",
+                },
+                {
+                    name: t("metenox", "Metenox"),
+                    label: t("metenox", "Metenox"),
+                    position: "left",
+                    to: "/metenox",
+                    icon: "lucide:mountain",
+                },
+                {
+                    name: t('comments.list.title'),
+                    label: t('comments.list.title'),
+                    position: "left",
+                    to: "/comments",
+                    icon: "lucide:message-square",
+                }
+            ]
+        });
+    }
+
+    return items;
+});
 
 /**
  * C nter navigation items
  */
-const defaultCenterNavItems = computed(() => [
-    {
-        icon: "lucide:search",
-        label: t("search.title", "Search"),
-        position: "center",
-        onClick: openSearch,
-    },
-]);
+const defaultCenterNavItems = computed(() => {
+    if (!showSearch.value) {
+        return [];
+    }
+
+    return [
+        {
+            icon: "lucide:search",
+            label: t("search.title", "Search"),
+            position: "center",
+            onClick: openSearch,
+        },
+    ];
+});
 
 /**
  * R ght navigation items
  */
-const defaultRightNavItems = computed(() => [
-    {
-        icon: "lucide:upload",
-        label: t("killmail.submit"),
-        position: "right",
-        mobile: false,
-        to: "/killmail"
-    },
-    {
+const defaultRightNavItems = computed(() => {
+    const items = [];
+
+    // Upload killmail
+    if (showUpload.value) {
+        items.push({
+            icon: "lucide:upload",
+            label: t("killmail.submit"),
+            position: "right",
+            mobile: false,
+            to: "/killmail"
+        });
+    }
+
+    // Language selector - always available in mobile
+    items.push({
         position: "right",
         component: NavbarLanguageSelector,
         mobile: true,
-    },
-    {
-        icon: "lucide:sun-moon",
-        label: t("toggleTheme"),
-        position: "right",
-        mobile: true,
-        onClick: () => {
-            colorMode.preference = colorMode.preference === "dark" ? "light" : "dark";
-        },
-    },
-    {
-        icon: "lucide:book-image",
-        label: t("changeBackground"),
-        component: NavbarBackgroundSwitcher,
-        position: "right",
-        mobile: true,
-    },
-    {
-        icon: "lucide:info",
-        label: t("informationMenu"),
-        position: "right",
-        collapse: false,
-        children: [
-            { name: t("faq"), label: t("faq"), to: "/faq" },
-            { name: t("status"), label: t("status"), to: "/status" },
-            { name: t("aboutTitle"), label: t("aboutTitle"), to: "/about" },
-            { name: t("Donate"), label: t("Donate"), to: "/donate" },
-            { name: t("Documentation"), label: t("Documentation"), to: "/docs" },
-        ],
-    },
-    {
-        component: NavbarUser,
-        position: "right",
-    },
-]);
+    });
+
+    // Theme toggle
+    if (showThemeToggle.value) {
+        items.push({
+            icon: "lucide:sun-moon",
+            label: t("toggleTheme"),
+            position: "right",
+            mobile: true,
+            onClick: () => {
+                colorMode.preference = colorMode.preference === "dark" ? "light" : "dark";
+            },
+        });
+    }
+
+    // Background switcher
+    if (showBackgroundSwitcher.value) {
+        items.push({
+            icon: "lucide:book-image",
+            label: t("changeBackground"),
+            component: NavbarBackgroundSwitcher,
+            position: "right",
+            mobile: true,
+        });
+    }
+
+    // Information menu
+    if (showInfoMenu.value) {
+        items.push({
+            icon: "lucide:info",
+            label: t("informationMenu"),
+            position: "right",
+            collapse: false,
+            children: [
+                { name: t("faq"), label: t("faq"), to: "/faq" },
+                { name: t("status"), label: t("status"), to: "/status" },
+                { name: t("aboutTitle"), label: t("aboutTitle"), to: "/about" },
+                { name: t("Donate"), label: t("Donate"), to: "/donate" },
+                { name: t("Documentation"), label: t("Documentation"), to: "/docs" },
+            ],
+        });
+    }
+
+    // User menu - always controlled by showUserMenu
+    if (showUserMenu.value) {
+        items.push({
+            component: NavbarUser,
+            position: "right",
+        });
+    }
+
+    return items;
+});
 
 // Merge custom navigation with default navigation
 const leftNavItems = computed(() => {
@@ -324,21 +396,11 @@ const leftNavItems = computed(() => {
 });
 
 const centerNavItems = computed(() => {
-    if (!showSearch.value) {
-        return [];
-    }
     return mergeNavigation(defaultCenterNavItems.value, 'center');
 });
 
 const rightNavItems = computed(() => {
-    const items = [...defaultRightNavItems.value];
-
-    // Filter out user menu if disabled
-    if (!showUserMenu.value) {
-        return items.filter(item => !item.component || item.component.name !== 'NavbarUser');
-    }
-
-    return mergeNavigation(items, 'right');
+    return mergeNavigation(defaultRightNavItems.value, 'right');
 });
 
 /**
@@ -520,7 +582,7 @@ const closeMobileMenu = () => {
 
                 <!-- Regular links that should appear in mobile header -->
                 <NuxtLink
-                    v-for="(link, index) in rightNavItems.filter(l => (l as any).to && !(l as any).mobile && !(l as any).children && !(l as any).component)"
+                    v-for="(link, index) in rightNavItems.filter((l: NavLink) => l.to && !l.mobile && !l.children && !l.component)"
                     :key="`mobile-link-${index}`" :to="(link as any).to" class="navbar-mobile-link"
                     :aria-label="(link as any).label">
                     <UIcon v-if="(link as any).icon" :name="(link as any).icon" class="navbar-mobile-icon" />
@@ -616,7 +678,8 @@ const closeMobileMenu = () => {
                 <h3 class="text-lg font-bold mb-4 text-gray-900 dark:text-gray-100">{{ t('navbar.menuTools') }}</h3>
                 <div class="space-y-3">
                     <!-- Information dropdown items in mobile view -->
-                    <template v-for="(link, index) in rightNavItems.filter(l => l.children)" :key="`info-${index}`">
+                    <template v-for="(link, index) in rightNavItems.filter((l: NavLink) => l.children)"
+                        :key="`info-${index}`">
                         <!-- Non-collapsible links with children -->
                         <div v-if="link.collapse === false" class="mb-4 space-y-2">
                             <!-- Static header -->

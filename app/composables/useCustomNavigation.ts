@@ -51,8 +51,57 @@ export const useCustomNavigation = () => {
     });
 
     /**
-     * Check if search should be shown in navbar
+     * Per-icon visibility controls
      */
+    const showHome = computed(() => {
+        if (!isCustomDomain.value || !navigation.value) {
+            return true;
+        }
+        return navigation.value.show_home !== false;
+    });
+
+    const showKills = computed(() => {
+        if (!isCustomDomain.value || !navigation.value) {
+            return true;
+        }
+        return navigation.value.show_kills !== false;
+    });
+
+    const showWars = computed(() => {
+        if (!isCustomDomain.value || !navigation.value) {
+            return true;
+        }
+        return navigation.value.show_wars !== false;
+    });
+
+    const showBattles = computed(() => {
+        if (!isCustomDomain.value || !navigation.value) {
+            return true;
+        }
+        return navigation.value.show_battles !== false;
+    });
+
+    const showCampaigns = computed(() => {
+        if (!isCustomDomain.value || !navigation.value) {
+            return true;
+        }
+        return navigation.value.show_campaigns !== false;
+    });
+
+    const showStats = computed(() => {
+        if (!isCustomDomain.value || !navigation.value) {
+            return true;
+        }
+        return navigation.value.show_stats !== false;
+    });
+
+    const showTools = computed(() => {
+        if (!isCustomDomain.value || !navigation.value) {
+            return true;
+        }
+        return navigation.value.show_tools !== false;
+    });
+
     const showSearch = computed(() => {
         if (!isCustomDomain.value || !navigation.value) {
             return true;
@@ -60,34 +109,39 @@ export const useCustomNavigation = () => {
         return navigation.value.show_search !== false;
     });
 
-    /**
-     * Check if user menu should be shown
-     */
+    const showUpload = computed(() => {
+        if (!isCustomDomain.value || !navigation.value) {
+            return true;
+        }
+        return navigation.value.show_upload !== false;
+    });
+
+    const showThemeToggle = computed(() => {
+        if (!isCustomDomain.value || !navigation.value) {
+            return true;
+        }
+        return navigation.value.show_theme_toggle !== false;
+    });
+
+    const showBackgroundSwitcher = computed(() => {
+        if (!isCustomDomain.value || !navigation.value) {
+            return true;
+        }
+        return navigation.value.show_background_switcher !== false;
+    });
+
+    const showInfoMenu = computed(() => {
+        if (!isCustomDomain.value || !navigation.value) {
+            return true;
+        }
+        return navigation.value.show_info_menu !== false;
+    });
+
     const showUserMenu = computed(() => {
         if (!isCustomDomain.value || !navigation.value) {
             return true;
         }
         return navigation.value.show_user_menu !== false;
-    });
-
-    /**
-     * Get navigation style
-     */
-    const getNavStyle = computed(() => {
-        if (!isCustomDomain.value || !navigation.value) {
-            return "horizontal";
-        }
-        return navigation.value.nav_style || "horizontal";
-    });
-
-    /**
-     * Get navigation position
-     */
-    const getNavPosition = computed(() => {
-        if (!isCustomDomain.value || !navigation.value) {
-            return "top";
-        }
-        return navigation.value.nav_position || "top";
     });
 
     /**
@@ -116,7 +170,28 @@ export const useCustomNavigation = () => {
 
         // Merge custom links with default navigation
         if (position === "left") {
-            return [...customLinks, ...defaultNavItems];
+            // Put Home first, then custom links, then other default items
+            const homeItem = defaultNavItems.find(
+                (item) =>
+                    item.to === "/" ||
+                    item.name === "Home" ||
+                    item.icon === "lucide:house"
+            );
+            const otherItems = defaultNavItems.filter(
+                (item) =>
+                    item.to !== "/" &&
+                    item.name !== "Home" &&
+                    item.icon !== "lucide:house"
+            );
+
+            if (homeItem) {
+                return [homeItem, ...customLinks, ...otherItems];
+            } else {
+                return [...customLinks, ...defaultNavItems];
+            }
+        } else if (position === "right") {
+            // Custom links should not appear on the right by default
+            return [...defaultNavItems];
         } else {
             return [...defaultNavItems, ...customLinks];
         }
@@ -125,10 +200,19 @@ export const useCustomNavigation = () => {
     return {
         getCustomLinks,
         showDefaultNav,
+        showHome,
+        showKills,
+        showWars,
+        showBattles,
+        showCampaigns,
+        showStats,
+        showTools,
         showSearch,
+        showUpload,
+        showThemeToggle,
+        showBackgroundSwitcher,
+        showInfoMenu,
         showUserMenu,
-        getNavStyle,
-        getNavPosition,
         isNavbarSticky,
         mergeNavigation,
     };
