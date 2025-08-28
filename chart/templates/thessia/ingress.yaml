@@ -13,6 +13,13 @@ metadata:
   {{- end }}
 spec:
   ingressClassName: {{ .Values.thessia.ingress.className }}
+  {{- if .Values.thessia.ingress.defaultBackend.enabled }}
+  defaultBackend:
+    service:
+      name: {{ include "thessia.fullname" . }}
+      port:
+        number: {{ .Values.thessia.service.port }}
+  {{- end }}
   {{- if .Values.thessia.ingress.tls }}
   tls:
     {{- range .Values.thessia.ingress.tls }}

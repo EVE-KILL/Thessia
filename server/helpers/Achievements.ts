@@ -711,7 +711,7 @@ export class AchievementService {
                 const completionTiers = Math.floor(
                     count / (achievement.threshold || 1)
                 );
-                
+
                 const newAchievement = {
                     achievement_id: achievement.id,
                     name: achievement.name,
@@ -727,11 +727,12 @@ export class AchievementService {
                     completed_at: isCompleted ? new Date() : null,
                     last_updated: new Date(),
                 };
-                
+
                 updates[`$push`] = updates[`$push`] || {};
-                updates[`$push`].achievements = updates[`$push`].achievements || { $each: [] };
+                updates[`$push`].achievements = updates[`$push`]
+                    .achievements || { $each: [] };
                 updates[`$push`].achievements.$each.push(newAchievement);
-                
+
                 hasUpdates = true;
             }
         }
@@ -741,14 +742,14 @@ export class AchievementService {
             // Separate $set and $push operations
             const setOperations: any = {};
             const pushOperations: any = updates.$push;
-            
+
             // Move non-$push operations to setOperations
             for (const [key, value] of Object.entries(updates)) {
-                if (key !== '$push') {
+                if (key !== "$push") {
                     setOperations[key] = value;
                 }
             }
-            
+
             setOperations.character_name = characterName;
             setOperations.last_calculated = new Date();
 

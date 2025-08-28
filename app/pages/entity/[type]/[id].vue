@@ -115,6 +115,9 @@ const { t } = useI18n();
 // Domain context
 const { isCustomDomain, customDomain, entityType: domainEntityType, entity: domainEntity } = useDomainContext();
 
+// SEO optimization for custom domains
+const { optimizeCustomDomainSeo, setDomainPageSeo, generateCustomDomainOgImage, generateDomainBreadcrumbs } = useDomainSeo();
+
 // Active tab management
 const activeTab = ref('overview');
 
@@ -124,23 +127,8 @@ const { data: entity, pending, error } = await useFetch<EntityData>(`/api/${enti
     default: () => null
 });
 
-// SEO and meta tags
+// Entity name for SEO
 const entityName = computed(() => entity.value?.name || 'Loading...');
-const pageTitle = computed(() => {
-    if (isCustomDomain.value && customDomain.value) {
-        return `${entityName.value} - ${customDomain.value.domain}`;
-    }
-    return `${entityName.value} - ${t(entityType)} - EVE-KILL`;
-});
-
-useSeoMeta({
-    title: pageTitle,
-    description: computed(() => entity.value?.description || `${t(entityType)} profile for ${entityName.value}`),
-    ogTitle: pageTitle,
-    ogDescription: computed(() => entity.value?.description || `View ${entityName.value}'s killboard statistics, recent kills, and activity on EVE-KILL.`),
-    ogImage: computed(() => entityAvatar.value),
-    twitterCard: 'summary_large_image'
-});
 
 // Entity avatar
 const entityAvatar = computed(() => {
@@ -160,6 +148,49 @@ const entityAvatar = computed(() => {
             return '';
     }
 });
+
+// SEO optimization when entity data is available
+watch(entity, (newEntity) => {
+    if (newEntity) {
+        // Generate breadcrumbs
+        const breadcrumbs = [
+            { name: 'Home', path: '/' },
+            { name: t(entityType), path: `/${entityType}s` },
+            { name: newEntity.name }
+        ];
+
+        generateDomainBreadcrumbs(breadcrumbs);
+
+        // Set domain-specific SEO
+        const description = newEntity.description ||
+            `${newEntity.name} ${entityType} killboard - View detailed PVP statistics, recent kills, losses, and combat achievements in EVE Online.`;
+
+        const keywords = [
+            'EVE Online',
+            'killboard',
+            newEntity.name,
+            entityType,
+            'PVP statistics',
+            'kills',
+            'losses',
+            'combat data',
+            ...(newEntity.ticker ? [newEntity.ticker] : [])
+        ];
+
+        setDomainPageSeo({
+            title: newEntity.name,
+            description,
+            keywords,
+            entityInfo: newEntity,
+            image: generateCustomDomainOgImage('entity', entityId)
+        });
+
+        // Optimize for custom domain
+        if (isCustomDomain.value) {
+            optimizeCustomDomainSeo(newEntity);
+        }
+    }
+}, { immediate: true });
 
 // Handle image loading errors
 const handleImageError = (event: Event) => {

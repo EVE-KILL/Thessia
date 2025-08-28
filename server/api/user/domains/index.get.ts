@@ -75,8 +75,12 @@ export default defineEventHandler(async (event) => {
                     );
                 }
 
+                // Convert to plain object and include verification token for the domain owner
+                const domainObj = domain.toObject();
+
                 return {
-                    ...domain.toJSON(),
+                    ...domainObj,
+                    verification_token: domain.verification_token, // Include for domain owner
                     entity_info: entityInfo,
                 };
             })

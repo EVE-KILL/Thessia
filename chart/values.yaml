@@ -135,6 +135,9 @@ thessia:
                 proxy_set_header X-Forwarded-Host $host;
             nginx.ingress.kubernetes.io/use-forwarded-headers: "true"
             nginx.ingress.kubernetes.io/proxy-real-ip-cidr: "0.0.0.0/0"
+        # Enable default backend to catch all unmatched domains
+        defaultBackend:
+            enabled: true
         hosts:
           - host: "eve-kill.com"
             paths:

@@ -213,12 +213,9 @@ const verificationMethods = [
     { id: 'file', label: t('settings.domains.verification.file'), slot: 'file' }
 ]
 
-// Generate a consistent verification token based on domain
+// Use the actual verification token from the domain object
 const verificationToken = computed(() => {
-    const domainId = props.domain.domain_id || props.domain.domain
-    // Use a hash of the domain ID to create a consistent token
-    const hash = btoa(domainId).replace(/[^a-zA-Z0-9]/g, '').substring(0, 8).toLowerCase()
-    return `evekill-${domainId}-${hash}`
+    return props.domain.verification_token || 'No token available'
 })
 
 const copyDnsRecord = async () => {
