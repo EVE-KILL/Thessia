@@ -1,0 +1,24 @@
+{{- if and .Values.thessia.enabled .Values.thessia.ingress.enabled .Values.thessia.ingress.defaultBackend.enabled }}
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: {{ include "thessia.fullname" . }}-wildcard
+  namespace: {{ .Values.namespace.name }}
+  labels:
+    {{- include "thessia.labels" . | nindent 4 }}
+    app.kubernetes.io/component: thessia-wildcard
+  {{- with .Values.thessia.ingress.annotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+    # Remove cert-manager annotation for wildcard ingress since it won't have specific hosts
+    cert-manager.io/cluster-issuer: null
+  {{- end }}
+spec:
+  ingressClassName: {{ .Values.thessia.ingress.className }}
+  # Default backend catches all domains not explicitly defined in the main ingress
+  defaultBackend:
+    service:
+      name: {{ include "thessia.fullname" . }}
+      port:
+        number: {{ .Values.thessia.service.port }}
+{{- end }}
