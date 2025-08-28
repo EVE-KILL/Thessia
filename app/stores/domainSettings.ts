@@ -163,28 +163,41 @@ export const useDomainSettingsStore = defineStore("domainSettings", () => {
     const customCTAButtons = computed(() => branding.value.cta_buttons || []);
 
     // Actions
-    const loadDomainSettings = async (domain: string) => {
+    const loadDomainSettings = async (domain: string, forceRefresh = false) => {
         isLoading.value = true;
         error.value = null;
 
-        console.log(
-            `[Domain Settings Store] Loading settings for domain: ${domain}`
-        );
+        // Log cache busting attempts
+        if (forceRefresh) {
+            console.log(
+                `[Domain Settings Store] Force refreshing domain settings for: ${domain}`
+            );
+        }
 
         try {
+            const queryParams: any = { domain };
+
+            // Add cache busting parameter when forcing refresh
+            if (forceRefresh) {
+                queryParams._t = Date.now();
+                queryParams.clearCache = "true"; // Also clear middleware cache
+            }
+
             const response = await $fetch<{
                 success: boolean;
                 data: DomainSettings;
             }>(`/api/domains/lookup`, {
-                query: { domain },
+                query: queryParams,
                 // Add timeout to prevent hanging requests
                 timeout: 10000,
+                // Disable caching for fetch requests
+                ...(forceRefresh
+                    ? {
+                          server: false,
+                          headers: { "Cache-Control": "no-cache" },
+                      }
+                    : {}),
             });
-
-            console.log(
-                `[Domain Settings Store] Received response for ${domain}:`,
-                response
-            );
 
             if (response.success && response.data) {
                 currentDomain.value = domain;
@@ -202,14 +215,7 @@ export const useDomainSettingsStore = defineStore("domainSettings", () => {
                     features: domainData.features || {},
                 };
                 hasUnsavedChanges.value = false;
-                console.log(
-                    `[Domain Settings Store] Successfully loaded settings for: ${domain}`
-                );
             } else {
-                console.error(
-                    `[Domain Settings Store] Invalid response for ${domain}:`,
-                    response
-                );
                 throw new Error("Invalid domain configuration received");
             }
         } catch (err: any) {
@@ -321,19 +327,41 @@ export const useDomainSettingsStore = defineStore("domainSettings", () => {
         hasUnsavedChanges.value = false;
     };
 
+    // Force refresh the current domain settings
+    const refreshDomainSettings = async () => {
+        if (!currentDomain.value) {
+            throw new Error("No current domain to refresh");
+        }
+
+        console.log(
+            `[Domain Settings Store] Force refreshing settings for ${currentDomain.value}`
+        );
+        await loadDomainSettings(currentDomain.value, true);
+    };
+
     // Save changes to server
     const saveChanges = async () => {
         if (!settings.value.domain_id) {
             throw new Error("No domain ID available for saving");
         }
 
-        return await updateDomainSettings(settings.value.domain_id, {
+        const result = await updateDomainSettings(settings.value.domain_id, {
             branding: settings.value.branding,
             navigation: settings.value.navigation,
             page_config: settings.value.page_config,
             features: settings.value.features,
             entities: settings.value.entities,
         });
+
+        // After successful save, refresh the domain settings to ensure store is up to date
+        if (currentDomain.value) {
+            console.log(
+                `[Domain Settings Store] Refreshing settings after save for ${currentDomain.value}`
+            );
+            await loadDomainSettings(currentDomain.value, true);
+        }
+
+        return result;
     };
 
     // Initialize from existing domain context or props
@@ -397,6 +425,7 @@ export const useDomainSettingsStore = defineStore("domainSettings", () => {
         updateFeatures,
         updateEntities,
         resetSettings,
+        refreshDomainSettings,
         saveChanges,
         initializeFromData,
     };

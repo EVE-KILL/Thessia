@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { invalidateDomainCache } from "../../../../utils/domainCacheManager";
 
 // Enhanced Zod schema for Phase 2 domain updates
 const updateDomainSchema = z.object({
@@ -347,6 +348,9 @@ export default defineEventHandler(async (event) => {
             "🔍 PATCH Debug - Updated Domain Navigation:",
             JSON.stringify(updatedDomain.navigation, null, 2)
         );
+
+        // Clear ALL domain-related caches (database-driven invalidation)
+        await invalidateDomainCache(updatedDomain.domain);
 
         return {
             success: true,

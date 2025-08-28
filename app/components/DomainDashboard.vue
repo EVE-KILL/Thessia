@@ -483,6 +483,9 @@ const props = withDefaults(defineProps<Props>(), {
 const selectedEntity = ref<any>(null);
 const selectedTimeRange = ref('7d');
 
+// Refresh key for cache invalidation
+const refreshKey = ref(0);
+
 // Computed domain for API calls
 const currentDomain = computed(() => props.domain || customDomain.value);
 
@@ -522,11 +525,12 @@ const {
 const {
     data: domainEntitiesResponse,
     pending: entitiesLoading,
-    error: entitiesError
+    error: entitiesError,
+    refresh: refreshEntities
 } = await useFetch(
     () => currentDomain.value ? `/api/domain/${currentDomain.value}/entities` : null,
     {
-        key: `domain-entities-${currentDomain.value}`,
+        key: `domain-entities-${currentDomain.value}-${refreshKey.value}`,
         server: true,
         lazy: false,
         default: () => ({ success: false, entities: [] })
@@ -572,9 +576,6 @@ const timeRanges = [
     { label: '14d', value: '14d' },
     { label: '30d', value: '30d' }
 ];
-
-// Key to force KillList refresh when filters change
-const refreshKey = ref(0);
 
 // Entity options from domain store
 const entityOptions = computed(() => {
@@ -876,9 +877,57 @@ const getCampaignStatus = (campaign: any): string => {
 const refreshData = async () => {
     // Refresh stats using useFetch's built-in refresh
     await refreshStats();
+    // Refresh entities data
+    await refreshEntities();
     // Force KillList refresh by updating key
     refreshKey.value++;
 };
+
+// Debug method to force refresh domain settings cache
+const refreshDomainCache = async () => {
+    console.log('[Domain Dashboard] Force refreshing domain settings cache');
+    try {
+        await domainStore.refreshDomainSettings();
+        console.log('[Domain Dashboard] Domain settings cache refreshed successfully');
+        // Also refresh other data to ensure everything is up to date
+        await refreshData();
+    } catch (error) {
+        console.error('[Domain Dashboard] Failed to refresh domain settings cache:', error);
+    }
+};
+
+// Debug method to clear middleware cache
+const clearMiddlewareCache = async () => {
+    console.log('[Domain Dashboard] Clearing middleware cache');
+    try {
+        const { clearMiddlewareCache } = useDomainCache();
+        await clearMiddlewareCache(currentDomain.value);
+        console.log('[Domain Dashboard] Middleware cache cleared successfully');
+    } catch (error) {
+        console.error('[Domain Dashboard] Failed to clear middleware cache:', error);
+    }
+};
+
+// Debug method for full cache refresh
+const fullCacheRefresh = async () => {
+    console.log('[Domain Dashboard] Full cache refresh');
+    try {
+        const { fullRefresh } = useDomainCache();
+        await fullRefresh(currentDomain.value);
+        console.log('[Domain Dashboard] Full cache refresh completed');
+        // Also refresh other data to ensure everything is up to date
+        await refreshData();
+    } catch (error) {
+        console.error('[Domain Dashboard] Full cache refresh failed:', error);
+    }
+};
+
+// Make cache methods available globally for debugging (dev only)
+if (process.client && process.dev) {
+    (window as any).refreshDomainCache = refreshDomainCache;
+    (window as any).clearMiddlewareCache = clearMiddlewareCache;
+    (window as any).fullCacheRefresh = fullCacheRefresh;
+}
 
 // Watch for time range changes
 watch(selectedTimeRange, () => {

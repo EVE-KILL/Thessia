@@ -361,7 +361,7 @@ export default defineCachedEventHandler(
     },
     {
         maxAge: 300,
-        staleMaxAge: 0,
+        staleMaxAge: -1,
         swr: true,
         base: "redis",
         getKey: (event) => {

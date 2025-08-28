@@ -1047,9 +1047,11 @@ const onSubmit = async () => {
 
         console.log('🔍 Frontend Debug - API Response:', JSON.stringify(response, null, 2));
 
-        // Update the domain store with the new settings
+        // Force refresh domain settings from the server to ensure we have the latest data
+        // This ensures any server-side transformations or computed fields are reflected
         if (response.domain) {
-            domainStore.initializeFromData(response.domain);
+            console.log('🔍 Frontend Debug - Force refreshing domain settings after update');
+            await domainStore.loadDomainSettings(state.domain, true);
         }
 
         emit('updated', response.domain);

@@ -175,6 +175,90 @@ export function clearAllDomainCache() {
 }
 
 /**
+ * Clear all caches related to a specific domain (middleware + Redis)
+ * This clears both the middleware cache and the Redis cached API responses
+ */
+export async function clearAllDomainCaches(domain: string) {
+    // Clear middleware cache (instant)
+    clearDomainCache(domain);
+
+    // Clear Redis-cached API responses for this domain (with timeout)
+    const clearRedisCache = async () => {
+        try {
+            const redis = useStorage("redis");
+
+            // Clear specific known cache keys for this domain
+            const keysToTry = [
+                // Domain entities cache
+                `nitro:handlers:api:domain:${domain}:entities.get.json`,
+
+                // Domain stats cache for different time ranges
+                `nitro:handlers:api:domain:${domain}:stats.get:timeRange=1d.json`,
+                `nitro:handlers:api:domain:${domain}:stats.get:timeRange=7d.json`,
+                `nitro:handlers:api:domain:${domain}:stats.get:timeRange=30d.json`,
+                `nitro:handlers:api:domain:${domain}:stats.get:timeRange=90d.json`,
+                `nitro:handlers:api:domain:${domain}:stats.get:timeRange=all.json`,
+
+                // Domain campaigns cache
+                `nitro:handlers:api:domain:${domain}:campaigns.get.json`,
+
+                // Domain killmails cache
+                `nitro:handlers:api:domain:${domain}:killmails.get.json`,
+            ];
+
+            let clearedCount = 0;
+            for (const key of keysToTry) {
+                try {
+                    const exists = await redis.hasItem(key);
+                    if (exists) {
+                        await redis.removeItem(key);
+                        clearedCount++;
+                        console.log(
+                            `[Domain Detection] Cleared Redis cache key: ${key}`
+                        );
+                    }
+                } catch (keyError: any) {
+                    // Skip individual key errors
+                    console.warn(
+                        `[Domain Detection] Could not clear key ${key}:`,
+                        keyError?.message || keyError
+                    );
+                }
+            }
+
+            console.log(
+                `[Domain Detection] Cleared ${clearedCount} Redis cache keys for domain: ${domain}`
+            );
+        } catch (error) {
+            console.error(
+                `[Domain Detection] Error clearing Redis caches for domain ${domain}:`,
+                error
+            );
+            throw error;
+        }
+    };
+
+    // Run Redis clearing with timeout to prevent hanging
+    try {
+        await Promise.race([
+            clearRedisCache(),
+            new Promise((_, reject) =>
+                setTimeout(
+                    () => reject(new Error("Redis cache clearing timed out")),
+                    5000
+                )
+            ),
+        ]);
+    } catch (error: any) {
+        console.warn(
+            `[Domain Detection] Redis cache clearing failed or timed out for domain ${domain}:`,
+            error.message
+        );
+        // Don't throw - middleware cache clearing still worked
+    }
+}
+
+/**
  * Enhanced domain detection middleware - Phase 2 with improved error handling
  */
 export default defineEventHandler(async (event: H3Event) => {
