@@ -364,9 +364,6 @@ export default defineCachedEventHandler(
         staleMaxAge: 0,
         swr: true,
         base: "redis",
-        shouldBypassCache: (event) => {
-            return true;
-        },
         getKey: (event) => {
             const domain = getRouterParam(event as any, "domain");
             const query = getQuery(event as any);
