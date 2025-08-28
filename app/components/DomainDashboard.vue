@@ -183,7 +183,7 @@
                         </div>
                     </div>
                     <div class="text-lg font-bold text-white mb-1">{{ topShipDestroyed?.ship_group_name || 'Loading...'
-                        }}</div>
+                    }}</div>
                     <div class="text-gray-400 text-sm">{{ topShipDestroyed?.killed || 0 }} destroyed</div>
                 </div>
 
@@ -447,7 +447,8 @@
 <script setup lang="ts">
 import { useDomainSettingsStore } from '~/stores/domainSettings';
 
-const { t } = useI18n();
+const { t, locale } = useI18n();
+const currentLocale = computed(() => locale.value);
 const {
     customDomain,
     domainContext,
@@ -717,8 +718,20 @@ const featuredCampaign = computed(() => {
 
 // Statistics helpers
 const topShipDestroyed = computed(() => {
-    return stats.value?.shipGroupStats?.[0] || null;
+    const shipStat = stats.value?.shipGroupStats?.[0];
+    if (!shipStat) return null;
+
+    return {
+        ...shipStat,
+        ship_group_name: getLocalizedString(shipStat.ship_group_name, currentLocale.value)
+    };
 });
+
+// Helper functions for data formatting
+const getLocalizedString = (obj: any, locale: string): string => {
+    if (!obj) return "";
+    return obj[locale] || obj.en || "";
+};
 
 // Format helpers
 const numberFormat = (num: number): string => {

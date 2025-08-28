@@ -29,7 +29,7 @@ function createTimeFilter(timeRange: string) {
 }
 
 /**
- * Generate ultra-lightweight domain statistics optimized for speed using separate index-friendly queries
+ * Generate comprehensive domain statistics optimized for speed using separate index-friendly queries
  */
 async function generateFastDomainStats(entities: any[], timeFilter: any) {
     const stats: any = {
@@ -37,33 +37,26 @@ async function generateFastDomainStats(entities: any[], timeFilter: any) {
         topKillersByCharacter: [],
         topKillersByCorporation: [],
         topKillersByAlliance: [],
-        shipStats: {},
+        shipStats: { destroyed: [] },
+        shipGroupStats: [],
         totalKills: 0,
         totalValue: 0,
     };
 
     try {
-        console.log(
-            "🔍 Running separate optimized queries for entities:",
-            entities.length
-        );
-        console.log("🕐 Time filter:", JSON.stringify(timeFilter, null, 2));
-
-        let totalKills = 0;
         let totalValue = 0;
         const allKillIds = new Set();
+        const allKillmails = [];
 
-        // Run separate queries for each entity type - this allows MongoDB to use specific indexes
+        // Run separate optimized queries for each entity (like the original approach)
         for (const entity of entities) {
             const entityId = entity.entity_id;
             const entityType = entity.entity_type;
 
-            console.log(`🎯 Querying ${entityType} ${entityId}`);
-
             let victimQuery: any = { ...timeFilter };
             let attackerQuery: any = { ...timeFilter };
 
-            // Build focused queries that can use single-field indexes
+            // Build focused queries that use single-field indexes
             if (entityType === "character") {
                 victimQuery["victim.character_id"] = entityId;
                 attackerQuery["attackers.character_id"] = entityId;
@@ -75,17 +68,7 @@ async function generateFastDomainStats(entities: any[], timeFilter: any) {
                 attackerQuery["attackers.alliance_id"] = entityId;
             }
 
-            // Count victims (using victim_*_id_1 indexes)
-            const victimCount = await Killmails.countDocuments(victimQuery);
-            console.log(`📊 ${entityType} ${entityId} victims: ${victimCount}`);
-
-            // Count attackers (using attackers_*_id_1 indexes)
-            const attackerCount = await Killmails.countDocuments(attackerQuery);
-            console.log(
-                `📊 ${entityType} ${entityId} attacker kills: ${attackerCount}`
-            );
-
-            // Use aggregation to get actual totals and values (no sampling, no limits)
+            // Get victim stats and sample killmails
             const [victimStats] = await Killmails.aggregate([
                 { $match: victimQuery },
                 {
@@ -98,6 +81,7 @@ async function generateFastDomainStats(entities: any[], timeFilter: any) {
                 },
             ]);
 
+            // Get attacker stats and sample killmails
             const [attackerStats] = await Killmails.aggregate([
                 { $match: attackerQuery },
                 {
@@ -110,7 +94,7 @@ async function generateFastDomainStats(entities: any[], timeFilter: any) {
                 },
             ]);
 
-            // Add killmail IDs to set for deduplication
+            // Collect killmail IDs for deduplication
             if (victimStats?.killmailIds) {
                 victimStats.killmailIds.forEach((id: any) =>
                     allKillIds.add(id)
@@ -124,42 +108,161 @@ async function generateFastDomainStats(entities: any[], timeFilter: any) {
                 );
                 totalValue += attackerStats.totalValue || 0;
             }
+
+            // Get some sample killmails from each entity for most valuable analysis
+            const sampleVictimKills = await Killmails.find(victimQuery)
+                .sort({ total_value: -1 })
+                .limit(5)
+                .select({
+                    killmail_id: 1,
+                    total_value: 1,
+                    kill_time: 1,
+                    victim: 1,
+                    system_name: 1,
+                    region_name: 1,
+                })
+                .lean();
+
+            const sampleAttackerKills = await Killmails.find(attackerQuery)
+                .sort({ total_value: -1 })
+                .limit(5)
+                .select({
+                    killmail_id: 1,
+                    total_value: 1,
+                    kill_time: 1,
+                    victim: 1,
+                    system_name: 1,
+                    region_name: 1,
+                })
+                .lean();
+
+            allKillmails.push(...sampleVictimKills, ...sampleAttackerKills);
         }
 
-        // Use the deduplicated Set size for accurate kill count
+        // Set basic totals
         stats.totalKills = allKillIds.size;
         stats.totalValue = totalValue;
 
-        console.log(
-            `📈 Final stats: ${
-                stats.totalKills
-            } unique kills, ${totalValue.toLocaleString()} ISK`
+        // Get top most valuable kills from collected samples, deduplicated
+        const uniqueKillmails = Array.from(
+            new Map(allKillmails.map((k) => [k.killmail_id, k])).values()
         );
+        stats.mostValuableKills = uniqueKillmails
+            .sort((a, b) => (b.total_value || 0) - (a.total_value || 0))
+            .slice(0, 10);
 
-        // Get a few most valuable kills using a simple query with total_value index
-        const mostValuableKills = await Killmails.find(timeFilter)
-            .sort({ total_value: -1 })
-            .limit(3)
-            .select({
-                killmail_id: 1,
-                total_value: 1,
-                kill_time: 1,
-                victim: 1,
-                system_name: 1,
-                region_name: 1,
-            })
-            .lean();
+        // For additional stats, use a lightweight approach with limited data
+        // This provides something useful without the complex $or performance issues
 
-        stats.mostValuableKills = mostValuableKills || [];
+        // Get ship group stats from a sample of killmails (not exhaustive but fast)
+        const sampleKillmailIds = Array.from(allKillIds).slice(0, 1000); // Sample for performance
+        if (sampleKillmailIds.length > 0) {
+            const shipGroupStats = await Killmails.aggregate([
+                { $match: { killmail_id: { $in: sampleKillmailIds } } },
+                {
+                    $group: {
+                        _id: "$victim.ship_group_name",
+                        ship_group_name: { $first: "$victim.ship_group_name" },
+                        killed: { $sum: 1 },
+                        total_value: { $sum: "$total_value" },
+                    },
+                },
+                { $sort: { killed: -1 } },
+                { $limit: 20 },
+                {
+                    $project: {
+                        ship_group_name: 1,
+                        killed: 1,
+                        total_value: 1,
+                        _id: 0,
+                    },
+                },
+            ]);
 
-        // Return minimal data to get something working fast
-        stats.topKillersByCharacter = [];
-        stats.topKillersByCorporation = [];
-        stats.topKillersByAlliance = [];
-        stats.shipStats = { destroyed: [] };
-        stats.shipGroupStats = [];
+            stats.shipGroupStats = shipGroupStats || [];
+            stats.shipStats = { destroyed: shipGroupStats || [] };
+
+            // Get top attackers from sample (fast approximation)
+            const topAttackers = await Killmails.aggregate([
+                {
+                    $match: {
+                        killmail_id: { $in: sampleKillmailIds.slice(0, 500) },
+                    },
+                },
+                { $unwind: "$attackers" },
+                {
+                    $group: {
+                        _id: {
+                            character_id: "$attackers.character_id",
+                            corporation_id: "$attackers.corporation_id",
+                            alliance_id: "$attackers.alliance_id",
+                        },
+                        character_name: { $first: "$attackers.character_name" },
+                        corporation_name: {
+                            $first: "$attackers.corporation_name",
+                        },
+                        alliance_name: { $first: "$attackers.alliance_name" },
+                        kills: { $sum: 1 },
+                    },
+                },
+                { $sort: { kills: -1 } },
+                { $limit: 30 },
+            ]);
+
+            // Split into categories
+            const characterMap = new Map();
+            const corporationMap = new Map();
+            const allianceMap = new Map();
+
+            for (const attacker of topAttackers) {
+                // Characters
+                if (attacker._id.character_id) {
+                    const key = attacker._id.character_id;
+                    const existing = characterMap.get(key) || { kills: 0 };
+                    characterMap.set(key, {
+                        character_id: key,
+                        character_name: attacker.character_name,
+                        kills: existing.kills + attacker.kills,
+                    });
+                }
+
+                // Corporations
+                if (attacker._id.corporation_id) {
+                    const key = attacker._id.corporation_id;
+                    const existing = corporationMap.get(key) || { kills: 0 };
+                    corporationMap.set(key, {
+                        corporation_id: key,
+                        corporation_name: attacker.corporation_name,
+                        kills: existing.kills + attacker.kills,
+                    });
+                }
+
+                // Alliances
+                if (attacker._id.alliance_id) {
+                    const key = attacker._id.alliance_id;
+                    const existing = allianceMap.get(key) || { kills: 0 };
+                    allianceMap.set(key, {
+                        alliance_id: key,
+                        alliance_name: attacker.alliance_name,
+                        kills: existing.kills + attacker.kills,
+                    });
+                }
+            }
+
+            stats.topKillersByCharacter = Array.from(characterMap.values())
+                .sort((a, b) => b.kills - a.kills)
+                .slice(0, 10);
+
+            stats.topKillersByCorporation = Array.from(corporationMap.values())
+                .sort((a, b) => b.kills - a.kills)
+                .slice(0, 10);
+
+            stats.topKillersByAlliance = Array.from(allianceMap.values())
+                .sort((a, b) => b.kills - a.kills)
+                .slice(0, 10);
+        }
     } catch (error) {
-        console.error("Error generating fast domain stats:", error);
+        console.error("Error generating domain stats:", error);
     }
 
     return stats;
