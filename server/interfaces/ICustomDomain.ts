@@ -158,7 +158,7 @@ export interface ICustomDomain {
     // Domain Management
     verified: boolean;
     verification_token: string;
-    verification_method?: "dns" | "meta" | "file";
+    verification_method?: "dns";
     dns_verified_at?: Date;
     ssl_enabled: boolean;
 

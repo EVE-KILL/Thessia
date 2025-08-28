@@ -335,8 +335,7 @@ export default defineEventHandler(async (event) => {
 
         return {
             success: true,
-            domain: newDomain.toJSON(),
-            verification_token: newDomain.verification_token,
+            domain: newDomain.toJSON(), // verification_token now included automatically
             message:
                 "Domain created successfully. Please verify ownership to activate.",
         };

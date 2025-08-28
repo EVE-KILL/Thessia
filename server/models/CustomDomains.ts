@@ -455,7 +455,8 @@ const customDomainSchema = new Schema<ICustomDomainDocument>(
         },
         verification_method: {
             type: String,
-            enum: ["dns", "meta", "file"],
+            enum: ["dns"],
+            default: "dns",
         },
         dns_verified_at: { type: Date },
         ssl_enabled: {
@@ -514,8 +515,7 @@ const customDomainSchema = new Schema<ICustomDomainDocument>(
             transform: (_doc: any, ret: any) => {
                 delete ret._id;
                 delete ret.__v;
-                // Don't expose verification token in API responses
-                delete ret.verification_token;
+                // Keep verification_token - it's needed for domain verification UI
             },
         },
     }

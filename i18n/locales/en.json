@@ -590,6 +590,12 @@
     "errorLoadingKills": "Failed to load killmails",
     "databaseTimeout": "The database took too long to respond. Please try again.",
     "backToHome": "Back to Frontpage",
+    "error": {
+        "updateFailed": "Update Failed",
+        "generic": "An error occurred. Please try again.",
+        "deleteFailed": "Delete Failed",
+        "loadingFailed": "Loading Failed"
+    },
     "errors": {
         "titles": {
             "403": "Access Forbidden",
@@ -1034,7 +1040,6 @@
     "settings.esi.currentPermissions": "Current Permissions",
     "settings.tabs.general": "General",
     "settings.tabs.esi": "ESI",
-    "settings.tabs.domains": "Custom Domains",
     "settings.tabs.comments": "Comments",
     "settings.comments.title": "My Comments",
     "settings.comments.description": "View and manage all comments you've made on killmails",
@@ -1058,6 +1063,13 @@
     "settings.comments.deleteError": "Failed to delete comment",
     "settings.comments.deleteErrorDesc": "An error occurred while deleting the comment.",
     "settings.tabs.domains": "Domains",
+    "settings.domains.activeComponents": "Active Components",
+    "settings.domains.verificationRequired": "Verification Required",
+    "settings.domains.verificationDescription": "To activate your custom domain, you must verify ownership using one of the methods below.",
+    "settings.domains.verify": "Verify",
+    "settings.domains.visit": "Visit",
+    "settings.domains.layout": "Layout",
+    "settings.domains.created": "Created",
     "settings.domains.title": "Custom Domains",
     "settings.domains.description": "Configure custom domains for your EVE entities",
     "settings.domains.noDomains": "No Custom Domains",
@@ -1116,6 +1128,27 @@
     "settings.domains.verification.verifyNow": "Verify Now",
     "settings.domains.verification.verifying": "Verifying...",
     "settings.domains.verification.tokenGenerated": "New verification token generated",
+    "settings.domains.verification.setupGuide": "Domain Setup Guide",
+    "settings.domains.verification.step1": "Step 1: DNS TXT Record",
+    "settings.domains.verification.step2": "Step 2: CNAME Configuration",
+    "settings.domains.verification.step3": "Step 3: Cloudflare Configuration (Recommended)",
+    "settings.domains.verification.cnameTitle": "CNAME Record Configuration",
+    "settings.domains.verification.cnameDescription": "Point your domain to our servers by adding a CNAME record:",
+    "settings.domains.verification.cnameTarget": "Target",
+    "settings.domains.verification.cloudflareTitle": "Cloudflare Setup (Highly Recommended)",
+    "settings.domains.verification.cloudflareDescription": "We strongly recommend using Cloudflare with proxy mode enabled for optimal performance, security, and reliability.",
+    "settings.domains.verification.cloudflareSteps": "Cloudflare Setup Steps",
+    "settings.domains.verification.cloudflareStep1": "Add your domain to Cloudflare",
+    "settings.domains.verification.cloudflareStep2": "Update your domain's nameservers to Cloudflare's",
+    "settings.domains.verification.cloudflareStep3": "Enable proxy mode (orange cloud icon) for your domain",
+    "settings.domains.verification.cloudflareStep4": "Add the CNAME record with proxy enabled",
+    "settings.domains.verification.cloudflareWarning": "Important: Without Cloudflare proxy mode, you're responsible for SSL certificates, DDoS protection, and performance optimization.",
+    "settings.domains.verification.alternativeSetup": "Alternative DNS Setup",
+    "settings.domains.verification.alternativeWarning": "If you choose not to use Cloudflare, you'll need to manage SSL certificates, security, and performance on your own.",
+    "settings.domains.verification.copyRecord": "Copy Record",
+    "settings.domains.verification.copyCname": "Copy CNAME",
+    "settings.domains.manageEntities": "Manage Entities",
+    "settings.domains.entitiesUpdated": "Entities updated successfully",
     "warning": "Warning",
     "delete": "Delete",
     "comments.list.title": "Comments",
@@ -2515,6 +2548,79 @@
         "error": {
             "title": "Map Not Available",
             "message": "Unable to load the region map. Please try again."
+        },
+        "domains": {
+            "title": "Custom Domains",
+            "description": "Manage and moderate custom domain mappings for EVE entities",
+            "refresh": "Refresh",
+            "search": "Search domains...",
+            "clearSearch": "Clear Search",
+            "loading": "Loading domains...",
+            "error": "Failed to load domains",
+            "retry": "Retry",
+            "empty": "No domains found",
+            "noDomainsFound": "No domains match the current filters",
+            "allStatuses": "All Statuses",
+            "pending": "Pending",
+            "verified": "Verified",
+            "suspended": "Suspended",
+            "allEntityTypes": "All Entity Types",
+            "character": "Character",
+            "corporation": "Corporation",
+            "alliance": "Alliance",
+            "perPage": "per page",
+            "verifiedDomains": "Verified Domains",
+            "pendingDomains": "Pending Verification",
+            "suspendedDomains": "Suspended Domains",
+            "totalDomains": "Total Domains",
+            "actions": {
+                "view": "View Details",
+                "suspend": "Suspend",
+                "activate": "Activate",
+                "delete": "Delete"
+            },
+            "columns": {
+                "domain": "Domain",
+                "entities": "Entities",
+                "entity": "Entity",
+                "owner": "Owner",
+                "status": "Status",
+                "created": "Created",
+                "verified": "Verified",
+                "lastAccessed": "Last Accessed"
+            },
+            "features": {
+                "branding": "Branding",
+                "navigation": "Navigation"
+            },
+            "details": {
+                "title": "Domain Details",
+                "basicInfo": "Basic Information",
+                "entities": "Entities",
+                "ownerId": "Owner ID",
+                "created": "Created",
+                "lastVerified": "Last Verified",
+                "lastAccessed": "Last Accessed",
+                "verificationInfo": "Verification Information",
+                "verificationMethod": "Verification Method",
+                "verificationToken": "Verification Token",
+                "customBranding": "Custom Branding",
+                "navigation": "Navigation Configuration",
+                "pageConfig": "Page Configuration",
+                "close": "Close"
+            },
+            "moderation": {
+                "deleteDomain": "Delete Domain",
+                "deleteDomainConfirm": "Are you sure you want to delete this domain?",
+                "cancel": "Cancel"
+            },
+            "pagination": {
+                "first": "First",
+                "previous": "Previous",
+                "next": "Next",
+                "last": "Last",
+                "page": "Page {current} of {total}"
+            }
         }
     }
 }

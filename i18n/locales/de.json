@@ -1574,5 +1574,122 @@
         "welcomeMessage": "Wählen Sie ein Thema aus dem Navigationsmenü, um loszulegen.",
         "home": "Startseite"
     },
-    "Documentation": "Dokumentation"
+    "Documentation": "Dokumentation",
+    "admin": {
+        "domains": {
+            "title": "Domain-Verwaltung",
+            "description": "Verwalten Sie benutzerdefinierte Domains und deren Einstellungen",
+            "refresh": "Aktualisieren",
+            "search": "Domains suchen...",
+            "clearSearch": "Suche löschen",
+            "allStatuses": "Alle Status",
+            "pending": "Ausstehend",
+            "verified": "Verifiziert",
+            "suspended": "Suspendiert",
+            "showingResults": "Zeige {start}-{end} von {total} Domains",
+            "perPage": "Pro Seite:",
+            "noDomains": "Keine Domains gefunden",
+            "loadingDomains": "Domains werden geladen...",
+            "errorLoadingDomains": "Fehler beim Laden der Domains",
+            "retryLoading": "Erneut versuchen",
+            "domainName": "Domain-Name",
+            "owner": "Eigentümer",
+            "status": "Status",
+            "verificationStatus": "Verifizierungsstatus",
+            "createdAt": "Erstellt am",
+            "lastVerified": "Zuletzt verifiziert",
+            "actions": "Aktionen",
+            "viewDetails": "Details anzeigen",
+            "editDomain": "Domain bearbeiten",
+            "suspendDomain": "Domain sperren",
+            "unsuspendDomain": "Domain entsperren",
+            "deleteDomain": "Domain löschen",
+            "verifyDomain": "Domain verifizieren",
+            "modal": {
+                "domainDetails": "Domain-Details",
+                "basicInformation": "Grundinformationen",
+                "verificationInformation": "Verifizierungsinformationen",
+                "configurationSettings": "Konfigurationseinstellungen",
+                "domainId": "Domain-ID",
+                "userId": "Benutzer-ID",
+                "verificationToken": "Verifizierungstoken",
+                "dnsRecordRequired": "Erforderlicher DNS-Eintrag",
+                "lastVerificationAttempt": "Letzter Verifizierungsversuch",
+                "verificationError": "Verifizierungsfehler",
+                "features": "Funktionen",
+                "pageConfiguration": "Seitenkonfiguration",
+                "navigationSettings": "Navigationseinstellungen",
+                "customLinks": "Benutzerdefinierte Links",
+                "close": "Schließen",
+                "loading": "Details werden geladen...",
+                "errorLoading": "Fehler beim Laden der Domain-Details",
+                "noVerificationError": "Kein Verifizierungsfehler",
+                "never": "Niemals",
+                "enabled": "Aktiviert",
+                "disabled": "Deaktiviert",
+                "showTopCharacters": "Top-Charaktere anzeigen",
+                "showTopCorporations": "Top-Korporationen anzeigen",
+                "showTopAlliances": "Top-Allianzen anzeigen",
+                "showTopShips": "Top-Schiffe anzeigen",
+                "showShipAnalysis": "Schiffsanalyse anzeigen",
+                "showMostValuable": "Wertvollste anzeigen",
+                "showMostDestroyed": "Meistzerstörte anzeigen",
+                "heroSection": "Hero-Bereich",
+                "topBoxes": "Top-Boxen",
+                "mostDestroyedSection": "Abschnitt 'Meistzerstörte'",
+                "navigationIcons": "Navigationssymbole",
+                "homeIcon": "Home-Symbol",
+                "killsIcon": "Kills-Symbol",
+                "battlesIcon": "Schlachten-Symbol",
+                "campaignsIcon": "Kampagnen-Symbol",
+                "queryIcon": "Abfrage-Symbol",
+                "donateIcon": "Spenden-Symbol"
+            },
+            "actions": {
+                "suspend": {
+                    "title": "Domain sperren",
+                    "message": "Sind Sie sicher, dass Sie diese Domain sperren möchten? Die Domain wird nicht mehr zugänglich sein.",
+                    "confirm": "Sperren",
+                    "success": "Domain wurde erfolgreich gesperrt",
+                    "error": "Fehler beim Sperren der Domain"
+                },
+                "unsuspend": {
+                    "title": "Domain entsperren",
+                    "message": "Sind Sie sicher, dass Sie diese Domain entsperren möchten? Die Domain wird wieder zugänglich sein.",
+                    "confirm": "Entsperren",
+                    "success": "Domain wurde erfolgreich entsperrt",
+                    "error": "Fehler beim Entsperren der Domain"
+                },
+                "delete": {
+                    "title": "Domain löschen",
+                    "message": "Sind Sie sicher, dass Sie diese Domain dauerhaft löschen möchten? Diese Aktion kann nicht rückgängig gemacht werden.",
+                    "confirm": "Löschen",
+                    "success": "Domain wurde erfolgreich gelöscht",
+                    "error": "Fehler beim Löschen der Domain"
+                },
+                "verify": {
+                    "success": "Domain-Verifizierung wurde eingeleitet",
+                    "error": "Fehler beim Starten der Domain-Verifizierung"
+                }
+            },
+            "filters": {
+                "status": {
+                    "all": "Alle Status",
+                    "pending": "Ausstehend",
+                    "verified": "Verifiziert",
+                    "suspended": "Suspendiert"
+                },
+                "sortBy": {
+                    "createdAt": "Erstellungsdatum",
+                    "domain": "Domain-Name",
+                    "owner": "Eigentümer",
+                    "lastVerified": "Zuletzt verifiziert"
+                },
+                "sortOrder": {
+                    "asc": "Aufsteigend",
+                    "desc": "Absteigend"
+                }
+            }
+        }
+    }
 }

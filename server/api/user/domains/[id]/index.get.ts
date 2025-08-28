@@ -88,14 +88,13 @@ export default defineEventHandler(async (event) => {
             }
         }
 
-        // Convert to plain object and include verification token for the domain owner
+        // Convert to plain object (verification token now included automatically)
         const domainObj = domain.toObject();
 
         return {
             success: true,
             domain: {
                 ...domainObj,
-                verification_token: domain.verification_token, // Include for domain owner
                 entities_info: entitiesInfo, // Multi-entity information
                 primary_entity:
                     entitiesInfo.find((e) => e._config.primary) ||

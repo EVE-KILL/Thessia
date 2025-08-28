@@ -52,11 +52,11 @@ export default defineEventHandler(async (event) => {
         const body = await readBody(event);
         const { method, token } = body;
 
-        if (!method || !["dns", "meta", "file"].includes(method)) {
+        if (!method || method !== "dns") {
             throw createError({
                 statusCode: 400,
                 statusMessage:
-                    "Invalid verification method. Must be dns, meta, or file",
+                    "Invalid verification method. Only DNS verification is supported",
             });
         }
 
@@ -88,26 +88,11 @@ export default defineEventHandler(async (event) => {
             // Use the token from the request if provided, otherwise use stored token
             const verificationToken = token || domain.verification_token;
 
-            switch (method) {
-                case "dns":
-                    verificationResult = await verifyDNSRecord(
-                        domain,
-                        verificationToken
-                    );
-                    break;
-                case "meta":
-                    verificationResult = await verifyMetaTag(
-                        domain,
-                        verificationToken
-                    );
-                    break;
-                case "file":
-                    verificationResult = await verifyFile(
-                        domain,
-                        verificationToken
-                    );
-                    break;
-            }
+            // Only DNS verification is supported
+            verificationResult = await verifyDNSRecord(
+                domain,
+                verificationToken
+            );
         } catch (error: any) {
             console.error(`Verification failed for ${domain.domain}:`, error);
             errorMessage = error.message || "Verification failed";
@@ -283,90 +268,8 @@ async function verifyDNSRecord(
 }
 
 /**
- * Verify meta tag on website
- */
-async function verifyMetaTag(
-    domain: any,
-    verificationToken?: string
-): Promise<boolean> {
-    try {
-        const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 10000);
-
-        const response = await fetch(`https://${domain.domain}`, {
-            headers: {
-                "User-Agent": "EVE-KILL Domain Verification Bot",
-            },
-            signal: controller.signal,
-        });
-
-        clearTimeout(timeoutId);
-
-        if (!response.ok) {
-            return false;
-        }
-
-        const html = await response.text();
-
-        // Look for meta tag with our verification token
-        const metaRegex =
-            /<meta\s+name=["']eve-kill-verification["']\s+content=["']([^"']+)["']/i;
-        const match = html.match(metaRegex);
-
-        const tokenToCheck = verificationToken || domain.verification_token;
-        return !!(match && match[1] === tokenToCheck);
-    } catch (error) {
-        return false;
-    }
-}
-
-/**
- * Verify file upload method
- */
-async function verifyFile(
-    domain: any,
-    verificationToken?: string
-): Promise<boolean> {
-    try {
-        const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 10000);
-
-        const response = await fetch(
-            `https://${domain.domain}/eve-kill-verification.txt`,
-            {
-                headers: {
-                    "User-Agent": "EVE-KILL Domain Verification Bot",
-                },
-                signal: controller.signal,
-            }
-        );
-
-        clearTimeout(timeoutId);
-
-        if (!response.ok) {
-            return false;
-        }
-
-        const content = await response.text();
-        const tokenToCheck = verificationToken || domain.verification_token;
-        return content.trim() === tokenToCheck;
-    } catch (error) {
-        return false;
-    }
-}
-
-/**
- * Get verification instructions for each method
+ * Get DNS verification instructions
  */
 function getVerificationInstructions(method: string, token: string): string {
-    switch (method) {
-        case "dns":
-            return `Add a TXT record to your domain with the value: eve-kill-verification=${token}`;
-        case "meta":
-            return `Add this meta tag to your website's <head> section: <meta name="eve-kill-verification" content="${token}">`;
-        case "file":
-            return `Upload a file named 'eve-kill-verification.txt' to your domain root containing: ${token}`;
-        default:
-            return "Unknown verification method";
-    }
+    return `Add a TXT record named '_evekill-verification' to your domain with the value: ${token}`;
 }
