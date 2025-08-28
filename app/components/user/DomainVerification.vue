@@ -248,7 +248,7 @@ const performVerification = async (method: string) => {
     verificationResult.value = null
 
     try {
-        const response = await $fetch(`/api/user/domains/${props.domain.domain_id}/verify`, {
+        const response = await $fetch(`/api/user/domains/${props.domain.domain_id}`, {
             method: 'POST',
             body: {
                 method,
