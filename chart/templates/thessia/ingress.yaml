@@ -30,19 +30,4 @@ spec:
       secretName: {{ .secretName }}
     {{- end }}
   {{- end }}
-  rules:
-    {{- range .Values.thessia.ingress.hosts }}
-    - host: {{ .host | quote }}
-      http:
-        paths:
-          {{- range .paths }}
-          - path: {{ .path }}
-            pathType: {{ .pathType }}
-            backend:
-              service:
-                name: {{ include "thessia.fullname" $ }}
-                port:
-                  number: {{ $.Values.thessia.service.port }}
-          {{- end }}
-    {{- end }}
 {{- end }}

@@ -36,12 +36,16 @@ Custom domains allow EVE Online corporations and alliances to run their killboar
 
 ## Getting Started
 
-### Prerequisites
+### For Users
 
-1. **Domain Name**: You need to own a domain name (e.g., `killboard.yourcorp.com`)
-2. **DNS Access**: Ability to modify DNS records for your domain
-3. **EVE-KILL Account**: Active account with appropriate permissions
-4. **SSL Certificate**: HTTPS certificate for your domain (optional but recommended)
+1. **Setup Cloudflare** for your domain (free plan sufficient)
+2. **Login to EVE-KILL** with your character
+3. **Navigate to Settings** → Custom Domains
+4. **Click "Add New Domain"** and configure your domain
+5. **Configure DNS in Cloudflare** as instructed (CNAME to `c.eve-kill.com`)
+6. **Enable Cloudflare Proxy** (orange cloud icon) - required for SSL
+7. **Verify your domain** using the provided methods
+8. **Customize your branding** and launch your killboard
 
 ### Account Requirements
 
@@ -80,22 +84,25 @@ Fill out the domain configuration form:
 
 ### Step 3: DNS Configuration
 
-After creating your domain configuration, you'll need to set up DNS records:
+After creating your domain configuration, you'll need to set up DNS records using **Cloudflare** (our officially supported DNS provider):
 
-1. **CNAME Record**: Point your domain to `eve-kill.com`
-   ```
+1. **CNAME Record**: Point your domain to `c.eve-kill.com`
+   ```dns
    Type: CNAME
    Name: killboard (or @ for root domain)
-   Value: eve-kill.com
-   TTL: 300 (5 minutes)
+   Value: c.eve-kill.com
+   TTL: Auto (or 300 seconds)
+   Proxy Status: Proxied (Orange Cloud)
    ```
 
+   **Important**: Use `c.eve-kill.com` as your CNAME target and ensure the **Proxy Status is enabled** (orange cloud) for SSL and performance benefits.
+
 2. **Verification Record**: Add the provided TXT record for verification
-   ```
+   ```dns
    Type: TXT
    Name: _eve-kill-verification
    Value: [provided verification token]
-   TTL: 300
+   TTL: Auto (or 300 seconds)
    ```
 
 ### Step 4: Domain Verification
@@ -110,34 +117,55 @@ Verification usually completes within a few minutes but can take up to 24 hours.
 
 ## DNS Configuration
 
-### DNS Provider Instructions
+### Cloudflare Setup (Required)
 
-#### Cloudflare
-1. Log into Cloudflare dashboard
-2. Select your domain
-3. Go to **DNS** → **Records**
-4. Add CNAME record pointing to `eve-kill.com`
-5. Add TXT record for verification
-6. Enable **Proxy status** (orange cloud) for CDN benefits
+**EVE-KILL officially supports Cloudflare only** for custom domains. Other DNS providers are not supported due to the complexity of SSL certificate management, security configurations, and performance optimization.
 
-#### GoDaddy
-1. Log into GoDaddy Domain Manager
-2. Select your domain
-3. Click **DNS** → **Manage Zones**
-4. Add CNAME record to `eve-kill.com`
-5. Add TXT record for verification
+#### Why Cloudflare Only?
 
-#### Namecheap
-1. Access Namecheap Domain Dashboard
-2. Click **Manage** next to your domain
-3. Go to **Advanced DNS**
-4. Add CNAME record pointing to `eve-kill.com`
-5. Add TXT record for verification
+Cloudflare provides essential features that make custom domains reliable and secure:
 
-#### Other Providers
-For other DNS providers, follow their specific instructions to:
-- Add a CNAME record pointing your domain/subdomain to `eve-kill.com`
-- Add the TXT verification record provided by EVE-KILL
+- **Free SSL certificates** with automatic renewal and management
+- **DDoS protection** and advanced security features
+- **Global CDN** for superior performance worldwide
+- **Seamless proxy handling** for SSL and traffic routing
+- **Advanced security rules** and bot protection
+- **Analytics and monitoring** built-in
+- **Easy management** through their intuitive dashboard
+
+#### Setup Instructions
+
+1. **Create Cloudflare Account**
+   - Sign up at [cloudflare.com](https://cloudflare.com) (free plan is sufficient)
+   - Add your domain to Cloudflare
+
+2. **Update Nameservers**
+   - Cloudflare will provide you with nameservers
+   - Update nameservers at your domain registrar
+   - Wait for nameserver propagation (usually 5-15 minutes)
+
+3. **Configure DNS Records**
+   - Go to **DNS** → **Records** in Cloudflare dashboard
+   - Add CNAME record pointing to `c.eve-kill.com`
+   - **Enable Proxy Status** (orange cloud icon) - this is crucial
+   - Add the TXT verification record provided by EVE-KILL
+
+4. **SSL/TLS Settings**
+   - Go to **SSL/TLS** → **Overview**
+   - Set encryption mode to **Flexible** (required due to upstream HTTP configuration)
+   - Enable **Always Use HTTPS** under **Edge Certificates**
+
+5. **Security Settings (Recommended)**
+   - Go to **Security** → **Settings**
+   - Set Security Level to **Medium** or **High**
+   - Enable **Bot Fight Mode** for additional protection
+
+#### Verification Process
+
+Once configured, EVE-KILL will automatically:
+- Detect your Cloudflare proxy configuration
+- Verify domain ownership through the TXT record
+- Enable your custom domain within 5-15 minutes
 
 ### DNS Propagation
 
@@ -148,7 +176,7 @@ DNS changes can take time to propagate globally:
 
 ## SSL Certificate Setup
 
-### Option 1: Cloudflare (Recommended)
+### Cloudflare
 
 Cloudflare provides free SSL certificates with automatic renewal:
 
@@ -165,45 +193,6 @@ Cloudflare provides free SSL certificates with automatic renewal:
 3. **Configure DNS**
    - Add CNAME record with **Proxy status** enabled (orange cloud)
    - SSL certificate is automatically provisioned
-
-### Option 2: Let's Encrypt
-
-Free SSL certificates with automated renewal:
-
-1. **Server Access Required**
-   - You need server access where your domain points
-   - Install Certbot or similar ACME client
-
-2. **Certificate Generation**
-   ```bash
-   # Install Certbot (Ubuntu/Debian)
-   sudo apt-get install certbot
-
-   # Generate certificate
-   sudo certbot certonly --webroot -w /var/www/html -d your-domain.com
-   ```
-
-3. **Renewal Setup**
-   ```bash
-   # Add to crontab for automatic renewal
-   0 12 * * * /usr/bin/certbot renew --quiet
-   ```
-
-### Option 3: Commercial SSL Certificate
-
-Purchase from certificate authorities like DigiCert, GlobalSign, or Comodo:
-
-1. **Generate Certificate Signing Request (CSR)**
-2. **Purchase and validate certificate**
-3. **Install certificate on your server**
-4. **Configure web server** (Apache/Nginx) to use certificate
-
-### SSL Verification
-
-Use EVE-KILL's SSL checker to verify your certificate:
-1. Go to your domain settings
-2. Click **"Check SSL Certificate"**
-3. Review certificate status and expiration
 
 ## Domain Verification
 
@@ -406,7 +395,7 @@ If you encounter issues not covered in this guide:
 
 ### Maintenance
 - **Monitor Uptime**: Use monitoring services
-- **Regular Backups**: Backup DNS configurations
+- **Regular Backups**: Backup Cloudflare configurations
 - **Update Contact Info**: Keep domain registration current
 - **Review Analytics**: Monitor traffic and engagement
 
@@ -451,18 +440,5 @@ A: DNS propagation can take up to 48 hours. Use DNS checking tools to verify you
 **Q: Can I change my domain after it's set up?**
 A: Yes, you can modify domain settings including the domain name itself through the admin interface.
 
-**Q: What if I need help with DNS configuration?**
-A: Contact your DNS provider's support or refer to their documentation. EVE-KILL support can also provide guidance.
-
----
-
-## Support
-
-For additional support:
-- **Documentation**: [docs.eve-kill.com](https://docs.eve-kill.com)
-- **Community Forums**: [forums.eve-kill.com](https://forums.eve-kill.com)
-- **Support Tickets**: Available through your account settings
-- **Discord**: Join the EVE-KILL Discord server
-
-Last Updated: 2024
-Version: 1.0
+**Q: What if I need help with Cloudflare configuration?**
+A: Refer to Cloudflare's documentation or contact their support. EVE-KILL support can also provide guidance for Cloudflare-specific configurations.
