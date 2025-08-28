@@ -199,7 +199,7 @@ websocket:
               - path: /
                 pathType: Prefix
         tls:
-          - secretName: "evekill-tls"
+          - secretName: "evekill-websocket-tls"
             hosts:
               - "ws.eve-kill.com"
 
@@ -256,7 +256,7 @@ imageserver:
               - path: /
                 pathType: Prefix
         tls:
-          - secretName: "evekill-tls"
+          - secretName: "evekill-images-tls"
             hosts:
               - "images.eve-kill.com"
 
