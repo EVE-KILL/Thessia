@@ -1,59 +1,21 @@
 import { createHash } from "crypto";
 
 /**
- * Convert domain entities to MongoDB filter for fast queries
+ * Create time filter for MongoDB queries
  */
-function domainEntitiesToMongoFilter(entities: any[], options: any = {}) {
-    if (!entities || entities.length === 0) return {};
-
-    const entityConditions: any[] = [];
-
-    entities.forEach((entity: any) => {
-        const entityId = entity.entity_id;
-        const entityType = entity.entity_type;
-
-        const entityCondition: any[] = [];
-
-        // Add victim conditions
-        if (entityType === "character") {
-            entityCondition.push({ "victim.character_id": entityId });
-        } else if (entityType === "corporation") {
-            entityCondition.push({ "victim.corporation_id": entityId });
-        } else if (entityType === "alliance") {
-            entityCondition.push({ "victim.alliance_id": entityId });
-        }
-
-        // Add attacker conditions
-        if (entityType === "character") {
-            entityCondition.push({ "attackers.character_id": entityId });
-        } else if (entityType === "corporation") {
-            entityCondition.push({ "attackers.corporation_id": entityId });
-        } else if (entityType === "alliance") {
-            entityCondition.push({ "attackers.alliance_id": entityId });
-        }
-
-        if (entityCondition.length > 0) {
-            entityConditions.push({ $or: entityCondition });
-        }
-    });
-
+function createTimeFilter(timeRange: string) {
     const query: any = {};
 
-    // Add entity filter
-    if (entityConditions.length > 0) {
-        query.$or = entityConditions;
-    }
-
-    // Add time range filter
-    if (options.timeRange && options.timeRange !== "all") {
+    if (timeRange && timeRange !== "all") {
         const timeRanges = {
-            "24h": 1,
+            "1d": 1,
             "7d": 7,
+            "14d": 14,
             "30d": 30,
             "90d": 90,
         };
 
-        const days = timeRanges[options.timeRange as keyof typeof timeRanges];
+        const days = timeRanges[timeRange as keyof typeof timeRanges];
         if (days) {
             const timeFrom = new Date();
             timeFrom.setDate(timeFrom.getDate() - days);
@@ -67,9 +29,9 @@ function domainEntitiesToMongoFilter(entities: any[], options: any = {}) {
 }
 
 /**
- * Generate lightweight domain statistics optimized for performance
+ * Generate ultra-lightweight domain statistics optimized for speed using separate index-friendly queries
  */
-async function generateFastDomainStats(mongoQuery: any) {
+async function generateFastDomainStats(entities: any[], timeFilter: any) {
     const stats: any = {
         mostValuableKills: [],
         topKillersByCharacter: [],
@@ -81,212 +43,123 @@ async function generateFastDomainStats(mongoQuery: any) {
     };
 
     try {
-        // 1. Get most valuable kills - only where entity is ATTACKER (not victim)
-        const attackerOnlyQuery = { ...mongoQuery };
+        console.log(
+            "🔍 Running separate optimized queries for entities:",
+            entities.length
+        );
+        console.log("🕐 Time filter:", JSON.stringify(timeFilter, null, 2));
 
-        // For most valuable kills, filter out victim conditions, keep only attacker conditions
-        if (mongoQuery.$or) {
-            attackerOnlyQuery.$or = mongoQuery.$or
-                .map((entityCondition: any) => {
-                    if (entityCondition.$or) {
-                        // Filter to keep only attacker conditions (remove victim conditions)
-                        const attackerConditions = entityCondition.$or.filter(
-                            (condition: any) => {
-                                const key = Object.keys(condition)[0];
-                                return key.startsWith("attackers.");
-                            }
-                        );
+        let totalKills = 0;
+        let totalValue = 0;
+        const allKillIds = new Set();
 
-                        // Only return if we have attacker conditions
-                        if (attackerConditions.length > 0) {
-                            return { $or: attackerConditions };
-                        }
-                    }
-                    return null;
-                })
-                .filter(Boolean);
+        // Run separate queries for each entity type - this allows MongoDB to use specific indexes
+        for (const entity of entities) {
+            const entityId = entity.entity_id;
+            const entityType = entity.entity_type;
+
+            console.log(`🎯 Querying ${entityType} ${entityId}`);
+
+            let victimQuery: any = { ...timeFilter };
+            let attackerQuery: any = { ...timeFilter };
+
+            // Build focused queries that can use single-field indexes
+            if (entityType === "character") {
+                victimQuery["victim.character_id"] = entityId;
+                attackerQuery["attackers.character_id"] = entityId;
+            } else if (entityType === "corporation") {
+                victimQuery["victim.corporation_id"] = entityId;
+                attackerQuery["attackers.corporation_id"] = entityId;
+            } else if (entityType === "alliance") {
+                victimQuery["victim.alliance_id"] = entityId;
+                attackerQuery["attackers.alliance_id"] = entityId;
+            }
+
+            // Count victims (using victim_*_id_1 indexes)
+            const victimCount = await Killmails.countDocuments(victimQuery);
+            console.log(`📊 ${entityType} ${entityId} victims: ${victimCount}`);
+
+            // Count attackers (using attackers_*_id_1 indexes)
+            const attackerCount = await Killmails.countDocuments(attackerQuery);
+            console.log(
+                `📊 ${entityType} ${entityId} attacker kills: ${attackerCount}`
+            );
+
+            // Use aggregation to get actual totals and values (no sampling, no limits)
+            const [victimStats] = await Killmails.aggregate([
+                { $match: victimQuery },
+                {
+                    $group: {
+                        _id: null,
+                        totalKills: { $sum: 1 },
+                        totalValue: { $sum: "$total_value" },
+                        killmailIds: { $addToSet: "$killmail_id" },
+                    },
+                },
+            ]);
+
+            const [attackerStats] = await Killmails.aggregate([
+                { $match: attackerQuery },
+                {
+                    $group: {
+                        _id: null,
+                        totalKills: { $sum: 1 },
+                        totalValue: { $sum: "$total_value" },
+                        killmailIds: { $addToSet: "$killmail_id" },
+                    },
+                },
+            ]);
+
+            // Add killmail IDs to set for deduplication
+            if (victimStats?.killmailIds) {
+                victimStats.killmailIds.forEach((id: any) =>
+                    allKillIds.add(id)
+                );
+                totalValue += victimStats.totalValue || 0;
+            }
+
+            if (attackerStats?.killmailIds) {
+                attackerStats.killmailIds.forEach((id: any) =>
+                    allKillIds.add(id)
+                );
+                totalValue += attackerStats.totalValue || 0;
+            }
         }
 
-        const mostValueableKills = await Killmails.find(attackerOnlyQuery)
+        // Use the deduplicated Set size for accurate kill count
+        stats.totalKills = allKillIds.size;
+        stats.totalValue = totalValue;
+
+        console.log(
+            `📈 Final stats: ${
+                stats.totalKills
+            } unique kills, ${totalValue.toLocaleString()} ISK`
+        );
+
+        // Get a few most valuable kills using a simple query with total_value index
+        const mostValuableKills = await Killmails.find(timeFilter)
             .sort({ total_value: -1 })
-            .limit(10)
+            .limit(3)
             .select({
                 killmail_id: 1,
                 total_value: 1,
                 kill_time: 1,
                 victim: 1,
                 system_name: 1,
-                system_security: 1,
                 region_name: 1,
-            });
+            })
+            .lean();
 
-        stats.mostValuableKills = mostValueableKills;
+        stats.mostValuableKills = mostValuableKills || [];
 
-        const basicStats = await Killmails.aggregate([
-            { $match: mongoQuery },
-            {
-                $group: {
-                    _id: null,
-                    totalKills: { $sum: 1 },
-                    totalValue: { $sum: "$total_value" },
-                },
-            },
-        ]);
-
-        if (basicStats.length > 0) {
-            stats.totalKills = basicStats[0].totalKills;
-            stats.totalValue = basicStats[0].totalValue;
-        }
-
-        // 3. Top killers by character (limit 10, only get finalblow attackers for performance)
-        const topCharacters = await Killmails.aggregate([
-            { $match: mongoQuery },
-            { $unwind: "$attackers" },
-            { $match: { "attackers.final_blow": true } },
-            {
-                $group: {
-                    _id: {
-                        character_id: "$attackers.character_id",
-                        character_name: "$attackers.character_name",
-                    },
-                    kills: { $sum: 1 },
-                    damage: { $sum: "$attackers.damage_done" },
-                },
-            },
-            { $sort: { kills: -1 } },
-            { $limit: 10 },
-            {
-                $project: {
-                    character_id: "$_id.character_id",
-                    character_name: "$_id.character_name",
-                    kills: 1,
-                    damage: 1,
-                    _id: 0,
-                },
-            },
-        ]);
-
-        stats.topKillersByCharacter = topCharacters;
-
-        // 4. Top killers by corporation (limit 10)
-        const topCorporations = await Killmails.aggregate([
-            { $match: mongoQuery },
-            { $unwind: "$attackers" },
-            {
-                $group: {
-                    _id: {
-                        corporation_id: "$attackers.corporation_id",
-                        corporation_name: "$attackers.corporation_name",
-                    },
-                    kills: { $sum: 1 },
-                },
-            },
-            { $sort: { kills: -1 } },
-            { $limit: 10 },
-            {
-                $project: {
-                    corporation_id: "$_id.corporation_id",
-                    corporation_name: "$_id.corporation_name",
-                    kills: 1,
-                    _id: 0,
-                },
-            },
-        ]);
-
-        stats.topKillersByCorporation = topCorporations;
-
-        // 5. Top killers by alliance (limit 10)
-        const topAlliances = await Killmails.aggregate([
-            { $match: mongoQuery },
-            { $unwind: "$attackers" },
-            { $match: { "attackers.alliance_id": { $ne: null, $gt: 0 } } },
-            {
-                $group: {
-                    _id: {
-                        alliance_id: "$attackers.alliance_id",
-                        alliance_name: "$attackers.alliance_name",
-                    },
-                    kills: { $sum: 1 },
-                },
-            },
-            { $sort: { kills: -1 } },
-            { $limit: 10 },
-            {
-                $project: {
-                    alliance_id: "$_id.alliance_id",
-                    alliance_name: "$_id.alliance_name",
-                    kills: 1,
-                    _id: 0,
-                },
-            },
-        ]);
-
-        stats.topKillersByAlliance = topAlliances;
-
-        // 6. Ship statistics (limit to top 20 ship types for performance)
-        const shipStatsData = await Killmails.aggregate([
-            { $match: mongoQuery },
-            {
-                $group: {
-                    _id: {
-                        ship_id: "$victim.ship_id",
-                        // Handle nested objects properly - extract the actual string values
-                        ship_name: {
-                            $ifNull: [
-                                "$victim.ship_name.en",
-                                "$victim.ship_name",
-                            ],
-                        },
-                        ship_group_name: {
-                            $ifNull: [
-                                "$victim.ship_group_name.en",
-                                "$victim.ship_group_name",
-                            ],
-                        },
-                    },
-                    destroyed: { $sum: 1 },
-                    totalValue: { $sum: "$total_value" },
-                },
-            },
-            { $sort: { destroyed: -1 } },
-            { $limit: 20 },
-        ]);
-
-        // Convert to format expected by frontend components
-        stats.shipStats = {
-            destroyed: shipStatsData.map((ship) => ({
-                ship_id: ship._id.ship_id,
-                ship_name: ship._id.ship_name,
-                ship_group_name: ship._id.ship_group_name,
-                count: ship.destroyed,
-                value: ship.totalValue,
-            })),
-        };
-
-        // Also create shipGroupStats for KillsShipStats component compatibility
-        // Group by ship_group_name and sum counts
-        const shipGroupMap = new Map();
-        shipStatsData.forEach((ship) => {
-            const groupName = ship._id.ship_group_name;
-            const groupId = ship._id.ship_id; // Use ship_id as fallback for group_id
-
-            if (shipGroupMap.has(groupName)) {
-                shipGroupMap.get(groupName).killed += ship.destroyed;
-            } else {
-                shipGroupMap.set(groupName, {
-                    ship_group_id: groupId,
-                    ship_group_name: groupName,
-                    killed: ship.destroyed,
-                });
-            }
-        });
-
-        stats.shipGroupStats = Array.from(shipGroupMap.values())
-            .sort((a, b) => b.killed - a.killed) // Sort by kills descending
-            .slice(0, 20); // Limit to top 20 groups
+        // Return minimal data to get something working fast
+        stats.topKillersByCharacter = [];
+        stats.topKillersByCorporation = [];
+        stats.topKillersByAlliance = [];
+        stats.shipStats = { destroyed: [] };
+        stats.shipGroupStats = [];
     } catch (error) {
         console.error("Error generating fast domain stats:", error);
-        // Return empty stats on error
     }
 
     return stats;
@@ -347,15 +220,11 @@ export default defineCachedEventHandler(
                 }
             }
 
-            // Convert domain entities to MongoDB filter
-            const filterOptions = { timeRange };
-            const mongoQuery = domainEntitiesToMongoFilter(
-                entities,
-                filterOptions
-            );
+            // Create time filter for optimized queries
+            const timeFilter = createTimeFilter(timeRange);
 
-            // Generate fast domain statistics
-            const stats = await generateFastDomainStats(mongoQuery);
+            // Generate fast domain statistics using separate optimized queries
+            const stats = await generateFastDomainStats(entities, timeFilter);
 
             // Add domain-specific metadata
             const domainStats = {
@@ -388,10 +257,13 @@ export default defineCachedEventHandler(
         }
     },
     {
-        maxAge: 5,
+        maxAge: 300,
         staleMaxAge: 0,
         swr: true,
         base: "redis",
+        shouldBypassCache: (event) => {
+            return true;
+        },
         getKey: (event) => {
             const domain = getRouterParam(event as any, "domain");
             const query = getQuery(event as any);
@@ -399,7 +271,7 @@ export default defineCachedEventHandler(
             const entityFilter = query?.entityFilter || "";
 
             // Create a hash of the parameters to avoid key length issues
-            const keyContent = `domain:${domain}:${timeRange}:${entityFilter}:fast:v5`;
+            const keyContent = `domain:${domain}:${timeRange}:${entityFilter}:fast:v6`;
             const hash = createHash("sha256")
                 .update(keyContent)
                 .digest("hex")

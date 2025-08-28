@@ -218,7 +218,7 @@ export default defineCachedEventHandler(
         }
     },
     {
-        maxAge: 5,
+        maxAge: 300,
         staleMaxAge: 0,
         swr: true,
         base: "redis",
