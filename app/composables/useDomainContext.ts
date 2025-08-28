@@ -5,6 +5,7 @@ interface IDomainContext {
     config?: any;
     entity?: any;
     entityType?: "character" | "corporation" | "alliance";
+    navigation?: any;
 }
 
 /**
@@ -44,6 +45,11 @@ export const useDomainContext = () => {
                                     JSON.stringify(context.config.branding)
                                 )
                               : null,
+                          navigation: context.config.navigation
+                              ? JSON.parse(
+                                    JSON.stringify(context.config.navigation)
+                                )
+                              : null,
                       }
                     : null,
             };
@@ -65,6 +71,7 @@ export const useDomainContext = () => {
     const entityType = computed(() => domainContext.value.entityType);
     const entity = computed(() => domainContext.value.entity);
     const branding = computed(() => domainContext.value.config?.branding);
+    const navigation = computed(() => domainContext.value.config?.navigation);
 
     /**
      * Generate entity-specific URL for custom domains
@@ -130,6 +137,7 @@ export const useDomainContext = () => {
         entityType,
         entity,
         branding,
+        navigation,
 
         // Helper functions
         entityUrl,

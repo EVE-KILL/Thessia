@@ -15,9 +15,20 @@ const { isOpen: isSearchOpen, openSearch, closeSearch } = useSpotlightSearch();
 // Custom domain context for navbar
 const { isCustomDomain, entityUrl } = useDomainContext();
 
+// Custom navigation integration
+const {
+    showDefaultNav,
+    showSearch,
+    showUserMenu,
+    mergeNavigation,
+    isNavbarSticky,
+    getNavStyle
+} = useCustomNavigation();
+
 // Computed home URL to ensure consistent SSR/client rendering
+// Phase 2: Custom domains now show multi-entity dashboard at root
 const homeUrl = computed(() => {
-    return isCustomDomain.value ? entityUrl() : "/";
+    return "/"; // Always go to root - custom domains show [domain].vue, main domain shows index.vue
 });
 
 // Mobile detection for conditional search component rendering
@@ -93,7 +104,7 @@ interface NavLink {
 /**
  * L ft navigation items
  */
-const leftNavItems = computed(() => [
+const defaultLeftNavItems = computed(() => [
     {
         name: t("home"),
         label: t("home"),
@@ -244,7 +255,7 @@ const leftNavItems = computed(() => [
 /**
  * C nter navigation items
  */
-const centerNavItems = computed(() => [
+const defaultCenterNavItems = computed(() => [
     {
         icon: "lucide:search",
         label: t("search.title", "Search"),
@@ -256,7 +267,7 @@ const centerNavItems = computed(() => [
 /**
  * R ght navigation items
  */
-const rightNavItems = computed(() => [
+const defaultRightNavItems = computed(() => [
     {
         icon: "lucide:upload",
         label: t("killmail.submit"),
@@ -303,6 +314,32 @@ const rightNavItems = computed(() => [
         position: "right",
     },
 ]);
+
+// Merge custom navigation with default navigation
+const leftNavItems = computed(() => {
+    if (!showDefaultNav.value) {
+        return mergeNavigation([], 'left');
+    }
+    return mergeNavigation(defaultLeftNavItems.value, 'left');
+});
+
+const centerNavItems = computed(() => {
+    if (!showSearch.value) {
+        return [];
+    }
+    return mergeNavigation(defaultCenterNavItems.value, 'center');
+});
+
+const rightNavItems = computed(() => {
+    const items = [...defaultRightNavItems.value];
+
+    // Filter out user menu if disabled
+    if (!showUserMenu.value) {
+        return items.filter(item => !item.component || item.component.name !== 'NavbarUser');
+    }
+
+    return mergeNavigation(items, 'right');
+});
 
 /**
  * A l navigation items combined

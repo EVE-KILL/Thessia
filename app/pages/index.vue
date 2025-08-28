@@ -1,5 +1,12 @@
 <template>
-    <div class="layout-container">
+    <!-- Custom Domain: Multi-Entity Dashboard -->
+    <div v-if="isCustomDomain" class="domain-dashboard">
+        <!-- Load the domain dashboard component -->
+        <DomainDashboard :domain="customDomain || ''" />
+    </div>
+
+    <!-- Main Domain: Standard Homepage -->
+    <div v-else class="layout-container">
         <!-- Desktop View - Only shown on desktop -->
         <div v-if="!isMobile" class="desktop-layout">
             <div class="top-row">
@@ -67,14 +74,9 @@ const { t } = useI18n();
 const { isMobile } = useResponsive();
 const { generateWebsiteStructuredData, generateOrganizationStructuredData, addStructuredDataToHead } = useStructuredData();
 
-// Custom domain handling
-const { isCustomDomain, entityUrl } = useDomainContext();
-
-// Redirect to entity page if accessed via custom domain
-// This should work on both server and client
-if (isCustomDomain.value) {
-    await navigateTo(entityUrl());
-}
+// Custom domain handling - Phase 2
+// Check if this is a custom domain to show the domain dashboard
+const { isCustomDomain, customDomain } = useDomainContext();
 
 // Initialize with a valid ID from our tabs
 const selectedTab = ref("kills");

@@ -1,4 +1,4 @@
-// Domain detection middleware for custom killboard domains
+// Domain detection middleware for custom killboard domains - Phase 2
 import type { H3Event } from "h3";
 import {
     createError,
@@ -7,7 +7,10 @@ import {
     getRequestURL,
     setHeader,
 } from "h3";
-import type { IDomainContext } from "../interfaces/ICustomDomain";
+import type {
+    IDomainContext,
+    IEntityConfig,
+} from "../interfaces/ICustomDomain";
 import { Alliances } from "../models/Alliances";
 import { Characters } from "../models/Characters";
 import { Corporations } from "../models/Corporations";
@@ -56,10 +59,7 @@ async function getDomainConfig(domain: string) {
 
         return config;
     } catch (error) {
-        console.error(
-            `🔍 [DB DEBUG] Error fetching domain config for ${domain}:`,
-            error
-        );
+        console.error(`Error fetching domain config for ${domain}:`, error);
         return null;
     }
 }
@@ -86,6 +86,42 @@ async function getEntityData(entityType: string, entityId: number) {
         );
         return null;
     }
+}
+
+/**
+ * PHASE 2: Get multiple entity data for multi-entity domains
+ */
+async function getMultipleEntityData(entityConfigs: IEntityConfig[]) {
+    const entities: any[] = [];
+    let primaryEntity: any = null;
+
+    for (const entityConfig of entityConfigs) {
+        const entity = await getEntityData(
+            entityConfig.entity_type,
+            entityConfig.entity_id
+        );
+        if (entity) {
+            // Enhance entity with display configuration
+            const enhancedEntity = {
+                ...entity.toObject(),
+                _entityConfig: entityConfig, // Add configuration metadata
+            };
+
+            entities.push(enhancedEntity);
+
+            // Track primary entity
+            if (entityConfig.primary) {
+                primaryEntity = enhancedEntity;
+            }
+        }
+    }
+
+    // If no primary found but we have entities, use the first one
+    if (!primaryEntity && entities.length > 0) {
+        primaryEntity = entities[0];
+    }
+
+    return { entities, primaryEntity };
 }
 
 /**
@@ -122,35 +158,17 @@ function isEveKillDomain(host: string): boolean {
 }
 
 /**
- * Update domain analytics and rate limiting
+ * PHASE 2: Update domain last accessed time (simplified - no more analytics/rate limiting)
  */
-async function updateDomainMetrics(domainConfig: any, event: H3Event) {
+async function updateDomainAccess(domainConfig: any) {
     if (!domainConfig) return;
 
     try {
-        // Check rate limiting
-        if (!domainConfig.checkRateLimit()) {
-            throw createError({
-                statusCode: 429,
-                statusMessage: "Rate limit exceeded for this domain",
-            });
-        }
-
-        // Increment rate limit counter
-        domainConfig.incrementRateLimit();
-
-        // Update analytics if enabled
-        if (domainConfig.analytics_enabled) {
-            const url = getRequestURL(event);
-            await domainConfig.updateAnalytics(url.pathname);
-        }
-
-        // Update last accessed time
-        domainConfig.last_accessed = new Date();
-        await domainConfig.save();
+        // Simply update last accessed time
+        await domainConfig.updateLastAccessed();
     } catch (error) {
-        console.error("Error updating domain metrics:", error);
-        // Don't block the request if analytics fail
+        console.error("Error updating domain access time:", error);
+        // Don't block the request if update fails
     }
 }
 
@@ -169,7 +187,7 @@ export function clearAllDomainCache() {
 }
 
 /**
- * Main domain detection middleware
+ * Main domain detection middleware - Phase 2
  */
 export default defineEventHandler(async (event: H3Event) => {
     // Skip for API routes that don't need domain context
@@ -243,15 +261,16 @@ export default defineEventHandler(async (event: H3Event) => {
         });
     }
 
-    // Get entity data
-    const entity = await getEntityData(
-        domainConfig.entity_type,
-        domainConfig.entity_id
+    // PHASE 2: Get multi-entity data
+    const { entities, primaryEntity } = await getMultipleEntityData(
+        domainConfig.entities
     );
 
-    if (!entity) {
+    if (!primaryEntity || entities.length === 0) {
         console.error(
-            `Entity not found for domain ${cleanHost}: ${domainConfig.entity_type}:${domainConfig.entity_id}`
+            `No entities found for domain ${cleanHost}: ${
+                domainConfig.entities?.length || 0
+            } entities configured`
         );
         // Fall back to normal eve-kill behavior
         event.context.domainContext = {
@@ -260,29 +279,41 @@ export default defineEventHandler(async (event: H3Event) => {
         return;
     }
 
-    // Update domain metrics in background
-    updateDomainMetrics(domainConfig, event).catch((err) => {
-        console.error("Background metrics update failed:", err);
+    // Update domain access in background (simplified - no more analytics/rate limiting)
+    updateDomainAccess(domainConfig).catch((err) => {
+        console.error("Background access update failed:", err);
     });
 
-    // Set up domain context for the request
+    // PHASE 2: Set up enhanced domain context for the request
     event.context.domainContext = {
         isCustomDomain: true,
         domain: cleanHost,
         config: domainConfig,
-        entity: entity,
-        entityType: domainConfig.entity_type,
+
+        // Multi-entity support
+        entities: entities,
+        primaryEntity: primaryEntity,
+        entityTypes: entities.map((e: any) => e._entityConfig.entity_type),
+
+        // Legacy single entity support (using primary entity)
+        entity: primaryEntity,
+        entityType: primaryEntity?._entityConfig?.entity_type,
     } as IDomainContext;
 
     // Add domain-specific headers
     setHeader(event, "X-Custom-Domain", cleanHost);
-    setHeader(event, "X-Entity-Type", domainConfig.entity_type);
-    setHeader(event, "X-Entity-ID", domainConfig.entity_id.toString());
+    setHeader(
+        event,
+        "X-Primary-Entity-Type",
+        primaryEntity?._entityConfig?.entity_type || "unknown"
+    );
+    setHeader(
+        event,
+        "X-Primary-Entity-ID",
+        primaryEntity?._entityConfig?.entity_id?.toString() || "unknown"
+    );
+    setHeader(event, "X-Entity-Count", entities.length.toString());
 
-    // Set Cache-Control headers for custom domains
-    if (domainConfig.analytics_enabled) {
-        setHeader(event, "Cache-Control", "public, max-age=300"); // 5 minutes
-    } else {
-        setHeader(event, "Cache-Control", "public, max-age=3600"); // 1 hour
-    }
+    // PHASE 2: Simplified cache headers (no more analytics-based logic)
+    setHeader(event, "Cache-Control", "public, max-age=1800"); // 30 minutes
 });

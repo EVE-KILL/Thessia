@@ -1,5 +1,5 @@
 /**
- * Get all domains owned by the authenticated user
+ * Get all domains owned by the authenticated user - Phase 2
  */
 export default defineEventHandler(async (event) => {
     // Add cache-control headers to prevent caching
@@ -36,43 +36,49 @@ export default defineEventHandler(async (event) => {
             owner_character_id: user.characterId,
         }).sort({ created_at: -1 });
 
-        // Enhance domains with entity information
+        // PHASE 2: Enhance domains with multi-entity information
         const enhancedDomains = await Promise.all(
             domains.map(async (domain) => {
-                let entityInfo = null;
+                const entitiesInfo = [];
 
-                try {
-                    switch (domain.entity_type) {
-                        case "character":
-                            entityInfo = await Characters.findOne(
-                                {
-                                    character_id: domain.entity_id,
-                                },
-                                { name: 1, character_id: 1 }
-                            );
-                            break;
-                        case "corporation":
-                            entityInfo = await Corporations.findOne(
-                                {
-                                    corporation_id: domain.entity_id,
-                                },
-                                { name: 1, ticker: 1, corporation_id: 1 }
-                            );
-                            break;
-                        case "alliance":
-                            entityInfo = await Alliances.findOne(
-                                {
-                                    alliance_id: domain.entity_id,
-                                },
-                                { name: 1, ticker: 1, alliance_id: 1 }
-                            );
-                            break;
+                // Get information for all entities in the domain
+                for (const entityConfig of domain.entities || []) {
+                    let entityInfo = null;
+
+                    try {
+                        switch (entityConfig.entity_type) {
+                            case "character":
+                                entityInfo = await Characters.findOne(
+                                    { character_id: entityConfig.entity_id },
+                                    { name: 1, character_id: 1 }
+                                );
+                                break;
+                            case "corporation":
+                                entityInfo = await Corporations.findOne(
+                                    { corporation_id: entityConfig.entity_id },
+                                    { name: 1, ticker: 1, corporation_id: 1 }
+                                );
+                                break;
+                            case "alliance":
+                                entityInfo = await Alliances.findOne(
+                                    { alliance_id: entityConfig.entity_id },
+                                    { name: 1, ticker: 1, alliance_id: 1 }
+                                );
+                                break;
+                        }
+
+                        if (entityInfo) {
+                            entitiesInfo.push({
+                                ...entityInfo.toObject(),
+                                _config: entityConfig, // Include entity configuration
+                            });
+                        }
+                    } catch (error) {
+                        console.error(
+                            `Error fetching entity info for domain ${domain.domain}, entity ${entityConfig.entity_type}:${entityConfig.entity_id}:`,
+                            error
+                        );
                     }
-                } catch (error) {
-                    console.error(
-                        `Error fetching entity info for domain ${domain.domain}:`,
-                        error
-                    );
                 }
 
                 // Convert to plain object and include verification token for the domain owner
@@ -81,7 +87,15 @@ export default defineEventHandler(async (event) => {
                 return {
                     ...domainObj,
                     verification_token: domain.verification_token, // Include for domain owner
-                    entity_info: entityInfo,
+                    entities_info: entitiesInfo, // Multi-entity information
+                    primary_entity:
+                        entitiesInfo.find((e) => e._config.primary) ||
+                        entitiesInfo[0], // Primary entity
+
+                    // Legacy single entity info for backward compatibility (using primary)
+                    entity_info:
+                        entitiesInfo.find((e) => e._config.primary) ||
+                        entitiesInfo[0],
                 };
             })
         );
@@ -90,6 +104,13 @@ export default defineEventHandler(async (event) => {
             success: true,
             domains: enhancedDomains,
             total: domains.length,
+
+            // PHASE 2: Basic domain usage statistics
+            usage: {
+                domains_count: domains.length,
+                domains_limit: 10,
+                domains_remaining: Math.max(0, 10 - domains.length),
+            },
         };
     } catch (error) {
         console.error("Error fetching user domains:", error);

@@ -1,5 +1,5 @@
 /**
- * Create a new custom domain for the authenticated user
+ * Create a new custom domain for the authenticated user - Phase 2
  */
 export default defineEventHandler(async (event) => {
     // Add cache-control headers to prevent caching
@@ -42,12 +42,38 @@ export default defineEventHandler(async (event) => {
         // Get the request body
         const body = await readBody(event);
 
-        // Validate required fields
-        if (!body.domain || !body.entity_type || !body.entity_id) {
+        // PHASE 2: Support both single-entity (legacy) and multi-entity formats
+        if (!body.domain) {
+            throw createError({
+                statusCode: 400,
+                statusMessage: "Missing required field: domain",
+            });
+        }
+
+        // Convert single-entity format to multi-entity format if needed
+        let entitiesArray;
+        if (
+            body.entities &&
+            Array.isArray(body.entities) &&
+            body.entities.length > 0
+        ) {
+            // Multi-entity format
+            entitiesArray = body.entities;
+        } else if (body.entity_type && body.entity_id) {
+            // Legacy single-entity format
+            entitiesArray = [
+                {
+                    entity_type: body.entity_type,
+                    entity_id: body.entity_id,
+                    primary: true,
+                    show_in_nav: true,
+                },
+            ];
+        } else {
             throw createError({
                 statusCode: 400,
                 statusMessage:
-                    "Missing required fields: domain, entity_type, entity_id",
+                    "Missing required fields: entities (array) or entity_type and entity_id",
             });
         }
 
@@ -88,15 +114,100 @@ export default defineEventHandler(async (event) => {
             });
         }
 
-        // Validate entity type
-        if (
-            !["character", "corporation", "alliance"].includes(body.entity_type)
-        ) {
+        // PHASE 2: Validate entities array
+        if (body.entities.length > 10) {
             throw createError({
                 statusCode: 400,
-                statusMessage:
-                    "Invalid entity type. Must be character, corporation, or alliance",
+                statusMessage: "Maximum 10 entities allowed per domain",
             });
+        }
+
+        // Validate each entity and check permissions
+        let primaryCount = 0;
+        const validatedEntities = [];
+
+        for (const entityData of body.entities) {
+            if (!entityData.entity_type || !entityData.entity_id) {
+                throw createError({
+                    statusCode: 400,
+                    statusMessage:
+                        "Each entity must have entity_type and entity_id",
+                });
+            }
+
+            // Validate entity type
+            if (
+                !["character", "corporation", "alliance"].includes(
+                    entityData.entity_type
+                )
+            ) {
+                throw createError({
+                    statusCode: 400,
+                    statusMessage:
+                        "Invalid entity type. Must be character, corporation, or alliance",
+                });
+            }
+
+            // Count primary entities
+            if (entityData.primary) {
+                primaryCount++;
+            }
+
+            // PHASE 2: Remove permission restrictions - allow any public entity
+            // Users can now add any character, corporation, or alliance that exists
+            // This enables true multi-entity domains for showcasing multiple entities
+
+            // Verify the entity exists
+            let entityExists = false;
+            switch (entityData.entity_type) {
+                case "character":
+                    entityExists = !!(await Characters.findOne({
+                        character_id: entityData.entity_id,
+                    }));
+                    break;
+                case "corporation":
+                    entityExists = !!(await Corporations.findOne({
+                        corporation_id: entityData.entity_id,
+                    }));
+                    break;
+                case "alliance":
+                    entityExists = !!(await Alliances.findOne({
+                        alliance_id: entityData.entity_id,
+                    }));
+                    break;
+            }
+
+            if (!entityExists) {
+                throw createError({
+                    statusCode: 404,
+                    statusMessage: `Entity ${entityData.entity_type} ${entityData.entity_id} not found`,
+                });
+            }
+
+            // Add validated entity
+            validatedEntities.push({
+                entity_type: entityData.entity_type,
+                entity_id: entityData.entity_id,
+                display_name: entityData.display_name || undefined,
+                show_in_nav: entityData.show_in_nav !== false,
+                show_in_stats: entityData.show_in_stats !== false,
+                primary: entityData.primary === true,
+                color_code: entityData.color_code || undefined,
+            });
+        }
+
+        // Ensure exactly one primary entity
+        if (primaryCount !== 1) {
+            // If no primary specified, make the first one primary
+            if (primaryCount === 0 && validatedEntities.length > 0) {
+                validatedEntities[0].primary = true;
+            } else {
+                throw createError({
+                    statusCode: 400,
+                    statusMessage:
+                        "Exactly one entity must be marked as primary",
+                });
+            }
         }
 
         // Check if domain already exists
@@ -111,79 +222,12 @@ export default defineEventHandler(async (event) => {
             });
         }
 
-        // Check if user has permission to create domain for this entity
-        let hasPermission = false;
-
-        switch (body.entity_type) {
-            case "character":
-                if (body.entity_id === user.characterId) {
-                    hasPermission = true;
-                }
-                break;
-            case "corporation":
-                // Check if user is in this corporation
-                const character = await Characters.findOne({
-                    character_id: user.characterId,
-                });
-                if (character && character.corporation_id === body.entity_id) {
-                    hasPermission = true;
-                }
-                break;
-            case "alliance":
-                // Check if user's corporation is in this alliance
-                const charWithAlliance = await Characters.findOne({
-                    character_id: user.characterId,
-                });
-                if (
-                    charWithAlliance &&
-                    charWithAlliance.alliance_id === body.entity_id
-                ) {
-                    hasPermission = true;
-                }
-                break;
-        }
-
-        if (!hasPermission) {
-            throw createError({
-                statusCode: 403,
-                statusMessage:
-                    "You don't have permission to create a domain for this entity",
-            });
-        }
-
-        // Verify the entity exists
-        let entityExists = false;
-        switch (body.entity_type) {
-            case "character":
-                entityExists = !!(await Characters.findOne({
-                    character_id: body.entity_id,
-                }));
-                break;
-            case "corporation":
-                entityExists = !!(await Corporations.findOne({
-                    corporation_id: body.entity_id,
-                }));
-                break;
-            case "alliance":
-                entityExists = !!(await Alliances.findOne({
-                    alliance_id: body.entity_id,
-                }));
-                break;
-        }
-
-        if (!entityExists) {
-            throw createError({
-                statusCode: 404,
-                statusMessage: "Entity not found",
-            });
-        }
-
-        // Check user's domain limit (basic users get 1, premium could get more)
+        // PHASE 2: Check user's domain limit (10 domains per user)
         const userDomainCount = await CustomDomains.countDocuments({
             owner_character_id: user.characterId,
         });
 
-        const maxDomains = 1; // TODO: Make this configurable based on user tier
+        const maxDomains = 10; // Phase 2: Increased limit
         if (userDomainCount >= maxDomains) {
             throw createError({
                 statusCode: 429,
@@ -199,41 +243,89 @@ export default defineEventHandler(async (event) => {
             .toString(36)
             .substr(2, 32)}`;
 
-        // Create the domain
+        // PHASE 2: Create domain with enhanced structure
         const domainData = {
             domain_id: domainId,
             verification_token: verificationToken,
             domain: body.domain.toLowerCase(),
-            entity_type: body.entity_type,
-            entity_id: body.entity_id,
             owner_character_id: user.characterId,
-            default_page: body.default_page || "dashboard",
+
+            // Multi-entity support
+            entities: validatedEntities,
+
+            // Enhanced branding with defaults
             branding: {
-                primary_color:
-                    body.branding?.primaryColor ||
-                    body.branding?.primary_color ||
-                    "#3b82f6",
-                secondary_color:
-                    body.branding?.secondaryColor ||
-                    body.branding?.secondary_color ||
-                    "#6b7280",
-                logo_url:
-                    body.branding?.logoUrl || body.branding?.logo_url || "",
-                favicon_url:
-                    body.branding?.faviconUrl ||
-                    body.branding?.favicon_url ||
-                    "",
-                custom_css:
-                    body.branding?.customCss || body.branding?.custom_css || "",
-                header_title:
-                    body.branding?.headerTitle ||
-                    body.branding?.header_title ||
-                    "",
+                primary_color: body.branding?.primary_color || "#3b82f6",
+                secondary_color: body.branding?.secondary_color || "#6b7280",
+                accent_color: body.branding?.accent_color,
+                background_color: body.branding?.background_color,
+                text_color: body.branding?.text_color,
+                logo_url: body.branding?.logo_url || "",
+                favicon_url: body.branding?.favicon_url || "",
+                banner_image_url: body.branding?.banner_image_url,
+                background_image_url: body.branding?.background_image_url,
+                header_title: body.branding?.header_title || "",
+                font_family: body.branding?.font_family,
+                font_size_base: body.branding?.font_size_base || 16,
+                custom_css: body.branding?.custom_css || "",
+                css_variables: body.branding?.css_variables || {},
                 show_eve_kill_branding:
                     body.branding?.show_eve_kill_branding !== false,
+                theme_mode: body.branding?.theme_mode || "auto",
+                border_radius: body.branding?.border_radius || "0.375rem",
+                shadow_intensity: body.branding?.shadow_intensity || "medium",
             },
+
+            // Navigation configuration
+            navigation: {
+                show_default_nav: body.navigation?.show_default_nav !== false,
+                nav_style: body.navigation?.nav_style || "horizontal",
+                custom_links: body.navigation?.custom_links || [],
+                nav_position: body.navigation?.nav_position || "top",
+                show_search: body.navigation?.show_search !== false,
+                show_user_menu: body.navigation?.show_user_menu !== false,
+                sticky: body.navigation?.sticky !== false,
+            },
+
+            // Page configuration
+            page_config: {
+                layout: body.page_config?.layout || "default",
+                components: {
+                    recent_kills:
+                        body.page_config?.components?.recent_kills !== false,
+                    top_pilots:
+                        body.page_config?.components?.top_pilots !== false,
+                    campaigns:
+                        body.page_config?.components?.campaigns !== false,
+                    battles: body.page_config?.components?.battles !== false,
+                    stats_overview:
+                        body.page_config?.components?.stats_overview !== false,
+                    search_widget:
+                        body.page_config?.components?.search_widget !== false,
+                    news_feed: body.page_config?.components?.news_feed === true,
+                    social_links:
+                        body.page_config?.components?.social_links === true,
+                },
+                component_settings: {
+                    recent_kills_count:
+                        body.page_config?.component_settings
+                            ?.recent_kills_count || 10,
+                    top_pilots_count:
+                        body.page_config?.component_settings
+                            ?.top_pilots_count || 10,
+                    time_range:
+                        body.page_config?.component_settings?.time_range ||
+                        "7d",
+                    show_losses:
+                        body.page_config?.component_settings?.show_losses !==
+                        false,
+                    show_involved_kills:
+                        body.page_config?.component_settings
+                            ?.show_involved_kills !== false,
+                },
+            },
+
             public_campaigns: body.public_campaigns !== false,
-            analytics_enabled: body.analytics_enabled !== false,
             verified: false,
             active: false, // Will be activated after verification
         };

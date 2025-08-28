@@ -33,7 +33,7 @@ export default defineNuxtPlugin(async () => {
         hostname === "eve-kill.com" ||
         hostname === "www.eve-kill.com" ||
         hostname === "localhost" ||
-        hostname.includes("localhost");
+        hostname === "127.0.0.1";
 
     if (isMainDomain) {
         // Clear any existing domain context

@@ -9,18 +9,54 @@
                 <p class="text-gray-600 dark:text-gray-400 mt-1">
                     {{ t('settings.domains.description') }}
                 </p>
+                <!-- PHASE 2: Usage Status -->
+                <div v-if="domainsData?.usage" class="mt-2 flex items-center gap-4 text-sm">
+                    <div class="flex items-center gap-2">
+                        <UIcon name="i-heroicons-globe-alt" class="w-4 h-4 text-blue-600" />
+                        <span class="text-gray-600 dark:text-gray-400">
+                            {{ domainsData.usage.domains_count }} / {{ domainsData.usage.domains_limit }} domains used
+                        </span>
+                    </div>
+                    <div v-if="domainsData.usage.domains_count >= domainsData.usage.domains_limit"
+                        class="text-orange-600 dark:text-orange-400 text-xs">
+                        Domain limit reached
+                    </div>
+                </div>
             </div>
-            <button @click="showCreateModal = true" :disabled="isLoadingDomains"
-                class="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 text-white text-sm font-medium rounded-md transition-colors">
-                <UIcon name="lucide:plus" class="h-4 w-4" />
-                {{ t('settings.domains.addDomain') }}
-            </button>
+            <div class="flex items-center gap-3">
+                <UButton @click="showCreateModal = true" :disabled="isLoadingDomains || isAtDomainLimit" color="primary"
+                    size="sm">
+                    <UIcon name="i-heroicons-plus" class="w-4 h-4 mr-2" />
+                    {{ t('settings.domains.addDomain') }}
+                </UButton>
+            </div>
+        </div>
+
+        <!-- PHASE 2: Multi-Entity Info -->
+        <div class="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
+            <div class="flex items-start gap-3">
+                <UIcon name="i-heroicons-information-circle" class="w-5 h-5 text-blue-600 mt-0.5" />
+                <div>
+                    <h3 class="font-medium text-blue-900 dark:text-blue-100 mb-1">
+                        Multi-Entity Custom Domains
+                    </h3>
+                    <p class="text-sm text-blue-800 dark:text-blue-200">
+                        Create powerful custom domains showcasing multiple characters, corporations, and alliances with
+                        advanced branding and configuration options.
+                    </p>
+                    <div class="mt-2 space-y-1 text-xs text-blue-700 dark:text-blue-300">
+                        <div>• Up to 10 mixed entities per domain (characters, corps, alliances)</div>
+                        <div>• Advanced branding with banner images and custom CSS</div>
+                        <div>• Flexible component selection and page layouts</div>
+                    </div>
+                </div>
+            </div>
         </div>
 
         <!-- Loading State -->
         <div v-if="isLoadingDomains" class="flex items-center justify-center py-12">
             <div class="text-center">
-                <UIcon name="lucide:loader-2" class="w-8 h-8 animate-spin text-blue-600 mx-auto mb-2" />
+                <UIcon name="i-heroicons-arrow-path" class="w-8 h-8 animate-spin text-blue-600 mx-auto mb-2" />
                 <p class="text-gray-600 dark:text-gray-400">{{ t('loading') }}</p>
             </div>
         </div>
@@ -28,7 +64,7 @@
         <!-- Error State -->
         <div v-else-if="domainsError" class="rounded-md bg-red-50 dark:bg-red-900/20 p-4">
             <div class="flex">
-                <UIcon name="lucide:alert-circle" class="h-5 w-5 text-red-400" />
+                <UIcon name="i-heroicons-exclamation-triangle" class="h-5 w-5 text-red-400" />
                 <div class="ml-3">
                     <h3 class="text-sm font-medium text-red-800 dark:text-red-200">
                         {{ t('error.loadingFailed') }}
@@ -42,37 +78,43 @@
 
         <!-- No Domains State -->
         <div v-else-if="!domains || domains.length === 0" class="text-center py-12">
-            <UIcon name="lucide:globe" class="w-16 h-16 text-gray-400 mx-auto mb-4" />
+            <UIcon name="i-heroicons-globe-alt" class="w-16 h-16 text-gray-400 mx-auto mb-4" />
             <h3 class="text-lg font-medium text-gray-900 dark:text-white mb-2">
                 {{ t('settings.domains.noDomains') }}
             </h3>
             <p class="text-gray-600 dark:text-gray-400 mb-6">
                 {{ t('settings.domains.noDomainsDescription') }}
             </p>
-            <button @click="showCreateModal = true"
-                class="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-md transition-colors">
-                <UIcon name="lucide:plus" class="h-4 w-4" />
+            <UButton @click="showCreateModal = true" :disabled="isAtDomainLimit" color="primary">
+                <UIcon name="i-heroicons-plus" class="w-4 h-4 mr-2" />
                 {{ t('settings.domains.addFirstDomain') }}
-            </button>
+            </UButton>
         </div>
 
         <!-- Domains List -->
         <div v-else class="space-y-4">
             <DomainCard v-for="domain in domains" :key="domain.domain_id" :domain="domain" @edit="editDomain"
-                @delete="deleteDomain" @verify="verifyDomain" @toggle-status="toggleDomainStatus" />
+                @delete="deleteDomain" @verify="verifyDomain" @toggle-status="toggleDomainStatus"
+                @manage-entities="manageEntities" />
         </div>
 
-        <!-- Create Domain Modal -->
-        <Modal :is-open="showCreateModal" :title="t('settings.domains.createDomain')" size="2xl"
+        <!-- PHASE 2: Create Domain Modal -->
+        <Modal :is-open="showCreateModal" title="Create Multi-Entity Domain" size="2xl"
             @close="showCreateModal = false">
             <CreateDomainForm @created="handleDomainCreated" @cancel="showCreateModal = false" />
         </Modal>
 
         <!-- Edit Domain Modal -->
-        <Modal :is-open="showEditModal" :title="t('settings.domains.editDomain')" size="2xl"
-            @close="showEditModal = false">
+        <Modal :is-open="showEditModal" title="Edit Domain" size="2xl" @close="showEditModal = false">
             <EditDomainForm v-if="editingDomain" :domain="editingDomain" @updated="handleDomainUpdated"
                 @cancel="showEditModal = false" />
+        </Modal>
+
+        <!-- PHASE 2: Manage Entities Modal -->
+        <Modal :is-open="showManageEntitiesModal" :title="t('settings.domains.manageEntities')" size="3xl"
+            @close="showManageEntitiesModal = false">
+            <ManageEntitiesForm v-if="managingDomain" :domain="managingDomain" @updated="handleEntitiesUpdated"
+                @cancel="showManageEntitiesModal = false" />
         </Modal>
 
         <!-- Delete Confirmation Modal -->
@@ -84,7 +126,7 @@
                 </p>
                 <div class="rounded-md bg-red-50 dark:bg-red-900/20 p-4">
                     <div class="flex">
-                        <UIcon name="lucide:alert-triangle" class="h-5 w-5 text-red-400" />
+                        <UIcon name="i-heroicons-exclamation-triangle" class="h-5 w-5 text-red-400" />
                         <div class="ml-3">
                             <h3 class="text-sm font-medium text-red-800 dark:text-red-200">
                                 {{ t('warning') }}
@@ -99,15 +141,13 @@
 
             <template #footer>
                 <div class="flex justify-end gap-3">
-                    <button @click="showDeleteModal = false" :disabled="isDeleting"
-                        class="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md hover:bg-gray-50 dark:hover:bg-gray-600 disabled:opacity-50">
+                    <UButton variant="outline" @click="showDeleteModal = false" :disabled="isDeleting">
                         {{ t('cancel') }}
-                    </button>
-                    <button @click="confirmDelete" :disabled="isDeleting"
-                        class="inline-flex items-center px-4 py-2 bg-red-600 hover:bg-red-700 disabled:bg-red-400 text-white text-sm font-medium rounded-md transition-colors">
-                        <UIcon v-if="isDeleting" name="lucide:loader-2" class="animate-spin -ml-1 mr-2 h-4 w-4" />
+                    </UButton>
+                    <UButton color="red" @click="confirmDelete" :disabled="isDeleting">
+                        <UIcon v-if="isDeleting" name="i-heroicons-arrow-path" class="animate-spin w-4 h-4 mr-2" />
                         {{ t('delete') }}
-                    </button>
+                    </UButton>
                 </div>
             </template>
         </Modal>
@@ -127,14 +167,18 @@ import Modal from '~/components/common/Modal.vue';
 const { t } = useI18n();
 const toast = useToast();
 
+// PHASE 2: Multi-entity mode is always enabled
+
 // State
 const showCreateModal = ref(false);
 const showEditModal = ref(false);
 const showDeleteModal = ref(false);
 const showVerificationModal = ref(false);
+const showManageEntitiesModal = ref(false); // PHASE 2: New modal for entity management
 const editingDomain = ref(null);
 const deletingDomain = ref(null);
 const verifyingDomain = ref(null);
+const managingDomain = ref(null); // PHASE 2: Domain for entity management
 const isDeleting = ref(false);
 
 // Fetch domains
@@ -144,10 +188,18 @@ const {
     error: domainsError,
     refresh: refreshDomains
 } = await useFetch('/api/user/domains', {
-    default: () => ({ domains: [], total: 0 })
+    default: () => ({ domains: [], total: 0, usage: { domains_count: 0, domains_limit: 10 } })
 });
 
+// Computed properties
 const domains = computed(() => domainsData.value?.domains || []);
+
+const isAtDomainLimit = computed(() => {
+    const usage = domainsData.value?.usage;
+    return usage ? usage.domains_count >= usage.domains_limit : false;
+});
+
+// Removed createModalTitle - now using static title
 
 // Handlers
 const editDomain = (domain: any) => {
@@ -165,6 +217,12 @@ const verifyDomain = (domain: any) => {
     showVerificationModal.value = true;
 };
 
+// PHASE 2: New handler for entity management
+const manageEntities = (domain: any) => {
+    managingDomain.value = domain;
+    showManageEntitiesModal.value = true;
+};
+
 const toggleDomainStatus = async (domain: any) => {
     try {
         await $fetch(`/api/user/domains/${domain.domain_id}/toggle`, {
@@ -174,7 +232,7 @@ const toggleDomainStatus = async (domain: any) => {
         toast.add({
             title: t('success'),
             description: t('settings.domains.statusUpdated'),
-            color: 'success'
+            color: 'green'
         });
 
         await refreshDomains();
@@ -182,7 +240,7 @@ const toggleDomainStatus = async (domain: any) => {
         toast.add({
             title: t('error.updateFailed'),
             description: error.data?.message || t('error.generic'),
-            color: 'error'
+            color: 'red'
         });
     }
 };
@@ -193,7 +251,7 @@ const handleDomainCreated = async (domain: any) => {
     toast.add({
         title: t('success'),
         description: t('settings.domains.domainCreated'),
-        color: 'success'
+        color: 'green'
     });
 
     await refreshDomains();
@@ -210,7 +268,21 @@ const handleDomainUpdated = async () => {
     toast.add({
         title: t('success'),
         description: t('settings.domains.domainUpdated'),
-        color: 'success'
+        color: 'green'
+    });
+
+    await refreshDomains();
+};
+
+// PHASE 2: New handler for entity updates
+const handleEntitiesUpdated = async () => {
+    showManageEntitiesModal.value = false;
+    managingDomain.value = null;
+
+    toast.add({
+        title: t('success'),
+        description: t('settings.domains.entitiesUpdated'),
+        color: 'green'
     });
 
     await refreshDomains();
@@ -223,7 +295,7 @@ const handleDomainVerified = async () => {
     toast.add({
         title: t('success'),
         description: t('settings.domains.domainVerified'),
-        color: 'success'
+        color: 'green'
     });
 
     await refreshDomains();
@@ -242,7 +314,7 @@ const confirmDelete = async () => {
         toast.add({
             title: t('success'),
             description: t('settings.domains.domainDeleted'),
-            color: 'success'
+            color: 'green'
         });
 
         showDeleteModal.value = false;
@@ -252,16 +324,18 @@ const confirmDelete = async () => {
         toast.add({
             title: t('error.deleteFailed'),
             description: error.data?.message || t('error.generic'),
-            color: 'error'
+            color: 'red'
         });
     } finally {
         isDeleting.value = false;
     }
 };
+
+// PHASE 2: Multi-entity mode is always enabled - no need for preference storage
 </script>
 
 <style scoped>
 .domain-settings {
-    max-width: 4xl;
+    max-width: 6xl;
 }
 </style>
