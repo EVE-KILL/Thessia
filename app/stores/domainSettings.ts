@@ -167,13 +167,24 @@ export const useDomainSettingsStore = defineStore("domainSettings", () => {
         isLoading.value = true;
         error.value = null;
 
+        console.log(
+            `[Domain Settings Store] Loading settings for domain: ${domain}`
+        );
+
         try {
             const response = await $fetch<{
                 success: boolean;
                 data: DomainSettings;
             }>(`/api/domains/lookup`, {
                 query: { domain },
+                // Add timeout to prevent hanging requests
+                timeout: 10000,
             });
+
+            console.log(
+                `[Domain Settings Store] Received response for ${domain}:`,
+                response
+            );
 
             if (response.success && response.data) {
                 currentDomain.value = domain;
@@ -191,12 +202,43 @@ export const useDomainSettingsStore = defineStore("domainSettings", () => {
                     features: domainData.features || {},
                 };
                 hasUnsavedChanges.value = false;
+                console.log(
+                    `[Domain Settings Store] Successfully loaded settings for: ${domain}`
+                );
             } else {
-                throw new Error("Invalid domain configuration");
+                console.error(
+                    `[Domain Settings Store] Invalid response for ${domain}:`,
+                    response
+                );
+                throw new Error("Invalid domain configuration received");
             }
         } catch (err: any) {
-            error.value = err.message || "Failed to load domain settings";
-            console.error("Failed to load domain settings:", err);
+            console.error(
+                `[Domain Settings Store] Error loading settings for ${domain}:`,
+                err
+            );
+
+            // Enhanced error handling with specific error types
+            if (err.statusCode === 404) {
+                error.value = "Domain not found";
+            } else if (err.statusCode === 403) {
+                error.value = "Domain not verified or not active";
+            } else if (err.statusCode === 503) {
+                error.value = "Domain is suspended";
+            } else if (err.statusCode === 410) {
+                error.value = "Domain has expired";
+            } else if (err.statusCode === 400) {
+                error.value = "Invalid domain parameter";
+            } else if (err.name === "TimeoutError" || err.statusCode === 408) {
+                error.value = "Request timeout - please try again";
+            } else {
+                error.value =
+                    err.message ||
+                    err.statusMessage ||
+                    "Failed to load domain settings";
+            }
+
+            // Re-throw the error to let the calling component handle it
             throw err;
         } finally {
             isLoading.value = false;

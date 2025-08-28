@@ -175,14 +175,16 @@ export function clearAllDomainCache() {
 }
 
 /**
- * Main domain detection middleware - Phase 2
+ * Enhanced domain detection middleware - Phase 2 with improved error handling
  */
 export default defineEventHandler(async (event: H3Event) => {
-    // Skip for API routes that don't need domain context
+    // Skip for API routes that don't need domain context (except domain-specific APIs)
     const url = getRequestURL(event);
     if (
         url.pathname.startsWith("/api/") &&
-        !url.pathname.startsWith("/api/user/domains")
+        !url.pathname.startsWith("/api/user/domains") &&
+        !url.pathname.startsWith("/api/domain/") &&
+        !url.pathname.startsWith("/api/domains/")
     ) {
         return;
     }
@@ -197,6 +199,7 @@ export default defineEventHandler(async (event: H3Event) => {
     }
 
     const host = getHeader(event, "host");
+    const userAgent = getHeader(event, "user-agent") || "";
 
     if (!host) {
         // No host header, set default context
@@ -209,6 +212,13 @@ export default defineEventHandler(async (event: H3Event) => {
     // Remove port from host if present
     const cleanHost = host.split(":")[0];
 
+    // Log domain access for debugging
+    console.log(
+        `[Domain Detection] Checking domain: ${cleanHost}, Path: ${
+            url.pathname
+        }, User-Agent: ${userAgent.substring(0, 100)}`
+    );
+
     // Check if this is an eve-kill domain
     const isEveKill = isEveKillDomain(cleanHost);
 
@@ -220,11 +230,29 @@ export default defineEventHandler(async (event: H3Event) => {
     }
 
     // This could be a custom domain, check our database
-    const domainConfig = await getDomainConfig(cleanHost);
+    let domainConfig;
+    try {
+        domainConfig = await getDomainConfig(cleanHost);
+    } catch (error) {
+        console.error(
+            `[Domain Detection] Database error for domain ${cleanHost}:`,
+            error
+        );
+        // Set error context instead of crashing
+        event.context.domainContext = {
+            isCustomDomain: true,
+            domain: cleanHost,
+            error: {
+                type: "domain_not_found",
+                message: "Database error occurred during domain lookup",
+            },
+        } as IDomainContext;
+        return;
+    }
 
     if (!domainConfig) {
         // Unknown domain - set error context for proper error handling
-        console.log(`Unknown domain accessed: ${cleanHost}`);
+        console.log(`[Domain Detection] Unknown domain accessed: ${cleanHost}`);
         event.context.domainContext = {
             isCustomDomain: true,
             domain: cleanHost,
@@ -236,57 +264,19 @@ export default defineEventHandler(async (event: H3Event) => {
         return;
     }
 
-    // Check if domain exists but is not active or not verified
-    const isLocalhostDomain = cleanHost.includes(".localhost");
+    // Enhanced verification and activation checks
+    const isLocalhostDomain =
+        cleanHost.includes(".localhost") ||
+        cleanHost.includes("127.0.0.1") ||
+        cleanHost.includes("0.0.0.0");
 
-    // For non-localhost domains, check both active and verified status
-    if (!isLocalhostDomain) {
-        if (!domainConfig.active) {
-            console.log(`Inactive domain accessed: ${cleanHost}`);
-            event.context.domainContext = {
-                isCustomDomain: true,
-                domain: cleanHost,
-                config: domainConfig,
-                error: {
-                    type: "domain_unverified",
-                    message: "Domain is not active",
-                },
-            } as IDomainContext;
-            return;
-        }
+    // Check domain status in order of precedence
 
-        if (!domainConfig.verified) {
-            console.log(`Unverified domain accessed: ${cleanHost}`);
-            event.context.domainContext = {
-                isCustomDomain: true,
-                domain: cleanHost,
-                config: domainConfig,
-                error: {
-                    type: "domain_unverified",
-                    message: "Domain exists but is not verified",
-                },
-            } as IDomainContext;
-            return;
-        }
-    } else {
-        // For localhost domains, only check verification status (allow inactive for development)
-        if (!domainConfig.verified) {
-            console.log(`Unverified localhost domain accessed: ${cleanHost}`);
-            event.context.domainContext = {
-                isCustomDomain: true,
-                domain: cleanHost,
-                config: domainConfig,
-                error: {
-                    type: "domain_unverified",
-                    message: "Domain exists but is not verified",
-                },
-            } as IDomainContext;
-            return;
-        }
-    }
-
-    // Check if domain is suspended
+    // 1. Check if domain is suspended first
     if (domainConfig.suspended) {
+        console.log(
+            `[Domain Detection] Suspended domain accessed: ${cleanHost}, reason: ${domainConfig.suspension_reason}`
+        );
         throw createError({
             statusCode: 503,
             statusMessage:
@@ -295,33 +285,114 @@ export default defineEventHandler(async (event: H3Event) => {
         });
     }
 
-    // Check if domain has expired
+    // 2. Check if domain has expired
     if (domainConfig.expires_at && domainConfig.expires_at < new Date()) {
+        console.log(
+            `[Domain Detection] Expired domain accessed: ${cleanHost}, expired at: ${domainConfig.expires_at}`
+        );
         throw createError({
             statusCode: 410,
             statusMessage: "Domain registration has expired",
         });
     }
 
-    // PHASE 2: Get multi-entity data
-    const { entities, primaryEntity } = await getMultipleEntityData(
-        domainConfig.entities
-    );
+    // 3. Check verification status (applies to all domains except localhost in dev)
+    if (!domainConfig.verified) {
+        console.log(
+            `[Domain Detection] Unverified domain accessed: ${cleanHost}, verified: ${domainConfig.verified}`
+        );
+        event.context.domainContext = {
+            isCustomDomain: true,
+            domain: cleanHost,
+            config: domainConfig,
+            error: {
+                type: "domain_unverified",
+                message: "Domain exists but is not verified",
+            },
+        } as IDomainContext;
+        return;
+    }
+
+    // 4. Check activation status (only for non-localhost domains)
+    if (!isLocalhostDomain && !domainConfig.active) {
+        console.log(
+            `[Domain Detection] Inactive domain accessed: ${cleanHost}, active: ${domainConfig.active}`
+        );
+        event.context.domainContext = {
+            isCustomDomain: true,
+            domain: cleanHost,
+            config: domainConfig,
+            error: {
+                type: "domain_unverified",
+                message: "Domain is not active",
+            },
+        } as IDomainContext;
+        return;
+    }
+
+    // 5. Validate entities exist and are configured properly
+    if (!domainConfig.entities || domainConfig.entities.length === 0) {
+        console.error(
+            `[Domain Detection] No entities configured for domain ${cleanHost}`
+        );
+        event.context.domainContext = {
+            isCustomDomain: true,
+            domain: cleanHost,
+            config: domainConfig,
+            error: {
+                type: "domain_not_found",
+                message: "Domain has no entities configured",
+            },
+        } as IDomainContext;
+        return;
+    }
+
+    // PHASE 2: Get multi-entity data with error handling
+    let entities, primaryEntity;
+    try {
+        const entityData = await getMultipleEntityData(domainConfig.entities);
+        entities = entityData.entities;
+        primaryEntity = entityData.primaryEntity;
+    } catch (error) {
+        console.error(
+            `[Domain Detection] Error fetching entities for domain ${cleanHost}:`,
+            error
+        );
+        event.context.domainContext = {
+            isCustomDomain: true,
+            domain: cleanHost,
+            config: domainConfig,
+            error: {
+                type: "domain_not_found",
+                message: "Error loading domain entities",
+            },
+        } as IDomainContext;
+        return;
+    }
 
     if (!primaryEntity || entities.length === 0) {
         console.error(
-            `No entities found for domain ${cleanHost}: ${
+            `[Domain Detection] No valid entities found for domain ${cleanHost}: ${
                 domainConfig.entities?.length || 0
-            } entities configured`
+            } entities configured, ${entities?.length || 0} entities loaded`
         );
-        // Fall back to normal eve-kill behavior
+        // Set error instead of falling back to normal behavior
         event.context.domainContext = {
-            isCustomDomain: false,
+            isCustomDomain: true,
+            domain: cleanHost,
+            config: domainConfig,
+            error: {
+                type: "domain_not_found",
+                message: "Domain entities could not be loaded",
+            },
         } as IDomainContext;
         return;
     }
 
     // PHASE 2: Set up enhanced domain context for the request
+    console.log(
+        `[Domain Detection] Successfully configured domain: ${cleanHost}, entities: ${entities.length}`
+    );
     event.context.domainContext = {
         isCustomDomain: true,
         domain: cleanHost,

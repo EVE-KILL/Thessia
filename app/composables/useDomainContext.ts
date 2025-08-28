@@ -26,60 +26,67 @@ export const useDomainContext = () => {
     // Create a reactive state that persists across client navigation
     const domainContextState = useState<IDomainContext>("domainContext", () => {
         // Initialize from SSR context if available
-        if (
-            process.server &&
-            nuxtApp.ssrContext?.event?.context?.domainContext
-        ) {
-            const context = nuxtApp.ssrContext.event.context.domainContext;
-            // Serialize the context to avoid Mongoose object serialization issues
-            return {
-                isCustomDomain: context.isCustomDomain,
-                domain: context.domain,
-                entityType: context.entityType,
-                entity: context.entity
-                    ? JSON.parse(JSON.stringify(context.entity))
-                    : null,
-                error: context.error
-                    ? {
-                          type: context.error.type,
-                          message: context.error.message,
-                      }
-                    : undefined,
-                config: context.config
-                    ? {
-                          entity_type: context.config.entity_type,
-                          entity_id: context.config.entity_id,
-                          domain: context.config.domain,
-                          active: context.config.active,
-                          verified: context.config.verified,
-                          default_page: context.config.default_page,
-                          public_campaigns: context.config.public_campaigns,
-                          branding: context.config.branding
-                              ? JSON.parse(
-                                    JSON.stringify(context.config.branding)
-                                )
-                              : null,
-                          navigation: context.config.navigation
-                              ? JSON.parse(
-                                    JSON.stringify(context.config.navigation)
-                                )
-                              : null,
-                          features: context.config.features
-                              ? JSON.parse(
-                                    JSON.stringify(context.config.features)
-                                )
-                              : null,
-                          page_config: context.config.page_config
-                              ? JSON.parse(
-                                    JSON.stringify(context.config.page_config)
-                                )
-                              : null,
-                      }
-                    : null,
-            };
+        try {
+            if (
+                process.server &&
+                nuxtApp.ssrContext?.event?.context?.domainContext
+            ) {
+                const context = nuxtApp.ssrContext.event.context.domainContext;
+                console.log(`[Domain Context] Initializing from SSR context:`, context?.domain, context?.error?.type);
+                
+                // Serialize the context to avoid Mongoose object serialization issues
+                return {
+                    isCustomDomain: Boolean(context.isCustomDomain),
+                    domain: context.domain || undefined,
+                    entityType: context.entityType || undefined,
+                    entity: context.entity
+                        ? JSON.parse(JSON.stringify(context.entity))
+                        : null,
+                    error: context.error
+                        ? {
+                              type: context.error.type,
+                              message: context.error.message,
+                          }
+                        : undefined,
+                    config: context.config
+                        ? {
+                              entity_type: context.config.entity_type,
+                              entity_id: context.config.entity_id,
+                              domain: context.config.domain,
+                              active: Boolean(context.config.active),
+                              verified: Boolean(context.config.verified),
+                              default_page: context.config.default_page,
+                              public_campaigns: Boolean(context.config.public_campaigns),
+                              branding: context.config.branding
+                                  ? JSON.parse(
+                                        JSON.stringify(context.config.branding)
+                                    )
+                                  : null,
+                              navigation: context.config.navigation
+                                  ? JSON.parse(
+                                        JSON.stringify(context.config.navigation)
+                                    )
+                                  : null,
+                              features: context.config.features
+                                  ? JSON.parse(
+                                        JSON.stringify(context.config.features)
+                                    )
+                                  : null,
+                              page_config: context.config.page_config
+                                  ? JSON.parse(
+                                        JSON.stringify(context.config.page_config)
+                                    )
+                                  : null,
+                          }
+                        : null,
+                };
+            }
+        } catch (error) {
+            console.error(`[Domain Context] Error initializing from SSR context:`, error);
         }
 
         // Fallback for client-side or when no custom domain
+        console.log(`[Domain Context] Using fallback initialization`);
         return {
             isCustomDomain: false,
         };

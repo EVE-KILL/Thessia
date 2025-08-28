@@ -78,21 +78,44 @@ const { generateWebsiteStructuredData, generateOrganizationStructuredData, addSt
 // Get domain context first to check if middleware detected a custom domain
 const { isCustomDomain, customDomain, domainError } = useDomainContext();
 
-// If middleware detected a custom domain, use that context
-// If not, check hostname for client-side detection as fallback
-if (!isCustomDomain.value && process.client) {
-    const hostname = window.location.hostname;
-    const isMainDomain = hostname === "eve-kill.com" ||
-        hostname === "www.eve-kill.com" ||
-        hostname === "localhost" ||
-        hostname === "127.0.0.1";
+console.log(`[Index Page] Domain context:`, {
+    isCustomDomain: isCustomDomain.value,
+    customDomain: customDomain.value,
+    domainError: domainError.value,
+    hostname: process.client ? window.location.hostname : 'server'
+});
 
-    if (!isMainDomain) {
-        // This is a custom domain that wasn't detected by middleware
-        // Redirect to [domain].vue for proper error handling
-        await navigateTo(`/`);
+// Handle domain detection and routing
+(async () => {
+    // If middleware detected a custom domain, use that context
+    // If not, check hostname for client-side detection as fallback
+    if (!isCustomDomain.value && process.client) {
+        const hostname = window.location.hostname;
+        const isMainDomain = hostname === "eve-kill.com" ||
+            hostname === "www.eve-kill.com" ||
+            hostname === "localhost" ||
+            hostname === "127.0.0.1" ||
+            hostname === "0.0.0.0" ||
+            hostname.includes("eve-kill.com"); // Allow eve-kill subdomains
+
+        console.log(`[Index Page] Client-side domain check:`, { hostname, isMainDomain });
+
+        if (!isMainDomain) {
+            // This is a custom domain that wasn't detected by middleware
+            // Redirect to [domain].vue for proper error handling
+            console.log(`[Index Page] Redirecting undetected custom domain: ${hostname}`);
+            await navigateTo(`/${hostname}`);
+            return;
+        }
     }
-}
+
+    // Handle domain errors by redirecting to the domain page for proper error display
+    if (domainError.value && customDomain.value) {
+        console.log(`[Index Page] Domain error detected, redirecting to domain page:`, domainError.value);
+        await navigateTo(`/${customDomain.value}`);
+        return;
+    }
+})();
 
 // Initialize with a valid ID from our tabs
 const selectedTab = ref("kills");
