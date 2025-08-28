@@ -558,7 +558,11 @@ export class AchievementService {
                     achievement_id: achievement.id,
                     name: achievement.name,
                     description: achievement.description,
+                    type: achievement.type,
                     points: achievement.points,
+                    rarity: achievement.rarity,
+                    category: achievement.category,
+                    threshold: achievement.threshold || 1,
                     is_completed: false,
                     current_count: 0,
                     completion_tiers: 0,
@@ -701,17 +705,61 @@ export class AchievementService {
                         hasUpdates = true;
                     }
                 }
+            } else {
+                // New achievement that doesn't exist in character record - add it
+                const isCompleted = count >= (achievement.threshold || 1);
+                const completionTiers = Math.floor(
+                    count / (achievement.threshold || 1)
+                );
+                
+                const newAchievement = {
+                    achievement_id: achievement.id,
+                    name: achievement.name,
+                    description: achievement.description,
+                    type: achievement.type,
+                    points: achievement.points,
+                    rarity: achievement.rarity,
+                    category: achievement.category,
+                    threshold: achievement.threshold || 1,
+                    current_count: count,
+                    is_completed: isCompleted,
+                    completion_tiers: completionTiers,
+                    completed_at: isCompleted ? new Date() : null,
+                    last_updated: new Date(),
+                };
+                
+                updates[`$push`] = updates[`$push`] || {};
+                updates[`$push`].achievements = updates[`$push`].achievements || { $each: [] };
+                updates[`$push`].achievements.$each.push(newAchievement);
+                
+                hasUpdates = true;
             }
         }
 
         // Save updates if any
         if (hasUpdates) {
-            updates.character_name = characterName;
-            updates.last_calculated = new Date();
+            // Separate $set and $push operations
+            const setOperations: any = {};
+            const pushOperations: any = updates.$push;
+            
+            // Move non-$push operations to setOperations
+            for (const [key, value] of Object.entries(updates)) {
+                if (key !== '$push') {
+                    setOperations[key] = value;
+                }
+            }
+            
+            setOperations.character_name = characterName;
+            setOperations.last_calculated = new Date();
+
+            const updateOperations: any = { $set: setOperations };
+            if (pushOperations) {
+                updateOperations.$push = pushOperations;
+            }
 
             await CharacterAchievements.updateOne(
                 { character_id: characterId },
-                { $set: updates }
+                updateOperations
             );
 
             // Recalculate totals
