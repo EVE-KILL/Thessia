@@ -295,7 +295,7 @@ async function generateFastDomainStats(mongoQuery: any) {
 export default defineCachedEventHandler(
     async (event) => {
         try {
-            const domain = getRouterParam(event, "domain");
+            const domain = getRouterParam(event as any, "domain");
             if (!domain) {
                 throw createError({
                     statusCode: 400,
@@ -304,7 +304,7 @@ export default defineCachedEventHandler(
             }
 
             // Get query parameters
-            const query = getQuery(event);
+            const query = getQuery(event as any);
             const timeRange = (query.timeRange as string) || "7d";
             const entityFilter = query.entityFilter as string;
 
@@ -388,13 +388,13 @@ export default defineCachedEventHandler(
         }
     },
     {
-        maxAge: 60 * 5, // Cache for 5 minutes
-        staleMaxAge: 60 * 10, // Serve stale for up to 10 minutes
+        maxAge: 5,
+        staleMaxAge: 0,
         swr: true,
         base: "redis",
         getKey: (event) => {
-            const domain = getRouterParam(event, "domain");
-            const query = getQuery(event);
+            const domain = getRouterParam(event as any, "domain");
+            const query = getQuery(event as any);
             const timeRange = query?.timeRange || "7d";
             const entityFilter = query?.entityFilter || "";
 

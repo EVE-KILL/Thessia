@@ -218,8 +218,8 @@ export default defineCachedEventHandler(
         }
     },
     {
-        maxAge: 300, // 5 minutes cache
-        staleMaxAge: -1,
+        maxAge: 5,
+        staleMaxAge: 0,
         swr: true,
         base: "redis",
         getKey: (event) => {

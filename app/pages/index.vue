@@ -75,20 +75,24 @@ const { isMobile } = useResponsive();
 const { generateWebsiteStructuredData, generateOrganizationStructuredData, addStructuredDataToHead } = useStructuredData();
 
 // Custom domain handling - Phase 2
-// For custom domains, redirect to the [domain] route which handles errors properly
-const hostname = process.client ? window.location.hostname : useRequestURL().hostname
-const isMainDomain = hostname === "eve-kill.com" ||
-    hostname === "www.eve-kill.com" ||
-    hostname === "localhost" ||
-    hostname === "127.0.0.1"
+// Get domain context first to check if middleware detected a custom domain
+const { isCustomDomain, customDomain, domainError } = useDomainContext();
 
-if (!isMainDomain) {
-    // This is a custom domain, redirect to [domain].vue for proper error handling
-    await navigateTo(`/${hostname}`)
+// If middleware detected a custom domain, use that context
+// If not, check hostname for client-side detection as fallback
+if (!isCustomDomain.value && process.client) {
+    const hostname = window.location.hostname;
+    const isMainDomain = hostname === "eve-kill.com" ||
+        hostname === "www.eve-kill.com" ||
+        hostname === "localhost" ||
+        hostname === "127.0.0.1";
+
+    if (!isMainDomain) {
+        // This is a custom domain that wasn't detected by middleware
+        // Redirect to [domain].vue for proper error handling
+        await navigateTo(`/`);
+    }
 }
-
-// Only use domain context for main domain routing logic
-const { isCustomDomain, customDomain } = useDomainContext();
 
 // Initialize with a valid ID from our tabs
 const selectedTab = ref("kills");

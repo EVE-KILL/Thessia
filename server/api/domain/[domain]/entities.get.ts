@@ -1,7 +1,7 @@
 export default defineCachedEventHandler(
     async (event) => {
         try {
-            const domain = getRouterParam(event, "domain");
+            const domain = getRouterParam(event as any, "domain");
 
             if (!domain) {
                 throw createError({
@@ -134,12 +134,12 @@ export default defineCachedEventHandler(
         }
     },
     {
-        maxAge: 60 * 15, // Cache for 15 minutes (entities don't change frequently)
-        staleMaxAge: 60 * 60, // Serve stale for up to 1 hour
+        maxAge: 5,
+        staleMaxAge: 0,
         swr: true,
         base: "redis",
         getKey: (event) => {
-            const domain = getRouterParam(event, "domain");
+            const domain = getRouterParam(event as any, "domain");
             return `domain:entities:${domain}:v1`;
         },
     }

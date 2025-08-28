@@ -183,7 +183,7 @@
                         </div>
                     </div>
                     <div class="text-lg font-bold text-white mb-1">{{ topShipDestroyed?.ship_group_name || 'Loading...'
-                        }}</div>
+                    }}</div>
                     <div class="text-gray-400 text-sm">{{ topShipDestroyed?.killed || 0 }} destroyed</div>
                 </div>
 
@@ -511,8 +511,8 @@ const {
     {
         key: statsFetchKey,
         query: statsQueryParams,
-        server: true,
-        lazy: false,
+        server: false,
+        lazy: true,
         default: () => ({})
     }
 );
@@ -526,8 +526,8 @@ const {
     () => currentDomain.value ? `/api/domain/${currentDomain.value}/entities` : null,
     {
         key: `domain-entities-${currentDomain.value}`,
-        server: true,
-        lazy: false,
+        server: false,
+        lazy: true,
         default: () => ({ success: false, entities: [] })
     }
 );
@@ -550,8 +550,8 @@ const {
     {
         key: `domain-campaigns-${currentDomain.value}`,
         query: { limit: 10 },
-        server: true,
-        lazy: false,
+        server: false,
+        lazy: true,
         default: () => ({ campaigns: [] })
     }
 );
