@@ -4,7 +4,7 @@
         :empty-icon="'lucide:package'" :empty-text="t('noItems')" background="transparent" :link-fn="generateItemLink"
         class="kill-items-table" @row-click="handleRowClick">
         <!-- Image cell with connector lines for container items -->
-        <template #cell-image="{ item }">
+        <template #cell-image="{ item }: { item: Item }">
             <div class="image-cell" :class="{
                 'indented-image': item.isNested,
                 'privacy-blur': props.hideFitting && isFittingItem(item) && (item.type === 'item' || item.type === 'container-item')
@@ -16,24 +16,25 @@
                 </template>
 
                 <!-- Show collapse icon for headers if collapsible -->
-                <Icon v-if="item.type === 'header' && isCollapsible(item.itemName)"
-                    :name="isSectionCollapsed(item.itemName) ? 'lucide:chevron-right' : 'lucide:chevron-down'"
-                    class="collapse-icon" :class="{ 'rotate-icon': !isSectionCollapsed(item.itemName) }"
-                    @click.stop="toggleSectionCollapse(item.itemName)" />
+                <Icon v-if="item.type === 'header' && item.itemName && isCollapsible(item.itemName)"
+                    :name="item.itemName && isSectionCollapsed(item.itemName) ? 'lucide:chevron-right' : 'lucide:chevron-down'"
+                    class="collapse-icon"
+                    :class="{ 'rotate-icon': item.itemName && !isSectionCollapsed(item.itemName) }"
+                    @click.stop="item.itemName && toggleSectionCollapse(item.itemName)" />
 
                 <!-- Show image only when not a skin -->
                 <Image
                     v-if="(item.type === 'item' || item.type === 'container-item') && item.itemId && !isSkin(item.itemName || '')"
                     :type="isBlueprint(item.itemName || '') ? 'blueprint-copy' : 'item'" :id="item.itemId" size="24"
                     class="w-7 h-7"
-                    :alt="props.hideFitting && isFittingItem(item as Item) ? '[REDACTED]' : ((item as Item).itemName || '')" />
+                    :alt="props.hideFitting && isFittingItem(item) ? '[REDACTED]' : (item.itemName || '')" />
             </div>
         </template> <!-- Name cell -->
-        <template #cell-name="{ item }">
+        <template #cell-name="{ item }: { item: Item }">
             <div v-if="item.type === 'header'" class="font-bold text-sm uppercase"
-                @click.stop="isCollapsible(item.itemName) && toggleSectionCollapse(item.itemName)">
+                @click.stop="item.itemName && isCollapsible(item.itemName) && toggleSectionCollapse(item.itemName)">
                 {{ item.itemName }}
-                <span v-if="isCollapsible(item.itemName)" class="section-count">
+                <span v-if="item.itemName && isCollapsible(item.itemName)" class="section-count">
                     ({{ getSectionItemCount(item.itemName) }})
                 </span>
             </div>
@@ -41,51 +42,75 @@
                 :class="{ 'privacy-blur': props.hideFitting && isFittingItem(item) }">
                 <!-- Add click handler directly to the name wrapper for containers -->
                 <div class="item-name-wrapper" :class="{ 'container-name': item.isContainer }"
-                    @click.stop="item.isContainer && item.containerId && toggleContainerCollapse(item.containerId!)">
+                    @click.stop="item.isContainer && item.containerId && toggleContainerCollapse(item.containerId)">
                     <!-- Container name first, then the icon -->
-                    {{ props.hideFitting && isFittingItem(item as Item) ? '[REDACTED]' : (item as Item).itemName }}
+                    {{ props.hideFitting && isFittingItem(item) ? '[REDACTED]' : item.itemName }}
                     <!-- Add collapse/expand control for containers after name -->
-                    <Icon v-if="(item as Item).isContainer"
-                        :name="isContainerCollapsed((item as Item).containerId!) ? 'lucide:chevron-right' : 'lucide:chevron-down'"
+                    <Icon v-if="item.isContainer && item.containerId"
+                        :name="isContainerCollapsed(item.containerId) ? 'lucide:chevron-right' : 'lucide:chevron-down'"
                         class="container-collapse-icon"
-                        @click.stop="toggleContainerCollapse((item as Item).containerId!, $event)" />
+                        @click.stop="item.containerId && toggleContainerCollapse(item.containerId, $event)" />
                 </div>
             </div>
-            <div v-else-if="item.type === 'value'" class="font-medium">{{ (item as Item).itemName }}</div>
+            <div v-else-if="item.type === 'value'" class="font-medium">{{ item.itemName }}</div>
         </template>
 
-        <!-- Quantity cell with badges -->
-        <template #cell-quantity="{ item }">
-            <template v-if="item.type === 'header' && sectionItemCounts[item.sectionName] > 1">
-                <div class="sort-column-header full-width-cell text-left"
-                    @click.stop="handleHeaderClick('quantity', item.sectionName)">
-                    {{ t('quantity') }}
-                    <Icon v-if="currentSortColumn === 'quantity' && currentSortSection === item.sectionName"
+        <!-- Dropped cell -->
+        <template #cell-dropped="{ item }">
+            <template
+                v-if="(item as Item).type === 'header' && (item as Item).sectionName && sectionItemCounts[(item as Item).sectionName!] && sectionItemCounts[(item as Item).sectionName!] > 1">
+                <div class="sort-column-header full-width-cell text-center"
+                    @click.stop="(item as Item).sectionName && handleHeaderClick('dropped', (item as Item).sectionName!)">
+                    {{ t('dropped') }}
+                    <Icon v-if="currentSortColumn === 'dropped' && currentSortSection === (item as Item).sectionName"
                         :name="currentSortDirection === 'asc' ? 'lucide:arrow-up' : 'lucide:arrow-down'"
                         class="sort-icon" />
                     <Icon v-else name="lucide:arrow-up-down" class="sort-icon-inactive" />
                 </div>
             </template>
-            <template v-else-if="item.type === 'item' || item.type === 'value' || item.type === 'container-item'">
-                <div class="quantity-badges">
-                    <!-- Dropped badge -->
-                    <UBadge v-if="item.dropped > 0" variant="solid" color="success" class="item-badge">
-                        <span class="badge-text">{{ item.dropped }}</span>
+            <template
+                v-else-if="(item as Item).type === 'item' || (item as Item).type === 'value' || (item as Item).type === 'container-item'">
+                <div class="badge-container">
+                    <UBadge v-if="(item as Item).dropped && (item as Item).dropped! > 0" variant="solid" color="success"
+                        class="item-badge modern-badge dropped-badge">
+                        <Icon name="lucide:package-check" class="badge-icon dropped-icon" />
+                        <span class="badge-text">{{ (item as Item).dropped }}</span>
                     </UBadge>
+                </div>
+            </template>
+        </template>
 
-                    <!-- Destroyed badge -->
-                    <UBadge v-if="item.destroyed > 0" variant="solid" color="error" class="item-badge">
-                        <span class="badge-text">{{ item.destroyed }}</span>
+        <!-- Destroyed cell -->
+        <template #cell-destroyed="{ item }">
+            <template
+                v-if="(item as Item).type === 'header' && (item as Item).sectionName && sectionItemCounts[(item as Item).sectionName!] && sectionItemCounts[(item as Item).sectionName!] > 1">
+                <div class="sort-column-header full-width-cell text-center"
+                    @click.stop="(item as Item).sectionName && handleHeaderClick('destroyed', (item as Item).sectionName!)">
+                    {{ t('destroyed') }}
+                    <Icon v-if="currentSortColumn === 'destroyed' && currentSortSection === (item as Item).sectionName"
+                        :name="currentSortDirection === 'asc' ? 'lucide:arrow-up' : 'lucide:arrow-down'"
+                        class="sort-icon" />
+                    <Icon v-else name="lucide:arrow-up-down" class="sort-icon-inactive" />
+                </div>
+            </template>
+            <template
+                v-else-if="(item as Item).type === 'item' || (item as Item).type === 'value' || (item as Item).type === 'container-item'">
+                <div class="badge-container">
+                    <UBadge v-if="(item as Item).destroyed && (item as Item).destroyed! > 0" variant="solid"
+                        color="error" class="item-badge modern-badge destroyed-badge">
+                        <Icon name="lucide:package-x" class="badge-icon destroyed-icon" />
+                        <span class="badge-text">{{ (item as Item).destroyed }}</span>
                     </UBadge>
                 </div>
             </template>
         </template>
 
         <!-- Value cell -->
-        <template #cell-value="{ item }: { item: Item }">
-            <template v-if="item.type === 'header' && sectionItemCounts[item.sectionName] > 1">
+        <template #cell-value="{ item }">
+            <template
+                v-if="item.type === 'header' && item.sectionName && sectionItemCounts[item.sectionName] && sectionItemCounts[item.sectionName] > 1">
                 <div class="sort-column-header full-width-cell text-right"
-                    @click.stop="handleHeaderClick('value', item.sectionName)">
+                    @click.stop="item.sectionName && handleHeaderClick('value', item.sectionName)">
                     {{ t('value') }}
                     <Icon v-if="currentSortColumn === 'value' && currentSortSection === item.sectionName"
                         :name="currentSortDirection === 'asc' ? 'lucide:arrow-up' : 'lucide:arrow-down'"
@@ -100,7 +125,6 @@
                 <div v-else class="text-right">-</div>
             </template>
         </template>
-
         <!-- Mobile view template -->
         <template #mobile-content="{ item }">
             <div class="mobile-container" :class="{
@@ -111,13 +135,14 @@
                 <!-- Header items get special treatment -->
                 <template v-if="(item as Item).type === 'header'">
                     <div class="mobile-header-content"
-                        @click.stop="isCollapsible((item as Item).itemName) && toggleSectionCollapse((item as Item).itemName!)">
+                        @click.stop="(item as Item).itemName && isCollapsible((item as Item).itemName!) && toggleSectionCollapse((item as Item).itemName!)">
                         <div class="mobile-header-row">
-                            <Icon v-if="isCollapsible((item as Item).itemName)"
+                            <Icon v-if="(item as Item).itemName && isCollapsible((item as Item).itemName!)"
                                 :name="isSectionCollapsed((item as Item).itemName!) ? 'lucide:chevron-right' : 'lucide:chevron-down'"
                                 class="mobile-collapse-icon" />
                             <h3 class="mobile-header-title">{{ (item as Item).itemName }}</h3>
-                            <span v-if="isCollapsible((item as Item).itemName)" class="mobile-section-count">
+                            <span v-if="(item as Item).itemName && isCollapsible((item as Item).itemName!)"
+                                class="mobile-section-count">
                                 ({{ getSectionItemCount((item as Item).itemName!) }})
                             </span>
                         </div>
@@ -155,7 +180,7 @@
                                     @click.stop="(item as Item).isContainer && (item as Item).containerId && toggleContainerCollapse((item as Item).containerId!)">
                                     {{ props.hideFitting && isFittingItem(item as Item) ? '[REDACTED]' : (item as
                                         Item).itemName }}
-                                    <Icon v-if="(item as Item).isContainer"
+                                    <Icon v-if="(item as Item).isContainer && (item as Item).containerId"
                                         :name="isContainerCollapsed((item as Item).containerId!) ? 'lucide:chevron-right' : 'lucide:chevron-down'"
                                         class="mobile-container-icon" />
                                 </div>
@@ -168,14 +193,17 @@
                                 <div v-if="((item as Item).dropped && (item as Item).dropped! > 0) || ((item as Item).destroyed && (item as Item).destroyed! > 0)"
                                     class="mobile-quantity-row">
                                     <UBadge v-if="(item as Item).dropped && (item as Item).dropped! > 0" variant="solid"
-                                        color="success" class="mobile-quantity-badge">
-                                        <Icon name="lucide:package-check" class="mobile-badge-icon" />
-                                        <span class="mobile-badge-text">{{ (item as Item).dropped }}</span>
+                                        color="success" class="mobile-quantity-badge modern-badge dropped-badge">
+                                        <Icon name="lucide:package-check"
+                                            class="mobile-badge-icon badge-icon dropped-icon" />
+                                        <span class="mobile-badge-text badge-text">{{ (item as Item).dropped }}</span>
                                     </UBadge>
                                     <UBadge v-if="(item as Item).destroyed && (item as Item).destroyed! > 0"
-                                        variant="solid" color="error" class="mobile-quantity-badge">
-                                        <Icon name="lucide:package-x" class="mobile-badge-icon" />
-                                        <span class="mobile-badge-text">{{ (item as Item).destroyed }}</span>
+                                        variant="solid" color="error"
+                                        class="mobile-quantity-badge modern-badge destroyed-badge">
+                                        <Icon name="lucide:package-x"
+                                            class="mobile-badge-icon badge-icon destroyed-icon" />
+                                        <span class="mobile-badge-text badge-text">{{ (item as Item).destroyed }}</span>
                                     </UBadge>
                                 </div>
 
@@ -226,6 +254,15 @@ const parseHumanReadableIsk = (val: any): number => {
 const { t, locale } = useI18n();
 const currentLocale = computed(() => locale.value);
 
+// Helper function to format ISK values
+const formatIsk = (value: number | null | undefined): string => {
+    if (!value || value === 0) return '0 ISK';
+    if (value >= 1000000000) return `${(value / 1000000000).toFixed(1)}B ISK`;
+    if (value >= 1000000) return `${(value / 1000000).toFixed(1)}M ISK`;
+    if (value >= 1000) return `${(value / 1000).toFixed(1)}K ISK`;
+    return `${value.toLocaleString()} ISK`;
+};
+
 const props = defineProps<{
     killmail: IKillmail | null;
     hideFitting?: boolean;
@@ -237,7 +274,7 @@ const currentSortDirection = ref<'asc' | 'desc'>('desc');
 const currentSortSection = ref<string | null>(null);
 
 // Define table columns with proper width and alignment
-const columns = ref<TableColumn[]>([
+const columns = ref([
     {
         id: "image",
         width: "80px",
@@ -249,16 +286,29 @@ const columns = ref<TableColumn[]>([
         cellClass: "name-cell-container", // Add flex-1 to make this column expand
     },
     {
-        id: "quantity",
+        id: "dropped",
         header: computed(() => {
-            const label = t("quantity");
-            if (currentSortColumn.value === 'quantity') {
+            const label = t("dropped");
+            if (currentSortColumn.value === 'dropped') {
                 return `${label} ${currentSortDirection.value === 'asc' ? '↑' : '↓'}`;
             }
             return label;
         }),
-        width: "120px",
-        cellClass: "quantity-cell-container", // Add justify-end for right alignment
+        width: "100px",
+        cellClass: "dropped-cell-container", // Add justify-end for right alignment
+        sortable: true,
+    },
+    {
+        id: "destroyed",
+        header: computed(() => {
+            const label = t("destroyed");
+            if (currentSortColumn.value === 'destroyed') {
+                return `${label} ${currentSortDirection.value === 'asc' ? '↑' : '↓'}`;
+            }
+            return label;
+        }),
+        width: "100px",
+        cellClass: "destroyed-cell-container", // Add justify-end for right alignment
         sortable: true,
     },
     {
@@ -726,10 +776,14 @@ function sortSectionItems(items: any[], sectionName: string) {
     return [...items].sort((a, b) => {
         let valueA, valueB;
 
-        if (currentSortColumn.value === 'quantity') {
-            // Sort by total quantity (dropped + destroyed)
-            valueA = (Number(a.qty_dropped) || 0) + (Number(a.qty_destroyed) || 0);
-            valueB = (Number(b.qty_dropped) || 0) + (Number(b.qty_destroyed) || 0);
+        if (currentSortColumn.value === 'dropped') {
+            // Sort by dropped quantity
+            valueA = Number(a.qty_dropped) || 0;
+            valueB = Number(b.qty_dropped) || 0;
+        } else if (currentSortColumn.value === 'destroyed') {
+            // Sort by destroyed quantity
+            valueA = Number(a.qty_destroyed) || 0;
+            valueB = Number(b.qty_destroyed) || 0;
         } else if (currentSortColumn.value === 'value') {
             // Calculate total value including container contents
             // First calculate the base item value (price × quantity)
@@ -924,10 +978,14 @@ function processKillmailData(killmail: IKillmail) {
                     const sortedContainerItems = [...item.items].sort((a, b) => {
                         let valueA, valueB;
 
-                        if (currentSortColumn.value === 'quantity') {
-                            // Sort by total quantity (dropped + destroyed)
-                            valueA = (Number(a.qty_dropped) || 0) + (Number(a.qty_destroyed) || 0);
-                            valueB = (Number(b.qty_dropped) || 0) + (Number(b.qty_destroyed) || 0);
+                        if (currentSortColumn.value === 'dropped') {
+                            // Sort by dropped quantity
+                            valueA = Number(a.qty_dropped) || 0;
+                            valueB = Number(b.qty_dropped) || 0;
+                        } else if (currentSortColumn.value === 'destroyed') {
+                            // Sort by destroyed quantity
+                            valueA = Number(a.qty_destroyed) || 0;
+                            valueB = Number(b.qty_destroyed) || 0;
                         } else if (currentSortColumn.value === 'value') {
                             // Sort by total value
                             valueA = (Number(a.value) || 0) * ((Number(a.qty_dropped) || 0) + (Number(a.qty_destroyed) || 0));
@@ -1089,13 +1147,32 @@ function generateItemLink(item: Item): string | null {
 </script>
 
 <style scoped>
-/* Add override styles for the Table component */
+/* Modern CSS Custom Properties for consistent theming */
 :deep(.kill-items-table) {
-    --table-border-color: light-dark(#e5e7eb, rgb(40, 40, 40));
+    /* Color system */
+    --primary-accent: light-dark(#3b82f6, #60a5fa);
+    --success-color: light-dark(#10b981, #34d399);
+    --error-color: light-dark(#ef4444, #f87171);
+    --warning-color: light-dark(#f59e0b, #fbbf24);
+    --surface-base: light-dark(#ffffff, #1f2937);
+    --surface-elevated: light-dark(#f8fafc, #374151);
+    --surface-hover: light-dark(#f1f5f9, #4b5563);
+    --text-primary: light-dark(#111827, #f9fafb);
+    --text-secondary: light-dark(#6b7280, #9ca3af);
+    --text-muted: light-dark(#9ca3af, #6b7280);
+    --border-color: light-dark(#e5e7eb, #374151);
+    --border-hover: light-dark(#d1d5db, #4b5563);
+    --shadow-subtle: 0 1px 3px rgba(0, 0, 0, 0.1), 0 1px 2px rgba(0, 0, 0, 0.06);
+    --shadow-elevated: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    --border-radius-sm: 0.375rem;
+    --border-radius-md: 0.5rem;
+    --border-radius-lg: 0.75rem;
+
+    /* Table styling */
+    --table-border-color: var(--border-color);
     overflow: hidden;
-    /* Prevent overflow during animations */
-    /* Add solid background matching the body background to prevent any transparency issues */
-    background-color: light-dark(var(--color-background), var(--color-background));
+    background-color: var(--surface-base);
+    border-radius: var(--border-radius-md);
 }
 
 /* Add explicit font size inheritance to prevent SSR/client differences */
@@ -1104,31 +1181,57 @@ function generateItemLink(item: Item): string | null {
     line-height: 1.25rem;
 }
 
-/* Section headers - Use consistent spacing without margin conflicts */
+/* Modern section headers with glass-morphism effect */
 :deep(.section-header-row) {
     position: relative;
     cursor: pointer;
-    background-color: light-dark(rgba(245, 245, 245, 0.1), rgba(26, 26, 26, 0.5));
-    color: light-dark(#111827, white);
-    border-top: 1px solid light-dark(#d1d5db, rgb(40, 40, 40));
+    background: linear-gradient(135deg,
+            var(--surface-elevated) 0%,
+            light-dark(rgba(241, 245, 249, 0.9), rgba(51, 65, 85, 0.9)) 100%);
+    color: var(--text-primary);
+    border: 1px solid light-dark(rgba(226, 232, 240, 0.6), rgba(71, 85, 105, 0.4));
+    border-radius: var(--border-radius-sm);
+    box-shadow: var(--shadow-subtle);
+    backdrop-filter: blur(12px);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    overflow: hidden;
+}
+
+:deep(.section-header-row::before) {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background: linear-gradient(90deg, var(--primary-accent), var(--success-color));
+    opacity: 0;
+    transition: opacity 0.3s ease;
 }
 
 :deep(.section-header-row:first-child) {
-    border-top: none;
+    border-top: 1px solid light-dark(rgba(226, 232, 240, 0.6), rgba(71, 85, 105, 0.4));
 }
 
-/* Add specific spacing for section headers - override Table component's margin for both mobile and desktop */
 :deep(.section-header-row:not(:first-child)) {
-    margin-top: 0.5rem !important;
+    margin-top: 1rem !important;
 }
 
-/* Ensure mobile view also gets the same section header spacing */
 :deep(.mobile-view .section-header-row:not(:first-child)) {
-    margin-top: 0.5rem !important;
+    margin-top: 1rem !important;
 }
 
 :deep(.section-header-row:hover) {
-    background-color: light-dark(rgba(229, 231, 235, 0.7), rgba(40, 40, 40, 0.4));
+    background: linear-gradient(135deg,
+            light-dark(rgba(248, 250, 252, 0.95), rgba(71, 85, 105, 0.95)) 0%,
+            light-dark(rgba(241, 245, 249, 0.9), rgba(51, 65, 85, 0.9)) 100%);
+    border-color: var(--primary-accent);
+    box-shadow: 0 8px 25px -5px rgba(59, 130, 246, 0.1);
+    transform: translateY(-1px);
+}
+
+:deep(.section-header-row:hover::before) {
+    opacity: 1;
 }
 
 /* Section total rows - prevent animations */
@@ -1221,21 +1324,91 @@ function generateItemLink(item: Item): string | null {
     flex-wrap: wrap;
 }
 
-/* Custom badge styling */
-.item-badge {
+/* Modern badge styling with enhanced visual appeal */
+.modern-badge {
     border: none;
+    border-radius: 1rem;
+    padding: 0.25rem 0.75rem;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.375rem;
+    font-weight: 600;
+    font-size: 0.75rem;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+    overflow: hidden;
+    box-shadow: var(--shadow-subtle);
+}
+
+.modern-badge::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+    transition: left 0.5s ease;
+}
+
+.modern-badge:hover::before {
+    left: 100%;
+}
+
+.dropped-badge {
+    background: linear-gradient(135deg, var(--success-color), #059669);
+    color: white;
+    border: 1px solid rgba(5, 150, 105, 0.3);
+}
+
+.destroyed-badge {
+    background: linear-gradient(135deg, var(--error-color), #dc2626);
+    color: white;
+    border: 1px solid rgba(220, 38, 38, 0.3);
+}
+
+.badge-icon {
+    width: 0.875rem;
+    height: 0.875rem;
+    flex-shrink: 0;
+}
+
+/* Icon colors - brighter than background */
+.dropped-icon {
+    color: #22c55e !important;
+    /* Brighter green */
+}
+
+.destroyed-icon {
+    color: #f87171 !important;
+    /* Brighter red */
 }
 
 .badge-text {
-    color: #000000 !important;
-    /* Force black text for both light and dark modes */
-    font-weight: 600;
+    color: white !important;
+    font-weight: 700;
+    font-size: 0.75rem;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+}
+
+/* Enhanced hover effects for badges */
+.modern-badge:hover {
+    transform: translateY(-1px) scale(1.05);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.dropped-badge:hover {
+    box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+}
+
+.destroyed-badge:hover {
+    box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
 }
 
 /* Compact styling for badges */
 :deep(.u-badge) {
-    padding: 0.1rem 0.4rem;
-    font-size: 0.7rem;
+    padding: 0.25rem 0.75rem;
+    font-size: 0.75rem;
 }
 
 /* Mobile view styling - improved card-based layout */
@@ -1429,6 +1602,15 @@ function generateItemLink(item: Item): string | null {
     height: 12px;
 }
 
+/* Mobile badge icon colors */
+.mobile-badge-icon.dropped-icon {
+    color: #22c55e !important;
+}
+
+.mobile-badge-icon.destroyed-icon {
+    color: #f87171 !important;
+}
+
 .mobile-badge-text {
     color: #000000 !important;
     font-weight: 700;
@@ -1581,16 +1763,30 @@ function generateItemLink(item: Item): string | null {
     animation: simpleFadeIn 0.25s ease-in-out;
 }
 
-/* Ensure columns are distributed properly */
+/* Ensure columns are distributed properly - 5 columns total */
 :deep(.table-row),
 :deep(.table-header) {
     display: grid;
-    grid-template-columns: 80px 1fr 120px 120px;
+    grid-template-columns: 80px 1fr 70px 70px 120px;
+    grid-gap: 0.75rem 0.75rem 0.1875rem 0.75rem;
     width: 100%;
+    align-items: center;
+}
+
+/* Badge container styling */
+.badge-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 2rem;
 }
 
 /* Fix cell alignments */
-:deep(.quantity-cell-container),
+:deep(.dropped-cell-container),
+:deep(.destroyed-cell-container) {
+    text-align: center;
+}
+
 :deep(.value-cell-container) {
     text-align: right;
 }
