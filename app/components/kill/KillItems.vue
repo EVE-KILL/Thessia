@@ -1,223 +1,261 @@
 <template>
-    <Table :columns="columns" :items="data" :loading="!killmail" :row-class="getRowClasses" :bordered="true"
-        :striped="false" :hover="true" :density="'compact'" :show-header="true" :special-header="true"
-        :empty-icon="'lucide:package'" :empty-text="t('noItems')" background="transparent" :link-fn="generateItemLink"
-        class="kill-items-table" @row-click="handleRowClick">
-        <!-- Image cell with connector lines for container items -->
-        <template #cell-image="{ item }: { item: Item }">
-            <div class="image-cell" :class="{
-                'indented-image': item.isNested,
-                'privacy-blur': props.hideFitting && isFittingItem(item) && (item.type === 'item' || item.type === 'container-item')
-            }">
-                <template v-if="item.isNested">
-                    <div class="connector-line">
-                        <Icon name="lucide:corner-down-right" class="connector-icon" />
-                    </div>
-                </template>
-
-                <!-- Show collapse icon for headers if collapsible -->
-                <Icon v-if="item.type === 'header' && item.itemName && isCollapsible(item.itemName)"
-                    :name="item.itemName && isSectionCollapsed(item.itemName) ? 'lucide:chevron-right' : 'lucide:chevron-down'"
-                    class="collapse-icon"
-                    :class="{ 'rotate-icon': item.itemName && !isSectionCollapsed(item.itemName) }"
-                    @click.stop="item.itemName && toggleSectionCollapse(item.itemName)" />
-
-                <!-- Show image only when not a skin -->
-                <Image
-                    v-if="(item.type === 'item' || item.type === 'container-item') && item.itemId && !isSkin(item.itemName || '')"
-                    :type="isBlueprint(item.itemName || '') ? 'blueprint-copy' : 'item'" :id="item.itemId" size="24"
-                    class="w-7 h-7"
-                    :alt="props.hideFitting && isFittingItem(item) ? '[REDACTED]' : (item.itemName || '')" />
-            </div>
-        </template> <!-- Name cell -->
-        <template #cell-name="{ item }: { item: Item }">
-            <div v-if="item.type === 'header'" class="font-bold text-sm uppercase"
-                @click.stop="item.itemName && isCollapsible(item.itemName) && toggleSectionCollapse(item.itemName)">
-                {{ item.itemName }}
-                <span v-if="item.itemName && isCollapsible(item.itemName)" class="section-count">
-                    ({{ getSectionItemCount(item.itemName) }})
-                </span>
-            </div>
-            <div v-else-if="item.type === 'item' || item.type === 'container-item'" class="font-medium"
-                :class="{ 'privacy-blur': props.hideFitting && isFittingItem(item) }">
-                <!-- Add click handler directly to the name wrapper for containers -->
-                <div class="item-name-wrapper" :class="{ 'container-name': item.isContainer }"
-                    @click.stop="item.isContainer && item.containerId && toggleContainerCollapse(item.containerId)">
-                    <!-- Container name first, then the icon -->
-                    {{ props.hideFitting && isFittingItem(item) ? '[REDACTED]' : item.itemName }}
-                    <!-- Add collapse/expand control for containers after name -->
-                    <Icon v-if="item.isContainer && item.containerId"
-                        :name="isContainerCollapsed(item.containerId) ? 'lucide:chevron-right' : 'lucide:chevron-down'"
-                        class="container-collapse-icon"
-                        @click.stop="item.containerId && toggleContainerCollapse(item.containerId, $event)" />
+    <!-- Custom inline table implementation -->
+    <div class="kill-items-table">
+        <!-- Desktop view -->
+        <div class="desktop-table" v-show="!isMobile">
+            <!-- Table header -->
+            <div class="table-header">
+                <div class="header-cell image-cell"><!-- Image column --></div>
+                <div class="header-cell name-cell">{{ t("item") }}</div>
+                <div class="header-cell dropped-cell">
+                    <span class="header-label">{{ t("dropped") }}</span>
+                </div>
+                <div class="header-cell destroyed-cell">
+                    <span class="header-label">{{ t("destroyed") }}</span>
+                </div>
+                <div class="header-cell value-cell">
+                    <span class="header-label">{{ t("value") }}</span>
                 </div>
             </div>
-            <div v-else-if="item.type === 'value'" class="font-medium">{{ item.itemName }}</div>
-        </template>
 
-        <!-- Dropped cell -->
-        <template #cell-dropped="{ item }">
-            <template
-                v-if="(item as Item).type === 'header' && (item as Item).sectionName && sectionItemCounts[(item as Item).sectionName!] && sectionItemCounts[(item as Item).sectionName!] > 1">
-                <div class="sort-column-header full-width-cell text-center"
-                    @click.stop="(item as Item).sectionName && handleHeaderClick('dropped', (item as Item).sectionName!)">
-                    {{ t('dropped') }}
-                    <Icon v-if="currentSortColumn === 'dropped' && currentSortSection === (item as Item).sectionName"
-                        :name="currentSortDirection === 'asc' ? 'lucide:arrow-up' : 'lucide:arrow-down'"
-                        class="sort-icon" />
-                    <Icon v-else name="lucide:arrow-up-down" class="sort-icon-inactive" />
-                </div>
-            </template>
-            <template
-                v-else-if="(item as Item).type === 'item' || (item as Item).type === 'value' || (item as Item).type === 'container-item'">
-                <div class="badge-container">
-                    <UBadge v-if="(item as Item).dropped && (item as Item).dropped! > 0" variant="solid" color="success"
-                        class="item-badge modern-badge dropped-badge">
-                        <Icon name="lucide:package-check" class="badge-icon dropped-icon" />
-                        <span class="badge-text">{{ (item as Item).dropped }}</span>
-                    </UBadge>
-                </div>
-            </template>
-        </template>
+            <!-- Table body -->
+            <div class="table-body">
+                <TransitionGroup name="table-row" tag="div" class="transition-group">
+                    <template v-for="(item, index) in data" :key="`item-${index}`">
+                        <div class="table-row" :class="getRowClasses(item)">
+                        <!-- Image cell -->
+                        <div class="body-cell image-cell">
+                            <div class="image-cell-content" :class="{
+                                'indented-image': item.isNested,
+                                'privacy-blur': props.hideFitting && isFittingItem(item) && (item.type === 'item' || item.type === 'container-item')
+                            }">
+                                <template v-if="item.isNested">
+                                    <div class="connector-line">
+                                        <Icon name="lucide:corner-down-right" class="connector-icon" />
+                                    </div>
+                                </template>
 
-        <!-- Destroyed cell -->
-        <template #cell-destroyed="{ item }">
-            <template
-                v-if="(item as Item).type === 'header' && (item as Item).sectionName && sectionItemCounts[(item as Item).sectionName!] && sectionItemCounts[(item as Item).sectionName!] > 1">
-                <div class="sort-column-header full-width-cell text-center"
-                    @click.stop="(item as Item).sectionName && handleHeaderClick('destroyed', (item as Item).sectionName!)">
-                    {{ t('destroyed') }}
-                    <Icon v-if="currentSortColumn === 'destroyed' && currentSortSection === (item as Item).sectionName"
-                        :name="currentSortDirection === 'asc' ? 'lucide:arrow-up' : 'lucide:arrow-down'"
-                        class="sort-icon" />
-                    <Icon v-else name="lucide:arrow-up-down" class="sort-icon-inactive" />
-                </div>
-            </template>
-            <template
-                v-else-if="(item as Item).type === 'item' || (item as Item).type === 'value' || (item as Item).type === 'container-item'">
-                <div class="badge-container">
-                    <UBadge v-if="(item as Item).destroyed && (item as Item).destroyed! > 0" variant="solid"
-                        color="error" class="item-badge modern-badge destroyed-badge">
-                        <Icon name="lucide:package-x" class="badge-icon destroyed-icon" />
-                        <span class="badge-text">{{ (item as Item).destroyed }}</span>
-                    </UBadge>
-                </div>
-            </template>
-        </template>
+                                <!-- Show collapse icon for headers if collapsible -->
+                                <Icon v-if="item.type === 'header' && item.itemName && isCollapsible(item.itemName)"
+                                    :name="item.itemName && isSectionCollapsed(item.itemName) ? 'lucide:chevron-right' : 'lucide:chevron-down'"
+                                    class="collapse-icon"
+                                    :class="{ 'rotate-icon': item.itemName && !isSectionCollapsed(item.itemName) }"
+                                    @click.stop="item.itemName && toggleSectionCollapse(item.itemName)" />
 
-        <!-- Value cell -->
-        <template #cell-value="{ item }">
-            <template
-                v-if="item.type === 'header' && item.sectionName && sectionItemCounts[item.sectionName] && sectionItemCounts[item.sectionName] > 1">
-                <div class="sort-column-header full-width-cell text-right"
-                    @click.stop="item.sectionName && handleHeaderClick('value', item.sectionName)">
-                    {{ t('value') }}
-                    <Icon v-if="currentSortColumn === 'value' && currentSortSection === item.sectionName"
-                        :name="currentSortDirection === 'asc' ? 'lucide:arrow-up' : 'lucide:arrow-down'"
-                        class="sort-icon" />
-                    <Icon v-else name="lucide:arrow-up-down" class="sort-icon-inactive" />
-                </div>
-            </template>
-            <template v-else-if="item.type === 'item' || item.type === 'value' || item.type === 'container-item'">
-                <div v-if="item.value" class="text-right font-medium">
-                    {{ formatIsk(item.value) }}
-                </div>
-                <div v-else class="text-right">-</div>
-            </template>
-        </template>
-        <!-- Mobile view template -->
-        <template #mobile-content="{ item }">
-            <div class="mobile-container" :class="{
-                'mobile-header-container': (item as Item).type === 'header',
-                'mobile-nested-item': (item as Item).isNested,
-                'mobile-container-item': (item as Item).isContainer
-            }">
-                <!-- Header items get special treatment -->
-                <template v-if="(item as Item).type === 'header'">
-                    <div class="mobile-header-content"
-                        @click.stop="(item as Item).itemName && isCollapsible((item as Item).itemName!) && toggleSectionCollapse((item as Item).itemName!)">
-                        <div class="mobile-header-row">
-                            <Icon v-if="(item as Item).itemName && isCollapsible((item as Item).itemName!)"
-                                :name="isSectionCollapsed((item as Item).itemName!) ? 'lucide:chevron-right' : 'lucide:chevron-down'"
-                                class="mobile-collapse-icon" />
-                            <h3 class="mobile-header-title">{{ (item as Item).itemName }}</h3>
-                            <span v-if="(item as Item).itemName && isCollapsible((item as Item).itemName!)"
-                                class="mobile-section-count">
-                                ({{ getSectionItemCount((item as Item).itemName!) }})
-                            </span>
+                                <!-- Show image only when not a skin -->
+                                <Image
+                                    v-if="(item.type === 'item' || item.type === 'container-item') && item.itemId && !isSkin(item.itemName || '')"
+                                    :type="isBlueprint(item.itemName || '') ? 'blueprint-copy' : 'item'"
+                                    :id="item.itemId" size="24" class="w-7 h-7"
+                                    :alt="props.hideFitting && isFittingItem(item) ? '[REDACTED]' : (item.itemName || '')" />
+                            </div>
+                        </div>
+
+                        <!-- Name cell with click handler only for non-header rows, or header rows that are collapsible -->
+                        <div class="body-cell name-cell" 
+                             @click="(item.type !== 'header' || (item.itemName && isCollapsible(item.itemName))) && handleRowClick(item, $event)">
+                            <div v-if="item.type === 'header'" class="font-bold text-sm uppercase section-header-name">
+                                {{ item.itemName }}
+                                <span v-if="item.itemName && isCollapsible(item.itemName)" class="section-count">
+                                    ({{ getSectionItemCount(item.itemName) }})
+                                </span>
+                            </div>
+                            <div v-else-if="item.type === 'item' || item.type === 'container-item'" class="font-medium"
+                                :class="{ 'privacy-blur': props.hideFitting && isFittingItem(item) }">
+                                <!-- Add click handler directly to the name wrapper for containers -->
+                                <div class="item-name-wrapper" :class="{ 'container-name': item.isContainer }"
+                                    @click.stop="item.isContainer && item.containerId && toggleContainerCollapse(item.containerId)">
+                                    <!-- Container name first, then the icon -->
+                                    {{ props.hideFitting && isFittingItem(item) ? '[REDACTED]' : item.itemName }}
+                                    <!-- Add collapse/expand control for containers after name -->
+                                    <Icon v-if="item.isContainer && item.containerId"
+                                        :name="isContainerCollapsed(item.containerId) ? 'lucide:chevron-right' : 'lucide:chevron-down'"
+                                        class="container-collapse-icon"
+                                        @click.stop="item.containerId && toggleContainerCollapse(item.containerId, $event)" />
+                                </div>
+                            </div>
+                            <div v-else-if="item.type === 'value'" class="font-medium">{{ item.itemName }}</div>
+                        </div>
+
+                        <!-- Dropped cell -->
+                        <div class="body-cell dropped-cell">
+                            <template v-if="item.type === 'header' && item.itemName">
+                                <!-- Show sorting controls for sections with more than 1 item -->
+                                <div v-if="getSectionItemCount(item.itemName) > 1"
+                                    class="sort-column-header text-center sortable-header"
+                                    @click.stop="handleHeaderClick('dropped', item.itemName)">
+                                    <span class="sort-label">{{ t('dropped') }}</span>
+                                    <Icon v-if="currentSortColumn === 'dropped' && currentSortSection === item.itemName"
+                                        :name="currentSortDirection === 'asc' ? 'lucide:arrow-up' : 'lucide:arrow-down'"
+                                        class="sort-icon active" />
+                                    <Icon v-else name="lucide:arrow-up-down" class="sort-icon inactive" />
+                                </div>
+                                <!-- Empty div for non-sortable sections to maintain grid layout -->
+                                <div v-else class="header-cell-spacer"></div>
+                            </template>
+                            <template
+                                v-else-if="item.type === 'item' || item.type === 'value' || item.type === 'container-item'">
+                                <div class="badge-container">
+                                    <UBadge v-if="item.dropped && item.dropped > 0" variant="solid" color="success"
+                                        class="item-badge modern-badge dropped-badge">
+                                        <Icon name="lucide:package-check" class="badge-icon dropped-icon" />
+                                        <span class="badge-text">{{ item.dropped }}</span>
+                                    </UBadge>
+                                </div>
+                            </template>
+                        </div>
+
+                        <!-- Destroyed cell -->
+                        <div class="body-cell destroyed-cell">
+                            <template v-if="item.type === 'header' && item.itemName">
+                                <!-- Show sorting controls for sections with more than 1 item -->
+                                <div v-if="getSectionItemCount(item.itemName) > 1"
+                                    class="sort-column-header text-center sortable-header"
+                                    @click.stop="handleHeaderClick('destroyed', item.itemName)">
+                                    <span class="sort-label">{{ t('destroyed') }}</span>
+                                    <Icon
+                                        v-if="currentSortColumn === 'destroyed' && currentSortSection === item.itemName"
+                                        :name="currentSortDirection === 'asc' ? 'lucide:arrow-up' : 'lucide:arrow-down'"
+                                        class="sort-icon active" />
+                                    <Icon v-else name="lucide:arrow-up-down" class="sort-icon inactive" />
+                                </div>
+                                <!-- Empty div for non-sortable sections to maintain grid layout -->
+                                <div v-else class="header-cell-spacer"></div>
+                            </template>
+                            <template
+                                v-else-if="item.type === 'item' || item.type === 'value' || item.type === 'container-item'">
+                                <div class="badge-container">
+                                    <UBadge v-if="item.destroyed && item.destroyed > 0" variant="solid" color="error"
+                                        class="item-badge modern-badge destroyed-badge">
+                                        <Icon name="lucide:package-x" class="badge-icon destroyed-icon" />
+                                        <span class="badge-text">{{ item.destroyed }}</span>
+                                    </UBadge>
+                                </div>
+                            </template>
+                        </div>
+
+                        <!-- Value cell -->
+                        <div class="body-cell value-cell">
+                            <template v-if="item.type === 'header' && item.itemName">
+                                <!-- Show sorting controls for sections with more than 1 item -->
+                                <div v-if="getSectionItemCount(item.itemName) > 1"
+                                    class="sort-column-header text-right sortable-header"
+                                    @click.stop="handleHeaderClick('value', item.itemName)">
+                                    <span class="sort-label">{{ t('value') }}</span>
+                                    <Icon v-if="currentSortColumn === 'value' && currentSortSection === item.itemName"
+                                        :name="currentSortDirection === 'asc' ? 'lucide:arrow-up' : 'lucide:arrow-down'"
+                                        class="sort-icon active" />
+                                    <Icon v-else name="lucide:arrow-up-down" class="sort-icon inactive" />
+                                </div>
+                                <!-- Empty div for non-sortable sections to maintain grid layout -->
+                                <div v-else class="header-cell-spacer"></div>
+                            </template>
+                            <template
+                                v-else-if="item.type === 'item' || item.type === 'value' || item.type === 'container-item'">
+                                <div v-if="item.value" class="text-right font-medium">
+                                    {{ formatIsk(item.value) }}
+                                </div>
+                                <div v-else class="text-right">-</div>
+                            </template>
                         </div>
                     </div>
                 </template>
+                </TransitionGroup>
+            </div>
+        </div>
 
-                <!-- Regular items get improved single row layout -->
-                <template v-else>
-                    <div class="mobile-item-card">
-                        <!-- Single row: Image, name, and stacked quantity/value -->
-                        <div class="mobile-item-row">
-                            <!-- Image and connector section -->
-                            <div class="mobile-image-section" :class="{ 'mobile-nested': (item as Item).isNested }">
-                                <!-- Connector line for nested items -->
-                                <div v-if="(item as Item).isNested" class="mobile-connector">
-                                    <Icon name="lucide:corner-down-right" class="mobile-connector-icon" />
-                                </div>
-
-                                <!-- Item image -->
-                                <div class="mobile-item-image">
-                                    <Image
-                                        v-if="((item as Item).type === 'item' || (item as Item).type === 'container-item') && (item as Item).itemId && !isSkin((item as Item).itemName || '')"
-                                        :type="isBlueprint((item as Item).itemName || '') ? 'blueprint-copy' : 'item'"
-                                        :id="(item as Item).itemId" size="28" class="w-7 h-7 rounded-md"
-                                        :alt="props.hideFitting && isFittingItem(item as Item) ? '[REDACTED]' : ((item as Item).itemName || '')" />
-                                </div>
+        <!-- Mobile view -->
+        <div class="mobile-table" v-show="isMobile">
+            <template v-for="(item, index) in data" :key="`mobile-${index}`">
+                <div class="mobile-container" :class="{
+                    'mobile-header-container': item.type === 'header',
+                    'mobile-nested-item': item.isNested,
+                    'mobile-container-item': item.isContainer,
+                    ...getRowClasses(item).split(' ').reduce((acc, cls) => { acc[cls] = true; return acc; }, {})
+                }" @click="isRowClickable(item) && handleRowClick(item, $event)">
+                    <!-- Header items get special treatment -->
+                    <template v-if="item.type === 'header'">
+                        <div class="mobile-header-content">
+                            <div class="mobile-header-row">
+                                <Icon v-if="item.itemName && isCollapsible(item.itemName)"
+                                    :name="isSectionCollapsed(item.itemName) ? 'lucide:chevron-right' : 'lucide:chevron-down'"
+                                    class="mobile-collapse-icon" />
+                                <h3 class="mobile-header-title">{{ item.itemName }}</h3>
+                                <span v-if="item.itemName && isCollapsible(item.itemName)" class="mobile-section-count">
+                                    ({{ getSectionItemCount(item.itemName) }})
+                                </span>
                             </div>
+                        </div>
+                    </template>
 
-                            <!-- Item name with container controls -->
-                            <div class="mobile-item-name-section">
-                                <div class="mobile-item-name" :class="{
-                                    'mobile-container-name': (item as Item).isContainer,
-                                    'privacy-blur': props.hideFitting && isFittingItem(item as Item)
-                                }"
-                                    @click.stop="(item as Item).isContainer && (item as Item).containerId && toggleContainerCollapse((item as Item).containerId!)">
-                                    {{ props.hideFitting && isFittingItem(item as Item) ? '[REDACTED]' : (item as
-                                        Item).itemName }}
-                                    <Icon v-if="(item as Item).isContainer && (item as Item).containerId"
-                                        :name="isContainerCollapsed((item as Item).containerId!) ? 'lucide:chevron-right' : 'lucide:chevron-down'"
-                                        class="mobile-container-icon" />
-                                </div>
-                            </div>
+                    <!-- Regular items get improved single row layout -->
+                    <template v-else>
+                        <div class="mobile-item-card">
+                            <!-- Single row: Image, name, and stacked quantity/value -->
+                            <div class="mobile-item-row">
+                                <!-- Image and connector section -->
+                                <div class="mobile-image-section" :class="{ 'mobile-nested': item.isNested }">
+                                    <!-- Connector line for nested items -->
+                                    <div v-if="item.isNested" class="mobile-connector">
+                                        <Icon name="lucide:corner-down-right" class="mobile-connector-icon" />
+                                    </div>
 
-                            <!-- Right side: Stacked quantity and value -->
-                            <div v-if="((item as Item).dropped && (item as Item).dropped! > 0) || ((item as Item).destroyed && (item as Item).destroyed! > 0) || (item as Item).value"
-                                class="mobile-meta-stack">
-                                <!-- Quantity badges row -->
-                                <div v-if="((item as Item).dropped && (item as Item).dropped! > 0) || ((item as Item).destroyed && (item as Item).destroyed! > 0)"
-                                    class="mobile-quantity-row">
-                                    <UBadge v-if="(item as Item).dropped && (item as Item).dropped! > 0" variant="solid"
-                                        color="success" class="mobile-quantity-badge modern-badge dropped-badge">
-                                        <Icon name="lucide:package-check"
-                                            class="mobile-badge-icon badge-icon dropped-icon" />
-                                        <span class="mobile-badge-text badge-text">{{ (item as Item).dropped }}</span>
-                                    </UBadge>
-                                    <UBadge v-if="(item as Item).destroyed && (item as Item).destroyed! > 0"
-                                        variant="solid" color="error"
-                                        class="mobile-quantity-badge modern-badge destroyed-badge">
-                                        <Icon name="lucide:package-x"
-                                            class="mobile-badge-icon badge-icon destroyed-icon" />
-                                        <span class="mobile-badge-text badge-text">{{ (item as Item).destroyed }}</span>
-                                    </UBadge>
+                                    <!-- Item image -->
+                                    <div class="mobile-item-image">
+                                        <Image
+                                            v-if="(item.type === 'item' || item.type === 'container-item') && item.itemId && !isSkin(item.itemName || '')"
+                                            :type="isBlueprint(item.itemName || '') ? 'blueprint-copy' : 'item'"
+                                            :id="item.itemId" size="28" class="w-7 h-7 rounded-md"
+                                            :alt="props.hideFitting && isFittingItem(item) ? '[REDACTED]' : (item.itemName || '')" />
+                                    </div>
                                 </div>
 
-                                <!-- Value row -->
-                                <div v-if="(item as Item).value" class="mobile-value-row">
-                                    <span class="mobile-value">{{ formatIsk((item as Item).value!) }}</span>
+                                <!-- Item name with container controls -->
+                                <div class="mobile-item-name-section">
+                                    <div class="mobile-item-name" :class="{
+                                        'mobile-container-name': item.isContainer,
+                                        'privacy-blur': props.hideFitting && isFittingItem(item)
+                                    }"
+                                        @click.stop="item.isContainer && item.containerId && toggleContainerCollapse(item.containerId)">
+                                        {{ props.hideFitting && isFittingItem(item) ? '[REDACTED]' : item.itemName }}
+                                        <Icon v-if="item.isContainer && item.containerId"
+                                            :name="isContainerCollapsed(item.containerId) ? 'lucide:chevron-right' : 'lucide:chevron-down'"
+                                            class="mobile-container-icon" />
+                                    </div>
+                                </div>
+
+                                <!-- Right side: Stacked quantity and value -->
+                                <div v-if="(item.dropped && item.dropped > 0) || (item.destroyed && item.destroyed > 0) || item.value"
+                                    class="mobile-meta-stack">
+                                    <!-- Quantity badges row -->
+                                    <div v-if="(item.dropped && item.dropped > 0) || (item.destroyed && item.destroyed > 0)"
+                                        class="mobile-quantity-row">
+                                        <UBadge v-if="item.dropped && item.dropped > 0" variant="solid" color="success"
+                                            class="mobile-quantity-badge modern-badge dropped-badge">
+                                            <Icon name="lucide:package-check"
+                                                class="mobile-badge-icon badge-icon dropped-icon" />
+                                            <span class="mobile-badge-text badge-text">{{ item.dropped }}</span>
+                                        </UBadge>
+                                        <UBadge v-if="item.destroyed && item.destroyed > 0" variant="solid"
+                                            color="error" class="mobile-quantity-badge modern-badge destroyed-badge">
+                                            <Icon name="lucide:package-x"
+                                                class="mobile-badge-icon badge-icon destroyed-icon" />
+                                            <span class="mobile-badge-text badge-text">{{ item.destroyed }}</span>
+                                        </UBadge>
+                                    </div>
+
+                                    <!-- Value row -->
+                                    <div v-if="item.value" class="mobile-value-row">
+                                        <span class="mobile-value">{{ formatIsk(item.value) }}</span>
+                                    </div>
                                 </div>
                             </div>
                         </div>
-                    </div>
-                </template>
-            </div>
-        </template>
-    </Table>
+                    </template>
+                </div>
+            </template>
+        </div>
+    </div>
 </template>
 
 <script setup lang="ts">
@@ -254,6 +292,21 @@ const parseHumanReadableIsk = (val: any): number => {
 const { t, locale } = useI18n();
 const currentLocale = computed(() => locale.value);
 
+// Mobile detection
+const isMobile = ref(false);
+
+// Check if we're on mobile on mount
+onMounted(() => {
+    const checkMobile = () => {
+        isMobile.value = window.innerWidth < 768;
+    };
+
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+
+    onUnmounted(() => window.removeEventListener('resize', checkMobile));
+});
+
 // Helper function to format ISK values
 const formatIsk = (value: number | null | undefined): string => {
     if (!value || value === 0) return '0 ISK';
@@ -272,60 +325,6 @@ const props = defineProps<{
 const currentSortColumn = ref<string | null>(null);
 const currentSortDirection = ref<'asc' | 'desc'>('desc');
 const currentSortSection = ref<string | null>(null);
-
-// Define table columns with proper width and alignment
-const columns = ref([
-    {
-        id: "image",
-        width: "80px",
-        cellClass: "image-cell-container",
-    },
-    {
-        id: "name",
-        header: computed(() => t("item")),
-        cellClass: "name-cell-container", // Add flex-1 to make this column expand
-    },
-    {
-        id: "dropped",
-        header: computed(() => {
-            const label = t("dropped");
-            if (currentSortColumn.value === 'dropped') {
-                return `${label} ${currentSortDirection.value === 'asc' ? '↑' : '↓'}`;
-            }
-            return label;
-        }),
-        width: "100px",
-        cellClass: "dropped-cell-container", // Add justify-end for right alignment
-        sortable: true,
-    },
-    {
-        id: "destroyed",
-        header: computed(() => {
-            const label = t("destroyed");
-            if (currentSortColumn.value === 'destroyed') {
-                return `${label} ${currentSortDirection.value === 'asc' ? '↑' : '↓'}`;
-            }
-            return label;
-        }),
-        width: "100px",
-        cellClass: "destroyed-cell-container", // Add justify-end for right alignment
-        sortable: true,
-    },
-    {
-        id: "value",
-        header: computed(() => {
-            const label = t("value");
-            if (currentSortColumn.value === 'value') {
-                return `${label} ${currentSortDirection.value === 'asc' ? '↑' : '↓'}`;
-            }
-            return label;
-        }),
-        width: "120px",
-        cellClass: "value-cell-container justify-end", // Add justify-end for right alignment
-        headerClass: "text-right", // Right align the header text
-        sortable: true,
-    },
-]);
 
 const groupedItems = ref();
 const data = ref<Item[]>();
@@ -617,13 +616,49 @@ function toggleContainerCollapse(containerId: string, event?: Event) {
 }
 
 /**
- * Handle row clicks - used to toggle containers
+ * Handle row clicks - used to toggle containers and section headers
  */
 function handleRowClick(item: Item, event: Event) {
+    // If this is a collapsible section header, toggle its collapsed state
+    if (item.type === 'header' && item.itemName && isCollapsible(item.itemName)) {
+        event.preventDefault();
+        event.stopPropagation();
+        toggleSectionCollapse(item.itemName);
+        return;
+    }
+
     // If this is a container, toggle its collapsed state
     if (item.isContainer && item.containerId) {
         toggleContainerCollapse(item.containerId, event);
     }
+
+    // If this is a clickable item, navigate to it
+    if (item.type === 'item' && item.itemId && !item.isContainer) {
+        const link = generateItemLink(item);
+        if (link) {
+            window.location.href = link;
+        }
+    }
+}
+
+// Check if a row is clickable
+function isRowClickable(item: Item): boolean {
+    // Headers are clickable if they're collapsible
+    if (item.type === 'header' && item.itemName && isCollapsible(item.itemName)) {
+        return true;
+    }
+
+    // Containers are clickable
+    if (item.isContainer) {
+        return true;
+    }
+
+    // Items are clickable if they have an itemId and aren't containers
+    if (item.type === 'item' && item.itemId && !item.isContainer) {
+        return true;
+    }
+
+    return false;
 }
 
 // Get CSS classes for each row
@@ -647,7 +682,7 @@ function getRowClasses(item: Item) {
 
     // Add header click indicator for collapsible headers
     if (item.type === "header" && isCollapsible(item.itemName)) {
-        classes.push("cursor-pointer");
+        classes.push("cursor-pointer", "section-header-row");
     }
 
     // Add nested item class
@@ -744,7 +779,7 @@ watch(
  */
 function handleHeaderClick(columnId: string, sectionName: string) {
     // Only enable sorting for sections with more than 1 item
-    if (!columnId || !sectionName || sectionItemCounts.value[sectionName] <= 1) {
+    if (!columnId || !sectionName || getSectionItemCount(sectionName) <= 1) {
         return;
     }
 
@@ -768,8 +803,13 @@ function handleHeaderClick(columnId: string, sectionName: string) {
  * Sort items within a section based on current sort settings
  */
 function sortSectionItems(items: any[], sectionName: string) {
-    // Only sort if this is the section being sorted and it has more than 1 item
-    if (currentSortSection.value !== sectionName || !currentSortColumn.value || items.length <= 1) {
+    // If global sorting is active (no currentSortSection), apply global sort to all sections
+    // If section-specific sorting is active, only sort the matching section
+    const shouldSort = !currentSortColumn.value ||
+        (currentSortSection.value === null) || // Global sorting
+        (currentSortSection.value === sectionName); // Section-specific sorting
+
+    if (!shouldSort || items.length <= 1) {
         return items;
     }
 
@@ -1132,14 +1172,14 @@ function generateItemLink(item: Item): string | null {
         return null;
     }
 
+    // Headers should not be navigational links (they handle collapse/expand)
+    if (item.type === "header") {
+        return null;
+    }
+
     // Only certain row types with itemId are clickable
     if ((item.type === "item" || item.type === "container-item") && item.itemId) {
         return `/item/${item.itemId}`;
-    }
-
-    // For headers that are collapsible, return null but let the click handler handle them
-    if (item.type === "header" && isCollapsible(item.itemName)) {
-        return null;
     }
 
     return null;
@@ -1148,19 +1188,19 @@ function generateItemLink(item: Item): string | null {
 
 <style scoped>
 /* Modern CSS Custom Properties for consistent theming */
-:deep(.kill-items-table) {
+.kill-items-table {
     /* Color system */
     --primary-accent: light-dark(#3b82f6, #60a5fa);
     --success-color: light-dark(#10b981, #34d399);
     --error-color: light-dark(#ef4444, #f87171);
     --warning-color: light-dark(#f59e0b, #fbbf24);
-    --surface-base: light-dark(#ffffff, #1f2937);
-    --surface-elevated: light-dark(#f8fafc, #374151);
-    --surface-hover: light-dark(#f1f5f9, #4b5563);
+    --surface-base: transparent;
+    --surface-elevated: light-dark(rgba(245, 245, 245, 0.05), rgba(26, 26, 26, 0.3));
+    --surface-hover: light-dark(rgba(229, 231, 235, 0.15), rgba(35, 35, 35, 0.5));
     --text-primary: light-dark(#111827, #f9fafb);
     --text-secondary: light-dark(#6b7280, #9ca3af);
     --text-muted: light-dark(#9ca3af, #6b7280);
-    --border-color: light-dark(#e5e7eb, #374151);
+    --border-color: light-dark(rgba(229, 231, 235, 0.3), rgba(75, 85, 99, 0.2));
     --border-hover: light-dark(#d1d5db, #4b5563);
     --shadow-subtle: 0 1px 3px rgba(0, 0, 0, 0.1), 0 1px 2px rgba(0, 0, 0, 0.06);
     --shadow-elevated: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
@@ -1168,118 +1208,207 @@ function generateItemLink(item: Item): string | null {
     --border-radius-md: 0.5rem;
     --border-radius-lg: 0.75rem;
 
-    /* Table styling */
+    /* Table styling - Match original Table component */
     --table-border-color: var(--border-color);
-    overflow: hidden;
-    background-color: var(--surface-base);
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    gap: 0;
     border-radius: var(--border-radius-md);
-}
-
-/* Add explicit font size inheritance to prevent SSR/client differences */
-.kill-items-table {
+    overflow: hidden;
     font-size: 0.875rem;
     line-height: 1.25rem;
+    background-color: transparent !important;
 }
 
-/* Modern section headers with glass-morphism effect */
-:deep(.section-header-row) {
+/* Desktop table layout */
+.desktop-table {
+    width: 100%;
+}
+
+/* Transition group container */
+.transition-group {
     position: relative;
-    cursor: pointer;
-    background: linear-gradient(135deg,
-            var(--surface-elevated) 0%,
-            light-dark(rgba(241, 245, 249, 0.9), rgba(51, 65, 85, 0.9)) 100%);
-    color: var(--text-primary);
-    border: 1px solid light-dark(rgba(226, 232, 240, 0.6), rgba(71, 85, 105, 0.4));
-    border-radius: var(--border-radius-sm);
-    box-shadow: var(--shadow-subtle);
-    backdrop-filter: blur(12px);
+}
+
+/* Vue TransitionGroup classes for smooth animations */
+.table-row-move,
+.table-row-enter-active,
+.table-row-leave-active {
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.table-row-enter-from {
+    opacity: 0;
+    transform: translateY(-10px) scale(0.98);
+    max-height: 0;
+}
+
+.table-row-leave-to {
+    opacity: 0;
+    transform: translateY(-10px) scale(0.98);
+    max-height: 0;
+    margin-top: 0;
+    margin-bottom: 0;
+    padding-top: 0;
+    padding-bottom: 0;
+}
+
+.table-row-leave-active {
+    position: relative;
     overflow: hidden;
 }
 
-:deep(.section-header-row::before) {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    height: 2px;
-    background: linear-gradient(90deg, var(--primary-accent), var(--success-color));
-    opacity: 0;
-    transition: opacity 0.3s ease;
+.table-header {
+    display: grid;
+    grid-template-columns: 80px 1fr 100px 100px 120px;
+    gap: 0.75rem;
+    padding: 0.4rem 0.75rem;
+    background-color: var(--surface-elevated);
+    border-bottom: 1px solid var(--border-color);
+    font-weight: 600;
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--text-secondary);
 }
 
-:deep(.section-header-row:first-child) {
-    border-top: 1px solid light-dark(rgba(226, 232, 240, 0.6), rgba(71, 85, 105, 0.4));
+.header-cell {
+    display: flex;
+    align-items: center;
 }
 
-:deep(.section-header-row:not(:first-child)) {
-    margin-top: 1rem !important;
+.header-cell.dropped-cell,
+.header-cell.destroyed-cell {
+    justify-content: center;
 }
 
-:deep(.mobile-view .section-header-row:not(:first-child)) {
-    margin-top: 1rem !important;
+.header-cell.value-cell {
+    justify-content: flex-end;
 }
 
-:deep(.section-header-row:hover) {
-    background: linear-gradient(135deg,
-            light-dark(rgba(248, 250, 252, 0.95), rgba(71, 85, 105, 0.95)) 0%,
-            light-dark(rgba(241, 245, 249, 0.9), rgba(51, 65, 85, 0.9)) 100%);
+/* Sortable header cell styling */
+.sortable-header-cell {
+    cursor: pointer;
+    transition: all 0.2s ease;
+    border-radius: 0.375rem;
+    padding: 0.375rem;
+    gap: 0.375rem;
+    background: light-dark(rgba(59, 130, 246, 0.1), rgba(59, 130, 246, 0.15));
+    border: 1px solid light-dark(rgba(59, 130, 246, 0.2), rgba(59, 130, 246, 0.3));
+    position: relative;
+}
+
+.sortable-header-cell:hover {
+    background: light-dark(rgba(59, 130, 246, 0.15), rgba(59, 130, 246, 0.25));
     border-color: var(--primary-accent);
-    box-shadow: 0 8px 25px -5px rgba(59, 130, 246, 0.1);
-    transform: translateY(-1px);
+    box-shadow: 0 2px 8px rgba(59, 130, 246, 0.2);
 }
 
-:deep(.section-header-row:hover::before) {
+.header-label {
+    font-weight: 600;
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: light-dark(#1f2937, #f3f4f6);
+}
+
+.header-sort-icon {
+    width: 14px;
+    height: 14px;
+    flex-shrink: 0;
+    transition: all 0.2s ease;
+}
+
+.header-sort-icon.active {
+    color: light-dark(#1f2937, #ffffff);
+    transform: scale(1.1);
+}
+
+.header-sort-icon.inactive {
+    color: light-dark(#6b7280, #9ca3af);
+    opacity: 0.7;
+}
+
+.sortable-header-cell:hover .header-sort-icon.inactive {
     opacity: 1;
+    color: light-dark(#4b5563, #d1d5db);
+    transform: scale(1.05);
 }
 
-/* Section total rows - prevent animations */
-:deep(.section-total-row) {
-    background-color: light-dark(rgba(243, 244, 246, 0.2), rgba(40, 40, 40, 0.2));
-    animation: none !important;
-    transition: none !important;
-    opacity: 1 !important;
-    position: relative;
-    z-index: 2;
+.sortable-header-cell:focus {
+    outline: 2px solid var(--primary-accent);
+    outline-offset: 2px;
 }
 
-/* Same for the total row */
-:deep(.table-row.value) {
-    animation: none !important;
-    transition: none !important;
-    opacity: 1 !important;
+.table-body {
+    width: 100%;
+}
+
+.table-row {
+    display: grid;
+    grid-template-columns: 80px 1fr 100px 100px 120px;
+    gap: 0.75rem;
+    padding: 0.35rem 0.75rem;
+    border-radius: 0.375rem;
+    background-color: light-dark(rgba(255, 255, 255, 0.4), rgba(26, 26, 26, 0.3));
+    transition: all 0.25s ease;
+    align-items: center;
+    cursor: pointer;
+}
+
+.table-row:not(:first-child) {
+    margin-top: 0.25rem;
+}
+
+.table-row:hover {
+    background-color: var(--surface-hover);
+}
+
+.body-cell {
+    display: flex;
+    align-items: center;
+    min-height: 2rem;
+}
+
+.body-cell.dropped-cell,
+.body-cell.destroyed-cell {
+    justify-content: center;
+}
+
+.body-cell.value-cell {
+    justify-content: flex-end;
+}
+
+/* Section headers - match original Table styling */
+.section-header-row {
     position: relative;
-    z-index: 2;
+    background-color: light-dark(rgba(255, 255, 255, 0.4), rgba(26, 26, 26, 0.3)) !important;
+    color: var(--text-primary);
+    border-radius: 0.375rem;
+    transition: all 0.2s ease;
+}
+
+.section-header-row:hover {
+    background-color: var(--surface-hover) !important;
+    transform: translateY(-1px);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+/* Make only name cell clickable for collapsible sections */
+.section-header-row .name-cell {
+    cursor: default;
+}
+
+.section-header-row.cursor-pointer .name-cell {
+    cursor: pointer;
 }
 
 /* Image cell styling */
-.image-cell {
+.image-cell-content {
     display: flex;
     align-items: center;
     position: relative;
-}
-
-/* Hover effect for container items */
-:deep(.container-item-row:hover) {
-    background-color: light-dark(rgba(229, 231, 235, 0.7), rgba(50, 50, 50, 0.4)) !important;
-}
-
-/* Styling for container items */
-:deep(.container-item-row) {
-    position: relative;
-    border-left: 1px dashed rgba(100, 100, 100, 0.2);
-    background-color: light-dark(rgba(250, 250, 250, 0.1), rgba(40, 40, 40, 0.15));
-    animation: simpleSlideDown 0.25s ease-in-out;
-    /* Modified animation with no bounce */
-    /* Ensure edges are covered during animation */
-    box-shadow: 0 0 0 2px light-dark(rgba(250, 250, 250, 0.1), rgba(40, 40, 40, 0.15));
-    z-index: 1;
-}
-
-/* Adjust container items indentation */
-.indented-image {
-    padding-left: 35px !important;
 }
 
 /* Connector line styling */
@@ -1299,15 +1428,33 @@ function generateItemLink(item: Item): string | null {
 
 /* Collapse icon styling */
 .collapse-icon {
-    width: 16px;
-    height: 16px;
+    width: 18px;
+    height: 18px;
     color: light-dark(#6b7280, #9ca3af);
-    margin-right: 4px;
-    transition: transform 0.3s ease;
+    margin-right: 6px;
+    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    cursor: pointer;
+    border-radius: 0.25rem;
+    padding: 2px;
+}
+
+.collapse-icon:hover {
+    color: light-dark(#374151, #d1d5db);
+    background-color: light-dark(rgba(0, 0, 0, 0.05), rgba(255, 255, 255, 0.1));
+    transform: scale(1.1);
 }
 
 .rotate-icon {
-    transform: rotate(0deg);
+    transform: rotate(90deg);
+}
+
+.rotate-icon:hover {
+    transform: rotate(90deg) scale(1.1);
+}
+
+/* Adjust container items indentation */
+.indented-image {
+    padding-left: 35px !important;
 }
 
 .section-count {
@@ -1317,170 +1464,142 @@ function generateItemLink(item: Item): string | null {
     margin-left: 0.5rem;
 }
 
-/* Quantity badges styling */
-.quantity-badges {
+/* Container collapsible items styling */
+.item-name-wrapper {
     display: flex;
-    gap: 0.5rem;
-    flex-wrap: wrap;
-}
-
-/* Modern badge styling with enhanced visual appeal */
-.modern-badge {
-    border: none;
-    border-radius: 1rem;
-    padding: 0.25rem 0.75rem;
-    display: inline-flex;
     align-items: center;
-    gap: 0.375rem;
-    font-weight: 600;
-    font-size: 0.75rem;
-    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-    position: relative;
-    overflow: hidden;
-    box-shadow: var(--shadow-subtle);
 }
 
-.modern-badge::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: -100%;
-    width: 100%;
-    height: 100%;
-    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
-    transition: left 0.5s ease;
-}
-
-.modern-badge:hover::before {
-    left: 100%;
-}
-
-.dropped-badge {
-    background: linear-gradient(135deg, var(--success-color), #059669);
-    color: white;
-    border: 1px solid rgba(5, 150, 105, 0.3);
-}
-
-.destroyed-badge {
-    background: linear-gradient(135deg, var(--error-color), #dc2626);
-    color: white;
-    border: 1px solid rgba(220, 38, 38, 0.3);
-}
-
-.badge-icon {
-    width: 0.875rem;
-    height: 0.875rem;
-    flex-shrink: 0;
-}
-
-/* Icon colors - brighter than background */
-.dropped-icon {
-    color: #22c55e !important;
-    /* Brighter green */
-}
-
-.destroyed-icon {
-    color: #f87171 !important;
-    /* Brighter red */
-}
-
-.badge-text {
-    color: white !important;
-    font-weight: 700;
-    font-size: 0.75rem;
-    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
-}
-
-/* Enhanced hover effects for badges */
-.modern-badge:hover {
-    transform: translateY(-1px) scale(1.05);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-}
-
-.dropped-badge:hover {
-    box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
-}
-
-.destroyed-badge:hover {
-    box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
-}
-
-/* Compact styling for badges */
-:deep(.u-badge) {
-    padding: 0.25rem 0.75rem;
-    font-size: 0.75rem;
-}
-
-/* Mobile view styling - improved card-based layout */
-.mobile-container {
-    display: flex;
-    flex-direction: column;
-    width: 100%;
-    padding: 0.5rem 0;
-    min-height: 60px;
-}
-
-/* Header container styling */
-.mobile-header-container {
-    background-color: light-dark(rgba(243, 244, 246, 0.3), rgba(40, 40, 40, 0.3));
-    border-radius: 0.5rem;
-    padding: 0.75rem;
-    margin-bottom: 0.25rem;
-}
-
-.mobile-header-content {
+/* Style for container names to indicate they're clickable */
+.container-name {
     cursor: pointer;
-    width: 100%;
+    transition: color 0.2s ease;
 }
 
-.mobile-header-row {
+.container-name:hover {
+    color: light-dark(#4b5563, #e5e7eb);
+}
+
+.container-collapse-icon {
+    width: 16px;
+    height: 16px;
+    color: light-dark(#6b7280, #9ca3af);
+    margin-left: 6px;
+    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    cursor: pointer;
+    border-radius: 0.25rem;
+    padding: 2px;
+}
+
+.container-collapse-icon:hover {
+    color: light-dark(#374151, #d1d5db);
+    background-color: light-dark(rgba(0, 0, 0, 0.05), rgba(255, 255, 255, 0.1));
+    transform: scale(1.15);
+}
+
+/* Section header name styling */
+.section-header-name {
     display: flex;
     align-items: center;
     gap: 0.5rem;
+    width: 100%;
+    color: var(--text-primary);
+    transition: color 0.2s ease;
 }
 
-.mobile-collapse-icon {
-    width: 18px;
-    height: 18px;
-    color: light-dark(#6b7280, #9ca3af);
-    transition: transform 0.2s ease;
-    flex-shrink: 0;
-}
-
-.mobile-header-title {
-    font-size: 0.875rem;
-    font-weight: 700;
-    text-transform: uppercase;
-    color: light-dark(#111827, #e5e7eb);
-    letter-spacing: 0.025em;
+/* Sort column header styling - simplified and visible */
+.sort-column-header {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    cursor: pointer;
+    padding: 0.375rem;
+    border-radius: 0.375rem;
+    transition: all 0.2s ease;
+    min-height: 2rem;
+    gap: 0.375rem;
     flex: 1;
 }
 
-.mobile-section-count {
-    font-size: 0.75rem;
-    color: light-dark(#6b7280, #9ca3af);
-    font-weight: 500;
-    background-color: light-dark(rgba(229, 231, 235, 0.5), rgba(55, 55, 55, 0.5));
-    padding: 0.125rem 0.375rem;
+.sortable-header {
+    background: transparent;
+    border: none;
     border-radius: 0.375rem;
-    flex-shrink: 0;
+    transition: all 0.2s ease;
 }
 
-/* Regular item card styling */
-.mobile-item-card {
+.sortable-header:hover {
+    background: light-dark(rgba(59, 130, 246, 0.05), rgba(59, 130, 246, 0.1));
+    border-color: transparent;
+    box-shadow: none;
+}
+
+.full-width-cell {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
     display: flex;
-    flex-direction: column;
-    padding: 0.375rem;
-    background-color: light-dark(rgba(255, 255, 255, 0.02), rgba(255, 255, 255, 0.02));
-    border-radius: 0.375rem;
-    transition: background-color 0.2s ease;
+    align-items: center;
+    width: 100%;
+    height: 100%;
+    background-color: transparent;
+    transition: all 0.2s ease;
+    padding: 0 0.5rem;
+    gap: 0.375rem;
 }
 
-.mobile-nested-item .mobile-item-card {
-    margin-left: 1rem;
-    border-left: 2px solid light-dark(rgba(156, 163, 175, 0.3), rgba(107, 114, 128, 0.3));
-    background-color: light-dark(rgba(250, 250, 250, 0.05), rgba(40, 40, 40, 0.15));
+/* Text alignment classes */
+.text-left {
+    justify-content: flex-start;
 }
+
+.text-right {
+    justify-content: flex-end;
+}
+
+.text-center {
+    justify-content: center;
+}
+
+/* Sort label styling */
+.sort-label {
+    font-weight: 500;
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: light-dark(#6b7280, #9ca3af);
+    transition: color 0.2s ease;
+}
+
+.sortable-header:hover .sort-label {
+    color: light-dark(#374151, #d1d5db);
+}
+
+/* Enhanced sort icons with better visibility */
+.sort-icon {
+    width: 14px;
+    height: 14px;
+    flex-shrink: 0;
+    transition: all 0.2s ease;
+}
+
+.sort-icon.active {
+    color: light-dark(#374151, #d1d5db);
+    transform: scale(1.05);
+}
+
+.sort-icon.inactive {
+    color: light-dark(#9ca3af, #6b7280);
+    opacity: 0.6;
+}
+
+.sortable-header:hover .sort-icon.inactive {
+    opacity: 0.8;
+    color: light-dark(#6b7280, #9ca3af);
+}
+
 
 .mobile-container-item .mobile-item-card {
     background-color: light-dark(rgba(245, 245, 245, 0.1), rgba(45, 45, 45, 0.2));
@@ -1597,7 +1716,14 @@ function generateItemLink(item: Item): string | null {
     min-height: 20px;
 }
 
+.badge-icon {
+    color: light-dark(#d1d5db, #374151) !important;
+    width: 12px;
+    height: 12px;
+}
+
 .mobile-badge-icon {
+    color: light-dark(#d1d5db, #374151) !important;
     width: 12px;
     height: 12px;
 }
@@ -1611,8 +1737,13 @@ function generateItemLink(item: Item): string | null {
     color: #f87171 !important;
 }
 
+.badge-text {
+    color: light-dark(#d1d5db, #374151);
+    font-weight: 600;
+}
+
 .mobile-badge-text {
-    color: #000000 !important;
+    color: light-dark(#d1d5db, #374151) !important;
     font-weight: 700;
     font-size: 0.7rem;
 }
@@ -1748,31 +1879,6 @@ function generateItemLink(item: Item): string | null {
 
 
 
-/* Ensure rows are properly spaced */
-:deep(.table-row) {
-    margin-bottom: 0.25rem;
-    transition: background-color 0.3s ease;
-    /* Only transition background color, not position or size */
-    position: relative;
-    /* Thicker box shadow to prevent any gaps between rows */
-    box-shadow: 0 0 0 2px light-dark(rgba(255, 255, 255, 0.25), rgba(26, 26, 26, 0.25));
-}
-
-/* Regular item rows have simple fade animation without transforms */
-:deep(.table-row.item) {
-    animation: simpleFadeIn 0.25s ease-in-out;
-}
-
-/* Ensure columns are distributed properly - 5 columns total */
-:deep(.table-row),
-:deep(.table-header) {
-    display: grid;
-    grid-template-columns: 80px 1fr 70px 70px 120px;
-    grid-gap: 0.75rem 0.75rem 0.1875rem 0.75rem;
-    width: 100%;
-    align-items: center;
-}
-
 /* Badge container styling */
 .badge-container {
     display: flex;
@@ -1781,17 +1887,13 @@ function generateItemLink(item: Item): string | null {
     min-height: 2rem;
 }
 
-/* Fix cell alignments */
-:deep(.dropped-cell-container),
-:deep(.destroyed-cell-container) {
-    text-align: center;
+/* Simplified table body styling */
+.table-body {
+    width: 100%;
+    background-color: transparent;
 }
 
-:deep(.value-cell-container) {
-    text-align: right;
-}
-
-/* Simplified animation keyframes - no transform on Y axis to prevent bouncing */
+/* Simplified animation keyframes */
 @keyframes simpleFadeIn {
     from {
         opacity: 0;
@@ -1814,136 +1916,38 @@ function generateItemLink(item: Item): string | null {
     }
 }
 
-/* Improved table rendering */
-:deep(.table-body) {
-    width: 100%;
-    position: relative;
-    /* Create stacking context for proper z-index behavior */
-    isolation: isolate;
-    overflow: hidden;
-    /* Ensure table body has solid background to prevent leaks */
-    background-color: light-dark(var(--color-background), var(--color-background));
+/* Remove duplicate full-width-cell - already defined above */
+
+.sort-icon.inactive:hover,
+.sortable-header:hover .sort-icon.inactive {
+    opacity: 1;
+    color: light-dark(#6b7280, #9ca3af);
+    transform: scale(1.05);
 }
 
-/* Collapsible section hover effect */
-:deep(.section-header-row:hover) {
-    background-color: light-dark(rgba(229, 231, 235, 0.9), rgba(40, 40, 40, 0.6));
-    transition: background-color 0.2s ease;
+/* Improve focus accessibility */
+.sortable-header:focus {
+    outline: 2px solid var(--primary-accent);
+    outline-offset: 2px;
 }
 
-/* Ensure cell backgrounds are transparent */
-:deep(.body-cell) {
-    background-color: transparent;
-    position: relative;
-}
+/* Add subtle animation for sort state changes */
+@keyframes sortActivate {
+    0% {
+        transform: scale(1);
+    }
 
-/* Add overlap between rows to prevent white gaps */
-:deep(.table-row) {
-    margin-bottom: 0;
-    /* Remove margin to prevent gaps */
-    padding-top: 0.125rem;
-    /* Add padding instead */
-    padding-bottom: 0.125rem;
-    /* Add outline to reinforce edges */
-    outline: 2px solid light-dark(rgba(255, 255, 255, 0.25), rgba(26, 26, 26, 0.25));
-    outline-offset: -1px;
-}
+    50% {
+        transform: scale(1.2);
+    }
 
-/* Add a solid backdrop during animation to prevent any transparency issues */
-:deep(.table-row)::before {
-    content: "";
-    position: absolute;
-    inset: -1px;
-    /* Slightly larger than the row itself */
-    background-color: inherit;
-    z-index: -1;
-}
-
-/* Special fix for Safari */
-@supports (-webkit-overflow-scrolling: touch) {
-
-    :deep(.table-row),
-    :deep(.container-item-row) {
-        transform: translate3d(0, 0, 0);
-        /* Force GPU rendering */
-        backface-visibility: hidden;
-        -webkit-backface-visibility: hidden;
+    100% {
+        transform: scale(1.1);
     }
 }
 
-/* Sorting styles */
-.sort-indicator {
-    font-size: 0.7rem;
-    color: light-dark(#6b7280, #9ca3af);
-    font-weight: normal;
-    margin-left: 0.5rem;
-}
-
-.sort-active {
-    color: light-dark(#4b5563, #d1d5db);
-}
-
-.sort-hint {
-    opacity: 0.6;
-}
-
-/* Sort column header styling */
-.sort-column-header {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    cursor: pointer;
-    height: 100%;
-    padding: 0.25rem;
-    border-radius: 0.25rem;
-}
-
-.full-width-cell {
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    display: flex;
-    align-items: center;
-    width: 100%;
-    height: 100%;
-    background-color: transparent;
-    transition: background-color 0.2s ease;
-    padding: 0 0.5rem;
-}
-
-/* Text alignment classes */
-.text-left {
-    justify-content: flex-start;
-}
-
-.text-right {
-    justify-content: flex-end;
-}
-
-/* Sort icons */
-.sort-icon {
-    width: 16px;
-    height: 16px;
-    margin-left: 4px;
-    color: light-dark(#4b5563, #d1d5db);
-}
-
-.sort-icon-inactive {
-    width: 16px;
-    height: 16px;
-    margin-left: 4px;
-    color: light-dark(#9ca3af, #6b7280);
-    opacity: 0.6;
-}
-
-.sort-icon-inactive:hover {
-    opacity: 1;
-}
-
-.full-width-cell:hover {
-    background-color: light-dark(rgba(229, 231, 235, 0.5), rgba(45, 45, 45, 0.5));
+.sort-icon.active {
+    animation: sortActivate 0.3s ease-out;
 }
 
 /* Container collapsible items styling */
@@ -1985,11 +1989,27 @@ function generateItemLink(item: Item): string | null {
     color: light-dark(#4b5563, #d1d5db);
 }
 
-/* Animation for container items */
-:deep(.container-item-row) {
-    animation: containerSlideDown 0.2s ease-in-out;
+/* Section header name styling */
+.section-header-name {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    width: 100%;
+    color: var(--text-primary);
+    transition: color 0.2s ease;
 }
 
+/* Header cell spacer for maintaining grid layout */
+.header-cell-spacer {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    min-height: 2rem;
+    background-color: transparent;
+}
+
+/* Animation for container items */
 @keyframes containerSlideDown {
     from {
         opacity: 0;
@@ -2002,14 +2022,14 @@ function generateItemLink(item: Item): string | null {
     }
 }
 
-/* Container row styling */
-:deep(.container-row) {
+/* Container row styling - without deep selectors */
+.table-row.container-row {
     background-color: light-dark(rgba(250, 250, 250, 0.15), rgba(45, 45, 45, 0.15));
     transition: background-color 0.2s ease;
     cursor: pointer;
 }
 
-:deep(.container-row:hover) {
+.table-row.container-row:hover {
     background-color: light-dark(rgba(245, 245, 245, 0.25), rgba(50, 50, 50, 0.25));
 }
 
@@ -2033,54 +2053,52 @@ function generateItemLink(item: Item): string | null {
     /* Block all interactions */
 }
 
-/* Row coloring for dropped and destroyed items - subtle tints */
-:deep(.row-dropped) {
+/* Row coloring for dropped and destroyed items - without deep selectors */
+.table-row.row-dropped {
     background-color: light-dark(rgba(0, 255, 0, 0.03), rgba(0, 255, 0, 0.05)) !important;
     transition: background-color 0.3s ease;
 }
 
-:deep(.row-destroyed) {
+.table-row.row-destroyed {
     background-color: light-dark(rgba(255, 0, 0, 0.03), rgba(255, 0, 0, 0.05)) !important;
     transition: background-color 0.3s ease;
 }
 
-/* Enhanced hover effects for colored rows - slightly more visible on hover */
-:deep(.row-dropped:hover) {
+/* Enhanced hover effects for colored rows */
+.table-row.row-dropped:hover {
     background-color: light-dark(rgba(0, 255, 0, 0.06), rgba(0, 255, 0, 0.08)) !important;
 }
 
-:deep(.row-destroyed:hover) {
+.table-row.row-destroyed:hover {
     background-color: light-dark(rgba(255, 0, 0, 0.06), rgba(255, 0, 0, 0.08)) !important;
 }
 
-/* Mobile view row coloring - same subtle tints */
-:deep(.mobile-container.row-dropped) {
+/* Mobile view row coloring */
+.mobile-container.row-dropped {
     background-color: light-dark(rgba(0, 255, 0, 0.03), rgba(0, 255, 0, 0.05));
     transition: background-color 0.3s ease;
 }
 
-:deep(.mobile-container.row-destroyed) {
+.mobile-container.row-destroyed {
     background-color: light-dark(rgba(255, 0, 0, 0.03), rgba(255, 0, 0, 0.05));
     transition: background-color 0.3s ease;
 }
 
 /* Mobile view enhanced hover effects */
-:deep(.mobile-container.row-dropped:active) {
+.mobile-container.row-dropped:active {
     background-color: light-dark(rgba(0, 255, 0, 0.06), rgba(0, 255, 0, 0.08));
 }
 
-:deep(.mobile-container.row-destroyed:active) {
+.mobile-container.row-destroyed:active {
     background-color: light-dark(rgba(255, 0, 0, 0.06), rgba(255, 0, 0, 0.08));
 }
 
-/* Ensure row coloring works with existing container item styles - even more subtle */
-:deep(.container-item-row.row-dropped) {
+/* Container item row coloring */
+.table-row.container-item-row.row-dropped {
     background-color: light-dark(rgba(0, 255, 0, 0.02), rgba(0, 255, 0, 0.04)) !important;
 }
 
-:deep(.container-item-row.row-destroyed) {
+.table-row.container-item-row.row-destroyed {
     background-color: light-dark(rgba(255, 0, 0, 0.02), rgba(255, 0, 0, 0.04)) !important;
 }
-
-/* Remove the text overlay for items table too */
 </style>
