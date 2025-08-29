@@ -305,7 +305,7 @@ const removeEntity = async (index: number) => {
     const entity = entities.value[index];
 
     try {
-        await $fetch(`/api/user/domains/${props.domain.domain_id}/entities/${entity._config.entity_type}/${entity._config.entity_id}`, {
+        await $fetch(`/api/user/domains/${props.domain.domain_id}/entities?entity_type=${entity._config.entity_type}&entity_id=${entity._config.entity_id}`, {
             method: 'DELETE'
         });
 
@@ -326,59 +326,85 @@ const removeEntity = async (index: number) => {
     }
 };
 
-const setPrimaryEntity = (index: number) => {
-    // Remove primary from all entities
-    entities.value.forEach(entity => {
-        entity._config.primary = false;
-    });
-
-    // Set new primary
-    entities.value[index]._config.primary = true;
-    hasChanges.value = true;
-};
-
-const updateEntityConfig = (index: number, key: string, value: any) => {
-    entities.value[index]._config[key] = value;
-    hasChanges.value = true;
-};
-
-const saveChanges = async () => {
-    if (!hasChanges.value) {
-        emit('updated');
-        return;
-    }
-
-    isSaving.value = true;
+const setPrimaryEntity = async (index: number) => {
+    const oldPrimaryIndex = entities.value.findIndex(e => e._config.primary);
 
     try {
-        // Update domain with new entity configuration
-        await $fetch(`/api/user/domains/${props.domain.domain_id}`, {
+        // Update via API
+        const entity = entities.value[index];
+        await $fetch(`/api/user/domains/${props.domain.domain_id}/entities/${entity._config.entity_type}/${entity._config.entity_id}`, {
             method: 'PATCH',
             body: {
-                entities: entities.value.map(entity => ({
-                    entity_type: entity._config.entity_type,
-                    entity_id: entity._config.entity_id,
-                    primary: entity._config.primary,
-                    show_in_nav: entity._config.show_in_nav
-                }))
+                primary: true
             }
         });
 
+        // Update locally after successful API call
+        entities.value.forEach(e => {
+            e._config.primary = false;
+        });
+        entities.value[index]._config.primary = true;
+        hasChanges.value = true;
+
         toast.add({
             title: t('success'),
-            description: t('settings.domains.manageEntities.changesSaved'),
+            description: 'Primary entity updated successfully',
             color: 'green'
         });
-
-        emit('updated');
     } catch (error: any) {
+        // Revert changes on error
+        entities.value.forEach(entity => {
+            entity._config.primary = false;
+        });
+        if (oldPrimaryIndex !== -1) {
+            entities.value[oldPrimaryIndex]._config.primary = true;
+        }
+
         toast.add({
             title: t('error.saveChangesFailed'),
             description: error.data?.message || t('error.generic'),
             color: 'red'
         });
-    } finally {
-        isSaving.value = false;
     }
+};
+
+const updateEntityConfig = async (index: number, key: string, value: any) => {
+    const oldValue = entities.value[index]._config[key];
+
+    try {
+        // Update via API
+        const entity = entities.value[index];
+        await $fetch(`/api/user/domains/${props.domain.domain_id}/entities/${entity._config.entity_type}/${entity._config.entity_id}`, {
+            method: 'PATCH',
+            body: {
+                [key]: value
+            }
+        });
+
+        // Update locally after successful API call
+        entities.value[index]._config[key] = value;
+        hasChanges.value = true;
+
+        toast.add({
+            title: t('success'),
+            description: 'Entity configuration updated successfully',
+            color: 'green'
+        });
+    } catch (error: any) {
+        // Revert on error
+        entities.value[index]._config[key] = oldValue;
+
+        toast.add({
+            title: t('error.saveChangesFailed'),
+            description: error.data?.message || t('error.generic'),
+            color: 'red'
+        });
+    }
+};
+
+const saveChanges = async () => {
+    // Individual changes are now handled immediately via API,
+    // this function mainly serves to close the form
+    emit('updated');
 };
 </script>

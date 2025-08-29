@@ -449,6 +449,9 @@ import { useDomainSettingsStore } from '~/stores/domainSettings';
 
 const { t, locale } = useI18n();
 const currentLocale = computed(() => locale.value);
+
+// Cache invalidation composable
+const { refreshKey, invalidateCache } = useDomainCacheInvalidation();
 const {
     customDomain,
     domainContext,
@@ -479,12 +482,12 @@ const props = withDefaults(defineProps<Props>(), {
     initialCampaigns: []
 });
 
+// Domain cache invalidation system
+const { globalDomainCacheKey, getCacheBustedKey } = useDomainCacheInvalidation();
+
 // Reactive state
 const selectedEntity = ref<any>(null);
 const selectedTimeRange = ref('7d');
-
-// Refresh key for cache invalidation
-const refreshKey = ref(0);
 
 // Computed domain for API calls
 const currentDomain = computed(() => props.domain || customDomain.value);
@@ -498,9 +501,9 @@ const statsQueryParams = computed(() => ({
     } : {})
 }));
 
-// Fetch key for stats (similar to KillList approach)
+// Fetch key for stats with cache busting
 const statsFetchKey = computed(() => {
-    return `domain-stats-${currentDomain.value}-${selectedTimeRange.value}-${selectedEntity.value?.type || 'all'}-${selectedEntity.value?.id || 'all'}`;
+    return getCacheBustedKey(`domain-stats-${currentDomain.value}-${selectedTimeRange.value}-${selectedEntity.value?.type || 'all'}-${selectedEntity.value?.id || 'all'}`);
 });
 
 // Fetch domain stats using useFetch (like KillList)
@@ -521,7 +524,7 @@ const {
     }
 );
 
-// Fetch domain entities using useFetch
+// Fetch domain entities using useFetch with cache-busted keys
 const {
     data: domainEntitiesResponse,
     pending: entitiesLoading,
@@ -530,7 +533,7 @@ const {
 } = await useFetch(
     () => currentDomain.value ? `/api/domain/${currentDomain.value}/entities` : null,
     {
-        key: `domain-entities-${currentDomain.value}-${refreshKey.value}`,
+        key: getCacheBustedKey(`domain-entities-${currentDomain.value}`),
         server: true,
         lazy: false,
         default: () => ({ success: false, entities: [] })
@@ -545,7 +548,7 @@ const domainEntitiesWithNames = computed(() => {
     return [];
 });
 
-// Fetch domain campaigns using useFetch
+// Fetch domain campaigns using useFetch with cache-busted keys
 const {
     data: campaignsResponse,
     pending: campaignsLoading,
@@ -553,7 +556,7 @@ const {
 } = await useFetch(
     () => currentDomain.value ? `/api/domain/${currentDomain.value}/campaigns` : null,
     {
-        key: `domain-campaigns-${currentDomain.value}`,
+        key: getCacheBustedKey(`domain-campaigns-${currentDomain.value}`),
         query: { limit: 10 },
         server: true,
         lazy: false,
@@ -651,55 +654,40 @@ const entityStats = computed(() => {
     return statsMap;
 });
 
-// Feature toggles - prioritize store data (for editing) or fallback to context (for display)
+// Feature toggles - use context values and ensure consistent SSR/client behavior
+const isHydrated = ref(false);
+
+onMounted(() => {
+    isHydrated.value = true;
+});
+
 const showHeroSection = computed(() => {
-    // If store has data (user is editing or store is loaded), use store
-    if (domainStore.currentDomain) {
-        return domainStore.showHeroSection;
-    }
-    // Otherwise use context from SSR middleware
     return contextShowHeroSection.value;
 });
 
 const showStatsSection = computed(() => {
-    if (domainStore.currentDomain) {
-        return domainStore.showStatsSection;
-    }
     return contextShowStatsSection.value;
 });
 
 const showTrackingOverview = computed(() => {
-    if (domainStore.currentDomain) {
-        return domainStore.showTrackingOverview;
-    }
     return contextShowTrackingOverview.value;
 });
 
 const showCampaignSection = computed(() => {
-    if (domainStore.currentDomain) {
-        return domainStore.showCampaignSection;
-    }
     return contextShowCampaignSection.value;
 });
 
 const showMostValuableSection = computed(() => {
-    if (domainStore.currentDomain) {
-        return domainStore.showMostValuableSection;
-    }
     return contextShowMostValuableSection.value;
 });
 
 const showTopBoxesSection = computed(() => {
-    if (domainStore.currentDomain) {
-        return domainStore.showTopBoxesSection;
-    }
+    // Use context value which should be consistent between SSR and client
+    // The context is populated from the domain middleware during SSR
     return contextShowTopBoxesSection.value;
 });
 
 const showShipAnalysisSection = computed(() => {
-    if (domainStore.currentDomain) {
-        return domainStore.showShipAnalysisSection;
-    }
     return contextShowShipAnalysisSection.value;
 });
 
@@ -879,8 +867,8 @@ const refreshData = async () => {
     await refreshStats();
     // Refresh entities data
     await refreshEntities();
-    // Force KillList refresh by updating key
-    refreshKey.value++;
+    // Force KillList refresh by invalidating cache
+    await invalidateCache();
 };
 
 // Debug method to force refresh domain settings cache

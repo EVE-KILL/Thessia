@@ -1,6 +1,3 @@
-import type { IDomainContext } from "../interfaces/ICustomDomain";
-import { domainCache } from "./domainCache";
-
 /**
  * Domain fallback and error handling system
  * Provides graceful degradation for invalid, expired, or problematic custom domains

@@ -32,8 +32,12 @@ export const useDomainContext = () => {
                 nuxtApp.ssrContext?.event?.context?.domainContext
             ) {
                 const context = nuxtApp.ssrContext.event.context.domainContext;
-                console.log(`[Domain Context] Initializing from SSR context:`, context?.domain, context?.error?.type);
-                
+                console.log(
+                    `[Domain Context] Initializing from SSR context:`,
+                    context?.domain,
+                    context?.error?.type
+                );
+
                 // Serialize the context to avoid Mongoose object serialization issues
                 return {
                     isCustomDomain: Boolean(context.isCustomDomain),
@@ -56,7 +60,9 @@ export const useDomainContext = () => {
                               active: Boolean(context.config.active),
                               verified: Boolean(context.config.verified),
                               default_page: context.config.default_page,
-                              public_campaigns: Boolean(context.config.public_campaigns),
+                              public_campaigns: Boolean(
+                                  context.config.public_campaigns
+                              ),
                               branding: context.config.branding
                                   ? JSON.parse(
                                         JSON.stringify(context.config.branding)
@@ -64,7 +70,9 @@ export const useDomainContext = () => {
                                   : null,
                               navigation: context.config.navigation
                                   ? JSON.parse(
-                                        JSON.stringify(context.config.navigation)
+                                        JSON.stringify(
+                                            context.config.navigation
+                                        )
                                     )
                                   : null,
                               features: context.config.features
@@ -74,7 +82,9 @@ export const useDomainContext = () => {
                                   : null,
                               page_config: context.config.page_config
                                   ? JSON.parse(
-                                        JSON.stringify(context.config.page_config)
+                                        JSON.stringify(
+                                            context.config.page_config
+                                        )
                                     )
                                   : null,
                           }
@@ -82,7 +92,10 @@ export const useDomainContext = () => {
                 };
             }
         } catch (error) {
-            console.error(`[Domain Context] Error initializing from SSR context:`, error);
+            console.error(
+                `[Domain Context] Error initializing from SSR context:`,
+                error
+            );
         }
 
         // Fallback for client-side or when no custom domain

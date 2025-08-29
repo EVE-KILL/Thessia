@@ -263,6 +263,7 @@ const handleDomainCreated = async (domain: any) => {
 
 const handleDomainUpdated = async () => {
     showEditModal.value = false;
+    const domain = editingDomain.value?.domain;
     editingDomain.value = null;
 
     toast.add({
@@ -271,12 +272,19 @@ const handleDomainUpdated = async () => {
         color: 'green'
     });
 
+    // Trigger comprehensive cache invalidation for the domain
+    if (domain) {
+        const { invalidateDomainAfterSettingsChange } = useDomainCacheInvalidation();
+        await invalidateDomainAfterSettingsChange(domain);
+    }
+
     await refreshDomains();
 };
 
 // PHASE 2: New handler for entity updates
 const handleEntitiesUpdated = async () => {
     showManageEntitiesModal.value = false;
+    const domain = managingDomain.value?.domain;
     managingDomain.value = null;
 
     toast.add({
@@ -284,6 +292,12 @@ const handleEntitiesUpdated = async () => {
         description: t('settings.domains.entitiesUpdated'),
         color: 'green'
     });
+
+    // Trigger comprehensive cache invalidation for the domain
+    if (domain) {
+        const { invalidateDomainAfterEntityChange } = useDomainCacheInvalidation();
+        await invalidateDomainAfterEntityChange(domain);
+    }
 
     await refreshDomains();
 };

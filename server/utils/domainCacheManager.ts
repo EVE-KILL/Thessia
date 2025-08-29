@@ -64,21 +64,51 @@ async function clearDomainCachesForDatabase(domain: string): Promise<void> {
         await clearDomainCache(domain);
 
         // Clear Redis cache keys for this domain
-        const storage = useStorage();
-        const cacheKeys = [
-            `nitro:functions:api:domains:lookup.get:${domain}`,
-            `nitro:functions:api:entities:${domain}`,
-        ];
+        const storage = useStorage("redis");
 
-        for (const key of cacheKeys) {
-            try {
-                await storage.removeItem(key);
-            } catch (error) {
-                // Silent error handling for cache clearing
+        // Get all keys with pattern matching for this domain
+        try {
+            // Clear specific cache keys using the working storage.removeItem() method
+            const domainForKey = domain.replace(/\./g, ""); // Remove dots for Nitro key format
+            const specificKeys = [
+                `nitro:functions:api:domains:lookup.get:${domain}`,
+                `domain:entities:${domain}:v1`, // Original cache key (fallback)
+                `nitro:handlers:_:domainentities${domainForKey}v1.json`, // Actual Nitro key format
+            ];
+
+            let clearedCount = 0;
+            for (const key of specificKeys) {
+                try {
+                    const exists = await storage.hasItem(key);
+                    if (exists) {
+                        await storage.removeItem(key);
+                        clearedCount++;
+                        console.log(
+                            `[Domain Cache Manager] Successfully cleared key: ${key}`
+                        );
+                    }
+                } catch (error) {
+                    console.warn(
+                        `[Domain Cache Manager] Failed to clear key ${key}:`,
+                        error
+                    );
+                }
             }
+
+            console.log(
+                `[Domain Cache Manager] Cleared ${clearedCount} specific cache keys for domain: ${domain}`
+            );
+        } catch (redisError) {
+            console.error(
+                `[Domain Cache Manager] Redis operations failed for domain ${domain}:`,
+                redisError
+            );
         }
 
-        // Success - caches cleared
+        // Success - at least middleware and specific caches cleared
+        console.log(
+            `[Domain Cache Manager] Cache clearing completed for domain: ${domain}`
+        );
     } catch (error) {
         console.error(`Error clearing caches for domain ${domain}:`, error);
     }

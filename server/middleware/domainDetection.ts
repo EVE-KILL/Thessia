@@ -188,42 +188,83 @@ export async function clearAllDomainCaches(domain: string) {
             const redis = useStorage("redis");
 
             // Clear specific known cache keys for this domain
-            const keysToTry = [
-                // Domain entities cache
-                `nitro:handlers:api:domain:${domain}:entities.get.json`,
+            const specificKeys = [
+                // Domain lookup API cache
+                `nitro:functions:api:domains:lookup.get:${domain}`,
 
-                // Domain stats cache for different time ranges
-                `nitro:handlers:api:domain:${domain}:stats.get:timeRange=1d.json`,
-                `nitro:handlers:api:domain:${domain}:stats.get:timeRange=7d.json`,
-                `nitro:handlers:api:domain:${domain}:stats.get:timeRange=30d.json`,
-                `nitro:handlers:api:domain:${domain}:stats.get:timeRange=90d.json`,
-                `nitro:handlers:api:domain:${domain}:stats.get:timeRange=all.json`,
-
-                // Domain campaigns cache
-                `nitro:handlers:api:domain:${domain}:campaigns.get.json`,
-
-                // Domain killmails cache
-                `nitro:handlers:api:domain:${domain}:killmails.get.json`,
+                // Domain entities cache (actual key pattern from defineCachedEventHandler)
+                `domain:entities:${domain}:v1`,
             ];
 
             let clearedCount = 0;
-            for (const key of keysToTry) {
+
+            // Clear specific keys first
+            for (const key of specificKeys) {
                 try {
                     const exists = await redis.hasItem(key);
                     if (exists) {
                         await redis.removeItem(key);
                         clearedCount++;
                         console.log(
-                            `[Domain Detection] Cleared Redis cache key: ${key}`
+                            `[Domain Detection] Cleared specific Redis key: ${key}`
                         );
                     }
                 } catch (keyError: any) {
-                    // Skip individual key errors
                     console.warn(
                         `[Domain Detection] Could not clear key ${key}:`,
                         keyError?.message || keyError
                     );
                 }
+            }
+
+            // Clear wildcard patterns for hashed cache keys
+            // These endpoints use SHA256 hashes in their cache keys
+            const wildcardPatterns = [
+                `domain:stats:*`, // Stats cache (hashed)
+                `domain:campaigns:*`, // Campaigns cache (hashed)
+                `domain:killmails:*`, // Killmails cache (hashed)
+            ];
+
+            // Try to use Redis KEYS command for pattern matching
+            try {
+                const redisClient = (redis as any).driver?.base?.client;
+                if (redisClient?.keys) {
+                    for (const pattern of wildcardPatterns) {
+                        try {
+                            const matchingKeys = await redisClient.keys(
+                                pattern
+                            );
+                            for (const key of matchingKeys) {
+                                try {
+                                    await redis.removeItem(key);
+                                    clearedCount++;
+                                    console.log(
+                                        `[Domain Detection] Cleared wildcard Redis key: ${key}`
+                                    );
+                                } catch (removeError) {
+                                    console.warn(
+                                        `[Domain Detection] Failed to remove key ${key}:`,
+                                        removeError
+                                    );
+                                }
+                            }
+                        } catch (patternError) {
+                            console.warn(
+                                `[Domain Detection] Could not process pattern ${pattern}:`,
+                                patternError
+                            );
+                        }
+                    }
+                } else {
+                    console.warn(
+                        `[Domain Detection] Redis KEYS command not available for wildcard clearing`
+                    );
+                }
+            } catch (wildcardError) {
+                console.warn(
+                    `[Domain Detection] Wildcard cache clearing failed:`,
+                    wildcardError
+                );
             }
 
             console.log(

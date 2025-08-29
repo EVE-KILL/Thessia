@@ -23,143 +23,147 @@
                 <TransitionGroup name="table-row" tag="div" class="transition-group">
                     <template v-for="(item, index) in data" :key="`item-${index}`">
                         <div class="table-row" :class="getRowClasses(item)">
-                        <!-- Image cell -->
-                        <div class="body-cell image-cell">
-                            <div class="image-cell-content" :class="{
-                                'indented-image': item.isNested,
-                                'privacy-blur': props.hideFitting && isFittingItem(item) && (item.type === 'item' || item.type === 'container-item')
-                            }">
-                                <template v-if="item.isNested">
-                                    <div class="connector-line">
-                                        <Icon name="lucide:corner-down-right" class="connector-icon" />
+                            <!-- Image cell -->
+                            <div class="body-cell image-cell">
+                                <div class="image-cell-content" :class="{
+                                    'indented-image': item.isNested,
+                                    'privacy-blur': props.hideFitting && isFittingItem(item) && (item.type === 'item' || item.type === 'container-item')
+                                }">
+                                    <template v-if="item.isNested">
+                                        <div class="connector-line">
+                                            <Icon name="lucide:corner-down-right" class="connector-icon" />
+                                        </div>
+                                    </template>
+
+                                    <!-- Show collapse icon for headers if collapsible -->
+                                    <Icon v-if="item.type === 'header' && item.itemName && isCollapsible(item.itemName)"
+                                        :name="item.itemName && isSectionCollapsed(item.itemName) ? 'lucide:chevron-right' : 'lucide:chevron-down'"
+                                        class="collapse-icon"
+                                        :class="{ 'rotate-icon': item.itemName && !isSectionCollapsed(item.itemName) }"
+                                        @click.stop="item.itemName && toggleSectionCollapse(item.itemName)" />
+
+                                    <!-- Show image only when not a skin -->
+                                    <Image
+                                        v-if="(item.type === 'item' || item.type === 'container-item') && item.itemId && !isSkin(item.itemName || '')"
+                                        :type="isBlueprint(item.itemName || '') ? 'blueprint-copy' : 'item'"
+                                        :id="item.itemId" size="24" class="w-7 h-7"
+                                        :alt="props.hideFitting && isFittingItem(item) ? '[REDACTED]' : (item.itemName || '')" />
+                                </div>
+                            </div>
+
+                            <!-- Name cell with click handler only for non-header rows, or header rows that are collapsible -->
+                            <div class="body-cell name-cell"
+                                @click="(item.type !== 'header' || (item.itemName && isCollapsible(item.itemName))) && handleRowClick(item, $event)">
+                                <div v-if="item.type === 'header'"
+                                    class="font-bold text-sm uppercase section-header-name">
+                                    {{ item.itemName }}
+                                    <span v-if="item.itemName && isCollapsible(item.itemName)" class="section-count">
+                                        ({{ getSectionItemCount(item.itemName) }})
+                                    </span>
+                                </div>
+                                <div v-else-if="item.type === 'item' || item.type === 'container-item'"
+                                    class="font-medium"
+                                    :class="{ 'privacy-blur': props.hideFitting && isFittingItem(item) }">
+                                    <!-- Add click handler directly to the name wrapper for containers -->
+                                    <div class="item-name-wrapper" :class="{ 'container-name': item.isContainer }"
+                                        @click.stop="item.isContainer && item.containerId && toggleContainerCollapse(item.containerId)">
+                                        <!-- Container name first, then the icon -->
+                                        {{ props.hideFitting && isFittingItem(item) ? '[REDACTED]' : item.itemName }}
+                                        <!-- Add collapse/expand control for containers after name -->
+                                        <Icon v-if="item.isContainer && item.containerId"
+                                            :name="isContainerCollapsed(item.containerId) ? 'lucide:chevron-right' : 'lucide:chevron-down'"
+                                            class="container-collapse-icon"
+                                            @click.stop="item.containerId && toggleContainerCollapse(item.containerId, $event)" />
+                                    </div>
+                                </div>
+                                <div v-else-if="item.type === 'value'" class="font-medium">{{ item.itemName }}</div>
+                            </div>
+
+                            <!-- Dropped cell -->
+                            <div class="body-cell dropped-cell">
+                                <template v-if="item.type === 'header' && item.itemName">
+                                    <!-- Show sorting controls for sections with more than 1 item -->
+                                    <div v-if="getSectionItemCount(item.itemName) > 1"
+                                        class="sort-column-header text-center sortable-header"
+                                        @click.stop="handleHeaderClick('dropped', item.itemName)">
+                                        <span class="sort-label">{{ t('dropped') }}</span>
+                                        <Icon
+                                            v-if="currentSortColumn === 'dropped' && currentSortSection === item.itemName"
+                                            :name="currentSortDirection === 'asc' ? 'lucide:arrow-up' : 'lucide:arrow-down'"
+                                            class="sort-icon active" />
+                                        <Icon v-else name="lucide:arrow-up-down" class="sort-icon inactive" />
+                                    </div>
+                                    <!-- Empty div for non-sortable sections to maintain grid layout -->
+                                    <div v-else class="header-cell-spacer"></div>
+                                </template>
+                                <template
+                                    v-else-if="item.type === 'item' || item.type === 'value' || item.type === 'container-item'">
+                                    <div class="badge-container">
+                                        <UBadge v-if="item.dropped && item.dropped > 0" variant="solid" color="success"
+                                            class="item-badge modern-badge dropped-badge">
+                                            <Icon name="lucide:package-check" class="badge-icon dropped-icon" />
+                                            <span class="badge-text">{{ item.dropped }}</span>
+                                        </UBadge>
                                     </div>
                                 </template>
+                            </div>
 
-                                <!-- Show collapse icon for headers if collapsible -->
-                                <Icon v-if="item.type === 'header' && item.itemName && isCollapsible(item.itemName)"
-                                    :name="item.itemName && isSectionCollapsed(item.itemName) ? 'lucide:chevron-right' : 'lucide:chevron-down'"
-                                    class="collapse-icon"
-                                    :class="{ 'rotate-icon': item.itemName && !isSectionCollapsed(item.itemName) }"
-                                    @click.stop="item.itemName && toggleSectionCollapse(item.itemName)" />
+                            <!-- Destroyed cell -->
+                            <div class="body-cell destroyed-cell">
+                                <template v-if="item.type === 'header' && item.itemName">
+                                    <!-- Show sorting controls for sections with more than 1 item -->
+                                    <div v-if="getSectionItemCount(item.itemName) > 1"
+                                        class="sort-column-header text-center sortable-header"
+                                        @click.stop="handleHeaderClick('destroyed', item.itemName)">
+                                        <span class="sort-label">{{ t('destroyed') }}</span>
+                                        <Icon
+                                            v-if="currentSortColumn === 'destroyed' && currentSortSection === item.itemName"
+                                            :name="currentSortDirection === 'asc' ? 'lucide:arrow-up' : 'lucide:arrow-down'"
+                                            class="sort-icon active" />
+                                        <Icon v-else name="lucide:arrow-up-down" class="sort-icon inactive" />
+                                    </div>
+                                    <!-- Empty div for non-sortable sections to maintain grid layout -->
+                                    <div v-else class="header-cell-spacer"></div>
+                                </template>
+                                <template
+                                    v-else-if="item.type === 'item' || item.type === 'value' || item.type === 'container-item'">
+                                    <div class="badge-container">
+                                        <UBadge v-if="item.destroyed && item.destroyed > 0" variant="solid"
+                                            color="error" class="item-badge modern-badge destroyed-badge">
+                                            <Icon name="lucide:package-x" class="badge-icon destroyed-icon" />
+                                            <span class="badge-text">{{ item.destroyed }}</span>
+                                        </UBadge>
+                                    </div>
+                                </template>
+                            </div>
 
-                                <!-- Show image only when not a skin -->
-                                <Image
-                                    v-if="(item.type === 'item' || item.type === 'container-item') && item.itemId && !isSkin(item.itemName || '')"
-                                    :type="isBlueprint(item.itemName || '') ? 'blueprint-copy' : 'item'"
-                                    :id="item.itemId" size="24" class="w-7 h-7"
-                                    :alt="props.hideFitting && isFittingItem(item) ? '[REDACTED]' : (item.itemName || '')" />
+                            <!-- Value cell -->
+                            <div class="body-cell value-cell">
+                                <template v-if="item.type === 'header' && item.itemName">
+                                    <!-- Show sorting controls for sections with more than 1 item -->
+                                    <div v-if="getSectionItemCount(item.itemName) > 1"
+                                        class="sort-column-header text-right sortable-header"
+                                        @click.stop="handleHeaderClick('value', item.itemName)">
+                                        <span class="sort-label">{{ t('value') }}</span>
+                                        <Icon
+                                            v-if="currentSortColumn === 'value' && currentSortSection === item.itemName"
+                                            :name="currentSortDirection === 'asc' ? 'lucide:arrow-up' : 'lucide:arrow-down'"
+                                            class="sort-icon active" />
+                                        <Icon v-else name="lucide:arrow-up-down" class="sort-icon inactive" />
+                                    </div>
+                                    <!-- Empty div for non-sortable sections to maintain grid layout -->
+                                    <div v-else class="header-cell-spacer"></div>
+                                </template>
+                                <template
+                                    v-else-if="item.type === 'item' || item.type === 'value' || item.type === 'container-item'">
+                                    <div v-if="item.value" class="text-right font-medium">
+                                        {{ formatIsk(item.value) }}
+                                    </div>
+                                    <div v-else class="text-right">-</div>
+                                </template>
                             </div>
                         </div>
-
-                        <!-- Name cell with click handler only for non-header rows, or header rows that are collapsible -->
-                        <div class="body-cell name-cell" 
-                             @click="(item.type !== 'header' || (item.itemName && isCollapsible(item.itemName))) && handleRowClick(item, $event)">
-                            <div v-if="item.type === 'header'" class="font-bold text-sm uppercase section-header-name">
-                                {{ item.itemName }}
-                                <span v-if="item.itemName && isCollapsible(item.itemName)" class="section-count">
-                                    ({{ getSectionItemCount(item.itemName) }})
-                                </span>
-                            </div>
-                            <div v-else-if="item.type === 'item' || item.type === 'container-item'" class="font-medium"
-                                :class="{ 'privacy-blur': props.hideFitting && isFittingItem(item) }">
-                                <!-- Add click handler directly to the name wrapper for containers -->
-                                <div class="item-name-wrapper" :class="{ 'container-name': item.isContainer }"
-                                    @click.stop="item.isContainer && item.containerId && toggleContainerCollapse(item.containerId)">
-                                    <!-- Container name first, then the icon -->
-                                    {{ props.hideFitting && isFittingItem(item) ? '[REDACTED]' : item.itemName }}
-                                    <!-- Add collapse/expand control for containers after name -->
-                                    <Icon v-if="item.isContainer && item.containerId"
-                                        :name="isContainerCollapsed(item.containerId) ? 'lucide:chevron-right' : 'lucide:chevron-down'"
-                                        class="container-collapse-icon"
-                                        @click.stop="item.containerId && toggleContainerCollapse(item.containerId, $event)" />
-                                </div>
-                            </div>
-                            <div v-else-if="item.type === 'value'" class="font-medium">{{ item.itemName }}</div>
-                        </div>
-
-                        <!-- Dropped cell -->
-                        <div class="body-cell dropped-cell">
-                            <template v-if="item.type === 'header' && item.itemName">
-                                <!-- Show sorting controls for sections with more than 1 item -->
-                                <div v-if="getSectionItemCount(item.itemName) > 1"
-                                    class="sort-column-header text-center sortable-header"
-                                    @click.stop="handleHeaderClick('dropped', item.itemName)">
-                                    <span class="sort-label">{{ t('dropped') }}</span>
-                                    <Icon v-if="currentSortColumn === 'dropped' && currentSortSection === item.itemName"
-                                        :name="currentSortDirection === 'asc' ? 'lucide:arrow-up' : 'lucide:arrow-down'"
-                                        class="sort-icon active" />
-                                    <Icon v-else name="lucide:arrow-up-down" class="sort-icon inactive" />
-                                </div>
-                                <!-- Empty div for non-sortable sections to maintain grid layout -->
-                                <div v-else class="header-cell-spacer"></div>
-                            </template>
-                            <template
-                                v-else-if="item.type === 'item' || item.type === 'value' || item.type === 'container-item'">
-                                <div class="badge-container">
-                                    <UBadge v-if="item.dropped && item.dropped > 0" variant="solid" color="success"
-                                        class="item-badge modern-badge dropped-badge">
-                                        <Icon name="lucide:package-check" class="badge-icon dropped-icon" />
-                                        <span class="badge-text">{{ item.dropped }}</span>
-                                    </UBadge>
-                                </div>
-                            </template>
-                        </div>
-
-                        <!-- Destroyed cell -->
-                        <div class="body-cell destroyed-cell">
-                            <template v-if="item.type === 'header' && item.itemName">
-                                <!-- Show sorting controls for sections with more than 1 item -->
-                                <div v-if="getSectionItemCount(item.itemName) > 1"
-                                    class="sort-column-header text-center sortable-header"
-                                    @click.stop="handleHeaderClick('destroyed', item.itemName)">
-                                    <span class="sort-label">{{ t('destroyed') }}</span>
-                                    <Icon
-                                        v-if="currentSortColumn === 'destroyed' && currentSortSection === item.itemName"
-                                        :name="currentSortDirection === 'asc' ? 'lucide:arrow-up' : 'lucide:arrow-down'"
-                                        class="sort-icon active" />
-                                    <Icon v-else name="lucide:arrow-up-down" class="sort-icon inactive" />
-                                </div>
-                                <!-- Empty div for non-sortable sections to maintain grid layout -->
-                                <div v-else class="header-cell-spacer"></div>
-                            </template>
-                            <template
-                                v-else-if="item.type === 'item' || item.type === 'value' || item.type === 'container-item'">
-                                <div class="badge-container">
-                                    <UBadge v-if="item.destroyed && item.destroyed > 0" variant="solid" color="error"
-                                        class="item-badge modern-badge destroyed-badge">
-                                        <Icon name="lucide:package-x" class="badge-icon destroyed-icon" />
-                                        <span class="badge-text">{{ item.destroyed }}</span>
-                                    </UBadge>
-                                </div>
-                            </template>
-                        </div>
-
-                        <!-- Value cell -->
-                        <div class="body-cell value-cell">
-                            <template v-if="item.type === 'header' && item.itemName">
-                                <!-- Show sorting controls for sections with more than 1 item -->
-                                <div v-if="getSectionItemCount(item.itemName) > 1"
-                                    class="sort-column-header text-right sortable-header"
-                                    @click.stop="handleHeaderClick('value', item.itemName)">
-                                    <span class="sort-label">{{ t('value') }}</span>
-                                    <Icon v-if="currentSortColumn === 'value' && currentSortSection === item.itemName"
-                                        :name="currentSortDirection === 'asc' ? 'lucide:arrow-up' : 'lucide:arrow-down'"
-                                        class="sort-icon active" />
-                                    <Icon v-else name="lucide:arrow-up-down" class="sort-icon inactive" />
-                                </div>
-                                <!-- Empty div for non-sortable sections to maintain grid layout -->
-                                <div v-else class="header-cell-spacer"></div>
-                            </template>
-                            <template
-                                v-else-if="item.type === 'item' || item.type === 'value' || item.type === 'container-item'">
-                                <div v-if="item.value" class="text-right font-medium">
-                                    {{ formatIsk(item.value) }}
-                                </div>
-                                <div v-else class="text-right">-</div>
-                            </template>
-                        </div>
-                    </div>
-                </template>
+                    </template>
                 </TransitionGroup>
             </div>
         </div>

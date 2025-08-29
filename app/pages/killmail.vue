@@ -159,7 +159,7 @@ const clearProcessedKillmails = () => {
  * Navigate to a specific killmail page
  */
 const navigateToKillmail = (killmail_id: number) => {
-    router.push(`/killmail/${killmail_id}`);
+    router.push(`/kill/${killmail_id}`);
 };
 
 /**
@@ -190,7 +190,7 @@ const processAndSubmit = async (url: string) => {
             if (data.value.error === "Killmail already exists") {
                 // If redirect is enabled, go directly to the killmail
                 if (shouldRedirect.value) {
-                    router.push(`/killmail/${killmailInfo.killmail_id}`);
+                    router.push(`/kill/${killmailInfo.killmail_id}`);
                     return;
                 }
 
@@ -216,7 +216,7 @@ const processAndSubmit = async (url: string) => {
 
         // Redirect if the option is enabled
         if (shouldRedirect.value) {
-            router.push(`/killmail/${killmailInfo.killmail_id}`);
+            router.push(`/kill/${killmailInfo.killmail_id}`);
         }
     } catch (error) {
         errorMessage.value = error instanceof Error ? error.message : t('killmail.unknownError');

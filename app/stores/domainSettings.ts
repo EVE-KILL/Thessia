@@ -336,6 +336,45 @@ export const useDomainSettingsStore = defineStore("domainSettings", () => {
         console.log(
             `[Domain Settings Store] Force refreshing settings for ${currentDomain.value}`
         );
+
+        // Clear cache manually by calling the cache clear API
+        try {
+            await $fetch(`/api/domains/cache/clear`, {
+                query: {
+                    domain: currentDomain.value,
+                    comprehensive: "true",
+                },
+                timeout: 10000,
+            });
+            console.log(
+                `[Domain Settings Store] Successfully cleared cache for ${currentDomain.value}`
+            );
+        } catch (cacheError) {
+            console.warn(
+                `[Domain Settings Store] Failed to clear cache:`,
+                cacheError
+            );
+            // Continue anyway - the force refresh might still work
+        }
+
+        // Also trigger global cache key invalidation for components
+        if (process.client) {
+            try {
+                const { incrementCacheKey } = await import(
+                    "~/composables/useDomainCacheInvalidation"
+                );
+                incrementCacheKey();
+                console.log(
+                    `[Domain Settings Store] Incremented global cache key`
+                );
+            } catch (importError) {
+                console.warn(
+                    `[Domain Settings Store] Failed to increment cache key:`,
+                    importError
+                );
+            }
+        }
+
         await loadDomainSettings(currentDomain.value, true);
     };
 
