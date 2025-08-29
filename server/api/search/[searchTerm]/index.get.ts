@@ -2,7 +2,44 @@ interface SearchHit {
     id: any;
     originalId?: any;
     type: string;
+    deleted?: boolean;
+    last_active?: string;
+    updatedAt?: string;
     [key: string]: any; // Allow other properties
+}
+
+/**
+ * Sort search results within each entity type to prioritize recently active entities
+ * For characters: prioritize non-deleted, then by last_active
+ * For corporations/alliances: prioritize by updatedAt (recent activity indicates current entity)
+ * @param results - Array of search hits to sort
+ * @returns Sorted array with recently active entities first
+ */
+function sortByActivityStatus(results: SearchHit[]): SearchHit[] {
+    return results.sort((a, b) => {
+        // For characters, prioritize non-deleted first
+        if (a.type === "character" || b.type === "character") {
+            const aDeleted = a.deleted === true;
+            const bDeleted = b.deleted === true;
+
+            if (!aDeleted && bDeleted) return -1;
+            if (aDeleted && !bDeleted) return 1;
+
+            // If both have same deleted status, sort by last_active or updatedAt
+            const aActivity = new Date(
+                a.last_active || a.updatedAt || 0
+            ).getTime();
+            const bActivity = new Date(
+                b.last_active || b.updatedAt || 0
+            ).getTime();
+            return bActivity - aActivity; // More recent first
+        }
+
+        // For corporations/alliances, sort by updatedAt (more recent = current entity with that name)
+        const aUpdated = new Date(a.updatedAt || 0).getTime();
+        const bUpdated = new Date(b.updatedAt || 0).getTime();
+        return bUpdated - aUpdated; // More recent first
+    });
 }
 
 /**
@@ -130,6 +167,17 @@ export default defineCachedEventHandler(
                     break;
             }
         }
+
+        // Apply activity-based sorting to prioritize recent entities over older ones with same names
+        groupedResults.alliances = sortByActivityStatus(
+            groupedResults.alliances
+        );
+        groupedResults.corporations = sortByActivityStatus(
+            groupedResults.corporations
+        );
+        groupedResults.characters = sortByActivityStatus(
+            groupedResults.characters
+        );
 
         // Calculate entity counts
         const entityCounts = {

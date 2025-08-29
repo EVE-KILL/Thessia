@@ -17,6 +17,7 @@ const alliancesSchema = new Schema<IAllianceDocument>(
         faction_name: { type: String }, // Faction name
         corporation_count: { type: Number }, // Number of corporations
         member_count: { type: Number }, // Number of members
+        deleted: { type: Boolean, default: false }, // Deleted flag
         // Timestamps are automatically added by Mongoose
     },
     {
@@ -37,6 +38,7 @@ alliancesSchema.index({ ticker: 1 }, { sparse: true }); // Sparse index on ticke
 alliancesSchema.index({ creator_id: 1 }, { sparse: true }); // Sparse index on creator_id
 alliancesSchema.index({ creator_corporation_id: 1 }, { sparse: true }); // Sparse index on creator_corporation_id
 alliancesSchema.index({ executor_corporation_id: 1 }, { sparse: true }); // Sparse index on executor_corporation_id
+alliancesSchema.index({ deleted: 1 }, { sparse: true }); // Sparse index on deleted
 alliancesSchema.index({ createdAt: 1 }, { sparse: true }); // Sparse index on createdAt
 alliancesSchema.index({ updatedAt: 1 }, { sparse: true }); // Sparse index on updatedAt
 
@@ -52,6 +54,10 @@ alliancesSchema.post<IAllianceDocument>("save", async function (doc) {
                 type: "alliance",
                 rank: 5,
                 lang: "all",
+                deleted: doc.deleted || false,
+                updatedAt: doc.updatedAt
+                    ? doc.updatedAt.toISOString()
+                    : undefined,
             };
             await meilisearch.addDocuments("nitro", [allianceDocument]);
             cliLogger.info(

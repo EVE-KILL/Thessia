@@ -1,7 +1,5 @@
-import {
-    invalidateDomainCache,
-    invalidateUserCache,
-} from "../../../../helpers/domainCache";
+import { invalidateUserCache } from "../../../../helpers/domainCache";
+import { invalidateDomainCache } from "../../../../utils/domainCacheManager";
 
 export default defineEventHandler(async (event) => {
     try {

@@ -47,7 +47,13 @@ export class MeilisearchUpdater {
             case "characters": {
                 const characters = await Characters.find(
                     { deleted: false, character_id: { $exists: true } },
-                    { character_id: 1, name: 1 }
+                    {
+                        character_id: 1,
+                        name: 1,
+                        deleted: 1,
+                        last_active: 1,
+                        updatedAt: 1,
+                    }
                 )
                     .skip(skip)
                     .limit(limit)
@@ -58,12 +64,25 @@ export class MeilisearchUpdater {
                     type: "character",
                     rank: 7,
                     lang: "all",
+                    deleted: character.deleted || false,
+                    last_active: character.last_active
+                        ? character.last_active.toISOString()
+                        : undefined,
+                    updatedAt: character.updatedAt
+                        ? character.updatedAt.toISOString()
+                        : undefined,
                 }));
             }
             case "corporations": {
                 const corporations = await Corporations.find(
                     { corporation_id: { $exists: true } },
-                    { corporation_id: 1, name: 1, ticker: 1 }
+                    {
+                        corporation_id: 1,
+                        name: 1,
+                        ticker: 1,
+                        deleted: 1,
+                        updatedAt: 1,
+                    }
                 )
                     .skip(skip)
                     .limit(limit)
@@ -75,12 +94,22 @@ export class MeilisearchUpdater {
                     type: "corporation",
                     rank: 6,
                     lang: "all",
+                    deleted: corporation.deleted || false,
+                    updatedAt: corporation.updatedAt
+                        ? corporation.updatedAt.toISOString()
+                        : undefined,
                 }));
             }
             case "alliances": {
                 const alliances = await Alliances.find(
                     { alliance_id: { $exists: true } },
-                    { alliance_id: 1, name: 1, ticker: 1 }
+                    {
+                        alliance_id: 1,
+                        name: 1,
+                        ticker: 1,
+                        deleted: 1,
+                        updatedAt: 1,
+                    }
                 )
                     .skip(skip)
                     .limit(limit)
@@ -92,6 +121,10 @@ export class MeilisearchUpdater {
                     type: "alliance",
                     rank: 5,
                     lang: "all",
+                    deleted: alliance.deleted || false,
+                    updatedAt: alliance.updatedAt
+                        ? alliance.updatedAt.toISOString()
+                        : undefined,
                 }));
             }
             case "factions": {
@@ -295,6 +328,9 @@ export class MeilisearchUpdater {
             "rank",
             "lang",
             "originalId",
+            "deleted",
+            "last_active",
+            "updatedAt",
         ]);
         cliLogger.info(`Settings configured for ${indexName}.`);
     }

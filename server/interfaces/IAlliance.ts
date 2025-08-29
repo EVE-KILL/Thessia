@@ -10,6 +10,7 @@ export interface IAlliance {
     faction_name?: string;
     corporation_count?: number;
     member_count?: number;
+    deleted?: boolean;
     updatedAt?: Date;
     createdAt?: Date;
 }

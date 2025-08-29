@@ -1,3 +1,5 @@
+import { invalidateDomainCache } from "../../../../utils/domainCacheManager";
+
 export default defineEventHandler(async (event) => {
     // Get the cookie value using the hardcoded cookie name
     const cookieName = "evelogin";

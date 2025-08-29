@@ -64,6 +64,13 @@ charactersSchema.post<ICharacterDocument>("save", async function (doc) {
                 type: "character",
                 rank: 7,
                 lang: "all",
+                deleted: doc.deleted || false,
+                last_active: doc.last_active
+                    ? doc.last_active.toISOString()
+                    : undefined,
+                updatedAt: doc.updatedAt
+                    ? doc.updatedAt.toISOString()
+                    : undefined,
             };
             await meilisearch.addDocuments("nitro", [characterDocument]);
             cliLogger.info(

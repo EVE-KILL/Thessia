@@ -107,9 +107,9 @@ export default defineEventHandler(async (event) => {
             await domain.save();
 
             // Clear domain cache since status changed
-            // Import from the correct helpers location
+            // Import from the correct utils location
             const { invalidateDomainCache } = await import(
-                "../../../../helpers/domainCache"
+                "../../../../utils/domainCacheManager"
             );
             await invalidateDomainCache(domain.domain);
 

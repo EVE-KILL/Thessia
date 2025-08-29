@@ -69,6 +69,10 @@ corporationsSchema.post<ICorporationDocument>("save", async function (doc) {
                 type: "corporation",
                 rank: 6,
                 lang: "all",
+                deleted: doc.deleted || false,
+                updatedAt: doc.updatedAt
+                    ? doc.updatedAt.toISOString()
+                    : undefined,
             };
             await meilisearch.addDocuments("nitro", [corporationDocument]);
             cliLogger.info(
