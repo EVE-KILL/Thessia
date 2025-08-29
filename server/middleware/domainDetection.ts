@@ -273,6 +273,11 @@ export default defineEventHandler(async (event: H3Event) => {
         return;
     }
 
+    // Skip for healthcheck routes (Kubernetes probes, monitoring)
+    if (url.pathname.startsWith("/_healthcheck")) {
+        return;
+    }
+
     // Skip for static assets
     if (
         url.pathname.match(

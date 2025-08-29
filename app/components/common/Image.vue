@@ -211,7 +211,7 @@ const imageClasses = computed(() => {
     }
 
     if (props.rounded) {
-        classes.push("rounded-lg");
+        classes.push("rounded-br-lg", "rounded-bl-lg", "rounded-tr-lg");
     }
 
     if (props.fit) {

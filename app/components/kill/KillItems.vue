@@ -25,7 +25,7 @@
                 <Image
                     v-if="(item.type === 'item' || item.type === 'container-item') && item.itemId && !isSkin(item.itemName || '')"
                     :type="isBlueprint(item.itemName || '') ? 'blueprint-copy' : 'item'" :id="item.itemId" size="24"
-                    class="w-6 h-6 rounded-md"
+                    class="w-7 h-7"
                     :alt="props.hideFitting && isFittingItem(item as Item) ? '[REDACTED]' : ((item as Item).itemName || '')" />
             </div>
         </template> <!-- Name cell -->
@@ -154,7 +154,7 @@
                                 }"
                                     @click.stop="(item as Item).isContainer && (item as Item).containerId && toggleContainerCollapse((item as Item).containerId!)">
                                     {{ props.hideFitting && isFittingItem(item as Item) ? '[REDACTED]' : (item as
-                                    Item).itemName }}
+                                        Item).itemName }}
                                     <Icon v-if="(item as Item).isContainer"
                                         :name="isContainerCollapsed((item as Item).containerId!) ? 'lucide:chevron-right' : 'lucide:chevron-down'"
                                         class="mobile-container-icon" />
@@ -613,6 +613,18 @@ function getRowClasses(item: Item) {
     // Add section total class
     if (item.type === "value" && item.itemName !== t("total")) {
         classes.push("section-total-row");
+    }
+
+    // Add dropped/destroyed coloring for item and container-item rows
+    if (item.type === "item" || item.type === "container-item") {
+        const dropped = Number(item.dropped) || 0;
+        const destroyed = Number(item.destroyed) || 0;
+
+        if (dropped > 0) {
+            classes.push("row-dropped");
+        } else if (destroyed > 0) {
+            classes.push("row-destroyed");
+        }
     }
 
     return classes.join(" ");
@@ -1823,6 +1835,55 @@ function generateItemLink(item: Item): string | null {
     z-index: 2;
     pointer-events: all;
     /* Block all interactions */
+}
+
+/* Row coloring for dropped and destroyed items - subtle tints */
+:deep(.row-dropped) {
+    background-color: light-dark(rgba(0, 255, 0, 0.03), rgba(0, 255, 0, 0.05)) !important;
+    transition: background-color 0.3s ease;
+}
+
+:deep(.row-destroyed) {
+    background-color: light-dark(rgba(255, 0, 0, 0.03), rgba(255, 0, 0, 0.05)) !important;
+    transition: background-color 0.3s ease;
+}
+
+/* Enhanced hover effects for colored rows - slightly more visible on hover */
+:deep(.row-dropped:hover) {
+    background-color: light-dark(rgba(0, 255, 0, 0.06), rgba(0, 255, 0, 0.08)) !important;
+}
+
+:deep(.row-destroyed:hover) {
+    background-color: light-dark(rgba(255, 0, 0, 0.06), rgba(255, 0, 0, 0.08)) !important;
+}
+
+/* Mobile view row coloring - same subtle tints */
+:deep(.mobile-container.row-dropped) {
+    background-color: light-dark(rgba(0, 255, 0, 0.03), rgba(0, 255, 0, 0.05));
+    transition: background-color 0.3s ease;
+}
+
+:deep(.mobile-container.row-destroyed) {
+    background-color: light-dark(rgba(255, 0, 0, 0.03), rgba(255, 0, 0, 0.05));
+    transition: background-color 0.3s ease;
+}
+
+/* Mobile view enhanced hover effects */
+:deep(.mobile-container.row-dropped:active) {
+    background-color: light-dark(rgba(0, 255, 0, 0.06), rgba(0, 255, 0, 0.08));
+}
+
+:deep(.mobile-container.row-destroyed:active) {
+    background-color: light-dark(rgba(255, 0, 0, 0.06), rgba(255, 0, 0, 0.08));
+}
+
+/* Ensure row coloring works with existing container item styles - even more subtle */
+:deep(.container-item-row.row-dropped) {
+    background-color: light-dark(rgba(0, 255, 0, 0.02), rgba(0, 255, 0, 0.04)) !important;
+}
+
+:deep(.container-item-row.row-destroyed) {
+    background-color: light-dark(rgba(255, 0, 0, 0.02), rgba(255, 0, 0, 0.04)) !important;
 }
 
 /* Remove the text overlay for items table too */

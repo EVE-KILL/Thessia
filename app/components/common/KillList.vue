@@ -1124,7 +1124,7 @@ onUpdated(() => {
                 <div class="flex items-center py-1 min-w-0 max-w-full overflow-hidden">
                     <Image type="type-overlay-render" :id="item.victim.ship_id"
                         :alt="`Ship: ${getLocalizedString(item.victim.ship_name, currentLocale)}`"
-                        class="rounded w-16 h-16 xs:w-12 xs:h-12 mx-2 xs:mx-1 flex-shrink-0" size="64" />
+                        class="w-16 h-16 xs:w-12 xs:h-12 mx-2 xs:mx-1 flex-shrink-0" size="64" />
                     <div class="flex flex-col items-start min-w-0 flex-1 overflow-hidden">
                         <NuxtLink :to="`/item/${item.victim.ship_id}`"
                             class="text-sm xs:text-xs text-black dark:text-white hover:text-blue-600 dark:hover:text-blue-400 transition-colors truncate w-full"
