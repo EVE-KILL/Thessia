@@ -92,6 +92,20 @@
                                         </div>
                                     </div>
 
+                                    <!-- CEO info -->
+                                    <div v-if="corporation.ceo_id && corporation.ceo_name" class="activity-item mb-3">
+                                        <div class="flex items-center gap-1 text-gray-600 dark:text-gray-400">
+                                            <UIcon name="i-lucide-user-check" class="flex-shrink-0 w-4 h-4" />
+                                            <span>{{ $t('ceo') }}:</span>
+                                        </div>
+                                        <div class="font-medium text-gray-900 dark:text-gray-300 ml-2">
+                                            <NuxtLink :to="`/character/${corporation.ceo_id}`"
+                                                class="hover:text-blue-600 dark:hover:text-blue-400 transition-colors">
+                                                {{ corporation.ceo_name }}
+                                            </NuxtLink>
+                                        </div>
+                                    </div>
+
                                     <!-- Tax rate info -->
                                     <div v-if="corporation.tax_rate !== undefined" class="activity-item">
                                         <div class="flex items-center gap-1 text-gray-600 dark:text-gray-400">
@@ -206,7 +220,7 @@
                                     </div>
                                     <div class="stat-row">
                                         <div class="stat-label text-gray-600 dark:text-gray-400">{{ $t('iskEfficiency')
-                                            }}</div>
+                                        }}</div>
                                         <div class="stat-value text-gray-900 dark:text-white">
                                             {{ calcIskEfficiency(validShortStats) }}%
                                         </div>
@@ -244,13 +258,13 @@
                                     </div>
                                     <div class="stat-row">
                                         <div class="stat-label text-gray-600 dark:text-gray-400">{{ $t('soloKillRatio')
-                                            }}</div>
+                                        }}</div>
                                         <div class="stat-value text-gray-900 dark:text-white">{{
                                             calcSoloKillRatio(validShortStats) }}%</div>
                                     </div>
                                     <div class="stat-row">
                                         <div class="stat-label text-gray-600 dark:text-gray-400">{{ $t('soloEfficiency')
-                                            }}
+                                        }}
                                         </div>
                                         <div class="stat-value text-gray-900 dark:text-white">{{
                                             calcSoloEfficiency(validShortStats) }}%</div>
@@ -274,13 +288,13 @@
                                     </div>
                                     <div class="stat-row">
                                         <div class="stat-label text-gray-600 dark:text-gray-400">{{ $t('npcLossRatio')
-                                            }}</div>
+                                        }}</div>
                                         <div class="stat-value text-gray-900 dark:text-white">{{
                                             calcNpcLossRatio(validShortStats) }}</div>
                                     </div>
                                     <div class="stat-row">
                                         <div class="stat-label text-gray-600 dark:text-gray-400">{{ $t('avgKillsPerDay')
-                                            }}
+                                        }}
                                         </div>
                                         <div class="stat-value text-gray-900 dark:text-white">{{
                                             calcAvgKillsPerDay(validShortStats, corporation.date_founded) }}</div>

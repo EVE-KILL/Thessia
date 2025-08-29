@@ -69,7 +69,7 @@ async function getPriceFromBlueprint(
         cumulativePrice += materialPrice * materialQuantity;
     }
 
-    return cumulativePrice * 1.15; // Add 10% for manufacturing cost and 5% for profit
+    return cumulativePrice; // Use to be cumulativePrice * 1.15; for 15% added (10% manufacturing and 5% profit) but that's apparently too damn high
 }
 
 export { customPrices, getPrice, getPriceFromBlueprint };

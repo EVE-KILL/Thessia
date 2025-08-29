@@ -16,6 +16,8 @@ export interface IUserSettingsMap {
     defaultCorporationPage: string;
     defaultAlliancePage: string;
     defaultSystemPage: string;
+    killListAlternatingRows: boolean;
+    killListMutedAlternatingRows: boolean;
     // Future settings can be added here
     // emailNotifications: boolean;
     // theme: 'light' | 'dark' | 'auto';
@@ -36,6 +38,8 @@ export const DEFAULT_USER_SETTINGS: IUserSettingsMap = {
     defaultCorporationPage: "dashboard",
     defaultAlliancePage: "dashboard",
     defaultSystemPage: "overview",
+    killListAlternatingRows: true,
+    killListMutedAlternatingRows: false,
 };
 
 /**
@@ -96,6 +100,14 @@ export const USER_SETTING_VALIDATION = {
     defaultSystemPage: {
         type: "string" as const,
         allowedValues: ["overview", "kills", "battles"],
+        required: false,
+    },
+    killListAlternatingRows: {
+        type: "boolean" as const,
+        required: false,
+    },
+    killListMutedAlternatingRows: {
+        type: "boolean" as const,
         required: false,
     },
 } as const;

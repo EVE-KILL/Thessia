@@ -6,6 +6,8 @@ export interface UserSettings {
     defaultCorporationPage: string;
     defaultAlliancePage: string;
     defaultSystemPage: string;
+    killListAlternatingRows: boolean;
+    killListMutedAlternatingRows: boolean;
 }
 
 interface UserSettingsResponse {
@@ -30,6 +32,8 @@ const defaultSettings: UserSettings = {
     defaultCorporationPage: "dashboard",
     defaultAlliancePage: "dashboard",
     defaultSystemPage: "overview",
+    killListAlternatingRows: true,
+    killListMutedAlternatingRows: false,
 };
 
 export const useUserSettingsStore = defineStore("userSettings", {
@@ -97,6 +101,20 @@ export const useUserSettingsStore = defineStore("userSettings", {
             return (
                 state.settings?.defaultSystemPage ??
                 defaultSettings.defaultSystemPage
+            );
+        },
+
+        killListAlternatingRows: (state) => {
+            return (
+                state.settings?.killListAlternatingRows ??
+                defaultSettings.killListAlternatingRows
+            );
+        },
+
+        killListMutedAlternatingRows: (state) => {
+            return (
+                state.settings?.killListMutedAlternatingRows ??
+                defaultSettings.killListMutedAlternatingRows
             );
         },
     },

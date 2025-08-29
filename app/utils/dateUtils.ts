@@ -44,6 +44,63 @@ export function formatTimeAgo(date: string | Date, locale = "en"): string {
 }
 
 /**
+ * Format a shortened "time ago" format (e.g., "5m", "2h", "3d")
+ * This provides a very compact format for space-constrained displays
+ */
+export function formatShortTimeAgo(date: string | Date): string {
+    if (!date) return "";
+
+    const parsedDate = typeof date === "string" ? new Date(date) : date;
+    if (isNaN(parsedDate.getTime())) return "";
+
+    const now = new Date();
+    const diffMs = now.getTime() - parsedDate.getTime();
+
+    const minutes = Math.floor(diffMs / (1000 * 60));
+    const hours = Math.floor(diffMs / (1000 * 60 * 60));
+    const days = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+
+    if (minutes < 1) return "now";
+    if (minutes < 60) return `${minutes}m ago`;
+    if (hours < 24) return `${hours}h ago`;
+    return `${days}d ago`;
+}
+
+/**
+ * Format time with both shortened and full UTC timestamp
+ * Returns an object with both short format and full timestamp
+ */
+export function formatEnhancedTimeDisplay(
+    date: string | Date,
+    locale = "en"
+): {
+    short: string;
+    date: string;
+    time: string;
+    timeOnly: string;
+} {
+    if (!date) return { short: "", date: "", time: "", timeOnly: "" };
+
+    const parsedDate = typeof date === "string" ? new Date(date) : date;
+    if (isNaN(parsedDate.getTime()))
+        return { short: "", date: "", time: "", timeOnly: "" };
+
+    const fullDateTime = formatDateTime(parsedDate, locale);
+    // Split the datetime string - typically "YYYY-MM-DD HH:MM:SS UTC"
+    const parts = fullDateTime.split(" ");
+    const datePart = parts[0]; // YYYY-MM-DD
+    const timePart = parts.slice(1).join(" "); // HH:MM:SS UTC
+    const timeOnlyPart = parts[1] ? parts[1].substring(0, 5) : ""; // Just HH:MM (first 5 chars of HH:MM:SS)
+
+    return {
+        short: formatShortTimeAgo(parsedDate),
+        date: datePart,
+        time: timePart,
+        timeOnly: timeOnlyPart,
+    };
+}
+
+/**
  * Format a date as a readable date string (e.g., "1st January 2024")
  */
 export function formatDateDisplay(date: string | Date, locale = "en"): string {
@@ -97,7 +154,8 @@ export function formatTimeRange(
 }
 
 /**
- * Format a full datetime with timezone info (e.g., "2024-01-01 14:30:45 UTC")
+ * Format a full datetime in EVE Time format (e.g., "2024-01-01 14:30:45")
+ * Forces UTC display regardless of user's local timezone
  */
 export function formatDateTime(date: string | Date, locale = "en"): string {
     if (!date) return "";
@@ -105,9 +163,15 @@ export function formatDateTime(date: string | Date, locale = "en"): string {
     const parsedDate = typeof date === "string" ? new Date(date) : date;
     if (isNaN(parsedDate.getTime())) return "";
 
-    return format(parsedDate, "yyyy-MM-dd HH:mm:ss 'UTC'", {
-        locale: getDateLocale(locale),
-    });
+    // Force UTC formatting by using toISOString and manually formatting
+    const year = parsedDate.getUTCFullYear();
+    const month = String(parsedDate.getUTCMonth() + 1).padStart(2, '0');
+    const day = String(parsedDate.getUTCDate()).padStart(2, '0');
+    const hours = String(parsedDate.getUTCHours()).padStart(2, '0');
+    const minutes = String(parsedDate.getUTCMinutes()).padStart(2, '0');
+    const seconds = String(parsedDate.getUTCSeconds()).padStart(2, '0');
+
+    return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
 }
 
 /**

@@ -53,7 +53,7 @@
                         {{ killmail.victim.character_name }}
                     </NuxtLink>
                     <span v-else>{{ killmail?.victim?.character_name || getLocalizedString(killmail?.victim?.ship_name)
-                        }}</span>
+                    }}</span>
                 </div>
                 <div v-if="killmail?.victim?.corporation_name" class="entity-name-line name-corporation truncate">
                     <NuxtLink v-if="killmail.victim.corporation_id"
@@ -168,7 +168,7 @@ const { t, locale } = useI18n();
 const currentLocale = computed(() => locale.value);
 
 // Use the centralized date formatting composable
-const { formatSimpleDateTime, formatTimeAgo: formatTimeAgoUtil } = useDateFormatting();
+const { formatDateTime: formatDateTimeUtil, formatTimeAgo: formatTimeAgoUtil } = useDateFormatting();
 
 // Props definition
 const props = defineProps<{
@@ -280,11 +280,11 @@ function getSecurityClass(security: number | undefined): string {
 }
 
 /**
- * Format date and time in local format
+ * Format date and time in UTC format
  */
 function formatDateTime(dateTime: string | undefined): string {
     if (!dateTime) return "";
-    return formatSimpleDateTime(dateTime);
+    return formatDateTimeUtil(dateTime);
 }
 
 /**

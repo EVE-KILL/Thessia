@@ -6,6 +6,8 @@ interface Props {
         defaultCorporationPage: string;
         defaultAlliancePage: string;
         defaultSystemPage: string;
+        killListAlternatingRows: boolean;
+        killListMutedAlternatingRows: boolean;
     };
     isUpdatingSettings: boolean;
 }
@@ -20,6 +22,8 @@ const emit = defineEmits<{
         defaultCorporationPage: string;
         defaultAlliancePage: string;
         defaultSystemPage: string;
+        killListAlternatingRows: boolean;
+        killListMutedAlternatingRows: boolean;
     }];
 }>();
 
@@ -86,6 +90,23 @@ const updateDefaultPage = async (pageType: 'character' | 'corporation' | 'allian
     const settingKey = settingKeys[pageType];
     emit('update:userSettings', { ...props.userSettings, [settingKey]: value });
     // Auto-save after updating the setting
+    await nextTick();
+    emit('updateSettings');
+};
+
+// UI Display setting handlers
+const updateKillListAlternatingRows = async (event: Event) => {
+    const target = event.target as HTMLInputElement;
+    const value = target.checked;
+    emit('update:userSettings', { ...props.userSettings, killListAlternatingRows: value });
+    await nextTick();
+    emit('updateSettings');
+};
+
+const updateKillListMutedAlternatingRows = async (event: Event) => {
+    const target = event.target as HTMLInputElement;
+    const value = target.checked;
+    emit('update:userSettings', { ...props.userSettings, killListMutedAlternatingRows: value });
     await nextTick();
     emit('updateSettings');
 };
@@ -202,6 +223,72 @@ onMounted(() => {
                         </label>
                         <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
                             {{ t("settings.privacy.hideFitting.description") }}
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- UI Display Settings Card -->
+        <div class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6">
+            <div class="flex items-center space-x-3 mb-6">
+                <div class="flex-shrink-0">
+                    <Icon name="lucide:eye" class="h-6 w-6 text-purple-600 dark:text-purple-400" />
+                </div>
+                <div>
+                    <h3 class="text-lg font-semibold text-gray-900 dark:text-white">
+                        {{ t("settings.ui.title", "Display Settings") }}
+                    </h3>
+                    <p class="text-sm text-gray-600 dark:text-gray-400">
+                        {{ t("settings.ui.description", "Customize how kill lists and data are displayed") }}
+                    </p>
+                </div>
+            </div>
+
+            <!-- UI Display Options -->
+            <div class="space-y-4">
+                <!-- Alternating Row Colors Setting -->
+                <div class="flex items-start space-x-3 p-4 rounded-lg bg-gray-50 dark:bg-gray-700/50">
+                    <div class="flex items-center h-5">
+                        <input id="killListAlternatingRows" type="checkbox"
+                            :checked="userSettings.killListAlternatingRows" @change="updateKillListAlternatingRows"
+                            :disabled="isUpdatingSettings"
+                            class="h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-800 dark:focus:ring-blue-400 disabled:opacity-50 disabled:cursor-not-allowed" />
+                    </div>
+                    <div class="flex-1 min-w-0">
+                        <label for="killListAlternatingRows"
+                            class="block text-sm font-medium text-gray-900 dark:text-white">
+                            {{ t("settings.ui.alternatingRows.title", "Enable Alternating Row Colors") }}
+                            <Icon v-if="isUpdatingSettings" name="lucide:loader-2"
+                                class="inline w-3 h-3 ml-1 animate-spin text-blue-500" />
+                        </label>
+                        <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                            {{ t("settings.ui.alternatingRows.description",
+                                "Add alternating background colors to kill list rows for better readability") }}
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Muted Alternating Colors Setting -->
+                <div class="flex items-start space-x-3 p-4 rounded-lg bg-gray-50 dark:bg-gray-700/50"
+                    :class="{ 'opacity-50': !userSettings.killListAlternatingRows }">
+                    <div class="flex items-center h-5">
+                        <input id="killListMutedAlternatingRows" type="checkbox"
+                            :checked="userSettings.killListMutedAlternatingRows"
+                            @change="updateKillListMutedAlternatingRows"
+                            :disabled="isUpdatingSettings || !userSettings.killListAlternatingRows"
+                            class="h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-800 dark:focus:ring-blue-400 disabled:opacity-50 disabled:cursor-not-allowed" />
+                    </div>
+                    <div class="flex-1 min-w-0">
+                        <label for="killListMutedAlternatingRows"
+                            class="block text-sm font-medium text-gray-900 dark:text-white">
+                            {{ t("settings.ui.mutedAlternatingRows.title", "Use Muted Colors") }}
+                            <Icon v-if="isUpdatingSettings" name="lucide:loader-2"
+                                class="inline w-3 h-3 ml-1 animate-spin text-blue-500" />
+                        </label>
+                        <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                            {{ t("settings.ui.mutedAlternatingRows.description",
+                                "Use more subtle alternating row colors for a cleaner appearance") }}
                         </p>
                     </div>
                 </div>

@@ -2,10 +2,11 @@
 import { computed, getCurrentInstance, nextTick, onBeforeUnmount } from 'vue';
 
 const { t, locale } = useI18n();
+const userSettingsStore = useUserSettingsStore();
 const currentLocale = computed(() => locale.value);
 
 // Use the centralized date formatting composable
-const { formatTimeAgo } = useDateFormatting();
+const { formatTimeAgo, formatEnhancedTimeDisplay } = useDateFormatting();
 
 // Use responsive detection composable
 const { isMobile } = useResponsive();
@@ -544,12 +545,14 @@ const truncateString = (str: any, num: number): string => {
 };
 
 const isCombinedLoss = (kill: any): boolean => {
-    if (!kill || !props.combinedKillsAndLosses || !props.combinedVictimId) return false;
+    // More robust checking - allow 0 as valid ID, but not null/undefined
+    if (!kill || !props.combinedKillsAndLosses || props.combinedVictimId == null) return false;
 
     const victimIdProp = `${props.combinedVictimType}_id`;
     const victimId = kill.victim?.[victimIdProp];
 
-    if (!victimId) return false;
+    // Allow 0 as valid ID, but not null/undefined
+    if (victimId == null) return false;
 
     // Ensure both values are numbers for comparison
     const victimIdNum = Number(victimId);
@@ -561,7 +564,16 @@ const isCombinedLoss = (kill: any): boolean => {
 // Get row class based on whether it's a combined loss and row index
 const getRowClass = (item: IKillList, index: number) => {
     const combinedLossClass = isCombinedLoss(item) ? "combined-loss-row bg-darkred" : "";
-    const alternatingClass = index % 2 === 1 ? "alternate-row" : "regular-row";
+
+    let alternatingClass = "regular-row";
+    if (userSettingsStore.killListAlternatingRows) {
+        if (userSettingsStore.killListMutedAlternatingRows) {
+            alternatingClass = index % 2 === 1 ? "alternate-row-muted" : "regular-row-muted";
+        } else {
+            alternatingClass = index % 2 === 1 ? "alternate-row" : "regular-row";
+        }
+    }
+
     return [combinedLossClass, alternatingClass].filter(Boolean).join(" ");
 };
 
@@ -901,7 +913,7 @@ onMounted(() => {
 */
 const updateTextFade = (refMap: Map<number, HTMLElement>) => {
     refMap.forEach((el) => {
-        if (el && el.scrollWidth > el.clientWidth) {
+        if (el && el.classList && el.scrollWidth > el.clientWidth) {
             el.classList.add('fade-text');
             // Store the full text in a data attribute for the hover effect
             el.setAttribute('data-full-text', el.textContent || '');
@@ -918,13 +930,24 @@ const updateTextFade = (refMap: Map<number, HTMLElement>) => {
                 showTooltip.value = false;
             });
 
-        } else if (el) {
+        } else if (el && el.classList) {
             el.classList.remove('fade-text');
             el.removeAttribute('data-full-text');
 
-            // Remove event listeners
-            el.removeEventListener('mouseenter', () => { });
-            el.removeEventListener('mouseleave', () => { });
+            // Remove event listeners - create proper handler references
+            const mouseEnterHandler = (e: MouseEvent) => {
+                tooltipText.value = el.textContent || '';
+                mouseX.value = e.clientX;
+                mouseY.value = e.clientY;
+                showTooltip.value = true;
+            };
+
+            const mouseLeaveHandler = () => {
+                showTooltip.value = false;
+            };
+
+            el.removeEventListener('mouseenter', mouseEnterHandler);
+            el.removeEventListener('mouseleave', mouseLeaveHandler);
         }
     });
 };
@@ -965,9 +988,20 @@ onBeforeUnmount(() => {
         ...finalBlowCorpRefs.value.values(),
         ...finalBlowAllianceRefs.value.values()
     ].forEach(el => {
-        if (el) {
-            el.removeEventListener('mouseenter', () => { });
-            el.removeEventListener('mouseleave', () => { });
+        if (el && el.classList) {
+            // Create the actual handler functions to remove
+            const mouseEnterHandler = (e) => {
+                tooltipText.value = el.textContent || '';
+                mouseX.value = e.clientX;
+                mouseY.value = e.clientY;
+                showTooltip.value = true;
+            };
+            const mouseLeaveHandler = () => {
+                showTooltip.value = false;
+            };
+
+            el.removeEventListener('mouseenter', mouseEnterHandler);
+            el.removeEventListener('mouseleave', mouseLeaveHandler);
         }
     });
 
@@ -1092,10 +1126,11 @@ onUpdated(() => {
                         :alt="`Ship: ${getLocalizedString(item.victim.ship_name, currentLocale)}`"
                         class="rounded w-16 h-16 xs:w-12 xs:h-12 mx-2 xs:mx-1 flex-shrink-0" size="64" />
                     <div class="flex flex-col items-start min-w-0 flex-1 overflow-hidden">
-                        <span class="text-sm xs:text-xs text-black dark:text-white truncate w-full"
+                        <NuxtLink :to="`/item/${item.victim.ship_id}`"
+                            class="text-sm xs:text-xs text-black dark:text-white hover:text-blue-600 dark:hover:text-blue-400 transition-colors truncate w-full"
                             :ref="(el) => setElementRef(el, item.killmail_id, shipNameRefs)">
                             {{ getLocalizedString(item.victim.ship_name, currentLocale) }}
-                        </span>
+                        </NuxtLink>
                         <span class="text-xs text-gray-500 dark:text-gray-400 truncate w-full hidden sm:block">
                             {{ getLocalizedString(item.victim.ship_group_name || {}, currentLocale) }}
                         </span>
@@ -1113,30 +1148,55 @@ onUpdated(() => {
                 <div class="flex items-center py-1 min-w-0 max-w-full overflow-hidden">
                     <!-- Hide victim image on mobile screens -->
                     <template v-if="item.victim.character_id > 0">
-                        <Image type="character" :id="item.victim.character_id"
-                            :alt="`Character: ${item.victim.character_name}`"
-                            class="w-16 h-16 mx-2 flex-shrink-0 hidden sm:block" size="64" />
+                        <NuxtLink :to="`/character/${item.victim.character_id}`">
+                            <Image type="character" :id="item.victim.character_id"
+                                :alt="`Character: ${item.victim.character_name}`"
+                                class="w-16 h-16 mx-2 flex-shrink-0 hidden sm:block hover:opacity-80 transition-opacity"
+                                size="64" />
+                        </NuxtLink>
                     </template>
                     <Image v-else type="character" :id="1" alt="Placeholder"
                         class="w-16 h-16 mx-2 flex-shrink-0 hidden sm:block" size="64" />
                     <div class="flex flex-col items-start min-w-0 flex-1 overflow-hidden">
                         <!-- Character Name -->
-                        <span class="text-sm xs:text-xs text-black dark:text-white truncate w-full"
+                        <NuxtLink v-if="item.victim.character_id > 0" :to="`/character/${item.victim.character_id}`"
+                            class="text-sm xs:text-xs text-black dark:text-white hover:text-blue-600 dark:hover:text-blue-400 transition-colors truncate w-full"
+                            :ref="(el) => setElementRef(el, item.killmail_id, characterNameRefs)">
+                            {{ item.victim.character_name }}
+                        </NuxtLink>
+                        <span v-else class="text-sm xs:text-xs text-black dark:text-white truncate w-full"
                             :ref="(el) => setElementRef(el, item.killmail_id, characterNameRefs)">
                             {{ item.victim.character_name }}
                         </span>
                         <!-- Corporation Name (without ticker) -->
-                        <span class="text-xs text-gray-600 dark:text-gray-400 truncate w-full"
+                        <NuxtLink v-if="item.victim.corporation_id > 0"
+                            :to="`/corporation/${item.victim.corporation_id}`"
+                            class="text-xs text-gray-600 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors truncate w-full"
+                            :ref="(el) => setElementRef(el, item.killmail_id, corporationNameRefs)">
+                            {{ item.victim.corporation_name }}
+                        </NuxtLink>
+                        <span v-else class="text-xs text-gray-600 dark:text-gray-400 truncate w-full"
                             :ref="(el) => setElementRef(el, item.killmail_id, corporationNameRefs)">
                             {{ item.victim.corporation_name }}
                         </span>
                         <!-- Alliance Name (without ticker) - hide on small screens -->
-                        <span v-if="item.victim.alliance_name"
+                        <NuxtLink v-if="item.victim.alliance_name && item.victim.alliance_id > 0"
+                            :to="`/alliance/${item.victim.alliance_id}`"
+                            class="text-xs text-gray-500 dark:text-gray-500 hover:text-blue-600 dark:hover:text-blue-400 transition-colors truncate w-full xs:hidden"
+                            :ref="(el) => setElementRef(el, item.killmail_id, allianceNameRefs)">
+                            {{ item.victim.alliance_name }}
+                        </NuxtLink>
+                        <span v-else-if="item.victim.alliance_name"
                             class="text-xs text-gray-500 dark:text-gray-500 truncate w-full xs:hidden"
                             :ref="(el) => setElementRef(el, item.killmail_id, allianceNameRefs)">
                             {{ item.victim.alliance_name }}
                         </span>
                         <!-- Faction Name (when no alliance) - hide on small screens -->
+                        <NuxtLink v-else-if="item.victim.faction_name && item.victim.faction_id > 0"
+                            :to="`/faction/${item.victim.faction_id}`"
+                            class="text-xs text-gray-500 dark:text-gray-500 hover:text-blue-600 dark:hover:text-blue-400 transition-colors truncate w-full xs:hidden">
+                            {{ item.victim.faction_name }}
+                        </NuxtLink>
                         <span v-else-if="item.victim.faction_name"
                             class="text-xs text-gray-500 dark:text-gray-500 truncate w-full xs:hidden">
                             {{ item.victim.faction_name }}
@@ -1150,27 +1210,48 @@ onUpdated(() => {
                 <div class="flex items-center py-1 min-w-0">
                     <!-- Character or placeholder when finalblow.character_id missing -->
                     <template v-if="item.finalblow.character_id > 0">
-                        <Image type="character" :id="item.finalblow.character_id"
-                            :alt="`Character: ${item.finalblow.character_name}`"
-                            class="w-16 h-16 mx-2 flex-shrink-0 hidden sm:block" size="64" />
+                        <NuxtLink :to="`/character/${item.finalblow.character_id}`">
+                            <Image type="character" :id="item.finalblow.character_id"
+                                :alt="`Character: ${item.finalblow.character_name}`"
+                                class="w-16 h-16 mx-2 flex-shrink-0 hidden sm:block hover:opacity-80 transition-opacity"
+                                size="64" />
+                        </NuxtLink>
                         <div class="flex flex-col items-start min-w-0 flex-1">
                             <!-- Character Name -->
-                            <span class="text-sm xs:text-xs text-black dark:text-white truncate w-full"
+                            <NuxtLink :to="`/character/${item.finalblow.character_id}`"
+                                class="text-sm xs:text-xs text-black dark:text-white hover:text-blue-600 dark:hover:text-blue-400 transition-colors truncate w-full"
                                 :ref="(el) => setElementRef(el, `fb-${item.killmail_id}`, finalBlowNameRefs)">
                                 {{ item.finalblow.character_name }}
-                            </span>
+                            </NuxtLink>
                             <!-- Corporation Name (without ticker) -->
-                            <span class="text-xs text-gray-600 dark:text-gray-400 truncate w-full"
+                            <NuxtLink v-if="item.finalblow.corporation_id > 0"
+                                :to="`/corporation/${item.finalblow.corporation_id}`"
+                                class="text-xs text-gray-600 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors truncate w-full"
+                                :ref="(el) => setElementRef(el, `fb-${item.killmail_id}`, finalBlowCorpRefs)">
+                                {{ item.finalblow.corporation_name }}
+                            </NuxtLink>
+                            <span v-else class="text-xs text-gray-600 dark:text-gray-400 truncate w-full"
                                 :ref="(el) => setElementRef(el, `fb-${item.killmail_id}`, finalBlowCorpRefs)">
                                 {{ item.finalblow.corporation_name }}
                             </span>
                             <!-- Alliance Name (without ticker) - hide on very small screens -->
-                            <span v-if="item.finalblow.alliance_name"
+                            <NuxtLink v-if="item.finalblow.alliance_name && item.finalblow.alliance_id > 0"
+                                :to="`/alliance/${item.finalblow.alliance_id}`"
+                                class="text-xs text-gray-500 dark:text-gray-500 hover:text-blue-600 dark:hover:text-blue-400 transition-colors truncate w-full xs:hidden"
+                                :ref="(el) => setElementRef(el, `fb-${item.killmail_id}`, finalBlowAllianceRefs)">
+                                {{ item.finalblow.alliance_name }}
+                            </NuxtLink>
+                            <span v-else-if="item.finalblow.alliance_name"
                                 class="text-xs text-gray-500 dark:text-gray-500 truncate w-full xs:hidden"
                                 :ref="(el) => setElementRef(el, `fb-${item.killmail_id}`, finalBlowAllianceRefs)">
                                 {{ item.finalblow.alliance_name }}
                             </span>
                             <!-- Faction Name (when no alliance) - hide on very small screens -->
+                            <NuxtLink v-else-if="item.finalblow.faction_name && item.finalblow.faction_id > 0"
+                                :to="`/faction/${item.finalblow.faction_id}`"
+                                class="text-xs text-gray-500 dark:text-gray-500 hover:text-blue-600 dark:hover:text-blue-400 transition-colors truncate w-full xs:hidden">
+                                {{ item.finalblow.faction_name }}
+                            </NuxtLink>
                             <span v-else-if="item.finalblow.faction_name"
                                 class="text-xs text-gray-500 dark:text-gray-500 truncate w-full xs:hidden">
                                 {{ item.finalblow.faction_name }}
@@ -1184,7 +1265,12 @@ onUpdated(() => {
                             <span class="text-sm xs:text-xs text-black dark:text-white truncate w-full">
                                 {{ item.finalblow.faction_name || item.finalblow.character_name }}
                             </span>
-                            <span v-if="item.finalblow.corporation_name"
+                            <NuxtLink v-if="item.finalblow.corporation_name && item.finalblow.corporation_id > 0"
+                                :to="`/corporation/${item.finalblow.corporation_id}`"
+                                class="text-xs text-gray-600 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors truncate w-full">
+                                {{ item.finalblow.corporation_name }}
+                            </NuxtLink>
+                            <span v-else-if="item.finalblow.corporation_name"
                                 class="text-xs text-gray-600 dark:text-gray-400 truncate w-full">
                                 {{ item.finalblow.corporation_name }}
                             </span>
@@ -1200,17 +1286,17 @@ onUpdated(() => {
             <!-- Location column -->
             <template #cell-location="{ item }">
                 <div class="flex flex-col items-start py-1 text-sm px-2 min-w-0">
-                    <span class="text-sm text-black dark:text-white truncate w-full">
-                        {{ getLocalizedString(item.region_name, currentLocale) }}
-                    </span>
-                    <div class="text-xs text-gray-600 dark:text-gray-400 truncate w-full">
-                        <span>{{ item.system_name }}</span>
-                        <span> (</span>
-                        <span :class="getSecurityColor(item.system_security)">
-                            {{ item.system_security.toFixed(1) }}
+                    <NuxtLink :to="`/system/${item.system_id}`"
+                        class="text-sm text-black dark:text-white hover:text-blue-600 dark:hover:text-blue-400 transition-colors truncate w-full">
+                        {{ item.system_name }}
+                        <span class="ml-1" :class="getSecurityColor(item.system_security)">
+                            ({{ item.system_security.toFixed(1) }})
                         </span>
-                        <span>)</span>
-                    </div>
+                    </NuxtLink>
+                    <NuxtLink :to="`/region/${item.region_id}`"
+                        class="text-xs text-gray-600 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors truncate w-full">
+                        {{ getLocalizedString(item.region_name, currentLocale) }}
+                    </NuxtLink>
                 </div>
             </template>
 
@@ -1219,13 +1305,27 @@ onUpdated(() => {
                 <div class="flex flex-col items-end w-full min-w-0 px-2">
                     <div class="text-sm xs:text-xs text-black dark:text-white">
                         <ClientOnly>
-                            {{ formatTimeAgo(item.kill_time) }}
+                            {{ formatEnhancedTimeDisplay(item.kill_time, currentLocale).short }}
                             <template #fallback>
                                 <span class="text-gray-400">Loading...</span>
                             </template>
                         </ClientOnly>
                     </div>
-                    <div class="flex gap-1 items-center">
+                    <div class="text-xs text-gray-500 dark:text-gray-500 truncate w-full text-right leading-tight">
+                        <ClientOnly>
+                            {{ formatEnhancedTimeDisplay(item.kill_time, currentLocale).date }}
+                            <template #fallback>
+                                <span class="text-gray-400">...</span>
+                            </template>
+                        </ClientOnly>
+                    </div>
+                    <div class="flex gap-1 items-center mt-1">
+                        <ClientOnly>
+                            {{ formatEnhancedTimeDisplay(item.kill_time, currentLocale).timeOnly }}
+                            <template #fallback>
+                                <span class="text-gray-400">...</span>
+                            </template>
+                        </ClientOnly>
                         <span class="text-xs text-gray-600 dark:text-gray-400">{{ item.attackerCount }}</span>
                         <UIcon name="lucide:users" class="h-4 w-4 xs:h-3 xs:w-3 text-gray-600 dark:text-gray-400"
                             :aria-label="`${item.attackerCount} Involved`" />
@@ -1303,8 +1403,10 @@ onUpdated(() => {
 
                             <!-- Ship Content -->
                             <div class="w-1/5 flex-shrink-0 space-y-1 pr-8">
-                                <div class="text-sm text-black dark:text-white truncate mt-2">{{
-                                    getLocalizedString(item.victim.ship_name, currentLocale) }}</div>
+                                <NuxtLink :to="`/item/${item.victim.ship_id}`"
+                                    class="text-sm text-black dark:text-white hover:text-blue-600 dark:hover:text-blue-400 transition-colors truncate mt-2">
+                                    {{
+                                        getLocalizedString(item.victim.ship_name, currentLocale) }}</NuxtLink>
                                 <div class="text-xs text-gray-600 dark:text-gray-400 truncate">{{
                                     getLocalizedString(item.victim.ship_group_name || {}, currentLocale) }}</div>
                                 <div v-if="item.total_value > 50" class="text-xs text-gray-600 dark:text-gray-400">{{
@@ -1336,10 +1438,14 @@ onUpdated(() => {
 
                             <!-- Location Content -->
                             <div class="w-1/5 flex-shrink-0 space-y-1 pr-8">
-                                <div class="text-sm text-black dark:text-white truncate mt-2">{{
-                                    getLocalizedString(item.region_name, currentLocale) }}</div>
-                                <div class="text-xs text-gray-600 dark:text-gray-400 truncate">{{ item.system_name }}
-                                </div>
+                                <NuxtLink :to="`/region/${item.region_id}`"
+                                    class="text-sm text-black dark:text-white hover:text-blue-600 dark:hover:text-blue-400 transition-colors truncate mt-2">
+                                    {{
+                                        getLocalizedString(item.region_name, currentLocale) }}</NuxtLink>
+                                <NuxtLink :to="`/system/${item.system_id}`"
+                                    class="text-xs text-gray-600 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors truncate">
+                                    {{ item.system_name }}
+                                </NuxtLink>
                                 <div class="text-xs">
                                     <span>Security: </span>
                                     <span :class="getSecurityColor(item.system_security)">{{
@@ -1351,13 +1457,36 @@ onUpdated(() => {
                             <div class="w-1/5 flex-shrink-0 space-y-1 pr-8">
                                 <div class="text-sm text-black dark:text-white mt-2">
                                     <ClientOnly>
-                                        {{ formatTimeAgo(item.kill_time) }}
+                                        {{ formatEnhancedTimeDisplay(item.kill_time, currentLocale).short }}
                                         <template #fallback>
                                             <span class="text-gray-400">Loading...</span>
                                         </template>
                                     </ClientOnly>
                                 </div>
-                                <div class="text-xs text-gray-600 dark:text-gray-400">{{ item.attackerCount }} attackers
+                                <div class="text-xs text-gray-600 dark:text-gray-400">
+                                    <ClientOnly>
+                                        {{ formatEnhancedTimeDisplay(item.kill_time, currentLocale).date }}
+                                        <template #fallback>
+                                            <span class="text-gray-400">...</span>
+                                        </template>
+                                    </ClientOnly>
+                                </div>
+                                <div class="text-xs text-gray-600 dark:text-gray-400">
+                                    <ClientOnly>
+                                        {{ formatEnhancedTimeDisplay(item.kill_time, currentLocale).time }}
+                                        <template #fallback>
+                                            <span class="text-gray-400">...</span>
+                                        </template>
+                                    </ClientOnly>
+                                </div>
+                                <div class="flex gap-1 items-center text-xs text-gray-600 dark:text-gray-400">
+                                    <ClientOnly>
+                                        {{ formatEnhancedTimeDisplay(item.kill_time, currentLocale).timeOnly }}
+                                        <template #fallback>
+                                            <span class="text-gray-400">...</span>
+                                        </template>
+                                    </ClientOnly>
+                                    <span>{{ item.attackerCount }} attackers</span>
                                 </div>
                             </div>
 
@@ -1492,11 +1621,19 @@ onUpdated(() => {
     white-space: nowrap;
 }
 
-/* Combined Loss Row Styling - Single source of truth */
+/* Combined Loss Row Styling - Enhanced specificity to override alternating rows */
 .combined-loss-row,
 .bg-darkred,
 :deep(.combined-loss-row),
-:deep(.bg-darkred) {
+:deep(.bg-darkred),
+.combined-loss-row.alternate-row,
+.combined-loss-row.regular-row,
+.combined-loss-row.alternate-row-muted,
+.combined-loss-row.regular-row-muted,
+:deep(.combined-loss-row.alternate-row),
+:deep(.combined-loss-row.regular-row),
+:deep(.combined-loss-row.alternate-row-muted),
+:deep(.combined-loss-row.regular-row-muted) {
     background-color: rgba(220, 38, 38, 0.15) !important;
     border-left: 3px solid rgb(220, 38, 38) !important;
 }
@@ -1523,11 +1660,41 @@ onUpdated(() => {
     background-color: rgba(255, 255, 255, 0.04) !important;
 }
 
-/* Table rows (div elements) */
+/* Muted alternating row colors for subtle visual separation */
+.alternate-row-muted,
+:deep(.alternate-row-muted) {
+    background-color: rgba(59, 130, 246, 0.03) !important;
+}
+
+:global(.dark) .alternate-row-muted,
+:global(.dark) :deep(.alternate-row-muted) {
+    background-color: rgba(59, 130, 246, 0.05) !important;
+}
+
+/* Muted regular rows (even rows) - very light background */
+.regular-row-muted,
+:deep(.regular-row-muted) {
+    background-color: rgba(0, 0, 0, 0.015) !important;
+}
+
+:global(.dark) .regular-row-muted,
+:global(.dark) :deep(.regular-row-muted) {
+    background-color: rgba(255, 255, 255, 0.02) !important;
+}
+
+/* Table rows (div elements) - Enhanced specificity */
 :deep(div.combined-loss-row),
 :deep(div.bg-darkred),
 :deep(.table-row.combined-loss-row),
-:deep(.table-row.bg-darkred) {
+:deep(.table-row.bg-darkred),
+:deep(div.combined-loss-row.alternate-row),
+:deep(div.combined-loss-row.regular-row),
+:deep(div.combined-loss-row.alternate-row-muted),
+:deep(div.combined-loss-row.regular-row-muted),
+:deep(.table-row.combined-loss-row.alternate-row),
+:deep(.table-row.combined-loss-row.regular-row),
+:deep(.table-row.combined-loss-row.alternate-row-muted),
+:deep(.table-row.combined-loss-row.regular-row-muted) {
     background-color: rgba(220, 38, 38, 0.15) !important;
     border-left: 3px solid rgb(220, 38, 38) !important;
 }
@@ -1552,11 +1719,40 @@ onUpdated(() => {
     background-color: rgba(255, 255, 255, 0.04) !important;
 }
 
-/* Hover states */
+/* Muted alternating rows (div elements) */
+:deep(div.alternate-row-muted),
+:deep(.table-row.alternate-row-muted) {
+    background-color: rgba(59, 130, 246, 0.03) !important;
+}
+
+:global(.dark) :deep(div.alternate-row-muted),
+:global(.dark) :deep(.table-row.alternate-row-muted) {
+    background-color: rgba(59, 130, 246, 0.05) !important;
+}
+
+:deep(div.regular-row-muted),
+:deep(.table-row.regular-row-muted) {
+    background-color: rgba(0, 0, 0, 0.015) !important;
+}
+
+:global(.dark) :deep(div.regular-row-muted),
+:global(.dark) :deep(.table-row.regular-row-muted) {
+    background-color: rgba(255, 255, 255, 0.02) !important;
+}
+
+/* Hover states - Enhanced specificity */
 :deep(div.combined-loss-row:hover),
 :deep(div.bg-darkred:hover),
 :deep(.table-row.combined-loss-row:hover),
-:deep(.table-row.bg-darkred:hover) {
+:deep(.table-row.bg-darkred:hover),
+:deep(div.combined-loss-row.alternate-row:hover),
+:deep(div.combined-loss-row.regular-row:hover),
+:deep(div.combined-loss-row.alternate-row-muted:hover),
+:deep(div.combined-loss-row.regular-row-muted:hover),
+:deep(.table-row.combined-loss-row.alternate-row:hover),
+:deep(.table-row.combined-loss-row.regular-row:hover),
+:deep(.table-row.combined-loss-row.alternate-row-muted:hover),
+:deep(.table-row.combined-loss-row.regular-row-muted:hover) {
     background-color: rgba(220, 38, 38, 0.25) !important;
 }
 
@@ -1578,6 +1774,27 @@ onUpdated(() => {
 :global(.dark) :deep(div.regular-row:hover),
 :global(.dark) :deep(.table-row.regular-row:hover) {
     background-color: rgba(255, 255, 255, 0.15) !important;
+}
+
+/* Muted row hover states */
+:deep(div.alternate-row-muted:hover),
+:deep(.table-row.alternate-row-muted:hover) {
+    background-color: rgba(255, 255, 255, 0.1) !important;
+}
+
+:global(.dark) :deep(div.alternate-row-muted:hover),
+:global(.dark) :deep(.table-row.alternate-row-muted:hover) {
+    background-color: rgba(255, 255, 255, 0.1) !important;
+}
+
+:deep(div.regular-row-muted:hover),
+:deep(.table-row.regular-row-muted:hover) {
+    background-color: rgba(255, 255, 255, 0.1) !important;
+}
+
+:global(.dark) :deep(div.regular-row-muted:hover),
+:global(.dark) :deep(.table-row.regular-row-muted:hover) {
+    background-color: rgba(255, 255, 255, 0.1) !important;
 }
 
 /* Override pagination text size */

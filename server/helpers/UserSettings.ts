@@ -136,6 +136,11 @@ export class UserSettingsHelper {
                 !validation.allowedValues.includes(value as any)
             )
                 return false;
+        } else if (
+            key === "killListAlternatingRows" ||
+            key === "killListMutedAlternatingRows"
+        ) {
+            if (typeof value !== "boolean") return false;
         }
 
         return true;

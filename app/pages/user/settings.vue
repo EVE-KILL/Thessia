@@ -31,6 +31,9 @@ const userSettings = ref({
     defaultCharacterPage: "dashboard",
     defaultCorporationPage: "dashboard",
     defaultAlliancePage: "dashboard",
+    defaultSystemPage: "overview",
+    killListAlternatingRows: false,
+    killListMutedAlternatingRows: false,
 });
 
 const isUpdatingSettings = ref(false);

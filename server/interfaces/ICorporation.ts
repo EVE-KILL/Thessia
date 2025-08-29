@@ -15,6 +15,7 @@ export interface ICorporation {
     faction_id: number;
     faction_name: string;
     ceo_id: number;
+    ceo_name?: string;
     creator_id: number;
     home_station_id: number;
     home_station_name: string;

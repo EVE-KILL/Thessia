@@ -30,7 +30,14 @@ export function useDateFormatting() {
         formatDateTime: (date: string | Date) =>
             dateUtils.formatDateTime(date, currentLocale.value),
 
+        /**
+         * Format time with both shortened and full UTC timestamp using current locale
+         */
+        formatEnhancedTimeDisplay: (date: string | Date) =>
+            dateUtils.formatEnhancedTimeDisplay(date, currentLocale.value),
+
         // These don't need locale, so we can use them directly
+        formatShortTimeAgo: dateUtils.formatShortTimeAgo,
         formatYear: dateUtils.formatYear,
         formatTime: dateUtils.formatTime,
         formatTimeRange: dateUtils.formatTimeRange,

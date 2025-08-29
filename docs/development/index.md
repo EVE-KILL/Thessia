@@ -6,6 +6,7 @@ This section contains documentation for developers working on the Thessia projec
 
 - [Development Guide](./development-guide.md) - Complete guide for setting up and developing Thessia
 - [Build System](./build-system.md) - Understanding the consolidated build infrastructure
+- [User Settings Guide](./user-settings-guide.md) - How to add and manage user settings
 
 ## Development Workflow
 
@@ -40,8 +41,9 @@ Thessia uses a modern TypeScript stack:
 docs/
 ├── development/          # Development documentation
 │   ├── index.md         # This file
-│   ├── development-guide.md  # Complete development setup
-│   └── build-system.md  # Build system documentation
+│   ├── development-guide.md     # Complete development setup
+│   ├── build-system.md         # Build system documentation
+│   └── user-settings-guide.md  # User settings implementation guide
 ├── api/                 # API documentation
 ├── backend/             # Backend-specific docs
 ├── frontend/            # Frontend-specific docs

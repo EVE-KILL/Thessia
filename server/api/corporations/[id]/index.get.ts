@@ -1,3 +1,5 @@
+import { getCharacter } from "../../../helpers/ESIData";
+
 export default defineCachedEventHandler(
     async (event) => {
         const corporationId: number | null = event.context.params?.id
@@ -22,6 +24,21 @@ export default defineCachedEventHandler(
             });
         }
 
+        // Fetch CEO name if ceo_id is available
+        let ceoName = null;
+        if ((corporation.ceo_id ?? 0) > 0) {
+            try {
+                const ceoData = await getCharacter(corporation.ceo_id);
+                ceoName = ceoData?.name || null;
+            } catch (error) {
+                console.warn(
+                    `Failed to fetch CEO data for corporation ${corporationId}:`,
+                    error
+                );
+                ceoName = null;
+            }
+        }
+
         const corporationData = (corporation as any).toObject
             ? (corporation as any).toObject()
             : corporation;
@@ -29,6 +46,7 @@ export default defineCachedEventHandler(
             ...corporationData,
             alliance_name: alliance?.name || null,
             faction_name: faction?.name || null,
+            ceo_name: ceoName,
         };
 
         return enhancedCorporation;
