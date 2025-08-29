@@ -48,67 +48,6 @@
                         </div>
                     </div>
 
-                    <!-- Enhanced Entity Showcase -->
-                    <div v-if="domainEntities.length > 0" class="mb-8">
-                        <div class="flex flex-wrap justify-center gap-4">
-                            <div v-for="entity in domainEntities.slice(0, 6)"
-                                :key="`${entity.entity_type}-${entity.entity_id}`"
-                                class="group flex items-center space-x-3 bg-gray-800/40 backdrop-blur-sm border border-gray-700/50 rounded-lg px-4 py-3 hover:bg-gray-700/40 hover:border-gray-600/50 transition-all duration-200 cursor-pointer"
-                                @click="focusOnEntity(entity)">
-                                <!-- Entity Avatar/Icon -->
-                                <div class="relative">
-                                    <img v-if="entity.entity_type === 'character'"
-                                        :src="`https://images.evetech.net/characters/${entity.entity_id}/portrait?size=32`"
-                                        :alt="entity.display_name" class="w-8 h-8 rounded-full border border-gray-600"
-                                        loading="lazy">
-                                    <img v-else-if="entity.entity_type === 'corporation'"
-                                        :src="`https://images.evetech.net/corporations/${entity.entity_id}/logo?size=32`"
-                                        :alt="entity.display_name" class="w-8 h-8 rounded border border-gray-600"
-                                        loading="lazy">
-                                    <img v-else-if="entity.entity_type === 'alliance'"
-                                        :src="`https://images.evetech.net/alliances/${entity.entity_id}/logo?size=32`"
-                                        :alt="entity.display_name" class="w-8 h-8 rounded border border-gray-600"
-                                        loading="lazy">
-                                    <div v-else
-                                        class="w-8 h-8 rounded-full bg-gradient-to-r from-blue-500 to-purple-500 flex items-center justify-center text-white font-bold text-sm">
-                                        {{ entity.entity_type === 'character' ? 'C' : entity.entity_type ===
-                                            'corporation' ? 'Corp' : 'A' }}
-                                    </div>
-                                    <!-- Activity Indicator -->
-                                    <div v-if="entity.recent_activity"
-                                        class="absolute -top-1 -right-1 w-3 h-3 bg-green-400 border-2 border-gray-800 rounded-full">
-                                    </div>
-                                </div>
-
-                                <div class="flex-1 min-w-0">
-                                    <div class="flex items-center space-x-2">
-                                        <span class="text-zinc-200 font-medium truncate">
-                                            {{ entity.display_name || `${entity.entity_type} ${entity.entity_id}` }}
-                                        </span>
-                                        <span v-if="entity.primary"
-                                            class="text-xs bg-yellow-500/20 text-yellow-300 px-2 py-1 rounded-full flex-shrink-0">Primary</span>
-                                    </div>
-                                    <!-- Entity Stats Preview -->
-                                    <div v-if="entityStats[entity.entity_id]" class="text-xs text-zinc-400 mt-1">
-                                        {{ entityStats[entity.entity_id].kills || 0 }} kills,
-                                        {{ formatISK(entityStats[entity.entity_id].value || 0) }} ISK
-                                    </div>
-                                </div>
-
-                                <!-- Focus Indicator -->
-                                <div class="text-zinc-400 group-hover:text-zinc-200 transition-colors">
-                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                            d="M9 5l7 7-7 7"></path>
-                                    </svg>
-                                </div>
-                            </div>
-                        </div>
-                        <p v-if="domainEntities.length > 6" class="text-zinc-400 text-sm mt-3 text-center">
-                            +{{ domainEntities.length - 6 }} more entities tracked on this domain
-                        </p>
-                    </div>
-
                 </div>
             </UContainer>
         </div>
@@ -183,7 +122,7 @@
                         </div>
                     </div>
                     <div class="text-lg font-bold text-white mb-1">{{ topShipDestroyed?.ship_group_name || 'Loading...'
-                    }}</div>
+                        }}</div>
                     <div class="text-gray-400 text-sm">{{ topShipDestroyed?.killed || 0 }} destroyed</div>
                 </div>
 
@@ -796,14 +735,9 @@ const handleEntityChange = (newEntity: any) => {
 
 // Focus on specific entity (from entity showcase)
 const focusOnEntity = (entity: any) => {
-    const entityOption = {
-        label: entity.display_name || `${entity.entity_type} ${entity.entity_id}`,
-        value: {
-            type: entity.entity_type,
-            id: entity.entity_id
-        }
-    };
-    handleEntityChange(entityOption.value);
+    // Navigate to the entity's page
+    const entityPath = `/${entity.entity_type}/${entity.entity_id}`;
+    navigateTo(entityPath);
 };
 
 // Campaign helpers
