@@ -91,7 +91,7 @@ const isPriorityImage = (index: number): boolean => {
             hover>
             <!-- Custom horizontal item template -->
             <template #horizontal-item="{ item, index }">
-                <div class="flex flex-col items-center p-2 w-20 md:w-24">
+                <div class="flex flex-col items-center p-4 w-24 md:w-32">
                     <Image type="type-overlay-render" :id="(item as IMostValuableKill).victim.ship_id"
                         :alt="`Ship: ${getShipName(item as IMostValuableKill)}`"
                         class="rounded w-20 h-20 md:w-24 md:h-24 object-contain mb-2" size="128"
@@ -128,7 +128,7 @@ const isPriorityImage = (index: number): boolean => {
             <template #horizontal-skeleton>
                 <div class="horizontal-grid" :class="[`grid-cols-${isMobile ? 2 : props.limit}`]">
                     <div v-for="i in props.limit" :key="`skeleton-kills-${i}`" class="horizontal-item">
-                        <div class="flex flex-col items-center p-2">
+                        <div class="flex flex-col items-center p-4">
                             <div
                                 class="rounded w-20 h-20 md:w-24 md:h-24 bg-gray-200 dark:bg-gray-700 animate-pulse mb-2">
                             </div>
@@ -180,8 +180,8 @@ const isPriorityImage = (index: number): boolean => {
 .horizontal-grid {
     display: grid;
     grid-template-columns: repeat(var(--cols, 5), 1fr);
-    gap: 0.75rem;
-    padding: 0.5rem;
+    gap: 1.5rem;
+    padding: 1rem;
 }
 
 .grid-cols-2 {
