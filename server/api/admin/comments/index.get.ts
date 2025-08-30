@@ -44,11 +44,17 @@ export default defineEventHandler(async (event) => {
         const sortOrder = (query.sortOrder as string) || "desc";
         const showDeleted =
             query.showDeleted === "true" || query.showDeleted === true;
-        
+
         // Entity filtering parameters
-        const characterId = query.characterId ? parseInt(query.characterId as string) : null;
-        const corporationId = query.corporationId ? parseInt(query.corporationId as string) : null;
-        const allianceId = query.allianceId ? parseInt(query.allianceId as string) : null;
+        const characterId = query.characterId
+            ? parseInt(query.characterId as string)
+            : null;
+        const corporationId = query.corporationId
+            ? parseInt(query.corporationId as string)
+            : null;
+        const allianceId = query.allianceId
+            ? parseInt(query.allianceId as string)
+            : null;
 
         // Build MongoDB filter
         const filter: any = {};

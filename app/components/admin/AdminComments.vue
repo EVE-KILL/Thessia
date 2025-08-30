@@ -109,8 +109,8 @@
                             :result-name="(result: any) => result.name" :min-length="2"
                             :placeholder="t('admin.comments.filters.entitySearchPlaceholder')"
                             input-class="w-full px-3 py-2 border border-gray-600 rounded-md shadow-sm bg-gray-800 text-gray-100 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                            dropdown-class="entity-search-dropdown"
-                            @select="handleEntitySelect" @clear="handleEntityClear">
+                            dropdown-class="entity-search-dropdown" @select="handleEntitySelect"
+                            @clear="handleEntityClear">
                             <template #results="{ results, selectResult }">
                                 <a v-for="result in results" :key="result.id" @click="selectResult(result)"
                                     class="flex items-center px-4 py-2 text-sm cursor-pointer text-gray-100 hover:bg-gray-700 border-b border-gray-600 last:border-b-0">
@@ -648,12 +648,12 @@ const performDelayedTextSearch = async () => {
     if (textSearchQuery.value.length > 0 && textSearchQuery.value.length < MIN_SEARCH_LENGTH) {
         return;
     }
-    
+
     // Set a new timeout for the actual search
     searchTimeoutId.value = setTimeout(async () => {
         searchInProgress.value = true;
         searchController.value = new AbortController();
-        
+
         try {
             currentPage.value = 1;
             await refresh(); // This will now use textSearchQuery.value in buildQueryParams
