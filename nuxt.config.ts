@@ -263,7 +263,7 @@ export default defineNuxtConfig({
         },
         // Rate limiting for API endpoints
         rateLimiter: {
-            tokensPerInterval: 150,
+            tokensPerInterval: 15000,
             interval: 300000, // 5 minutes
             headers: false,
             whiteList: ["::1", "127.0.0.1", "10.0.0.0/8"],
