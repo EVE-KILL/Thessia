@@ -336,7 +336,7 @@ export default defineCachedEventHandler(
 
             // Get entities from domain config
             let entities = domainConfig.entities || [];
-            
+
             if (entities.length === 0) {
                 throw createError({
                     statusCode: 400,

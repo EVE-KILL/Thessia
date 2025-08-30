@@ -26,7 +26,7 @@
                             <h1 class="text-3xl font-bold text-white">Dashboard Customizer</h1>
                             <p class="mt-2 text-gray-400">
                                 Create a custom dashboard layout for <span class="text-blue-400 font-medium">{{ domain
-                                }}</span>
+                                    }}</span>
                             </p>
                         </div>
                         <div class="flex items-center space-x-4">
@@ -148,7 +148,8 @@
                                                 Template</label>
                                             <textarea v-model="currentTemplate" @input="onTemplateEdit"
                                                 class="flex-1 w-full bg-gray-900/50 border border-gray-600 rounded-lg p-3 text-sm font-mono text-gray-100 resize-none focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500/50"
-                                                placeholder="Enter your dashboard template HTML..." spellcheck="false" />
+                                                placeholder="Enter your dashboard template HTML..."
+                                                spellcheck="false" />
                                         </div>
                                         <!-- CSS Editor -->
                                         <div class="flex-1 flex flex-col">
@@ -174,43 +175,53 @@
                                         <!-- Mobile Device Frame -->
                                         <div class="mobile-device-frame">
                                             <!-- Device Outer Shell -->
-                                            <div class="relative bg-gray-900 rounded-[2.5rem] p-2 shadow-2xl border-2 border-gray-700">
+                                            <div
+                                                class="relative bg-gray-900 rounded-[2.5rem] p-2 shadow-2xl border-2 border-gray-700">
                                                 <!-- Notch/Dynamic Island -->
-                                                <div class="absolute top-4 left-1/2 transform -translate-x-1/2 w-20 h-7 bg-black rounded-full z-10 border border-gray-800"></div>
-                                                
+                                                <div
+                                                    class="absolute top-4 left-1/2 transform -translate-x-1/2 w-20 h-7 bg-black rounded-full z-10 border border-gray-800">
+                                                </div>
+
                                                 <!-- Screen Container -->
-                                                <div class="relative bg-black rounded-[2rem] overflow-hidden" style="width: 375px; height: 667px;">
+                                                <div class="relative bg-black rounded-[2rem] overflow-hidden"
+                                                    style="width: 375px; height: 667px;">
                                                     <!-- Status Bar Overlay -->
-                                                    <div class="absolute top-0 left-0 right-0 h-12 bg-gradient-to-b from-black/40 to-transparent z-20 pointer-events-none">
-                                                        <div class="flex items-center justify-between px-6 pt-4 text-white text-sm status-bar">
+                                                    <div
+                                                        class="absolute top-0 left-0 right-0 h-12 bg-gradient-to-b from-black/40 to-transparent z-20 pointer-events-none">
+                                                        <div
+                                                            class="flex items-center justify-between px-6 pt-4 text-white text-sm status-bar">
                                                             <span class="font-semibold">9:41</span>
                                                             <div class="flex items-center space-x-1">
-                                                                <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                                                                    <path d="M2 11a1 1 0 011-1h2a1 1 0 011 1v5a1 1 0 01-1 1H3a1 1 0 01-1-1v-5zM8 7a1 1 0 011-1h2a1 1 0 011 1v9a1 1 0 01-1 1H9a1 1 0 01-1-1V7zM14 4a1 1 0 011-1h2a1 1 0 011 1v12a1 1 0 01-1 1h-2a1 1 0 01-1-1V4z"/>
+                                                                <svg class="w-4 h-4" fill="currentColor"
+                                                                    viewBox="0 0 20 20">
+                                                                    <path
+                                                                        d="M2 11a1 1 0 011-1h2a1 1 0 011 1v5a1 1 0 01-1 1H3a1 1 0 01-1-1v-5zM8 7a1 1 0 011-1h2a1 1 0 011 1v9a1 1 0 01-1 1H9a1 1 0 01-1-1V7zM14 4a1 1 0 011-1h2a1 1 0 011 1v12a1 1 0 01-1 1h-2a1 1 0 01-1-1V4z" />
                                                                 </svg>
-                                                                <svg class="w-5 h-3" fill="currentColor" viewBox="0 0 20 20">
-                                                                    <path d="M17 4h1a1 1 0 011 1v10a1 1 0 01-1 1h-1a1 1 0 01-1-1V5a1 1 0 011-1zM2 6h14v8H2V6z"/>
+                                                                <svg class="w-5 h-3" fill="currentColor"
+                                                                    viewBox="0 0 20 20">
+                                                                    <path
+                                                                        d="M17 4h1a1 1 0 011 1v10a1 1 0 01-1 1h-1a1 1 0 01-1-1V5a1 1 0 011-1zM2 6h14v8H2V6z" />
                                                                 </svg>
                                                             </div>
                                                         </div>
                                                     </div>
-                                                    
+
                                                     <!-- Viewport Content -->
                                                     <div class="w-full h-full overflow-auto mobile-viewport-content">
-                                                        <div class="min-h-full" style="font-size: 14px; line-height: 1.4;">
-                                                            <DomainDashboardRenderer 
-                                                                :domain="domain" 
-                                                                :time-range="'7d'"
-                                                                :custom-template="currentTemplate" 
+                                                        <div class="min-h-full"
+                                                            style="font-size: 14px; line-height: 1.4;">
+                                                            <DomainDashboardRenderer :domain="domain" :time-range="'7d'"
+                                                                :custom-template="currentTemplate"
                                                                 :custom-css="mobileOptimizedCss"
-                                                                :fallback-to-default="false" 
-                                                                :client-only="true" />
+                                                                :fallback-to-default="false" :client-only="true" />
                                                         </div>
                                                     </div>
                                                 </div>
-                                                
+
                                                 <!-- Home Indicator -->
-                                                <div class="absolute bottom-2 left-1/2 transform -translate-x-1/2 w-32 h-1 bg-gray-400 rounded-full"></div>
+                                                <div
+                                                    class="absolute bottom-2 left-1/2 transform -translate-x-1/2 w-32 h-1 bg-gray-400 rounded-full">
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
@@ -266,7 +277,7 @@
 </template>
 
 <script setup lang="ts">
-import { nextTick, ref, watch, computed } from 'vue';
+import { computed, nextTick, ref, watch } from 'vue';
 import DomainDashboardRenderer from '~/components/domain/dashboard/DomainDashboardRenderer.vue';
 import { useDomainContext } from '~/composables/useDomainContext';
 import { useDomainDashboardTemplate } from '~/composables/useDomainDashboardTemplate';
@@ -336,71 +347,71 @@ const mobileOptimizedCss = computed(() => {
                 font-size: 14px !important;
                 line-height: 1.4 !important;
             }
-            
+
             /* Make metrics grid single column on mobile */
             .dashboard-container .metrics-grid {
                 grid-template-columns: 1fr !important;
                 gap: 0.75rem !important;
                 margin-bottom: 1.5rem !important;
             }
-            
+
             /* Reduce metric box heights for mobile */
             .dashboard-container .metrics-grid-item {
                 min-height: 120px !important;
             }
-            
+
             .dashboard-container .metric-box {
                 min-height: 120px !important;
                 padding: 0.75rem !important;
             }
-            
+
             /* Compact sections */
             .dashboard-section {
                 margin-bottom: 1.5rem !important;
             }
-            
+
             /* Force bottom grid to single column */
             .bottom-grid {
                 grid-template-columns: 1fr !important;
                 gap: 1rem !important;
             }
-            
+
             /* Smaller text sizes */
             h1, .text-3xl { font-size: 1.5rem !important; }
             h2, .text-2xl { font-size: 1.25rem !important; }
             h3, .text-xl { font-size: 1.125rem !important; }
-            
+
             /* Compact padding */
             .p-6 { padding: 1rem !important; }
             .p-4 { padding: 0.75rem !important; }
             .px-6 { padding-left: 1rem !important; padding-right: 1rem !important; }
             .py-6 { padding-top: 1rem !important; padding-bottom: 1rem !important; }
-            
+
             /* Hide some content that doesn't work well on mobile */
             .desktop-only { display: none !important; }
         }
-        
+
         /* Always apply mobile viewport constraints in mobile preview */
         .mobile-viewport-content {
             max-width: 375px !important;
             font-size: 14px !important;
             line-height: 1.4 !important;
         }
-        
+
         .mobile-viewport-content .dashboard-container {
             padding: 0.75rem !important;
         }
-        
+
         .mobile-viewport-content .metrics-grid {
             grid-template-columns: 1fr !important;
             gap: 0.75rem !important;
         }
-        
+
         .mobile-viewport-content .bottom-grid {
             grid-template-columns: 1fr !important;
         }
     `;
-    
+
     return baseCss + mobileEnhancements;
 });
 
@@ -880,8 +891,8 @@ pre code {
 }
 
 /* Device shadows and depth */
-.mobile-device-frame > div {
-    box-shadow: 
+.mobile-device-frame>div {
+    box-shadow:
         0 25px 50px -12px rgba(0, 0, 0, 0.8),
         0 10px 20px -5px rgba(0, 0, 0, 0.4);
 }

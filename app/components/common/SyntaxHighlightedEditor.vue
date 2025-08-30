@@ -1,34 +1,19 @@
 <template>
     <div class="syntax-editor" :class="{ 'is-focused': isFocused }">
         <!-- Code display with syntax highlighting -->
-        <pre
-            ref="highlightedCode"
-            class="syntax-highlight"
-            :class="`language-${language}`"
-            v-html="highlightedContent"
-        ></pre>
-        
+        <pre ref="highlightedCode" class="syntax-highlight" :class="`language-${language}`"
+            v-html="highlightedContent"></pre>
+
         <!-- Invisible textarea for input -->
-        <textarea
-            ref="textarea"
-            v-model="localValue"
-            @input="onInput"
-            @focus="isFocused = true"
-            @blur="isFocused = false"
-            @scroll="syncScroll"
-            @keydown="onKeydown"
-            class="syntax-input"
-            :placeholder="placeholder"
-            spellcheck="false"
-            autocomplete="off"
-            autocorrect="off"
-            autocapitalize="off"
-        ></textarea>
+        <textarea ref="textarea" v-model="localValue" @input="onInput" @focus="isFocused = true"
+            @blur="isFocused = false" @scroll="syncScroll" @keydown="onKeydown" class="syntax-input"
+            :placeholder="placeholder" spellcheck="false" autocomplete="off" autocorrect="off"
+            autocapitalize="off"></textarea>
     </div>
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch, nextTick, onMounted } from 'vue';
+import { computed, nextTick, onMounted, ref, watch } from 'vue';
 
 interface Props {
     modelValue: string;
@@ -63,13 +48,13 @@ onMounted(async () => {
     try {
         const prismModule = await import('prismjs');
         Prism = prismModule.default || prismModule;
-        
+
         // Load languages
         await import('prismjs/components/prism-markup'); // HTML
         await import('prismjs/components/prism-css');
         await import('prismjs/components/prism-javascript');
         await import('prismjs/components/prism-typescript');
-        
+
         // Initial highlighting
         await nextTick();
         updateHighlighting();
@@ -83,7 +68,7 @@ const highlightedContent = computed(() => {
     if (!Prism || !localValue.value) {
         return escapeHtml(localValue.value);
     }
-    
+
     try {
         const grammar = Prism.languages[props.language === 'html' ? 'markup' : props.language];
         if (grammar) {
@@ -92,7 +77,7 @@ const highlightedContent = computed(() => {
     } catch (error) {
         console.warn('Syntax highlighting failed:', error);
     }
-    
+
     return escapeHtml(localValue.value);
 });
 
@@ -135,18 +120,18 @@ function syncScroll() {
 function onKeydown(event: KeyboardEvent) {
     if (event.key === 'Tab') {
         event.preventDefault();
-        
+
         const target = event.target as HTMLTextAreaElement;
         const start = target.selectionStart;
         const end = target.selectionEnd;
-        
+
         // Insert tab
         const value = target.value;
         target.value = value.substring(0, start) + '  ' + value.substring(end);
-        
+
         // Restore cursor position
         target.selectionStart = target.selectionEnd = start + 2;
-        
+
         // Update local value
         localValue.value = target.value;
     }

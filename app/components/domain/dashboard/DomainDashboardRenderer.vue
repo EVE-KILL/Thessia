@@ -30,7 +30,7 @@
 
             <!-- HTML Template Rendering (final fallback) -->
             <div v-else-if="processedTemplate" class="html-template" v-html="processedTemplate" />
-            
+
             <!-- Default Dashboard (when no template at all) -->
             <div v-else class="default-domain-dashboard">
                 <div class="dashboard-header mb-8">
@@ -41,43 +41,30 @@
                         Monitor combat operations and strategic achievements for {{ currentDomain }}
                     </p>
                 </div>
-                
+
                 <!-- Stats Grid -->
                 <div class="stats-grid mb-8">
-                    <DomainDashboardStatsGrid 
-                        :domain="currentDomain" 
-                        :stats="stats"
-                        :time-range="timeRange"
-                    />
+                    <DomainDashboardStatsGrid :domain="currentDomain" :stats="stats" :time-range="timeRange" />
                 </div>
-                
+
                 <!-- Most Valuable Kills -->
                 <div v-if="stats?.mostValuableKills?.length > 0" class="most-valuable-section mb-8">
                     <h2 class="text-2xl font-semibold mb-4 text-gray-900 dark:text-white">Most Valuable Kills</h2>
-                    <KillsMostValuable 
-                        :kills="stats.mostValuableKills.slice(0, 6)" 
-                        :show-header="false"
-                        class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"
-                    />
+                    <KillsMostValuable :kills="stats.mostValuableKills.slice(0, 6)" :show-header="false"
+                        class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4" />
                 </div>
-                
+
                 <!-- Top Ship Stats -->
                 <div v-if="stats?.shipGroupStats?.length > 0" class="ship-stats-section mb-8">
                     <h2 class="text-2xl font-semibold mb-4 text-gray-900 dark:text-white">Ship Analysis</h2>
-                    <KillsShipStats 
-                        :stats="{ shipGroupStats: stats.shipGroupStats.slice(0, 10) }"
-                        :loading="false"
-                    />
+                    <KillsShipStats :stats="{ shipGroupStats: stats.shipGroupStats.slice(0, 10) }" :loading="false" />
                 </div>
-                
+
                 <!-- Entities Overview -->
                 <div class="entities-section mb-8">
-                    <DomainDashboardTrackingOverview 
-                        :domain="currentDomain"
-                        :entities="domainEntitiesWithNames"
-                    />
+                    <DomainDashboardTrackingOverview :domain="currentDomain" :entities="domainEntitiesWithNames" />
                 </div>
-                
+
                 <!-- Recent Activity -->
                 <div class="recent-activity">
                     <h2 class="text-2xl font-semibold mb-4 text-gray-900 dark:text-white">Recent Activity</h2>
@@ -99,12 +86,12 @@ const { locale } = useI18n();
 const currentLocale = computed(() => locale.value);
 
 // Import dashboard components
+import DomainDashboardTrackingOverview from './sections/DomainDashboardTrackingOverview.vue';
 import DomainDashboardActiveEntitiesBox from './stats/DomainDashboardActiveEntitiesBox.vue';
 import DomainDashboardISKDestroyedBox from './stats/DomainDashboardISKDestroyedBox.vue';
+import DomainDashboardStatsGrid from './stats/DomainDashboardStatsGrid.vue';
 import DomainDashboardTopShipBox from './stats/DomainDashboardTopShipBox.vue';
 import DomainDashboardTotalKillsBox from './stats/DomainDashboardTotalKillsBox.vue';
-import DomainDashboardStatsGrid from './stats/DomainDashboardStatsGrid.vue';
-import DomainDashboardTrackingOverview from './sections/DomainDashboardTrackingOverview.vue';
 
 // Import section components
 import DomainDashboardCampaignsSection from './sections/DomainDashboardCampaignsSection.vue';
