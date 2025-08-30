@@ -19,9 +19,11 @@
                     </ul>
                 </div>
                 <div class="mt-8">
-                    <a href="/" class="inline-flex items-center px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors">
+                    <a href="/"
+                        class="inline-flex items-center px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors">
                         <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M10 19l-7-7m0 0l7-7m-7 7h18" />
                         </svg>
                         Go to EVE-KILL.com
                     </a>
@@ -496,13 +498,13 @@ const defaultWelcomeMessage = computed(() => {
 // Initialize template immediately if available from domain context
 const initializeTemplate = () => {
     const context = domainContext.value;
-    
+
     // If domain has an error, mark as loaded to show error state
     if (context?.error) {
         templateLoaded.value = true;
         return true;
     }
-    
+
     if (context?.dashboardTemplate) {
         customTemplate.value = context.dashboardTemplate.template || '';
         customCss.value = context.dashboardTemplate.customCss || '';

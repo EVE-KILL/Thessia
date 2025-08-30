@@ -12,8 +12,8 @@
     <!-- Custom Domain: Multi-Entity Dashboard -->
     <div v-else-if="isCustomDomain" class="domain-dashboard">
         <!-- Load the domain dashboard component -->
-        <DomainDashboardRenderer :domain="domain || ''"
-            :time-range="selectedTimeRange as '1d' | '7d' | '14d' | '30d'" :client-only="false" />
+        <DomainDashboardRenderer :domain="domain || ''" :time-range="selectedTimeRange as '1d' | '7d' | '14d' | '30d'"
+            :client-only="false" />
     </div>
 
     <!-- Main Domain: Standard Homepage -->

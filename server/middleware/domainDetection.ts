@@ -86,7 +86,9 @@ async function getEntityData(entityType: string, entityId: number) {
                 entity = await Characters.findOne({ character_id: entityId });
                 break;
             case "corporation":
-                entity = await Corporations.findOne({ corporation_id: entityId });
+                entity = await Corporations.findOne({
+                    corporation_id: entityId,
+                });
                 break;
             case "alliance":
                 entity = await Alliances.findOne({ alliance_id: entityId });
@@ -94,7 +96,7 @@ async function getEntityData(entityType: string, entityId: number) {
             default:
                 return null;
         }
-        
+
         // Convert Mongoose document to plain object
         return entity ? entity.toObject() : null;
     } catch (error) {
