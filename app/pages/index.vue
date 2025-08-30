@@ -1,8 +1,18 @@
 <template>
+    <!-- Domain Error States -->
+    <div v-if="showDomainError">
+        <!-- Domain Not Found -->
+        <DomainNotFound v-if="domainErrorType === 'domain_not_found'" :domain="domainName" />
+        <!-- Domain Not Verified -->
+        <DomainUnverified v-else-if="domainErrorType === 'domain_not_verified'" :domain="domainName" />
+        <!-- Generic Domain Error Fallback -->
+        <DomainNotFound v-else :domain="domainName" />
+    </div>
+
     <!-- Custom Domain: Multi-Entity Dashboard -->
-    <div v-if="isCustomDomain" class="domain-dashboard">
+    <div v-else-if="isCustomDomain" class="domain-dashboard">
         <!-- Load the domain dashboard component -->
-        <DomainDashboardRenderer :domain="customDomain || ''"
+        <DomainDashboardRenderer :domain="domain || ''"
             :time-range="selectedTimeRange as '1d' | '7d' | '14d' | '30d'" :client-only="false" />
     </div>
 
@@ -78,7 +88,12 @@ const selectedTimeRange = ref('7d');
 
 // Custom domain handling - Phase 2
 // Get domain context first to check if middleware detected a custom domain
-const { isCustomDomain, customDomain, domainError } = useDomainContext();
+const { isCustomDomain, domain, domainError } = useDomainContext();
+
+// We'll use computed values to determine what to show
+const showDomainError = computed(() => domainError.value !== null);
+const domainErrorType = computed(() => domainError.value?.type || 'domain_not_found');
+const domainName = computed(() => domain.value || 'unknown');
 
 // Handle domain detection and routing
 (async () => {
@@ -102,13 +117,6 @@ const { isCustomDomain, customDomain, domainError } = useDomainContext();
             await navigateTo(`/${hostname}`);
             return;
         }
-    }
-
-    // Handle domain errors by redirecting to the domain page for proper error display
-    if (domainError.value && customDomain.value) {
-        console.log(`[Index Page] Domain error detected, redirecting to domain page:`, domainError.value);
-        await navigateTo(`/${customDomain.value}`);
-        return;
     }
 })();
 

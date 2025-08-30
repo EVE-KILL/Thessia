@@ -1,8 +1,32 @@
 <template>
     <div class="domain-dashboard-renderer">
-        <!-- Error State -->
-        <div v-if="domainError" class="text-center py-12">
-            <div class="text-red-400">Failed to load domain: {{ domainError }}</div>
+        <!-- Error State for Invalid Domains -->
+        <div v-if="domainError" class="text-center py-16 px-4">
+            <div class="max-w-md mx-auto">
+                <div class="text-6xl mb-6">🚫</div>
+                <h2 class="text-2xl font-bold text-gray-800 dark:text-white mb-4">
+                    Domain Not Found
+                </h2>
+                <div class="text-gray-600 dark:text-gray-400 mb-6">
+                    {{ domainError }}
+                </div>
+                <div class="text-sm text-gray-500 dark:text-gray-500">
+                    If you believe this is an error, please check that:
+                    <ul class="list-disc list-inside mt-2 space-y-1">
+                        <li>The domain is correctly configured</li>
+                        <li>DNS settings are properly set up</li>
+                        <li>The domain registration is active</li>
+                    </ul>
+                </div>
+                <div class="mt-8">
+                    <a href="/" class="inline-flex items-center px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors">
+                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
+                        </svg>
+                        Go to EVE-KILL.com
+                    </a>
+                </div>
+            </div>
         </div>
 
         <!-- Loading State -->
@@ -140,13 +164,15 @@ interface Props {
     customCss?: string
     customTemplate?: string
     fallbackToDefault?: boolean
+    clientOnly?: boolean
 }
 
 const props = withDefaults(defineProps<Props>(), {
     timeRange: '7d',
     customCss: '',
     customTemplate: '',
-    fallbackToDefault: true
+    fallbackToDefault: true,
+    clientOnly: false
 })
 
 // Use Nuxt's useState for proper SSR/client state sharing
@@ -276,7 +302,14 @@ const currentDomain = computed(() => {
     return '';
 });
 
-const shouldFetchStats = computed(() => !!currentDomain.value);
+// Check if we have a valid domain context or if this is a known domain
+const shouldFetchStats = computed(() => {
+    // Only fetch stats if we have a domain AND either:
+    // 1. We have a valid domain context (verified domain)
+    // 2. This is a fallback scenario with clientOnly prop
+    return !!(currentDomain.value && (domainContext.value?.domain || props.clientOnly));
+});
+
 const statsUrl = computed(() =>
     shouldFetchStats.value ? `/api/domain/${currentDomain.value}/stats` : ''
 );
@@ -295,18 +328,21 @@ const {
         lazy: false,
         default: () => ({}),
         onResponseError({ request, response, options }) {
-            console.error('[DomainDashboardRenderer] Stats API Error:', {
-                url: request,
-                status: response.status,
-                error: response._data
-            });
+            // Don't log errors for invalid domains (404s are expected)
+            if (response.status !== 404) {
+                console.error('[DomainDashboardRenderer] Stats API Error:', {
+                    url: request,
+                    status: response.status,
+                    error: response._data
+                });
+            }
         }
     }
 );
 
-// Fetch domain entities using useFetch (SSR)
+// Fetch domain entities using useFetch (SSR) - only if we have a valid domain
 const entitiesUrl = computed(() =>
-    currentDomain.value ? `/api/domain/${currentDomain.value}/entities` : ''
+    shouldFetchStats.value ? `/api/domain/${currentDomain.value}/entities` : ''
 );
 const {
     data: domainEntitiesResponse,
@@ -321,7 +357,13 @@ const {
         }),
         server: true,
         lazy: false,
-        default: () => ({ success: false, entities: [] })
+        default: () => ({ success: false, entities: [] }),
+        onResponseError({ response }) {
+            // Don't log errors for invalid domains (404s are expected)
+            if (response.status !== 404) {
+                console.error('[DomainDashboardRenderer] Entities API Error:', response.status);
+            }
+        }
     }
 );
 
@@ -334,9 +376,9 @@ const domainEntitiesWithNames = computed(() => {
     return domainEntities.value;
 });
 
-// Fetch domain campaigns using useFetch (SSR)
+// Fetch domain campaigns using useFetch (SSR) - only if we have a valid domain
 const campaignsUrl = computed(() =>
-    currentDomain.value ? `/api/domain/${currentDomain.value}/campaigns` : ''
+    shouldFetchStats.value ? `/api/domain/${currentDomain.value}/campaigns` : ''
 );
 const {
     data: campaignsResponse,
@@ -351,7 +393,13 @@ const {
         query: { limit: 10 },
         server: true,
         lazy: false,
-        default: () => ({ success: false, campaigns: [] })
+        default: () => ({ success: false, campaigns: [] }),
+        onResponseError({ response }) {
+            // Don't log errors for invalid domains (404s are expected)
+            if (response.status !== 404) {
+                console.error('[DomainDashboardRenderer] Campaigns API Error:', response.status);
+            }
+        }
     }
 );
 
@@ -448,6 +496,13 @@ const defaultWelcomeMessage = computed(() => {
 // Initialize template immediately if available from domain context
 const initializeTemplate = () => {
     const context = domainContext.value;
+    
+    // If domain has an error, mark as loaded to show error state
+    if (context?.error) {
+        templateLoaded.value = true;
+        return true;
+    }
+    
     if (context?.dashboardTemplate) {
         customTemplate.value = context.dashboardTemplate.template || '';
         customCss.value = context.dashboardTemplate.customCss || '';
@@ -467,20 +522,26 @@ if (process.server) {
 
 // Only use onMounted for API fallback if no template was loaded during SSR
 onMounted(async () => {
+    // If we have a domain error, mark as loaded to show error state
+    if (domainError.value) {
+        templateLoaded.value = true;
+        return;
+    }
+
     // If we already have template data from SSR, we're good
     if (customTemplate.value || templateLoaded.value) {
         return;
     }
 
-    // Final fallback to API if no template available
+    // Final fallback to API if no template available and domain is valid
     try {
         const { loadTemplate } = useDomainDashboardTemplate();
         const templateData = await loadTemplate(currentDomain.value);
         if (templateData) {
             customTemplate.value = templateData.template;
             customCss.value = templateData.customCss;
-            templateLoaded.value = true;
         }
+        templateLoaded.value = true;
     } catch (error) {
         console.error('[DomainDashboardRenderer] Failed to load template:', error);
         templateLoaded.value = true; // Prevent infinite loading

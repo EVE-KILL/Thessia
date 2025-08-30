@@ -142,7 +142,7 @@ thessia:
           - secretName: "evekill-tls"
             hosts:
               - "eve-kill.com"
-              - "c.eve-kill.com"
+              - "*.eve-kill.com"
 
 # WebSocket server
 websocket:
