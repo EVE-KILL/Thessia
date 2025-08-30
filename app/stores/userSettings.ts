@@ -1,22 +1,17 @@
 import { defineStore } from "pinia";
 
-export interface UserSettings {
-    killmailDelay: number;
-    defaultCharacterPage: string;
-    defaultCorporationPage: string;
-    defaultAlliancePage: string;
-    defaultSystemPage: string;
-    killListAlternatingRows: boolean;
-    killListMutedAlternatingRows: boolean;
+// Flexible user settings interface - allows any key/value pairs
+export interface FlexibleUserSettings {
+    [key: string]: any;
 }
 
 interface UserSettingsResponse {
     success: boolean;
-    settings: UserSettings;
+    settings: FlexibleUserSettings;
 }
 
 interface UserSettingsState {
-    settings: UserSettings | null;
+    settings: FlexibleUserSettings | null;
     isLoading: boolean;
     error: string | null;
     lastFetchTime: number | null;
@@ -25,8 +20,9 @@ interface UserSettingsState {
 // Cache duration in milliseconds (5 minutes)
 const CACHE_DURATION = 5 * 60 * 1000;
 
-// Default settings fallback
-const defaultSettings: UserSettings = {
+// Registry of core settings - these are just for backwards compatibility
+// Settings are now dynamic and can be added without changing this
+const CORE_SETTINGS_DEFAULTS: FlexibleUserSettings = {
     killmailDelay: 0,
     defaultCharacterPage: "dashboard",
     defaultCorporationPage: "dashboard",
@@ -63,58 +59,57 @@ export const useUserSettingsStore = defineStore("userSettings", {
          */
         currentSettings: (state) => {
             return state.settings
-                ? { ...defaultSettings, ...state.settings }
-                : { ...defaultSettings };
+                ? { ...CORE_SETTINGS_DEFAULTS, ...state.settings }
+                : { ...CORE_SETTINGS_DEFAULTS };
         },
 
-        /**
-         * Individual setting getters with fallbacks
-         */
+        // Backwards compatibility getters for existing code
         killmailDelay: (state) => {
             return (
-                state.settings?.killmailDelay ?? defaultSettings.killmailDelay
+                state.settings?.killmailDelay ??
+                CORE_SETTINGS_DEFAULTS.killmailDelay
             );
         },
 
         defaultCharacterPage: (state) => {
             return (
                 state.settings?.defaultCharacterPage ??
-                defaultSettings.defaultCharacterPage
+                CORE_SETTINGS_DEFAULTS.defaultCharacterPage
             );
         },
 
         defaultCorporationPage: (state) => {
             return (
                 state.settings?.defaultCorporationPage ??
-                defaultSettings.defaultCorporationPage
+                CORE_SETTINGS_DEFAULTS.defaultCorporationPage
             );
         },
 
         defaultAlliancePage: (state) => {
             return (
                 state.settings?.defaultAlliancePage ??
-                defaultSettings.defaultAlliancePage
+                CORE_SETTINGS_DEFAULTS.defaultAlliancePage
             );
         },
 
         defaultSystemPage: (state) => {
             return (
                 state.settings?.defaultSystemPage ??
-                defaultSettings.defaultSystemPage
+                CORE_SETTINGS_DEFAULTS.defaultSystemPage
             );
         },
 
         killListAlternatingRows: (state) => {
             return (
                 state.settings?.killListAlternatingRows ??
-                defaultSettings.killListAlternatingRows
+                CORE_SETTINGS_DEFAULTS.killListAlternatingRows
             );
         },
 
         killListMutedAlternatingRows: (state) => {
             return (
                 state.settings?.killListMutedAlternatingRows ??
-                defaultSettings.killListMutedAlternatingRows
+                CORE_SETTINGS_DEFAULTS.killListMutedAlternatingRows
             );
         },
     },
@@ -148,7 +143,7 @@ export const useUserSettingsStore = defineStore("userSettings", {
 
                 if (response.success && response.settings) {
                     this.settings = {
-                        ...defaultSettings,
+                        ...CORE_SETTINGS_DEFAULTS,
                         ...response.settings,
                     };
                     this.lastFetchTime = Date.now();
@@ -159,19 +154,16 @@ export const useUserSettingsStore = defineStore("userSettings", {
                 console.error("Failed to fetch user settings:", err);
                 this.error = "Failed to load user settings";
                 // Use default settings as fallback
-                this.settings = { ...defaultSettings };
+                this.settings = { ...CORE_SETTINGS_DEFAULTS };
             } finally {
                 this.isLoading = false;
             }
         },
 
         /**
-         * Update a specific setting
+         * Update a specific setting with flexible key/value system
          */
-        async updateSetting<K extends keyof UserSettings>(
-            key: K,
-            value: UserSettings[K]
-        ) {
+        async updateSetting(key: string, value: any) {
             const authStore = useAuthStore();
 
             if (!authStore.isAuthenticated) {
@@ -184,10 +176,10 @@ export const useUserSettingsStore = defineStore("userSettings", {
 
             // Optimistically update the local state
             if (this.settings) {
-                (this.settings as any)[key] = value;
+                this.settings[key] = value;
             } else {
                 // If no settings loaded yet, create with defaults + new value
-                this.settings = { ...defaultSettings, [key]: value };
+                this.settings = { ...CORE_SETTINGS_DEFAULTS, [key]: value };
             }
 
             try {
@@ -201,7 +193,7 @@ export const useUserSettingsStore = defineStore("userSettings", {
             } catch (err: any) {
                 // Revert the optimistic update on error
                 if (this.settings && previousValue !== undefined) {
-                    (this.settings as any)[key] = previousValue;
+                    this.settings[key] = previousValue;
                 }
                 console.error("Failed to update user setting:", err);
                 throw err;
@@ -211,7 +203,7 @@ export const useUserSettingsStore = defineStore("userSettings", {
         /**
          * Update multiple settings at once
          */
-        async updateSettings(updates: Partial<UserSettings>) {
+        async updateSettings(updates: FlexibleUserSettings) {
             const authStore = useAuthStore();
 
             if (!authStore.isAuthenticated) {
@@ -225,15 +217,12 @@ export const useUserSettingsStore = defineStore("userSettings", {
             // Store previous values and optimistically update
             if (this.settings) {
                 Object.keys(updates).forEach((key) => {
-                    const typedKey = key as keyof UserSettings;
-                    previousValues[typedKey] = this.settings![typedKey];
-                    (this.settings as any)[typedKey] = (updates as any)[
-                        typedKey
-                    ];
+                    previousValues[key] = this.settings![key];
+                    this.settings![key] = updates[key];
                 });
             } else {
                 // If no settings loaded yet, create with defaults + updates
-                this.settings = { ...defaultSettings, ...updates };
+                this.settings = { ...CORE_SETTINGS_DEFAULTS, ...updates };
             }
 
             try {
@@ -248,9 +237,7 @@ export const useUserSettingsStore = defineStore("userSettings", {
                 // Revert all optimistic updates on error
                 if (this.settings) {
                     Object.keys(previousValues).forEach((key) => {
-                        const typedKey = key as keyof UserSettings;
-                        (this.settings as any)[typedKey] =
-                            previousValues[typedKey];
+                        this.settings![key] = previousValues[key];
                     });
                 }
                 console.error("Failed to update user settings:", err);

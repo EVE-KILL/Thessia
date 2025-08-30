@@ -1,331 +1,66 @@
-// Define interfaces locally since server types aren't directly accessible in client
-interface IDomainError {
-    type: "domain_not_found" | "domain_unverified";
-    message: string;
-}
+import type { IDomainContext } from "../../server/interfaces/ICustomDomain";
 
-interface IDomainContext {
-    isCustomDomain: boolean;
-    domain?: string;
-    config?: any;
-    entity?: any;
-    entityType?: "character" | "corporation" | "alliance";
-    navigation?: any;
-    features?: any;
-    page_config?: any;
-    error?: IDomainError;
-}
-
-/**
- * Composable for accessing domain context throughout the application
- */
+// Domain context composable using useState for proper SSR/client state sharing
 export const useDomainContext = () => {
-    // Get domain context from Nuxt context
-    const nuxtApp = useNuxtApp();
-
-    // Create a reactive state that persists across client navigation
-    const domainContextState = useState<IDomainContext>("domainContext", () => {
-        // Initialize from SSR context if available
-        try {
-            if (
-                process.server &&
-                nuxtApp.ssrContext?.event?.context?.domainContext
-            ) {
-                const context = nuxtApp.ssrContext.event.context.domainContext;
-                console.log(
-                    `[Domain Context] Initializing from SSR context:`,
-                    context?.domain,
-                    context?.error?.type
-                );
-
-                // Serialize the context to avoid Mongoose object serialization issues
-                return {
-                    isCustomDomain: Boolean(context.isCustomDomain),
-                    domain: context.domain || undefined,
-                    entityType: context.entityType || undefined,
-                    entity: context.entity
-                        ? JSON.parse(JSON.stringify(context.entity))
-                        : null,
-                    error: context.error
-                        ? {
-                              type: context.error.type,
-                              message: context.error.message,
-                          }
-                        : undefined,
-                    config: context.config
-                        ? {
-                              entity_type: context.config.entity_type,
-                              entity_id: context.config.entity_id,
-                              domain: context.config.domain,
-                              active: Boolean(context.config.active),
-                              verified: Boolean(context.config.verified),
-                              default_page: context.config.default_page,
-                              public_campaigns: Boolean(
-                                  context.config.public_campaigns
-                              ),
-                              branding: context.config.branding
-                                  ? JSON.parse(
-                                        JSON.stringify(context.config.branding)
-                                    )
-                                  : null,
-                              navigation: context.config.navigation
-                                  ? JSON.parse(
-                                        JSON.stringify(
-                                            context.config.navigation
-                                        )
-                                    )
-                                  : null,
-                              features: context.config.features
-                                  ? JSON.parse(
-                                        JSON.stringify(context.config.features)
-                                    )
-                                  : null,
-                              page_config: context.config.page_config
-                                  ? JSON.parse(
-                                        JSON.stringify(
-                                            context.config.page_config
-                                        )
-                                    )
-                                  : null,
-                          }
-                        : null,
-                };
+    // Use useState for domain context - automatically shared between SSR and client
+    const domainContext = useState<IDomainContext | null>(
+        "domain-context",
+        () => {
+            // During SSR, initialize from event context
+            if (process.server) {
+                const event = useRequestEvent();
+                return event?.context?.domainContext || null;
             }
-        } catch (error) {
-            console.error(
-                `[Domain Context] Error initializing from SSR context:`,
-                error
-            );
+            // On client, this will be hydrated from server state
+            return null;
         }
+    );
 
-        // Fallback for client-side or when no custom domain
-        console.log(`[Domain Context] Using fallback initialization`);
-        return {
-            isCustomDomain: false,
-        };
+    // Computed properties for easy access to domain context data
+    const isCustomDomain = computed(
+        () => domainContext.value?.isCustomDomain || false
+    );
+    const domain = computed(() => domainContext.value?.domain || "");
+    const entities = computed(() => domainContext.value?.entities || []);
+    const primaryEntity = computed(
+        () => domainContext.value?.primaryEntity || null
+    );
+    const dashboardTemplate = computed(
+        () => domainContext.value?.dashboardTemplate || null
+    );
+    const domainError = computed(() => domainContext.value?.error || null);
+
+    // Navigation from domain config
+    const navigation = computed(
+        () => domainContext.value?.config?.navigation || null
+    );
+
+    // Entity URL helper for custom domains
+    const entityUrl = computed(() => {
+        if (!isCustomDomain.value || !primaryEntity.value) {
+            return "";
+        }
+        // Return appropriate URL based on entity type
+        const entity = primaryEntity.value;
+        if (entity.entity_type === "character") {
+            return `/character/${entity.character_id}`;
+        } else if (entity.entity_type === "corporation") {
+            return `/corporation/${entity.corporation_id}`;
+        } else if (entity.entity_type === "alliance") {
+            return `/alliance/${entity.alliance_id}`;
+        }
+        return "";
     });
-
-    const domainContext = computed<IDomainContext>(() => {
-        return domainContextState.value;
-    });
-
-    // Reactive helpers
-    const isCustomDomain = computed(() => domainContext.value.isCustomDomain);
-    const customDomain = computed(() => domainContext.value.domain);
-    const entityType = computed(() => domainContext.value.entityType);
-    const entity = computed(() => domainContext.value.entity);
-    const branding = computed(() => domainContext.value.config?.branding);
-    const navigation = computed(() => domainContext.value.config?.navigation);
-    const features = computed(() => domainContext.value.config?.features);
-    const pageConfig = computed(() => domainContext.value.config?.page_config);
-    const domainError = computed(() => domainContext.value.error);
-
-    /**
-     * Generate entity-specific URL for custom domains
-     */
-    const entityUrl = (path: string = "") => {
-        if (!isCustomDomain.value || !entity.value) {
-            return path;
-        }
-
-        const { entityType: type, entity: ent } = domainContext.value;
-        if (!type || !ent) return path;
-
-        const entityId = ent[`${type}_id`];
-        const entityPath = `/${type}/${entityId}${path}`;
-        return entityPath;
-    };
-
-    /**
-     * Get default page for entity based on domain config
-     */
-    const getDefaultPage = () => {
-        if (!isCustomDomain.value || !domainContext.value.config) {
-            return "dashboard";
-        }
-        return domainContext.value.config.default_page || "dashboard";
-    };
-
-    /**
-     * Check if campaigns should be shown on this domain
-     */
-    const showCampaigns = computed(() => {
-        if (!isCustomDomain.value || !domainContext.value.config) {
-            return false;
-        }
-        return domainContext.value.config.public_campaigns;
-    });
-
-    /**
-     * Get page title for custom domain
-     */
-    const getPageTitle = (defaultTitle: string) => {
-        if (!isCustomDomain.value || !branding.value?.header_title) {
-            return defaultTitle;
-        }
-        return branding.value.header_title;
-    };
-
-    /**
-     * Check if EVE-KILL branding should be shown
-     */
-    const showEveKillBranding = computed(() => {
-        if (!isCustomDomain.value || !branding.value) {
-            return true;
-        }
-        return branding.value.show_eve_kill_branding;
-    });
-
-    // Feature toggle getters (with proper defaults matching the store)
-    const showHeroSection = computed(() => features.value?.show_hero !== false);
-    const showStatsSection = computed(
-        () => features.value?.show_stats !== false
-    );
-    const showTrackingOverview = computed(
-        () => features.value?.show_tracking_overview !== false
-    );
-    const showCampaignSection = computed(
-        () => features.value?.show_campaigns !== false
-    );
-    const showMostValuableSection = computed(
-        () => features.value?.show_most_valuable !== false
-    );
-    const showTopBoxesSection = computed(
-        () => features.value?.show_top_boxes !== false
-    );
-    const showShipAnalysisSection = computed(
-        () => features.value?.show_ship_analysis !== false
-    );
 
     return {
-        // Core domain context
         domainContext: readonly(domainContext),
         isCustomDomain,
-        customDomain,
-        entityType,
-        entity,
-        branding,
-        navigation,
-        features,
-        pageConfig,
+        domain,
+        entities,
+        primaryEntity,
+        dashboardTemplate,
         domainError,
-
-        // Helper functions
-        entityUrl,
-        getDefaultPage,
-        getPageTitle,
-
-        // Feature flags
-        showCampaigns,
-        showEveKillBranding,
-
-        // Feature toggles
-        showHeroSection,
-        showStatsSection,
-        showTrackingOverview,
-        showCampaignSection,
-        showMostValuableSection,
-        showTopBoxesSection,
-        showShipAnalysisSection,
-    };
-};
-
-/**
- * Composable for generating custom CSS variables from branding
- */
-export const useCustomBranding = () => {
-    const { branding, isCustomDomain } = useDomainContext();
-
-    const customCssVariables = computed(() => {
-        if (!isCustomDomain.value || !branding.value) {
-            return {};
-        }
-
-        const vars: Record<string, string> = {};
-
-        if (branding.value.primary_color) {
-            vars["--color-primary"] = branding.value.primary_color;
-        }
-
-        if (branding.value.secondary_color) {
-            vars["--color-secondary"] = branding.value.secondary_color;
-        }
-
-        return vars;
-    });
-
-    const customCssClasses = computed(() => {
-        if (!isCustomDomain.value) {
-            return "";
-        }
-
-        const classes = ["custom-domain"];
-
-        if (branding.value?.primary_color) {
-            classes.push("has-custom-primary");
-        }
-
-        if (branding.value?.secondary_color) {
-            classes.push("has-custom-secondary");
-        }
-
-        return classes.join(" ");
-    });
-
-    const customCss = computed(() => {
-        if (!isCustomDomain.value || !branding.value?.custom_css) {
-            return "";
-        }
-        return branding.value.custom_css;
-    });
-
-    return {
-        customCssVariables,
-        customCssClasses,
-        customCss,
-        branding,
-    };
-};
-
-/**
- * Composable for domain-aware navigation
- */
-export const useDomainNavigation = () => {
-    const { isCustomDomain, entityType, entity } = useDomainContext();
-    const router = useRouter();
-
-    /**
-     * Navigate to a page within the current domain context
-     */
-    const navigateWithinDomain = (path: string) => {
-        if (!isCustomDomain.value) {
-            return navigateTo(path);
-        }
-
-        // For custom domains, ensure we stay within the entity context
-        if (path.startsWith("/")) {
-            return navigateTo(path);
-        }
-
-        // Relative navigation within entity
-        const entityPath = entityUrl(path);
-        return navigateTo(entityPath);
-    };
-
-    /**
-     * Generate entity-specific URL
-     */
-    const entityUrl = (path: string = "") => {
-        if (!isCustomDomain.value || !entity.value) {
-            return path;
-        }
-
-        const entityId = entity.value[`${entityType.value}_id`];
-        return `/${entityType.value}/${entityId}${path}`;
-    };
-
-    return {
-        navigateWithinDomain,
+        navigation,
         entityUrl,
     };
 };

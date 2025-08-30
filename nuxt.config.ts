@@ -105,27 +105,9 @@ export default defineNuxtConfig({
         },
 
         experimental: {
-            openAPI: true,
             websocket: true,
             asyncContext: true,
-        },
-
-        openAPI: {
-            production: "runtime",
-            meta: {
-                title: "EVE-KILL API",
-                description: "API for EVE-KILL",
-                version: "1.0.0",
-            },
-            ui: {
-                scalar: {
-                    route: "/scalar",
-                    theme: "dark",
-                },
-                swagger: {
-                    route: "/swagger",
-                },
-            },
+            wasm: true,
         },
 
         future: {

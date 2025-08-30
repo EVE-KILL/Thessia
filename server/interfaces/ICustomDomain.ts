@@ -11,47 +11,16 @@ export interface IEntityConfig {
     color_code?: string; // Custom color for this entity
 }
 
-// Enhanced branding system
-export interface ICustomBranding {
-    // Color scheme
-    primary_color?: string;
-    secondary_color?: string;
-    accent_color?: string;
-    background_color?: string;
-    text_color?: string;
-
-    // Images
-    logo_url?: string;
-    favicon_url?: string;
-    banner_image_url?: string;
-    background_image_url?: string;
-
-    // Typography
-    header_title?: string;
-    welcome_message?: string;
-    secondary_message?: string;
-    font_family?: string;
-    font_size_base?: number;
-
-    // Call-to-action buttons
-    cta_buttons?: Array<{
-        text: string;
-        url: string;
-        primary: boolean;
-        external: boolean;
-    }>;
-
-    // CSS customization
-    custom_css?: string;
-    css_variables?: Record<string, string>;
-
-    // Theme settings
-    show_eve_kill_branding: boolean;
-    theme_mode: "light" | "dark" | "auto";
-
-    // UI enhancements
-    border_radius?: string;
-    shadow_intensity?: "none" | "light" | "medium" | "heavy";
+// Flexible configuration - allows any key/value pairs
+export interface IFlexibleConfiguration {
+    [key: string]: any; // Allow any configuration values
+    // Common examples that users might define:
+    // primary_color?: string;
+    // welcome_message?: string;
+    // logo_url?: string;
+    // show_hero?: boolean;
+    // custom_font?: string;
+    // theme_mode?: string;
 }
 
 // Custom navigation configuration
@@ -85,42 +54,25 @@ export interface ICustomNavLink {
     access_level: "public" | "members" | "admin";
 }
 
-// Simple page configuration (checkbox-based)
-export interface ISimplePageConfig {
-    layout: "default" | "compact" | "detailed"; // Predefined layout options
-
-    // Component toggles - simple on/off switches
-    components: {
-        recent_kills: boolean;
-        top_pilots: boolean;
-        campaigns: boolean;
-        battles: boolean;
-        stats_overview: boolean;
-        search_widget: boolean;
-        news_feed: boolean;
-        social_links: boolean;
-    };
-
-    // Simple component settings
-    component_settings: {
-        recent_kills_count: number; // 5, 10, 20, 50
-        top_pilots_count: number; // 5, 10, 15
-        time_range: "24h" | "7d" | "30d" | "all";
-        show_losses: boolean;
-        show_involved_kills: boolean;
-    };
+// Dashboard template interface (modular system)
+export interface IDomainDashboardTemplate {
+    enabled?: boolean;
+    html_template?: string;
+    custom_css?: string;
+    template_name?: string;
+    template_description?: string;
+    template_version?: string;
+    created_at?: Date;
+    updated_at?: Date;
 }
 
-// Domain features configuration
-export interface IDomainFeatures {
-    show_hero: boolean;
-    show_stats: boolean;
-    show_tracking_overview: boolean;
-    show_campaigns: boolean;
-    show_most_valuable: boolean;
-    show_top_boxes: boolean;
-    show_ship_analysis: boolean;
-    featured_campaign_id?: string;
+// Dashboard template interface (legacy system - keep for compatibility)
+export interface IDashboardTemplate {
+    name: string;
+    template: string;
+    description?: string;
+    created_at: Date;
+    updated_at: Date;
 }
 
 // Domain usage tracking
@@ -134,7 +86,7 @@ export interface IDomainUsage {
     updated_at: Date;
 }
 
-// Phase 2 Custom Domain interface
+// Main Custom Domain interface (simplified)
 export interface ICustomDomain {
     domain_id: string;
     domain: string;
@@ -143,17 +95,14 @@ export interface ICustomDomain {
     // Multi-entity support
     entities: IEntityConfig[];
 
-    // Enhanced branding
-    branding: ICustomBranding;
-
     // Custom navigation
     navigation: INavigationConfig;
 
-    // Simple page configuration
-    page_config: ISimplePageConfig;
+    // Flexible configuration - any key/value pairs
+    configuration: IFlexibleConfiguration;
 
-    // Domain features
-    features: IDomainFeatures;
+    // Single dashboard template (new system)
+    dashboard_template?: IDomainDashboardTemplate;
 
     // Domain Management
     verified: boolean;
@@ -187,6 +136,20 @@ export interface IDomainContext {
     entities?: any[]; // Array of ICharacter | ICorporation | IAlliance
     primaryEntity?: any; // The primary entity
     entityTypes?: ("character" | "corporation" | "alliance")[];
+
+    // Dashboard template data (for SSR)
+    dashboardTemplate?: {
+        enabled: boolean;
+        template?: string;
+        customCss?: string;
+        isDefault?: boolean;
+    };
+
+    // Error state
+    error?: {
+        type: string;
+        message: string;
+    };
 }
 
 // Domain verification response
@@ -197,7 +160,7 @@ export interface IDomainVerification {
     error?: string;
 }
 
-// Enhanced domain creation request
+// Enhanced domain creation request (simplified)
 export interface ICreateDomainRequest {
     domain: string;
 
@@ -211,19 +174,17 @@ export interface ICreateDomainRequest {
         primary?: boolean;
     }[];
 
-    // Enhanced configuration
-    branding?: Partial<ICustomBranding>;
+    // Flexible configuration
+    configuration?: IFlexibleConfiguration;
     navigation?: Partial<INavigationConfig>;
-    page_config?: Partial<ISimplePageConfig>;
     public_campaigns?: boolean;
 }
 
-// Enhanced domain update request
+// Enhanced domain update request (simplified)
 export interface IUpdateDomainRequest {
     entities?: IEntityConfig[];
-    branding?: Partial<ICustomBranding>;
+    configuration?: IFlexibleConfiguration;
     navigation?: Partial<INavigationConfig>;
-    page_config?: Partial<ISimplePageConfig>;
     public_campaigns?: boolean;
 }
 

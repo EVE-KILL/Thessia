@@ -1,32 +1,15 @@
 import { defineStore } from "pinia";
 
-export interface DomainBranding {
-    primary_color?: string;
-    secondary_color?: string;
-    accent_color?: string;
-    background_color?: string;
-    text_color?: string;
-    logo_url?: string;
-    favicon_url?: string;
-    banner_image_url?: string;
-    background_image_url?: string;
-    header_title?: string;
-    welcome_message?: string;
-    secondary_message?: string;
-    cta_buttons?: Array<{
-        text: string;
-        url: string;
-        primary: boolean;
-        external: boolean;
-    }>;
-    font_family?: string;
-    font_size_base?: number;
-    custom_css?: string;
-    css_variables?: Record<string, string>;
-    show_eve_kill_branding?: boolean;
-    theme_mode?: "light" | "dark" | "auto";
-    border_radius?: string;
-    shadow_intensity?: "none" | "light" | "medium" | "heavy";
+// Flexible configuration interface - allows any key/value pairs
+export interface FlexibleConfiguration {
+    [key: string]: any;
+    // Common examples:
+    // primary_color?: string;
+    // welcome_message?: string;
+    // logo_url?: string;
+    // show_hero?: boolean;
+    // custom_font?: string;
+    // theme_mode?: string;
 }
 
 export interface DomainNavigation {
@@ -56,58 +39,34 @@ export interface DomainNavigation {
     }>;
 }
 
-export interface DomainPageConfig {
-    layout?: "default" | "compact" | "detailed";
-    components?: {
-        recent_kills?: boolean;
-        top_pilots?: boolean;
-        campaigns?: boolean;
-        battles?: boolean;
-        stats_overview?: boolean;
-        search_widget?: boolean;
-        news_feed?: boolean;
-        social_links?: boolean;
-    };
-    component_settings?: {
-        recent_kills_count?: 5 | 10 | 20 | 50;
-        top_pilots_count?: 5 | 10 | 15;
-        time_range?: "24h" | "7d" | "30d" | "all";
-        show_losses?: boolean;
-        show_involved_kills?: boolean;
-    };
-}
-
-export interface DomainFeatures {
-    show_hero?: boolean;
-    show_stats?: boolean;
-    show_tracking_overview?: boolean;
-    show_campaigns?: boolean;
-    show_most_valuable?: boolean;
-    show_top_boxes?: boolean;
-    show_ship_analysis?: boolean;
-    featured_campaign_id?: string;
+export interface DomainDashboardTemplate {
+    enabled?: boolean;
+    html_template?: string;
+    custom_css?: string;
+    version?: number;
+    created_at?: string;
+    updated_at?: string;
 }
 
 export interface DomainEntity {
-    entity_type: "character" | "corporation" | "alliance";
     entity_id: number;
-    display_name?: string;
-    show_in_nav?: boolean;
+    entity_type: "character" | "corporation" | "alliance";
+    entity_name?: string;
     primary?: boolean;
 }
 
 export interface DomainSettings {
-    domain_id?: string;
     domain?: string;
+    owner_character_id?: number;
     verified?: boolean;
     active?: boolean;
     entities?: DomainEntity[];
-    branding?: DomainBranding;
     navigation?: DomainNavigation;
-    page_config?: DomainPageConfig;
-    features?: DomainFeatures;
+    configuration?: FlexibleConfiguration;
+    dashboard_template?: DomainDashboardTemplate;
 }
 
+// Store definition
 export const useDomainSettingsStore = defineStore("domainSettings", () => {
     // State
     const currentDomain = ref<string | null>(null);
@@ -121,46 +80,35 @@ export const useDomainSettingsStore = defineStore("domainSettings", () => {
         return !!(settings.value.domain && settings.value.entities?.length);
     });
 
-    const branding = computed(() => settings.value.branding || {});
-    const navigation = computed(() => settings.value.navigation || {});
-    const pageConfig = computed(() => settings.value.page_config || {});
-    const features = computed(() => settings.value.features || {});
+    // Computed getters for easy access to nested properties
     const entities = computed(() => settings.value.entities || []);
-
-    // Feature toggle getters (with proper defaults)
-    const showHeroSection = computed(() => features.value.show_hero !== false);
-    const showStatsSection = computed(
-        () => features.value.show_stats !== false
-    );
-    const showTrackingOverview = computed(
-        () => features.value.show_tracking_overview !== false
-    );
-    const showCampaignSection = computed(
-        () => features.value.show_campaigns !== false
-    );
-    const showMostValuableSection = computed(
-        () => features.value.show_most_valuable !== false
-    );
-    const showTopBoxesSection = computed(
-        () => features.value.show_top_boxes !== false
-    );
-    const showShipAnalysisSection = computed(
-        () => features.value.show_ship_analysis !== false
+    const navigation = computed(() => settings.value.navigation || {});
+    const configuration = computed(() => settings.value.configuration || {});
+    const dashboardTemplate = computed(
+        () => settings.value.dashboard_template || {}
     );
 
-    // Branding getters
-    const domainTitle = computed(() => {
-        return (
-            branding.value.header_title ||
-            `${currentDomain.value || "Custom"} Killboard`
-        );
-    });
-
-    const customWelcomeMessage = computed(() => branding.value.welcome_message);
-    const customSecondaryMessage = computed(
-        () => branding.value.secondary_message
+    // Navigation getters
+    const showDefaultNav = computed(
+        () => navigation.value.show_default_nav !== false
     );
-    const customCTAButtons = computed(() => branding.value.cta_buttons || []);
+    const customLinks = computed(() => navigation.value.custom_links || []);
+
+    // Config getters - flexible configuration access
+    const getConfigValue = (key: string, defaultValue?: any) => {
+        return computed(() => configuration.value[key] ?? defaultValue);
+    };
+
+    // Dashboard Template getters
+    const hasCustomDashboard = computed(
+        () => dashboardTemplate.value.enabled === true
+    );
+    const customDashboardTemplate = computed(
+        () => dashboardTemplate.value.html_template || ""
+    );
+    const customDashboardCSS = computed(
+        () => dashboardTemplate.value.custom_css || ""
+    );
 
     // Actions
     const loadDomainSettings = async (domain: string, forceRefresh = false) => {
@@ -204,15 +152,14 @@ export const useDomainSettingsStore = defineStore("domainSettings", () => {
                 // Map the API response data correctly
                 const domainData = response.data;
                 settings.value = {
-                    domain_id: domainData._id || domainData.domain_id,
                     domain: domainData.domain,
+                    owner_character_id: domainData.owner_character_id,
                     verified: domainData.verified,
                     active: domainData.active,
                     entities: domainData.entities || [],
-                    branding: domainData.branding || {},
                     navigation: domainData.navigation || {},
-                    page_config: domainData.page_config || {},
-                    features: domainData.features || {},
+                    configuration: domainData.configuration || {},
+                    dashboard_template: domainData.dashboard_template || {},
                 };
                 hasUnsavedChanges.value = false;
             } else {
@@ -282,14 +229,6 @@ export const useDomainSettingsStore = defineStore("domainSettings", () => {
     };
 
     // Local state updates (for forms)
-    const updateBranding = (brandingUpdates: Partial<DomainBranding>) => {
-        settings.value.branding = {
-            ...settings.value.branding,
-            ...brandingUpdates,
-        };
-        hasUnsavedChanges.value = true;
-    };
-
     const updateNavigation = (navigationUpdates: Partial<DomainNavigation>) => {
         settings.value.navigation = {
             ...settings.value.navigation,
@@ -298,24 +237,28 @@ export const useDomainSettingsStore = defineStore("domainSettings", () => {
         hasUnsavedChanges.value = true;
     };
 
-    const updatePageConfig = (pageConfigUpdates: Partial<DomainPageConfig>) => {
-        settings.value.page_config = {
-            ...settings.value.page_config,
-            ...pageConfigUpdates,
-        };
-        hasUnsavedChanges.value = true;
-    };
-
-    const updateFeatures = (featureUpdates: Partial<DomainFeatures>) => {
-        settings.value.features = {
-            ...settings.value.features,
-            ...featureUpdates,
+    const updateConfiguration = (
+        configUpdates: Partial<FlexibleConfiguration>
+    ) => {
+        settings.value.configuration = {
+            ...settings.value.configuration,
+            ...configUpdates,
         };
         hasUnsavedChanges.value = true;
     };
 
     const updateEntities = (entityUpdates: DomainEntity[]) => {
         settings.value.entities = entityUpdates;
+        hasUnsavedChanges.value = true;
+    };
+
+    const updateDashboardTemplate = (
+        templateUpdates: Partial<DomainDashboardTemplate>
+    ) => {
+        settings.value.dashboard_template = {
+            ...settings.value.dashboard_template,
+            ...templateUpdates,
+        };
         hasUnsavedChanges.value = true;
     };
 
@@ -360,17 +303,19 @@ export const useDomainSettingsStore = defineStore("domainSettings", () => {
         // Also trigger global cache key invalidation for components
         if (process.client) {
             try {
-                const { incrementCacheKey } = await import(
-                    "~/composables/useDomainCacheInvalidation"
+                // Direct cache key increment to avoid circular dependency
+                const globalDomainCacheKey = useState<number>(
+                    "domain-cache-key",
+                    () => Date.now()
                 );
-                incrementCacheKey();
+                globalDomainCacheKey.value = Date.now();
                 console.log(
-                    `[Domain Settings Store] Incremented global cache key`
+                    `[Domain Settings Store] Incremented global cache key: ${globalDomainCacheKey.value}`
                 );
-            } catch (importError) {
+            } catch (cacheError) {
                 console.warn(
                     `[Domain Settings Store] Failed to increment cache key:`,
-                    importError
+                    cacheError
                 );
             }
         }
@@ -380,16 +325,15 @@ export const useDomainSettingsStore = defineStore("domainSettings", () => {
 
     // Save changes to server
     const saveChanges = async () => {
-        if (!settings.value.domain_id) {
-            throw new Error("No domain ID available for saving");
+        if (!settings.value.domain) {
+            throw new Error("No domain available for saving");
         }
 
-        const result = await updateDomainSettings(settings.value.domain_id, {
-            branding: settings.value.branding,
+        const result = await updateDomainSettings(settings.value.domain, {
             navigation: settings.value.navigation,
-            page_config: settings.value.page_config,
-            features: settings.value.features,
+            configuration: settings.value.configuration,
             entities: settings.value.entities,
+            dashboard_template: settings.value.dashboard_template,
         });
 
         // After successful save, refresh the domain settings to ensure store is up to date
@@ -409,63 +353,80 @@ export const useDomainSettingsStore = defineStore("domainSettings", () => {
         const data = domainData.data || domainData;
 
         settings.value = {
-            domain_id: data._id || data.domain_id,
             domain: data.domain,
+            owner_character_id: data.owner_character_id,
             verified: data.verified,
             active: data.active,
             entities: data.entities || [],
-            branding: data.branding || {},
             navigation: data.navigation || {},
-            page_config: data.page_config || {},
-            features: data.features || {},
+            configuration: data.configuration || {},
+            dashboard_template: data.dashboard_template || {},
         };
 
         currentDomain.value = data.domain || null;
         hasUnsavedChanges.value = false;
     };
 
+    // Initialize from SSR domain context (new SSR approach)
+    const initializeFromDomainContext = (domainContext: any) => {
+        if (!domainContext?.config) {
+            console.warn("[Domain Settings Store] No domain config in context");
+            return;
+        }
+
+        const config = domainContext.config;
+        settings.value = {
+            domain: config.domain,
+            owner_character_id: config.owner_character_id,
+            verified: config.verified,
+            active: config.active,
+            entities: config.entities || [],
+            navigation: config.navigation || {},
+            configuration: config.configuration || {},
+            dashboard_template: config.dashboard_template || {},
+        };
+
+        currentDomain.value = config.domain || null;
+        hasUnsavedChanges.value = false;
+
+        console.log(
+            `[Domain Settings Store] Initialized from domain context for: ${config.domain}`
+        );
+    };
+
     return {
-        // State
-        currentDomain: readonly(currentDomain),
-        settings: readonly(settings),
-        isLoading: readonly(isLoading),
-        error: readonly(error),
-        hasUnsavedChanges: readonly(hasUnsavedChanges),
+        // State - expose original refs, not readonly wrappers
+        currentDomain,
+        settings,
+        isLoading,
+        error,
+        hasUnsavedChanges,
 
         // Computed
         isValid,
-        branding,
-        navigation,
-        pageConfig,
-        features,
         entities,
+        navigation,
+        configuration,
+        dashboardTemplate,
+        showDefaultNav,
+        customLinks,
 
-        // Feature toggles
-        showHeroSection,
-        showStatsSection,
-        showTrackingOverview,
-        showCampaignSection,
-        showMostValuableSection,
-        showTopBoxesSection,
-        showShipAnalysisSection,
-
-        // Branding
-        domainTitle,
-        customWelcomeMessage,
-        customSecondaryMessage,
-        customCTAButtons,
+        // Dashboard Template
+        hasCustomDashboard,
+        customDashboardTemplate,
+        customDashboardCSS,
 
         // Actions
         loadDomainSettings,
         updateDomainSettings,
-        updateBranding,
         updateNavigation,
-        updatePageConfig,
-        updateFeatures,
+        updateConfiguration,
         updateEntities,
+        updateDashboardTemplate,
         resetSettings,
         refreshDomainSettings,
         saveChanges,
         initializeFromData,
+        initializeFromDomainContext,
     };
 });

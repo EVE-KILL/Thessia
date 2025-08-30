@@ -2,14 +2,11 @@ import { type Document, type Model, Schema, model } from "mongoose";
 
 // Import the interface from the dedicated interfaces file
 import type {
-    ICustomBranding,
     ICustomDomain,
     ICustomNavLink,
-    IDomainFeatures,
     IDomainUsage,
     IEntityConfig,
     INavigationConfig,
-    ISimplePageConfig,
 } from "../interfaces/ICustomDomain";
 
 export interface ICustomDomainDocument extends ICustomDomain, Document {}
@@ -51,160 +48,22 @@ const entityConfigSchema = new Schema<IEntityConfig>(
     { _id: false }
 );
 
-// Sub-schema for enhanced branding configuration
-const brandingSchema = new Schema<ICustomBranding>(
+// Flexible configuration schema - accepts any key/value pairs
+const configurationSchema = new Schema(
     {
-        // Color scheme
-        primary_color: {
-            type: String,
-            match: /^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$/,
-            default: "#3b82f6",
-        },
-        secondary_color: {
-            type: String,
-            match: /^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$/,
-            default: "#6b7280",
-        },
-        accent_color: {
-            type: String,
-            match: /^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$/,
-        },
-        background_color: {
-            type: String,
-            match: /^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$/,
-        },
-        text_color: {
-            type: String,
-            match: /^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$/,
-        },
-
-        // Images
-        logo_url: {
-            type: String,
-            validate: {
-                validator: function (v: string) {
-                    if (!v) return true;
-                    return /^https?:\/\/.+\.(jpg|jpeg|png|gif|svg|webp)$/i.test(
-                        v
-                    );
-                },
-                message: "Logo URL must be a valid image URL",
-            },
-        },
-        favicon_url: {
-            type: String,
-            validate: {
-                validator: function (v: string) {
-                    if (!v) return true;
-                    return /^https?:\/\/.+\.(ico|png|gif|svg)$/i.test(v);
-                },
-                message: "Favicon URL must be a valid icon URL",
-            },
-        },
-        banner_image_url: {
-            type: String,
-            validate: {
-                validator: function (v: string) {
-                    if (!v) return true;
-                    return /^https?:\/\/.+\.(jpg|jpeg|png|gif|svg|webp)$/i.test(
-                        v
-                    );
-                },
-                message: "Banner image URL must be a valid image URL",
-            },
-        },
-        background_image_url: {
-            type: String,
-            validate: {
-                validator: function (v: string) {
-                    if (!v) return true;
-                    return /^https?:\/\/.+\.(jpg|jpeg|png|gif|svg|webp)$/i.test(
-                        v
-                    );
-                },
-                message: "Background image URL must be a valid image URL",
-            },
-        },
-
-        // Typography
-        header_title: {
-            type: String,
-            maxlength: 100,
-        },
-        welcome_message: {
-            type: String,
-            maxlength: 500,
-        },
-        secondary_message: {
-            type: String,
-            maxlength: 300,
-        },
-        cta_buttons: [
-            {
-                text: {
-                    type: String,
-                    required: true,
-                    maxlength: 50,
-                },
-                url: {
-                    type: String,
-                    required: true,
-                    maxlength: 500,
-                },
-                primary: {
-                    type: Boolean,
-                    default: false,
-                },
-                external: {
-                    type: Boolean,
-                    default: true,
-                },
-            },
-        ],
-        font_family: {
-            type: String,
-            maxlength: 100,
-        },
-        font_size_base: {
-            type: Number,
-            min: 10,
-            max: 24,
-            default: 16,
-        },
-
-        // CSS customization
-        custom_css: {
-            type: String,
-            maxlength: 100000, // Increased limit for Phase 2
-        },
-        css_variables: {
-            type: Map,
-            of: String,
-        },
-
-        // Theme settings
-        show_eve_kill_branding: {
-            type: Boolean,
-            default: true,
-        },
-        theme_mode: {
-            type: String,
-            enum: ["light", "dark", "auto"],
-            default: "auto",
-        },
-
-        // UI enhancements
-        border_radius: {
-            type: String,
-            default: "0.375rem",
-        },
-        shadow_intensity: {
-            type: String,
-            enum: ["none", "light", "medium", "heavy"],
-            default: "medium",
-        },
+        // Allow any key-value pairs for maximum flexibility
+        // Users can define: colors, fonts, messages, toggles, etc.
+        // Examples:
+        // - primary_color: "#ff0000"
+        // - welcome_message: "Welcome to our killboard"
+        // - show_hero: true
+        // - custom_font: "Inter"
     },
-    { _id: false }
+    {
+        _id: false,
+        strict: false, // Allow any additional fields
+        minimize: false, // Keep empty objects
+    }
 );
 
 // Sub-schema for custom navigation links
@@ -327,45 +186,6 @@ const simplePageConfigSchema = new Schema<ISimplePageConfig>(
     { _id: false }
 );
 
-// Sub-schema for domain features configuration
-const featuresSchema = new Schema<IDomainFeatures>(
-    {
-        show_hero: {
-            type: Boolean,
-            default: true,
-        },
-        show_stats: {
-            type: Boolean,
-            default: true,
-        },
-        show_tracking_overview: {
-            type: Boolean,
-            default: true,
-        },
-        show_campaigns: {
-            type: Boolean,
-            default: true,
-        },
-        show_most_valuable: {
-            type: Boolean,
-            default: true,
-        },
-        show_top_boxes: {
-            type: Boolean,
-            default: true,
-        },
-        show_ship_analysis: {
-            type: Boolean,
-            default: true,
-        },
-        featured_campaign_id: {
-            type: String,
-            maxlength: 100,
-        },
-    },
-    { _id: false }
-);
-
 // Main CustomDomain schema
 const customDomainSchema = new Schema<ICustomDomainDocument>(
     {
@@ -418,28 +238,52 @@ const customDomainSchema = new Schema<ICustomDomainDocument>(
             },
         },
 
-        // Enhanced branding
-        branding: {
-            type: brandingSchema,
-            default: () => ({}),
-        },
-
         // Custom navigation
         navigation: {
             type: navigationSchema,
             default: () => ({}),
         },
 
-        // Simple page configuration
-        page_config: {
-            type: simplePageConfigSchema,
+        // Flexible configuration - any key/value pairs
+        configuration: {
+            type: configurationSchema,
             default: () => ({}),
         },
 
-        // Domain features
-        features: {
-            type: featuresSchema,
-            default: () => ({}),
+        // Single dashboard template (new system)
+        dashboard_template: {
+            enabled: {
+                type: Boolean,
+                default: false,
+            },
+            html_template: {
+                type: String,
+                maxlength: 50000, // 50KB limit
+            },
+            custom_css: {
+                type: String,
+                maxlength: 25000, // 25KB limit
+            },
+            template_name: {
+                type: String,
+                maxlength: 100,
+            },
+            template_description: {
+                type: String,
+                maxlength: 500,
+            },
+            template_version: {
+                type: String,
+                default: "1.0",
+            },
+            created_at: {
+                type: Date,
+                default: Date.now,
+            },
+            updated_at: {
+                type: Date,
+                default: Date.now,
+            },
         },
 
         // Domain Management

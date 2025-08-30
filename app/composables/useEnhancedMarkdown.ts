@@ -41,6 +41,8 @@ export const useEnhancedMarkdown = () => {
             await import("prismjs/components/prism-typescript");
             // @ts-ignore
             await import("prismjs/components/prism-yaml");
+            // @ts-ignore
+            await import("prismjs/components/prism-markup"); // HTML support
         } catch (error) {
             console.warn("Failed to load PrismJS:", error);
             Prism = null;

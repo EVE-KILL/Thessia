@@ -339,7 +339,6 @@ onMounted(() => {
                 const parsed = JSON.parse(stored);
                 if (Array.isArray(parsed)) {
                     recentSearches.value = parsed.slice(0, 5); // Limit to 5 recent searches
-                    console.log('Loaded recent searches:', recentSearches.value);
                 }
             }
         } catch (error) {
@@ -355,7 +354,6 @@ const saveRecentSearches = () => {
     if (import.meta.client) {
         try {
             localStorage.setItem('eve-kill-recent-searches', JSON.stringify(recentSearches.value));
-            console.log('Saved recent searches:', recentSearches.value);
         } catch (error) {
             console.warn('Failed to save recent searches:', error);
         }
@@ -369,7 +367,6 @@ const addToRecentSearches = (query: string) => {
         recentSearches.value.unshift(trimmed);
         recentSearches.value = recentSearches.value.slice(0, 5); // Keep only 5 most recent
         saveRecentSearches();
-        console.log('Added to recent searches:', trimmed);
     }
 };
 

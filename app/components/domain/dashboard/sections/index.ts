@@ -1,0 +1,9 @@
+// Export all section components for easy importing
+export { default as DomainDashboardCampaignsSection } from "./DomainDashboardCampaignsSection.vue";
+export { default as DomainDashboardHeroSection } from "./DomainDashboardHeroSection.vue";
+export { default as DomainDashboardMostValuableSection } from "./DomainDashboardMostValuableSection.vue";
+export { default as DomainDashboardRecentActivitySection } from "./DomainDashboardRecentActivitySection.vue";
+export { default as DomainDashboardShipAnalysisSection } from "./DomainDashboardShipAnalysisSection.vue";
+export { default as DomainDashboardTimeRangeSelector } from "./DomainDashboardTimeRangeSelector.vue";
+export { default as DomainDashboardTopBoxesSection } from "./DomainDashboardTopBoxesSection.vue";
+export { default as DomainDashboardTrackingOverview } from "./DomainDashboardTrackingOverview.vue";

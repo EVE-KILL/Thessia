@@ -1,0 +1,125 @@
+import { invalidateDomainCache } from "../../../utils/domainCacheManager";
+
+export default defineEventHandler(async (event) => {
+    try {
+        // Get the cookie value using the hardcoded cookie name
+        const cookieName = "evelogin";
+        const cookie = getCookie(event, cookieName);
+
+        if (!cookie) {
+            throw createError({
+                statusCode: 401,
+                statusMessage: "Authentication required",
+            });
+        }
+
+        // Get user session
+        const session = await $fetch("/api/auth/me", {
+            headers: {
+                cookie: `${cookieName}=${cookie}`,
+            },
+        });
+
+        if (!session || !session.authenticated) {
+            throw createError({
+                statusCode: 401,
+                statusMessage: "Authentication failed",
+            });
+        }
+
+        const user = session.user;
+        const domainId = getRouterParam(event, "id");
+
+        if (!domainId) {
+            throw createError({
+                statusCode: 400,
+                statusMessage: "Domain ID is required",
+            });
+        }
+
+        // Parse request body - let Mongoose handle field validation
+        const body = await readBody(event);
+
+        // Find the domain and verify ownership
+        const existingDomain = await CustomDomains.findOne({
+            domain_id: domainId,
+            owner_character_id: user.characterId,
+        });
+
+        if (!existingDomain) {
+            throw createError({
+                statusCode: 404,
+                statusMessage: "Domain not found",
+            });
+        }
+
+        // Check if domain name is being changed and if it's already taken
+        if (body.domain && body.domain !== existingDomain.domain) {
+            const domainExists = await CustomDomains.findOne({
+                domain: body.domain,
+                domain_id: { $ne: domainId },
+            });
+
+            if (domainExists) {
+                throw createError({
+                    statusCode: 409,
+                    statusMessage: "Domain already exists",
+                });
+            }
+        }
+
+        // Prepare update data
+        const updateData: any = {
+            ...body,
+            updated_at: new Date(),
+        };
+
+        // Reset verification if domain changes
+        if (body.domain && body.domain !== existingDomain.domain) {
+            updateData.verified = false;
+            updateData.verification_method = undefined;
+            updateData.dns_verified_at = null;
+        }
+
+        // Handle legacy support
+        if (body.entityType) {
+            updateData.entity_type = body.entityType;
+        }
+        if (body.entityId) {
+            updateData.entity_id = body.entityId;
+        }
+
+        // Update the domain - Mongoose will validate and filter fields
+        const updatedDomain = await CustomDomains.findOneAndUpdate(
+            {
+                domain_id: domainId,
+                owner_character_id: user.characterId,
+            },
+            { $set: updateData },
+            { new: true, runValidators: true }
+        );
+
+        if (!updatedDomain) {
+            throw createError({
+                statusCode: 500,
+                statusMessage: "Failed to update domain",
+            });
+        }
+
+        // Invalidate domain cache
+        await invalidateDomainCache(updatedDomain.domain);
+
+        return { domain: updatedDomain };
+    } catch (error: any) {
+        console.error("Error updating domain:", error);
+
+        if (error.statusCode) {
+            throw error;
+        }
+
+        throw createError({
+            statusCode: 500,
+            statusMessage: "Failed to update domain",
+        });
+    }
+});

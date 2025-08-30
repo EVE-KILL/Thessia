@@ -328,7 +328,6 @@ const totalLogLines = computed(() => {
 const connectToLogStream = async () => {
     // Always close existing connection first
     if (eventSource.value) {
-        console.log('Closing existing SSE connection...');
         eventSource.value.close();
         eventSource.value = null;
         // Small delay to ensure cleanup
@@ -338,11 +337,9 @@ const connectToLogStream = async () => {
     connectionStatus.value = 'connecting';
 
     try {
-        console.log('Connecting to SSE endpoint:', streamEndpoint.value);
         eventSource.value = new EventSource(streamEndpoint.value);
 
         eventSource.value.onopen = () => {
-            console.log('SSE connection opened');
             connectionStatus.value = 'connected';
             lastUpdate.value = new Date().toISOString();
         };

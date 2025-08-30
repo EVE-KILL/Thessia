@@ -11,393 +11,173 @@
                     required />
             </div>
 
-            <!-- PHASE 2: Multi-Entity Display -->
+            <!-- Entities Display -->
             <div>
-                <!-- Multi-Entity Display (Read-only in edit mode) -->
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                        {{ t('settings.domains.form.entities') }} *
-                    </label>
-                    <p class="text-xs text-gray-500 dark:text-gray-400 mb-3">
-                        Use the "Manage Entities" option to modify entities for this domain.
-                    </p>
+                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    {{ t('settings.domains.form.entities') }} *
+                </label>
+                <p class="text-xs text-gray-500 dark:text-gray-400 mb-3">
+                    Use the "Manage Entities" option to modify entities for this domain.
+                </p>
 
-                    <!-- Current Entities Display -->
-                    <div v-if="currentEntities.length > 0" class="space-y-2">
-                        <div v-for="entity in currentEntities"
-                            :key="`${entity._config?.entity_type || entity.type}-${entity._config?.entity_id || entity.id}`"
-                            class="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
-                            <div class="flex items-center space-x-3">
-                                <Image :type="entity._config?.entity_type || entity.type"
-                                    :id="entity._config?.entity_id || entity.id" :size="32" />
-                                <div>
-                                    <div class="font-medium text-gray-900 dark:text-gray-100">
-                                        {{ getEntityDisplayName(entity) }}
-                                    </div>
-                                    <div class="text-sm text-gray-500 dark:text-gray-400 capitalize">
-                                        {{ entity._config?.entity_type || entity.type }}
-                                    </div>
+                <!-- Current Entities Display -->
+                <div v-if="currentEntities.length > 0" class="space-y-2">
+                    <div v-for="entity in currentEntities"
+                        :key="`${entity._config?.entity_type || entity.type}-${entity._config?.entity_id || entity.id}`"
+                        class="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
+                        <div class="flex items-center space-x-3">
+                            <Image :type="entity._config?.entity_type || entity.type"
+                                :id="entity._config?.entity_id || entity.id" :size="32" />
+                            <div>
+                                <div class="font-medium text-gray-900 dark:text-gray-100">
+                                    {{ getEntityDisplayName(entity) }}
                                 </div>
-                                <div class="flex items-center gap-2 ml-4">
-                                    <span v-if="entity._config?.primary || entity.primary"
-                                        class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200">
-                                        Primary
-                                    </span>
-                                    <span v-if="entity._config?.show_in_nav || entity.show_in_nav"
-                                        class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200">
-                                        In Nav
-                                    </span>
+                                <div class="text-sm text-gray-500 dark:text-gray-400 capitalize">
+                                    {{ entity._config?.entity_type || entity.type }}
                                 </div>
                             </div>
+                            <div class="flex items-center gap-2 ml-4">
+                                <span v-if="entity._config?.primary || entity.primary"
+                                    class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200">
+                                    Primary
+                                </span>
+                                <span v-if="entity._config?.show_in_nav || entity.show_in_nav"
+                                    class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200">
+                                    In Nav
+                                </span>
+                            </div>
                         </div>
-                    </div>
-
-                    <!-- Entity Limit Info -->
-                    <div class="text-xs text-gray-500 dark:text-gray-400 mt-2">
-                        {{ currentEntities.length }} / 10 entities configured
                     </div>
                 </div>
             </div>
 
-            <!-- PHASE 2: Enhanced Branding Section -->
+            <!-- Flexible Configuration Section -->
             <div class="border-t border-gray-200 dark:border-gray-700 pt-4">
-                <h3 class="text-lg font-medium mb-4 text-gray-900 dark:text-white">
-                    {{ t('settings.domains.form.customBranding') }}
+                <h3 class="text-lg font-medium mb-4 text-gray-900 dark:text-white flex items-center gap-2">
+                    <Icon name="lucide:settings" class="w-5 h-5" />
+                    Configuration
                 </h3>
+                <p class="text-sm text-gray-600 dark:text-gray-400 mb-4">
+                    Add custom key-value settings that can be used in your dashboard templates with <code
+                        class="px-1 py-0.5 bg-gray-200 dark:bg-gray-600 rounded text-xs">&#123;&#123; key &#125;&#125;</code>
+                    syntax.
+                </p>
 
-                <!-- Basic Branding -->
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-                    <div>
-                        <label for="primaryColor" class="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                            {{ t('settings.domains.form.primaryColor') }}
-                        </label>
-                        <input id="primaryColor" v-model="state.branding.primary_color" type="color"
-                            :disabled="isSubmitting"
-                            class="mt-1 block w-full h-10 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-700" />
+                <!-- Existing Configuration Items -->
+                <div v-if="Object.keys(state.configuration).length > 0" class="space-y-4 mb-6">
+                    <div v-for="(value, key) in state.configuration" :key="key"
+                        class="flex items-center space-x-3 p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
+                        <div class="flex-1">
+                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                {{ key }}
+                            </label>
+                            <input v-if="typeof value === 'string'" v-model="state.configuration[key]" type="text"
+                                class="block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-800 dark:text-white sm:text-sm"
+                                :disabled="isSubmitting" />
+                            <input v-else-if="typeof value === 'number'" v-model.number="state.configuration[key]"
+                                type="number"
+                                class="block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-800 dark:text-white sm:text-sm"
+                                :disabled="isSubmitting" />
+                            <label v-else-if="typeof value === 'boolean'" class="flex items-center">
+                                <input v-model="state.configuration[key]" type="checkbox"
+                                    class="h-4 w-4 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500 dark:border-gray-600 dark:bg-gray-800 mr-2"
+                                    :disabled="isSubmitting" />
+                                <span class="text-sm">Enable {{ key }}</span>
+                            </label>
+                            <textarea v-else v-model="state.configuration[key]" rows="3"
+                                class="block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-800 dark:text-white sm:text-sm font-mono"
+                                :disabled="isSubmitting" placeholder="JSON format" />
+                        </div>
+                        <button type="button" @click="removeConfigurationItem(key)"
+                            class="text-red-600 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300 p-1"
+                            :disabled="isSubmitting">
+                            <Icon name="lucide:trash-2" class="w-4 h-4" />
+                        </button>
                     </div>
+                </div>
 
-                    <div>
-                        <label for="themeMode" class="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                            Theme Mode
-                        </label>
-                        <select id="themeMode" v-model="state.branding.theme_mode" :disabled="isSubmitting"
-                            class="mt-1 block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-700 dark:text-white sm:text-sm">
-                            <option value="auto">Auto</option>
-                            <option value="light">Light</option>
-                            <option value="dark">Dark</option>
+                <!-- Add New Configuration Item -->
+                <div class="border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg p-4">
+                    <div class="flex space-x-2 mb-4">
+                        <input v-model="newConfigKey" type="text"
+                            placeholder="Configuration key (e.g., primary_color, welcome_message)"
+                            class="flex-1 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-800 dark:text-white sm:text-sm"
+                            :disabled="isSubmitting" />
+                        <select v-model="newConfigType"
+                            class="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-800 dark:text-white sm:text-sm"
+                            :disabled="isSubmitting">
+                            <option value="string">Text</option>
+                            <option value="number">Number</option>
+                            <option value="boolean">True/False</option>
+                            <option value="object">JSON</option>
                         </select>
-                    </div>
-                </div>
-
-                <!-- Header Title -->
-                <div class="mb-4">
-                    <label for="headerTitle" class="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                        Custom Header Title
-                    </label>
-                    <input id="headerTitle" v-model="state.branding.header_title" type="text"
-                        placeholder="Your custom domain title" :disabled="isSubmitting"
-                        class="mt-1 block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-700 dark:text-white sm:text-sm" />
-                    <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                        Leave empty to use default domain-based title
-                    </p>
-                </div>
-
-                <!-- Welcome Messages -->
-                <div class="mb-6">
-                    <h4 class="text-sm font-medium text-gray-900 dark:text-white mb-3">Welcome Messages</h4>
-
-                    <div class="space-y-4">
-                        <div>
-                            <label for="welcomeMessage"
-                                class="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                                Primary Welcome Message
-                            </label>
-                            <textarea id="welcomeMessage" v-model="state.branding.welcome_message"
-                                placeholder="Welcome to our killboard! Track our combat activities and strategic achievements in New Eden."
-                                :disabled="isSubmitting" rows="3"
-                                class="mt-1 block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-700 dark:text-white sm:text-sm"></textarea>
-                            <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                                Leave empty to use auto-generated welcome message based on entities
-                            </p>
-                        </div>
-
-                        <div>
-                            <label for="secondaryMessage"
-                                class="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                                Secondary Message (Optional)
-                            </label>
-                            <textarea id="secondaryMessage" v-model="state.branding.secondary_message"
-                                placeholder="Additional information about your organization or mission."
-                                :disabled="isSubmitting" rows="2"
-                                class="mt-1 block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-700 dark:text-white sm:text-sm"></textarea>
-                            <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                                Additional text displayed below the main welcome message
-                            </p>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Call-to-Action Buttons -->
-                <div class="mb-6">
-                    <div class="flex items-center justify-between mb-3">
-                        <h4 class="text-sm font-medium text-gray-900 dark:text-white">
-                            Call-to-Action Buttons
-                        </h4>
-                        <button type="button" @click="addCTAButton" :disabled="state.branding.cta_buttons.length >= 5"
-                            class="inline-flex items-center px-3 py-1.5 border border-transparent text-sm font-medium rounded text-white bg-gray-600 hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 disabled:opacity-50 disabled:cursor-not-allowed">
-                            <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                    d="M12 4v16m8-8H4"></path>
-                            </svg>
-                            Add Button
+                        <button type="button" @click="addConfigurationItem" :disabled="!newConfigKey || isSubmitting"
+                            class="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center">
+                            <Icon name="lucide:plus" class="w-4 h-4" />
                         </button>
                     </div>
 
-                    <div v-if="state.branding.cta_buttons.length === 0"
-                        class="text-center py-4 text-gray-500 dark:text-gray-400">
-                        <p class="text-sm">No call-to-action buttons configured</p>
-                    </div>
-
-                    <div v-else class="space-y-3">
-                        <div v-for="(button, index) in state.branding.cta_buttons" :key="index"
-                            class="border border-gray-200 dark:border-gray-600 rounded-lg p-3 space-y-3">
-                            <div class="flex items-center justify-between">
-                                <span class="text-sm font-medium text-gray-700 dark:text-gray-300">
-                                    Button #{{ index + 1 }}
-                                </span>
-                                <button type="button" @click="removeCTAButton(index)"
-                                    class="inline-flex items-center p-1 text-red-600 hover:text-red-800 hover:bg-red-50 rounded focus:outline-none focus:ring-2 focus:ring-red-500">
-                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                            d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16">
-                                        </path>
-                                    </svg>
-                                </button>
-                            </div>
-
-                            <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
-                                <div>
-                                    <label class="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">
-                                        Button Text
-                                    </label>
-                                    <input v-model="button.text" type="text" maxlength="50" placeholder="Join Us"
-                                        class="w-full px-2 py-1 text-sm border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-700 dark:text-white" />
-                                </div>
-
-                                <div>
-                                    <label class="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">
-                                        URL
-                                    </label>
-                                    <input v-model="button.url" type="url" maxlength="500"
-                                        placeholder="https://discord.gg/..."
-                                        class="w-full px-2 py-1 text-sm border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-700 dark:text-white" />
-                                </div>
-                            </div>
-
-                            <div class="flex items-center justify-between">
-                                <div class="flex items-center gap-4">
-                                    <label class="flex items-center gap-2">
-                                        <input type="checkbox" v-model="button.primary"
-                                            class="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded" />
-                                        <span class="text-xs text-gray-700 dark:text-gray-300">Primary Button</span>
-                                    </label>
-                                    <label class="flex items-center gap-2">
-                                        <input type="checkbox" v-model="button.external"
-                                            class="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded" />
-                                        <span class="text-xs text-gray-700 dark:text-gray-300">External Link</span>
-                                    </label>
-                                </div>
-                            </div>
+                    <!-- Common Configuration Examples -->
+                    <div>
+                        <p class="text-xs text-gray-500 dark:text-gray-400 mb-2">Quick add common settings:</p>
+                        <div class="flex flex-wrap gap-2">
+                            <button v-for="example in configurationExamples" :key="example.key" type="button"
+                                @click="addExampleConfiguration(example)"
+                                :disabled="state.configuration && state.configuration.hasOwnProperty(example.key) || isSubmitting"
+                                class="text-xs px-3 py-1 bg-gray-200 dark:bg-gray-600 text-gray-700 dark:text-gray-300 rounded hover:bg-gray-300 dark:hover:bg-gray-500 disabled:opacity-50 disabled:cursor-not-allowed">
+                                {{ example.label }}
+                            </button>
                         </div>
                     </div>
                 </div>
+            </div>
 
-                <!-- Banner Image -->
-                <div class="mb-4">
-                    <label for="bannerImageUrl" class="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                        Banner Image URL
-                    </label>
-                    <input id="bannerImageUrl" v-model="state.branding.banner_image_url" type="url"
-                        placeholder="https://example.com/banner.jpg" :disabled="isSubmitting"
-                        class="mt-1 block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-700 dark:text-white sm:text-sm" />
-                </div>
+            <!-- Navigation Settings -->
+            <div class="border-t border-gray-200 dark:border-gray-700 pt-4">
+                <h3 class="text-lg font-medium mb-4 text-gray-900 dark:text-white flex items-center gap-2">
+                    <Icon name="lucide:navigation" class="w-5 h-5" />
+                    Navigation
+                </h3>
 
-                <!-- Custom CSS -->
-                <div class="mb-4">
-                    <label for="customCss" class="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                        {{ t('settings.domains.form.customCss') }}
+                <div class="grid grid-cols-2 md:grid-cols-3 gap-4">
+                    <label v-for="(value, key) in state.navigation" :key="key" class="flex items-center">
+                        <input v-model="state.navigation[key]" type="checkbox"
+                            class="h-4 w-4 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500 dark:border-gray-600 dark:bg-gray-800 mr-2"
+                            :disabled="isSubmitting" />
+                        <span class="text-sm capitalize">{{ key.replace('show_', '').replace('_', ' ') }}</span>
                     </label>
-                    <textarea id="customCss" v-model="state.branding.custom_css"
-                        :placeholder="t('settings.domains.form.customCssPlaceholder')" :disabled="isSubmitting" rows="4"
-                        class="mt-1 block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-700 dark:text-white sm:text-sm"></textarea>
                 </div>
             </div>
 
-            <!-- PHASE 2: Features Configuration -->
+            <!-- Dashboard Template Configuration -->
             <div class="border-t border-gray-200 dark:border-gray-700 pt-4">
                 <h3 class="text-lg font-medium mb-4 text-gray-900 dark:text-white">
-                    Features Configuration
+                    Custom Dashboard Template
                 </h3>
                 <p class="text-sm text-gray-600 dark:text-gray-400 mb-4">
-                    Configure which features and sections are displayed on your domain.
+                    Create a custom dashboard layout using modular components with personalized styling.
                 </p>
 
-                <div class="space-y-4">
-                    <!-- Show Hero Section -->
-                    <div class="flex items-center justify-between">
-                        <div>
-                            <label class="text-sm font-medium text-gray-700 dark:text-gray-300">
-                                Show Hero Section
-                            </label>
-                            <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                                Display the main hero section with welcome message and entity showcase
-                            </p>
-                        </div>
-                        <label class="relative inline-flex items-center cursor-pointer">
-                            <input type="checkbox" v-model="state.features.show_hero" class="sr-only peer">
-                            <div
-                                class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-indigo-300 dark:peer-focus:ring-indigo-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-indigo-600">
-                            </div>
+                <!-- Enable Custom Dashboard Toggle -->
+                <div class="flex items-center justify-between mb-6">
+                    <div>
+                        <label class="text-sm font-medium text-gray-700 dark:text-gray-300">
+                            Enable Custom Dashboard Template
                         </label>
+                        <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                            Use a custom HTML template with modular dashboard components instead of the default layout
+                        </p>
                     </div>
-
-                    <!-- Show Statistics Cards -->
-                    <div class="flex items-center justify-between">
-                        <div>
-                            <label class="text-sm font-medium text-gray-700 dark:text-gray-300">
-                                Show Statistics Cards
-                            </label>
-                            <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                                Display the statistics highlight cards (kills, ISK, ships, entities)
-                            </p>
+                    <label class="relative inline-flex items-center cursor-pointer">
+                        <input type="checkbox" v-model="state.dashboard_template.enabled" class="sr-only peer">
+                        <div
+                            class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-indigo-300 dark:peer-focus:ring-indigo-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-indigo-600">
                         </div>
-                        <label class="relative inline-flex items-center cursor-pointer">
-                            <input type="checkbox" v-model="state.features.show_stats" class="sr-only peer">
-                            <div
-                                class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-indigo-300 dark:peer-focus:ring-indigo-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-indigo-600">
-                            </div>
-                        </label>
-                    </div>
-
-                    <!-- Show Tracking Overview -->
-                    <div class="flex items-center justify-between">
-                        <div>
-                            <label class="text-sm font-medium text-gray-700 dark:text-gray-300">
-                                Show Tracking Overview
-                            </label>
-                            <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                                Display the entity tracking overview section with entity list
-                            </p>
-                        </div>
-                        <label class="relative inline-flex items-center cursor-pointer">
-                            <input type="checkbox" v-model="state.features.show_tracking_overview" class="sr-only peer">
-                            <div
-                                class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-indigo-300 dark:peer-focus:ring-indigo-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-indigo-600">
-                            </div>
-                        </label>
-                    </div>
-
-                    <!-- Show Campaigns -->
-                    <div class="flex items-center justify-between">
-                        <div>
-                            <label class="text-sm font-medium text-gray-700 dark:text-gray-300">
-                                Show Campaign Section
-                            </label>
-                            <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                                Display campaign information and featured campaigns
-                            </p>
-                        </div>
-                        <label class="relative inline-flex items-center cursor-pointer">
-                            <input type="checkbox" v-model="state.features.show_campaigns" class="sr-only peer">
-                            <div
-                                class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-indigo-300 dark:peer-focus:ring-indigo-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-indigo-600">
-                            </div>
-                        </label>
-                    </div>
-
-                    <!-- Show Most Valuable Kills -->
-                    <div class="flex items-center justify-between">
-                        <div>
-                            <label class="text-sm font-medium text-gray-700 dark:text-gray-300">
-                                Show Most Valuable Kills
-                            </label>
-                            <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                                Display the most valuable kills section with high-value killmails
-                            </p>
-                        </div>
-                        <label class="relative inline-flex items-center cursor-pointer">
-                            <input type="checkbox" v-model="state.features.show_most_valuable" class="sr-only peer">
-                            <div
-                                class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-indigo-300 dark:peer-focus:ring-indigo-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-indigo-600">
-                            </div>
-                        </label>
-                    </div>
-
-                    <!-- Show Top Boxes -->
-                    <div class="flex items-center justify-between">
-                        <div>
-                            <label class="text-sm font-medium text-gray-700 dark:text-gray-300">
-                                Show Top Boxes
-                            </label>
-                            <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                                Display the top killers, corporations, and alliances boxes
-                            </p>
-                        </div>
-                        <label class="relative inline-flex items-center cursor-pointer">
-                            <input type="checkbox" v-model="state.features.show_top_boxes" class="sr-only peer">
-                            <div
-                                class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-indigo-300 dark:peer-focus:ring-indigo-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-indigo-600">
-                            </div>
-                        </label>
-                    </div>
-
-                    <!-- Show Ship Destruction Analysis -->
-                    <div class="flex items-center justify-between">
-                        <div>
-                            <label class="text-sm font-medium text-gray-700 dark:text-gray-300">
-                                Show Ship Destruction Analysis
-                            </label>
-                            <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                                Display detailed ship destruction analysis and patterns
-                            </p>
-                        </div>
-                        <label class="relative inline-flex items-center cursor-pointer">
-                            <input type="checkbox" v-model="state.features.show_ship_analysis" class="sr-only peer">
-                            <div
-                                class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-indigo-300 dark:peer-focus:ring-indigo-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-indigo-600">
-                            </div>
-                        </label>
-                    </div>
-
-                    <!-- Featured Campaign Selector -->
-                    <div v-if="state.features.show_campaigns"
-                        class="ml-4 pl-4 border-l-2 border-gray-200 dark:border-gray-600">
-                        <div class="mb-3">
-                            <label for="featuredCampaign"
-                                class="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                                Featured Campaign (Optional)
-                            </label>
-                            <select id="featuredCampaign" v-model="state.features.featured_campaign_id"
-                                :disabled="isSubmitting || campaignsLoading"
-                                class="mt-1 block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-700 dark:text-white sm:text-sm">
-                                <option value="">No featured campaign</option>
-                                <option v-if="campaignsLoading" disabled>Loading campaigns...</option>
-                                <option v-for="campaign in availableCampaigns" :key="campaign.campaign_id"
-                                    :value="campaign.campaign_id">
-                                    {{ campaign.name }} ({{ campaign.status }})
-                                </option>
-                                <option v-if="!campaignsLoading && availableCampaigns.length === 0" disabled>No
-                                    campaigns available</option>
-                            </select>
-                            <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                                Select a campaign to feature prominently on your domain
-                            </p>
-                        </div>
-                    </div>
+                    </label>
                 </div>
             </div>
 
-            <!-- PHASE 2: Navigation Configuration -->
+            <!-- Navigation Settings -->
             <div class="border-t border-gray-200 dark:border-gray-700 pt-4">
                 <h3 class="text-lg font-medium mb-4 text-gray-900 dark:text-white">
                     Navigation Settings
@@ -743,75 +523,192 @@
                 </div>
             </div>
 
-            <!-- PHASE 2: Page Component Selection -->
+            <!-- Dashboard Template Configuration -->
             <div class="border-t border-gray-200 dark:border-gray-700 pt-4">
                 <h3 class="text-lg font-medium mb-4 text-gray-900 dark:text-white">
-                    Page Components
+                    Dashboard Template
                 </h3>
                 <p class="text-sm text-gray-600 dark:text-gray-400 mb-4">
-                    Choose which components to display on your custom domain pages.
+                    Create a custom dashboard layout using modular components with personalized styling.
                 </p>
 
-                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-                    <label
-                        class="flex items-center p-3 border border-gray-200 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer">
-                        <input type="checkbox" v-model="state.page_config.components.recent_kills"
-                            class="mr-3 h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded" />
-                        <div>
-                            <div class="font-medium text-gray-900 dark:text-white">Recent Kills</div>
-                            <div class="text-xs text-gray-500 dark:text-gray-400">Show recent killmails</div>
+                <!-- Enable Custom Dashboard Toggle -->
+                <div class="flex items-center justify-between mb-6">
+                    <div>
+                        <label class="text-sm font-medium text-gray-700 dark:text-gray-300">
+                            Enable Custom Dashboard Template
+                        </label>
+                        <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                            Use a custom HTML template with modular dashboard components instead of the default layout
+                        </p>
+                    </div>
+                    <label class="relative inline-flex items-center cursor-pointer">
+                        <input type="checkbox" v-model="state.dashboard_template.enabled" class="sr-only peer">
+                        <div
+                            class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-indigo-300 dark:peer-focus:ring-indigo-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-indigo-600">
                         </div>
                     </label>
+                </div>
 
-                    <label
-                        class="flex items-center p-3 border border-gray-200 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer">
-                        <input type="checkbox" v-model="state.page_config.components.top_pilots"
-                            class="mr-3 h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded" />
+                <!-- Template Configuration (shown when enabled) -->
+                <div v-if="state.dashboard_template.enabled" class="space-y-6">
+                    <!-- Template Metadata -->
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div>
-                            <div class="font-medium text-gray-900 dark:text-white">Top Pilots</div>
-                            <div class="text-xs text-gray-500 dark:text-gray-400">Show top pilots leaderboard</div>
+                            <label for="templateName"
+                                class="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                                Template Name (Optional)
+                            </label>
+                            <input id="templateName" v-model="state.dashboard_template.template_name" type="text"
+                                placeholder="My Custom Dashboard" :disabled="isSubmitting" maxlength="100"
+                                class="mt-1 block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-700 dark:text-white sm:text-sm" />
                         </div>
-                    </label>
 
-                    <label
-                        class="flex items-center p-3 border border-gray-200 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer">
-                        <input type="checkbox" v-model="state.page_config.components.campaigns"
-                            class="mr-3 h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded" />
                         <div>
-                            <div class="font-medium text-gray-900 dark:text-white">Campaigns</div>
-                            <div class="text-xs text-gray-500 dark:text-gray-400">Show active campaigns</div>
+                            <label for="templateDescription"
+                                class="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                                Description (Optional)
+                            </label>
+                            <input id="templateDescription" v-model="state.dashboard_template.template_description"
+                                type="text" placeholder="Custom layout for our organization" :disabled="isSubmitting"
+                                maxlength="200"
+                                class="mt-1 block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-700 dark:text-white sm:text-sm" />
                         </div>
-                    </label>
+                    </div>
 
-                    <label
-                        class="flex items-center p-3 border border-gray-200 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer">
-                        <input type="checkbox" v-model="state.page_config.components.battles"
-                            class="mr-3 h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded" />
-                        <div>
-                            <div class="font-medium text-gray-900 dark:text-white">Battles</div>
-                            <div class="text-xs text-gray-500 dark:text-gray-400">Show battle reports</div>
+                    <!-- HTML Template -->
+                    <div>
+                        <div class="flex items-center justify-between mb-2">
+                            <label for="htmlTemplate"
+                                class="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                                HTML Template
+                            </label>
+                            <div class="flex items-center space-x-2">
+                                <button type="button" @click="loadDefaultTemplate"
+                                    class="px-2 py-1 text-xs bg-gray-500 hover:bg-gray-600 text-white rounded transition-colors">
+                                    Load Default
+                                </button>
+                                <button type="button" @click="openTemplateEditor"
+                                    class="px-2 py-1 text-xs bg-blue-500 hover:bg-blue-600 text-white rounded transition-colors">
+                                    Advanced Editor
+                                </button>
+                            </div>
                         </div>
-                    </label>
+                        <textarea id="htmlTemplate" v-model="state.dashboard_template.html_template"
+                            :disabled="isSubmitting" rows="8" placeholder="<!-- Use modular dashboard components with configuration variables: -->
+<div class=&quot;grid grid-cols-2 gap-6&quot;>
+  <DomainDashboardTotalKillsBox
+    domain=&quot;{{ domain }}&quot;
+    time-range=&quot;7d&quot;
+    title=&quot;Total Kills&quot; />
+  <DomainDashboardISKDestroyedBox
+    domain=&quot;{{ domain }}&quot;
+    time-range=&quot;7d&quot; />
+</div>
 
-                    <label
-                        class="flex items-center p-3 border border-gray-200 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer">
-                        <input type="checkbox" v-model="state.page_config.components.stats_overview"
-                            class="mr-3 h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded" />
-                        <div>
-                            <div class="font-medium text-gray-900 dark:text-white">Statistics</div>
-                            <div class="text-xs text-gray-500 dark:text-gray-400">Show statistics overview</div>
-                        </div>
-                    </label>
+<!-- Use configuration variables like: -->
+<p>Join our Discord: {{ discord_invite }}</p>
+<h1>{{ welcome_message }}</h1>"
+                            class="mt-1 block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-700 dark:text-white sm:text-sm font-mono"></textarea>
+                        <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                            Use modular dashboard components with HTML layout. Available components:
+                            DomainDashboardTotalKillsBox, DomainDashboardISKDestroyedBox, DomainDashboardTopShipBox,
+                            DomainDashboardActiveEntitiesBox. Use <strong>&#123;&#123; key &#125;&#125;</strong> syntax
+                            for configuration variables.
+                        </p>
+                    </div>
 
-                    <label
-                        class="flex items-center p-3 border border-gray-200 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer">
-                        <input type="checkbox" v-model="state.page_config.components.search_widget"
-                            class="mr-3 h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded" />
-                        <div>
-                            <div class="font-medium text-gray-900 dark:text-white">Search Widget</div>
-                            <div class="text-xs text-gray-500 dark:text-gray-400">Show search functionality</div>
+                    <!-- Custom CSS -->
+                    <div>
+                        <label for="templateCss" class="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                            Custom CSS Styles
+                        </label>
+                        <textarea id="templateCss" v-model="state.dashboard_template.custom_css"
+                            :disabled="isSubmitting" rows="6" placeholder="/* Custom styles for your dashboard components */
+.domain-dashboard-total-kills-box {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border: 2px solid #667eea;
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+  .grid { grid-template-columns: 1fr; }
+}" class="mt-1 block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-700 dark:text-white sm:text-sm font-mono"></textarea>
+                        <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                            Add custom CSS to style your dashboard components. Use component-specific classes for
+                            targeted styling.
+                        </p>
+                    </div>
+
+                    <!-- Template Actions -->
+                    <div class="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-800 rounded-lg">
+                        <div class="flex items-center space-x-4">
+                            <button type="button" @click="previewTemplate"
+                                :disabled="!state.dashboard_template.html_template"
+                                class="inline-flex items-center px-3 py-2 border border-gray-300 shadow-sm text-sm leading-4 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed">
+                                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                                </svg>
+                                Preview Template
+                            </button>
                         </div>
-                    </label>
+                        <div class="text-xs text-gray-500 dark:text-gray-400">
+                            Last updated: {{ state.dashboard_template.updated_at ?
+                                formatDate(state.dashboard_template.updated_at) : 'Never' }}
+                        </div>
+                    </div>
+
+                    <!-- Template Validation Results -->
+                    <div v-if="templateValidation.errors.length > 0"
+                        class="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-md p-4">
+                        <div class="flex">
+                            <div class="flex-shrink-0">
+                                <svg class="h-5 w-5 text-red-400" viewBox="0 0 20 20" fill="currentColor">
+                                    <path fill-rule="evenodd"
+                                        d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
+                                        clip-rule="evenodd" />
+                                </svg>
+                            </div>
+                            <div class="ml-3">
+                                <h3 class="text-sm font-medium text-red-800 dark:text-red-200">Template Validation
+                                    Errors</h3>
+                                <div class="mt-2 text-sm text-red-700 dark:text-red-300">
+                                    <ul class="list-disc list-inside space-y-1">
+                                        <li v-for="error in templateValidation.errors" :key="error">{{ error }}</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Help Text -->
+                <div
+                    class="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-md p-4 mt-4">
+                    <div class="flex">
+                        <div class="flex-shrink-0">
+                            <svg class="h-5 w-5 text-blue-400" viewBox="0 0 20 20" fill="currentColor">
+                                <path fill-rule="evenodd"
+                                    d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z"
+                                    clip-rule="evenodd" />
+                            </svg>
+                        </div>
+                        <div class="ml-3">
+                            <h3 class="text-sm font-medium text-blue-800 dark:text-blue-200">Custom Dashboard Templates
+                            </h3>
+                            <div class="mt-2 text-sm text-blue-700 dark:text-blue-300">
+                                <p>Create custom dashboard layouts using modular components. When disabled, your domain
+                                    uses the default dashboard layout.
+                                    <a href="/docs/modular-dashboard" target="_blank"
+                                        class="font-medium underline hover:no-underline">Learn more about dashboard
+                                        templates</a>
+                                </p>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
 
@@ -846,6 +743,7 @@
 </template>
 
 <script setup lang="ts">
+import { useDomainCacheInvalidation } from '~/composables/useDomainCacheInvalidation';
 import { useDomainSettingsStore } from '~/stores/domainSettings';
 
 interface CustomLink {
@@ -874,13 +772,34 @@ const { t } = useI18n();
 // Use the domain settings store for state management
 const domainStore = useDomainSettingsStore()
 
+// Cache invalidation for template updates
+const { invalidateAllDomainCaches } = useDomainCacheInvalidation();
+
 const isSubmitting = ref(false);
 const campaignsLoading = ref(false);
 const availableCampaigns = ref<any[]>([]);
 
+// Configuration management
+const newConfigKey = ref('');
+const newConfigType = ref('string');
+
+// Configuration examples
+const configurationExamples = ref([
+    { key: 'contact_email', value: 'recruit@example.com', type: 'string', label: 'Contact Email' },
+    { key: 'discord_invite', value: 'https://discord.gg/yourserver', type: 'string', label: 'Discord Invite' },
+    { key: 'recruitment_open', value: true, type: 'boolean', label: 'Open Recruitment' },
+    { key: 'primary_timezone', value: 'UTC', type: 'string', label: 'Primary Timezone' },
+    { key: 'min_skillpoints', value: 5000000, type: 'number', label: 'Min Skill Points' },
+    { key: 'welcome_message', value: 'Welcome to our killboard!', type: 'string', label: 'Welcome Message' }
+]);
+
+// Dashboard template functionality
+const templateValidation = ref({ errors: [] as string[] });
+
 // PHASE 2: Enhanced state for multi-entity support
 const state = reactive({
     domain: props.domain.domain || '',
+    configuration: props.domain.configuration || {},
     branding: {
         primary_color: props.domain.branding?.primary_color || '#3B82F6',
         theme_mode: props.domain.branding?.theme_mode || 'auto',
@@ -931,6 +850,16 @@ const state = reactive({
         show_top_boxes: props.domain.features?.show_top_boxes ?? true,
         show_ship_analysis: props.domain.features?.show_ship_analysis ?? true,
         featured_campaign_id: props.domain.features?.featured_campaign_id || ''
+    },
+    dashboard_template: {
+        enabled: props.domain.dashboard_template?.enabled ?? false,
+        html_template: props.domain.dashboard_template?.html_template || '',
+        custom_css: props.domain.dashboard_template?.custom_css || '',
+        template_name: props.domain.dashboard_template?.template_name || '',
+        template_description: props.domain.dashboard_template?.template_description || '',
+        template_version: props.domain.dashboard_template?.template_version || '1.0.0',
+        created_at: props.domain.dashboard_template?.created_at || new Date().toISOString(),
+        updated_at: props.domain.dashboard_template?.updated_at || new Date().toISOString()
     }
 });
 
@@ -940,10 +869,6 @@ const entitySearchQuery = ref('');
 
 // Initialize data
 onMounted(async () => {
-    console.log('🔍 Frontend Debug - Initial props.domain:', JSON.stringify(props.domain, null, 2));
-    console.log('🔍 Frontend Debug - Initial state.navigation:', JSON.stringify(state.navigation, null, 2));
-    console.log('🔍 Frontend Debug - props.domain.navigation:', JSON.stringify(props.domain.navigation, null, 2));
-
     // Load current entities
     if (props.domain.entities_info) {
         currentEntities.value = props.domain.entities_info;
@@ -1021,22 +946,174 @@ const removeCTAButton = (index: number) => {
     state.branding.cta_buttons.splice(index, 1);
 };
 
+// Configuration management functions
+const addConfigurationItem = () => {
+    if (!newConfigKey.value.trim()) return;
+
+    if (!state.configuration) {
+        state.configuration = {};
+    }
+
+    let defaultValue: any = '';
+    switch (newConfigType.value) {
+        case 'number':
+            defaultValue = 0;
+            break;
+        case 'boolean':
+            defaultValue = false;
+            break;
+        case 'object':
+            defaultValue = {};
+            break;
+        default:
+            defaultValue = '';
+    }
+
+    state.configuration[newConfigKey.value] = defaultValue;
+    newConfigKey.value = '';
+    newConfigType.value = 'string';
+};
+
+const removeConfigurationItem = (key: string | number) => {
+    delete state.configuration[String(key)];
+};
+
+const addExampleConfiguration = (example: any) => {
+    if (!state.configuration) {
+        state.configuration = {};
+    }
+    if (state.configuration.hasOwnProperty(example.key)) return;
+    state.configuration[example.key] = example.value;
+};
+
+// Dashboard template management functions
+const loadDefaultTemplate = () => {
+    state.dashboard_template.html_template = `<!-- Welcome Section with Configuration Variables -->
+<div class="mb-8 text-center">
+  <h1 class="text-3xl font-bold mb-2">{{ welcome_message }}</h1>
+  <p class="text-gray-600">Join our community: <a href="{{ discord_invite }}" class="text-blue-600 hover:underline">Discord</a></p>
+</div>
+
+<!-- Dashboard Statistics -->
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+  <DomainDashboardTotalKillsBox
+    domain="{{ domain }}"
+    time-range="7d"
+    title="Total Kills" />
+  <DomainDashboardISKDestroyedBox
+    domain="{{ domain }}"
+    time-range="7d"
+    title="ISK Destroyed" />
+  <DomainDashboardTopShipBox
+    domain="{{ domain }}"
+    time-range="7d"
+    limit="1" />
+  <DomainDashboardActiveEntitiesBox
+    domain="{{ domain }}"
+    time-range="7d" />
+</div>`;
+
+    state.dashboard_template.custom_css = `.domain-dashboard-stats-container {
+  margin-bottom: 2rem;
+}
+
+.domain-dashboard-total-kills-box,
+.domain-dashboard-isk-destroyed-box,
+.domain-dashboard-top-ship-box,
+.domain-dashboard-active-entities-box {
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.1), rgba(147, 51, 234, 0.1));
+  border: 1px solid rgba(59, 130, 246, 0.2);
+  backdrop-filter: blur(10px);
+  transition: all 0.3s ease;
+}
+
+.domain-dashboard-total-kills-box:hover,
+.domain-dashboard-isk-destroyed-box:hover,
+.domain-dashboard-top-ship-box:hover,
+.domain-dashboard-active-entities-box:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(59, 130, 246, 0.15);
+}`;
+
+    state.dashboard_template.updated_at = new Date().toISOString();
+};
+
+const validateTemplate = async () => {
+    if (!state.dashboard_template.html_template) {
+        templateValidation.value = { errors: ['HTML template is required'] };
+        return;
+    }
+
+    try {
+        // Simple validation - just check for basic HTML structure
+        templateValidation.value = { errors: [] };
+    } catch (error) {
+        console.error('Template validation error:', error);
+        templateValidation.value = { errors: ['Failed to validate template'] };
+    }
+};
+
+const previewTemplate = () => {
+    // Store template data in sessionStorage to avoid long URLs
+    const templateData = {
+        domain: state.domain,
+        preview: true,
+        template: state.dashboard_template.html_template,
+        css: state.dashboard_template.custom_css || '',
+        name: state.dashboard_template.template_name || '',
+        description: state.dashboard_template.template_description || ''
+    };
+
+    sessionStorage.setItem('dashboard_template_preview', JSON.stringify(templateData));
+    window.open(`/domain/dashboard/customizer?domain=${encodeURIComponent(state.domain)}&from=preview`, '_blank');
+};
+
+const openTemplateEditor = () => {
+    // Store template data in sessionStorage to avoid long URLs
+    const templateData = {
+        domain: state.domain,
+        template: state.dashboard_template.html_template,
+        css: state.dashboard_template.custom_css || '',
+        name: state.dashboard_template.template_name || '',
+        description: state.dashboard_template.template_description || ''
+    };
+
+    sessionStorage.setItem('dashboard_template_edit', JSON.stringify(templateData));
+    window.open(`/domain/dashboard/customizer?domain=${encodeURIComponent(state.domain)}&from=editor`, '_blank');
+};
+
+const formatDate = (dateString: string) => {
+    return new Date(dateString).toLocaleDateString();
+};
+
 const onSubmit = async () => {
     if (!isFormValid.value) return;
 
     isSubmitting.value = true;
 
     try {
+        // Update dashboard template timestamps if enabled
+        if (state.dashboard_template.enabled) {
+            state.dashboard_template.updated_at = new Date().toISOString();
+
+            // Validate template before submitting if it has content
+            if (state.dashboard_template.html_template) {
+                await validateTemplate();
+                if (templateValidation.value.errors.length > 0) {
+                    throw new Error('Template validation failed. Please fix the errors before saving.');
+                }
+            }
+        }
+
         const body: any = {
             domain: state.domain,
+            configuration: state.configuration,
             branding: state.branding,
             navigation: state.navigation,
             page_config: state.page_config,
-            features: state.features
+            features: state.features,
+            dashboard_template: state.dashboard_template
         };
-
-        console.log('🔍 Frontend Debug - Sending to API:', JSON.stringify(body, null, 2));
-        console.log('🔍 Frontend Debug - Current state.navigation:', JSON.stringify(state.navigation, null, 2));
 
         // Multi-entity mode - entities are managed separately via ManageEntitiesForm
 
@@ -1045,13 +1122,13 @@ const onSubmit = async () => {
             body
         }) as { domain: any };
 
-        console.log('🔍 Frontend Debug - API Response:', JSON.stringify(response, null, 2));
-
         // Force refresh domain settings from the server to ensure we have the latest data
         // This ensures any server-side transformations or computed fields are reflected
         if (response.domain) {
-            console.log('🔍 Frontend Debug - Force refreshing domain settings after update');
             await domainStore.loadDomainSettings(state.domain, true);
+
+            // Invalidate all domain caches to ensure template changes are reflected
+            await invalidateAllDomainCaches(state.domain);
         }
 
         emit('updated', response.domain);

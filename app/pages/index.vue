@@ -2,7 +2,8 @@
     <!-- Custom Domain: Multi-Entity Dashboard -->
     <div v-if="isCustomDomain" class="domain-dashboard">
         <!-- Load the domain dashboard component -->
-        <DomainDashboard :domain="customDomain || ''" />
+        <DomainDashboardRenderer :domain="customDomain || ''"
+            :time-range="selectedTimeRange as '1d' | '7d' | '14d' | '30d'" :client-only="false" />
     </div>
 
     <!-- Main Domain: Standard Homepage -->
@@ -73,17 +74,11 @@
 const { t } = useI18n();
 const { isMobile } = useResponsive();
 const { generateWebsiteStructuredData, generateOrganizationStructuredData, addStructuredDataToHead } = useStructuredData();
+const selectedTimeRange = ref('7d');
 
 // Custom domain handling - Phase 2
 // Get domain context first to check if middleware detected a custom domain
 const { isCustomDomain, customDomain, domainError } = useDomainContext();
-
-console.log(`[Index Page] Domain context:`, {
-    isCustomDomain: isCustomDomain.value,
-    customDomain: customDomain.value,
-    domainError: domainError.value,
-    hostname: process.client ? window.location.hostname : 'server'
-});
 
 // Handle domain detection and routing
 (async () => {

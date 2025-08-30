@@ -32,6 +32,10 @@ function createTimeFilter(timeRange: string) {
  * Generate comprehensive domain statistics optimized for speed using separate index-friendly queries
  */
 async function generateFastDomainStats(entities: any[], timeFilter: any) {
+    console.log(`[generateFastDomainStats] Processing ${entities.length} entities`);
+    console.log(`[generateFastDomainStats] Time filter:`, timeFilter);
+    console.log(`[generateFastDomainStats] First entity:`, entities[0]);
+    
     const stats: any = {
         mostValuableKills: [],
         topKillersByCharacter: [],
@@ -39,8 +43,13 @@ async function generateFastDomainStats(entities: any[], timeFilter: any) {
         topKillersByAlliance: [],
         shipStats: { destroyed: [] },
         shipGroupStats: [],
+        topShips: [], // Add for component compatibility
         totalKills: 0,
         totalValue: 0,
+        // Add active entity counts
+        activeCharacters: 0,
+        activeCorporations: 0,
+        activeAlliances: 0,
     };
 
     try {
@@ -93,6 +102,15 @@ async function generateFastDomainStats(entities: any[], timeFilter: any) {
                     },
                 },
             ]);
+
+            console.log(`[generateFastDomainStats] Entity ${entityId} (${entityType}):`, {
+                victimQuery,
+                attackerQuery,
+                victimKills: victimStats?.totalKills || 0,
+                attackerKills: attackerStats?.totalKills || 0,
+                victimValue: victimStats?.totalValue || 0,
+                attackerValue: attackerStats?.totalValue || 0
+            });
 
             // Collect killmail IDs for deduplication
             if (victimStats?.killmailIds) {
@@ -182,6 +200,32 @@ async function generateFastDomainStats(entities: any[], timeFilter: any) {
             stats.shipGroupStats = shipGroupStats || [];
             stats.shipStats = { destroyed: shipGroupStats || [] };
 
+            // Create topShips array for component compatibility
+            if (shipGroupStats && shipGroupStats.length > 0) {
+                stats.topShips = shipGroupStats.map((ship: any) => {
+                    // Extract localized ship group name - prefer English as fallback
+                    let shipTypeName = ship.ship_group_name;
+                    if (
+                        typeof shipTypeName === "object" &&
+                        shipTypeName !== null
+                    ) {
+                        shipTypeName =
+                            shipTypeName.en ||
+                            shipTypeName.de ||
+                            shipTypeName.fr ||
+                            Object.values(shipTypeName)[0] ||
+                            "Unknown Ship Type";
+                    }
+
+                    return {
+                        shipTypeName: shipTypeName,
+                        shipTypeIcon: null, // Could add ship icons later
+                        count: ship.killed,
+                        percentage: null, // Calculate if needed
+                    };
+                });
+            }
+
             // Get top attackers from sample (fast approximation)
             const topAttackers = await Killmails.aggregate([
                 {
@@ -260,7 +304,21 @@ async function generateFastDomainStats(entities: any[], timeFilter: any) {
             stats.topKillersByAlliance = Array.from(allianceMap.values())
                 .sort((a, b) => b.kills - a.kills)
                 .slice(0, 10);
+
+            // Calculate active entity counts
+            stats.activeCharacters = characterMap.size;
+            stats.activeCorporations = corporationMap.size;
+            stats.activeAlliances = allianceMap.size;
         }
+
+        console.log(`[generateFastDomainStats] Final stats:`, {
+            totalKills: stats.totalKills,
+            totalValue: stats.totalValue,
+            mostValuableKillsCount: stats.mostValuableKills.length,
+            shipGroupStatsCount: stats.shipGroupStats.length,
+            uniqueKillIds: allKillIds.size,
+            allKillmailsCount: allKillmails.length
+        });
     } catch (error) {
         console.error("Error generating domain stats:", error);
     }
@@ -300,6 +358,10 @@ export default defineCachedEventHandler(
 
             // Get entities from domain config
             let entities = domainConfig.entities || [];
+            console.log(`[Domain Stats API] Domain: ${domain}, Entities found: ${entities.length}`);
+            console.log(`[Domain Stats API] Domain config:`, domainConfig ? 'found' : 'not found');
+            console.log(`[Domain Stats API] First entity:`, entities[0]);
+            
             if (entities.length === 0) {
                 throw createError({
                     statusCode: 400,

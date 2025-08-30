@@ -56,6 +56,7 @@ async function getDomainConfig(domain: string) {
             suspended: 1,
             suspension_reason: 1,
             expires_at: 1,
+            dashboard_template: 1,
         });
 
         // Cache the result (including null results to avoid repeated DB queries)
@@ -205,9 +206,6 @@ export async function clearAllDomainCaches(domain: string) {
                     if (exists) {
                         await redis.removeItem(key);
                         clearedCount++;
-                        console.log(
-                            `[Domain Detection] Cleared specific Redis key: ${key}`
-                        );
                     }
                 } catch (keyError: any) {
                     console.warn(
@@ -238,9 +236,6 @@ export async function clearAllDomainCaches(domain: string) {
                                 try {
                                     await redis.removeItem(key);
                                     clearedCount++;
-                                    console.log(
-                                        `[Domain Detection] Cleared wildcard Redis key: ${key}`
-                                    );
                                 } catch (removeError) {
                                     console.warn(
                                         `[Domain Detection] Failed to remove key ${key}:`,
@@ -266,10 +261,6 @@ export async function clearAllDomainCaches(domain: string) {
                     wildcardError
                 );
             }
-
-            console.log(
-                `[Domain Detection] Cleared ${clearedCount} Redis cache keys for domain: ${domain}`
-            );
         } catch (error) {
             console.error(
                 `[Domain Detection] Error clearing Redis caches for domain ${domain}:`,
@@ -297,6 +288,222 @@ export async function clearAllDomainCaches(domain: string) {
         );
         // Don't throw - middleware cache clearing still worked
     }
+}
+
+/**
+ * Generate default template for domains without custom templates
+ */
+function generateDefaultTemplate(domain: string): string {
+    return `<!-- Hero Section -->
+<DomainDashboardHeroSection
+  domain="${domain}"
+  title="EVE Online Killboard"
+  welcome-message="Welcome to our EVE Online killboard"
+  secondary-message="Track combat operations, analyze statistics, and monitor space battles across New Eden" />
+
+<!-- Main Dashboard Content -->
+<div class="dashboard-container">
+  <!-- Time Range Selector -->
+  <div class="time-range-section">
+    <DomainDashboardTimeRangeSelector v-model="selectedTimeRange" />
+  </div>
+
+  <!-- Statistics Grid - 4 Key Metrics in Row -->
+  <div class="metrics-grid">
+    <div class="metrics-grid-item">
+      <DomainDashboardTotalKillsBox
+        domain="${domain}"
+        :time-range="selectedTimeRange"
+        title="Total Kills"
+        size="md"
+        class="metric-box" />
+    </div>
+
+    <div class="metrics-grid-item">
+      <DomainDashboardISKDestroyedBox
+        domain="${domain}"
+        :time-range="selectedTimeRange"
+        title="ISK Destroyed"
+        size="md"
+        class="metric-box" />
+    </div>
+
+    <div class="metrics-grid-item">
+      <DomainDashboardTopShipBox
+        domain="${domain}"
+        :time-range="selectedTimeRange"
+        title="Most Destroyed"
+        count-label="destroyed"
+        :show-ship-icon="true"
+        size="md"
+        class="metric-box" />
+    </div>
+
+    <div class="metrics-grid-item">
+      <DomainDashboardActiveEntitiesBox
+        domain="${domain}"
+        :time-range="selectedTimeRange"
+        title="Active Entities"
+        entity-type="all"
+        size="md"
+        class="metric-box" />
+    </div>
+  </div>
+
+  <!-- Tracking Overview -->
+  <div class="dashboard-section">
+    <DomainDashboardTrackingOverview
+      domain="${domain}"
+      :entities="entities"
+      :entity-stats="entityStats" />
+  </div>
+
+  <!-- Campaigns Section -->
+  <div class="dashboard-section">
+    <DomainDashboardCampaignsSection
+      domain="${domain}"
+      :campaigns="campaigns" />
+  </div>
+
+  <!-- Most Valuable Kills -->
+  <div class="dashboard-section">
+    <DomainDashboardMostValuableSection
+      domain="${domain}"
+      :most-valuable-kills="stats?.mostValuableKills?.slice(0, 7) || []"
+      :loading="statsLoading"
+      :selected-entity="selectedEntityLabel"
+      time-range-label="Recent Activity" />
+  </div>
+
+  <!-- Ship Analysis -->
+  <div class="dashboard-section">
+    <DomainDashboardShipAnalysisSection
+      domain="${domain}"
+      :stats="stats"
+      :loading="statsLoading"
+      :selected-entity="selectedEntityLabel"
+      time-range-label="Combat Analysis" />
+  </div>
+
+  <!-- Bottom Section: Kill List (80%) + Top Boxes (20%) -->
+  <div class="bottom-grid">
+    <!-- Kill List - 80% width -->
+    <div class="kill-list-section">
+      <DomainDashboardRecentActivitySection
+        domain="${domain}"
+        :api-endpoint="killmailsEndpoint"
+        :selected-entity="selectedEntityLabel"
+        title="Recent Killmails"
+        description="Latest combat activity and killmail reports" />
+    </div>
+
+    <!-- Top Boxes - 20% width -->
+    <div class="top-boxes-section">
+      <DomainDashboardTopBoxesSection
+        domain="${domain}"
+        :top-killers-by-character="stats?.topKillersByCharacter || []"
+        :top-killers-by-corporation="stats?.topKillersByCorporation || []"
+        :top-killers-by-alliance="stats?.topKillersByAlliance || []"
+        :loading="statsLoading"
+        :days="selectedTimeRangeDays"
+        title="Top Performers"
+        show-all-categories="true" />
+    </div>
+  </div>
+</div>`;
+}
+
+/**
+ * Generate default CSS for domains without custom CSS
+ */
+function generateDefaultCSS(): string {
+    return `/* Dashboard Container */
+.dashboard-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 1rem 1.5rem;
+    padding-top: 2rem;
+}
+
+/* Time Range Section */
+.time-range-section {
+    margin-bottom: 2rem;
+}
+
+/* Metrics Grid Layout - Force Grid Display */
+.dashboard-container .metrics-grid {
+    display: grid !important;
+    grid-template-columns: 1fr;
+    gap: 1rem;
+    margin-bottom: 4rem;
+    align-items: stretch;
+}
+
+/* Responsive grid breakpoints */
+@media (min-width: 640px) {
+    .dashboard-container .metrics-grid {
+        grid-template-columns: repeat(2, 1fr) !important;
+        gap: 1.5rem;
+    }
+}
+
+@media (min-width: 1024px) {
+    .dashboard-container .metrics-grid {
+        grid-template-columns: repeat(4, 1fr) !important;
+        gap: 1.5rem;
+    }
+}
+
+/* Grid items - equal height and proper display */
+.dashboard-container .metrics-grid-item {
+    display: flex;
+    width: 100%;
+    min-height: 200px;
+}
+
+/* Metric boxes - expand to fill container completely */
+.dashboard-container .metric-box,
+.dashboard-container .metrics-grid-item > * {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    height: 100%;
+    min-height: 200px;
+}
+
+/* Dashboard sections spacing */
+.dashboard-section {
+    margin-bottom: 3rem;
+}
+
+/* Bottom section - 80/20 split layout */
+.bottom-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 2rem;
+    margin-top: 2rem;
+}
+
+/* Responsive 80/20 split for larger screens */
+@media (min-width: 1280px) {
+    .bottom-grid {
+        grid-template-columns: 4fr 1fr;
+        gap: 2rem;
+    }
+}
+
+/* Kill list section (80% width on large screens) */
+.kill-list-section {
+    width: 100%;
+    min-width: 0;
+}
+
+/* Top boxes section (20% width on large screens) */
+.top-boxes-section {
+    width: 100%;
+    min-width: 0;
+}`;
 }
 
 /**
@@ -342,13 +549,6 @@ export default defineEventHandler(async (event: H3Event) => {
     // Remove port from host if present
     const cleanHost = host.split(":")[0];
 
-    // Log domain access for debugging
-    console.log(
-        `[Domain Detection] Checking domain: ${cleanHost}, Path: ${
-            url.pathname
-        }, User-Agent: ${userAgent.substring(0, 100)}`
-    );
-
     // Check if this is an eve-kill domain
     const isEveKill = isEveKillDomain(cleanHost);
 
@@ -381,8 +581,6 @@ export default defineEventHandler(async (event: H3Event) => {
     }
 
     if (!domainConfig) {
-        // Unknown domain - set error context for proper error handling
-        console.log(`[Domain Detection] Unknown domain accessed: ${cleanHost}`);
         event.context.domainContext = {
             isCustomDomain: true,
             domain: cleanHost,
@@ -404,9 +602,6 @@ export default defineEventHandler(async (event: H3Event) => {
 
     // 1. Check if domain is suspended first
     if (domainConfig.suspended) {
-        console.log(
-            `[Domain Detection] Suspended domain accessed: ${cleanHost}, reason: ${domainConfig.suspension_reason}`
-        );
         throw createError({
             statusCode: 503,
             statusMessage:
@@ -428,9 +623,6 @@ export default defineEventHandler(async (event: H3Event) => {
 
     // 3. Check verification status (applies to all domains except localhost in dev)
     if (!domainConfig.verified) {
-        console.log(
-            `[Domain Detection] Unverified domain accessed: ${cleanHost}, verified: ${domainConfig.verified}`
-        );
         event.context.domainContext = {
             isCustomDomain: true,
             domain: cleanHost,
@@ -445,9 +637,6 @@ export default defineEventHandler(async (event: H3Event) => {
 
     // 4. Check activation status (only for non-localhost domains)
     if (!isLocalhostDomain && !domainConfig.active) {
-        console.log(
-            `[Domain Detection] Inactive domain accessed: ${cleanHost}, active: ${domainConfig.active}`
-        );
         event.context.domainContext = {
             isCustomDomain: true,
             domain: cleanHost,
@@ -519,11 +708,31 @@ export default defineEventHandler(async (event: H3Event) => {
         return;
     }
 
-    // PHASE 2: Set up enhanced domain context for the request
-    console.log(
-        `[Domain Detection] Successfully configured domain: ${cleanHost}, entities: ${entities.length}`
-    );
-    event.context.domainContext = {
+    // Prepare dashboard template data for SSR
+    let dashboardTemplate;
+    if (
+        domainConfig.dashboard_template?.enabled &&
+        domainConfig.dashboard_template?.html_template
+    ) {
+        // Use custom template from domain config
+        dashboardTemplate = {
+            enabled: true,
+            template: domainConfig.dashboard_template.html_template,
+            customCss: domainConfig.dashboard_template.custom_css || "",
+            isDefault: false,
+        };
+    } else {
+        // Generate default template
+        dashboardTemplate = {
+            enabled: true,
+            template: generateDefaultTemplate(cleanHost),
+            customCss: generateDefaultCSS(),
+            isDefault: true,
+        };
+    }
+
+    // Create the full domain context
+    const fullDomainContext = {
         isCustomDomain: true,
         domain: cleanHost,
         config: domainConfig,
@@ -536,7 +745,29 @@ export default defineEventHandler(async (event: H3Event) => {
         // Legacy single entity support (using primary entity)
         entity: primaryEntity,
         entityType: primaryEntity?._entityConfig?.entity_type,
-    } as IDomainContext;
+
+        // Dashboard template data (for SSR)
+        dashboardTemplate: dashboardTemplate,
+    };
+
+    // JSON encode/decode the entire context to ensure complete serialization
+    const serializedContext = JSON.parse(JSON.stringify(fullDomainContext));
+
+    event.context.domainContext = serializedContext as IDomainContext;
+
+    // Store domain context in event headers for client access
+    setHeader(
+        event,
+        "X-Domain-Context",
+        JSON.stringify({
+            isCustomDomain: true,
+            domain: cleanHost,
+            entities: entities,
+            primaryEntity: primaryEntity,
+            entityTypes: entities.map((e: any) => e._entityConfig.entity_type),
+            dashboardTemplate: dashboardTemplate,
+        })
+    );
 
     // Add domain-specific headers
     setHeader(event, "X-Custom-Domain", cleanHost);

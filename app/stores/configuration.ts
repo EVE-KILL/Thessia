@@ -250,10 +250,10 @@ export const useConfigurationStore = defineStore("configuration", () => {
     };
 
     return {
-        // State
-        configurations: readonly(configurations),
-        loading: readonly(loading),
-        context: readonly(context),
+        // State - expose original refs, not readonly wrappers
+        configurations,
+        loading,
+        context,
 
         // Getters
         getConfiguration,

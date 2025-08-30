@@ -566,8 +566,26 @@ const getRowClass = (item: IKillList, index: number) => {
     const combinedLossClass = isCombinedLoss(item) ? "combined-loss-row bg-darkred" : "";
 
     let alternatingClass = "regular-row";
-    if (userSettingsStore.killListAlternatingRows) {
-        if (userSettingsStore.killListMutedAlternatingRows) {
+    
+    // To prevent hydration mismatches, use consistent default values
+    // during SSR and initial client render. User preferences will apply after hydration.
+    const isSSR = typeof window === 'undefined';
+    
+    // Always use defaults during SSR, and on client only use user settings if they're loaded
+    let alternatingRows, mutedRows;
+    
+    if (isSSR) {
+        // SSR: Use hardcoded defaults
+        alternatingRows = true;
+        mutedRows = false;
+    } else {
+        // Client: Use user settings if loaded, otherwise use defaults
+        alternatingRows = userSettingsStore.isLoaded ? userSettingsStore.killListAlternatingRows : true;
+        mutedRows = userSettingsStore.isLoaded ? userSettingsStore.killListMutedAlternatingRows : false;
+    }
+    
+    if (alternatingRows) {
+        if (mutedRows) {
             alternatingClass = index % 2 === 1 ? "alternate-row-muted" : "regular-row-muted";
         } else {
             alternatingClass = index % 2 === 1 ? "alternate-row" : "regular-row";
