@@ -1838,6 +1838,7 @@
         },
         "nav": {
             "domains": "Domains",
+            "comments": "Comments",
             "overview": "Overview",
             "accessLogs": "Access Logs",
             "traffic": "Traffic Analysis",
@@ -1872,6 +1873,7 @@
             "corporations": "Corporations",
             "alliances": "Alliances",
             "domains": "Custom Domains",
+            "comments": "Comment Management",
             "unknown": "Unknown Page"
         },
         "actions": {
@@ -2395,6 +2397,71 @@
                     "failed": "Failed"
                 }
             }
+        },
+        "comments": {
+            "title": "Comment Management",
+            "description": "Manage and moderate user comments across all killmails",
+            "loading": "Loading comments...",
+            "stats": {
+                "total": "Total Comments",
+                "today": "Today",
+                "thisWeek": "This Week",
+                "thisMonth": "This Month"
+            },
+            "filters": {
+                "title": "Filters",
+                "showDeleted": "Show Deleted Comments",
+                "textSearch": "Text Search",
+                "textSearchPlaceholder": "Search comment content...",
+                "entitySearch": "Entity Search",
+                "entitySearchPlaceholder": "Search characters, corporations, alliances...",
+                "timeRange": "Time Range",
+                "allTime": "All Time",
+                "today": "Today",
+                "thisWeek": "This Week",
+                "thisMonth": "This Month",
+                "selectedEntity": "Selected Entity",
+                "noEntitySelected": "No entity selected",
+                "searching": "Searching",
+                "noResults": "No results found"
+            },
+            "actionsTitle": "Actions",
+            "viewKillmail": "View Killmail",
+            "noKillmail": "No Killmail",
+            "restore": "Restore Comment",
+            "commentId": "Comment ID",
+            "createdAt": "Created At",
+            "updatedAt": "Updated At",
+            "corporation": "Corporation",
+            "alliance": "Alliance",
+            "status": "Status",
+            "statusActive": "Active",
+            "statusDeleted": "Deleted",
+            "deletedBadge": "DELETED",
+            "killmailLabel": "Killmail",
+            "killmailMissing": "Not Available",
+            "noComments": {
+                "title": "No Comments Found",
+                "message": "No comments match your current filters. Try adjusting your search criteria."
+            },
+            "error": {
+                "title": "Error Loading Comments",
+                "retry": "Try Again"
+            },
+            "edit": {
+                "title": "Edit Comment",
+                "comment": "Comment Content",
+                "save": "Save Changes",
+                "cancel": "Cancel",
+                "saving": "Saving..."
+            },
+            "delete": {
+                "title": "Delete Comment",
+                "warning": "Are you sure you want to delete this comment?",
+                "confirm": "Delete",
+                "cancel": "Cancel",
+                "deleting": "Deleting..."
+            }
         }
     },
     "Documentation": "Documentation",
@@ -2638,6 +2705,103 @@
                 "next": "Next",
                 "last": "Last",
                 "page": "Page {current} of {total}"
+            }
+        },
+        "comments": {
+            "title": "Comment Management",
+            "description": "Manage and moderate all user comments on killmails",
+            "refresh": "Refresh",
+            "search": "Search comments...",
+            "clearSearch": "Clear search",
+            "perPage": "per page",
+            "loading": "Loading comments...",
+            "error": {
+                "title": "Failed to load comments",
+                "retry": "Retry"
+            },
+            "retry": "Retry",
+            "empty": "No comments found",
+            "first": "First",
+            "prev": "Previous",
+            "next": "Next",
+            "last": "Last",
+            "pageInfo": "Page {current} of {total}",
+            "stats": {
+                "total": "Total Comments",
+                "today": "Today",
+                "thisWeek": "This Week",
+                "thisMonth": "This Month"
+            },
+            "filters": {
+                "title": "Filters",
+                "search": "Search",
+                "searchPlaceholder": "Search by content, character, killmail ID...",
+                "killmail": "Killmail ID",
+                "killmailPlaceholder": "Enter killmail ID...",
+                "character": "Character",
+                "characterPlaceholder": "Enter character name...",
+                "timeRange": "Time Range",
+                "allTime": "All Time",
+                "today": "Today",
+                "thisWeek": "This Week",
+                "thisMonth": "This Month",
+                "showDeleted": "Show Deleted Comments"
+            },
+            "killmailLabel": "Killmail",
+            "killmailMissing": "Killmail ID missing",
+            "noKillmail": "No Killmail",
+            "actionsTitle": "Actions",
+            "viewKillmail": "View Killmail",
+            "edit": "Edit",
+            "delete": "Delete",
+            "restore": "Restore",
+            "commentId": "Comment ID",
+            "createdAt": "Created At",
+            "updatedAt": "Updated At",
+            "corporation": "Corporation",
+            "alliance": "Alliance",
+            "deletedAt": "Deleted At",
+            "status": "Status",
+            "statusActive": "Active",
+            "statusDeleted": "Deleted",
+            "deletedBadge": "DELETED",
+            "noComments": {
+                "title": "No Comments Found",
+                "message": "No comments match your current filters. Try adjusting your search criteria."
+            },
+            "modals": {
+                "edit": {
+                    "title": "Edit Comment",
+                    "content": "Content",
+                    "contentPlaceholder": "Enter comment content...",
+                    "save": "Save Changes",
+                    "cancel": "Cancel",
+                    "saving": "Saving...",
+                    "success": "Comment updated successfully",
+                    "error": "Failed to update comment"
+                },
+                "delete": {
+                    "title": "Delete Comment",
+                    "message": "Are you sure you want to delete this comment? This action cannot be undone.",
+                    "confirmButton": "Delete Comment",
+                    "cancel": "Cancel",
+                    "deleting": "Deleting...",
+                    "success": "Comment deleted successfully",
+                    "error": "Failed to delete comment"
+                },
+                "restore": {
+                    "title": "Restore Comment",
+                    "message": "Are you sure you want to restore this deleted comment?",
+                    "confirmButton": "Restore Comment",
+                    "cancel": "Cancel",
+                    "restoring": "Restoring...",
+                    "success": "Comment restored successfully",
+                    "error": "Failed to restore comment"
+                }
+            },
+            "validation": {
+                "contentRequired": "Content is required",
+                "contentTooLong": "Content must be less than 2000 characters"
             }
         }
     },

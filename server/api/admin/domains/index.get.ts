@@ -193,37 +193,56 @@ export default defineEventHandler(async (event) => {
                                         break;
                                     case "corporation":
                                         entityData = await Corporations.findOne(
-                                            { corporation_id: entity.entity_id },
-                                            { name: 1, ticker: 1, corporation_id: 1 }
+                                            {
+                                                corporation_id:
+                                                    entity.entity_id,
+                                            },
+                                            {
+                                                name: 1,
+                                                ticker: 1,
+                                                corporation_id: 1,
+                                            }
                                         );
                                         break;
                                     case "alliance":
                                         entityData = await Alliances.findOne(
                                             { alliance_id: entity.entity_id },
-                                            { name: 1, ticker: 1, alliance_id: 1 }
+                                            {
+                                                name: 1,
+                                                ticker: 1,
+                                                alliance_id: 1,
+                                            }
                                         );
                                         break;
                                 }
                             } catch (error) {
-                                console.error(`Error fetching entity info for ${entity.entity_type} ${entity.entity_id}:`, error);
+                                console.error(
+                                    `Error fetching entity info for ${entity.entity_type} ${entity.entity_id}:`,
+                                    error
+                                );
                             }
 
                             return {
                                 entity_type: entity.entity_type,
                                 entity_id: entity.entity_id,
-                                entity_name: entityData?.name || entity.display_name || `${entity.entity_type} ${entity.entity_id}`,
+                                entity_name:
+                                    entityData?.name ||
+                                    entity.display_name ||
+                                    `${entity.entity_type} ${entity.entity_id}`,
                                 display_name: entity.display_name,
                                 show_in_nav: entity.show_in_nav,
                                 show_in_stats: entity.show_in_stats,
                                 primary: entity.primary,
-                                color_code: entity.color_code
+                                color_code: entity.color_code,
                             };
                         })
                     );
                 }
 
                 // Get primary entity info for backward compatibility
-                const primaryEntity = enhancedEntities.find(e => e.primary) || enhancedEntities[0];
+                const primaryEntity =
+                    enhancedEntities.find((e) => e.primary) ||
+                    enhancedEntities[0];
 
                 // Map domain status to display status
                 let status = "pending";

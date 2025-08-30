@@ -120,7 +120,8 @@
                     <div class="domain-title-section">
                         <div class="domain-name-header">
                             <Icon name="heroicons:globe-alt" class="domain-icon" />
-                            <h4 class="domain-title">{{ domain.domain }}</h4>
+                            <h4 class="domain-title"><a target="_blank" :href="'https://' + domain.domain">{{
+                                    domain.domain }}</a></h4>
                         </div>
                         <StatusBadge :status="mapDomainStatus(domain.status)" class="domain-status" />
                     </div>
@@ -438,7 +439,7 @@
                                                 ${entity.entity_id}` }}
                                             </h5>
                                             <span class="entity-card-type">{{ formatEntityType(entity.entity_type)
-                                                }}</span>
+                                            }}</span>
                                             <span class="entity-card-id">ID: {{ entity.entity_id }}</span>
                                         </div>
                                     </div>
@@ -558,7 +559,7 @@
                                     <div v-if="selectedDomain.branding.font_size_base" class="typography-item">
                                         <span class="typography-label">Base Font Size:</span>
                                         <span class="typography-value">{{ selectedDomain.branding.font_size_base
-                                            }}px</span>
+                                        }}px</span>
                                     </div>
                                     <div v-if="selectedDomain.branding.theme_mode" class="typography-item">
                                         <span class="typography-label">Theme Mode:</span>
@@ -582,7 +583,7 @@
                                         class="css-preview-code"><code>{{ selectedDomain.branding.custom_css }}</code></pre>
                                     <div class="css-stats">
                                         <span class="css-stat">{{ selectedDomain.branding.custom_css.split('\n').length
-                                            }} lines</span>
+                                        }} lines</span>
                                         <span class="css-stat">{{ selectedDomain.branding.custom_css.length }}
                                             characters</span>
                                     </div>
@@ -856,7 +857,7 @@
                                     <div class="verification-item">
                                         <span class="verification-label">Verification Method:</span>
                                         <span class="verification-value">{{ selectedDomain.verification_method || 'None'
-                                            }}</span>
+                                        }}</span>
                                     </div>
                                     <div class="verification-item">
                                         <span class="verification-label">Verification Token:</span>
@@ -899,7 +900,7 @@
                     <p><strong>{{ t('admin.domains.columns.domain') }}:</strong> {{ domainToDelete?.domain }}</p>
                     <p><strong>{{ t('admin.domains.columns.entity') }}:</strong> {{ domainToDelete?.entity_name }}</p>
                     <p><strong>{{ t('admin.domains.columns.owner') }}:</strong> {{ domainToDelete?.owner_character_name
-                    }}</p>
+                        }}</p>
                 </div>
             </div>
 
@@ -1106,7 +1107,7 @@ const formatDate = (dateString: string) => {
 const formatDateShort = (dateString: string): string => {
     if (!dateString) return 'Unknown';
     const date = new Date(dateString);
-    return new Intl.DateTimeFormat('en-US', { 
+    return new Intl.DateTimeFormat('en-US', {
         month: 'short',
         day: 'numeric',
         year: '2-digit'
@@ -1145,7 +1146,7 @@ const activateAndVerifyDomain = async (domain: Domain) => {
         // Update local data
         domain.status = 'verified' as any;
         await refreshData();
-        
+
     } catch (error) {
         console.error('Failed to activate and verify domain:', error);
     }

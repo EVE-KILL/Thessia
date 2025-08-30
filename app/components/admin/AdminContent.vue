@@ -10,6 +10,7 @@ n<template>
         <AdminLogs v-else-if="currentPath === 'logs'" />
         <AdminUsersView v-else-if="currentPath === 'users'" />
         <AdminDomains v-else-if="currentPath === 'domains'" />
+        <AdminComments v-else-if="currentPath === 'comments'" />
         <AdminApiKeys v-else-if="currentPath === 'api-keys'" />
         <AdminCustomPrices v-else-if="currentPath === 'custom-prices'" />
         <AdminAnalyticsESI v-else-if="currentPath === 'analytics/esi'" />
@@ -63,6 +64,7 @@ const currentPageTitle = computed(() => {
         'logs': t('admin.pages.logs'),
         'users': t('admin.pages.users'),
         'domains': t('admin.pages.domains'),
+        'comments': t('admin.pages.comments'),
         'analytics/esi': t('admin.analytics.esi.title'),
         'settings': t('admin.pages.settings'),
         'database': t('admin.pages.database'),

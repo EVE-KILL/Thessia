@@ -42,6 +42,9 @@
                     :current-path="currentPath" @navigate="$emit('navigate', 'users')" />
                 <AdminNavItem :item="{ name: t('admin.nav.domains'), path: 'domains', icon: 'heroicons:globe-alt' }"
                     :current-path="currentPath" @navigate="$emit('navigate', 'domains')" />
+                <AdminNavItem
+                    :item="{ name: t('admin.nav.comments'), path: 'comments', icon: 'heroicons:chat-bubble-left-right' }"
+                    :current-path="currentPath" @navigate="$emit('navigate', 'comments')" />
                 <AdminNavItem :item="{ name: t('admin.nav.apiKeys'), path: 'api-keys', icon: 'heroicons:key' }"
                     :current-path="currentPath" @navigate="$emit('navigate', 'api-keys')" />
                 <AdminNavItem
