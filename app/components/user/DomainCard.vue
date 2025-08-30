@@ -64,13 +64,11 @@
                     </template>
 
                     <div class="py-1 min-w-[180px]">
-                        <button v-if="!domain.verified" @click="$emit('verify', domain); dropdownOpen = false"
-                            class="w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-600 flex items-center gap-2">
-                            <UIcon name="i-heroicons-shield-check" class="w-4 h-4" />
+                        <button v-if="!domain.verified && !isEveKillSubdomain" @click="$emit('verify', domain); dropdownOpen = false"
+                            class="w-full text-left px-4 py-2 text-sm text-yellow-700 hover:bg-yellow-50 dark:text-yellow-300 dark:hover:bg-yellow-900/20">
+                            <UIcon name="i-heroicons-shield-check" class="mr-2 inline-block" />
                             {{ t('settings.domains.verify') }}
-                        </button>
-
-                        <button @click="$emit('edit', domain); dropdownOpen = false"
+                        </button>                        <button @click="$emit('edit', domain); dropdownOpen = false"
                             class="w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-600 flex items-center gap-2">
                             <UIcon name="i-heroicons-pencil" class="w-4 h-4" />
                             {{ t('edit') }}
@@ -166,7 +164,7 @@
         </div>
 
         <!-- Verification Notice -->
-        <div v-if="!domain.verified" class="mb-4">
+        <div v-if="!domain.verified && !isEveKillSubdomain" class="mb-4">
             <UAlert color="warning" variant="soft" :title="t('settings.domains.verificationRequired')"
                 :description="t('settings.domains.verificationDescription')">
                 <template #actions>
@@ -225,6 +223,10 @@ const { t } = useI18n();
 const showAllEntities = ref(false);
 
 // Computed properties
+const isEveKillSubdomain = computed(() => {
+    return props.domain.domain?.endsWith('.eve-kill.com');
+});
+
 const domainStatus = computed(() => {
     if (!props.domain.verified) return 'unverified';
     if (props.domain.suspended) return 'suspended';

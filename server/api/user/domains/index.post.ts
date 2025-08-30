@@ -222,6 +222,27 @@ export default defineEventHandler(async (event) => {
             });
         }
 
+        // Special handling for eve-kill.com subdomains
+        const isEveKillSubdomain = normalizedDomain.endsWith('.eve-kill.com');
+        
+        // For eve-kill.com subdomains, also check for potential clashes with existing subdomains
+        if (isEveKillSubdomain) {
+            // Extract subdomain part (e.g., "corp" from "corp.eve-kill.com")
+            const subdomainPart = normalizedDomain.replace('.eve-kill.com', '');
+            
+            // Check if any existing domain uses this subdomain pattern
+            const conflictingDomain = await CustomDomains.findOne({
+                domain: { $regex: `^${subdomainPart}\\.eve-kill\\.com$`, $options: 'i' }
+            });
+            
+            if (conflictingDomain) {
+                throw createError({
+                    statusCode: 409,
+                    statusMessage: `The subdomain ${subdomainPart}.eve-kill.com is already registered`,
+                });
+            }
+        }
+
         // PHASE 2: Check user's domain limit (10 domains per user)
         const userDomainCount = await CustomDomains.countDocuments({
             owner_character_id: user.characterId,
@@ -326,18 +347,24 @@ export default defineEventHandler(async (event) => {
             },
 
             public_campaigns: body.public_campaigns !== false,
-            verified: false,
-            active: false, // Will be activated after verification
+            verified: isEveKillSubdomain, // Auto-verify eve-kill.com subdomains
+            active: isEveKillSubdomain,   // Auto-activate eve-kill.com subdomains
+            verified_at: isEveKillSubdomain ? new Date() : undefined,
         };
 
         const newDomain = new CustomDomains(domainData);
         await newDomain.save();
 
+        // Different messages for eve-kill.com subdomains vs external domains
+        const message = isEveKillSubdomain
+            ? "Eve-kill.com subdomain created and activated successfully! Your custom killboard is ready to use."
+            : "Domain created successfully. Please verify ownership to activate.";
+
         return {
             success: true,
-            domain: newDomain.toJSON(), // verification_token now included automatically
-            message:
-                "Domain created successfully. Please verify ownership to activate.",
+            domain: newDomain.toJSON(),
+            message,
+            isEveKillSubdomain, // Let frontend know if this is an eve-kill subdomain
         };
     } catch (error: any) {
         console.error("Error creating domain:", error);

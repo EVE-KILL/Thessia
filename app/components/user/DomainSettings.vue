@@ -256,9 +256,12 @@ const handleDomainCreated = async (domain: any) => {
 
     await refreshDomains();
 
-    // Show verification modal for new domain
-    verifyingDomain.value = domain;
-    showVerificationModal.value = true;
+    // Only show verification modal for external domains (not eve-kill.com subdomains)
+    const isEveKillSubdomain = domain.domain?.endsWith('.eve-kill.com');
+    if (!isEveKillSubdomain) {
+        verifyingDomain.value = domain;
+        showVerificationModal.value = true;
+    }
 };
 
 const handleDomainUpdated = async () => {

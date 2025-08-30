@@ -132,23 +132,6 @@
                 </div>
             </div>
 
-            <!-- Navigation Settings -->
-            <div class="border-t border-gray-200 dark:border-gray-700 pt-4">
-                <h3 class="text-lg font-medium mb-4 text-gray-900 dark:text-white flex items-center gap-2">
-                    <Icon name="lucide:navigation" class="w-5 h-5" />
-                    Navigation
-                </h3>
-
-                <div class="grid grid-cols-2 md:grid-cols-3 gap-4">
-                    <label v-for="(value, key) in state.navigation" :key="key" class="flex items-center">
-                        <input v-model="state.navigation[key]" type="checkbox"
-                            class="h-4 w-4 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500 dark:border-gray-600 dark:bg-gray-800 mr-2"
-                            :disabled="isSubmitting" />
-                        <span class="text-sm capitalize">{{ key.replace('show_', '').replace('_', ' ') }}</span>
-                    </label>
-                </div>
-            </div>
-
             <!-- Dashboard Template Configuration -->
             <div class="border-t border-gray-200 dark:border-gray-700 pt-4">
                 <h3 class="text-lg font-medium mb-4 text-gray-900 dark:text-white">

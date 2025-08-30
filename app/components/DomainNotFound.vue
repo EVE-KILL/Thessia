@@ -20,7 +20,14 @@
                         <ul class="space-y-3 text-gray-200 dark:text-gray-300">
                             <li class="flex items-start space-x-3">
                                 <UIcon name="i-heroicons-x-circle" class="w-5 h-5 text-red-400 mt-0.5 flex-shrink-0" />
-                                <span>This domain is not registered in our custom domain system</span>
+                                <span>
+                                    <template v-if="isEveKillSubdomain">
+                                        This eve-kill.com subdomain is not registered yet
+                                    </template>
+                                    <template v-else>
+                                        This domain is not registered in our custom domain system
+                                    </template>
+                                </span>
                             </li>
                             <li class="flex items-start space-x-3">
                                 <UIcon name="i-heroicons-x-circle" class="w-5 h-5 text-red-400 mt-0.5 flex-shrink-0" />
@@ -28,7 +35,14 @@
                             </li>
                             <li class="flex items-start space-x-3">
                                 <UIcon name="i-heroicons-x-circle" class="w-5 h-5 text-red-400 mt-0.5 flex-shrink-0" />
-                                <span>The domain owner hasn't set up their custom killboard yet</span>
+                                <span>
+                                    <template v-if="isEveKillSubdomain">
+                                        Nobody has claimed this subdomain yet - it could be yours!
+                                    </template>
+                                    <template v-else>
+                                        The domain owner hasn't set up their custom killboard yet
+                                    </template>
+                                </span>
                             </li>
                         </ul>
                     </div>
@@ -37,13 +51,19 @@
                     <div>
                         <h2 class="text-2xl font-bold mb-3">Want to Set Up a Custom Killboard?</h2>
                         <p class="text-gray-200 dark:text-gray-300 mb-4">
-                            If you own this domain, you can create a custom killboard in just a few steps:
+                            <template v-if="isEveKillSubdomain">
+                                This eve-kill.com subdomain is available! You can claim it in just a few steps:
+                            </template>
+                            <template v-else>
+                                If you own this domain, you can create a custom killboard in just a few steps:
+                            </template>
                         </p>
                         <ol class="list-decimal list-inside space-y-2 text-gray-200 dark:text-gray-300 ml-4">
                             <li>Create an account on EVE Kill</li>
                             <li>Navigate to User Settings → Custom Domains</li>
                             <li>Add your domain and configure your entities</li>
-                            <li>Complete the DNS verification process</li>
+                            <li v-if="!isEveKillSubdomain">Complete the DNS verification process</li>
+                            <li v-else>Your eve-kill.com subdomain will be active immediately!</li>
                         </ol>
                     </div>
 
@@ -88,6 +108,11 @@ interface Props {
 }
 
 const props = defineProps<Props>();
+
+// Check if it's an eve-kill.com subdomain
+const isEveKillSubdomain = computed(() => {
+    return props.domain?.endsWith('.eve-kill.com');
+});
 
 // SEO
 useSeoMeta({
