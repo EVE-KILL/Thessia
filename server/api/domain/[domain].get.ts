@@ -9,8 +9,6 @@ export default defineEventHandler(async (event) => {
             });
         }
 
-        console.log(`[Domain API] GET request for domain: ${domain}`);
-
         // Find the domain in the database
         const domainData = await CustomDomains.findOne({
             domain: domain.toLowerCase(),
@@ -36,12 +34,6 @@ export default defineEventHandler(async (event) => {
                 statusMessage: "Domain not active",
             });
         }
-
-        console.log(
-            `[Domain API] Found domain: ${domain}, entities: ${
-                domainData.entities?.length || 0
-            }`
-        );
 
         // Return the domain configuration
         return {

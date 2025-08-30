@@ -83,9 +83,6 @@ async function clearDomainCachesForDatabase(domain: string): Promise<void> {
                     if (exists) {
                         await storage.removeItem(key);
                         clearedCount++;
-                        console.log(
-                            `[Domain Cache Manager] Successfully cleared key: ${key}`
-                        );
                     }
                 } catch (error) {
                     console.warn(
@@ -94,10 +91,6 @@ async function clearDomainCachesForDatabase(domain: string): Promise<void> {
                     );
                 }
             }
-
-            console.log(
-                `[Domain Cache Manager] Cleared ${clearedCount} specific cache keys for domain: ${domain}`
-            );
         } catch (redisError) {
             console.error(
                 `[Domain Cache Manager] Redis operations failed for domain ${domain}:`,
@@ -106,9 +99,6 @@ async function clearDomainCachesForDatabase(domain: string): Promise<void> {
         }
 
         // Success - at least middleware and specific caches cleared
-        console.log(
-            `[Domain Cache Manager] Cache clearing completed for domain: ${domain}`
-        );
     } catch (error) {
         console.error(`Error clearing caches for domain ${domain}:`, error);
     }

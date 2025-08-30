@@ -245,7 +245,6 @@ class DomainFallbackHandler {
         try {
             // This would perform DNS lookup to verify CNAME record
             // Implementation would depend on DNS library
-            console.log(`Checking DNS for ${domain}`);
         } catch (error) {
             console.error(`DNS check failed for ${domain}:`, error);
         }
@@ -291,7 +290,6 @@ class DomainFallbackHandler {
             };
 
             // Store in monitoring system or database
-            console.log("Domain event:", logEntry);
         } catch (error) {
             console.error(`Failed to log domain event:`, error);
         }

@@ -428,40 +428,27 @@ watch([currentTemplate, currentCss], ([newTemplate, newCss]) => {
 // Watch domain context changes
 watch(dashboardTemplate, (newTemplate) => {
     if (newTemplate && !templateLoaded.value) {
-        console.log('Dashboard template updated in domain context, reloading...');
         loadExistingTemplate();
     }
 }, { deep: true });
 
 // Initialize template and CSS from sessionStorage, API, or query parameters
 onMounted(async () => {
-    console.log('onMounted: Starting initialization');
-    console.log('Current domain:', domain.value);
-    console.log('Domain context available:', !!domainContext.value);
-    console.log('Dashboard template from context:', dashboardTemplate.value);
-    console.log('useState template:', domainTemplate.value);
-
     // Load template presets
     await loadTemplatePresets();
 
     // Check if we're coming from the form editor
     const fromParam = route.query.from as string;
-    console.log('From parameter:', fromParam);
 
     if (fromParam === 'preview') {
         const templateData = import.meta.client ? sessionStorage.getItem('dashboard_template_preview') : null;
-        console.log('Preview mode - sessionStorage data:', templateData ? 'found' : 'not found');
         if (templateData) {
             try {
                 const data = JSON.parse(templateData);
                 currentTemplate.value = data.template || '';
                 currentCss.value = data.css || '';
                 editorMode.value = 'code';
-                loadedFromSessionStorage.value = true; // Mark as loaded from sessionStorage
-                console.log('Loaded from preview sessionStorage:', {
-                    template: currentTemplate.value.substring(0, 100) + '...',
-                    css: currentCss.value.substring(0, 50) + '...'
-                });
+                loadedFromSessionStorage.value = true;
                 // Clear the session storage after using it
                 if (import.meta.client) {
                     sessionStorage.removeItem('dashboard_template_preview');
@@ -472,18 +459,13 @@ onMounted(async () => {
         }
     } else if (fromParam === 'editor') {
         const templateData = import.meta.client ? sessionStorage.getItem('dashboard_template_edit') : null;
-        console.log('Editor mode - sessionStorage data:', templateData ? 'found' : 'not found');
         if (templateData) {
             try {
                 const data = JSON.parse(templateData);
                 currentTemplate.value = data.template || '';
                 currentCss.value = data.css || '';
                 editorMode.value = 'code';
-                loadedFromSessionStorage.value = true; // Mark as loaded from sessionStorage
-                console.log('Loaded from editor sessionStorage:', {
-                    template: currentTemplate.value.substring(0, 100) + '...',
-                    css: currentCss.value.substring(0, 50) + '...'
-                });
+                loadedFromSessionStorage.value = true;
                 // Clear the session storage after using it
                 if (import.meta.client) {
                     sessionStorage.removeItem('dashboard_template_edit');
@@ -496,8 +478,7 @@ onMounted(async () => {
 
     // If no template loaded from sessionStorage, try domain context/API
     if (!currentTemplate.value) {
-        loadedFromSessionStorage.value = false; // Mark as loaded from API
-        console.log('No sessionStorage data, loading from domain context/API');
+        loadedFromSessionStorage.value = false;
         await loadExistingTemplate();
 
         // If we're in normal mode and there's no API template, clear any old sessionStorage
@@ -509,7 +490,6 @@ onMounted(async () => {
 
     // Fallback: Load initial values from query parameters (legacy support)
     if (!currentTemplate.value && route.query.template) {
-        console.log('Loading from query parameters');
         currentTemplate.value = decodeURIComponent(route.query.template as string);
     }
     if (!currentCss.value && route.query.css) {
@@ -519,12 +499,6 @@ onMounted(async () => {
     if (route.query.preview === 'true') {
         editorMode.value = 'code';
     }
-
-    console.log('onMounted: Initialization complete', {
-        template: currentTemplate.value ? currentTemplate.value.substring(0, 100) + '...' : 'empty',
-        css: currentCss.value ? currentCss.value.substring(0, 50) + '...' : 'empty',
-        editorMode: editorMode.value
-    });
 });
 
 // Available components for visual editor
@@ -621,14 +595,8 @@ const {
 // Event handlers
 async function saveCurrentTemplate() {
     if (!domain.value || !currentTemplate.value) {
-        console.log('Cannot save: missing domain or template', {
-            domain: domain.value,
-            hasTemplate: !!currentTemplate.value
-        });
         return;
     }
-
-    console.log('Saving template for domain:', domain.value);
 
     try {
         const response = await $fetch(`/api/domain/${domain.value}/template`, {
@@ -641,8 +609,6 @@ async function saveCurrentTemplate() {
                 encoded: true
             }
         });
-
-        console.log('Template saved successfully:', response);
 
         // Update shared useState after successful save
         domainTemplate.value = currentTemplate.value;
@@ -725,14 +691,9 @@ function removeComponent(index: number) {
 }
 
 function applyPreset(preset: any) {
-    console.log('Applying preset:', preset.title);
     currentTemplate.value = preset.template || '';
     currentCss.value = preset.customCss || '';
     showPresets.value = false;
-    console.log('Preset applied:', {
-        template: currentTemplate.value.substring(0, 100) + '...',
-        css: currentCss.value.substring(0, 50) + '...'
-    });
 
     // Trigger live preview update
     nextTick(() => {
@@ -756,21 +717,12 @@ async function loadTemplatePresets() {
 // Load existing template for domain
 async function loadExistingTemplate() {
     if (!domain.value) {
-        console.log('No domain value, skipping template load');
         return;
     }
 
-    console.log('loadExistingTemplate: Starting for domain:', domain.value);
-    console.log('Domain context:', domainContext.value);
-    console.log('Dashboard template from context:', dashboardTemplate.value);
-    console.log('useState template:', domainTemplate.value);
-    console.log('Template loaded flag:', templateLoaded.value);
-
-    // Since this page has ssr: false, let's try API first for now
+    // Since this page has ssr: false, let's try API first
     try {
-        console.log('loadExistingTemplate: Making API call to load template...');
         const templateData = await $fetch(`/api/domain/${domain.value}/template`);
-        console.log('loadExistingTemplate: API response:', templateData);
 
         if (templateData && templateData.template) {
             currentTemplate.value = templateData.template;
@@ -780,17 +732,7 @@ async function loadExistingTemplate() {
             domainTemplate.value = currentTemplate.value;
             domainCss.value = currentCss.value;
             templateLoaded.value = true;
-
-            console.log('loadExistingTemplate: Template loaded from API:', {
-                templateLength: currentTemplate.value.length,
-                cssLength: currentCss.value.length,
-                template: currentTemplate.value.substring(0, 200) + '...',
-                css: currentCss.value.substring(0, 100) + '...',
-                isDefault: templateData.isDefault
-            });
             return;
-        } else {
-            console.log('loadExistingTemplate: No template found in API response');
         }
     } catch (error) {
         console.error('loadExistingTemplate: Failed to load template from API:', error);
@@ -798,7 +740,6 @@ async function loadExistingTemplate() {
 
     // Fallback: try domain context if API fails
     if (dashboardTemplate.value && dashboardTemplate.value.template) {
-        console.log('Fallback: Using template from domain context');
         currentTemplate.value = dashboardTemplate.value.template || '';
         currentCss.value = dashboardTemplate.value.customCss || '';
 
@@ -806,27 +747,17 @@ async function loadExistingTemplate() {
         domainTemplate.value = currentTemplate.value;
         domainCss.value = currentCss.value;
         templateLoaded.value = true;
-
-        console.log('Template loaded from domain context:', {
-            template: currentTemplate.value.substring(0, 100) + '...',
-            css: currentCss.value.substring(0, 100) + '...'
-        });
         return;
     }
 
     // Check if template is already loaded in useState
     if (domainTemplate.value && templateLoaded.value) {
-        console.log('Fallback: Using template from useState');
         currentTemplate.value = domainTemplate.value;
         currentCss.value = domainCss.value;
-        console.log('Template loaded from useState:', {
-            template: currentTemplate.value.substring(0, 100) + '...',
-            css: currentCss.value.substring(0, 100) + '...'
-        });
         return;
     }
 
-    console.log('loadExistingTemplate: No template found from any source');
+    // No template found from any source
     currentTemplate.value = '';
     currentCss.value = '';
 }

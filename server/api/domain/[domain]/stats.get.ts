@@ -32,10 +32,6 @@ function createTimeFilter(timeRange: string) {
  * Generate comprehensive domain statistics optimized for speed using separate index-friendly queries
  */
 async function generateFastDomainStats(entities: any[], timeFilter: any) {
-    console.log(`[generateFastDomainStats] Processing ${entities.length} entities`);
-    console.log(`[generateFastDomainStats] Time filter:`, timeFilter);
-    console.log(`[generateFastDomainStats] First entity:`, entities[0]);
-    
     const stats: any = {
         mostValuableKills: [],
         topKillersByCharacter: [],
@@ -102,15 +98,6 @@ async function generateFastDomainStats(entities: any[], timeFilter: any) {
                     },
                 },
             ]);
-
-            console.log(`[generateFastDomainStats] Entity ${entityId} (${entityType}):`, {
-                victimQuery,
-                attackerQuery,
-                victimKills: victimStats?.totalKills || 0,
-                attackerKills: attackerStats?.totalKills || 0,
-                victimValue: victimStats?.totalValue || 0,
-                attackerValue: attackerStats?.totalValue || 0
-            });
 
             // Collect killmail IDs for deduplication
             if (victimStats?.killmailIds) {
@@ -310,15 +297,6 @@ async function generateFastDomainStats(entities: any[], timeFilter: any) {
             stats.activeCorporations = corporationMap.size;
             stats.activeAlliances = allianceMap.size;
         }
-
-        console.log(`[generateFastDomainStats] Final stats:`, {
-            totalKills: stats.totalKills,
-            totalValue: stats.totalValue,
-            mostValuableKillsCount: stats.mostValuableKills.length,
-            shipGroupStatsCount: stats.shipGroupStats.length,
-            uniqueKillIds: allKillIds.size,
-            allKillmailsCount: allKillmails.length
-        });
     } catch (error) {
         console.error("Error generating domain stats:", error);
     }
@@ -358,9 +336,6 @@ export default defineCachedEventHandler(
 
             // Get entities from domain config
             let entities = domainConfig.entities || [];
-            console.log(`[Domain Stats API] Domain: ${domain}, Entities found: ${entities.length}`);
-            console.log(`[Domain Stats API] Domain config:`, domainConfig ? 'found' : 'not found');
-            console.log(`[Domain Stats API] First entity:`, entities[0]);
             
             if (entities.length === 0) {
                 throw createError({

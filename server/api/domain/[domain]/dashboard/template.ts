@@ -9,7 +9,6 @@ import {
 
 export default defineEventHandler(async (event) => {
     const method = event.node.req.method;
-    console.log(`[Template API] ${method} request to:`, event.node.req.url);
 
     const domain = getRouterParam(event as any, "domain");
     if (!domain) {
@@ -247,8 +246,6 @@ async function handleGetTemplate(domain: string) {
     };
 
     try {
-        console.log("[Template GET] Loading template for domain:", domain);
-
         // Look for domain configuration
         const domainConfig = await CustomDomains.findOne({
             domain: domain.toLowerCase(),
@@ -291,21 +288,10 @@ async function handleGetTemplate(domain: string) {
 
 // POST handler - Save template
 async function handlePostTemplate(event: any, domain: string) {
-    console.log("[Template POST] Handler called for domain:", domain);
-
     try {
         // Parse the request body
         const body = await readBody(event);
-        console.log("[Template POST] Received body:", body);
         const { name, template, description, customCss } = body;
-
-        console.log("[Template POST] Parsed fields:", {
-            hasName: !!name,
-            hasTemplate: !!template,
-            templateLength: template?.length || 0,
-            hasCss: !!customCss,
-        });
-
         if (!name || !template) {
             throw createError({
                 statusCode: 400,
@@ -465,8 +451,6 @@ async function handlePostTemplate(event: any, domain: string) {
 
 // DELETE handler - Delete template
 async function handleDeleteTemplate(event: any, domain: string) {
-    console.log("[Template DELETE] Handler called for domain:", domain);
-
     try {
         // Get query parameters
         const query = getQuery(event);

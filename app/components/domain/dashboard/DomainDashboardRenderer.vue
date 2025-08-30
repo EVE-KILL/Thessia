@@ -273,23 +273,19 @@ const statsFetchKey = computed(() => {
 const currentDomain = computed(() => {
     // Use props.domain if available, otherwise try to get from domain context or current hostname
     if (props.domain) {
-        console.log('DomainDashboardRenderer - using props.domain:', props.domain);
         return props.domain;
     }
 
     // Try to get domain from context
     if (domainContext.value?.domain) {
-        console.log('DomainDashboardRenderer - using domainContext:', domainContext.value.domain);
         return domainContext.value.domain;
     }
 
     // Fallback to current hostname (client-side only)
     if (process.client && typeof window !== 'undefined') {
-        console.log('DomainDashboardRenderer - using window.location.hostname:', window.location.hostname);
         return window.location.hostname;
     }
 
-    console.log('DomainDashboardRenderer - no domain found, returning empty string');
     return '';
 });
 

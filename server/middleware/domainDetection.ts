@@ -612,9 +612,6 @@ export default defineEventHandler(async (event: H3Event) => {
 
     // 2. Check if domain has expired
     if (domainConfig.expires_at && domainConfig.expires_at < new Date()) {
-        console.log(
-            `[Domain Detection] Expired domain accessed: ${cleanHost}, expired at: ${domainConfig.expires_at}`
-        );
         throw createError({
             statusCode: 410,
             statusMessage: "Domain registration has expired",

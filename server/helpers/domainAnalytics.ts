@@ -193,7 +193,6 @@ class DomainAnalytics {
             const visitorsKey = `${key}:${ip}`;
 
             // This is a placeholder - would implement with actual storage
-            console.log(`Tracking unique visitor for ${domain}: ${ip}`);
         } catch (error) {
             console.error("Unique visitor tracking error:", error);
         }
@@ -206,12 +205,7 @@ class DomainAnalytics {
         try {
             // This would store in your analytics database
             // For now, just log
-            console.log(`Storing analytics for ${domain}:`, {
-                timestamp: new Date(),
-                path: request.path,
-                statusCode: request.statusCode,
-                responseTime: request.responseTime,
-            });
+            await this.storeInBuffer(domain, analyticsData);
         } catch (error) {
             console.error("Analytics storage error:", error);
         }
@@ -410,7 +404,6 @@ class DomainAnalytics {
     ): Promise<void> {
         try {
             // This would configure monitoring alerts
-            console.log(`Setting up alerts for ${domain}:`, thresholds);
 
             // Store alert configuration
             const alertConfig = {
@@ -421,7 +414,6 @@ class DomainAnalytics {
             };
 
             // Would persist to database
-            console.log("Alert configuration saved:", alertConfig);
         } catch (error) {
             console.error("Failed to setup alerts:", error);
         }
@@ -433,8 +425,6 @@ class DomainAnalytics {
     private async flushMetricsBuffer(): Promise<void> {
         try {
             if (this.metricsBuffer.size === 0) return;
-
-            console.log(`Flushing ${this.metricsBuffer.size} metric records`);
 
             // Process each metric record
             for (const [key, metrics] of this.metricsBuffer.entries()) {
@@ -455,11 +445,6 @@ class DomainAnalytics {
     private async persistMetrics(metrics: DomainMetrics): Promise<void> {
         try {
             // This would save to your analytics database
-            console.log(`Persisting metrics for ${metrics.domain}:`, {
-                requests: metrics.requestCount,
-                responseTime: metrics.responseTime,
-                bandwidth: metrics.bandwidth,
-            });
         } catch (error) {
             console.error("Failed to persist metrics:", error);
         }
@@ -472,9 +457,6 @@ class DomainAnalytics {
         try {
             const cutoffDate = new Date(
                 Date.now() - retentionDays * 24 * 60 * 60 * 1000
-            );
-            console.log(
-                `Cleaning up analytics data older than ${cutoffDate.toISOString()}`
             );
 
             // This would delete old records from your analytics database

@@ -13,7 +13,6 @@ export default defineEventHandler(async (event) => {
     if (all) {
         // Clear all domain cache
         clearAllDomainCache();
-        console.log("[Cache Clear API] Cleared all domain middleware cache");
         return {
             success: true,
             message: "Cleared all domain cache entries",
@@ -26,9 +25,6 @@ export default defineEventHandler(async (event) => {
         if (comprehensive) {
             // Clear both middleware and Redis caches
             await clearAllDomainCaches(normalizedDomain);
-            console.log(
-                `[Cache Clear API] Cleared ALL caches (middleware + Redis) for domain: ${normalizedDomain}`
-            );
             return {
                 success: true,
                 message: `Cleared all caches for domain: ${normalizedDomain}`,
@@ -38,9 +34,6 @@ export default defineEventHandler(async (event) => {
         } else {
             // Clear only middleware cache
             clearDomainCache(normalizedDomain);
-            console.log(
-                `[Cache Clear API] Cleared middleware cache for domain: ${normalizedDomain}`
-            );
             return {
                 success: true,
                 message: `Cleared middleware cache for domain: ${normalizedDomain}`,

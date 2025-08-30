@@ -831,9 +831,6 @@ export function useDomainDashboardTemplate() {
             // First try to get template from SSR context (preferred)
             if (process.server || typeof window === "undefined") {
                 // During SSR, template should already be available in domain context
-                console.log(
-                    "[useDomainDashboardTemplate] SSR: Template should be available in domain context"
-                );
                 return null; // Let the component handle domain context directly
             }
 
@@ -843,9 +840,6 @@ export function useDomainDashboardTemplate() {
                 nuxtApp.ssrContext?.event?.context?.domainContext;
 
             if (domainContext?.dashboardTemplate) {
-                console.log(
-                    "[useDomainDashboardTemplate] Using template from domain context"
-                );
                 return {
                     template: domainContext.dashboardTemplate.template,
                     customCss: domainContext.dashboardTemplate.customCss || "",
@@ -855,7 +849,6 @@ export function useDomainDashboardTemplate() {
             }
 
             // Final fallback: API call (only when domain context is not available)
-            console.log("[useDomainDashboardTemplate] Fallback to API call");
             const templateData = await $fetch<any>(
                 `/api/domain/${domain}/template`
             );

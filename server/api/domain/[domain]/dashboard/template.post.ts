@@ -1,9 +1,6 @@
 import { defineEventHandler } from "h3";
 
 export default defineEventHandler(async (event) => {
-    console.log("[Template POST] Handler called for URL:", event.node.req.url);
-    console.log("[Template POST] Method:", event.node.req.method);
-
     // Simple test response
     return {
         success: true,
@@ -23,15 +20,7 @@ export default defineEventHandler(async (event) => {
 
         // Parse the request body
         const body = await readBody(event);
-        console.log('[Template POST] Received body:', body);
         const { name, template, description, customCss } = body;
-
-        console.log('[Template POST] Parsed fields:', {
-            hasName: !!name,
-            hasTemplate: !!template,
-            templateLength: template?.length || 0,
-            hasCss: !!customCss
-        });
 
         if (!name || !template) {
             throw createError({

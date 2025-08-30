@@ -115,13 +115,6 @@ export const useDomainSettingsStore = defineStore("domainSettings", () => {
         isLoading.value = true;
         error.value = null;
 
-        // Log cache busting attempts
-        if (forceRefresh) {
-            console.log(
-                `[Domain Settings Store] Force refreshing domain settings for: ${domain}`
-            );
-        }
-
         try {
             const queryParams: any = { domain };
 
@@ -276,10 +269,6 @@ export const useDomainSettingsStore = defineStore("domainSettings", () => {
             throw new Error("No current domain to refresh");
         }
 
-        console.log(
-            `[Domain Settings Store] Force refreshing settings for ${currentDomain.value}`
-        );
-
         // Clear cache manually by calling the cache clear API
         try {
             await $fetch(`/api/domains/cache/clear`, {
@@ -289,9 +278,6 @@ export const useDomainSettingsStore = defineStore("domainSettings", () => {
                 },
                 timeout: 10000,
             });
-            console.log(
-                `[Domain Settings Store] Successfully cleared cache for ${currentDomain.value}`
-            );
         } catch (cacheError) {
             console.warn(
                 `[Domain Settings Store] Failed to clear cache:`,
@@ -309,9 +295,6 @@ export const useDomainSettingsStore = defineStore("domainSettings", () => {
                     () => Date.now()
                 );
                 globalDomainCacheKey.value = Date.now();
-                console.log(
-                    `[Domain Settings Store] Incremented global cache key: ${globalDomainCacheKey.value}`
-                );
             } catch (cacheError) {
                 console.warn(
                     `[Domain Settings Store] Failed to increment cache key:`,
@@ -338,9 +321,6 @@ export const useDomainSettingsStore = defineStore("domainSettings", () => {
 
         // After successful save, refresh the domain settings to ensure store is up to date
         if (currentDomain.value) {
-            console.log(
-                `[Domain Settings Store] Refreshing settings after save for ${currentDomain.value}`
-            );
             await loadDomainSettings(currentDomain.value, true);
         }
 
@@ -388,10 +368,6 @@ export const useDomainSettingsStore = defineStore("domainSettings", () => {
 
         currentDomain.value = config.domain || null;
         hasUnsavedChanges.value = false;
-
-        console.log(
-            `[Domain Settings Store] Initialized from domain context for: ${config.domain}`
-        );
     };
 
     return {
