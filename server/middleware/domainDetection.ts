@@ -59,13 +59,16 @@ async function getDomainConfig(domain: string) {
             dashboard_template: 1,
         });
 
+        // Convert Mongoose document to plain object to ensure serializability
+        const plainConfig = config ? config.toObject() : null;
+
         // Cache the result (including null results to avoid repeated DB queries)
         domainCache.set(cacheKey, {
-            data: config,
+            data: plainConfig,
             timestamp: Date.now(),
         });
 
-        return config;
+        return plainConfig;
     } catch (error) {
         console.error(`Error fetching domain config for ${domain}:`, error);
         return null;
@@ -77,16 +80,23 @@ async function getDomainConfig(domain: string) {
  */
 async function getEntityData(entityType: string, entityId: number) {
     try {
+        let entity = null;
         switch (entityType) {
             case "character":
-                return await Characters.findOne({ character_id: entityId });
+                entity = await Characters.findOne({ character_id: entityId });
+                break;
             case "corporation":
-                return await Corporations.findOne({ corporation_id: entityId });
+                entity = await Corporations.findOne({ corporation_id: entityId });
+                break;
             case "alliance":
-                return await Alliances.findOne({ alliance_id: entityId });
+                entity = await Alliances.findOne({ alliance_id: entityId });
+                break;
             default:
                 return null;
         }
+        
+        // Convert Mongoose document to plain object
+        return entity ? entity.toObject() : null;
     } catch (error) {
         console.error(
             `Error fetching entity data for ${entityType}:${entityId}:`,
@@ -111,7 +121,7 @@ async function getMultipleEntityData(entityConfigs: IEntityConfig[]) {
         if (entity) {
             // Enhance entity with display configuration
             const enhancedEntity = {
-                ...entity.toObject(),
+                ...entity, // entity is already a plain object from getEntityData
                 _entityConfig: entityConfig, // Add configuration metadata
             };
 
