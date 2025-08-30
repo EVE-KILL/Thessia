@@ -162,32 +162,9 @@ export default defineEventHandler(async (event) => {
         // Enhance domains with entity information and owner names
         const enhancedDomains = await Promise.all(
             domains.map(async (domain) => {
-                let entityInfo = null;
                 let ownerInfo = null;
 
                 try {
-                    // Get entity information
-                    switch (domain.entity_type) {
-                        case "character":
-                            entityInfo = await Characters.findOne(
-                                { character_id: domain.entity_id },
-                                { name: 1, character_id: 1 }
-                            );
-                            break;
-                        case "corporation":
-                            entityInfo = await Corporations.findOne(
-                                { corporation_id: domain.entity_id },
-                                { name: 1, ticker: 1, corporation_id: 1 }
-                            );
-                            break;
-                        case "alliance":
-                            entityInfo = await Alliances.findOne(
-                                { alliance_id: domain.entity_id },
-                                { name: 1, ticker: 1, alliance_id: 1 }
-                            );
-                            break;
-                    }
-
                     // Get owner information
                     ownerInfo = await Characters.findOne(
                         { character_id: domain.owner_character_id },
@@ -195,10 +172,58 @@ export default defineEventHandler(async (event) => {
                     );
                 } catch (error) {
                     console.error(
-                        `Error fetching info for domain ${domain.domain}:`,
+                        `Error fetching owner info for domain ${domain.domain}:`,
                         error
                     );
                 }
+
+                // Enhance entities array with names if it exists
+                let enhancedEntities = [];
+                if (domain.entities && Array.isArray(domain.entities)) {
+                    enhancedEntities = await Promise.all(
+                        domain.entities.map(async (entity) => {
+                            let entityData = null;
+                            try {
+                                switch (entity.entity_type) {
+                                    case "character":
+                                        entityData = await Characters.findOne(
+                                            { character_id: entity.entity_id },
+                                            { name: 1, character_id: 1 }
+                                        );
+                                        break;
+                                    case "corporation":
+                                        entityData = await Corporations.findOne(
+                                            { corporation_id: entity.entity_id },
+                                            { name: 1, ticker: 1, corporation_id: 1 }
+                                        );
+                                        break;
+                                    case "alliance":
+                                        entityData = await Alliances.findOne(
+                                            { alliance_id: entity.entity_id },
+                                            { name: 1, ticker: 1, alliance_id: 1 }
+                                        );
+                                        break;
+                                }
+                            } catch (error) {
+                                console.error(`Error fetching entity info for ${entity.entity_type} ${entity.entity_id}:`, error);
+                            }
+
+                            return {
+                                entity_type: entity.entity_type,
+                                entity_id: entity.entity_id,
+                                entity_name: entityData?.name || entity.display_name || `${entity.entity_type} ${entity.entity_id}`,
+                                display_name: entity.display_name,
+                                show_in_nav: entity.show_in_nav,
+                                show_in_stats: entity.show_in_stats,
+                                primary: entity.primary,
+                                color_code: entity.color_code
+                            };
+                        })
+                    );
+                }
+
+                // Get primary entity info for backward compatibility
+                const primaryEntity = enhancedEntities.find(e => e.primary) || enhancedEntities[0];
 
                 // Map domain status to display status
                 let status = "pending";
@@ -218,9 +243,10 @@ export default defineEventHandler(async (event) => {
                 return {
                     _id: domain._id,
                     domain: domain.domain,
-                    entity_type: domain.entity_type,
-                    entity_id: domain.entity_id,
-                    entity_name: entityInfo?.name || "Unknown",
+                    // Backward compatibility fields
+                    entity_type: primaryEntity?.entity_type || "unknown",
+                    entity_id: primaryEntity?.entity_id || 0,
+                    entity_name: primaryEntity?.entity_name || "Unknown",
                     owner_character_id: domain.owner_character_id,
                     owner_character_name: ownerInfo?.name || "Unknown",
                     status: status,
@@ -228,7 +254,10 @@ export default defineEventHandler(async (event) => {
                     verification_token: domain.verification_token,
                     created_at: domain.created_at,
                     verified_at: domain.dns_verified_at,
+                    last_accessed: domain.last_accessed,
                     branding: domain.branding,
+                    navigation: domain.navigation,
+                    entities: enhancedEntities, // Include the enhanced entities array
                 };
             })
         );

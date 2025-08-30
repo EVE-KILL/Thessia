@@ -1837,6 +1837,7 @@
             "management": "Management"
         },
         "nav": {
+            "domains": "Domains",
             "overview": "Overview",
             "accessLogs": "Access Logs",
             "traffic": "Traffic Analysis",
