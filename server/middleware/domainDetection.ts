@@ -32,26 +32,31 @@ function cleanForSerialization(obj: any): any {
     if (obj === null || obj === undefined) {
         return obj;
     }
-    
-    if (typeof obj !== 'object') {
+
+    if (typeof obj !== "object") {
         return obj;
     }
-    
+
     if (Array.isArray(obj)) {
-        return obj.map(item => cleanForSerialization(item));
+        return obj.map((item) => cleanForSerialization(item));
     }
-    
+
     const cleaned: any = {};
     for (const [key, value] of Object.entries(obj)) {
         // Skip Mongoose-specific fields
-        if (key === '_id' || key === '__v' || key === '$__' || key === '$isNew') {
+        if (
+            key === "_id" ||
+            key === "__v" ||
+            key === "$__" ||
+            key === "$isNew"
+        ) {
             continue;
         }
-        
+
         // Recursively clean nested objects
         cleaned[key] = cleanForSerialization(value);
     }
-    
+
     return cleaned;
 }
 
@@ -800,13 +805,16 @@ export default defineEventHandler(async (event: H3Event) => {
     // Clean the entire context to ensure complete serialization
     try {
         const cleanedContext = cleanForSerialization(fullDomainContext);
-        
+
         // Test serialization to catch any remaining issues
         JSON.stringify(cleanedContext);
-        
+
         event.context.domainContext = cleanedContext as IDomainContext;
     } catch (error) {
-        console.error(`[Domain Detection] Failed to serialize domain context for ${cleanHost}:`, error);
+        console.error(
+            `[Domain Detection] Failed to serialize domain context for ${cleanHost}:`,
+            error
+        );
         // Fallback to basic error context
         event.context.domainContext = {
             isCustomDomain: true,

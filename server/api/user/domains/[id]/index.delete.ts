@@ -29,7 +29,9 @@ export default defineEventHandler(async (event) => {
             });
         }
 
-        console.log(`Attempting to delete domain: ${domainId} for user: ${user.characterId}`);
+        console.log(
+            `Attempting to delete domain: ${domainId} for user: ${user.characterId}`
+        );
 
         // Find the domain and verify ownership
         const domain = await CustomDomains.findOne({
@@ -37,16 +39,23 @@ export default defineEventHandler(async (event) => {
             owner_character_id: user.characterId,
         });
 
-        console.log(`Domain found:`, domain ? 'Yes' : 'No');
+        console.log(`Domain found:`, domain ? "Yes" : "No");
 
         if (!domain) {
             // Let's also check if the domain exists but with different ownership
-            const existingDomain = await CustomDomains.findOne({ domain_id: domainId });
-            console.log(`Domain exists with different owner:`, existingDomain ? 'Yes' : 'No');
+            const existingDomain = await CustomDomains.findOne({
+                domain_id: domainId,
+            });
+            console.log(
+                `Domain exists with different owner:`,
+                existingDomain ? "Yes" : "No"
+            );
             if (existingDomain) {
-                console.log(`Domain owner: ${existingDomain.owner_character_id}, Current user: ${user.characterId}`);
+                console.log(
+                    `Domain owner: ${existingDomain.owner_character_id}, Current user: ${user.characterId}`
+                );
             }
-            
+
             throw createError({
                 statusCode: 404,
                 statusMessage: "Domain not found",

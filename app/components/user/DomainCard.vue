@@ -64,11 +64,12 @@
                     </template>
 
                     <div class="py-1 min-w-[180px]">
-                        <button v-if="!domain.verified && !isEveKillSubdomain" @click="$emit('verify', domain); dropdownOpen = false"
+                        <button v-if="!domain.verified && !isEveKillSubdomain"
+                            @click="$emit('verify', domain); dropdownOpen = false"
                             class="w-full text-left px-4 py-2 text-sm text-yellow-700 hover:bg-yellow-50 dark:text-yellow-300 dark:hover:bg-yellow-900/20">
                             <UIcon name="i-heroicons-shield-check" class="mr-2 inline-block" />
                             {{ t('settings.domains.verify') }}
-                        </button>                        <button @click="$emit('edit', domain); dropdownOpen = false"
+                        </button> <button @click="$emit('edit', domain); dropdownOpen = false"
                             class="w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-600 flex items-center gap-2">
                             <UIcon name="i-heroicons-pencil" class="w-4 h-4" />
                             {{ t('edit') }}

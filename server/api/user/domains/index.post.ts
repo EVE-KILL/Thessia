@@ -223,18 +223,21 @@ export default defineEventHandler(async (event) => {
         }
 
         // Special handling for eve-kill.com subdomains
-        const isEveKillSubdomain = normalizedDomain.endsWith('.eve-kill.com');
-        
+        const isEveKillSubdomain = normalizedDomain.endsWith(".eve-kill.com");
+
         // For eve-kill.com subdomains, also check for potential clashes with existing subdomains
         if (isEveKillSubdomain) {
             // Extract subdomain part (e.g., "corp" from "corp.eve-kill.com")
-            const subdomainPart = normalizedDomain.replace('.eve-kill.com', '');
-            
+            const subdomainPart = normalizedDomain.replace(".eve-kill.com", "");
+
             // Check if any existing domain uses this subdomain pattern
             const conflictingDomain = await CustomDomains.findOne({
-                domain: { $regex: `^${subdomainPart}\\.eve-kill\\.com$`, $options: 'i' }
+                domain: {
+                    $regex: `^${subdomainPart}\\.eve-kill\\.com$`,
+                    $options: "i",
+                },
             });
-            
+
             if (conflictingDomain) {
                 throw createError({
                     statusCode: 409,
@@ -348,7 +351,7 @@ export default defineEventHandler(async (event) => {
 
             public_campaigns: body.public_campaigns !== false,
             verified: isEveKillSubdomain, // Auto-verify eve-kill.com subdomains
-            active: isEveKillSubdomain,   // Auto-activate eve-kill.com subdomains
+            active: isEveKillSubdomain, // Auto-activate eve-kill.com subdomains
             verified_at: isEveKillSubdomain ? new Date() : undefined,
         };
 

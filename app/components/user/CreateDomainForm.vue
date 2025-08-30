@@ -9,31 +9,39 @@
                     :placeholder="t('settings.domains.form.domainPlaceholder')" :disabled="isSubmitting"
                     class="mt-1 block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white sm:text-sm"
                     required />
-                
+
                 <!-- Domain Type Info -->
                 <div class="mt-2 space-y-2">
-                    <div class="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-md p-3">
+                    <div
+                        class="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-md p-3">
                         <div class="flex items-start gap-2">
                             <UIcon name="i-heroicons-information-circle" class="w-4 h-4 text-blue-600 mt-0.5" />
                             <div class="text-xs">
-                                <p class="font-medium text-blue-900 dark:text-blue-100 mb-1">Eve-kill.com Subdomains (Recommended)</p>
+                                <p class="font-medium text-blue-900 dark:text-blue-100 mb-1">Eve-kill.com Subdomains
+                                    (Recommended)</p>
                                 <p class="text-blue-800 dark:text-blue-200">
-                                    Use <strong>yourname.eve-kill.com</strong> for instant activation - no DNS verification needed!
-                                    <br />Examples: <code class="text-xs bg-blue-100 dark:bg-blue-800 px-1 rounded">corp.eve-kill.com</code>, 
-                                    <code class="text-xs bg-blue-100 dark:bg-blue-800 px-1 rounded">alliance.eve-kill.com</code>
+                                    Use <strong>yourname.eve-kill.com</strong> for instant activation - no DNS
+                                    verification needed!
+                                    <br />Examples: <code
+                                        class="text-xs bg-blue-100 dark:bg-blue-800 px-1 rounded">corp.eve-kill.com</code>,
+                                    <code
+                                        class="text-xs bg-blue-100 dark:bg-blue-800 px-1 rounded">alliance.eve-kill.com</code>
                                 </p>
                             </div>
                         </div>
                     </div>
-                    <div class="bg-gray-50 dark:bg-gray-900/20 border border-gray-200 dark:border-gray-700 rounded-md p-3">
+                    <div
+                        class="bg-gray-50 dark:bg-gray-900/20 border border-gray-200 dark:border-gray-700 rounded-md p-3">
                         <div class="flex items-start gap-2">
                             <UIcon name="i-heroicons-globe-alt" class="w-4 h-4 text-gray-600 mt-0.5" />
                             <div class="text-xs">
                                 <p class="font-medium text-gray-900 dark:text-gray-100 mb-1">External Domains</p>
                                 <p class="text-gray-700 dark:text-gray-300">
                                     Use your own domain (requires DNS verification before activation)
-                                    <br />Examples: <code class="text-xs bg-gray-100 dark:bg-gray-800 px-1 rounded">example.com</code>, 
-                                    <code class="text-xs bg-gray-100 dark:bg-gray-800 px-1 rounded">killboard.example.com</code>
+                                    <br />Examples: <code
+                                        class="text-xs bg-gray-100 dark:bg-gray-800 px-1 rounded">example.com</code>,
+                                    <code
+                                        class="text-xs bg-gray-100 dark:bg-gray-800 px-1 rounded">killboard.example.com</code>
                                 </p>
                             </div>
                         </div>
