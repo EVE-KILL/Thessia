@@ -26,6 +26,36 @@ interface CacheEntry {
 }
 
 /**
+ * Deep clean an object from Mongoose-specific fields and non-serializable properties
+ */
+function cleanForSerialization(obj: any): any {
+    if (obj === null || obj === undefined) {
+        return obj;
+    }
+    
+    if (typeof obj !== 'object') {
+        return obj;
+    }
+    
+    if (Array.isArray(obj)) {
+        return obj.map(item => cleanForSerialization(item));
+    }
+    
+    const cleaned: any = {};
+    for (const [key, value] of Object.entries(obj)) {
+        // Skip Mongoose-specific fields
+        if (key === '_id' || key === '__v' || key === '$__' || key === '$isNew') {
+            continue;
+        }
+        
+        // Recursively clean nested objects
+        cleaned[key] = cleanForSerialization(value);
+    }
+    
+    return cleaned;
+}
+
+/**
  * Get domain configuration with caching
  */
 async function getDomainConfig(domain: string) {
@@ -59,8 +89,12 @@ async function getDomainConfig(domain: string) {
             dashboard_template: 1,
         });
 
-        // Convert Mongoose document to plain object to ensure serializability
-        const plainConfig = config ? config.toObject() : null;
+        // Convert Mongoose document to plain object and clean all serialization issues
+        let plainConfig = null;
+        if (config) {
+            const obj = config.toObject();
+            plainConfig = cleanForSerialization(obj);
+        }
 
         // Cache the result (including null results to avoid repeated DB queries)
         domainCache.set(cacheKey, {
@@ -97,8 +131,12 @@ async function getEntityData(entityType: string, entityId: number) {
                 return null;
         }
 
-        // Convert Mongoose document to plain object
-        return entity ? entity.toObject() : null;
+        // Convert Mongoose document to plain object and clean all serialization issues
+        if (entity) {
+            const obj = entity.toObject();
+            return cleanForSerialization(obj);
+        }
+        return null;
     } catch (error) {
         console.error(
             `Error fetching entity data for ${entityType}:${entityId}:`,
@@ -632,7 +670,7 @@ export default defineEventHandler(async (event: H3Event) => {
 
     // 3. Check verification status (applies to all domains except localhost in dev)
     if (!domainConfig.verified) {
-        event.context.domainContext = {
+        event.context.domainContext = cleanForSerialization({
             isCustomDomain: true,
             domain: cleanHost,
             config: domainConfig,
@@ -640,13 +678,13 @@ export default defineEventHandler(async (event: H3Event) => {
                 type: "domain_unverified",
                 message: "Domain exists but is not verified",
             },
-        } as IDomainContext;
+        }) as IDomainContext;
         return;
     }
 
     // 4. Check activation status (only for non-localhost domains)
     if (!isLocalhostDomain && !domainConfig.active) {
-        event.context.domainContext = {
+        event.context.domainContext = cleanForSerialization({
             isCustomDomain: true,
             domain: cleanHost,
             config: domainConfig,
@@ -654,7 +692,7 @@ export default defineEventHandler(async (event: H3Event) => {
                 type: "domain_unverified",
                 message: "Domain is not active",
             },
-        } as IDomainContext;
+        }) as IDomainContext;
         return;
     }
 
@@ -663,7 +701,7 @@ export default defineEventHandler(async (event: H3Event) => {
         console.error(
             `[Domain Detection] No entities configured for domain ${cleanHost}`
         );
-        event.context.domainContext = {
+        event.context.domainContext = cleanForSerialization({
             isCustomDomain: true,
             domain: cleanHost,
             config: domainConfig,
@@ -671,7 +709,7 @@ export default defineEventHandler(async (event: H3Event) => {
                 type: "domain_not_found",
                 message: "Domain has no entities configured",
             },
-        } as IDomainContext;
+        }) as IDomainContext;
         return;
     }
 
@@ -686,7 +724,7 @@ export default defineEventHandler(async (event: H3Event) => {
             `[Domain Detection] Error fetching entities for domain ${cleanHost}:`,
             error
         );
-        event.context.domainContext = {
+        event.context.domainContext = cleanForSerialization({
             isCustomDomain: true,
             domain: cleanHost,
             config: domainConfig,
@@ -694,7 +732,7 @@ export default defineEventHandler(async (event: H3Event) => {
                 type: "domain_not_found",
                 message: "Error loading domain entities",
             },
-        } as IDomainContext;
+        }) as IDomainContext;
         return;
     }
 
@@ -705,7 +743,7 @@ export default defineEventHandler(async (event: H3Event) => {
             } entities configured, ${entities?.length || 0} entities loaded`
         );
         // Set error instead of falling back to normal behavior
-        event.context.domainContext = {
+        event.context.domainContext = cleanForSerialization({
             isCustomDomain: true,
             domain: cleanHost,
             config: domainConfig,
@@ -713,7 +751,7 @@ export default defineEventHandler(async (event: H3Event) => {
                 type: "domain_not_found",
                 message: "Domain entities could not be loaded",
             },
-        } as IDomainContext;
+        }) as IDomainContext;
         return;
     }
 
@@ -759,10 +797,27 @@ export default defineEventHandler(async (event: H3Event) => {
         dashboardTemplate: dashboardTemplate,
     };
 
-    // JSON encode/decode the entire context to ensure complete serialization
-    const serializedContext = JSON.parse(JSON.stringify(fullDomainContext));
-
-    event.context.domainContext = serializedContext as IDomainContext;
+    // Clean the entire context to ensure complete serialization
+    try {
+        const cleanedContext = cleanForSerialization(fullDomainContext);
+        
+        // Test serialization to catch any remaining issues
+        JSON.stringify(cleanedContext);
+        
+        event.context.domainContext = cleanedContext as IDomainContext;
+    } catch (error) {
+        console.error(`[Domain Detection] Failed to serialize domain context for ${cleanHost}:`, error);
+        // Fallback to basic error context
+        event.context.domainContext = {
+            isCustomDomain: true,
+            domain: cleanHost,
+            error: {
+                type: "domain_not_found",
+                message: "Domain context serialization failed",
+            },
+        } as IDomainContext;
+        return;
+    }
 
     // Store domain context in event headers for client access
     setHeader(
