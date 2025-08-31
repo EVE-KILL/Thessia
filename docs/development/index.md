@@ -7,6 +7,7 @@ This section contains documentation for developers working on the Thessia projec
 - [Development Guide](./development-guide.md) - Complete guide for setting up and developing Thessia
 - [Build System](./build-system.md) - Understanding the consolidated build infrastructure
 - [User Settings Guide](./user-settings-guide.md) - How to add and manage user settings
+- [Admin Panel Guide](./admin-panel-guide.md) - How to add new admin panels to the admin interface
 
 ## Development Workflow
 

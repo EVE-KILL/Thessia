@@ -11,6 +11,9 @@ n<template>
         <AdminUsersView v-else-if="currentPath === 'users'" />
         <AdminDomains v-else-if="currentPath === 'domains'" />
         <AdminComments v-else-if="currentPath === 'comments'" />
+        <AdminCharacters v-else-if="currentPath === 'characters'" />
+        <AdminCorporations v-else-if="currentPath === 'corporations'" />
+        <AdminAlliances v-else-if="currentPath === 'alliances'" />
         <AdminApiKeys v-else-if="currentPath === 'api-keys'" />
         <AdminCustomPrices v-else-if="currentPath === 'custom-prices'" />
         <AdminAnalyticsESI v-else-if="currentPath === 'analytics/esi'" />
@@ -65,6 +68,9 @@ const currentPageTitle = computed(() => {
         'users': t('admin.pages.users'),
         'domains': t('admin.pages.domains'),
         'comments': t('admin.pages.comments'),
+        'characters': t('admin.pages.characters'),
+        'corporations': t('admin.pages.corporations'),
+        'alliances': t('admin.pages.alliances'),
         'analytics/esi': t('admin.analytics.esi.title'),
         'settings': t('admin.pages.settings'),
         'database': t('admin.pages.database'),

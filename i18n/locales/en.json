@@ -2462,6 +2462,78 @@
                 "cancel": "Cancel",
                 "deleting": "Deleting..."
             }
+        },
+        "characters": {
+            "title": "Character Management",
+            "description": "Manage and view character data from EVE Online",
+            "refresh": "Refresh",
+            "search": "Search characters...",
+            "searchActive": "Searching characters...",
+            "searchResults": "Found {count} character(s)",
+            "clearSearch": "Clear search",
+            "loading": "Loading characters...",
+            "error": "Failed to load characters",
+            "retry": "Retry",
+            "empty": "No characters found",
+            "noCharactersFound": "No characters match the current filters",
+            "perPage": "per page",
+            "activeCharacters": "Active Characters",
+            "deletedCharacters": "Deleted Characters",
+            "totalCharacters": "Total Characters",
+            "pagination": {
+                "first": "First",
+                "previous": "Previous",
+                "next": "Next",
+                "last": "Last",
+                "page": "Page {current} of {total}"
+            }
+        },
+        "corporations": {
+            "title": "Corporation Management",
+            "description": "Manage and view corporation data from EVE Online",
+            "refresh": "Refresh",
+            "search": "Search corporations...",
+            "searchActive": "Searching corporations...",
+            "searchResults": "Found {count} corporation(s)",
+            "clearSearch": "Clear search",
+            "loading": "Loading corporations...",
+            "error": "Failed to load corporations",
+            "retry": "Retry",
+            "empty": "No corporations found",
+            "noCorporationsFound": "No corporations match the current filters",
+            "perPage": "per page",
+            "activeCorporations": "Active Corporations",
+            "deletedCorporations": "Deleted Corporations",
+            "totalCorporations": "Total Corporations",
+            "pagination": {
+                "first": "First",
+                "previous": "Previous",
+                "next": "Next",
+                "last": "Last",
+                "page": "Page {current} of {total}"
+            }
+        },
+        "alliances": {
+            "title": "Alliance Management",
+            "description": "Manage and view alliance data from EVE Online",
+            "refresh": "Refresh",
+            "search": "Search alliances...",
+            "searchActive": "Searching alliances...",
+            "searchResults": "Found {count} alliance(s)",
+            "clearSearch": "Clear search",
+            "loading": "Loading alliances...",
+            "error": "Failed to load alliances",
+            "retry": "Retry",
+            "empty": "No alliances found",
+            "noAlliancesFound": "No alliances match the current filters",
+            "perPage": "per page",
+            "pagination": {
+                "first": "First",
+                "previous": "Previous",
+                "next": "Next",
+                "last": "Last",
+                "page": "Page {current} of {total}"
+            }
         }
     },
     "Documentation": "Documentation",

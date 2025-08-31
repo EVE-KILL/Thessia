@@ -45,6 +45,17 @@
                 <AdminNavItem
                     :item="{ name: t('admin.nav.comments'), path: 'comments', icon: 'heroicons:chat-bubble-left-right' }"
                     :current-path="currentPath" @navigate="$emit('navigate', 'comments')" />
+
+                <!-- EVE Entity Management -->
+                <AdminNavItem :item="{ name: t('admin.pages.characters'), path: 'characters', icon: 'heroicons:user' }"
+                    :current-path="currentPath" @navigate="$emit('navigate', 'characters')" />
+                <AdminNavItem
+                    :item="{ name: t('admin.pages.corporations'), path: 'corporations', icon: 'heroicons:building-office-2' }"
+                    :current-path="currentPath" @navigate="$emit('navigate', 'corporations')" />
+                <AdminNavItem
+                    :item="{ name: t('admin.pages.alliances'), path: 'alliances', icon: 'heroicons:shield-check' }"
+                    :current-path="currentPath" @navigate="$emit('navigate', 'alliances')" />
+
                 <AdminNavItem :item="{ name: t('admin.nav.apiKeys'), path: 'api-keys', icon: 'heroicons:key' }"
                     :current-path="currentPath" @navigate="$emit('navigate', 'api-keys')" />
                 <AdminNavItem
