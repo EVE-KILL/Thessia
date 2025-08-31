@@ -1,9 +1,8 @@
 <template>
     <div class="admin-alliances">
-        <!-- Header Section -->
         <div class="alliances-header">
             <div class="header-info">
-                <h1 class="alliances-title">{{ t('admin.alliances.title') }}</h1>
+                <h3 class="alliances-title">{{ t('admin.alliances.title') }}</h3>
                 <p class="alliances-description">{{ t('admin.alliances.description') }}</p>
             </div>
             <div class="header-actions">
@@ -629,78 +628,61 @@ const handleDeleteCancel = () => {
 </script>
 
 <style scoped>
-/* Admin Alliances - Following AdminDomains/AdminCharacters styling pattern */
+/* Admin Alliances - Following AdminCharacters styling pattern */
 .admin-alliances {
-    padding: 2rem;
-    background: linear-gradient(135deg, rgb(9, 9, 11) 0%, rgb(24, 24, 27) 50%, rgb(39, 39, 42) 100%);
-    min-height: 100vh;
     display: flex;
     flex-direction: column;
+    gap: 2rem;
+    padding: 2rem;
+    height: 100%;
+    overflow-y: auto;
 }
 
-:global(.light) .admin-alliances {
-    background: linear-gradient(135deg, #f8fafc 0%, #ffffff 50%, #f1f5f9 100%);
-}
-
-/* Header Section */
+/* Header */
 .alliances-header {
     display: flex;
-    flex-direction: column;
     justify-content: space-between;
     align-items: flex-start;
     gap: 1rem;
     margin-bottom: 2rem;
-    padding: 2rem;
+    padding: 1.5rem;
     background: linear-gradient(135deg, rgb(31, 31, 31) 0%, rgb(24, 24, 27) 100%);
     border: 1px solid rgb(63, 63, 70);
     border-radius: 0.75rem;
-    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
-    backdrop-filter: blur(10px);
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
 }
 
 :global(.light) .alliances-header {
     background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
     border-color: #e2e8f0;
-    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
-}
-
-@media (min-width: 768px) {
-    .alliances-header {
-        flex-direction: row;
-        align-items: center;
-        gap: 2rem;
-    }
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
 }
 
 .header-info {
     flex: 1;
-    min-width: 0;
 }
 
 .alliances-title {
-    font-size: 2.25rem;
+    font-size: 1.875rem;
     font-weight: 700;
-    margin-bottom: 1rem;
+    color: white;
+    margin-bottom: 0.75rem;
     background: linear-gradient(135deg, #ffffff 0%, #e5e7eb 100%);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
-    line-height: 1.2;
 }
 
 :global(.light) .alliances-title {
     color: #1e293b;
-    background: linear-gradient(135deg, #1e293b 0%, #475569 100%);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
+    background: none;
+    -webkit-text-fill-color: initial;
 }
 
 .alliances-description {
     color: rgb(156, 163, 175);
     line-height: 1.6;
-    font-size: 1rem;
-    max-width: 600px;
+    font-size: 0.95rem;
 }
 
 :global(.light) .alliances-description {
@@ -709,130 +691,242 @@ const handleDeleteCancel = () => {
 
 .header-actions {
     display: flex;
-    gap: 1rem;
-    flex-shrink: 0;
-    flex-wrap: wrap;
+    gap: 0.75rem;
 }
 
 .action-btn {
-    display: inline-flex;
+    display: flex;
     align-items: center;
     gap: 0.5rem;
-    padding: 0.75rem 1.5rem;
-    border: 1px solid rgb(82, 82, 91);
-    border-radius: 0.5rem;
-    background: linear-gradient(135deg, rgba(82, 82, 91, 0.1) 0%, rgba(63, 63, 70, 0.1) 100%);
+    padding: 0.625rem 1.25rem;
+    background: linear-gradient(135deg, rgb(55, 65, 81) 0%, rgb(45, 55, 72) 100%);
     color: white;
+    border: 1px solid rgb(75, 85, 99);
+    border-radius: 0.5rem;
     font-weight: 500;
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     cursor: pointer;
-    white-space: nowrap;
-    backdrop-filter: blur(5px);
+    transition: all 0.2s ease;
+    box-shadow: 0 2px 4px -1px rgba(0, 0, 0, 0.1);
 }
 
-:global(.light) .action-btn {
-    border-color: rgb(203, 213, 225);
-    background: linear-gradient(135deg, rgba(248, 250, 252, 0.8) 0%, rgba(241, 245, 249, 0.8) 100%);
-    color: rgb(51, 65, 85);
-}
-
-.action-btn:hover:not(:disabled) {
-    background: linear-gradient(135deg, rgba(82, 82, 91, 0.2) 0%, rgba(63, 63, 70, 0.2) 100%);
-    border-color: rgb(113, 113, 122);
+.action-btn:hover {
+    background: linear-gradient(135deg, rgb(75, 85, 99) 0%, rgb(55, 65, 81) 100%);
     transform: translateY(-1px);
-    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
-}
-
-:global(.light) .action-btn:hover:not(:disabled) {
-    background: linear-gradient(135deg, rgba(203, 213, 225, 0.2) 0%, rgba(226, 232, 240, 0.2) 100%);
-    border-color: rgb(148, 163, 184);
-    transform: translateY(-1px);
-    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.15);
 }
 
 .action-btn:disabled {
-    opacity: 0.6;
+    opacity: 0.5;
     cursor: not-allowed;
-    transform: none !important;
+    transform: none;
 }
 
-.action-icon {
-    width: 1.125rem;
-    height: 1.125rem;
-    flex-shrink: 0;
-}
-
-/* Filters Section */
-.filters-section {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 2rem;
-    gap: 1rem;
-    flex-wrap: wrap;
-    padding: 1.5rem;
-    background: linear-gradient(135deg, rgba(31, 31, 31, 0.8) 0%, rgba(24, 24, 27, 0.8) 100%);
-    border: 1px solid rgb(63, 63, 70);
-    border-radius: 0.75rem;
-    backdrop-filter: blur(10px);
-}
-
-:global(.light) .filters-section {
-    background: linear-gradient(135deg, rgba(248, 250, 252, 0.8) 0%, rgba(241, 245, 249, 0.8) 100%);
+:global(.light) .action-btn {
+    background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+    color: #1e293b;
     border-color: #e2e8f0;
 }
 
-@media (min-width: 640px) {
-    .filters-section {
-        flex-wrap: nowrap;
-    }
+:global(.light) .action-btn:hover {
+    background: linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 100%);
+}
+
+.action-icon {
+    width: 1rem;
+    height: 1rem;
+}
+
+/* Filters */
+.filters-section {
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+    padding: 1.5rem;
+    background: linear-gradient(135deg, rgb(31, 31, 31) 0%, rgb(24, 24, 27) 100%);
+    border-radius: 0.75rem;
+    border: 1px solid rgb(63, 63, 70);
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    margin-bottom: 1.5rem;
+}
+
+:global(.light) .filters-section {
+    background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+    border-color: #e2e8f0;
 }
 
 .search-container {
     position: relative;
-    flex: 1;
-    max-width: 400px;
-    min-width: 200px;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    max-width: 600px;
+}
+
+.search-input-wrapper {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.search-icon {
+    position: absolute;
+    left: 0.75rem;
+    width: 1.25rem;
+    height: 1.25rem;
+    color: rgb(156, 163, 175);
+    z-index: 2;
+}
+
+:global(.light) .search-icon {
+    color: #64748b;
+}
+
+.search-input {
+    width: 100%;
+    padding: 0.75rem 2.5rem 0.75rem 3rem;
+    background: linear-gradient(135deg, rgb(55, 65, 81) 0%, rgb(45, 55, 72) 100%);
+    border: 1px solid rgb(75, 85, 99);
+    border-radius: 0.5rem;
+    color: white;
+    font-size: 0.95rem;
+    transition: all 0.2s ease;
+    box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.search-input:focus {
+    outline: none;
+    border-color: rgb(59, 130, 246);
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.search-input.search-active {
+    border-color: rgb(59, 130, 246);
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+:global(.light) .search-input {
+    background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+    color: #1e293b;
+    border-color: #e2e8f0;
+}
+
+:global(.light) .search-input:focus {
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.clear-search-btn {
+    position: absolute;
+    right: 0.75rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 1.5rem;
+    height: 1.5rem;
+    background: rgba(156, 163, 175, 0.1);
+    border: none;
+    border-radius: 0.25rem;
+    color: rgb(156, 163, 175);
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.clear-search-btn:hover {
+    background: rgba(239, 68, 68, 0.1);
+    color: rgb(239, 68, 68);
+}
+
+:global(.light) .clear-search-btn {
+    background: rgba(100, 116, 139, 0.1);
+    color: #64748b;
+}
+
+:global(.light) .clear-search-btn:hover {
+    background: rgba(239, 68, 68, 0.1);
+    color: #ef4444;
+}
+
+.search-status {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 0.75rem;
+    background: rgba(59, 130, 246, 0.1);
+    border: 1px solid rgba(59, 130, 246, 0.2);
+    border-radius: 0.375rem;
+    font-size: 0.875rem;
+}
+
+.search-status-icon {
+    width: 1rem;
+    height: 1rem;
+    color: rgb(59, 130, 246);
+}
+
+.search-status-text {
+    color: rgb(209, 213, 219);
+}
+
+:global(.light) .search-status {
+    background: rgba(59, 130, 246, 0.05);
+    border-color: rgba(59, 130, 246, 0.15);
+}
+
+:global(.light) .search-status-text {
+    color: #374151;
+}
+
+.clear-search-btn {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 1rem;
+    background: linear-gradient(135deg, rgba(239, 68, 68, 0.8) 0%, rgba(220, 38, 38, 0.8) 100%);
+    color: white;
+    border: 1px solid rgba(239, 68, 68, 0.3);
+    border-radius: 0.5rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    box-shadow: 0 2px 4px -1px rgba(0, 0, 0, 0.1);
+}
+
+.clear-search-btn:hover {
+    background: linear-gradient(135deg, rgba(220, 38, 38, 0.9) 0%, rgba(185, 28, 28, 0.9) 100%);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.15);
 }
 
 .filters-row {
     display: flex;
-    gap: 1rem;
+    gap: 1.25rem;
     align-items: center;
-    flex-shrink: 0;
+    flex-wrap: wrap;
 }
 
 .page-size-select {
     padding: 0.75rem 1rem;
-    border: 1px solid rgb(82, 82, 91);
+    background: linear-gradient(135deg, rgb(55, 65, 81) 0%, rgb(45, 55, 72) 100%);
+    border: 1px solid rgb(75, 85, 99);
     border-radius: 0.5rem;
-    background: linear-gradient(135deg, rgba(39, 39, 42, 0.8) 0%, rgba(24, 24, 27, 0.8) 100%);
     color: white;
-    font-size: 0.875rem;
-    font-weight: 500;
-    transition: all 0.2s;
-    backdrop-filter: blur(5px);
-}
-
-:global(.light) .page-size-select {
-    border-color: rgb(203, 213, 225);
-    background: linear-gradient(135deg, rgba(248, 250, 252, 0.8) 0%, rgba(255, 255, 255, 0.8) 100%);
-    color: rgb(51, 65, 85);
+    font-size: 0.9rem;
+    min-width: 160px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.1);
 }
 
 .page-size-select:focus {
     outline: none;
+    border-color: rgb(59, 130, 246);
     box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
-    border-color: #3b82f6;
 }
 
-/* Content Area */
-.alliances-content {
-    display: flex;
-    flex-direction: column;
-    gap: 2rem;
-    flex: 1;
-    min-height: 0;
+:global(.light) .page-size-select {
+    background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+    color: #1e293b;
+    border-color: #e2e8f0;
 }
 
 /* Alliances List */
@@ -1223,52 +1317,6 @@ const handleDeleteCancel = () => {
 
 :global(.light) .pagination-btn:hover:not(:disabled) {
     background: linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 100%);
-}
-
-/* Search input styling */
-.search-input {
-    position: relative;
-    width: 100%;
-    max-width: 400px;
-}
-
-.search-input input {
-    width: 100%;
-    padding: 0.5rem 0.75rem;
-    border: 1px solid #d1d5db;
-    border-radius: 0.375rem;
-    font-size: 0.875rem;
-    line-height: 1.25rem;
-}
-
-:global(.dark) .search-input input {
-    background-color: #374151;
-    border-color: #4b5563;
-    color: #f9fafb;
-}
-
-.search-input input:focus {
-    outline: none;
-    border-color: #3b82f6;
-    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
-}
-
-.search-status {
-    font-size: 0.75rem;
-    margin-top: 0.25rem;
-    color: #6b7280;
-}
-
-:global(.dark) .search-status {
-    color: #9ca3af;
-}
-
-.search-status.searching {
-    color: #3b82f6;
-}
-
-.search-status.error {
-    color: #ef4444;
 }
 
 /* Modal Styles - Consistent with AdminCharacters and AdminCorporations */
