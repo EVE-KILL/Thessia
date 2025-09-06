@@ -175,7 +175,9 @@
                                             <span class="corp-name">{{ corp.name }}</span>
                                             <span class="corp-members">{{ corp.memberCount }} {{
                                                 t('admin.analytics.members') }}</span>
-                                            <div class="corp-key-indicator">
+                                            <div class="corp-key-indicator clickable-key"
+                                                @click.stop="openKeyModalForCorp(corp)"
+                                                :title="t('admin.analytics.esi.viewKeyDetails')">
                                                 <Icon name="heroicons:key" class="key-icon" />
                                             </div>
                                         </div>
@@ -251,7 +253,9 @@
                                         </NuxtLink>
                                         <span class="user-scopes">{{ user.scopesCount }} {{ t('admin.analytics.scopes')
                                             }}</span>
-                                        <div v-if="user.canFetchCorporationKillmails" class="corp-key-indicator">
+                                        <div class="corp-key-indicator clickable-key"
+                                            @click.stop="openKeyModal(user.characterId)"
+                                            :title="t('admin.analytics.esi.viewKeyDetails')">
                                             <Icon name="heroicons:key" class="key-icon" />
                                         </div>
                                     </div>
@@ -266,6 +270,175 @@
                 </div>
             </div>
         </div>
+
+        <!-- ESI Key Details Modal -->
+        <Modal :is-open="isKeyModalOpen" :title="t('admin.analytics.esi.keyDetails')" size="xl" @close="closeKeyModal">
+            <div v-if="keyDetailsLoading" class="modal-loading">
+                <Icon name="heroicons:arrow-path" class="loading-icon animate-spin" />
+                <p class="loading-text">{{ t('admin.analytics.loading') }}</p>
+            </div>
+
+            <div v-else-if="keyDetailsError" class="modal-error">
+                <Icon name="heroicons:exclamation-triangle" class="error-icon" />
+                <p class="error-text">{{ t('admin.analytics.error') }}</p>
+                <p class="error-details">{{ keyDetailsError }}</p>
+            </div>
+
+            <div v-else-if="keyDetails" class="key-details-content">
+                <!-- Character Information -->
+                <div class="detail-section">
+                    <h5 class="detail-title">{{ t('admin.analytics.esi.characterInfo') }}</h5>
+                    <div class="detail-grid">
+                        <div class="detail-item">
+                            <span class="detail-label">{{ t('admin.analytics.esi.characterName') }}</span>
+                            <div class="detail-value character-value">
+                                <Image type="character" :id="keyDetails.character?.id" :alt="keyDetails.character?.name"
+                                    :size="32" class="character-avatar" />
+                                <NuxtLink :to="`/character/${keyDetails.character?.id}`" class="character-link">
+                                    {{ keyDetails.character?.name }}
+                                </NuxtLink>
+                            </div>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">{{ t('admin.analytics.esi.characterId') }}</span>
+                            <span class="detail-value">{{ keyDetails.character?.id }}</span>
+                        </div>
+                        <div v-if="keyDetails.character?.securityStatus" class="detail-item">
+                            <span class="detail-label">{{ t('admin.analytics.esi.securityStatus') }}</span>
+                            <span class="detail-value">{{ keyDetails.character.securityStatus.toFixed(2) }}</span>
+                        </div>
+                        <div v-if="keyDetails.character?.birthday" class="detail-item">
+                            <span class="detail-label">{{ t('admin.analytics.esi.birthday') }}</span>
+                            <span class="detail-value">{{ new Date(keyDetails.character.birthday).toLocaleDateString()
+                            }}</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Corporation Information -->
+                <div v-if="keyDetails.corporation" class="detail-section">
+                    <h5 class="detail-title">{{ t('admin.analytics.esi.corporationInfo') }}</h5>
+                    <div class="detail-grid">
+                        <div class="detail-item">
+                            <span class="detail-label">{{ t('admin.analytics.esi.corporationName') }}</span>
+                            <div class="detail-value corporation-value">
+                                <Image type="corporation" :id="keyDetails.corporation.id"
+                                    :alt="keyDetails.corporation.name" :size="32" class="corporation-avatar" />
+                                <NuxtLink :to="`/corporation/${keyDetails.corporation.id}`" class="corporation-link">
+                                    {{ keyDetails.corporation.name }}
+                                </NuxtLink>
+                                <span v-if="keyDetails.corporation.ticker" class="ticker">[{{
+                                    keyDetails.corporation.ticker }}]</span>
+                            </div>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">{{ t('admin.analytics.esi.corporationId') }}</span>
+                            <span class="detail-value">{{ keyDetails.corporation.id }}</span>
+                        </div>
+                        <div v-if="keyDetails.corporation.memberCount" class="detail-item">
+                            <span class="detail-label">{{ t('admin.analytics.esi.memberCount') }}</span>
+                            <span class="detail-value">{{ keyDetails.corporation.memberCount.toLocaleString() }}</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Alliance Information -->
+                <div v-if="keyDetails.alliance" class="detail-section">
+                    <h5 class="detail-title">{{ t('admin.analytics.esi.allianceInfo') }}</h5>
+                    <div class="detail-grid">
+                        <div class="detail-item">
+                            <span class="detail-label">{{ t('admin.analytics.esi.allianceName') }}</span>
+                            <div class="detail-value alliance-value">
+                                <Image type="alliance" :id="keyDetails.alliance.id" :alt="keyDetails.alliance.name"
+                                    :size="32" class="alliance-avatar" />
+                                <NuxtLink :to="`/alliance/${keyDetails.alliance.id}`" class="alliance-link">
+                                    {{ keyDetails.alliance.name }}
+                                </NuxtLink>
+                                <span v-if="keyDetails.alliance.ticker" class="ticker">&lt;{{ keyDetails.alliance.ticker
+                                }}&gt;</span>
+                            </div>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">{{ t('admin.analytics.esi.allianceId') }}</span>
+                            <span class="detail-value">{{ keyDetails.alliance.id }}</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Key Information -->
+                <div class="detail-section">
+                    <h5 class="detail-title">{{ t('admin.analytics.esi.keyInfo') }}</h5>
+                    <div class="detail-grid">
+                        <div class="detail-item">
+                            <span class="detail-label">{{ t('admin.analytics.esi.tokenType') }}</span>
+                            <span class="detail-value">{{ keyDetails.key.tokenType }}</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">{{ t('admin.analytics.esi.expirationDate') }}</span>
+                            <span class="detail-value" :class="{ 'text-red-400': keyDetails.key.isExpired }">
+                                {{ new Date(keyDetails.key.dateExpiration).toLocaleString() }}
+                                <span v-if="keyDetails.key.isExpired" class="expired-badge">{{
+                                    t('admin.analytics.esi.expired') }}</span>
+                                <span v-else-if="keyDetails.key.daysUntilExpiration <= 7" class="warning-badge">
+                                    {{ t('admin.analytics.esi.expiresSoon', {
+                                        days: keyDetails.key.daysUntilExpiration
+                                    }) }}
+                                </span>
+                            </span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">{{ t('admin.analytics.esi.lastChecked') }}</span>
+                            <span class="detail-value">
+                                {{ new Date(keyDetails.key.lastChecked).toLocaleString() }}
+                                <span class="time-ago">({{ keyDetails.key.daysSinceLastCheck }} {{
+                                    t('admin.analytics.esi.daysAgo') }})</span>
+                            </span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">{{ t('admin.analytics.esi.corporationKillmails') }}</span>
+                            <span class="detail-value">
+                                <Icon
+                                    :name="keyDetails.key.canFetchCorporationKillmails ? 'heroicons:check-circle' : 'heroicons:x-circle'"
+                                    :class="keyDetails.key.canFetchCorporationKillmails ? 'text-green-400' : 'text-red-400'"
+                                    class="w-5 h-5 inline" />
+                                {{ keyDetails.key.canFetchCorporationKillmails ? t('admin.analytics.esi.enabled') :
+                                    t('admin.analytics.esi.disabled') }}
+                            </span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">{{ t('admin.analytics.esi.administrator') }}</span>
+                            <span class="detail-value">
+                                <Icon
+                                    :name="keyDetails.key.administrator ? 'heroicons:check-circle' : 'heroicons:x-circle'"
+                                    :class="keyDetails.key.administrator ? 'text-green-400' : 'text-gray-400'"
+                                    class="w-5 h-5 inline" />
+                                {{ keyDetails.key.administrator ? t('admin.analytics.esi.yes') :
+                                    t('admin.analytics.esi.no') }}
+                            </span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">{{ t('admin.analytics.esi.createdAt') }}</span>
+                            <span class="detail-value">{{ new Date(keyDetails.key.createdAt).toLocaleString() }}</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Scopes Information -->
+                <div class="detail-section">
+                    <h5 class="detail-title">{{ t('admin.analytics.esi.scopes') }} ({{ keyDetails.scopes.total }})</h5>
+                    <div class="scopes-container">
+                        <div v-for="(scopes, category) in keyDetails.scopes.categories" :key="category"
+                            v-show="scopes.length > 0" class="scope-category">
+                            <h6 class="scope-category-title">{{ t(`admin.analytics.esi.scopeCategory.${category}`) }}
+                                ({{ scopes.length }})</h6>
+                            <div class="scope-list">
+                                <span v-for="scope in scopes" :key="scope" class="scope-tag">{{ scope }}</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </Modal>
     </div>
 </template>
 
@@ -297,6 +470,13 @@ const debouncedSearchQuery = ref('');
 const expandedAlliances = ref(new Set<number>());
 const expandedCorporations = ref(new Set<number>());
 
+// Modal state
+const isKeyModalOpen = ref(false);
+const selectedCharacterId = ref<number | null>(null);
+const keyDetails = ref<any>(null);
+const keyDetailsLoading = ref(false);
+const keyDetailsError = ref<string | null>(null);
+
 // Computed API endpoint
 const apiEndpoint = computed(() => {
     const params = new URLSearchParams();
@@ -320,20 +500,6 @@ const { data, pending, error, refresh: refreshData } = useAsyncData(
         watch: [debouncedSearchQuery],
     }
 );
-
-// Debug data (remove after testing)
-watch(data, (newData) => {
-    console.log('ESI Analytics data received:', newData);
-    if (newData && !newData.success) {
-        console.error('API returned error:', newData);
-    }
-}, { immediate: true });
-
-watch(error, (newError) => {
-    if (newError) {
-        console.error('ESI Analytics fetch error:', newError);
-    }
-}, { immediate: true });
 
 // Filtered data
 const filteredCorporations = computed(() => {
@@ -381,6 +547,45 @@ const toggleCorpUsers = (corporationId: number) => {
     } else {
         expandedCorporations.value.add(corporationId);
     }
+};
+
+// Modal methods
+const openKeyModal = async (characterId: number) => {
+    selectedCharacterId.value = characterId;
+    isKeyModalOpen.value = true;
+    keyDetailsLoading.value = true;
+    keyDetailsError.value = null;
+    keyDetails.value = null;
+
+    try {
+        const response = await $fetch(`/api/admin/analytics/esi/${characterId}`);
+        if (response.success) {
+            keyDetails.value = response.data;
+        } else {
+            keyDetailsError.value = 'Failed to load key details';
+        }
+    } catch (error: any) {
+        keyDetailsError.value = error?.data?.statusMessage || error?.message || 'Unknown error occurred';
+    } finally {
+        keyDetailsLoading.value = false;
+    }
+};
+
+const openKeyModalForCorp = async (corp: any) => {
+    // Find the best user to show - prefer users with corporation killmail access
+    const usersWithCorpAccess = corp.users?.filter((user: any) => user.canFetchCorporationKillmails) || [];
+    const selectedUser = usersWithCorpAccess.length > 0 ? usersWithCorpAccess[0] : corp.users?.[0];
+    
+    if (selectedUser) {
+        await openKeyModal(selectedUser.characterId);
+    } else {
+        keyDetailsError.value = 'No users found for this corporation';
+    }
+};const closeKeyModal = () => {
+    isKeyModalOpen.value = false;
+    selectedCharacterId.value = null;
+    keyDetails.value = null;
+    keyDetailsError.value = null;
 };
 
 // Debounce utility
@@ -977,6 +1182,7 @@ function debounce<T extends (...args: any[]) => any>(func: T, wait: number): (..
     width: 12px;
     height: 12px;
     color: white;
+    pointer-events: none;
 }
 
 .empty-state {
@@ -997,6 +1203,201 @@ function debounce<T extends (...args: any[]) => any>(func: T, wait: number): (..
 .empty-text {
     color: rgb(156, 163, 175);
     font-size: 0.875rem;
+}
+
+/* Clickable key indicator */
+.clickable-key {
+    cursor: pointer;
+    transition: all 0.2s ease-in-out;
+}
+
+.clickable-key:hover {
+    background: rgb(21, 128, 61);
+    transform: scale(1.1);
+}
+
+/* Modal styles */
+.modal-loading,
+.modal-error {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 2rem;
+    gap: 1rem;
+}
+
+.loading-icon {
+    width: 32px;
+    height: 32px;
+    color: rgb(59, 130, 246);
+}
+
+.loading-text {
+    color: rgb(156, 163, 175);
+    font-size: 0.875rem;
+}
+
+.error-icon {
+    width: 32px;
+    height: 32px;
+    color: rgb(239, 68, 68);
+}
+
+.error-text {
+    color: rgb(239, 68, 68);
+    font-weight: 500;
+}
+
+.error-details {
+    color: rgb(156, 163, 175);
+    font-size: 0.75rem;
+    text-align: center;
+}
+
+.key-details-content {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+.detail-section {
+    border-bottom: 1px solid rgb(55, 65, 81);
+    padding-bottom: 1rem;
+}
+
+.detail-section:last-child {
+    border-bottom: none;
+    padding-bottom: 0;
+}
+
+.detail-title {
+    font-size: 1.125rem;
+    font-weight: 600;
+    color: white;
+    margin-bottom: 1rem;
+}
+
+.detail-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 0.75rem;
+}
+
+.detail-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.5rem 0;
+}
+
+.detail-label {
+    font-weight: 500;
+    color: rgb(209, 213, 219);
+    flex-shrink: 0;
+    min-width: 140px;
+}
+
+.detail-value {
+    color: white;
+    text-align: right;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    justify-content: flex-end;
+}
+
+.character-value,
+.corporation-value,
+.alliance-value {
+    justify-content: flex-start;
+}
+
+.character-avatar,
+.corporation-avatar,
+.alliance-avatar {
+    border-radius: 50%;
+    flex-shrink: 0;
+}
+
+.character-link,
+.corporation-link,
+.alliance-link {
+    color: rgb(59, 130, 246);
+    text-decoration: none;
+    font-weight: 500;
+}
+
+.character-link:hover,
+.corporation-link:hover,
+.alliance-link:hover {
+    text-decoration: underline;
+}
+
+.ticker {
+    color: rgb(156, 163, 175);
+    font-size: 0.875rem;
+}
+
+.expired-badge {
+    background: rgb(153, 27, 27);
+    color: white;
+    padding: 0.125rem 0.5rem;
+    border-radius: 0.25rem;
+    font-size: 0.75rem;
+    font-weight: 500;
+    margin-left: 0.5rem;
+}
+
+.warning-badge {
+    background: rgb(161, 98, 7);
+    color: white;
+    padding: 0.125rem 0.5rem;
+    border-radius: 0.25rem;
+    font-size: 0.75rem;
+    font-weight: 500;
+    margin-left: 0.5rem;
+}
+
+.time-ago {
+    color: rgb(156, 163, 175);
+    font-size: 0.75rem;
+    margin-left: 0.5rem;
+}
+
+.scopes-container {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.scope-category {
+    background: rgb(31, 41, 55);
+    border-radius: 0.5rem;
+    padding: 1rem;
+}
+
+.scope-category-title {
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: rgb(209, 213, 219);
+    margin-bottom: 0.75rem;
+    text-transform: capitalize;
+}
+
+.scope-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+}
+
+.scope-tag {
+    background: rgb(55, 65, 81);
+    color: rgb(209, 213, 219);
+    padding: 0.25rem 0.75rem;
+    border-radius: 0.375rem;
+    font-size: 0.75rem;
+    font-family: monospace;
 }
 
 /* Responsive adjustments */

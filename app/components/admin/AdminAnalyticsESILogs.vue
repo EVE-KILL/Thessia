@@ -72,7 +72,7 @@
                             <div class="stat-info">
                                 <div class="stat-label">{{ t('admin.analytics.esiLogs.uniqueCharacters') }}</div>
                                 <div class="stat-value">{{ data?.data?.summary?.uniqueCharacters?.toLocaleString() || 0
-                                    }}</div>
+                                }}</div>
                             </div>
                         </div>
                         <div class="stat-card">
@@ -91,7 +91,7 @@
                             <div class="stat-info">
                                 <div class="stat-label">{{ t('admin.analytics.esiLogs.totalItemsFetched') }}</div>
                                 <div class="stat-value">{{ data?.data?.summary?.totalItemsFetched?.toLocaleString() || 0
-                                    }}</div>
+                                }}</div>
                             </div>
                         </div>
                         <div class="stat-card">
@@ -101,7 +101,7 @@
                             <div class="stat-info">
                                 <div class="stat-label">{{ t('admin.analytics.esiLogs.totalNewItems') }}</div>
                                 <div class="stat-value">{{ data?.data?.summary?.totalNewItems?.toLocaleString() || 0
-                                    }}</div>
+                                }}</div>
                             </div>
                         </div>
                         <div class="stat-card">
@@ -198,7 +198,7 @@
                         <!-- Character ID Filter -->
                         <div class="filter-group">
                             <label class="filter-label">{{ t('admin.analytics.esiLogs.characterId') }}</label>
-                            <input v-model="characterIdFilter" type="number"
+                            <input v-model.number="characterIdFilter" type="number"
                                 :placeholder="t('admin.analytics.esiLogs.characterIdPlaceholder')"
                                 class="filter-input" />
                         </div>
@@ -279,12 +279,13 @@
                                         <span v-else class="no-data">-</span>
                                     </div>
                                     <div class="table-cell">
-                                        <div class="status-badge" :class="log.error ? 'error' : 'success'">
+                                        <button @click="openLogDetails(log)" class="status-badge"
+                                            :class="log.error ? 'error' : 'success'">
                                             <Icon :name="log.error ? 'heroicons:x-circle' : 'heroicons:check-circle'"
                                                 class="status-icon" />
                                             {{ log.error ? t('admin.analytics.esiLogs.error') :
                                                 t('admin.analytics.esiLogs.success') }}
-                                        </div>
+                                        </button>
                                     </div>
                                 </div>
                             </div>
@@ -318,6 +319,89 @@
             </div>
         </div>
     </div>
+
+    <!-- Log Details Modal -->
+    <Modal :is-open="isModalOpen" :title="modalTitle" size="lg" @close="closeModal">
+        <div v-if="modalContent" class="log-details">
+            <!-- Basic Information -->
+            <div class="detail-section">
+                <h4 class="detail-section-title">{{ t('admin.analytics.esiLogs.basicInfo') }}</h4>
+                <div class="detail-grid">
+                    <div class="detail-item">
+                        <span class="detail-label">{{ t('admin.analytics.esiLogs.timestamp') }}</span>
+                        <span class="detail-value">{{ modalContent.timestamp }}</span>
+                    </div>
+                    <div class="detail-item">
+                        <span class="detail-label">{{ t('admin.analytics.esiLogs.character') }}</span>
+                        <span class="detail-value">{{ modalContent.character }}</span>
+                    </div>
+                    <div class="detail-item">
+                        <span class="detail-label">{{ t('admin.analytics.esiLogs.endpoint') }}</span>
+                        <span class="detail-value code">{{ modalContent.endpoint }}</span>
+                    </div>
+                    <div class="detail-item">
+                        <span class="detail-label">{{ t('admin.analytics.esiLogs.dataType') }}</span>
+                        <span class="detail-value">{{ modalContent.dataType }}</span>
+                    </div>
+                    <div class="detail-item">
+                        <span class="detail-label">{{ t('admin.analytics.esiLogs.source') }}</span>
+                        <span class="detail-value">{{ modalContent.source }}</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Success Data -->
+            <div v-if="modalType === 'success'" class="detail-section">
+                <h4 class="detail-section-title">{{ t('admin.analytics.esiLogs.successData') }}</h4>
+                <div class="detail-grid">
+                    <div class="detail-item">
+                        <span class="detail-label">{{ t('admin.analytics.esiLogs.items') }}</span>
+                        <span class="detail-value">{{ modalContent.itemsReturned?.toLocaleString() }}</span>
+                    </div>
+                    <div class="detail-item">
+                        <span class="detail-label">{{ t('admin.analytics.esiLogs.newItems') }}</span>
+                        <span class="detail-value" :class="{ 'has-new': modalContent.newItemsCount > 0 }">
+                            {{ modalContent.newItemsCount?.toLocaleString() }}
+                        </span>
+                    </div>
+                </div>
+
+                <!-- Fetched Data -->
+                <div v-if="modalContent.fetchedData && modalContent.fetchedData.length > 0"
+                    class="fetched-data-section">
+                    <h5 class="fetched-data-title">{{ t('admin.analytics.esiLogs.fetchedData') }}</h5>
+                    <div class="fetched-data-container">
+                        <div class="fetched-data-summary">
+                            {{ t('admin.analytics.esiLogs.showingItems', { count: modalContent.fetchedData.length }) }}
+                        </div>
+                        <div class="fetched-data-list">
+                            <div v-for="(item, index) in modalContent.fetchedData.slice(0, 100)" :key="index"
+                                class="fetched-item">
+                                <span class="item-id">{{ item.id }}</span>
+                                <span v-if="item.hash" class="item-hash">{{ item.hash }}</span>
+                                <span v-if="item.additionalInfo" class="item-additional">
+                                    {{ typeof item.additionalInfo === 'object' ? JSON.stringify(item.additionalInfo) :
+                                    item.additionalInfo }}
+                                </span>
+                            </div>
+                        </div>
+                        <div v-if="modalContent.fetchedData.length > 100" class="fetched-data-truncated">
+                            {{ t('admin.analytics.esiLogs.andMore', { count: modalContent.fetchedData.length - 100 }) }}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Error Data -->
+            <div v-if="modalType === 'error'" class="detail-section">
+                <h4 class="detail-section-title">{{ t('admin.analytics.esiLogs.errorInfo') }}</h4>
+                <div class="error-message">
+                    <div class="error-message-label">{{ t('admin.analytics.esiLogs.errorMessage') }}</div>
+                    <div class="error-message-text">{{ modalContent.errorMessage }}</div>
+                </div>
+            </div>
+        </div>
+    </Modal>
 </template>
 
 <script setup lang="ts">
@@ -367,10 +451,16 @@ const limit = ref(50);
 const selectedDataType = ref('all');
 const selectedSource = ref('all');
 const selectedStatus = ref('all');
-const characterIdFilter = ref('');
+const characterIdFilter = ref<string | number | null>(null);
 
 // Debounced character ID filter
-const debouncedCharacterId = ref('');
+const debouncedCharacterId = ref<string | number | null>(null);
+
+// Modal state
+const isModalOpen = ref(false);
+const modalTitle = ref('');
+const modalContent = ref<any>(null);
+const modalType = ref<'success' | 'error'>('success');
 
 // Computed API endpoint
 const apiEndpoint = computed(() => {
@@ -388,8 +478,8 @@ const apiEndpoint = computed(() => {
     if (selectedStatus.value !== 'all') {
         params.set('status', selectedStatus.value);
     }
-    if (debouncedCharacterId.value.trim()) {
-        params.set('characterId', debouncedCharacterId.value.trim());
+    if (debouncedCharacterId.value !== null && debouncedCharacterId.value !== '' && !isNaN(Number(debouncedCharacterId.value))) {
+        params.set('characterId', debouncedCharacterId.value.toString());
     }
 
     return `/api/admin/analytics/esilogs?${params.toString()}`;
@@ -453,6 +543,45 @@ const goToPage = (newPage: number) => {
     if (newPage >= 1 && newPage <= (data.value?.data?.pagination?.pages || 1)) {
         page.value = newPage;
     }
+};
+
+// Modal functions
+const openLogDetails = (log: any) => {
+    if (log.error) {
+        // Show error details
+        modalType.value = 'error';
+        modalTitle.value = t('admin.analytics.esiLogs.errorDetails');
+        modalContent.value = {
+            endpoint: log.endpoint,
+            dataType: getDataTypeName(log.dataType),
+            source: getSourceName(log.source),
+            character: log.characterId ? log.characterId.name : t('admin.analytics.esiLogs.unknownCharacter'),
+            timestamp: formatTimestamp(log.timestamp),
+            errorMessage: log.errorMessage || t('admin.analytics.esiLogs.noErrorMessage'),
+            ...log
+        };
+    } else {
+        // Show success details with fetched data
+        modalType.value = 'success';
+        modalTitle.value = t('admin.analytics.esiLogs.successDetails');
+        modalContent.value = {
+            endpoint: log.endpoint,
+            dataType: getDataTypeName(log.dataType),
+            source: getSourceName(log.source),
+            character: log.characterId ? log.characterId.name : t('admin.analytics.esiLogs.unknownCharacter'),
+            timestamp: formatTimestamp(log.timestamp),
+            itemsReturned: log.itemsReturned || 0,
+            newItemsCount: log.newItemsCount || 0,
+            fetchedData: log.fetchedData || [],
+            ...log
+        };
+    }
+    isModalOpen.value = true;
+};
+
+const closeModal = () => {
+    isModalOpen.value = false;
+    modalContent.value = null;
 };
 
 // Debounce utility
@@ -871,7 +1000,7 @@ function debounce<T extends (...args: any[]) => any>(func: T, wait: number): (..
 
 .table-header {
     display: grid;
-    grid-template-columns: 150px 200px 150px 120px 80px 80px 120px;
+    grid-template-columns: 150px 180px 150px 120px 60px 60px 100px;
     gap: 1rem;
     padding: 1rem;
     background: rgba(0, 0, 0, 0.5);
@@ -888,7 +1017,7 @@ function debounce<T extends (...args: any[]) => any>(func: T, wait: number): (..
 
 .table-row {
     display: grid;
-    grid-template-columns: 150px 200px 150px 120px 80px 80px 120px;
+    grid-template-columns: 150px 200px 150px 120px 60px 60px 120px;
     gap: 1rem;
     padding: 1rem;
     border-bottom: 1px solid rgba(55, 55, 55, 0.5);
@@ -976,6 +1105,15 @@ function debounce<T extends (...args: any[]) => any>(func: T, wait: number): (..
     border-radius: 0.25rem;
     font-size: 0.75rem;
     font-weight: 500;
+    border: none;
+    background: none;
+    cursor: pointer;
+    transition: all 0.15s ease-in-out;
+}
+
+.status-badge:hover {
+    transform: translateY(-1px);
+    filter: brightness(1.1);
 }
 
 .status-badge.success {
@@ -984,10 +1122,20 @@ function debounce<T extends (...args: any[]) => any>(func: T, wait: number): (..
     color: rgb(34, 197, 94);
 }
 
+.status-badge.success:hover {
+    background: rgba(34, 197, 94, 0.3);
+    border-color: rgba(34, 197, 94, 0.5);
+}
+
 .status-badge.error {
     background: rgba(239, 68, 68, 0.2);
     border: 1px solid rgba(239, 68, 68, 0.3);
     color: rgb(239, 68, 68);
+}
+
+.status-badge.error:hover {
+    background: rgba(239, 68, 68, 0.3);
+    border-color: rgba(239, 68, 68, 0.5);
 }
 
 .status-icon {
@@ -1073,5 +1221,230 @@ function debounce<T extends (...args: any[]) => any>(func: T, wait: number): (..
         padding: 0.5rem 0;
         border-bottom: 1px solid rgba(55, 55, 55, 0.3);
     }
+}
+
+/* Modal Styles */
+.log-details {
+    color: rgb(31, 41, 55);
+}
+
+:global(.dark) .log-details {
+    color: white;
+}
+
+.detail-section {
+    margin-bottom: 1.5rem;
+}
+
+.detail-section:last-child {
+    margin-bottom: 0;
+}
+
+.detail-section-title {
+    font-size: 1.125rem;
+    font-weight: 600;
+    margin-bottom: 0.75rem;
+    color: rgb(31, 41, 55);
+    border-bottom: 1px solid rgb(229, 231, 235);
+    padding-bottom: 0.5rem;
+}
+
+:global(.dark) .detail-section-title {
+    color: white;
+    border-bottom-color: rgb(55, 65, 81);
+}
+
+.detail-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 0.75rem;
+}
+
+.detail-item {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+}
+
+.detail-label {
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: rgb(107, 114, 128);
+}
+
+:global(.dark) .detail-label {
+    color: rgb(156, 163, 175);
+}
+
+.detail-value {
+    font-size: 0.875rem;
+    color: rgb(31, 41, 55);
+    word-break: break-all;
+}
+
+:global(.dark) .detail-value {
+    color: white;
+}
+
+.detail-value.code {
+    font-family: monospace;
+    background: rgb(243, 244, 246);
+    padding: 0.25rem 0.5rem;
+    border-radius: 0.25rem;
+    font-size: 0.75rem;
+}
+
+:global(.dark) .detail-value.code {
+    background: rgb(31, 41, 55);
+}
+
+.detail-value.has-new {
+    color: rgb(34, 197, 94);
+    font-weight: 600;
+}
+
+.error-message {
+    background: rgb(254, 242, 242);
+    border: 1px solid rgb(252, 165, 165);
+    border-radius: 0.5rem;
+    padding: 1rem;
+}
+
+:global(.dark) .error-message {
+    background: rgba(239, 68, 68, 0.1);
+    border-color: rgba(239, 68, 68, 0.3);
+}
+
+.error-message-label {
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: rgb(153, 27, 27);
+    margin-bottom: 0.5rem;
+}
+
+:global(.dark) .error-message-label {
+    color: rgb(248, 113, 113);
+}
+
+.error-message-text {
+    font-family: monospace;
+    font-size: 0.875rem;
+    color: rgb(127, 29, 29);
+    white-space: pre-wrap;
+    word-break: break-word;
+}
+
+:global(.dark) .error-message-text {
+    color: rgb(239, 68, 68);
+}
+
+.fetched-data-section {
+    margin-top: 1rem;
+}
+
+.fetched-data-title {
+    font-size: 1rem;
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+    color: rgb(31, 41, 55);
+}
+
+:global(.dark) .fetched-data-title {
+    color: white;
+}
+
+.fetched-data-container {
+    background: rgb(249, 250, 251);
+    border: 1px solid rgb(229, 231, 235);
+    border-radius: 0.5rem;
+    padding: 1rem;
+}
+
+:global(.dark) .fetched-data-container {
+    background: rgb(31, 41, 55);
+    border-color: rgb(55, 65, 81);
+}
+
+.fetched-data-summary {
+    font-size: 0.875rem;
+    color: rgb(107, 114, 128);
+    margin-bottom: 0.75rem;
+}
+
+:global(.dark) .fetched-data-summary {
+    color: rgb(156, 163, 175);
+}
+
+.fetched-data-list {
+    max-height: 300px;
+    overflow-y: auto;
+    border: 1px solid rgb(229, 231, 235);
+    border-radius: 0.25rem;
+    background: white;
+}
+
+:global(.dark) .fetched-data-list {
+    border-color: rgb(55, 65, 81);
+    background: rgb(17, 24, 39);
+}
+
+.fetched-item {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem;
+    border-bottom: 1px solid rgb(243, 244, 246);
+    font-size: 0.75rem;
+}
+
+:global(.dark) .fetched-item {
+    border-bottom-color: rgb(55, 65, 81);
+}
+
+.fetched-item:last-child {
+    border-bottom: none;
+}
+
+.item-id {
+    font-family: monospace;
+    font-weight: 600;
+    color: rgb(59, 130, 246);
+    min-width: 80px;
+}
+
+.item-hash {
+    font-family: monospace;
+    color: rgb(107, 114, 128);
+    font-size: 0.625rem;
+}
+
+:global(.dark) .item-hash {
+    color: rgb(156, 163, 175);
+}
+
+.item-additional {
+    font-family: monospace;
+    color: rgb(107, 114, 128);
+    font-size: 0.625rem;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    flex: 1;
+}
+
+:global(.dark) .item-additional {
+    color: rgb(156, 163, 175);
+}
+
+.fetched-data-truncated {
+    margin-top: 0.5rem;
+    font-size: 0.875rem;
+    color: rgb(107, 114, 128);
+    text-align: center;
+    font-style: italic;
+}
+
+:global(.dark) .fetched-data-truncated {
+    color: rgb(156, 163, 175);
 }
 </style>

@@ -187,7 +187,7 @@
 
                     <div class="form-group">
                         <label for="edit-executor-corporation">{{ t('admin.alliances.edit.executorCorporation')
-                            }}</label>
+                        }}</label>
                         <Search v-model="editModal.form.executor_corporation_id" type="corporations"
                             :placeholder="t('admin.alliances.edit.executorCorporationPlaceholder')"
                             class="form-search" />
@@ -236,7 +236,7 @@
                     <div class="alliance-info">
                         <strong>{{ deleteModal.alliance.name }}</strong>
                         <span v-if="deleteModal.alliance.ticker" class="ticker">[{{ deleteModal.alliance.ticker
-                            }}]</span>
+                        }}]</span>
                     </div>
                 </div>
             </template>

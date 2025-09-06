@@ -209,10 +209,17 @@ export default defineEventHandler(async (event) => {
                         ...user.corporation,
                         keyCount: 0,
                         hasCorpKeys: false,
+                        users: [],
                     });
                 }
                 const corp = alliance.corporations.get(corpId);
                 corp.keyCount++;
+                corp.users.push({
+                    characterId: user.characterId,
+                    characterName: user.characterName,
+                    scopesCount: user.scopesCount,
+                    canFetchCorporationKillmails: user.canFetchCorporationKillmails,
+                });
                 if (user.canFetchCorporationKillmails && !corp.hasCorpKeys) {
                     corp.hasCorpKeys = true;
                     alliance.corporationsWithKeys++;
