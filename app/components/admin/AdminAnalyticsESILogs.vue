@@ -72,7 +72,7 @@
                             <div class="stat-info">
                                 <div class="stat-label">{{ t('admin.analytics.esiLogs.uniqueCharacters') }}</div>
                                 <div class="stat-value">{{ data?.data?.summary?.uniqueCharacters?.toLocaleString() || 0
-                                    }}</div>
+                                }}</div>
                             </div>
                         </div>
                         <div class="stat-card">
@@ -82,7 +82,7 @@
                             <div class="stat-info">
                                 <div class="stat-label">{{ t('admin.analytics.esiLogs.activeUsers') }}</div>
                                 <div class="stat-value">{{ data?.data?.summary?.activeUsers?.toLocaleString() || 0
-                                    }}</div>
+                                }}</div>
                             </div>
                         </div>
                         <div class="stat-card">
@@ -92,7 +92,7 @@
                             <div class="stat-info">
                                 <div class="stat-label">{{ t('admin.analytics.esiLogs.deactivatedUsers') }}</div>
                                 <div class="stat-value">{{ data?.data?.summary?.deactivatedUsers?.toLocaleString() || 0
-                                    }}</div>
+                                }}</div>
                             </div>
                         </div>
                         <div class="stat-card">
@@ -111,7 +111,7 @@
                             <div class="stat-info">
                                 <div class="stat-label">{{ t('admin.analytics.esiLogs.totalItemsFetched') }}</div>
                                 <div class="stat-value">{{ data?.data?.summary?.totalItemsFetched?.toLocaleString() || 0
-                                    }}</div>
+                                }}</div>
                             </div>
                         </div>
                         <div class="stat-card">
@@ -121,7 +121,7 @@
                             <div class="stat-info">
                                 <div class="stat-label">{{ t('admin.analytics.esiLogs.totalNewItems') }}</div>
                                 <div class="stat-value">{{ data?.data?.summary?.totalNewItems?.toLocaleString() || 0
-                                    }}</div>
+                                }}</div>
                             </div>
                         </div>
                         <div class="stat-card">

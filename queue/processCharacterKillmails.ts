@@ -193,7 +193,29 @@ export default {
                             killmails.push(...killmailsPage);
                             page++;
                         } while (killmailsPage.length === 1000);
-                    } catch (killmailError) {
+                    } catch (killmailError: any) {
+                        // Handle scope errors by deactivating the user
+                        if (
+                            (killmailError.name === "ESIError" &&
+                                (killmailError.esiResponse?.error?.includes("Token is not valid for any required scope") ||
+                                 killmailError.esiResponse?.error?.includes("Unauthorized"))) ||
+                            (killmailError.message &&
+                                (killmailError.message.includes("Token is not valid for any required scope") ||
+                                 killmailError.message.includes("Unauthorized")))
+                        ) {
+                            cliLogger.warn(
+                                `Deactivating ESI for ${characterName} (${characterId}) due to insufficient scopes`
+                            );
+                            await Users.updateOne(
+                                { _id: userId },
+                                {
+                                    lastChecked: new Date(),
+                                    esiActive: false,
+                                }
+                            );
+                            return;
+                        }
+                        
                         cliLogger.error(
                             `Error fetching character killmails for ${characterName} (${characterId}): ${killmailError}`
                         );
@@ -226,6 +248,7 @@ export default {
                                     killmails.push(...killmailsPage);
                                     page++;
                                 } catch (corpError: any) {
+                                    // Handle role errors
                                     if (
                                         (corpError.name === "ESIError" &&
                                             corpError.esiResponse?.error?.includes(
@@ -248,6 +271,53 @@ export default {
                                         );
                                         break;
                                     }
+                                    
+                                    // Handle character not in corporation
+                                    if (
+                                        (corpError.name === "ESIError" &&
+                                            corpError.esiResponse?.error?.includes(
+                                                "Character is not in the corporation"
+                                            )) ||
+                                        (corpError.message &&
+                                            corpError.message.includes(
+                                                "Character is not in the corporation"
+                                            ))
+                                    ) {
+                                        await Users.updateOne(
+                                            { _id: userId },
+                                            {
+                                                canFetchCorporationKillmails:
+                                                    false,
+                                            }
+                                        );
+                                        cliLogger.info(
+                                            `Character ${characterName} (${characterId}) is no longer in corporation ${corporationId} - disabling corp killmail access`
+                                        );
+                                        break;
+                                    }
+                                    
+                                    // Handle scope errors for corporation access
+                                    if (
+                                        (corpError.name === "ESIError" &&
+                                            (corpError.esiResponse?.error?.includes("Token is not valid for any required scope") ||
+                                             corpError.esiResponse?.error?.includes("Unauthorized"))) ||
+                                        (corpError.message &&
+                                            (corpError.message.includes("Token is not valid for any required scope") ||
+                                             corpError.message.includes("Unauthorized")))
+                                    ) {
+                                        await Users.updateOne(
+                                            { _id: userId },
+                                            {
+                                                canFetchCorporationKillmails:
+                                                    false,
+                                            }
+                                        );
+                                        cliLogger.info(
+                                            `Character ${characterName} (${characterId}) lacks required scopes for corporation killmails - disabling corp access`
+                                        );
+                                        break;
+                                    }
+                                    
                                     throw corpError;
                                 }
                             } while (killmailsPage.length === 1000);
@@ -487,8 +557,12 @@ async function getCharacterKillmails(
             }
         );
         return Array.isArray(killmails) ? killmails : [];
-    } catch (error) {
+    } catch (error: any) {
         cliLogger.error(`Error fetching character killmails: ${error}`);
+        // Re-throw ESI errors for proper handling upstream
+        if (error.name === "ESIError") {
+            throw error;
+        }
         return [];
     }
 }
@@ -547,8 +621,12 @@ async function getCorporationKillmails(
             }
         );
         return Array.isArray(killmails) ? killmails : [];
-    } catch (error) {
+    } catch (error: any) {
         cliLogger.error(`Error fetching corporation killmails: ${error}`);
+        // Re-throw ESI errors for proper handling upstream
+        if (error.name === "ESIError") {
+            throw error;
+        }
         return [];
     }
 }

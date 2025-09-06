@@ -237,7 +237,11 @@ export default defineEventHandler(async (event) => {
                         user.canFetchCorporationKillmails,
                     esiActive: user.esiActive,
                 });
-                if (user.canFetchCorporationKillmails && user.esiActive && !corp.hasCorpKeys) {
+                if (
+                    user.canFetchCorporationKillmails &&
+                    user.esiActive &&
+                    !corp.hasCorpKeys
+                ) {
                     corp.hasCorpKeys = true;
                     alliance.corporationsWithKeys++;
                 }
@@ -325,9 +329,9 @@ export default defineEventHandler(async (event) => {
             : 0;
 
     // Calculate summary statistics
-    const activeUsers = userAnalytics.filter(user => user.esiActive);
-    const deactivatedUsers = userAnalytics.filter(user => !user.esiActive);
-    
+    const activeUsers = userAnalytics.filter((user) => user.esiActive);
+    const deactivatedUsers = userAnalytics.filter((user) => !user.esiActive);
+
     const summary = {
         totalKeys: activeUsers.length,
         totalCorporationKeys: activeUsers.filter(
