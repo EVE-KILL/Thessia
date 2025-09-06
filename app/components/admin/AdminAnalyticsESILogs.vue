@@ -72,7 +72,7 @@
                             <div class="stat-info">
                                 <div class="stat-label">{{ t('admin.analytics.esiLogs.uniqueCharacters') }}</div>
                                 <div class="stat-value">{{ data?.data?.summary?.uniqueCharacters?.toLocaleString() || 0
-                                }}</div>
+                                    }}</div>
                             </div>
                         </div>
                         <div class="stat-card">
@@ -91,7 +91,7 @@
                             <div class="stat-info">
                                 <div class="stat-label">{{ t('admin.analytics.esiLogs.totalItemsFetched') }}</div>
                                 <div class="stat-value">{{ data?.data?.summary?.totalItemsFetched?.toLocaleString() || 0
-                                }}</div>
+                                    }}</div>
                             </div>
                         </div>
                         <div class="stat-card">
@@ -101,7 +101,7 @@
                             <div class="stat-info">
                                 <div class="stat-label">{{ t('admin.analytics.esiLogs.totalNewItems') }}</div>
                                 <div class="stat-value">{{ data?.data?.summary?.totalNewItems?.toLocaleString() || 0
-                                }}</div>
+                                    }}</div>
                             </div>
                         </div>
                         <div class="stat-card">
@@ -381,7 +381,7 @@
                                 <span v-if="item.hash" class="item-hash">{{ item.hash }}</span>
                                 <span v-if="item.additionalInfo" class="item-additional">
                                     {{ typeof item.additionalInfo === 'object' ? JSON.stringify(item.additionalInfo) :
-                                    item.additionalInfo }}
+                                        item.additionalInfo }}
                                 </span>
                             </div>
                         </div>

@@ -61,19 +61,25 @@ export default {
                                 cliLogger.error(
                                     `Error refreshing token for ${characterName} (${characterId}): ${newTokens.error} - ${newTokens.error_description}`
                                 );
-                                
+
                                 // If the refresh token is invalid, deactivate ESI for this user
-                                if (newTokens.error === 'invalid_grant' && 
-                                    (newTokens.error_description?.includes('Invalid refresh token') || 
-                                     newTokens.error_description?.includes('Token missing/expired'))) {
+                                if (
+                                    newTokens.error === "invalid_grant" &&
+                                    (newTokens.error_description?.includes(
+                                        "Invalid refresh token"
+                                    ) ||
+                                        newTokens.error_description?.includes(
+                                            "Token missing/expired"
+                                        ))
+                                ) {
                                     cliLogger.warn(
                                         `Deactivating ESI for ${characterName} (${characterId}) due to invalid/expired refresh token`
                                     );
                                     await Users.updateOne(
                                         { _id: userId },
-                                        { 
+                                        {
                                             lastChecked: new Date(),
-                                            esiActive: false 
+                                            esiActive: false,
                                         }
                                     );
                                 } else {
@@ -104,20 +110,24 @@ export default {
                             cliLogger.error(
                                 `Exception refreshing token for ${characterName} (${characterId}): ${refreshError}`
                             );
-                            
+
                             // Check if this is a token-related error
                             const errorMessage = String(refreshError);
-                            if (errorMessage.includes('invalid_grant') || 
-                                errorMessage.includes('Invalid refresh token') ||
-                                errorMessage.includes('Token missing/expired')) {
+                            if (
+                                errorMessage.includes("invalid_grant") ||
+                                errorMessage.includes(
+                                    "Invalid refresh token"
+                                ) ||
+                                errorMessage.includes("Token missing/expired")
+                            ) {
                                 cliLogger.warn(
                                     `Deactivating ESI for ${characterName} (${characterId}) due to refresh token exception`
                                 );
                                 await Users.updateOne(
                                     { _id: userId },
-                                    { 
+                                    {
                                         lastChecked: new Date(),
-                                        esiActive: false 
+                                        esiActive: false,
                                     }
                                 );
                             } else {
@@ -217,8 +227,14 @@ export default {
                                     page++;
                                 } catch (corpError: any) {
                                     if (
-                                        (corpError.name === 'ESIError' && corpError.esiResponse?.error?.includes("Character does not have required role(s)")) ||
-                                        (corpError.message && corpError.message.includes("Character does not have required role(s)"))
+                                        (corpError.name === "ESIError" &&
+                                            corpError.esiResponse?.error?.includes(
+                                                "Character does not have required role(s)"
+                                            )) ||
+                                        (corpError.message &&
+                                            corpError.message.includes(
+                                                "Character does not have required role(s)"
+                                            ))
                                     ) {
                                         await Users.updateOne(
                                             { _id: userId },

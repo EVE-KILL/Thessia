@@ -12,9 +12,9 @@ export default {
 
             // Fetch all users that haven't been checked in the last 5 minutes and have ESI active
             const users = await Users.find(
-                { 
+                {
                     lastChecked: { $lt: new Date(Date.now() - 60 * 5 * 1000) },
-                    esiActive: { $ne: false } // Include users where esiActive is true or undefined (for backward compatibility)
+                    esiActive: { $ne: false }, // Include users where esiActive is true or undefined (for backward compatibility)
                 },
                 {
                     _id: 1,

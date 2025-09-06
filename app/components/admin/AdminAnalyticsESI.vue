@@ -128,7 +128,7 @@
                                     <h5 class="alliance-name">{{ alliance.name }}</h5>
                                     <div class="alliance-stats">
                                         <span class="stat-item">{{ alliance.totalKeys }} {{ t('admin.analytics.keys')
-                                            }}</span>
+                                        }}</span>
                                         <span class="stat-item">{{ alliance.totalCorporations }} {{
                                             t('admin.analytics.corporations') }}</span>
                                     </div>
@@ -228,7 +228,7 @@
                                     <h5 class="corporation-name">{{ corporation.name }}</h5>
                                     <div class="corporation-stats">
                                         <span class="stat-item">{{ corporation.keyCount }} {{ t('admin.analytics.keys')
-                                            }}</span>
+                                        }}</span>
                                         <span class="stat-item">{{ corporation.memberCount }} {{
                                             t('admin.analytics.members') }}</span>
                                     </div>
@@ -252,7 +252,7 @@
                                             {{ user.characterName }}
                                         </NuxtLink>
                                         <span class="user-scopes">{{ user.scopesCount }} {{ t('admin.analytics.scopes')
-                                            }}</span>
+                                        }}</span>
                                         <div class="corp-key-indicator clickable-key"
                                             @click.stop="openKeyModal(user.characterId)"
                                             :title="t('admin.analytics.esi.viewKeyDetails')">
@@ -310,7 +310,7 @@
                         <div v-if="keyDetails.character?.birthday" class="detail-item">
                             <span class="detail-label">{{ t('admin.analytics.esi.birthday') }}</span>
                             <span class="detail-value">{{ new Date(keyDetails.character.birthday).toLocaleDateString()
-                            }}</span>
+                                }}</span>
                         </div>
                     </div>
                 </div>
@@ -355,7 +355,7 @@
                                     {{ keyDetails.alliance.name }}
                                 </NuxtLink>
                                 <span v-if="keyDetails.alliance.ticker" class="ticker">&lt;{{ keyDetails.alliance.ticker
-                                }}&gt;</span>
+                                    }}&gt;</span>
                             </div>
                         </div>
                         <div class="detail-item">
@@ -575,13 +575,13 @@ const openKeyModalForCorp = async (corp: any) => {
     // Find the best user to show - prefer users with corporation killmail access
     const usersWithCorpAccess = corp.users?.filter((user: any) => user.canFetchCorporationKillmails) || [];
     const selectedUser = usersWithCorpAccess.length > 0 ? usersWithCorpAccess[0] : corp.users?.[0];
-    
+
     if (selectedUser) {
         await openKeyModal(selectedUser.characterId);
     } else {
         keyDetailsError.value = 'No users found for this corporation';
     }
-};const closeKeyModal = () => {
+}; const closeKeyModal = () => {
     isKeyModalOpen.value = false;
     selectedCharacterId.value = null;
     keyDetails.value = null;

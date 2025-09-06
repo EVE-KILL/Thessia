@@ -113,12 +113,16 @@ async function esiFetcher(url: string, options?: RequestInit): Promise<any> {
     }
 
     const responseData = await response.json();
-    
+
     // Check if the response contains an error
-    if (responseData && typeof responseData === 'object' && responseData.error) {
+    if (
+        responseData &&
+        typeof responseData === "object" &&
+        responseData.error
+    ) {
         // Create a proper error with the ESI error details
         const esiError = new Error(responseData.error);
-        esiError.name = 'ESIError';
+        esiError.name = "ESIError";
         (esiError as any).esiResponse = responseData;
         (esiError as any).statusCode = response.status;
         throw esiError;

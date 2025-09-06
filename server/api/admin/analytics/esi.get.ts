@@ -218,7 +218,8 @@ export default defineEventHandler(async (event) => {
                     characterId: user.characterId,
                     characterName: user.characterName,
                     scopesCount: user.scopesCount,
-                    canFetchCorporationKillmails: user.canFetchCorporationKillmails,
+                    canFetchCorporationKillmails:
+                        user.canFetchCorporationKillmails,
                 });
                 if (user.canFetchCorporationKillmails && !corp.hasCorpKeys) {
                     corp.hasCorpKeys = true;
