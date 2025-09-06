@@ -223,6 +223,28 @@ export default defineEventHandler(async (event) => {
         .hint({ timestamp: -1 })
         .option({ maxTimeMS: 15000, allowDiskUse: false });
 
+    // Get ESI user statistics
+    const esiUserStats = await Users.aggregate([
+        {
+            $group: {
+                _id: null,
+                totalUsers: { $sum: 1 },
+                activeUsers: {
+                    $sum: { $cond: [{ $ne: ["$esiActive", false] }, 1, 0] },
+                },
+                deactivatedUsers: {
+                    $sum: { $cond: [{ $eq: ["$esiActive", false] }, 1, 0] },
+                },
+            },
+        },
+    ]);
+
+    const userStats = esiUserStats[0] || {
+        totalUsers: 0,
+        activeUsers: 0,
+        deactivatedUsers: 0,
+    };
+
     return {
         success: true,
         data: {
@@ -237,15 +259,18 @@ export default defineEventHandler(async (event) => {
                 dataTypes: dataTypes.sort(),
                 sources: sources.sort(),
             },
-            summary: summaryStats[0] || {
-                totalRequests: 0,
-                successfulRequests: 0,
-                errorRequests: 0,
-                uniqueCharacters: 0,
-                totalItemsFetched: 0,
-                totalNewItems: 0,
-                successRate: 0,
-                newItemsRate: 0,
+            summary: {
+                ...(summaryStats[0] || {
+                    totalRequests: 0,
+                    successfulRequests: 0,
+                    errorRequests: 0,
+                    uniqueCharacters: 0,
+                    totalItemsFetched: 0,
+                    totalNewItems: 0,
+                    successRate: 0,
+                    newItemsRate: 0,
+                }),
+                ...userStats,
             },
             topDataTypes,
             dateRange: {

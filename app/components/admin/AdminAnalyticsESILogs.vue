@@ -76,6 +76,26 @@
                             </div>
                         </div>
                         <div class="stat-card">
+                            <div class="stat-icon success-icon">
+                                <Icon name="heroicons:check-circle" class="icon" />
+                            </div>
+                            <div class="stat-info">
+                                <div class="stat-label">{{ t('admin.analytics.esiLogs.activeUsers') }}</div>
+                                <div class="stat-value">{{ data?.data?.summary?.activeUsers?.toLocaleString() || 0
+                                    }}</div>
+                            </div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-icon error-icon">
+                                <Icon name="heroicons:x-circle" class="icon" />
+                            </div>
+                            <div class="stat-info">
+                                <div class="stat-label">{{ t('admin.analytics.esiLogs.deactivatedUsers') }}</div>
+                                <div class="stat-value">{{ data?.data?.summary?.deactivatedUsers?.toLocaleString() || 0
+                                    }}</div>
+                            </div>
+                        </div>
+                        <div class="stat-card">
                             <div class="stat-icon rate-icon">
                                 <Icon name="heroicons:chart-pie" class="icon" />
                             </div>

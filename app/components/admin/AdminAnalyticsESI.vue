@@ -70,6 +70,15 @@
                             </div>
                         </div>
                         <div class="stat-card">
+                            <div class="stat-icon error-icon">
+                                <Icon name="heroicons:x-circle" class="icon" />
+                            </div>
+                            <div class="stat-info">
+                                <div class="stat-label">{{ t('admin.analytics.esi.deactivatedKeys') }}</div>
+                                <div class="stat-value">{{ data?.data?.summary?.deactivatedKeys || 0 }}</div>
+                            </div>
+                        </div>
+                        <div class="stat-card">
                             <div class="stat-icon">
                                 <Icon name="heroicons:building-storefront" class="icon" />
                             </div>

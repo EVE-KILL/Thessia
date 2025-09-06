@@ -14,6 +14,7 @@ export default defineEventHandler(async (event) => {
             scopes: 1,
             canFetchCorporationKillmails: 1,
             administrator: 1,
+            esiActive: 1,
         }
     ).lean();
 
@@ -139,6 +140,7 @@ export default defineEventHandler(async (event) => {
                     : 0,
             canFetchCorporationKillmails: user.canFetchCorporationKillmails,
             administrator: user.administrator,
+            esiActive: user.esiActive !== false, // Default to true if undefined
             corporation: corporation
                 ? {
                       id: corporation.corporation_id,
@@ -156,7 +158,7 @@ export default defineEventHandler(async (event) => {
         };
     });
 
-    // Build corporation analytics
+    // Build corporation analytics (include all users for counts, but track active separately)
     const corporationAnalytics = new Map();
     userAnalytics.forEach((user) => {
         if (user.corporation) {
@@ -165,25 +167,30 @@ export default defineEventHandler(async (event) => {
                 corporationAnalytics.set(corpId, {
                     ...user.corporation,
                     keyCount: 0,
+                    activeKeyCount: 0,
                     users: [],
                     hasCorpKeys: false,
                 });
             }
             const corp = corporationAnalytics.get(corpId);
             corp.keyCount++;
+            if (user.esiActive) {
+                corp.activeKeyCount++;
+            }
             corp.users.push({
                 characterId: user.characterId,
                 characterName: user.characterName,
                 scopesCount: user.scopesCount,
                 canFetchCorporationKillmails: user.canFetchCorporationKillmails,
+                esiActive: user.esiActive,
             });
-            if (user.canFetchCorporationKillmails) {
+            if (user.canFetchCorporationKillmails && user.esiActive) {
                 corp.hasCorpKeys = true;
             }
         }
     });
 
-    // Build alliance analytics
+    // Build alliance analytics (include all users for counts, but track active separately)
     const allianceAnalytics = new Map();
     userAnalytics.forEach((user) => {
         if (user.alliance) {
@@ -195,11 +202,15 @@ export default defineEventHandler(async (event) => {
                         allianceCorpCountMap.get(allianceId) || 0,
                     corporationsWithKeys: 0,
                     totalKeys: 0,
+                    activeKeys: 0,
                     corporations: new Map(),
                 });
             }
             const alliance = allianceAnalytics.get(allianceId);
             alliance.totalKeys++;
+            if (user.esiActive) {
+                alliance.activeKeys++;
+            }
 
             // Track corporations in this alliance that have keys
             if (user.corporation) {
@@ -208,20 +219,25 @@ export default defineEventHandler(async (event) => {
                     alliance.corporations.set(corpId, {
                         ...user.corporation,
                         keyCount: 0,
+                        activeKeyCount: 0,
                         hasCorpKeys: false,
                         users: [],
                     });
                 }
                 const corp = alliance.corporations.get(corpId);
                 corp.keyCount++;
+                if (user.esiActive) {
+                    corp.activeKeyCount++;
+                }
                 corp.users.push({
                     characterId: user.characterId,
                     characterName: user.characterName,
                     scopesCount: user.scopesCount,
                     canFetchCorporationKillmails:
                         user.canFetchCorporationKillmails,
+                    esiActive: user.esiActive,
                 });
-                if (user.canFetchCorporationKillmails && !corp.hasCorpKeys) {
+                if (user.canFetchCorporationKillmails && user.esiActive && !corp.hasCorpKeys) {
                     corp.hasCorpKeys = true;
                     alliance.corporationsWithKeys++;
                 }
@@ -309,11 +325,15 @@ export default defineEventHandler(async (event) => {
             : 0;
 
     // Calculate summary statistics
+    const activeUsers = userAnalytics.filter(user => user.esiActive);
+    const deactivatedUsers = userAnalytics.filter(user => !user.esiActive);
+    
     const summary = {
-        totalKeys: users.length,
-        totalCorporationKeys: userAnalytics.filter(
+        totalKeys: activeUsers.length,
+        totalCorporationKeys: activeUsers.filter(
             (user) => user.canFetchCorporationKillmails
         ).length,
+        deactivatedKeys: deactivatedUsers.length,
         uniqueCorporations: corporationsList.length,
         uniqueAlliances: alliancesList.length,
         corporationsWithKeys: corporationsList.filter(
