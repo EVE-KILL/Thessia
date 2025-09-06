@@ -15,6 +15,7 @@ export interface IUser {
     uniqueIdentifier: string;
     lastChecked: Date;
     canFetchCorporationKillmails: boolean;
+    esiActive: boolean; // Whether ESI fetching is active for this user
     administrator: boolean;
     settings: IUserSetting[]; // Array of user settings
     createdAt?: Date;

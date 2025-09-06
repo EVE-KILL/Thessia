@@ -10,9 +10,12 @@ export default {
         try {
             cliLogger.info("Starting killmail fetch job - queuing characters");
 
-            // Fetch all users that haven't been checked in the last 5 minutes
+            // Fetch all users that haven't been checked in the last 5 minutes and have ESI active
             const users = await Users.find(
-                { lastChecked: { $lt: new Date(Date.now() - 60 * 5 * 1000) } },
+                { 
+                    lastChecked: { $lt: new Date(Date.now() - 60 * 5 * 1000) },
+                    esiActive: { $ne: false } // Include users where esiActive is true or undefined (for backward compatibility)
+                },
                 {
                     _id: 1,
                     characterId: 1,

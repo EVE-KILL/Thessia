@@ -25,6 +25,7 @@ const userSchema = new Schema<IUserDocument>(
         uniqueIdentifier: { type: String, required: true },
         lastChecked: { type: Date, default: Date.now },
         canFetchCorporationKillmails: { type: Boolean, default: true },
+        esiActive: { type: Boolean, default: true },
         administrator: { type: Boolean, default: false },
         settings: { type: [userSettingSchema], default: [] },
     },
