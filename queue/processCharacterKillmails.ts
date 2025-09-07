@@ -197,11 +197,25 @@ export default {
                         // Handle scope errors by deactivating the user
                         if (
                             (killmailError.name === "ESIError" &&
-                                (killmailError.esiResponse?.error?.includes("Token is not valid for any required scope") ||
-                                 killmailError.esiResponse?.error?.includes("Unauthorized"))) ||
+                                (killmailError.esiResponse?.error?.includes(
+                                    "Token is not valid for any required scope"
+                                ) ||
+                                    killmailError.esiResponse?.error?.includes(
+                                        "Token missing/expired"
+                                    ) ||
+                                    killmailError.esiResponse?.error?.includes(
+                                        "Unauthorized"
+                                    ))) ||
                             (killmailError.message &&
-                                (killmailError.message.includes("Token is not valid for any required scope") ||
-                                 killmailError.message.includes("Unauthorized")))
+                                (killmailError.message.includes(
+                                    "Token is not valid for any required scope"
+                                ) ||
+                                    killmailError.message.includes(
+                                        "Token missing/expired"
+                                    ) ||
+                                    killmailError.message.includes(
+                                        "Unauthorized"
+                                    )))
                         ) {
                             cliLogger.warn(
                                 `Deactivating ESI for ${characterName} (${characterId}) due to insufficient scopes`
@@ -215,7 +229,7 @@ export default {
                             );
                             return;
                         }
-                        
+
                         cliLogger.error(
                             `Error fetching character killmails for ${characterName} (${characterId}): ${killmailError}`
                         );
@@ -271,7 +285,7 @@ export default {
                                         );
                                         break;
                                     }
-                                    
+
                                     // Handle character not in corporation
                                     if (
                                         (corpError.name === "ESIError" &&
@@ -295,15 +309,23 @@ export default {
                                         );
                                         break;
                                     }
-                                    
+
                                     // Handle scope errors for corporation access
                                     if (
                                         (corpError.name === "ESIError" &&
-                                            (corpError.esiResponse?.error?.includes("Token is not valid for any required scope") ||
-                                             corpError.esiResponse?.error?.includes("Unauthorized"))) ||
+                                            (corpError.esiResponse?.error?.includes(
+                                                "Token is not valid for any required scope"
+                                            ) ||
+                                                corpError.esiResponse?.error?.includes(
+                                                    "Unauthorized"
+                                                ))) ||
                                         (corpError.message &&
-                                            (corpError.message.includes("Token is not valid for any required scope") ||
-                                             corpError.message.includes("Unauthorized")))
+                                            (corpError.message.includes(
+                                                "Token is not valid for any required scope"
+                                            ) ||
+                                                corpError.message.includes(
+                                                    "Unauthorized"
+                                                )))
                                     ) {
                                         await Users.updateOne(
                                             { _id: userId },
@@ -317,7 +339,7 @@ export default {
                                         );
                                         break;
                                     }
-                                    
+
                                     throw corpError;
                                 }
                             } while (killmailsPage.length === 1000);
@@ -654,14 +676,16 @@ async function getNewRefreshToken(refreshToken: string) {
             }
         );
 
+        const data = await response.json();
+
         if (!response.ok) {
-            const errorText = await response.text();
             cliLogger.error(
-                `Token refresh failed: ${response.status} - ${errorText}`
+                `Token refresh failed: ${response.status} - ${JSON.stringify(
+                    data
+                )}`
             );
         }
 
-        const data = await response.json();
         return data;
     } catch (error) {
         cliLogger.error(`Exception during token refresh: ${error}`);
