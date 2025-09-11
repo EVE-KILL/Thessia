@@ -280,7 +280,6 @@ export default defineEventHandler(
 
             // Set streaming headers
             setHeader(event, "Content-Type", "application/json");
-            setHeader(event, "Transfer-Encoding", "chunked");
             setHeader(
                 event,
                 "Cache-Control",
