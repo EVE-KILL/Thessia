@@ -155,6 +155,8 @@
     "faq.items.account.content": "No, you don't need an account to access and browse our comprehensive killboard data. However, creating an account unlocks enhanced features such as posting comments, creating campaigns, and personalizing your experience. When logging in through EVE SSO, you maintain full control over which permissions you grant—we operate on a principle of minimal necessary access. While the killmail scope is recommended for optimal functionality and is selected by default, you have complete freedom to customize your authorization preferences.",
     "faq.items.contact.label": "How can I contact support?",
     "faq.items.contact.content": "Our support team is readily accessible through our active <a target='_blank' href='{discordLink}'>Discord community</a>, where you can engage directly with both our team and fellow users. For technical inquiries, feature requests, or bug reports, our <a target='_blank' href='{githubLink}'>GitHub repository</a> provides a structured platform for detailed discussions and issue tracking.",
+    "faq.items.pricing.label": "How are item prices calculated?",
+    "faq.items.pricing.content": "Item prices are updated daily from the Forge region market (Jita). When a killmail is processed, it uses the most recent snapshot available at that time. Because the EVE market fluctuates constantly, prices shown on older killmails may not always match the current market value. This ensures consistent and fair valuations across all records.",
     "aboutTitle": "About",
     "backgroundTitle": "Background",
     "background": {

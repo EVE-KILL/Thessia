@@ -32,6 +32,12 @@ const items = computed(() => [
         key: 'killmails'
     },
     {
+        label: t('faq.items.prices.label'),
+        icon: 'i-lucide-dollar-sign',
+        content: t('faq.items.prices.content'),
+        key: 'killmail-prices'
+    },
+    {
         label: t('faq.items.api.label'),
         icon: 'i-lucide-code',
         content: t('faq.items.api.content', { swaggerLink: '/swagger', scalarLink: '/scalar' }),
