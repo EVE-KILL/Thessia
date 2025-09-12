@@ -32,9 +32,9 @@ const items = computed(() => [
         key: 'killmails'
     },
     {
-        label: t('faq.items.prices.label'),
+        label: t('faq.items.pricing.label'),
         icon: 'i-lucide-dollar-sign',
-        content: t('faq.items.prices.content'),
+        content: t('faq.items.pricing.content'),
         key: 'killmail-prices'
     },
     {
