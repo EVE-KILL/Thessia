@@ -31,7 +31,7 @@
         "@nuxtjs/color-mode": "3.5.2",
         "@nuxtjs/device": "3.2.4",
         "@nuxtjs/partytown": "1.6.0",
-        "@nuxtjs/seo": "3.1.0",
+        "@nuxtjs/seo": "3.2.2",
         "@pinia/nuxt": "0.11.2",
         "@types/highlight.js": "^10.1.0",
         "@types/markdown-it": "^14.1.2",
