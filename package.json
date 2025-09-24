@@ -79,7 +79,7 @@
         "@iconify-json/lucide": "^1.2.63",
         "@iconify-json/simple-icons": "^1.2.48",
         "@nuxt/icon": "2.0.0",
-        "@nuxt/ui": "^3.3.2",
+        "@nuxt/ui": "^4.0.0",
         "@nuxtjs/critters": "^0.9.0",
         "@nuxtjs/i18n": "^10.0.6",
         "@nuxtjs/sitemap": "^7.4.3",
