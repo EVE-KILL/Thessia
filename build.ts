@@ -71,6 +71,7 @@ export function generateCliLoader(targetFile = "console/.loader.ts"): number {
             "**/.loader.js",
             "**/_*.ts",
             "**/_*.js",
+            "**/migration/**", // Exclude migration folder from auto-loading
         ],
     });
 

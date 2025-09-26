@@ -34,8 +34,7 @@ async function main() {
     Object.entries(commands).forEach(([name, commandModule]) => {
         const command = program
             .command(name)
-            .description(commandModule.description)
-            .allowUnknownOption(true);
+            .description(commandModule.description);
 
         // Add options if they exist (use 'any' to bypass TypeScript checking for optional properties)
         const moduleAny = commandModule as any;

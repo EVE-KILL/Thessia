@@ -1,4 +1,10 @@
 import { type Document, type Model, Schema, model } from "mongoose";
+import {
+    type IBattles,
+    type ICharacterShipManifestEntry,
+    type IEntityStats,
+    type ITeamSummaryStats,
+} from "../interfaces/IBattles";
 
 // Extend the IBattles interface with Mongoose's Document interface
 export interface IBattlesDocument extends IBattles, Document {}

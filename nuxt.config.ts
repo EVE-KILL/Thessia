@@ -13,18 +13,19 @@ export default defineNuxtConfig({
 
     // Modules with automatic TypeScript support
     modules: [
-        "nuxt-security",
-        "@nuxt/ui",
-        "@nuxt/icon",
-        "@nuxtjs/i18n",
-        "@nuxtjs/sitemap",
-        "@nuxtjs/seo",
-        "@nuxtjs/color-mode",
-        "@nuxtjs/device",
-        "@nuxtjs/partytown",
-        "@nuxtjs/critters",
-        "@pinia/nuxt",
-        "@vueuse/nuxt",
+      "nuxt-security",
+      "@nuxt/ui",
+      "@nuxt/icon",
+      "@nuxtjs/i18n",
+      "@nuxtjs/sitemap",
+      "@nuxtjs/seo",
+      "@nuxtjs/color-mode",
+      "@nuxtjs/device",
+      "@nuxtjs/partytown",
+      "@nuxtjs/critters",
+      "@pinia/nuxt",
+      "@vueuse/nuxt",
+      "@prisma/nuxt",
     ],
 
     critters: {
