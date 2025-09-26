@@ -1,3 +1,5 @@
+import { BattleService } from "~/server/services";
+
 export default defineCachedEventHandler(
     async (event) => {
         const idParam = event.context.params?.id;
@@ -22,10 +24,8 @@ export default defineCachedEventHandler(
         }
 
         try {
-            // Get battle data with lean() to get a plain JS object
-            const rawBattle = await Battles.findOne({
-                battle_id: battleId,
-            }).lean();
+            // Get battle data using BattleService
+            const rawBattle = await BattleService.findById(battleId);
 
             if (!rawBattle) {
                 throw createError({
@@ -34,9 +34,44 @@ export default defineCachedEventHandler(
                 });
             }
 
+            // Convert Prisma battle data to format expected by processBattleDataForFrontend
+            // For now, we'll create a minimal adapter to work with the existing helper
+            const battleDocument = {
+                battle_id: Number(rawBattle.battle_id),
+                custom: rawBattle.custom,
+                start_time: rawBattle.start_time,
+                end_time: rawBattle.end_time,
+                duration_ms: rawBattle.duration_ms
+                    ? Number(rawBattle.duration_ms)
+                    : undefined,
+
+                // Map Prisma field names to expected interface
+                killmailsCount: rawBattle.killmails_count,
+                iskDestroyed: Number(rawBattle.isk_destroyed),
+
+                // Extract from JSON fields or provide empty arrays as fallback
+                systems: (rawBattle.systems as any) || [],
+                sides: (rawBattle.sides as any) || {},
+                killmail_ids: (rawBattle.killmail_ids as any) || [],
+                side_ids: Object.keys((rawBattle.sides as any) || {}),
+
+                // These would need to be calculated from the sides JSON if needed
+                alliancesInvolved: [],
+                corporationsInvolved: [],
+                charactersInvolved: [],
+                involved_alliances_count: 0,
+                involved_corporations_count: 0,
+                involved_characters_count: 0,
+
+                // These would be in the JSON structure
+                top_alliances: [],
+                top_corporations: [],
+                top_ship_types: [],
+            } as any;
+
             // Process the battle data using the helper function
             const processedBattle = await processBattleDataForFrontend(
-                rawBattle,
+                battleDocument,
                 includeKillmails
             );
 

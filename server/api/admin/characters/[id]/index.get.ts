@@ -1,8 +1,8 @@
-import { Alliances } from "../../../../models/Alliances";
-import { Characters } from "../../../../models/Characters";
-import { Corporations } from "../../../../models/Corporations";
-import { Factions } from "../../../../models/Factions";
-import { Users } from "../../../../models/Users";
+import {
+    CharacterService,
+    FactionService,
+    UserService,
+} from "../../../../services";
 
 export default defineEventHandler(async (event) => {
     // Admin authentication check
@@ -14,8 +14,8 @@ export default defineEventHandler(async (event) => {
         });
     }
 
-    const user = await Users.findOne({ uniqueIdentifier: cookie });
-    if (!(user as any)?.administrator) {
+    const user = await UserService.findByUniqueIdentifier(cookie);
+    if (user?.role !== "admin") {
         throw createError({
             statusCode: 403,
             statusMessage: "Administrator privileges required",
@@ -31,10 +31,8 @@ export default defineEventHandler(async (event) => {
     }
 
     try {
-        // Get full character data
-        const character = await Characters.findOne({
-            character_id: characterId,
-        });
+        // Get character data with related entities
+        const character = await CharacterService.findWithRelations(characterId);
 
         if (!character) {
             throw createError({
@@ -43,37 +41,34 @@ export default defineEventHandler(async (event) => {
             });
         }
 
-        // Get related entity names for display
-        let corporationName = null;
-        let allianceName = null;
+        // Get faction name if needed
         let factionName = null;
-
-        if (character.corporation_id) {
-            const corporation = await Corporations.findOne({
-                corporation_id: character.corporation_id,
-            });
-            corporationName = corporation?.name;
-        }
-
-        if (character.alliance_id) {
-            const alliance = await Alliances.findOne({
-                alliance_id: character.alliance_id,
-            });
-            allianceName = alliance?.name;
-        }
-
         if (character.faction_id) {
-            const faction = await Factions.findOne({
-                faction_id: character.faction_id,
-            });
+            const faction = await FactionService.findById(character.faction_id);
             factionName = faction?.name;
         }
 
         return {
-            character: character.toJSON(),
+            character: {
+                character_id: character.character_id,
+                name: character.name,
+                description: character.description,
+                birthday: character.birthday,
+                gender: character.gender,
+                race_id: character.race_id,
+                security_status: character.security_status,
+                bloodline_id: character.bloodline_id,
+                corporation_id: character.corporation_id,
+                alliance_id: character.alliance_id,
+                faction_id: character.faction_id,
+                deleted: character.deleted,
+                last_active: character.last_active,
+                created_at: character.created_at,
+                updated_at: character.updated_at,
+            },
             names: {
-                corporationName,
-                allianceName,
+                corporationName: character.corporation?.name || null,
+                allianceName: character.alliance?.name || null,
                 factionName,
             },
         };

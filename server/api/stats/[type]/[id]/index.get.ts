@@ -1,3 +1,4 @@
+// TODO: Convert to StatsService once 'days' field is added to schema or logic is redesigned
 export default defineCachedEventHandler(
     async (event) => {
         const params = getRouterParams(event);
@@ -45,8 +46,7 @@ export default defineCachedEventHandler(
             if (!stats) {
                 const placeholderStats = await createPlaceholderStats(
                     type,
-                    id,
-                    days
+                    id
                 );
                 const fullStats = {
                     ...placeholderStats,

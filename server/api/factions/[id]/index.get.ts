@@ -1,3 +1,5 @@
+import { FactionService } from "~/server/services";
+
 export default defineCachedEventHandler(
     async (event) => {
         const factionId: number | null = event.context.params?.id
@@ -7,7 +9,10 @@ export default defineCachedEventHandler(
             return { error: "Faction ID not provided" };
         }
 
-        const faction = await getFaction(factionId);
+        const faction = await FactionService.findById(factionId);
+        if (!faction) {
+            return { error: "Faction not found" };
+        }
         return faction;
     },
     {

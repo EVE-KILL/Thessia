@@ -1,3 +1,5 @@
+import { KillmailService } from "~/server/services";
+
 export default defineEventHandler(async (event) => {
     const body = await readBody(event);
     const { ids } = body;
@@ -11,10 +13,7 @@ export default defineEventHandler(async (event) => {
     }
 
     try {
-        const killmails: IKillmail[] = await Killmails.find({
-            killmail_id: { $in: ids },
-        }).lean();
-
+        const killmails = await KillmailService.findByIds(ids);
         return killmails;
     } catch (error: any) {
         console.error("Error fetching killmails by batch ID:", error);

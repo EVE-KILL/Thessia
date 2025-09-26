@@ -1,6 +1,14 @@
 /**
  * Get all domains owned by the authenticated user - Phase 2
  */
+import {
+    AllianceService,
+    CharacterService,
+    CorporationService,
+    CustomDomainService,
+    UserService,
+} from "~/server/services";
+
 export default defineEventHandler(async (event) => {
     // Add cache-control headers to prevent caching
     setResponseHeaders(event, {
@@ -21,7 +29,7 @@ export default defineEventHandler(async (event) => {
     }
 
     // Find the user by uniqueIdentifier
-    const user = await Users.findOne({ uniqueIdentifier: cookie });
+    const user = await UserService.findByUniqueIdentifier(cookie);
 
     if (!user) {
         throw createError({
@@ -32,44 +40,41 @@ export default defineEventHandler(async (event) => {
 
     try {
         // Get user's domains
-        const domains = await CustomDomains.find({
-            owner_character_id: user.characterId,
-        }).sort({ created_at: -1 });
+        const domains = await CustomDomainService.findByOwnerCharacterId(
+            user.character_id
+        );
 
         // PHASE 2: Enhance domains with multi-entity information
         const enhancedDomains = await Promise.all(
-            domains.map(async (domain) => {
+            domains.map(async (domain: any) => {
                 const entitiesInfo = [];
 
                 // Get information for all entities in the domain
-                for (const entityConfig of domain.entities || []) {
+                for (const entityConfig of domain.entities as any[] || []) {
                     let entityInfo = null;
 
                     try {
                         switch (entityConfig.entity_type) {
                             case "character":
-                                entityInfo = await Characters.findOne(
-                                    { character_id: entityConfig.entity_id },
-                                    { name: 1, character_id: 1 }
+                                entityInfo = await CharacterService.findById(
+                                    entityConfig.entity_id
                                 );
                                 break;
                             case "corporation":
-                                entityInfo = await Corporations.findOne(
-                                    { corporation_id: entityConfig.entity_id },
-                                    { name: 1, ticker: 1, corporation_id: 1 }
+                                entityInfo = await CorporationService.findById(
+                                    entityConfig.entity_id
                                 );
                                 break;
                             case "alliance":
-                                entityInfo = await Alliances.findOne(
-                                    { alliance_id: entityConfig.entity_id },
-                                    { name: 1, ticker: 1, alliance_id: 1 }
+                                entityInfo = await AllianceService.findById(
+                                    entityConfig.entity_id
                                 );
                                 break;
                         }
 
                         if (entityInfo) {
                             entitiesInfo.push({
-                                ...entityInfo.toObject(),
+                                ...entityInfo,
                                 _config: entityConfig, // Include entity configuration
                             });
                         }
@@ -81,19 +86,17 @@ export default defineEventHandler(async (event) => {
                     }
                 }
 
-                // Convert to plain object (verification token now included automatically)
-                const domainObj = domain.toObject();
-
+                // Return domain object with additional info (no need for toObject() with Prisma)
                 return {
-                    ...domainObj,
+                    ...domain,
                     entities_info: entitiesInfo, // Multi-entity information
                     primary_entity:
-                        entitiesInfo.find((e) => e._config.primary) ||
+                        entitiesInfo.find((e: any) => e._config.primary) ||
                         entitiesInfo[0], // Primary entity
 
                     // Legacy single entity info for backward compatibility (using primary)
                     entity_info:
-                        entitiesInfo.find((e) => e._config.primary) ||
+                        entitiesInfo.find((e: any) => e._config.primary) ||
                         entitiesInfo[0],
                 };
             })

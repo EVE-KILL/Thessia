@@ -1,3 +1,5 @@
+import { CampaignService } from "~/server/services/CampaignService";
+
 export default defineEventHandler(async (event) => {
     const campaignId = getRouterParam(event, "id");
 
@@ -9,10 +11,8 @@ export default defineEventHandler(async (event) => {
     }
 
     try {
-        // Check if campaign exists
-        const campaign = await Campaigns.findOne({
-            campaign_id: campaignId,
-        }).lean();
+        // Check if campaign exists using CampaignService
+        const campaign = await CampaignService.findByCampaignId(campaignId);
 
         if (!campaign) {
             throw createError({

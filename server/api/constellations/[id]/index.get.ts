@@ -1,3 +1,5 @@
+import { ConstellationService } from "~/server/services";
+
 export default defineCachedEventHandler(
     async (event) => {
         const param = event.context.params?.id;
@@ -14,10 +16,7 @@ export default defineCachedEventHandler(
 
         // Check if param is a string of digits
         if (!isNaN(numericId) && param.match(/^\d+$/)) {
-            constellation = await Constellations.findOne(
-                { constellation_id: numericId },
-                { _id: 0, __v: 0 }
-            );
+            constellation = await ConstellationService.findById(numericId);
             if (!constellation) {
                 throw createError({
                     statusCode: 404,
@@ -27,12 +26,7 @@ export default defineCachedEventHandler(
         } else {
             // Treat as a constellation name
             const decodedName = decodeURIComponent(param);
-            // Perform a case-insensitive search for the name
-            const nameRegex = new RegExp(`^${decodedName}$`, "i");
-            constellation = await Constellations.findOne(
-                { constellation_name: nameRegex },
-                { _id: 0, __v: 0 }
-            );
+            constellation = await ConstellationService.findByName(decodedName);
             if (!constellation) {
                 throw createError({
                     statusCode: 404,

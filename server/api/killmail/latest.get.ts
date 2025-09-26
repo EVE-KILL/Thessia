@@ -1,17 +1,8 @@
+import { KillmailService } from "~/server/services";
+
 export default defineCachedEventHandler(
     async (event) => {
-        const latestKillmails: IKillmail[] = await Killmails.find(
-            {},
-            {
-                _id: 0,
-                killmail_id: 1,
-                killmail_hash: 1,
-            },
-            {
-                sort: { createdAt: -1 },
-                limit: 10000,
-            }
-        ).hint("createdAt_-1");
+        const latestKillmails = await KillmailService.findLatest(10000);
 
         // Return { killmail_id: killmail_hash, ... }
         const killmails: { [key: string]: string } = {};

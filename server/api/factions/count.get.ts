@@ -1,6 +1,8 @@
+import { FactionService } from "~/server/services";
+
 export default defineCachedEventHandler(
     async (event) => {
-        const count: number = await Factions.estimatedDocumentCount();
+        const count: number = await FactionService.getTotalCount();
         return { count: count };
     },
     {

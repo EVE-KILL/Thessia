@@ -1,4 +1,6 @@
-export default defineEventHandler(async (event: H3Event) => {
+import { SavedQueryService } from "~/server/services";
+
+export default defineEventHandler(async (event) => {
     // Get the query ID from the URL query parameters
     const query = getQuery(event);
     const id = query.id as string;
@@ -11,8 +13,8 @@ export default defineEventHandler(async (event: H3Event) => {
     }
 
     try {
-        // Find the saved query by hash
-        const savedQuery = await SavedQuery.findOne({ hash: id });
+        // Find the saved query by query_id (hash)
+        const savedQuery = await SavedQueryService.findByQueryId(id);
 
         if (!savedQuery) {
             // For testing purposes, create a sample query if it doesn't exist
@@ -27,11 +29,11 @@ export default defineEventHandler(async (event: H3Event) => {
                 },
             };
 
-            await SavedQuery.create({
-                hash: id,
-                title: "Sample Query",
+            await SavedQueryService.create({
+                query_id: id,
+                name: "Sample Query",
                 description: "Automatically created sample query",
-                query: sampleQuery,
+                query_data: sampleQuery,
             });
 
             // Return the sample data
@@ -43,12 +45,12 @@ export default defineEventHandler(async (event: H3Event) => {
             };
         }
 
-        // Return the saved query data
+        // Return the saved query data (map Prisma fields back to API format)
         return {
-            title: savedQuery.title,
+            title: savedQuery.name,
             description: savedQuery.description,
-            query: savedQuery.query,
-            hash: savedQuery.hash,
+            query: savedQuery.query_data,
+            hash: savedQuery.query_id,
         };
     } catch (err) {
         throw createError({

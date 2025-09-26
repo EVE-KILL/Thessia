@@ -1,3 +1,5 @@
+import { TypeService } from "~/server/services";
+
 /**
  * Returns a list of most lost ships (ships that were destroyed)
  * @param dateFrom - Start date for the query
@@ -74,12 +76,9 @@ async function topLostShips(
 
     const results = await aggregation;
 
-    // Batch load ship data
+    // Batch load ship data using TypeService
     const shipIds = results.map((result) => result.id);
-    const ships = await InvTypes.find(
-        { type_id: { $in: shipIds } },
-        { type_id: 1, name: 1, _id: 0 }
-    ).lean();
+    const ships = await TypeService.findManyByIds(shipIds);
 
     // Create a map for faster lookups
     const shipMap = new Map();

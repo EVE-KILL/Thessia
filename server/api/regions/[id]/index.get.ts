@@ -1,3 +1,5 @@
+import { RegionService } from "~/server/services";
+
 export default defineCachedEventHandler(
     async (event) => {
         const param = event.context.params?.id;
@@ -14,10 +16,7 @@ export default defineCachedEventHandler(
 
         // Check if param is a string of digits
         if (!isNaN(numericId) && param.match(/^\d+$/)) {
-            region = await Regions.findOne(
-                { region_id: numericId },
-                { _id: 0, __v: 0 }
-            );
+            region = await RegionService.findById(numericId);
             if (!region) {
                 throw createError({
                     statusCode: 404,
@@ -27,12 +26,7 @@ export default defineCachedEventHandler(
         } else {
             // Treat as a region name
             const decodedName = decodeURIComponent(param);
-            // Perform a case-insensitive search for the name
-            const nameRegex = new RegExp(`^${decodedName}$`, "i");
-            region = await Regions.findOne(
-                { "name.en": nameRegex },
-                { _id: 0, __v: 0 }
-            );
+            region = await RegionService.findByName(decodedName);
             if (!region) {
                 throw createError({
                     statusCode: 404,

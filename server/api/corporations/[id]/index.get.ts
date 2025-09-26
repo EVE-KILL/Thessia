@@ -1,3 +1,4 @@
+import { AllianceService, CorporationService, FactionService } from "~/server/services";
 import { getCharacter } from "../../../helpers/ESIData";
 
 export default defineCachedEventHandler(
@@ -9,24 +10,23 @@ export default defineCachedEventHandler(
             return { error: "Corporation ID not provided" };
         }
 
-        const corporation = await getCorporation(corporationId);
+        const corporation = await CorporationService.findById(corporationId);
+        if (!corporation) {
+            return { error: "Corporation not found" };
+        }
         let alliance = null;
 
         if ((corporation.alliance_id ?? 0) > 0) {
-            alliance = await Alliances.findOne({
-                alliance_id: corporation.alliance_id,
-            });
+            alliance = await AllianceService.findById(corporation.alliance_id!);
         }
         let faction = null;
         if ((corporation.faction_id ?? 0) > 0) {
-            faction = await Factions.findOne({
-                faction_id: corporation.faction_id,
-            });
+            faction = await FactionService.findById(corporation.faction_id!);
         }
 
         // Fetch CEO name if ceo_id is available
         let ceoName = null;
-        if ((corporation.ceo_id ?? 0) > 0) {
+        if (corporation.ceo_id && corporation.ceo_id > 0) {
             try {
                 const ceoData = await getCharacter(corporation.ceo_id);
                 ceoName = ceoData?.name || null;
@@ -39,11 +39,8 @@ export default defineCachedEventHandler(
             }
         }
 
-        const corporationData = (corporation as any).toObject
-            ? (corporation as any).toObject()
-            : corporation;
         const enhancedCorporation = {
-            ...corporationData,
+            ...corporation,
             alliance_name: alliance?.name || null,
             faction_name: faction?.name || null,
             ceo_name: ceoName,

@@ -1,4 +1,5 @@
 import { nanoid } from "nanoid";
+import { CampaignService } from "~/server/services/CampaignService";
 
 // Define constants for entity limits
 const LOCATION_MAX_ENTITIES = 5;
@@ -111,17 +112,17 @@ export default defineEventHandler(async (event) => {
         const campaignData = {
             name: name.trim(),
             description: description?.trim(),
-            startTime: startTimeDate,
-            endTime: endTimeDate,
+            start_time: startTimeDate, // Note: field name mapping
+            end_time: endTimeDate, // Note: field name mapping
             query,
-            creator_id: user.characterId, // Add creator ID from authenticated user
+            creator_id: user!.characterId, // Add creator ID from authenticated user
             public: isPublic !== undefined ? Boolean(isPublic) : true, // Use provided value or default to true
         };
 
         // If we're updating an existing campaign
         if (isUpdate) {
-            // Check if the campaign exists and the user is the creator
-            const existingCampaign = await Campaigns.findOne({ campaign_id });
+            // Check if the campaign exists and the user is the creator using CampaignService
+            const existingCampaign = await CampaignService.findByCampaignId(campaign_id);
 
             if (!existingCampaign) {
                 throw createError({
@@ -130,7 +131,7 @@ export default defineEventHandler(async (event) => {
                 });
             }
 
-            if (existingCampaign.creator_id !== user.characterId) {
+            if (existingCampaign.creator_id !== user!.characterId) {
                 throw createError({
                     statusCode: 403,
                     statusMessage:
@@ -138,20 +139,15 @@ export default defineEventHandler(async (event) => {
                 });
             }
 
-            // Update the campaign
-            await Campaigns.updateOne(
-                { campaign_id },
-                {
-                    $set: {
-                        ...campaignData,
-                        processing_status: "pending", // Reset processing status
-                        processing_error: null,
-                        processing_started_at: null,
-                        processing_completed_at: null,
-                        processed_data: null, // Clear old processed data
-                    },
-                }
-            );
+            // Update the campaign using CampaignService
+            await CampaignService.updateByCampaignId(campaign_id, {
+                ...campaignData,
+                processing_status: "pending", // Reset processing status
+                processing_error: undefined,
+                processing_started_at: undefined,
+                processing_completed_at: undefined,
+                processed_data: undefined, // Clear old processed data
+            });
 
             // Queue the campaign for reprocessing
             await reprocessCampaign(campaign_id, 10); // Higher priority for updates
@@ -167,15 +163,13 @@ export default defineEventHandler(async (event) => {
         }
         // Creating a new campaign
         else {
-            // Generate a unique campaign ID
-            const newCampaignData = {
+            // Generate a unique campaign ID and create the campaign using CampaignService
+            const newCampaignId = nanoid();
+            
+            const campaign = await CampaignService.create({
                 ...campaignData,
-                campaign_id: nanoid(),
-            };
-
-            // Save to database
-            const campaign = new Campaigns(newCampaignData);
-            await campaign.save();
+                campaign_id: newCampaignId,
+            });
 
             // Queue the campaign for processing
             await queueCampaignProcessing(campaign.campaign_id, 5); // Normal priority for new campaigns

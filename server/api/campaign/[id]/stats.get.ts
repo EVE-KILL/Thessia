@@ -1,5 +1,7 @@
+import { CampaignService } from "~/server/services/CampaignService";
+
 export default defineCachedEventHandler(
-    async (event: H3Event) => {
+    async (event) => {
         const campaignId = getRouterParam(event, "id");
 
         if (!campaignId) {
@@ -10,10 +12,8 @@ export default defineCachedEventHandler(
         }
 
         try {
-            // First, get the campaign to check processing status
-            const campaign = await Campaigns.findOne({
-                campaign_id: campaignId,
-            }).lean();
+            // First, get the campaign to check processing status using CampaignService
+            const campaign = await CampaignService.findByCampaignId(campaignId);
 
             if (!campaign) {
                 throw createError({
@@ -54,8 +54,8 @@ export default defineCachedEventHandler(
                 campaign_id: campaignId,
                 name: campaign.name,
                 description: campaign.description,
-                startTime: campaign.startTime,
-                endTime: campaign.endTime,
+                startTime: campaign.start_time,
+                endTime: campaign.end_time,
                 public: campaign.public,
                 campaignQuery: campaign.query,
             };
@@ -86,17 +86,6 @@ export default defineCachedEventHandler(
         getKey: async (event) => {
             // Access the parameter directly and add a check for robustness
             const campaignId = event.context.params?.id;
-            const campaignData = await Campaigns.findOne(
-                {
-                    campaign_id: campaignId,
-                },
-                {
-                    query: 1,
-                }
-            );
-
-            const query = JSON.stringify(campaignData.query);
-
             if (!campaignId) {
                 console.error(
                     "Campaign ID is missing in getKey for stats endpoint"
@@ -104,6 +93,12 @@ export default defineCachedEventHandler(
                 return "campaign:missing-id:stats";
             }
 
+            const campaignData = await CampaignService.findByCampaignId(campaignId);
+            if (!campaignData) {
+                return `campaign:${campaignId}:not-found`;
+            }
+
+            const query = JSON.stringify(campaignData.query);
             return `campaign:${campaignId}:stats:${query}`;
         },
     }

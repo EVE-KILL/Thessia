@@ -22,6 +22,8 @@ interface SSLInfo {
  * SSL Certificate checker API endpoint
  * Checks SSL certificate information for a custom domain
  */
+import { CustomDomainService, UserService } from "~/server/services";
+
 export default defineEventHandler(async (event) => {
     const domain = getRouterParam(event, "domain");
 
@@ -36,13 +38,13 @@ export default defineEventHandler(async (event) => {
         // Verify domain belongs to user (if authenticated)
         const cookie = getCookie(event, "evelogin");
         if (cookie) {
-            const user = await Users.findOne({ uniqueIdentifier: cookie });
+            const user = await UserService.findByUniqueIdentifier(cookie);
             if (user) {
                 // Check if user owns this domain
-                const domainConfig = await CustomDomains.findOne({
-                    domain: domain.toLowerCase(),
-                    owner_character_id: user.characterId,
-                });
+                const domainConfig = await CustomDomainService.findByDomainAndOwner(
+                    domain.toLowerCase(),
+                    user.character_id
+                );
 
                 if (!domainConfig) {
                     throw createError({

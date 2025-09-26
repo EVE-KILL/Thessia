@@ -1,5 +1,7 @@
+import { CharacterService, UserService, CustomDomainService, CorporationService, AllianceService } from "~/server/services";
+
 /**
- * Add entity to domain
+ * Add an entity to a custom domain
  * Route: POST /api/user/domains/{id}/entities
  */
 export default defineEventHandler(async (event) => {
@@ -14,8 +16,8 @@ export default defineEventHandler(async (event) => {
         });
     }
 
-    // Find the user by uniqueIdentifier
-    const user = await Users.findOne({ uniqueIdentifier: cookie });
+    // Find the user by uniqueIdentifier using service
+    const user = await UserService.findByUniqueIdentifier(cookie);
 
     if (!user) {
         throw createError({
@@ -33,11 +35,11 @@ export default defineEventHandler(async (event) => {
         });
     }
 
-    // Find the domain
-    const domain = await CustomDomains.findOne({
-        domain_id: domainId,
-        owner_character_id: user.characterId,
-    });
+    // Find the domain using service
+    const domain = await CustomDomainService.findByDomainIdAndOwner(
+        domainId,
+        user.character_id
+    );
 
     if (!domain) {
         throw createError({
@@ -74,25 +76,13 @@ export default defineEventHandler(async (event) => {
     try {
         switch (body.entity_type) {
             case "alliance":
-                entityData = await Alliances.findOne({
-                    alliance_id: body.entity_id,
-                })
-                    .select("alliance_id name")
-                    .lean();
+                entityData = await AllianceService.findById(body.entity_id);
                 break;
             case "corporation":
-                entityData = await Corporations.findOne({
-                    corporation_id: body.entity_id,
-                })
-                    .select("corporation_id name")
-                    .lean();
+                entityData = await CorporationService.findById(body.entity_id);
                 break;
             case "character":
-                entityData = await Characters.findOne({
-                    character_id: body.entity_id,
-                })
-                    .select("character_id name")
-                    .lean();
+                entityData = await CharacterService.findById(body.entity_id);
                 break;
         }
     } catch (error) {

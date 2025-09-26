@@ -1,3 +1,11 @@
+import {
+    AllianceService,
+    CharacterService,
+    CorporationService,
+    CustomDomainService,
+    UserService,
+} from "~/server/services";
+
 /**
  * Create a new custom domain for the authenticated user - Phase 2
  */
@@ -28,8 +36,8 @@ export default defineEventHandler(async (event) => {
         });
     }
 
-    // Find the user by uniqueIdentifier
-    const user = await Users.findOne({ uniqueIdentifier: cookie });
+    // Find the user by uniqueIdentifier using service
+    const user = await UserService.findByUniqueIdentifier(cookie);
 
     if (!user) {
         throw createError({
@@ -161,19 +169,19 @@ export default defineEventHandler(async (event) => {
             let entityExists = false;
             switch (entityData.entity_type) {
                 case "character":
-                    entityExists = !!(await Characters.findOne({
-                        character_id: entityData.entity_id,
-                    }));
+                    entityExists = !!(await CharacterService.findById(
+                        entityData.entity_id
+                    ));
                     break;
                 case "corporation":
-                    entityExists = !!(await Corporations.findOne({
-                        corporation_id: entityData.entity_id,
-                    }));
+                    entityExists = !!(await CorporationService.findById(
+                        entityData.entity_id
+                    ));
                     break;
                 case "alliance":
-                    entityExists = !!(await Alliances.findOne({
-                        alliance_id: entityData.entity_id,
-                    }));
+                    entityExists = !!(await AllianceService.findById(
+                        entityData.entity_id
+                    ));
                     break;
             }
 
@@ -210,10 +218,10 @@ export default defineEventHandler(async (event) => {
             }
         }
 
-        // Check if domain already exists
-        const existingDomain = await CustomDomains.findOne({
-            domain: body.domain.toLowerCase(),
-        });
+        // Check if domain already exists using service
+        const existingDomain = await CustomDomainService.findByDomain(
+            body.domain.toLowerCase()
+        );
 
         if (existingDomain) {
             throw createError({
@@ -231,12 +239,9 @@ export default defineEventHandler(async (event) => {
             const subdomainPart = normalizedDomain.replace(".eve-kill.com", "");
 
             // Check if any existing domain uses this subdomain pattern
-            const conflictingDomain = await CustomDomains.findOne({
-                domain: {
-                    $regex: `^${subdomainPart}\\.eve-kill\\.com$`,
-                    $options: "i",
-                },
-            });
+            const conflictingDomain = await CustomDomainService.findByDomain(
+                `${subdomainPart}.eve-kill.com`
+            );
 
             if (conflictingDomain) {
                 throw createError({
@@ -247,9 +252,9 @@ export default defineEventHandler(async (event) => {
         }
 
         // PHASE 2: Check user's domain limit (10 domains per user)
-        const userDomainCount = await CustomDomains.countDocuments({
-            owner_character_id: user.characterId,
-        });
+        const userDomainCount = await CustomDomainService.countByOwnerCharacterId(
+            user.character_id
+        );
 
         const maxDomains = 10; // Phase 2: Increased limit
         if (userDomainCount >= maxDomains) {
@@ -272,7 +277,7 @@ export default defineEventHandler(async (event) => {
             domain_id: domainId,
             verification_token: verificationToken,
             domain: body.domain.toLowerCase(),
-            owner_character_id: user.characterId,
+            owner_character_id: user.character_id,
 
             // Multi-entity support
             entities: validatedEntities,
@@ -355,8 +360,7 @@ export default defineEventHandler(async (event) => {
             verified_at: isEveKillSubdomain ? new Date() : undefined,
         };
 
-        const newDomain = new CustomDomains(domainData);
-        await newDomain.save();
+        const newDomain = await CustomDomainService.create(domainData);
 
         // Different messages for eve-kill.com subdomains vs external domains
         const message = isEveKillSubdomain
@@ -365,7 +369,7 @@ export default defineEventHandler(async (event) => {
 
         return {
             success: true,
-            domain: newDomain.toJSON(),
+            domain: newDomain,
             message,
             isEveKillSubdomain, // Let frontend know if this is an eve-kill subdomain
         };

@@ -1,3 +1,5 @@
+import { KillmailService } from "~/server/services";
+
 export default defineEventHandler(async (event) => {
     try {
         const { systemIds, startTime, endTime } = await readBody(event);
@@ -48,13 +50,11 @@ export default defineEventHandler(async (event) => {
         }
 
         // Query killmails within any of the specified systems and time range
-        const killmails = await Killmails.find({
-            system_id: { $in: systemIds }, // Use $in operator to match any of the provided system IDs
-            kill_time: {
-                $gte: new Date(startTime),
-                $lte: new Date(endTime),
-            },
-        }).lean();
+        const killmails = await KillmailService.findBySystemsAndTimeRange(
+            systemIds,
+            new Date(startTime),
+            new Date(endTime)
+        );
 
         // Aggregate unique alliances and corporations
         const alliances = new Map();

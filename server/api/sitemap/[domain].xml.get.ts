@@ -1,3 +1,5 @@
+import { CustomDomainService } from "~/server/services";
+
 /**
  * Dynamic sitemap generation for custom domains
  * Generates XML sitemaps with domain-specific URLs and content
@@ -14,11 +16,9 @@ export default defineEventHandler(async (event) => {
 
     try {
         // Find the custom domain configuration
-        const domainConfig = await CustomDomains.findOne({
-            domain: domain.toLowerCase(),
-            active: true,
-            verified: true,
-        });
+        const domainConfig = await CustomDomainService.findActiveDomain(
+            domain.toLowerCase()
+        );
 
         if (!domainConfig) {
             throw createError({

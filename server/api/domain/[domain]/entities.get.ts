@@ -1,3 +1,5 @@
+import { CharacterService, CustomDomainService, AllianceService, CorporationService } from "~/server/services";
+
 export default defineCachedEventHandler(
     async (event) => {
         try {
@@ -10,11 +12,8 @@ export default defineCachedEventHandler(
                 });
             }
 
-            // Find the domain configuration
-            const domainConfig = await CustomDomains.findOne({
-                domain: domain,
-                active: true,
-            }).lean();
+            // Find the domain configuration using service
+            const domainConfig = await CustomDomainService.findActiveDomain(domain);
 
             if (!domainConfig) {
                 throw createError({
@@ -23,20 +22,18 @@ export default defineCachedEventHandler(
                 });
             }
 
-            // Fetch entity details from respective collections
+            // Fetch entity details from respective services
             const entityDetails = [];
 
-            for (const entity of domainConfig.entities || []) {
+            for (const entity of domainConfig.entities as any[] || []) {
                 let entityData = null;
 
                 try {
                     switch (entity.entity_type) {
                         case "alliance":
-                            entityData = await Alliances.findOne({
-                                alliance_id: entity.entity_id,
-                            })
-                                .select("alliance_id name")
-                                .lean();
+                            entityData = await AllianceService.findById(
+                                entity.entity_id
+                            );
                             if (entityData) {
                                 entityDetails.push({
                                     entity_type: "alliance",
@@ -53,11 +50,9 @@ export default defineCachedEventHandler(
                             break;
 
                         case "corporation":
-                            entityData = await Corporations.findOne({
-                                corporation_id: entity.entity_id,
-                            })
-                                .select("corporation_id name")
-                                .lean();
+                            entityData = await CorporationService.findById(
+                                entity.entity_id
+                            );
                             if (entityData) {
                                 entityDetails.push({
                                     entity_type: "corporation",
@@ -74,20 +69,14 @@ export default defineCachedEventHandler(
                             break;
 
                         case "character":
-                            entityData = await Characters.findOne({
-                                character_id: entity.entity_id,
-                            })
-                                .select("character_id name")
-                                .lean();
+                            entityData = await CharacterService.findById(
+                                entity.entity_id
+                            );
                             if (entityData) {
                                 entityDetails.push({
                                     entity_type: "character",
                                     entity_id: entity.entity_id,
                                     name: entityData.name,
-                                    display_name: entityData.name,
-                                    image_url: `https://images.evetech.net/characters/${entity.entity_id}/portrait?size=64`,
-                                    primary: entity.primary || false,
-                                    show_in_nav: entity.show_in_nav || false,
                                     show_in_stats:
                                         entity.show_in_stats || false,
                                 });
@@ -100,12 +89,13 @@ export default defineCachedEventHandler(
                         entityError
                     );
                     // Add placeholder entry for missing entities
-                    const imageUrl = entity.entity_type === 'character'
-                        ? `https://images.evetech.net/characters/${entity.entity_id}/portrait?size=64`
-                        : entity.entity_type === 'corporation'
-                        ? `https://images.evetech.net/corporations/${entity.entity_id}/logo?size=64`
-                        : `https://images.evetech.net/alliances/${entity.entity_id}/logo?size=64`;
-                        
+                    const imageUrl =
+                        entity.entity_type === "character"
+                            ? `https://images.evetech.net/characters/${entity.entity_id}/portrait?size=64`
+                            : entity.entity_type === "corporation"
+                            ? `https://images.evetech.net/corporations/${entity.entity_id}/logo?size=64`
+                            : `https://images.evetech.net/alliances/${entity.entity_id}/logo?size=64`;
+
                     entityDetails.push({
                         entity_type: entity.entity_type,
                         entity_id: entity.entity_id,

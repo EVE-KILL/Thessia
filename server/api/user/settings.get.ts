@@ -1,3 +1,5 @@
+import { UserService } from "~/server/services";
+
 export default defineEventHandler(async (event) => {
     // Add cache-control headers to prevent caching
     setResponseHeaders(event, {
@@ -18,7 +20,7 @@ export default defineEventHandler(async (event) => {
     }
 
     // Find the user by uniqueIdentifier
-    const user = await Users.findOne({ uniqueIdentifier: cookie });
+    const user = await UserService.findByUniqueIdentifier(cookie);
 
     if (!user) {
         throw createError({
@@ -29,7 +31,7 @@ export default defineEventHandler(async (event) => {
 
     try {
         // Get user settings using the helper
-        const settingsHelper = getUserSettingsHelper(user);
+        const settingsHelper = getUserSettingsHelper(user as any);
         const settings = settingsHelper.getAllSettings();
 
         return {

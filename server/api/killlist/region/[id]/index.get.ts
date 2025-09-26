@@ -1,3 +1,5 @@
+import { KillmailService } from "~/server/services";
+
 export default defineCachedEventHandler(
     async (event: any) => {
         const query = getQuery(event);
@@ -7,68 +9,49 @@ export default defineCachedEventHandler(
         if (page < 1) page = 1;
         if (limit < 1) limit = 1;
         if (limit > 1000) limit = 1000;
-        const mongoQuery = {
-            region_id: Number(id),
-        };
 
-        // Create cursor for streaming killmails
-        let cursor = Killmails.find(
-            mongoQuery,
-            { _id: 0, items: 0 },
-            {
-                sort: { kill_time: -1 },
-                skip: (page - 1) * limit,
-                limit: limit,
-            }
+        // Get killmails using KillmailService
+        const killmails = await KillmailService.findByRegionDetailed(
+            Number(id), 
+            limit, 
+            (page - 1) * limit
         );
 
-        // Stream through killmails using cursor and format on-the-fly
-        const result: any[] = [];
-        for await (const killmail of cursor) {
-            const finalBlowAttacker =
-                killmail.attackers.find((a: any) => a.final_blow) || undefined;
+        // Format killmails for response
+        // NOTE: This is a simplified version - name fields need to be populated via additional joins
+        const result = killmails.map((killmail: any) => {
+            const finalBlowAttacker = killmail.attackers.find((a: any) => a.final_blow) || undefined;
 
-            result.push({
+            return {
                 killmail_id: killmail.killmail_id,
                 total_value: killmail.total_value,
-                system_id: killmail.system_id,
-                system_name: killmail.system_name,
-                system_security: killmail.system_security,
+                system_id: killmail.solar_system_id,
+                system_name: killmail.solar_system?.system_name || '',
+                system_security: killmail.solar_system?.security || 0,
                 region_id: killmail.region_id,
-                region_name: killmail.region_name,
+                region_name: killmail.region?.region_name || '',
                 constellation_id: killmail.constellation_id,
-                constellation_name: killmail.constellation_name,
-                kill_time: killmail.kill_time,
+                constellation_name: killmail.constellation?.constellation_name || '',
+                killmail_time: killmail.killmail_time,
                 attackerCount: killmail.attackers.length,
                 commentCount: 0,
-                is_npc: killmail.is_npc,
-                is_solo: killmail.is_solo,
+                is_npc: false, // TODO: Calculate based on attacker data
+                is_solo: killmail.attackers.length === 1,
                 victim: {
-                    ship_id: killmail.victim.ship_id,
-                    ship_name: killmail.victim.ship_name,
-                    ship_group_name: killmail.victim.ship_group_name,
+                    ship_type_id: killmail.victim.ship_type_id,
                     character_id: killmail.victim.character_id,
-                    character_name: killmail.victim.character_name,
                     corporation_id: killmail.victim.corporation_id,
-                    corporation_name: killmail.victim.corporation_name,
                     alliance_id: killmail.victim.alliance_id,
-                    alliance_name: killmail.victim.alliance_name,
-                    faction_id: killmail.victim.faction_id,
-                    faction_name: killmail.victim.faction_name,
+                    // TODO: Add name fields via joins
                 },
-                finalblow: {
-                    character_id: finalBlowAttacker?.character_id,
-                    character_name: finalBlowAttacker?.character_name,
-                    corporation_id: finalBlowAttacker?.corporation_id,
-                    corporation_name: finalBlowAttacker?.corporation_name,
-                    alliance_id: finalBlowAttacker?.alliance_id,
-                    alliance_name: finalBlowAttacker?.alliance_name,
-                    faction_id: finalBlowAttacker?.faction_id,
-                    faction_name: finalBlowAttacker?.faction_name,
-                    ship_group_name: finalBlowAttacker?.ship_group_name,
-                },
-            });
-        }
+                finalblow: finalBlowAttacker ? {
+                    character_id: finalBlowAttacker.character_id,
+                    corporation_id: finalBlowAttacker.corporation_id,
+                    alliance_id: finalBlowAttacker.alliance_id,
+                    // TODO: Add name fields via joins
+                } : null,
+            };
+        });
 
         return result;
     },

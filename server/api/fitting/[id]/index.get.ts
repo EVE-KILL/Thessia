@@ -1,4 +1,5 @@
 import crypto from "node:crypto";
+import { TypeService, KillmailService, PriceService } from "~/server/services";
 
 // Define types for better type safety
 interface IFittingSlots {
@@ -54,37 +55,19 @@ export default defineCachedEventHandler(
             limit = 50;
         }
 
-        // Optimized ship validation with group filter
-        const ship = await InvTypes.findOne({
-            type_id: shipId,
-            group_id: { $in: shipGroupIds },
-        });
+        // Optimized ship validation using TypeService
+        const ship = await TypeService.findById(shipId);
 
-        if (!ship) {
+        if (!ship || !shipGroupIds.includes(ship.group_id)) {
             return { error: "Ship not found or not a valid ship type" };
         }
 
-        // Optimized query with better date filtering and projection
-        const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
-        const killmails = await Killmails.find(
-            {
-                "victim.ship_id": shipId,
-                kill_time: { $gte: thirtyDaysAgo },
-            },
-            {
-                _id: 0,
-                killmail_id: 1,
-                killmail_hash: 1,
-                ship_value: 1,
-                "items.type_id": 1,
-                "items.flag": 1,
-                "items.qty_dropped": 1,
-                "items.qty_destroyed": 1,
-            }
-        )
-            .sort({ kill_time: -1 })
-            .limit(600) // Reduced limit for better performance
-            .lean();
+        // Get recent killmails using service
+        const killmails = await KillmailService.findRecentByVictimShipType(
+            shipId,
+            30,
+            limit + 50 // Get extra to account for filtering
+        );
 
         if (killmails.length === 0) {
             return [];
@@ -188,13 +171,11 @@ async function generateFittingCost(fitting: IFittingSlots): Promise<number> {
 
     if (typeIds.size === 0) return 0;
 
-    // Single batch query for all prices
-    const prices = await Prices.find({
-        type_id: { $in: Array.from(typeIds) },
-        region_id: 10000002,
-    })
-        .sort({ date: -1 })
-        .lean();
+    // Single batch query for all prices using PriceService
+    const prices = await PriceService.findByTypesAndRegion(
+        Array.from(typeIds),
+        10000002
+    );
 
     // Create efficient price lookup map
     const priceMap = new Map<number, number>();

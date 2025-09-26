@@ -1,15 +1,11 @@
+import { CharacterService } from "~/server/services";
+
 export default defineCachedEventHandler(
     async (event) => {
         const query = getQuery(event);
         const page = query?.page ? Number.parseInt(query.page as string) : 1;
-        const characters: ICharacter[] = await Characters.find(
-            {},
-            { character_id: 1 },
-            { limit: 100000, skip: (page - 1) * 100000 }
-        );
 
-        // Return a single array containing all the IDs
-        return characters.map((character) => character.character_id);
+        return await CharacterService.getCharacterIds(page, 100000);
     },
     {
         maxAge: 3600,

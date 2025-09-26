@@ -6,6 +6,7 @@ import {
     getRouterParam,
     readBody,
 } from "h3";
+import { CustomDomainService } from "~/server/services";
 
 export default defineEventHandler(async (event) => {
     const method = event.node.req.method;
@@ -246,20 +247,18 @@ async function handleGetTemplate(domain: string) {
     };
 
     try {
-        // Look for domain configuration
-        const domainConfig = await CustomDomains.findOne({
-            domain: domain.toLowerCase(),
-            active: true,
-            verified: true,
-        }).select("dashboard_templates");
+        // Look for domain configuration using service
+        const domainConfig = await CustomDomainService.findActiveDomain(
+            domain.toLowerCase()
+        );
 
-        if (domainConfig?.dashboard_templates?.length) {
+        if (domainConfig?.dashboard_template && Array.isArray(domainConfig.dashboard_template)) {
             // Look for a template named "default" first
-            const defaultTemplate = domainConfig.dashboard_templates.find(
+            const templates = domainConfig.dashboard_template as any[];
+            const defaultTemplate = templates.find(
                 (t: any) => t.name === "default"
             );
-            const template =
-                defaultTemplate || domainConfig.dashboard_templates[0];
+            const template = defaultTemplate || templates[0];
 
             if (template?.template) {
                 return {

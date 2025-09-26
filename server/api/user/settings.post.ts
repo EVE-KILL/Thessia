@@ -1,3 +1,5 @@
+import { UserService } from "~/server/services";
+
 export default defineEventHandler(async (event) => {
     // Add cache-control headers to prevent caching
     setResponseHeaders(event, {
@@ -26,7 +28,7 @@ export default defineEventHandler(async (event) => {
     }
 
     // Find the user by uniqueIdentifier
-    const user = await Users.findOne({ uniqueIdentifier: cookie });
+    const user = await UserService.findByUniqueIdentifier(cookie);
 
     if (!user) {
         throw createError({
@@ -48,8 +50,8 @@ export default defineEventHandler(async (event) => {
         }
 
         // Use the helper to update user settings
-        const settingsHelper = getUserSettingsHelper(user);
-        await settingsHelper.setSettings(body as Partial<IUserSettingsMap>);
+        const settingsHelper = getUserSettingsHelper(user as any);
+        await settingsHelper.setSettings(body as Partial<IFlexibleUserSettings>);
 
         // Return updated settings
         const updatedSettings = settingsHelper.getAllSettings();

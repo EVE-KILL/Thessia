@@ -1,9 +1,8 @@
+import { AllianceService } from "~/server/services";
+
 export default defineCachedEventHandler(
     async (event) => {
-        const alliances: IAlliance[] = await Alliances.find(
-            {},
-            { alliance_id: 1 }
-        );
+        const alliances = await AllianceService.findAllIds();
         // Return a single array containing all the IDs
         return alliances.map((alliance) => alliance.alliance_id);
     },

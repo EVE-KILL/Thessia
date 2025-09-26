@@ -1,6 +1,7 @@
 import crypto from "crypto";
+import { SavedQueryService } from "~/server/services";
 
-export default defineEventHandler(async (event: H3Event) => {
+export default defineEventHandler(async (event) => {
     const body = await readBody(event);
     const { title, description, query, id } = body || {};
 
@@ -14,7 +15,7 @@ export default defineEventHandler(async (event: H3Event) => {
     try {
         // If id is provided, update existing query
         if (id) {
-            const existingQuery = await SavedQuery.findOne({ hash: id });
+            const existingQuery = await SavedQueryService.findByQueryId(id);
 
             if (!existingQuery) {
                 throw createError({
@@ -24,10 +25,11 @@ export default defineEventHandler(async (event: H3Event) => {
             }
 
             // Update the existing query
-            existingQuery.title = title;
-            existingQuery.description = description || "";
-            existingQuery.query = query;
-            await existingQuery.save();
+            await SavedQueryService.update(id, {
+                name: title,
+                description: description || "",
+                query_data: query,
+            });
 
             return { hash: id };
         }
@@ -40,11 +42,11 @@ export default defineEventHandler(async (event: H3Event) => {
             .slice(0, 10);
 
         // Save new query to DB
-        await SavedQuery.create({
-            hash,
-            title,
+        await SavedQueryService.create({
+            query_id: hash,
+            name: title,
             description: description || "",
-            query,
+            query_data: query,
         });
 
         return { hash };

@@ -43,3 +43,5 @@ _ca/
 # old frontend
 oldfrontend/
 edk/
+
+/app/generated/prisma

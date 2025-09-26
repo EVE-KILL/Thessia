@@ -1,3 +1,4 @@
+import { TypeService } from "~/server/services";
 import { getCachedPricesForType } from "../../../helpers/RuntimeCache";
 
 /**
@@ -48,24 +49,12 @@ export default defineCachedEventHandler(
             // Execute all queries in parallel for maximum performance
             const [item, killmails, prices] = await Promise.all([
                 // Get item details
-                InvTypes.findOne(
-                    { type_id: typeId },
-                    {
-                        _id: 0,
-                        dogma_attributes: 0,
-                        dogma_effects: 0,
-                        createdAt: 0,
-                        updatedAt: 0,
-                    }
-                ).lean(),
+                TypeService.findById(typeId),
 
                 // Get recent killmails
                 (async () => {
                     // First check if this is a ship type
-                    const type = await InvTypes.findOne(
-                        { type_id: typeId },
-                        { group_id: 1 }
-                    ).lean();
+                    const type = await TypeService.findById(typeId);
 
                     if (!type) return [];
 

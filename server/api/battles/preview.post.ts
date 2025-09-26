@@ -1,3 +1,5 @@
+import { KillmailService, SystemService, RegionService } from "~/server/services";
+
 interface Side {
     side_id: string;
     name: string;
@@ -72,14 +74,12 @@ export default defineEventHandler(async (event) => {
             });
         }
 
-        // Query killmails within all specified systems and time range
-        const killmails = await Killmails.find({
-            system_id: { $in: systemIds },
-            kill_time: {
-                $gte: startTimeDate,
-                $lte: endTimeDate,
-            },
-        }).lean();
+        // Query killmails within all specified systems and time range using KillmailService
+        const killmails = await KillmailService.findBySystemsAndTimeRange(
+            systemIds,
+            startTimeDate,
+            endTimeDate
+        );
 
         if (killmails.length === 0) {
             throw createError({
@@ -91,16 +91,10 @@ export default defineEventHandler(async (event) => {
         // Process systems data properly for the preview endpoint
         const systemsData = await Promise.all(
             systems.map(async (system) => {
-                const systemInfo = await SolarSystems.findOne(
-                    { system_id: system.system_id },
-                    { system_name: 1, region_id: 1, security: 1 }
-                ).lean();
+                const systemInfo = await SystemService.findById(system.system_id);
 
                 const regionInfo = systemInfo?.region_id
-                    ? await Regions.findOne(
-                          { region_id: systemInfo.region_id },
-                          { name: 1 }
-                      ).lean()
+                    ? await RegionService.findById(systemInfo.region_id)
                     : null;
 
                 return {

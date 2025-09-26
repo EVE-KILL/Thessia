@@ -5,6 +5,7 @@ import {
     getRouterParam,
     readRawBody,
 } from "h3";
+import { CustomDomainService } from "~/server/services";
 
 export default defineEventHandler(async (event) => {
     const method = event.node.req.method;
@@ -264,11 +265,9 @@ async function handleGetTemplate(domain: string) {
 
     try {
         // Look for domain configuration
-        const domainConfig = await CustomDomains.findOne({
-            domain: domain.toLowerCase(),
-            active: true,
-            verified: true,
-        }).select("dashboard_template");
+        const domainConfig = await CustomDomainService.findByDomainActiveVerified(
+            domain.toLowerCase()
+        );
 
         if (
             domainConfig?.dashboard_template?.enabled &&
@@ -388,11 +387,9 @@ async function handlePostTemplate(event: any, domain: string) {
         const user = session.user;
 
         // Get domain configuration to verify access and ownership
-        const domainConfig = await CustomDomains.findOne({
-            domain: domain.toLowerCase(),
-            active: true,
-            verified: true,
-        });
+        const domainConfig = await CustomDomainService.findByDomainActiveVerified(
+            domain.toLowerCase()
+        );
 
         if (!domainConfig) {
             throw createError({

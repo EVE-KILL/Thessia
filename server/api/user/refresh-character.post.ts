@@ -3,6 +3,7 @@ import {
     getCharacter,
     getCorporation,
 } from "../../helpers/ESIData";
+import { UserService } from "~/server/services";
 
 export default defineEventHandler(async (event) => {
     // Add cache-control headers to prevent caching
@@ -32,7 +33,7 @@ export default defineEventHandler(async (event) => {
     }
 
     // Find the user by uniqueIdentifier
-    const user = await Users.findOne({ uniqueIdentifier: cookie });
+    const user = await UserService.findByUniqueIdentifier(cookie);
 
     if (!user) {
         throw createError({
@@ -52,7 +53,7 @@ export default defineEventHandler(async (event) => {
         // Always refresh character data and get updated character info
         let characterData = null;
         try {
-            characterData = await getCharacter(user.characterId, true); // force_update = true
+            characterData = await getCharacter(user.character_id, true); // force_update = true
             refreshResults.character = true;
         } catch (error) {
             const errorMessage =
