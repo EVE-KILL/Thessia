@@ -1,3 +1,4 @@
+import { AllianceService, FactionService } from "~/server/services";
 import { getCharacter } from "../../../helpers/ESIData";
 
 export default defineCachedEventHandler(
@@ -13,15 +14,11 @@ export default defineCachedEventHandler(
         let alliance = null;
 
         if ((corporation.alliance_id ?? 0) > 0) {
-            alliance = await Alliances.findOne({
-                alliance_id: corporation.alliance_id,
-            });
+            alliance = await AllianceService.findById(corporation.alliance_id!);
         }
         let faction = null;
         if ((corporation.faction_id ?? 0) > 0) {
-            faction = await Factions.findOne({
-                faction_id: corporation.faction_id,
-            });
+            faction = await FactionService.findById(corporation.faction_id!);
         }
 
         // Fetch CEO name if ceo_id is available

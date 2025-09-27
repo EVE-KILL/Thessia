@@ -1,6 +1,8 @@
+import { FactionService } from "../../services";
+
 export default defineCachedEventHandler(
     async (event) => {
-        const factions: IFaction[] = await Factions.find({}, { faction_id: 1 });
+        const factions = await FactionService.findAll();
         // Return a single array containing all the IDs
         return factions.map((faction) => faction.faction_id);
     },

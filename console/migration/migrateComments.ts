@@ -89,7 +89,6 @@ export async function migrateComments(force: boolean = false): Promise<void> {
                 kill_identifier: mongoComment.killIdentifier,
                 comment: mongoComment.comment,
                 character_id: mongoComment.characterId,
-                character_name: mongoComment.characterName,
                 corporation_id: mongoComment.corporationId,
                 corporation_name: mongoComment.corporationName,
                 alliance_id: mongoComment.allianceId || null,

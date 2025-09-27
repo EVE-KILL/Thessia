@@ -1,4 +1,4 @@
-import { Killmails } from "../../../models/Killmails";
+import { KillmailService } from "~/server/services";
 
 export default defineCachedEventHandler(
     async (event: any) => {
@@ -19,53 +19,52 @@ export default defineCachedEventHandler(
         }
 
         try {
-            const mongoQuery = {
-                war_id: warId,
-            };
+            const skip = (page - 1) * limit;
 
-            // Create cursor for streaming killmails
-            let cursor = Killmails.find(
-                mongoQuery,
-                { _id: 0, items: 0 },
-                {
-                    sort: { kill_time: -1 },
-                    skip: (page - 1) * limit,
-                    limit: limit,
-                }
+            // Get killmails using KillmailService
+            const killmails = await KillmailService.findByWar(
+                warId,
+                limit,
+                skip
             );
 
-            // Stream through killmails using cursor and format on-the-fly
-            const result: any[] = [];
-            for await (const killmail of cursor) {
-                const finalBlowAttacker = killmail.attackers.find(
+            // Format killmails for response
+            const result = killmails.map((killmail: any) => {
+                // Parse attackers JSON field
+                const attackers =
+                    typeof killmail.attackers === "string"
+                        ? JSON.parse(killmail.attackers)
+                        : killmail.attackers || [];
+
+                const finalBlowAttacker = attackers.find(
                     (a: any) => a.final_blow
                 );
 
-                result.push({
+                return {
                     killmail_id: killmail.killmail_id,
                     total_value: killmail.total_value,
-                    system_id: killmail.system_id,
-                    system_name: killmail.system_name,
+                    system_id: killmail.solar_system_id,
+                    system_name: killmail.solar_system_name,
                     system_security: killmail.system_security,
                     region_id: killmail.region_id,
                     region_name: killmail.region_name,
-                    kill_time: killmail.kill_time,
-                    attackerCount: killmail.attackers.length,
+                    kill_time: killmail.killmail_time,
+                    attackerCount: attackers.length,
                     commentCount: 0,
                     is_npc: killmail.is_npc,
                     is_solo: killmail.is_solo,
                     victim: {
-                        ship_id: killmail.victim.ship_id,
-                        ship_name: killmail.victim.ship_name,
-                        ship_group_name: killmail.victim.ship_group_name,
-                        character_id: killmail.victim.character_id,
-                        character_name: killmail.victim.character_name,
-                        corporation_id: killmail.victim.corporation_id,
-                        corporation_name: killmail.victim.corporation_name,
-                        alliance_id: killmail.victim.alliance_id,
-                        alliance_name: killmail.victim.alliance_name,
-                        faction_id: killmail.victim.faction_id,
-                        faction_name: killmail.victim.faction_name,
+                        ship_id: killmail.ship_type_id,
+                        ship_name: killmail.ship_name,
+                        ship_group_name: killmail.ship_group_name,
+                        character_id: killmail.victim_character_id,
+                        character_name: killmail.victim_character_name,
+                        corporation_id: killmail.victim_corporation_id,
+                        corporation_name: killmail.victim_corporation_name,
+                        alliance_id: killmail.victim_alliance_id,
+                        alliance_name: killmail.victim_alliance_name,
+                        faction_id: killmail.victim_faction_id,
+                        faction_name: killmail.victim_faction_name,
                     },
                     finalblow: {
                         character_id: finalBlowAttacker?.character_id,
@@ -78,8 +77,8 @@ export default defineCachedEventHandler(
                         faction_name: finalBlowAttacker?.faction_name,
                         ship_group_name: finalBlowAttacker?.ship_group_name,
                     },
-                });
-            }
+                };
+            });
 
             return result;
         } catch (error) {

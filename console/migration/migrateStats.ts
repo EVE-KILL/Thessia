@@ -8,25 +8,41 @@ const prisma = new PrismaClient();
 
 interface MongoStats {
     _id: ObjectId;
-    alliance_id?: number;
-    corporation_id?: number;
-    character_id?: number;
-    type: string;
+    type: "character_id" | "corporation_id" | "alliance_id";
+    id: number;
+    days: number;
     kills?: number;
     losses?: number;
-    iskDestroyed?: number;
+    iskKilled?: number;
     iskLost?: number;
-    efficiency?: number;
-    mostUsedShips?: any;
-    mostLostShips?: any;
-    mostValuableKills?: any[];
-    mostValuableShips?: any[];
-    mostValuableStructures?: any[];
-    topAttackers?: any[];
-    topVictims?: any[];
-    activityByHour?: any;
-    activityByDay?: any;
-    lastCalculated?: Date;
+    npcLosses?: number;
+    soloKills?: number;
+    soloLosses?: number;
+    lastActive?: Date;
+    full?: {
+        mostUsedShips?: any;
+        mostLostShips?: any;
+        mostValuableKills?: any[];
+        mostValuableShips?: any[];
+        mostValuableStructures?: any[];
+        topCharacters?: any[];
+        topCorporations?: any[];
+        topShips?: any[];
+        topSystems?: any[];
+        topConstellations?: any[];
+        topRegions?: any[];
+        shipGroupStats?: any[];
+        monthlyStats?: any[];
+        diesToCorporations?: any;
+        diesToAlliances?: any;
+        blobFactor?: number;
+        heatMap?: any;
+        fliesWithCorporations?: any;
+        fliesWithAlliances?: any;
+        sameShipAsOtherAttackers?: number;
+        possibleFC?: boolean;
+        possibleCynoAlt?: boolean;
+    };
     createdAt?: Date;
     updatedAt?: Date;
 }
@@ -89,45 +105,87 @@ export async function migrateStats(force: boolean = false): Promise<void> {
                 break;
             }
 
-            const operations = batch.map((mongoStats) => ({
-                alliance_id:
-                    MigrationHelper.normalizeValue(
-                        mongoStats.alliance_id,
-                        "alliance_id"
-                    ) || null,
-                corporation_id:
-                    MigrationHelper.normalizeValue(
-                        mongoStats.corporation_id,
-                        "corporation_id"
-                    ) || null,
-                character_id:
-                    MigrationHelper.normalizeValue(
-                        mongoStats.character_id,
-                        "character_id"
-                    ) || null,
-                type: mongoStats.type || "unknown",
-                kills_total: mongoStats.kills || 0,
-                losses_total: mongoStats.losses || 0,
-                isk_destroyed: mongoStats.iskDestroyed || 0,
-                isk_lost: mongoStats.iskLost || 0,
-                efficiency: mongoStats.efficiency,
+            const operations = batch
+                .filter((mongoStats) => {
+                    // Skip records without valid entity ID
+                    return (
+                        mongoStats.type && mongoStats.id && mongoStats.id > 0
+                    );
+                })
+                .map((mongoStats) => {
+                    // Map the entity type and ID correctly
+                    let entityType: string;
+                    let alliance_id: number | null = null;
+                    let corporation_id: number | null = null;
+                    let character_id: number | null = null;
 
-                // JSON fields for complex data structures
-                most_used_ships: mongoStats.mostUsedShips || null,
-                most_lost_ships: mongoStats.mostLostShips || null,
-                most_valuable_kills: mongoStats.mostValuableKills || null,
-                most_valuable_ships: mongoStats.mostValuableShips || null,
-                most_valuable_structures:
-                    mongoStats.mostValuableStructures || null,
-                top_attackers: mongoStats.topAttackers || null,
-                top_victims: mongoStats.topVictims || null,
-                activity_by_hour: mongoStats.activityByHour || null,
-                activity_by_day: mongoStats.activityByDay || null,
+                    switch (mongoStats.type) {
+                        case "character_id":
+                            entityType = "character";
+                            character_id = mongoStats.id;
+                            break;
+                        case "corporation_id":
+                            entityType = "corporation";
+                            corporation_id = mongoStats.id;
+                            break;
+                        case "alliance_id":
+                            entityType = "alliance";
+                            alliance_id = mongoStats.id;
+                            break;
+                        default:
+                            entityType = "unknown";
+                    }
 
-                last_calculated: mongoStats.lastCalculated || new Date(),
-                created_at: mongoStats.createdAt || new Date(),
-                updated_at: mongoStats.updatedAt || new Date(),
-            }));
+                    // Calculate efficiency if we have both destroyed and lost
+                    const iskDestroyed = mongoStats.iskKilled || 0;
+                    const iskLost = mongoStats.iskLost || 0;
+                    const efficiency =
+                        iskDestroyed + iskLost > 0
+                            ? (iskDestroyed / (iskDestroyed + iskLost)) * 100
+                            : undefined;
+
+                    return {
+                        alliance_id,
+                        corporation_id,
+                        character_id,
+                        entity_type: entityType,
+                        entity_id: mongoStats.id,
+                        kills: mongoStats.kills || 0,
+                        losses: mongoStats.losses || 0,
+                        total_damage_done: null, // Not available in old stats
+                        total_damage_received: null, // Not available in old stats
+                        total_isk_destroyed: iskDestroyed,
+                        total_isk_lost: iskLost,
+                        last_kill_date: null, // Not available in old stats
+                        last_loss_date: mongoStats.lastActive || null,
+                        efficiency: efficiency,
+                        avg_gang_size: null, // Not available in old stats
+                        solo_kills: mongoStats.soloKills || 0,
+                        solo_losses: mongoStats.soloLosses || 0,
+                        solo_percentage:
+                            mongoStats.soloKills && (mongoStats.kills || 0) > 0
+                                ? (mongoStats.soloKills /
+                                      (mongoStats.kills || 1)) *
+                                  100
+                                : null,
+
+                        // Store complex data as JSON
+                        ships_used: mongoStats.full?.mostUsedShips || null,
+                        ships_lost: mongoStats.full?.mostLostShips || null,
+                        most_used_ship: null, // Can be calculated from ships_used
+                        most_lost_ship: null, // Can be calculated from ships_lost
+                        top_victims: mongoStats.full?.topCharacters || null,
+                        top_attackers: null, // Not directly available
+                        monthly_stats: mongoStats.full?.monthlyStats || null,
+                        weekly_stats: null, // Not available in old stats
+                        daily_stats: null, // Not available in old stats
+                        recent_activity: null, // Not available in old stats
+                        full_stats: mongoStats.full || null,
+
+                        created_at: mongoStats.createdAt || new Date(),
+                        updated_at: mongoStats.updatedAt || new Date(),
+                    };
+                });
 
             await prisma.stats.createMany({
                 data: operations,

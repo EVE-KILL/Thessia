@@ -1,0 +1,12 @@
+{
+  "modelName": "alliances",
+  "totalRecords": 17677,
+  "processedRecords": 17677,
+  "lastSkipValue": 18000,
+  "startTime": 1758992652622,
+  "lastUpdateTime": 1758992665674,
+  "batchSize": 1000,
+  "errorCount": 0,
+  "isComplete": true,
+  "lastProcessedId": "68d30a7484ef32ff9ae5704e"
+}

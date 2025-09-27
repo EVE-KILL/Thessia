@@ -1,5 +1,5 @@
 import { getCachedItemMarketData } from "../../../../helpers/RuntimeCache";
-import { Regions } from "../../../../models/Regions";
+import { SDEService } from "../../../../services/SDEService";
 
 /**
  * Item Market Stats API
@@ -42,11 +42,10 @@ export default defineCachedEventHandler(
             // Get region name for the cheapest price
             let cheapestRegionName = null;
             if (cheapestPrice?.region_id) {
-                const region = await Regions.findOne(
-                    { region_id: cheapestPrice.region_id },
-                    { name: 1 }
+                const region = await SDEService.findRegionById(
+                    cheapestPrice.region_id
                 );
-                cheapestRegionName = region?.name;
+                cheapestRegionName = region?.region_name;
             }
 
             return {

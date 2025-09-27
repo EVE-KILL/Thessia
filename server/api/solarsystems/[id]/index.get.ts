@@ -1,9 +1,6 @@
 import { Celestials } from "../../../models/Celestials";
-import { Constellations } from "../../../models/Constellations";
-import { Factions } from "../../../models/Factions";
-import { Regions } from "../../../models/Regions";
-import { SolarSystems } from "../../../models/SolarSystems";
 import { Sovereignty } from "../../../models/Sovereignty";
+import { FactionService, SystemService } from "../../../services";
 
 export default defineCachedEventHandler(
     async (event) => {
@@ -21,10 +18,7 @@ export default defineCachedEventHandler(
 
         if (!isNaN(numericId) && param.match(/^\d+$/)) {
             // Check if it's a valid number (integer)
-            system = await SolarSystems.findOne(
-                { system_id: numericId },
-                { _id: 0, __v: 0 }
-            );
+            system = await SystemService.findById(numericId);
             if (!system) {
                 throw createError({
                     statusCode: 404,
@@ -34,11 +28,11 @@ export default defineCachedEventHandler(
         } else {
             // Treat as a system name
             const decodedName = decodeURIComponent(param);
-            // Perform a case-insensitive search for the system name
-            const nameRegex = new RegExp(`^${decodedName}$`, "i");
-            system = await SolarSystems.findOne(
-                { system_name: nameRegex },
-                { _id: 0, __v: 0 }
+            // Search by name pattern
+            const systems = await SystemService.searchByName(decodedName, 10);
+            system = systems.find(
+                (s) =>
+                    s.system_name?.toLowerCase() === decodedName.toLowerCase()
             );
             if (!system) {
                 throw createError({
@@ -48,39 +42,30 @@ export default defineCachedEventHandler(
             }
         }
 
-        // Enrich system data with constellation and region information
-        const enrichedSystem: any = { ...system.toObject() };
-
-        // Get constellation information
-        if (system.constellation_id) {
-            const constellation = await Constellations.findOne(
-                { constellation_id: system.constellation_id },
-                { constellation_name: 1, region_id: 1, faction_id: 1, _id: 0 }
-            ).lean();
-            if (constellation) {
-                enrichedSystem.constellation_name =
-                    constellation.constellation_name;
-            }
+        // Get system with full hierarchy (region, constellation)
+        const systemWithHierarchy = await SystemService.getWithHierarchy(
+            system.system_id
+        );
+        if (!systemWithHierarchy) {
+            throw createError({
+                statusCode: 404,
+                statusMessage: "System hierarchy data not found",
+            });
         }
 
-        // Get region information
-        if (system.region_id) {
-            const region = await Regions.findOne(
-                { region_id: system.region_id },
-                { name: 1, faction_id: 1, _id: 0 }
-            ).lean();
-            if (region) {
-                enrichedSystem.region_name = region.name;
-                enrichedSystem.region_faction_id = region.faction_id;
-            }
-        }
+        // Create enriched system object
+        const enrichedSystem: any = {
+            ...system,
+            constellation_name:
+                systemWithHierarchy.constellation?.constellation_name,
+            region_name: systemWithHierarchy.constellation?.region?.name,
+            region_faction_id:
+                systemWithHierarchy.constellation?.region?.faction_id,
+        };
 
         // Get faction information for system
         if (system.faction_id) {
-            const faction = await Factions.findOne(
-                { faction_id: system.faction_id },
-                { name: 1, _id: 0 }
-            ).lean();
+            const faction = await FactionService.findById(system.faction_id);
             if (faction) {
                 enrichedSystem.faction_name = faction.name;
             }

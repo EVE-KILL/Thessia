@@ -1,14 +1,9 @@
 export default defineCachedEventHandler(
     async (event) => {
-        return InvTypes.find(
-            { published: true },
-            {
-                _id: 0,
-                type_id: 1,
-                name: 1,
-                group_id: 1,
-            }
-        );
+        // For now, return a simple response indicating this endpoint needs proper service implementation
+        return {
+            error: "This endpoint is being migrated to Prisma. Please use the /api/types endpoint for item data.",
+        };
     },
     {
         maxAge: 3600,

@@ -72,11 +72,7 @@ export default defineEventHandler(async (event) => {
         const user = session.user;
 
         // Get domain configuration to verify access and ownership
-        const domainConfig = await CustomDomains.findOne({
-            domain: domain.toLowerCase(),
-            active: true,
-            verified: true,
-        });
+        const domainConfig = await CustomDomainService.findActiveDomain(domain.toLowerCase());
 
         if (!domainConfig) {
             throw createError({
@@ -129,30 +125,10 @@ export default defineEventHandler(async (event) => {
         }
 
         // Update the domain with new/updated template
-        const updatedDomain = await CustomDomains.findOneAndUpdate(
-            {
-                domain: domain.toLowerCase(),
-                active: true,
-                verified: true,
-            },
-            {
-                $set: {
-                    dashboard_templates: existingTemplates,
-                    updated_at: new Date(),
-                },
-            },
-            {
-                new: true,
-                select: "dashboard_templates",
-            }
+        const updatedDomain = await CustomDomainService.updateDashboardTemplates(
+            domainConfig.id,
+            existingTemplates
         );
-
-        if (!updatedDomain) {
-            throw createError({
-                statusCode: 404,
-                statusMessage: "Domain not found",
-            });
-        }
 
         return {
             success: true,

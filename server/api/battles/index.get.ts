@@ -1,5 +1,7 @@
 import { createHash } from "crypto";
 
+import { BattleService } from "~/server/services";
+
 export default defineCachedEventHandler(
     async (event) => {
         const query = getQuery(event as any);
@@ -81,40 +83,20 @@ export default defineCachedEventHandler(
                 top_ship_types: { $slice: 10 },
             };
 
-            // Determine optimal index hint for the battle query
-            const sortOptions = { start_time: -1 };
-            const hint = await determineOptimalIndexHint(
-                Battles.collection,
-                mongoQuery,
-                sortOptions,
-                "[Battles API]"
-            );
-
-            // Execute query and count in parallel, using more efficient methods
-            const [battles, totalItems] = await Promise.all([
-                // Use a regular find query with sort, skip, limit and projection
-                // This is much faster than an aggregation pipeline for simple pagination
-                Battles.find(mongoQuery)
-                    .sort({ start_time: -1 })
-                    .skip(skip)
-                    .limit(limit)
-                    .select(projection)
-                    .hint(hint || { start_time: -1 })
-                    .lean(),
-
-                Battles.countDocuments(mongoQuery).hint(
-                    hint || { start_time: -1 }
-                ),
-            ]);
-
-            const totalPages = Math.ceil(totalItems / limit);
+            // Execute query using BattleService
+            const result = await BattleService.searchWithPagination({
+                filter,
+                search,
+                page,
+                limit,
+            });
 
             return {
-                totalItems,
-                totalPages,
-                currentPage: page,
-                itemsPerPage: limit,
-                battles,
+                totalItems: result.total,
+                totalPages: result.totalPages,
+                currentPage: result.page,
+                itemsPerPage: result.limit,
+                battles: result.data,
             };
         } catch (error) {
             console.error("Error fetching battles:", error);

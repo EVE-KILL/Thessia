@@ -2,6 +2,10 @@ import prisma from "../../lib/prisma";
 import { cliLogger } from "../../server/helpers/Logger";
 import { Characters } from "../../server/models/Characters";
 import { MigrationHelper } from "./MigrationHelper";
+import {
+    type MigrationCheckpoint,
+    MigrationProgressTracker,
+} from "./MigrationProgressTracker";
 
 type CharacterHistory = {
     record_id?: number;
@@ -30,11 +34,14 @@ type MongoCharacterLean = {
 };
 
 /**
- * Process a batch of characters and return the number of history records processed
+ * Process a batch of characters and extract normalized data
  */
 async function processCharacterBatch(
-    characters: MongoCharacterLean[]
-): Promise<number> {
+    characters: MongoCharacterLean[],
+    batchNumber: number,
+    totalBatches: number,
+    checkpoint: MigrationCheckpoint
+): Promise<void> {
     // Prepare character data for Prisma batch insert
     const characterData = characters.map((character) => ({
         character_id: character.character_id,
@@ -54,12 +61,6 @@ async function processCharacterBatch(
         created_at: character.createdAt || new Date(),
         updated_at: character.updatedAt || new Date(),
     }));
-
-    // Insert character batch into PostgreSQL
-    await prisma.character.createMany({
-        data: characterData,
-        skipDuplicates: true, // Skip if character_id already exists
-    });
 
     // Process character history for this batch
     let historyData: Array<{
@@ -90,68 +91,99 @@ async function processCharacterBatch(
         }
     }
 
-    // Insert history batch if there are history records
-    if (historyData.length > 0) {
-        await prisma.characterHistory.createMany({
-            data: historyData,
-            skipDuplicates: true,
-        });
-    }
-
-    return historyData.length;
-}
-
-export async function migrateCharacters(): Promise<void> {
-    cliLogger.info("Starting Character migration from MongoDB to PostgreSQL");
-
     try {
-        // Get estimated count for much faster startup
-        const totalCount = await MigrationHelper.getEstimatedCount(Characters);
-        cliLogger.info(
-            `Total characters to migrate: ${totalCount.toLocaleString()}`
-        );
+        // Insert character batch into PostgreSQL
+        await prisma.character.createMany({
+            data: characterData,
+            skipDuplicates: true, // Skip if character_id already exists
+        });
 
-        const batchSize = 1000; // Larger batches for better throughput
-        const totalBatches = Math.ceil(totalCount / batchSize);
-        cliLogger.info(`Estimated batches: ${totalBatches.toLocaleString()}`);
+        // Insert history batch if there are history records
+        if (historyData.length > 0) {
+            await prisma.characterHistory.createMany({
+                data: historyData,
+                skipDuplicates: true,
+            });
+        }
 
-        let migratedHistoryRecords = 0;
-        const startTime = Date.now();
+        // Update checkpoint
+        checkpoint.processedRecords += characterData.length;
+        checkpoint.lastUpdateTime = Date.now();
 
-        // Use the helper for batch processing
-        const { migratedRecords, errorCount } =
-            await MigrationHelper.processBatches<MongoCharacterLean>(
-                Characters,
-                totalCount,
-                batchSize,
-                async (
-                    batch: MongoCharacterLean[],
-                    batchNumber: number,
-                    totalBatches: number
-                ) => {
-                    const historyCount = await processCharacterBatch(batch);
-                    migratedHistoryRecords += historyCount;
-
-                    // Log progress with history count
-                    MigrationHelper.logProgress(
-                        {
-                            totalCount,
-                            migratedRecords: batchNumber * batchSize,
-                            errorCount: 0,
-                            startTime,
-                        },
-                        batch.length,
-                        historyCount,
-                        "history records"
-                    );
-                }
-            );
+        await MigrationProgressTracker.saveProgress(checkpoint);
 
         cliLogger.info(
-            `Character migration completed. Characters: ${migratedRecords}, History Records: ${migratedHistoryRecords}, Errors: ${errorCount}`
+            `✅ Batch ${batchNumber}/${totalBatches}: ` +
+                `${characterData.length} characters, ${historyData.length} history records`
         );
     } catch (error) {
-        cliLogger.error(`Fatal error during character migration: ${error}`);
+        cliLogger.error(`❌ Database error in batch ${batchNumber}: ${error}`);
+        checkpoint.errorCount += characterData.length;
         throw error;
     }
+}
+
+export async function migrateCharacters(
+    forceRestart: boolean = false
+): Promise<void> {
+    try {
+        cliLogger.info(
+            "🚀 Starting Characters migration with resumable pattern..."
+        );
+
+        // Use the resumable migration helper
+        await MigrationHelper.processResumableMigration({
+            modelName: "characters",
+            model: Characters,
+            batchSize: 1000,
+            processBatch: processCharacterBatch,
+            forceRestart,
+            onProgress: (checkpoint) => {
+                const progressPercent = (
+                    (checkpoint.processedRecords / checkpoint.totalRecords) *
+                    100
+                ).toFixed(1);
+                const elapsedTime = Date.now() - checkpoint.startTime;
+                const avgTimePerRecord =
+                    elapsedTime / checkpoint.processedRecords;
+                const remainingRecords =
+                    checkpoint.totalRecords - checkpoint.processedRecords;
+                const estimatedRemainingTime =
+                    avgTimePerRecord * remainingRecords;
+                const estimatedFinishTime = new Date(
+                    Date.now() + estimatedRemainingTime
+                );
+
+                cliLogger.info(
+                    `📈 Progress: ${checkpoint.processedRecords.toLocaleString()}/${checkpoint.totalRecords.toLocaleString()} ` +
+                        `(${progressPercent}%) - ETA: ${estimatedFinishTime.toLocaleTimeString()}`
+                );
+
+                if (checkpoint.errorCount > 0) {
+                    cliLogger.warn(
+                        `⚠️  Errors encountered: ${checkpoint.errorCount}`
+                    );
+                }
+            },
+        });
+
+        cliLogger.info("🎉 Characters migration completed successfully!");
+    } catch (error) {
+        cliLogger.error(`❌ Migration failed: ${error}`);
+        throw error;
+    }
+}
+
+// Export for CLI usage
+if (require.main === module) {
+    const forceRestart = process.argv.includes("--force-restart");
+    migrateCharacters(forceRestart)
+        .then(() => {
+            cliLogger.info("✅ Migration script completed");
+            process.exit(0);
+        })
+        .catch((error) => {
+            cliLogger.error(`❌ Migration script failed: ${error}`);
+            process.exit(1);
+        });
 }

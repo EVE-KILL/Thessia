@@ -1,3 +1,5 @@
+import { CustomDomainService } from "~/server/services";
+
 /**
  * Dynamic robots.txt generation for custom domains
  * Generates domain-specific robots.txt with proper sitemap references
@@ -14,11 +16,9 @@ export default defineEventHandler(async (event) => {
 
     try {
         // Find the custom domain configuration
-        const domainConfig = await CustomDomains.findOne({
-            domain: domain.toLowerCase(),
-            active: true,
-            verified: true,
-        });
+        const domainConfig = await CustomDomainService.findActiveDomain(
+            domain.toLowerCase()
+        );
 
         if (!domainConfig) {
             throw createError({

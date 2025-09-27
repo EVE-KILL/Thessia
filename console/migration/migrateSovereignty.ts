@@ -7,14 +7,12 @@ const prisma = new PrismaClient();
 
 interface MongoSovereignty {
     _id: any;
-    systemId: number;
-    allianceId?: number;
-    corporationId?: number;
-    factionId?: number;
-    contested?: string;
-    vulnerabilityOccupancyLevel?: number;
-    vulnerableStartTime?: Date;
-    vulnerableEndTime?: Date;
+    system_id: number;
+    alliance_id?: number;
+    corporation_id?: number;
+    faction_id?: number;
+    date_added: Date;
+    history?: any[];
     createdAt?: Date;
     updatedAt?: Date;
 }
@@ -66,15 +64,14 @@ export async function migrateSovereignty(
                 totalBatches: number
             ) => {
                 const transformedSovereignty = batch.map((sov) => ({
-                    system_id: sov.systemId,
-                    alliance_id: sov.allianceId || null,
-                    corporation_id: sov.corporationId || null,
-                    faction_id: sov.factionId || null,
-                    contested: sov.contested || null,
-                    vulnerability_occupancy_level:
-                        sov.vulnerabilityOccupancyLevel || null,
-                    vulnerable_start_time: sov.vulnerableStartTime || null,
-                    vulnerable_end_time: sov.vulnerableEndTime || null,
+                    system_id: sov.system_id,
+                    alliance_id: sov.alliance_id || null,
+                    corporation_id: sov.corporation_id || null,
+                    faction_id: sov.faction_id || null,
+                    contested: null, // Not in MongoDB model, set to null
+                    vulnerability_occupancy_level: null, // Not in MongoDB model, set to null
+                    vulnerable_start_time: null, // Not in MongoDB model, set to null
+                    vulnerable_end_time: null, // Not in MongoDB model, set to null
                     created_at: sov.createdAt || new Date(),
                     updated_at: sov.updatedAt || new Date(),
                 }));
@@ -84,7 +81,12 @@ export async function migrateSovereignty(
                     skipDuplicates: true,
                 });
             },
-            { batchSize, logProgress: true, skipDuplicates: true }
+            {
+                batchSize,
+                logProgress: true,
+                skipDuplicates: true,
+                resume: false,
+            }
         );
 
         const finalCount = await prisma.sovereignty.count();

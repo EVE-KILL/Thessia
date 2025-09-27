@@ -1,3 +1,5 @@
+import { CustomDomainService } from "../../services";
+
 export default defineEventHandler(async (event) => {
     try {
         const domain = getRouterParam(event, "domain") as string;
@@ -10,9 +12,7 @@ export default defineEventHandler(async (event) => {
         }
 
         // Find the domain in the database
-        const domainData = await CustomDomains.findOne({
-            domain: domain.toLowerCase(),
-        }).lean();
+        const domainData = await CustomDomainService.findByDomain(domain);
 
         if (!domainData) {
             throw createError({

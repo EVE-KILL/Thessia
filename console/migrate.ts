@@ -231,6 +231,15 @@ async function getMigrationFunctions(model: string) {
             );
             return { migrate: migratePrices, validate: validatePrices };
 
+        case "killmails":
+            const { migrateKillmails } = await import(
+                "./migration/migrateKillmails"
+            );
+            const { validateKillmails } = await import(
+                "./migration/validateKillmails"
+            );
+            return { migrate: migrateKillmails, validate: validateKillmails };
+
         case "comments":
             const { migrateComments } = await import(
                 "./migration/migrateComments"

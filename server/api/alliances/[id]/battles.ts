@@ -1,4 +1,4 @@
-import type { PipelineStage } from "mongoose";
+import { BattleService } from "~/server/services";
 
 export default defineCachedEventHandler(
     async (event) => {
@@ -30,20 +30,9 @@ export default defineCachedEventHandler(
         const skip = (page - 1) * limit;
 
         try {
-            const matchStage: PipelineStage = {
-                $match: { alliancesInvolved: allianceId },
-            };
-            const pipeline: PipelineStage[] = [
-                matchStage,
-                { $sort: { start_time: -1 } },
-                { $skip: skip },
-                { $limit: limit },
-                { $project: { _id: 0 } },
-            ];
-
             const [results, totalItems] = await Promise.all([
-                Battles.aggregate(pipeline),
-                Battles.countDocuments({ alliancesInvolved: allianceId }),
+                BattleService.findByAlliance(allianceId, limit, skip),
+                BattleService.countByAlliance(allianceId),
             ]);
 
             const totalPages = Math.ceil(totalItems / limit);

@@ -2,7 +2,7 @@ import { createError, defineEventHandler, getRequestIP, readBody } from "h3";
 import { isbot } from "isbot";
 import { cliLogger } from "../../helpers/Logger";
 import type { IAccessLog } from "../../interfaces/IAccessLog";
-import { AccessLogs } from "../../models/AccessLogs";
+import { AccessLogService } from "../../services";
 
 export default defineEventHandler(async (event) => {
     try {
@@ -39,8 +39,7 @@ export default defineEventHandler(async (event) => {
         };
 
         // Save directly to database
-        const logEnt = new AccessLogs(logEntry);
-        await logEnt.save();
+        await AccessLogService.create(logEntry);
 
         return { success: true };
     } catch (error) {

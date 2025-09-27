@@ -17,7 +17,6 @@ export const migrateCharacterAchievements = async () => {
         for (const achievement of achievements) {
             const mappedData: any = {
                 character_id: achievement.character_id,
-                character_name: achievement.character_name,
                 total_points: achievement.total_points,
                 completed_achievements: achievement.completed_achievements,
                 total_achievements: achievement.total_achievements,
@@ -37,7 +36,7 @@ export const migrateCharacterAchievements = async () => {
             );
         }
     } catch (err) {
-        cliLogger.error("Error migrating character achievements", err);
+        cliLogger.error(`❌ Error migrating character achievements: ${err}`);
     } finally {
         await enableForeignKeyChecks();
         await prisma.$disconnect();

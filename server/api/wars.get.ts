@@ -1,6 +1,4 @@
-import { Alliances } from "../models/Alliances";
-import { Corporations } from "../models/Corporations";
-import { Wars } from "../models/Wars";
+import { WarService } from "../services";
 
 export default defineCachedEventHandler(
     async (event) => {
@@ -64,116 +62,33 @@ export default defineCachedEventHandler(
                     break;
             }
 
-            // Apply additional filters
-            if (ongoing) {
-                filterQuery.finished = null; // Only wars that haven't finished
-            }
-
-            if (mutual) {
-                filterQuery.mutual = true;
-            }
-
-            if (openToAllies) {
-                filterQuery.open_for_allies = true;
-            }
-
-            if (hasActivity) {
-                filterQuery.$or = [
-                    ...(filterQuery.$or || []),
-                    { "aggressor.ships_killed": { $gt: 0 } },
-                    { "defender.ships_killed": { $gt: 0 } },
-                ];
-            }
-
-            // Get wars with pagination
-            const [wars, totalCount] = await Promise.all([
-                Wars.find(filterQuery)
-                    .sort(sortQuery)
-                    .skip(skip)
-                    .limit(limit)
-                    .lean(),
-                Wars.countDocuments(filterQuery),
-            ]);
-
-            // Collect all corporation and alliance IDs for population
-            const corporationIds = new Set<number>();
-            const allianceIds = new Set<number>();
-
-            wars.forEach((war) => {
-                if (war.aggressor.corporation_id)
-                    corporationIds.add(war.aggressor.corporation_id);
-                if (war.aggressor.alliance_id)
-                    allianceIds.add(war.aggressor.alliance_id);
-                if (war.defender.corporation_id)
-                    corporationIds.add(war.defender.corporation_id);
-                if (war.defender.alliance_id)
-                    allianceIds.add(war.defender.alliance_id);
-
-                war.allies?.forEach((ally) => {
-                    if (ally.corporation_id)
-                        corporationIds.add(ally.corporation_id);
-                    if (ally.alliance_id) allianceIds.add(ally.alliance_id);
-                });
+            // Get wars using the service
+            const { wars, pagination } = await WarService.searchWithPagination({
+                page,
+                limit,
+                entityId,
+                entityType: entityType as "corporation" | "alliance",
+                tab,
+                ongoing,
+                mutual,
+                openToAllies,
+                hasActivity,
             });
 
-            // Fetch corporation and alliance data
-            const [corporations, alliances] = await Promise.all([
-                Corporations.find(
-                    { corporation_id: { $in: Array.from(corporationIds) } },
-                    { corporation_id: 1, name: 1 }
-                ).lean(),
-                Alliances.find(
-                    { alliance_id: { $in: Array.from(allianceIds) } },
-                    { alliance_id: 1, name: 1 }
-                ).lean(),
-            ]);
-
-            // Create lookup maps
-            const corpMap = new Map(
-                corporations.map((corp) => [corp.corporation_id, corp])
+            // Extract entity IDs and populate wars
+            const { corporationIds, allianceIds } =
+                WarService.extractEntityIds(wars);
+            const populatedWars = await WarService.populateWarEntities(
+                wars,
+                corporationIds,
+                allianceIds
             );
-            const allianceMap = new Map(
-                alliances.map((alliance) => [alliance.alliance_id, alliance])
-            );
-
-            // Populate wars with entity names
-            const populatedWars = wars.map((war) => ({
-                ...war,
-                aggressor: {
-                    ...war.aggressor,
-                    corporation: war.aggressor.corporation_id
-                        ? corpMap.get(war.aggressor.corporation_id)
-                        : null,
-                    alliance: war.aggressor.alliance_id
-                        ? allianceMap.get(war.aggressor.alliance_id)
-                        : null,
-                },
-                defender: {
-                    ...war.defender,
-                    corporation: war.defender.corporation_id
-                        ? corpMap.get(war.defender.corporation_id)
-                        : null,
-                    alliance: war.defender.alliance_id
-                        ? allianceMap.get(war.defender.alliance_id)
-                        : null,
-                },
-                allies:
-                    war.allies?.map((ally) => ({
-                        ...ally,
-                        corporation: ally.corporation_id
-                            ? corpMap.get(ally.corporation_id)
-                            : null,
-                        alliance: ally.alliance_id
-                            ? allianceMap.get(ally.alliance_id)
-                            : null,
-                    })) || [],
-            }));
 
             return {
                 wars: populatedWars,
-                totalItems: totalCount,
-                totalPages: Math.ceil(totalCount / limit),
-                currentPage: page,
+                totalItems: pagination.totalCount,
+                totalPages: pagination.totalPages,
+                currentPage: pagination.currentPage,
                 itemsPerPage: limit,
             };
         } catch (error) {

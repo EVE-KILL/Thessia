@@ -1,3 +1,11 @@
+import {
+    AllianceService,
+    CharacterService,
+    CorporationService,
+    CustomDomainService,
+    KillmailService,
+} from "~/server/services";
+
 /**
  * Open Graph image generation for custom domains
  * Generates dynamic OG images with domain-specific branding
@@ -19,11 +27,9 @@ export default defineEventHandler(async (event) => {
 
         // Get domain data if provided
         if (domain) {
-            domainData = await CustomDomains.findOne({
-                domain: domain as string,
-                active: true,
-                verified: true,
-            });
+            domainData = await CustomDomainService.findActiveDomain(
+                domain as string
+            );
         }
 
         // Get entity data based on type
@@ -91,31 +97,17 @@ async function getEntityData(id: string, entityType?: string) {
 
     switch (entityType) {
         case "character":
-            return await Characters.findOne({ character_id: numericId }).select(
-                "name character_id corporation_id alliance_id"
-            );
+            return await CharacterService.findWithRelations(numericId);
         case "corporation":
-            return await Corporations.findOne({
-                corporation_id: numericId,
-            }).select("name ticker corporation_id alliance_id member_count");
+            return await CorporationService.findById(numericId);
         case "alliance":
-            return await Alliances.findOne({ alliance_id: numericId }).select(
-                "name ticker alliance_id corporation_count member_count"
-            );
+            return await AllianceService.findById(numericId);
         default:
             // Try to find in all collections
             return (
-                (await Characters.findOne({ character_id: numericId }).select(
-                    "name character_id corporation_id alliance_id"
-                )) ||
-                (await Corporations.findOne({
-                    corporation_id: numericId,
-                }).select(
-                    "name ticker corporation_id alliance_id member_count"
-                )) ||
-                (await Alliances.findOne({ alliance_id: numericId }).select(
-                    "name ticker alliance_id corporation_count member_count"
-                ))
+                (await CharacterService.findWithRelations(numericId)) ||
+                (await CorporationService.findById(numericId)) ||
+                (await AllianceService.findById(numericId))
             );
     }
 }
@@ -127,9 +119,7 @@ async function getKillmailData(id: string) {
     const numericId = parseInt(id);
     if (isNaN(numericId)) return null;
 
-    return await Killmails.findOne({ killmail_id: numericId }).select(
-        "killmail_id victim ship_type_id system_id killmail_date total_value"
-    );
+    return await KillmailService.findById(numericId);
 }
 
 /**

@@ -1,13 +1,15 @@
 import { PrismaClient } from "@prisma/client";
-import { ObjectId } from "mongodb";
 import { cliLogger } from "../../server/helpers/Logger";
 import { Prices as MongoosePrices } from "../../server/models/Prices";
 import { MigrationHelper } from "./MigrationHelper";
+import {
+    type MigrationCheckpoint,
+    MigrationProgressTracker,
+} from "./MigrationProgressTracker";
 
 const prisma = new PrismaClient();
 
 interface MongoPrice {
-    _id: ObjectId;
     type_id: number;
     average?: number;
     highest?: number;
@@ -20,100 +22,113 @@ interface MongoPrice {
     updatedAt?: Date;
 }
 
-export async function migratePrices(force: boolean = false): Promise<void> {
+/**
+ * Process a batch of prices and insert into PostgreSQL
+ */
+async function processPriceBatch(
+    prices: MongoPrice[],
+    batchNumber: number,
+    totalBatches: number,
+    checkpoint: MigrationCheckpoint
+): Promise<void> {
     try {
-        cliLogger.info("Starting Prices migration...");
+        const operations = prices.map((mongoPrice) => ({
+            type_id: mongoPrice.type_id,
+            average: mongoPrice.average || null,
+            highest: mongoPrice.highest || null,
+            lowest: mongoPrice.lowest || null,
+            region_id: mongoPrice.region_id,
+            order_count: mongoPrice.order_count || null,
+            volume: mongoPrice.volume || null,
+            date: mongoPrice.date,
+            created_at: mongoPrice.createdAt || new Date(),
+            updated_at: mongoPrice.updatedAt || new Date(),
+        }));
 
-        // Check if migration already exists
-        const existingCount = await prisma.price.count();
-        if (existingCount > 0 && !force) {
-            cliLogger.warn(
-                `Prices migration already exists (${existingCount} records). Use --force to re-run.`
-            );
-            return;
-        }
+        await prisma.price.createMany({
+            data: operations,
+            skipDuplicates: true,
+        });
 
-        const totalCount = await MigrationHelper.getEstimatedCount(
-            MongoosePrices
-        );
+        // Update checkpoint
+        checkpoint.processedRecords += operations.length;
+        checkpoint.lastUpdateTime = Date.now();
+
+        await MigrationProgressTracker.saveProgress(checkpoint);
+
         cliLogger.info(
-            `Estimated MongoDB Prices records: ${totalCount.toLocaleString()}`
-        );
-
-        if (totalCount === 0) {
-            cliLogger.info("No Prices records to migrate");
-            return;
-        }
-
-        // Clear existing data if force migration
-        if (force && existingCount > 0) {
-            cliLogger.info("Force migration: clearing existing Prices data...");
-            await prisma.price.deleteMany();
-        }
-
-        let processed = 0;
-        const batchSize = 10000;
-
-        // Process in batches using standard pattern
-        let skip = 0;
-        while (skip < totalCount) {
-            const batchNumber = Math.floor(skip / batchSize) + 1;
-            const totalBatches = Math.ceil(totalCount / batchSize);
-
-            cliLogger.info(
-                `Processing batch ${batchNumber}/${totalBatches} - Records ${skip}-${Math.min(
-                    skip + batchSize,
-                    totalCount
-                )}`
-            );
-
-            // Fetch batch from MongoDB
-            const batch = (await MongoosePrices.find({})
-                .skip(skip)
-                .limit(batchSize)
-                .lean()
-                .exec()) as any[];
-
-            if (batch.length === 0) {
-                break;
-            }
-
-            const operations = batch.map((mongoPrice) => ({
-                type_id: mongoPrice.type_id,
-                average: mongoPrice.average || null,
-                highest: mongoPrice.highest || null,
-                lowest: mongoPrice.lowest || null,
-                region_id: mongoPrice.region_id,
-                order_count: mongoPrice.order_count || null,
-                volume: mongoPrice.volume || null,
-                date: mongoPrice.date,
-                created_at: mongoPrice.createdAt || new Date(),
-                updated_at: mongoPrice.updatedAt || new Date(),
-            }));
-
-            await prisma.price.createMany({
-                data: operations,
-                skipDuplicates: true,
-            });
-
-            processed += operations.length;
-            skip += batchSize;
-
-            // Log progress
-            const progressPercent = ((processed / totalCount) * 100).toFixed(1);
-            cliLogger.info(
-                `Progress: ${processed}/${totalCount} (${progressPercent}%)`
-            );
-        }
-
-        const finalCount = await prisma.price.count();
-        cliLogger.info(
-            `✅ Prices migration completed: ${finalCount.toLocaleString()} records migrated`
+            `✅ Batch ${batchNumber}/${totalBatches}: ${operations.length} prices processed`
         );
     } catch (error) {
-        cliLogger.error(`Prices migration failed: ${error}`);
+        cliLogger.error(`❌ Database error in batch ${batchNumber}: ${error}`);
+        checkpoint.errorCount += prices.length;
+        throw error;
+    }
+}
+
+export async function migratePrices(
+    forceRestart: boolean = false
+): Promise<void> {
+    try {
+        cliLogger.info(
+            "🚀 Starting Prices migration with resumable pattern..."
+        );
+
+        // Use the resumable migration helper
+        await MigrationHelper.processResumableMigration({
+            modelName: "prices",
+            model: MongoosePrices,
+            batchSize: 10000, // Large batch size for simple data
+            processBatch: processPriceBatch,
+            forceRestart,
+            onProgress: (checkpoint) => {
+                const progressPercent = (
+                    (checkpoint.processedRecords / checkpoint.totalRecords) *
+                    100
+                ).toFixed(1);
+                const elapsedTime = Date.now() - checkpoint.startTime;
+                const avgTimePerRecord =
+                    elapsedTime / checkpoint.processedRecords;
+                const remainingRecords =
+                    checkpoint.totalRecords - checkpoint.processedRecords;
+                const estimatedRemainingTime =
+                    avgTimePerRecord * remainingRecords;
+                const estimatedFinishTime = new Date(
+                    Date.now() + estimatedRemainingTime
+                );
+
+                cliLogger.info(
+                    `📈 Progress: ${checkpoint.processedRecords.toLocaleString()}/${checkpoint.totalRecords.toLocaleString()} ` +
+                        `(${progressPercent}%) - ETA: ${estimatedFinishTime.toLocaleTimeString()}`
+                );
+
+                if (checkpoint.errorCount > 0) {
+                    cliLogger.warn(
+                        `⚠️  Errors encountered: ${checkpoint.errorCount}`
+                    );
+                }
+            },
+        });
+
+        cliLogger.info("🎉 Prices migration completed successfully!");
+    } catch (error) {
+        cliLogger.error(`❌ Migration failed: ${error}`);
         throw error;
     } finally {
         await prisma.$disconnect();
     }
+}
+
+// Export for CLI usage
+if (require.main === module) {
+    const forceRestart = process.argv.includes("--force-restart");
+    migratePrices(forceRestart)
+        .then(() => {
+            cliLogger.info("✅ Migration script completed");
+            process.exit(0);
+        })
+        .catch((error) => {
+            cliLogger.error(`❌ Migration script failed: ${error}`);
+            process.exit(1);
+        });
 }

@@ -1,6 +1,8 @@
+import { KillmailService } from "~/server/services";
+
 export default defineCachedEventHandler(
     async () => {
-        const count: number = await Killmails.estimatedDocumentCount();
+        const count: number = await KillmailService.getTotalCount();
         return { count: count };
     },
     {

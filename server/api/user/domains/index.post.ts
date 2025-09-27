@@ -1,3 +1,9 @@
+import {
+    AllianceService,
+    CharacterService,
+    CorporationService,
+} from "~/server/services";
+
 /**
  * Create a new custom domain for the authenticated user - Phase 2
  */
@@ -161,19 +167,19 @@ export default defineEventHandler(async (event) => {
             let entityExists = false;
             switch (entityData.entity_type) {
                 case "character":
-                    entityExists = !!(await Characters.findOne({
-                        character_id: entityData.entity_id,
-                    }));
+                    entityExists = !!(await CharacterService.findById(
+                        entityData.entity_id
+                    ));
                     break;
                 case "corporation":
-                    entityExists = !!(await Corporations.findOne({
-                        corporation_id: entityData.entity_id,
-                    }));
+                    entityExists = !!(await CorporationService.findById(
+                        entityData.entity_id
+                    ));
                     break;
                 case "alliance":
-                    entityExists = !!(await Alliances.findOne({
-                        alliance_id: entityData.entity_id,
-                    }));
+                    entityExists = !!(await AllianceService.findById(
+                        entityData.entity_id
+                    ));
                     break;
             }
 

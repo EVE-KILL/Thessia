@@ -1,5 +1,7 @@
+import { CharacterService } from "~/server/services";
+
 /**
- * Add entity to domain
+ * Add an entity to a custom domain
  * Route: POST /api/user/domains/{id}/entities
  */
 export default defineEventHandler(async (event) => {
@@ -88,11 +90,7 @@ export default defineEventHandler(async (event) => {
                     .lean();
                 break;
             case "character":
-                entityData = await Characters.findOne({
-                    character_id: body.entity_id,
-                })
-                    .select("character_id name")
-                    .lean();
+                entityData = await CharacterService.findById(body.entity_id);
                 break;
         }
     } catch (error) {

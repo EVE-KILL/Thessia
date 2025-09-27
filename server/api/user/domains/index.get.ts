@@ -1,6 +1,12 @@
 /**
  * Get all domains owned by the authenticated user - Phase 2
  */
+import {
+    AllianceService,
+    CharacterService,
+    CorporationService,
+} from "~/server/services";
+
 export default defineEventHandler(async (event) => {
     // Add cache-control headers to prevent caching
     setResponseHeaders(event, {
@@ -48,28 +54,25 @@ export default defineEventHandler(async (event) => {
                     try {
                         switch (entityConfig.entity_type) {
                             case "character":
-                                entityInfo = await Characters.findOne(
-                                    { character_id: entityConfig.entity_id },
-                                    { name: 1, character_id: 1 }
+                                entityInfo = await CharacterService.findById(
+                                    entityConfig.entity_id
                                 );
                                 break;
                             case "corporation":
-                                entityInfo = await Corporations.findOne(
-                                    { corporation_id: entityConfig.entity_id },
-                                    { name: 1, ticker: 1, corporation_id: 1 }
+                                entityInfo = await CorporationService.findById(
+                                    entityConfig.entity_id
                                 );
                                 break;
                             case "alliance":
-                                entityInfo = await Alliances.findOne(
-                                    { alliance_id: entityConfig.entity_id },
-                                    { name: 1, ticker: 1, alliance_id: 1 }
+                                entityInfo = await AllianceService.findById(
+                                    entityConfig.entity_id
                                 );
                                 break;
                         }
 
                         if (entityInfo) {
                             entitiesInfo.push({
-                                ...entityInfo.toObject(),
+                                ...entityInfo,
                                 _config: entityConfig, // Include entity configuration
                             });
                         }

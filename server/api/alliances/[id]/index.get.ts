@@ -1,3 +1,9 @@
+import {
+    CharacterService,
+    CorporationService,
+    FactionService,
+} from "~/server/services";
+
 export default defineCachedEventHandler(
     async (event) => {
         const allianceId: number | null = event.context.params?.id
@@ -16,22 +22,22 @@ export default defineCachedEventHandler(
 
         // Add corporation_count and member_count
         const [corporation_count, member_count] = await Promise.all([
-            Corporations.countDocuments({ alliance_id: allianceId }),
-            Characters.countDocuments({ alliance_id: allianceId }),
+            CorporationService.countByAllianceId(allianceId),
+            CharacterService.countByAllianceId(allianceId),
         ]);
 
         let faction = null;
         if (alliance?.faction_id > 0) {
-            faction = await Factions.findOne({
-                faction_id: alliance.faction_id,
-            });
+            faction = await FactionService.findById(alliance.faction_id);
         }
 
         return {
             ...alliance,
             corporation_count,
             member_count,
-            faction_name: faction?.name || null,
+            faction_name: faction?.name
+                ? (faction.name as any)?.en || faction.name
+                : null,
         };
     },
     {

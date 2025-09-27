@@ -1,7 +1,6 @@
 import { Database } from "bun:sqlite";
-import { exec } from "node:child_process";
 import * as fs from "node:fs";
-import { Readable, pipeline } from "node:stream";
+import { pipeline } from "node:stream";
 import { promisify } from "node:util";
 import prisma from "../lib/prisma";
 import { cliLogger } from "../server/helpers/Logger";
@@ -35,72 +34,72 @@ export default {
             });
             const localMd5 = localMd5Config ? localMd5Config.value : null;
 
-            if (localMd5 === checksum) {
-                cliLogger.info("SDE is up to date");
-                return { result: "SDE is up to date" };
-            }
+            // if (localMd5 === checksum) {
+            //     cliLogger.info("SDE is up to date");
+            //     return { result: "SDE is up to date" };
+            // }
 
-            // Download and decompress the .bz2 file
-            const response = await fetch(sqliteUrl);
-            if (!response.ok) {
-                throw new Error(`Failed to fetch ${sqliteUrl}`);
-            }
+            // // Download and decompress the .bz2 file
+            // const response = await fetch(sqliteUrl);
+            // if (!response.ok) {
+            //     throw new Error(`Failed to fetch ${sqliteUrl}`);
+            // }
 
-            if (!response.body) {
-                throw new Error("Response body is null");
-            }
+            // if (!response.body) {
+            //     throw new Error("Response body is null");
+            // }
 
-            cliLogger.info("Downloading SDE...");
-            const writeStream = fs.createWriteStream(localDbPath);
+            // cliLogger.info("Downloading SDE...");
+            // const writeStream = fs.createWriteStream(localDbPath);
 
-            // Convert the Web ReadableStream to a Node.js ReadableStream
-            const nodeStream = Readable.fromWeb(response.body);
+            // // Convert the Web ReadableStream to a Node.js ReadableStream
+            // const nodeStream = Readable.fromWeb(response.body);
 
-            // Use the pipeline to handle the stream
-            await pipe(nodeStream, bz2(), writeStream);
+            // // Use the pipeline to handle the stream
+            // await pipe(nodeStream, bz2(), writeStream);
 
-            // Download and extract the everef data
-            cliLogger.info("Downloading everef data...");
-            const everefResponse = await fetch(everefUrl);
-            if (!everefResponse.ok) {
-                throw new Error(`Failed to fetch ${everefUrl}`);
-            }
+            // // Download and extract the everef data
+            // cliLogger.info("Downloading everef data...");
+            // const everefResponse = await fetch(everefUrl);
+            // if (!everefResponse.ok) {
+            //     throw new Error(`Failed to fetch ${everefUrl}`);
+            // }
 
-            if (!everefResponse.body) {
-                throw new Error("Everef response body is null");
-            }
+            // if (!everefResponse.body) {
+            //     throw new Error("Everef response body is null");
+            // }
 
-            const everefWriteStream = fs.createWriteStream(
-                "/tmp/everef-latest.tar.xz"
-            );
-            const everefNodeStream = Readable.fromWeb(everefResponse.body);
-            await pipe(everefNodeStream, everefWriteStream);
+            // const everefWriteStream = fs.createWriteStream(
+            //     "/tmp/everef-latest.tar.xz"
+            // );
+            // const everefNodeStream = Readable.fromWeb(everefResponse.body);
+            // await pipe(everefNodeStream, everefWriteStream);
 
-            cliLogger.info("Extracting everef data...");
-            await new Promise<void>((resolve, reject) => {
-                const tar = exec(
-                    "tar -xf /tmp/everef-latest.tar.xz -C /tmp",
-                    (error, stdout, stderr) => {
-                        if (error) {
-                            cliLogger.error(
-                                `Error extracting everef data: ${error.message}`
-                            );
-                            return reject(error);
-                        }
-                        if (stderr) {
-                            cliLogger.error(
-                                `Error extracting everef data: ${stderr}`
-                            );
-                            return reject(new Error(stderr));
-                        }
-                        cliLogger.info(`everef data extracted: ${stdout}`);
-                    }
-                );
-                tar.on("close", () => {
-                    cliLogger.info("everef data extraction complete");
-                    resolve();
-                });
-            });
+            // cliLogger.info("Extracting everef data...");
+            // await new Promise<void>((resolve, reject) => {
+            //     const tar = exec(
+            //         "tar -xf /tmp/everef-latest.tar.xz -C /tmp",
+            //         (error, stdout, stderr) => {
+            //             if (error) {
+            //                 cliLogger.error(
+            //                     `Error extracting everef data: ${error.message}`
+            //                 );
+            //                 return reject(error);
+            //             }
+            //             if (stderr) {
+            //                 cliLogger.error(
+            //                     `Error extracting everef data: ${stderr}`
+            //                 );
+            //                 return reject(new Error(stderr));
+            //             }
+            //             cliLogger.info(`everef data extracted: ${stdout}`);
+            //         }
+            //     );
+            //     tar.on("close", () => {
+            //         cliLogger.info("everef data extraction complete");
+            //         resolve();
+            //     });
+            // });
 
             // Process in dependency order using upserts (no need to clear data)
 

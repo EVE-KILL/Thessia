@@ -1,3 +1,5 @@
+import { CharacterService } from "~/server/services";
+
 export default defineCachedEventHandler(
     async (event) => {
         const allianceId: number | null = event.context.params?.id
@@ -17,28 +19,8 @@ export default defineCachedEventHandler(
                   Math.max(1, Number.parseInt(query.limit as string))
               )
             : 1000;
-        const skip = (page - 1) * limit;
 
-        // Find all members that are in this alliance (paginated)
-        const [members, total] = await Promise.all([
-            Characters.find(
-                { alliance_id: allianceId },
-                { _id: 0, character_id: 1, name: 1 }
-            )
-                .skip(skip)
-                .limit(limit)
-                .lean(),
-            Characters.countDocuments({ alliance_id: allianceId }),
-        ]);
-
-        return {
-            members,
-            total,
-            page,
-            limit,
-            pageCount: Math.ceil(total / limit),
-            count: members.length,
-        };
+        return await CharacterService.findByAllianceId(allianceId, page, limit);
     },
     {
         maxAge: 3600,

@@ -1,3 +1,10 @@
+import {
+    AllianceService,
+    CorporationService,
+    FactionService,
+    RaceService,
+} from "~/server/services";
+
 export default defineCachedEventHandler(
     async (event) => {
         const characterId: number | null = event.context.params?.id
@@ -10,29 +17,27 @@ export default defineCachedEventHandler(
         const character = await getCharacter(characterId);
 
         // Add corporation and alliance names
-        const corporation = await Corporations.findOne({
-            corporation_id: character.corporation_id,
-        });
+        const corporation = character.corporation_id
+            ? await CorporationService.findById(character.corporation_id)
+            : null;
         let alliance = null;
         if ((character?.alliance_id ?? 0) > 0) {
-            alliance = await Alliances.findOne({
-                alliance_id: character.alliance_id,
-            });
+            alliance = await AllianceService.findById(character.alliance_id!);
         }
         let faction = null;
         if ((character?.faction_id ?? 0) > 0) {
-            faction = await Factions.findOne({
-                faction_id: character.faction_id,
-            });
+            faction = await FactionService.findById(character.faction_id!);
         }
 
-        // Load the bloodline data
+        // Load the bloodline data - keeping original for now as no BloodlineService exists
         const bloodline = await Bloodlines.findOne({
             bloodline_id: character.bloodline_id,
         });
-        const race = await Races.findOne({ race_id: character.race_id });
+        const race = character.race_id
+            ? await RaceService.findById(character.race_id)
+            : null;
 
-        // Load character achievements if they exist
+        // Load character achievements if they exist - keeping original for now
         const achievements = await CharacterAchievements.findOne({
             character_id: characterId,
         });

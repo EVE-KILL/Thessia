@@ -1,3 +1,5 @@
+import { BattleService } from "~/server/services";
+
 export default defineEventHandler(async (event) => {
     try {
         const battleDocument = await readBody(event);
@@ -20,8 +22,21 @@ export default defineEventHandler(async (event) => {
         // but we ensure it here as well.
         battleDocument.custom = true;
 
-        // Save the battle in the database
-        const savedBattle = await Battles.create(battleDocument);
+        // Save the battle in the database using BattleService
+        const savedBattle = await BattleService.create({
+            battle_id: battleDocument.battle_id,
+            custom: true,
+            start_time: battleDocument.start_time,
+            end_time: battleDocument.end_time,
+            duration_ms: battleDocument.duration_ms || null,
+            killmails_count: battleDocument.killmailsCount || 0,
+            isk_destroyed: battleDocument.iskDestroyed || 0,
+            main_system: battleDocument.systems?.[0]?.system_id || null,
+            main_region: battleDocument.systems?.[0]?.region_id || null,
+            systems: battleDocument.systems || [],
+            sides: battleDocument.sides || {},
+            killmail_ids: battleDocument.killmail_ids || [],
+        });
 
         // Return the battle_id
         return {

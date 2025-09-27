@@ -1,4 +1,9 @@
 import { createHash } from "crypto";
+import {
+    AllianceService,
+    CharacterService,
+    CorporationService,
+} from "~/server/services";
 
 interface QueryParams {
     listType?: string;
@@ -101,59 +106,48 @@ export default defineCachedEventHandler(
             const characterIds = topCharacters.map(
                 (char: CharacterAchievementResult) => char.character_id
             );
-            const characterDetails = (await Characters.find({
-                character_id: { $in: characterIds },
-            })
-                .select("character_id name corporation_id alliance_id")
-                .lean()) as CharacterResult[];
+            const characterDetails = await CharacterService.findManyByIds(
+                characterIds
+            );
 
-            // Get unique corporation and alliance IDs
+            // Get unique corporation and alliance IDs (filter nulls)
             const corporationIds = [
                 ...new Set(
                     characterDetails
                         .map((char) => char.corporation_id)
-                        .filter((id) => id && id > 0)
+                        .filter((id): id is number => id !== null && id > 0)
                 ),
             ];
             const allianceIds = [
                 ...new Set(
                     characterDetails
                         .map((char) => char.alliance_id)
-                        .filter((id) => id && id > 0)
+                        .filter((id): id is number => id !== null && id > 0)
                 ),
             ];
 
             // Fetch corporation and alliance names
             const [corporationDetails, allianceDetails] = await Promise.all([
                 corporationIds.length > 0
-                    ? (Corporations.find({
-                          corporation_id: { $in: corporationIds },
-                      })
-                          .select("corporation_id name")
-                          .lean() as Promise<CorporationResult[]>)
+                    ? CorporationService.findByIds(corporationIds)
                     : Promise.resolve([]),
                 allianceIds.length > 0
-                    ? (Alliances.find({ alliance_id: { $in: allianceIds } })
-                          .select("alliance_id name")
-                          .lean() as Promise<AllianceResult[]>)
+                    ? AllianceService.findByIds(allianceIds)
                     : Promise.resolve([]),
             ]);
 
             // Create maps for quick lookup
             const characterMap = new Map(
-                characterDetails.map((char: CharacterResult) => [
-                    char.character_id,
-                    char,
-                ])
+                characterDetails.map((char) => [char.character_id, char])
             );
             const corporationMap = new Map(
-                corporationDetails.map((corp: CorporationResult) => [
+                corporationDetails.map((corp) => [
                     corp.corporation_id,
                     corp.name,
                 ])
             );
             const allianceMap = new Map(
-                allianceDetails.map((alliance: AllianceResult) => [
+                allianceDetails.map((alliance) => [
                     alliance.alliance_id,
                     alliance.name,
                 ])

@@ -1,3 +1,5 @@
+import { CharacterService } from "~/server/services";
+
 export default defineCachedEventHandler(
     async (event) => {
         try {
@@ -74,20 +76,14 @@ export default defineCachedEventHandler(
                             break;
 
                         case "character":
-                            entityData = await Characters.findOne({
-                                character_id: entity.entity_id,
-                            })
-                                .select("character_id name")
-                                .lean();
+                            entityData = await CharacterService.findById(
+                                entity.entity_id
+                            );
                             if (entityData) {
                                 entityDetails.push({
                                     entity_type: "character",
                                     entity_id: entity.entity_id,
                                     name: entityData.name,
-                                    display_name: entityData.name,
-                                    image_url: `https://images.evetech.net/characters/${entity.entity_id}/portrait?size=64`,
-                                    primary: entity.primary || false,
-                                    show_in_nav: entity.show_in_nav || false,
                                     show_in_stats:
                                         entity.show_in_stats || false,
                                 });
@@ -100,12 +96,13 @@ export default defineCachedEventHandler(
                         entityError
                     );
                     // Add placeholder entry for missing entities
-                    const imageUrl = entity.entity_type === 'character'
-                        ? `https://images.evetech.net/characters/${entity.entity_id}/portrait?size=64`
-                        : entity.entity_type === 'corporation'
-                        ? `https://images.evetech.net/corporations/${entity.entity_id}/logo?size=64`
-                        : `https://images.evetech.net/alliances/${entity.entity_id}/logo?size=64`;
-                        
+                    const imageUrl =
+                        entity.entity_type === "character"
+                            ? `https://images.evetech.net/characters/${entity.entity_id}/portrait?size=64`
+                            : entity.entity_type === "corporation"
+                            ? `https://images.evetech.net/corporations/${entity.entity_id}/logo?size=64`
+                            : `https://images.evetech.net/alliances/${entity.entity_id}/logo?size=64`;
+
                     entityDetails.push({
                         entity_type: entity.entity_type,
                         entity_id: entity.entity_id,

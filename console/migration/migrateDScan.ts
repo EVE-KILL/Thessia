@@ -7,11 +7,8 @@ const prisma = new PrismaClient();
 
 interface MongoDScan {
     _id: any;
-    scanId: string;
-    characterId?: number;
-    systemId?: number;
-    scanData: any[];
-    expiresAt: Date;
+    hash: string;
+    ships: any[];
     createdAt?: Date;
     updatedAt?: Date;
 }
@@ -59,11 +56,11 @@ export async function migrateDScan(force: boolean = false): Promise<void> {
                 totalBatches: number
             ) => {
                 const transformedDScans = batch.map((dscan) => ({
-                    scan_id: dscan.scanId,
-                    character_id: dscan.characterId || null,
-                    system_id: dscan.systemId || null,
-                    scan_data: JSON.parse(JSON.stringify(dscan.scanData || [])),
-                    expires_at: dscan.expiresAt,
+                    scan_id: dscan.hash, // Use hash as unique scan identifier
+                    character_id: null, // DScan doesn't store character info in MongoDB
+                    system_id: null, // DScan doesn't store system info in MongoDB
+                    scan_data: JSON.parse(JSON.stringify(dscan.ships || [])), // ships array becomes scan_data
+                    expires_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // Set expiry to 7 days from now
                     created_at: dscan.createdAt || new Date(),
                     updated_at: dscan.updatedAt || new Date(),
                 }));
@@ -73,7 +70,12 @@ export async function migrateDScan(force: boolean = false): Promise<void> {
                     skipDuplicates: true,
                 });
             },
-            { batchSize, logProgress: true, skipDuplicates: true }
+            {
+                batchSize,
+                logProgress: true,
+                skipDuplicates: true,
+                resume: false,
+            }
         );
 
         const finalCount = await prisma.dScan.count();

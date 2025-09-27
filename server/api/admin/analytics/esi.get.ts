@@ -1,3 +1,9 @@
+import {
+    AllianceService,
+    CharacterService,
+    CorporationService,
+} from "~/server/services";
+
 export default defineEventHandler(async (event) => {
     // Authenticate and verify admin privileges
     await requireAdminAuth(event);
@@ -22,44 +28,32 @@ export default defineEventHandler(async (event) => {
     const characterIds = users.map((user) => user.characterId);
 
     // Get character data with corporation and alliance info
-    const characters = await Characters.find(
-        { character_id: { $in: characterIds } },
-        {
-            character_id: 1,
-            name: 1,
-            corporation_id: 1,
-            alliance_id: 1,
-        }
-    ).lean();
+    const characters = await CharacterService.findManyByIds(characterIds);
 
-    // Get all unique corporation and alliance IDs
+    // Get all unique corporation and alliance IDs (filter nulls)
     const corporationIds = [
         ...new Set(
-            characters.map((char) => char.corporation_id).filter(Boolean)
+            characters
+                .map((char) => char.corporation_id)
+                .filter((id): id is number => id !== null)
         ),
     ];
     const allianceIds = [
-        ...new Set(characters.map((char) => char.alliance_id).filter(Boolean)),
+        ...new Set(
+            characters
+                .map((char) => char.alliance_id)
+                .filter((id): id is number => id !== null)
+        ),
     ];
 
     // Get corporation and alliance data
     const [corporations, alliances] = await Promise.all([
-        Corporations.find(
-            { corporation_id: { $in: corporationIds } },
-            {
-                corporation_id: 1,
-                name: 1,
-                alliance_id: 1,
-                member_count: 1,
-            }
-        ).lean(),
-        Alliances.find(
-            { alliance_id: { $in: allianceIds } },
-            {
-                alliance_id: 1,
-                name: 1,
-            }
-        ).lean(),
+        corporationIds.length > 0
+            ? CorporationService.findByIds(corporationIds)
+            : Promise.resolve([]),
+        allianceIds.length > 0
+            ? AllianceService.findByIds(allianceIds)
+            : Promise.resolve([]),
     ]);
 
     // Get total corporation counts per alliance
@@ -119,7 +113,7 @@ export default defineEventHandler(async (event) => {
     // Process users and build analytics data
     const userAnalytics = users.map((user) => {
         const character = characterMap.get(user.characterId);
-        const corporation = character
+        const corporation = character?.corporation_id
             ? corporationMap.get(character.corporation_id)
             : null;
         const alliance = character?.alliance_id

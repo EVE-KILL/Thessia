@@ -1,3 +1,5 @@
+import { KillmailService, TypeService } from "~/server/services";
+
 /**
  * Optimized Item Statistics API
  * Provides only the essential statistics actually used by the frontend:
@@ -32,10 +34,7 @@ export default defineCachedEventHandler(
             ];
 
             // Get item details to determine if it's a ship
-            const item = await InvTypes.findOne(
-                { type_id: typeId },
-                { group_id: 1, category_id: 1, name: 1 }
-            ).lean();
+            const item = await TypeService.findById(typeId);
 
             if (!item) {
                 throw createError({
@@ -44,32 +43,21 @@ export default defineCachedEventHandler(
                 });
             }
 
-            const isShip = shipGroupIds.includes(item.group_id);
+            const isShip = Boolean(
+                item.group_id && shipGroupIds.includes(item.group_id)
+            );
             const dateThreshold = new Date(
                 Date.now() - 7 * 24 * 60 * 60 * 1000
             ); // 7 days
 
-            // Base query condition
-            let queryCondition: any = {};
-            if (isShip) {
-                // For ships, search in victim.ship_id
-                queryCondition = { "victim.ship_id": typeId };
-            } else {
-                // For non-ship items, search in items.type_id
-                queryCondition = { "items.type_id": typeId };
-            }
-
             // Execute only the essential queries
             const [recentKillsCount, allTimeKillsCount] = await Promise.all([
                 // Recent kills count (last 7 days)
-                Killmails.countDocuments({
-                    ...queryCondition,
-                    kill_time: { $gte: dateThreshold },
-                }),
+                KillmailService.countByTypeId(typeId, isShip, dateThreshold),
 
                 // All-time kills count - only for ships to avoid expensive queries
                 isShip
-                    ? Killmails.countDocuments(queryCondition)
+                    ? KillmailService.countByTypeId(typeId, isShip)
                     : Promise.resolve(null),
             ]);
 
@@ -83,7 +71,7 @@ export default defineCachedEventHandler(
                 },
                 meta: {
                     generatedAt: new Date().toISOString(),
-                    itemName: item.name,
+                    itemName: (item.name as any)?.en || "Unknown Item",
                 },
             };
 

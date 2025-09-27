@@ -1,3 +1,5 @@
+import { CharacterService } from "~/server/services";
+
 export default defineEventHandler(async (event) => {
     // Authenticate and verify admin privileges
     await requireAdminAuth(event);
@@ -74,10 +76,7 @@ export default defineEventHandler(async (event) => {
     ];
 
     // Fetch character data for the logs
-    const characters = await Characters.find(
-        { character_id: { $in: characterIds } },
-        { character_id: 1, name: 1, corporation_id: 1, alliance_id: 1 }
-    ).lean();
+    const characters = await CharacterService.findManyByIds(characterIds);
 
     // Create a character lookup map
     const characterMap = new Map(

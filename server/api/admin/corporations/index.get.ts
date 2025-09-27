@@ -1,5 +1,4 @@
-import { Corporations } from "../../../models/Corporations";
-import { Users } from "../../../models/Users";
+import { CorporationService, UserService } from "../../../services";
 
 export default defineEventHandler(async (event) => {
     // Add cache-control headers to prevent caching
@@ -21,7 +20,7 @@ export default defineEventHandler(async (event) => {
     }
 
     // Find the user by uniqueIdentifier
-    const user = await Users.findOne({ uniqueIdentifier: cookie });
+    const user = await UserService.findByUniqueIdentifier(cookie);
 
     if (!user) {
         throw createError({
@@ -31,7 +30,7 @@ export default defineEventHandler(async (event) => {
     }
 
     // Only allow administrators
-    if (!user.administrator) {
+    if (user.role !== "admin") {
         throw createError({
             statusCode: 403,
             statusMessage: "Access denied. Administrator privileges required.",
@@ -44,77 +43,28 @@ export default defineEventHandler(async (event) => {
         const limit = Math.min(parseInt(query.limit as string) || 25, 100); // Cap at 100
         const search = (query.search as string) || "";
 
-        // Build MongoDB filter with indexed fields
-        const filter: any = {};
-
-        // Handle search - use indexed fields for better performance
-        if (search) {
-            const searchNumber = parseInt(search);
-            if (!isNaN(searchNumber)) {
-                // If search is a number, search by corporation_id first (indexed)
-                filter.corporation_id = searchNumber;
-            } else {
-                // Text search - check if it could be a ticker or name
-                filter.$or = [
-                    { name: { $regex: search, $options: "i" } },
-                    { ticker: { $regex: search, $options: "i" } },
-                ];
-            }
-        }
-
-        // Calculate pagination
-        const skip = (page - 1) * limit;
-
-        // Use aggregation pipeline for better performance with large datasets
-        const pipeline: any[] = [
-            { $match: filter },
-            { $sort: { updatedAt: -1 } },
-            {
-                $facet: {
-                    data: [
-                        { $skip: skip },
-                        { $limit: limit },
-                        {
-                            $project: {
-                                corporation_id: 1,
-                                name: 1,
-                                ticker: 1,
-                                alliance_id: 1,
-                                alliance_name: 1,
-                                ceo_id: 1,
-                                member_count: 1,
-                                tax_rate: 1,
-                                deleted: 1,
-                                createdAt: 1,
-                                updatedAt: 1,
-                            },
-                        },
-                    ],
-                },
-            },
-        ];
-
-        const [result] = await Corporations.aggregate(pipeline);
-
-        const corporations = result.data || [];
-
-        // Use estimated document count for pagination calculation
-        const estimatedTotal = await Corporations.estimatedDocumentCount();
-
-        // Calculate pagination info
-        const totalPages = Math.ceil(estimatedTotal / limit);
-        const hasNextPage = page < totalPages;
-        const hasPrevPage = page > 1;
+        // Use the CorporationService to search with pagination
+        const result = await CorporationService.searchWithPagination({
+            search: search || undefined,
+            page,
+            limit,
+        });
 
         return {
-            corporations,
-            pagination: {
-                currentPage: page,
-                totalPages,
-                hasNextPage,
-                hasPrevPage,
-                estimatedTotal,
-            },
+            corporations: result.corporations.map((corp) => ({
+                corporation_id: corp.corporation_id,
+                name: corp.name,
+                ticker: corp.ticker,
+                alliance_id: corp.alliance_id,
+                // alliance_name would need to be fetched via relation or separate query
+                ceo_id: corp.ceo_id,
+                member_count: corp.member_count,
+                tax_rate: corp.tax_rate,
+                deleted: corp.deleted,
+                createdAt: corp.created_at,
+                updatedAt: corp.updated_at,
+            })),
+            pagination: result.pagination,
         };
     } catch (error) {
         console.error("Error fetching corporations:", error);

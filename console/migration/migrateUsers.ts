@@ -72,7 +72,6 @@ export async function migrateUsers(force: boolean = false): Promise<void> {
                     date_expiration: user.dateExpiration,
                     refresh_token: user.refreshToken,
                     character_id: user.characterId,
-                    character_name: user.characterName,
                     scopes: user.scopes || [],
                     token_type: user.tokenType,
                     character_owner_hash: user.characterOwnerHash,
@@ -96,7 +95,12 @@ export async function migrateUsers(force: boolean = false): Promise<void> {
                     skipDuplicates: true,
                 });
             },
-            { batchSize, logProgress: true, skipDuplicates: true }
+            {
+                batchSize,
+                logProgress: true,
+                skipDuplicates: true,
+                resume: false,
+            }
         );
 
         const finalCount = await prisma.user.count();

@@ -41,6 +41,11 @@ model Alliance {
     stats               Stats[]              @relation("AllianceStats")
     sovereignty         Sovereignty[]        @relation("AllianceSovereignty")
     custom_domains      CustomDomain[]       @relation("AllianceCustomDomain")
+    comments            Comment[]            @relation("AllianceComments")
+
+    // Killmail relations
+    killmail_victims   KillmailVictim[]   @relation("KillmailVictimAlliance")
+    killmail_attackers KillmailAttacker[] @relation("KillmailAttackerAlliance")
 
     @@index([name])
     @@index([ticker])
@@ -94,6 +99,10 @@ model Character {
     dscans         DScan[]        @relation("CharacterDScan")
     local_scans    LocalScan[]    @relation("CharacterLocalScan")
 
+    // Killmail relations
+    killmail_victims   KillmailVictim[]   @relation("KillmailVictimCharacter")
+    killmail_attackers KillmailAttacker[] @relation("KillmailAttackerCharacter")
+
     @@index([corporation_id])
     @@index([alliance_id])
     @@index([faction_id])
@@ -142,7 +151,6 @@ model Corporation {
     tax_rate          Float?
     creator_id        Int?
     ceo_id            Int?
-    ceo_name          String?
     war_eligible      Boolean   @default(false)
     deleted           Boolean   @default(false)
     error             String?
@@ -164,6 +172,10 @@ model Corporation {
     sovereignty           Sovereignty[]        @relation("CorporationSovereignty")
     custom_domains        CustomDomain[]       @relation("CorporationCustomDomain")
     comments              Comment[]            @relation("CorporationComments")
+
+    // Killmail relations
+    killmail_victims   KillmailVictim[]   @relation("KillmailVictimCorporation")
+    killmail_attackers KillmailAttacker[] @relation("KillmailAttackerCorporation")
 
     @@index([name])
     @@index([ticker])
@@ -222,6 +234,10 @@ model Faction {
     constellations Constellation[] @relation("ConstellationFaction")
     solar_systems  SolarSystem[]   @relation("SolarSystemFaction")
     types          InvType[]       @relation("InvTypeFaction")
+
+    // Killmail relations
+    killmail_victims   KillmailVictim[]   @relation("KillmailVictimFaction")
+    killmail_attackers KillmailAttacker[] @relation("KillmailAttackerFaction")
 
     @@index([faction_id])
     @@index([name])
@@ -350,7 +366,6 @@ model CharacterAchievement {
 model CharacterAchievements {
     id                     Int                    @id @default(autoincrement())
     character_id           Int                    @unique
-    character_name         String?
     total_points           Int                    @default(0)
     completed_achievements Int                    @default(0)
     total_achievements     Int                    @default(0)
@@ -363,7 +378,6 @@ model CharacterAchievements {
     // Relations
     character Character @relation("CharacterAchievements", fields: [character_id], references: [character_id], onDelete: Cascade)
 
-    @@index([character_name])
     @@index([total_points])
     @@index([completed_achievements])
     @@index([last_calculated])
@@ -439,6 +453,9 @@ model War {
     defender_corporation  Corporation? @relation("WarDefenderCorporation", fields: [defender_corporation_id], references: [corporation_id])
     defender_alliance     Alliance?    @relation("WarDefenderAlliance", fields: [defender_alliance_id], references: [alliance_id])
 
+    // Killmail relations
+    killmails Killmail[] @relation("KillmailWar")
+
     @@index([war_id])
     @@index([declared])
     @@index([started])
@@ -453,43 +470,55 @@ model War {
 // Stats model - Current statistics with JSON for complex aggregated data
 model Stats {
     id             Int    @id @default(autoincrement())
-    alliance_id    Int?   @unique
-    corporation_id Int?   @unique
-    character_id   Int?   @unique
-    type           String // "alliance", "corporation", "character"
+    alliance_id    Int?
+    corporation_id Int?
+    character_id   Int?
+    entity_type    String // "alliance", "corporation", "character"
+    entity_id      Int // The actual entity ID
 
     // Basic stats
-    kills_total   Int     @default(0)
-    losses_total  Int     @default(0)
-    isk_destroyed Decimal @default(0) @db.Decimal(20, 2)
-    isk_lost      Decimal @default(0) @db.Decimal(20, 2)
-    efficiency    Float?
+    kills                 Int       @default(0)
+    losses                Int       @default(0)
+    total_damage_done     Decimal?  @db.Decimal(20, 2)
+    total_damage_received Decimal?  @db.Decimal(20, 2)
+    total_isk_destroyed   Decimal   @default(0) @db.Decimal(20, 2)
+    total_isk_lost        Decimal   @default(0) @db.Decimal(20, 2)
+    last_kill_date        DateTime?
+    last_loss_date        DateTime?
+    efficiency            Float?
+    avg_gang_size         Float?
+    solo_kills            Int       @default(0)
+    solo_losses           Int       @default(0)
+    solo_percentage       Float?
 
     // JSON storage for complex aggregated statistics
-    most_used_ships          Json? // Ship usage statistics
-    most_lost_ships          Json? // Ship loss statistics
-    most_valuable_kills      Json? // Top valuable kills array
-    most_valuable_ships      Json? // Most expensive ships destroyed
-    most_valuable_structures Json? // Most expensive structures destroyed
-    top_attackers            Json? // Top attackers statistics
-    top_victims              Json? // Top victim statistics
-    activity_by_hour         Json? // Activity distribution
-    activity_by_day          Json? // Day-based activity
+    ships_used      Json? // Ship usage statistics
+    ships_lost      Json? // Ship loss statistics
+    most_used_ship  Json? // Most used ship details
+    most_lost_ship  Json? // Most lost ship details
+    top_victims     Json? // Top victim statistics
+    top_attackers   Json? // Top attackers statistics
+    monthly_stats   Json? // Monthly aggregated data
+    weekly_stats    Json? // Weekly aggregated data
+    daily_stats     Json? // Daily aggregated data
+    recent_activity Json? // Recent activity patterns
+    full_stats      Json? // Full statistics object from MongoDB
 
-    last_calculated DateTime @default(now())
-    created_at      DateTime @default(now()) @map("createdAt")
-    updated_at      DateTime @updatedAt @map("updatedAt")
+    created_at DateTime @default(now()) @map("createdAt")
+    updated_at DateTime @updatedAt @map("updatedAt")
 
     // Relations
     alliance    Alliance?    @relation("AllianceStats", fields: [alliance_id], references: [alliance_id])
     corporation Corporation? @relation("CorporationStats", fields: [corporation_id], references: [corporation_id])
     character   Character?   @relation("CharacterStats", fields: [character_id], references: [character_id])
 
-    @@index([type])
+    @@index([entity_type])
+    @@index([entity_id])
     @@index([alliance_id])
     @@index([corporation_id])
     @@index([character_id])
-    @@index([last_calculated])
+    @@index([last_kill_date])
+    @@index([last_loss_date])
     @@map("stats")
 }
 
@@ -538,25 +567,23 @@ model Price {
 
 // Comments model - User comments on killmails
 model Comment {
-    id               Int      @id @default(autoincrement())
-    identifier       String   @unique
-    kill_identifier  String
-    comment          String
-    character_id     Int
-    character_name   String
-    corporation_id   Int
-    corporation_name String
-    alliance_id      Int?
-    alliance_name    String?
-    deleted          Boolean  @default(false)
-    reported         Boolean  @default(false)
-    report_messages  Json? // Array of report messages
-    created_at       DateTime @default(now()) @map("createdAt")
-    updated_at       DateTime @updatedAt @map("updatedAt")
+    id              Int      @id @default(autoincrement())
+    identifier      String   @unique
+    kill_identifier String
+    comment         String
+    character_id    Int
+    corporation_id  Int
+    alliance_id     Int?
+    deleted         Boolean  @default(false)
+    reported        Boolean  @default(false)
+    report_messages Json? // Array of report messages
+    created_at      DateTime @default(now()) @map("createdAt")
+    updated_at      DateTime @updatedAt @map("updatedAt")
 
     // Relations
     character   Character   @relation("CharacterComments", fields: [character_id], references: [character_id])
     corporation Corporation @relation("CorporationComments", fields: [corporation_id], references: [corporation_id])
+    alliance    Alliance?   @relation("AllianceComments", fields: [alliance_id], references: [alliance_id])
 
     @@index([kill_identifier])
     @@index([character_id])
@@ -581,7 +608,6 @@ model User {
     date_expiration                 DateTime
     refresh_token                   String
     character_id                    Int      @unique
-    character_name                  String
     scopes                          Json // Array of ESI scopes
     token_type                      String
     character_owner_hash            String
@@ -598,7 +624,6 @@ model User {
     character Character @relation("CharacterUser", fields: [character_id], references: [character_id])
 
     @@index([character_id])
-    @@index([character_name])
     @@index([role])
     @@index([last_checked])
     @@index([esi_active])
@@ -725,16 +750,22 @@ model SavedQuery {
 
 // CustomDomains model - Domain configuration
 model CustomDomain {
-    id             Int      @id @default(autoincrement())
-    domain         String   @unique
-    character_id   Int?
-    alliance_id    Int?
-    corporation_id Int?
-    verified       Boolean  @default(false)
-    ssl_enabled    Boolean  @default(false)
-    redirect_url   String?
-    created_at     DateTime @default(now()) @map("createdAt")
-    updated_at     DateTime @updatedAt @map("updatedAt")
+    id                 Int      @id @default(autoincrement())
+    domain             String   @unique
+    character_id       Int?
+    alliance_id        Int?
+    corporation_id     Int?
+    owner_character_id Int?
+    verified           Boolean  @default(false)
+    active             Boolean  @default(false)
+    ssl_enabled        Boolean  @default(false)
+    redirect_url       String?
+    entities           Json? // Array of entities
+    navigation         Json? // Navigation configuration
+    configuration      Json? // Domain configuration
+    dashboard_template Json? // Dashboard template data
+    created_at         DateTime @default(now()) @map("createdAt")
+    updated_at         DateTime @updatedAt @map("updatedAt")
 
     // Relations
     character   Character?   @relation("CharacterCustomDomain", fields: [character_id], references: [character_id])
@@ -779,6 +810,9 @@ model Region {
     battles        Battle[]        @relation("BattleMainRegion")
     prices         Price[]         @relation("PriceRegion")
 
+    // Killmail relations
+    killmails Killmail[] @relation("KillmailRegion")
+
     @@index([region_id])
     @@index([region_name])
     @@index([faction_id])
@@ -810,6 +844,9 @@ model Constellation {
     solar_systems SolarSystem[] @relation("ConstellationSolarSystems")
     celestials    Celestial[]   @relation("ConstellationCelestials")
     factions      Faction?      @relation("ConstellationFaction", fields: [faction_id], references: [faction_id])
+
+    // Killmail relations
+    killmails Killmail[] @relation("KillmailConstellation")
 
     @@index([region_id])
     @@index([constellation_id])
@@ -861,6 +898,9 @@ model SolarSystem {
     faction_systems Faction[]     @relation("FactionSolarSystem")
     battles         Battle[]      @relation("BattleMainSystem")
 
+    // Killmail relations
+    killmails Killmail[] @relation("KillmailSolarSystem")
+
     @@index([region_id])
     @@index([constellation_id])
     @@index([system_id])
@@ -901,7 +941,6 @@ model Celestial {
     @@index([constellation_id])
     @@index([solar_system_id])
     @@index([type_id])
-    @@index([item_name])
     @@map("celestials")
 }
 
@@ -944,6 +983,12 @@ model InvType {
     prices            Price[]       @relation("PriceType")
     bloodlines        Bloodline[]   @relation("BloodlineShipType")
 
+    // Killmail relations
+    victim_ships     KillmailVictim[]   @relation("KillmailVictimShipType")
+    attacker_ships   KillmailAttacker[] @relation("KillmailAttackerShipType")
+    attacker_weapons KillmailAttacker[] @relation("KillmailAttackerWeaponType")
+    killmail_items   KillmailItem[]     @relation("KillmailItemType")
+
     @@index([type_id])
     @@index([group_id])
     @@index([category_id])
@@ -970,6 +1015,11 @@ model InvGroup {
 
     // Relations
     types InvType[] @relation("InvTypeGroup")
+
+    // Killmail relations
+    victim_ship_groups   KillmailVictim[]   @relation("KillmailVictimShipGroup")
+    attacker_ship_groups KillmailAttacker[] @relation("KillmailAttackerShipGroup")
+    killmail_item_groups KillmailItem[]     @relation("KillmailItemGroup")
 
     @@index([group_id])
     @@index([category_id])
@@ -1045,4 +1095,188 @@ model Bloodline {
     @@index([bloodline_name])
     @@index([ship_type_id])
     @@map("bloodlines")
+}
+
+// ==== KILLMAIL MODELS ====
+
+// Core killmail data and metadata
+model Killmail {
+    id              Int      @id @default(autoincrement())
+    killmail_id     Int      @unique
+    killmail_hash   String
+    killmail_time   DateTime
+    solar_system_id Int
+
+    // Location data (foreign key references)
+    constellation_id Int?
+    region_id        Int?
+
+    // Calculated values (enriched during processing)
+    total_value   Decimal? @db.Decimal(20, 2)
+    fitting_value Decimal? @db.Decimal(20, 2)
+    ship_value    Decimal? @db.Decimal(20, 2)
+
+    // Processing status
+    processed        Boolean   @default(false)
+    delayed_until    DateTime?
+    processing_error String?
+
+    // Additional metadata
+    is_npc  Boolean @default(false)
+    is_solo Boolean @default(false)
+    war_id  Int?
+    dna     String?
+    near    String?
+
+    // Timestamps
+    created_at DateTime @default(now())
+    updated_at DateTime @updatedAt
+
+    // Relations to reference tables
+    solar_system  SolarSystem?   @relation("KillmailSolarSystem", fields: [solar_system_id], references: [system_id])
+    constellation Constellation? @relation("KillmailConstellation", fields: [constellation_id], references: [constellation_id])
+    region        Region?        @relation("KillmailRegion", fields: [region_id], references: [region_id])
+    war           War?           @relation("KillmailWar", fields: [war_id], references: [war_id])
+
+    // Relations to killmail components
+    victim    KillmailVictim?
+    attackers KillmailAttacker[]
+    items     KillmailItem[]
+
+    // Indexes for core queries
+    @@index([killmail_time])
+    @@index([processed])
+    @@index([solar_system_id, killmail_time])
+    @@index([region_id, killmail_time])
+    @@index([constellation_id, killmail_time])
+    @@index([is_npc, killmail_time])
+    @@index([is_solo, killmail_time])
+    @@index([total_value, killmail_time])
+    @@index([war_id, killmail_time])
+    @@index([delayed_until, processed])
+    @@map("killmails")
+}
+
+// Victim data (1:1 with killmail)
+model KillmailVictim {
+    id          Int @id @default(autoincrement())
+    killmail_id Int @unique
+
+    // Entity references (foreign keys to existing tables)
+    character_id   Int?
+    corporation_id Int?
+    alliance_id    Int?
+    faction_id     Int?
+
+    // Ship data
+    ship_type_id  Int
+    ship_group_id Int?
+    damage_taken  Int
+
+    // Position coordinates
+    x Float?
+    y Float?
+    z Float?
+
+    // Relations to reference tables
+    character   Character?   @relation("KillmailVictimCharacter", fields: [character_id], references: [character_id])
+    corporation Corporation? @relation("KillmailVictimCorporation", fields: [corporation_id], references: [corporation_id])
+    alliance    Alliance?    @relation("KillmailVictimAlliance", fields: [alliance_id], references: [alliance_id])
+    faction     Faction?     @relation("KillmailVictimFaction", fields: [faction_id], references: [faction_id])
+    ship_type   InvType      @relation("KillmailVictimShipType", fields: [ship_type_id], references: [type_id])
+    ship_group  InvGroup?    @relation("KillmailVictimShipGroup", fields: [ship_group_id], references: [group_id])
+
+    // Relation back to killmail
+    killmail Killmail @relation(fields: [killmail_id], references: [killmail_id], onDelete: Cascade)
+
+    // Indexes for entity queries
+    @@index([character_id])
+    @@index([corporation_id])
+    @@index([alliance_id])
+    @@index([faction_id])
+    @@index([ship_type_id])
+    @@index([ship_group_id])
+    @@map("killmail_victims")
+}
+
+// Attacker data (1:many with killmail)
+model KillmailAttacker {
+    id          Int @id @default(autoincrement())
+    killmail_id Int
+
+    // Entity references (foreign keys to existing tables)
+    character_id   Int?
+    corporation_id Int?
+    alliance_id    Int?
+    faction_id     Int?
+
+    // Ship and weapon data
+    ship_type_id   Int?
+    ship_group_id  Int?
+    weapon_type_id Int?
+
+    // Attack data
+    damage_done     Int
+    final_blow      Boolean @default(false)
+    security_status Float?
+
+    // Relations to reference tables
+    character   Character?   @relation("KillmailAttackerCharacter", fields: [character_id], references: [character_id])
+    corporation Corporation? @relation("KillmailAttackerCorporation", fields: [corporation_id], references: [corporation_id])
+    alliance    Alliance?    @relation("KillmailAttackerAlliance", fields: [alliance_id], references: [alliance_id])
+    faction     Faction?     @relation("KillmailAttackerFaction", fields: [faction_id], references: [faction_id])
+    ship_type   InvType?     @relation("KillmailAttackerShipType", fields: [ship_type_id], references: [type_id])
+    ship_group  InvGroup?    @relation("KillmailAttackerShipGroup", fields: [ship_group_id], references: [group_id])
+    weapon_type InvType?     @relation("KillmailAttackerWeaponType", fields: [weapon_type_id], references: [type_id])
+
+    // Relation back to killmail
+    killmail Killmail @relation(fields: [killmail_id], references: [killmail_id], onDelete: Cascade)
+
+    // Indexes for entity and damage queries
+    @@index([killmail_id])
+    @@index([character_id])
+    @@index([corporation_id])
+    @@index([alliance_id])
+    @@index([faction_id])
+    @@index([ship_type_id])
+    @@index([ship_group_id])
+    @@index([weapon_type_id])
+    @@index([final_blow])
+    @@index([damage_done])
+    @@map("killmail_attackers")
+}
+
+// Item data (1:many with killmail, hierarchical for nested items)
+model KillmailItem {
+    id             Int  @id @default(autoincrement())
+    killmail_id    Int
+    parent_item_id Int? // Self-referencing for nested items
+
+    // Item references (foreign keys to existing tables)
+    item_type_id       Int
+    group_id           Int?
+    category_id        Int?
+    flag               Int
+    singleton          Int
+    quantity_destroyed Int      @default(0)
+    quantity_dropped   Int      @default(0)
+    value              Decimal? @db.Decimal(15, 2)
+
+    // Relations to reference tables
+    item_type InvType   @relation("KillmailItemType", fields: [item_type_id], references: [type_id])
+    group     InvGroup? @relation("KillmailItemGroup", fields: [group_id], references: [group_id])
+
+    // Relations for hierarchy and killmail
+    killmail    Killmail       @relation(fields: [killmail_id], references: [killmail_id], onDelete: Cascade)
+    parent_item KillmailItem?  @relation("ItemHierarchy", fields: [parent_item_id], references: [id], onDelete: Restrict, onUpdate: Restrict)
+    child_items KillmailItem[] @relation("ItemHierarchy")
+
+    // Indexes for item queries
+    @@index([killmail_id])
+    @@index([item_type_id])
+    @@index([group_id])
+    @@index([category_id])
+    @@index([parent_item_id])
+    @@index([flag])
+    @@map("killmail_items")
 }

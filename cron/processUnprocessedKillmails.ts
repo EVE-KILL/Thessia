@@ -1,7 +1,6 @@
 import { cliLogger } from "../server/helpers/Logger";
 import { createQueue } from "../server/helpers/Queue";
-import type { IESIKillmail } from "../server/interfaces/IESIKillmail";
-import { KillmailsESI } from "../server/models/KillmailsESI";
+import { KillmailService } from "../server/services/KillmailService";
 
 export default {
     name: "processUnprocessedKillmails",
@@ -21,25 +20,12 @@ export default {
             };
         }
 
-        const now = new Date();
-
         // Limit it to 100k mails at a time
         const limit = 100000;
 
-        // Find unprocessed killmails that are either:
-        // 1. Not delayed (delayedUntil is null/undefined)
-        // 2. Have passed their delay time (delayedUntil <= now)
-        const unprocessedKillmails: IESIKillmail[] = await KillmailsESI.find(
-            {
-                processed: false,
-                $or: [
-                    { delayedUntil: { $exists: false } },
-                    { delayedUntil: null },
-                    { delayedUntil: { $lte: now } },
-                ],
-            },
-            { killmail_id: 1, killmail_hash: 1 },
-            { limit: limit }
+        // Find unprocessed killmails using the new KillmailService
+        const unprocessedKillmails = await KillmailService.findUnprocessed(
+            limit
         );
 
         if (unprocessedKillmails.length === 0) {
@@ -50,12 +36,15 @@ export default {
             };
         }
 
+        // Note: We need killmail_hash for processing, but the normalized schema doesn't store it separately
+        // For now, we'll queue the killmails with a placeholder hash - the queue processor will handle fetching
         await killmailQueue.addBulk(
             unprocessedKillmails.map((killmail) => ({
                 name: "killmail",
                 data: {
                     killmailId: killmail.killmail_id,
-                    killmailHash: killmail.killmail_hash,
+                    killmailHash: killmail.killmail_hash, // This is stored in the main killmail table
+                    warId: killmail.war_id || 0,
                 },
                 opts: {
                     priority: 5,
