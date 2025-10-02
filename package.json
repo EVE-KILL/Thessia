@@ -55,7 +55,7 @@
         "micromark": "^4.0.2",
         "micromark-extension-gfm": "^3.0.0",
         "mongoose": "^8.17.2",
-        "neo4j-driver": "^5.28.1",
+        "neo4j-driver": "^6.0.0",
         "node-gyp": "^11.4.1",
         "nuxt": "^4.0.3",
         "nuxt-security": "2.4.0",
