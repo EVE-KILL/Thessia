@@ -45,7 +45,6 @@ interface ExportKillmailsResponse {
         returned: number;
         hasMore: boolean;
     };
-    total?: number;
 }
 
 const DEFAULT_LIMIT = 1000;
@@ -103,7 +102,9 @@ function validateIds(ids: any, fieldName: string): number[] {
 /**
  * Builds MongoDB filter from request parameters
  */
-function buildFilter(filter?: ExportKillmailsRequest["filter"]): Record<string, any> {
+function buildFilter(
+    filter?: ExportKillmailsRequest["filter"]
+): Record<string, any> {
     if (!filter) {
         throw new Error("Filter is required");
     }
@@ -171,7 +172,7 @@ export default defineCachedEventHandler(
             const mongoFilter = buildFilter(body.filter);
 
             // Build the aggregation pipeline
-            const pipeline = [
+            const pipeline: any[] = [
                 { $match: mongoFilter },
                 { $sort: { kill_time: -1 } },
                 { $skip: skip },
@@ -192,16 +193,6 @@ export default defineCachedEventHandler(
             const hasMore = results.length > limit;
             const data = hasMore ? results.slice(0, limit) : results;
 
-            // Get total count for the filter (optional, for better UX)
-            // This is cached separately and only computed if needed
-            let total: number | undefined;
-            try {
-                total = await Killmails.countDocuments(mongoFilter);
-            } catch (error) {
-                // If count fails, continue without it
-                console.error("Error counting documents:", error);
-            }
-
             return {
                 data,
                 pagination: {
@@ -210,7 +201,6 @@ export default defineCachedEventHandler(
                     returned: data.length,
                     hasMore,
                 },
-                total,
             };
         } catch (error: any) {
             console.error("Export killmails API error:", error);
@@ -222,11 +212,12 @@ export default defineCachedEventHandler(
 
             // Provide user-friendly error messages
             throw createError({
-                statusCode: error.message.includes("must be") ||
+                statusCode:
+                    error.message.includes("must be") ||
                     error.message.includes("cannot be") ||
                     error.message.includes("required")
-                    ? 400
-                    : 500,
+                        ? 400
+                        : 500,
                 statusMessage: error.message || "Internal server error",
             });
         }
