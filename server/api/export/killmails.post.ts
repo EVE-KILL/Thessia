@@ -177,13 +177,6 @@ export default defineCachedEventHandler(
                 { $sort: { kill_time: -1 } },
                 { $skip: skip },
                 { $limit: limit + 1 }, // Fetch one extra to check if there are more results
-                {
-                    $project: {
-                        _id: 0,
-                        killmail_id: 1,
-                        killmail_hash: 1,
-                    },
-                },
             ];
 
             // Execute the query
