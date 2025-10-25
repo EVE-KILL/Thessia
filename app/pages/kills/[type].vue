@@ -127,7 +127,7 @@ interface KillsViewStats {
 
 // Define allowed types (same as original kills page)
 const allowedTypes = [
-    'latest', 'abyssal', 'wspace', 'highsec', 'lowsec', 'nullsec', 'pochven', 'big', 'solo', 'npc',
+    'latest', 'abyssal', 'wspace', 'highsec', 'lowsec', 'nullsec', 'pochven', 'ccpregions', 'big', 'solo', 'npc',
     '5b', '10b', 'citadels', 't1', 't2', 't3', 'frigates', 'destroyers', 'cruisers',
     'battlecruisers', 'battleships', 'capitals', 'freighters', 'supercarriers', 'titans', 'structureboys'
 ]
@@ -141,6 +141,7 @@ const killlistTypeToFilters: Record<string, Record<string, any>> = {
     lowsec: { system_security: { $lte: 0.45, $gte: 0 } },
     nullsec: { system_security: { $lte: 0 } },
     pochven: { region_id: 10000070 },
+    ccpregions: { region_id: { $in: [10000004, 10000017, 10000019] } },
     big: { "victim.ship_group_id": { $in: [547, 485, 513, 902, 941, 30, 659] } },
     solo: { is_solo: true },
     npc: { is_npc: true },
@@ -173,17 +174,17 @@ const killlistTypeToFilters: Record<string, Record<string, any>> = {
 
 // Types that should show ship statistics (broader categories only)
 const shipStatsTypes = [
-    'latest', 'abyssal', 'wspace', 'highsec', 'lowsec', 'nullsec', 'pochven', 'big', 'solo', 'npc', '5b', '10b'
+    'latest', 'abyssal', 'wspace', 'highsec', 'lowsec', 'nullsec', 'pochven', 'ccpregions', 'big', 'solo', 'npc', '5b', '10b'
 ]
 
 // Types that should show most valuable kills (all except very specific ship types)
 const mostValuableKillsTypes = [
-    'latest', 'abyssal', 'wspace', 'highsec', 'lowsec', 'nullsec', 'pochven', 'big', 'solo', 'npc', '5b', '10b', 'citadels'
+    'latest', 'abyssal', 'wspace', 'highsec', 'lowsec', 'nullsec', 'pochven', 'ccpregions', 'big', 'solo', 'npc', '5b', '10b', 'citadels'
 ]
 
 // Types that should show top killers sections (broader categories only)
 const topKillersTypes = [
-    'latest', 'abyssal', 'wspace', 'highsec', 'lowsec', 'nullsec', 'pochven', 'big', 'solo', 'npc', '5b', '10b'
+    'latest', 'abyssal', 'wspace', 'highsec', 'lowsec', 'nullsec', 'pochven', 'ccpregions', 'big', 'solo', 'npc', '5b', '10b'
 ]
 
 // Composables

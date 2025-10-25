@@ -155,6 +155,12 @@ const defaultLeftNavItems = computed(() => {
                 // Separator
                 { name: "---", label: "separator", to: "#" },
 
+                // CCP Regions
+                { name: t("ccpregions"), label: t("ccpregions"), to: "/kills/ccpregions" },
+
+                // Separator
+                { name: "---", label: "separator", to: "#" },
+
                 // By Value
                 { name: t("5b"), label: t("5b"), to: "/kills/5b" },
                 { name: t("10b"), label: t("10b"), to: "/kills/10b" },
