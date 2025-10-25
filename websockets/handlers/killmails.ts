@@ -31,6 +31,7 @@ export const validTopics = [
     "freighters",
     "supercarriers",
     "titans",
+    "jove",
 ];
 
 export const partialTopics = ["victim.", "attacker.", "system.", "region."];
@@ -54,9 +55,17 @@ function generateRoutingKeys(killmail: any): string[] {
     if (killmail.killValue >= 5_000_000_000) keys.push("5b");
     if (killmail.killValue >= 1_000_000_000) keys.push("bigkills");
 
+    // Region-based routing
+    if (killmail.regionId) {
+        keys.push(`region.${killmail.regionId}`);
+        // CCP Regions (Jove space)
+        if ([10000004, 10000017, 10000019].includes(killmail.regionId)) {
+            keys.push("jove");
+        }
+    }
+
     // System-based routing
     if (killmail.solarSystemId) keys.push(`system.${killmail.solarSystemId}`);
-    if (killmail.regionId) keys.push(`region.${killmail.regionId}`);
 
     // Victim-based routing
     if (killmail.victim) {

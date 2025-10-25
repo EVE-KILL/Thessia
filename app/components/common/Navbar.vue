@@ -156,7 +156,7 @@ const defaultLeftNavItems = computed(() => {
                 { name: "---", label: "separator", to: "#" },
 
                 // CCP Regions
-                { name: t("ccpregions"), label: t("ccpregions"), to: "/kills/ccpregions" },
+                { name: t("jove"), label: t("jove space"), to: "/kills/jove" },
 
                 // Separator
                 { name: "---", label: "separator", to: "#" },

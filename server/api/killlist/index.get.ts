@@ -49,7 +49,7 @@ const killlistQueries: Record<string, QueryConfig> = {
         projection: { _id: 0, items: 0 },
         hint: "region_id_kill_time",
     },
-    ccpregions: {
+    jove: {
         // Filters kills from CCP / Jove Space regions:
         // - 10000004: UUA-F4 (CCP / Jove Space)
         // - 10000017: J7HZ-F (CCP / Jove Space)
