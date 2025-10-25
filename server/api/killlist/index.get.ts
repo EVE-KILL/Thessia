@@ -49,6 +49,12 @@ const killlistQueries: Record<string, QueryConfig> = {
         projection: { _id: 0, items: 0 },
         hint: "region_id_kill_time",
     },
+    ccpregions: {
+        find: { region_id: { $in: [10000004, 10000017, 10000019] } },
+        sort: { kill_time: -1 },
+        projection: { _id: 0, items: 0 },
+        hint: "region_id_kill_time",
+    },
     big: {
         find: {
             "victim.ship_group_id": { $in: [547, 485, 513, 902, 941, 30, 659] },
