@@ -243,7 +243,7 @@ const leftNavItems = computed(() => {
             logo: '/images/rift-intel-fusion-tool-256.png'
         },
         {
-            name: "ESI Link",
+            name: "ESI",
             position: "left",
             logo: "https://esi.evetech.net/favicon.ico",
             to: `https://esi.evetech.net/latest/killmails/${props.killmail?.killmail_id}/${props.killmail?.killmail_hash}/`,
