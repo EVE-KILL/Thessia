@@ -242,6 +242,14 @@ const leftNavItems = computed(() => {
             target: '_blank',
             logo: '/images/rift-intel-fusion-tool-256.png'
         },
+        {
+            name: "ESI Link",
+            position: "left",
+            logo: "https://esi.evetech.net/favicon.ico",
+            to: `https://esi.evetech.net/latest/killmails/${props.killmail?.killmail_id}/${props.killmail?.killmail_hash}/`,
+            target: '_blank',
+            disabled: !props.killmail?.killmail_hash,
+        },
     ];
 });
 
