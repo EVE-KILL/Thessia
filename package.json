@@ -51,7 +51,7 @@
         "isomorphic-dompurify": "^2.26.0",
         "jsonwebtoken": "^9.0.2",
         "lru-cache": "^11.1.0",
-        "meilisearch": "^0.52.0",
+        "meilisearch": "^0.54.0",
         "micromark": "^4.0.2",
         "micromark-extension-gfm": "^3.0.0",
         "mongoose": "^8.17.2",
