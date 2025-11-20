@@ -1,7 +1,6 @@
-import type { AnyBulkWriteOperation } from "mongoose";
+import prisma from "../lib/prisma";
 import { getSystemJumps, getSystemKills } from "../server/helpers/ESIData";
 import { cliLogger } from "../server/helpers/Logger";
-import { SolarSystems } from "../server/models/SolarSystems";
 
 export default {
     name: "updateSystemActivity",
@@ -24,103 +23,83 @@ export default {
             const now = new Date();
             const oneDayAgo = new Date(now.getTime() - 24 * 60 * 60 * 1000);
 
-            // Get all systems that need updating
-            const systems = await SolarSystems.find(
-                {},
-                {
-                    system_id: 1,
-                    jumps_24h: 1,
-                    kills_24h: 1,
+            // Get all systems
+            const systems = await prisma.solarSystem.findMany({
+                select: {
+                    system_id: true,
+                    activity: true,
+                    kills: true
                 }
-            );
+            });
 
             cliLogger.info(`Processing ${systems.length} systems`);
 
-            const bulkOps: AnyBulkWriteOperation[] = [];
             let updated = 0;
 
-            for (const systemDoc of systems) {
-                const system = systemDoc.toObject() as any;
+            for (const system of systems) {
                 const systemId = system.system_id;
                 let needsUpdate = false;
-                const updateData: any = {};
+
+                // Parse existing data
+                // Cast to any[] because Prisma Json type is loosely typed in TS as JsonValue
+                let activityArr: any[] = Array.isArray(system.activity) ? system.activity as any[] : [];
+                let killsArr: any[] = Array.isArray(system.kills) ? system.kills as any[] : [];
 
                 // Process jumps data
                 const jumpEntry = jumpsData.find(
                     (entry: any) => entry.system_id === systemId
                 );
-                if (jumpEntry) {
-                    const newJumpEntry = {
-                        timestamp: now,
-                        ship_jumps: jumpEntry.ship_jumps || 0,
-                    };
 
-                    // Clean up old entries (keep only last 24 hours) and add new entry
-                    const currentJumps = system.jumps_24h || [];
-                    const filteredJumps = currentJumps.filter(
+                if (jumpEntry) {
+                    // Filter old
+                    activityArr = activityArr.filter(
                         (entry: any) => new Date(entry.timestamp) > oneDayAgo
                     );
-                    filteredJumps.push(newJumpEntry);
-
-                    updateData.jumps_24h = filteredJumps;
+                    // Add new
+                    activityArr.push({
+                        timestamp: now.toISOString(),
+                        ship_jumps: jumpEntry.ship_jumps || 0,
+                    });
                     needsUpdate = true;
+                } else if (activityArr.length > 0) {
+                     // Cleanup old entries
+                     const len = activityArr.length;
+                     activityArr = activityArr.filter((e: any) => new Date(e.timestamp) > oneDayAgo);
+                     if (activityArr.length !== len) needsUpdate = true;
                 }
 
                 // Process kills data
                 const killEntry = killsData.find(
                     (entry: any) => entry.system_id === systemId
                 );
+
                 if (killEntry) {
-                    const newKillEntry = {
-                        timestamp: now,
+                    killsArr = killsArr.filter(
+                        (entry: any) => new Date(entry.timestamp) > oneDayAgo
+                    );
+                    killsArr.push({
+                        timestamp: now.toISOString(),
                         ship_kills: killEntry.ship_kills || 0,
                         npc_kills: killEntry.npc_kills || 0,
                         pod_kills: killEntry.pod_kills || 0,
-                    };
-
-                    // Clean up old entries (keep only last 24 hours) and add new entry
-                    const currentKills = system.kills_24h || [];
-                    const filteredKills = currentKills.filter(
-                        (entry: any) => new Date(entry.timestamp) > oneDayAgo
-                    );
-                    filteredKills.push(newKillEntry);
-
-                    updateData.kills_24h = filteredKills;
+                    });
                     needsUpdate = true;
+                } else if (killsArr.length > 0) {
+                    const len = killsArr.length;
+                    killsArr = killsArr.filter((e: any) => new Date(e.timestamp) > oneDayAgo);
+                    if (killsArr.length !== len) needsUpdate = true;
                 }
 
                 if (needsUpdate) {
-                    updateData.updatedAt = now;
-
-                    // Separate $push operations from regular field updates
-                    const pushOps = updateData.$push;
-                    delete updateData.$push;
-
-                    const updateOperation: any = {};
-                    if (Object.keys(updateData).length > 0) {
-                        updateOperation.$set = updateData;
-                    }
-                    if (pushOps) {
-                        updateOperation.$push = pushOps;
-                    }
-
-                    bulkOps.push({
-                        updateOne: {
-                            filter: { system_id: systemId },
-                            update: updateOperation,
-                            upsert: false,
-                        },
+                    await prisma.solarSystem.update({
+                        where: { system_id: systemId },
+                        data: {
+                            activity: activityArr,
+                            kills: killsArr
+                        }
                     });
                     updated++;
                 }
-            }
-
-            // Execute all bulk operations in one go
-            if (bulkOps.length > 0) {
-                cliLogger.info(
-                    `Executing bulk update for ${bulkOps.length} systems`
-                );
-                await SolarSystems.bulkWrite(bulkOps);
             }
 
             cliLogger.info(

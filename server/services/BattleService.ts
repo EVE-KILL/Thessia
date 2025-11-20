@@ -191,51 +191,29 @@ export class BattleService {
     static async findByCharacter(characterId: number, page = 1, limit = 50) {
         const skip = (page - 1) * limit;
 
-        const pipeline = [
-            {
-                $match: {
-                    charactersInvolved: characterId,
-                },
-            },
-            {
-                $sort: { start_time: -1 },
-            },
-            { $skip: skip },
-            { $limit: limit },
-            {
-                $project: {
-                    _id: 0,
-                    battle_id: 1,
-                    custom: 1,
-                    start_time: 1,
-                    end_time: 1,
-                    duration_ms: 1,
-                    systems: 1,
-                    total_ships_lost: 1,
-                    total_isk_lost: 1,
-                    sides: 1,
-                },
-            },
-        ];
-
-        // For now, we'll use raw aggregation since this is complex
-        // TODO: Convert to pure Prisma when character involvement tracking is finalized
         const [battles, total] = await Promise.all([
-            prisma.$queryRaw`
-                SELECT battle_id, custom, start_time, end_time, duration_ms,
-                       total_ships_lost, total_isk_lost, sides
-                FROM "Battle"
-                WHERE ${characterId} = ANY(characters_involved)
-                ORDER BY start_time DESC
-                LIMIT ${limit} OFFSET ${skip}
-            `,
-            prisma.battle.count({
+            prisma.battle.findMany({
                 where: {
                     characters_involved: {
                         has: characterId,
                     },
                 },
+                select: {
+                    battle_id: true,
+                    custom: true,
+                    start_time: true,
+                    end_time: true,
+                    duration_ms: true,
+                    systems: true,
+                    total_ships_lost: true,
+                    total_isk_lost: true,
+                    sides: true,
+                },
+                orderBy: { start_time: "desc" },
+                skip,
+                take: limit,
             }),
+            this.countByCharacter(characterId),
         ]);
 
         return {
@@ -254,14 +232,27 @@ export class BattleService {
         const skip = (page - 1) * limit;
 
         const [battles, total] = await Promise.all([
-            prisma.$queryRaw`
-                SELECT battle_id, custom, start_time, end_time, duration_ms,
-                       total_ships_lost, total_isk_lost, sides
-                FROM "Battle"
-                WHERE ${allianceId} = ANY(alliances_involved)
-                ORDER BY start_time DESC
-                LIMIT ${limit} OFFSET ${skip}
-            `,
+            prisma.battle.findMany({
+                where: {
+                    alliances_involved: {
+                        has: allianceId,
+                    },
+                },
+                select: {
+                    battle_id: true,
+                    custom: true,
+                    start_time: true,
+                    end_time: true,
+                    duration_ms: true,
+                    systems: true,
+                    total_ships_lost: true,
+                    total_isk_lost: true,
+                    sides: true,
+                },
+                orderBy: { start_time: "desc" },
+                skip,
+                take: limit,
+            }),
             this.countByAlliance(allianceId),
         ]);
 
@@ -285,14 +276,27 @@ export class BattleService {
         const skip = (page - 1) * limit;
 
         const [battles, total] = await Promise.all([
-            prisma.$queryRaw`
-                SELECT battle_id, custom, start_time, end_time, duration_ms,
-                       total_ships_lost, total_isk_lost, sides
-                FROM "Battle"
-                WHERE ${corporationId} = ANY(corporations_involved)
-                ORDER BY start_time DESC
-                LIMIT ${limit} OFFSET ${skip}
-            `,
+            prisma.battle.findMany({
+                where: {
+                    corporations_involved: {
+                        has: corporationId,
+                    },
+                },
+                select: {
+                    battle_id: true,
+                    custom: true,
+                    start_time: true,
+                    end_time: true,
+                    duration_ms: true,
+                    systems: true,
+                    total_ships_lost: true,
+                    total_isk_lost: true,
+                    sides: true,
+                },
+                orderBy: { start_time: "desc" },
+                skip,
+                take: limit,
+            }),
             this.countByCorporation(corporationId),
         ]);
 

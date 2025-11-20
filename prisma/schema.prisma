@@ -1280,3 +1280,34 @@ model KillmailItem {
     @@index([flag])
     @@map("killmail_items")
 }
+
+// Access Logs
+model AccessLog {
+    id           Int      @id @default(autoincrement())
+    timestamp    DateTime
+    method       String
+    url          String
+    httpVersion  String
+    userAgent    String
+    clientIp     String
+    statusCode   Int?
+    responseTime Float?
+    responseSize Int?
+    referrer     String?
+    userId       Int?
+    endpoint     String?
+    isBot        Boolean  @default(false)
+    isApiRequest Boolean  @default(false)
+    logType      String   @default("server")
+    sessionId    String?
+
+    @@index([timestamp, endpoint])
+    @@index([timestamp, clientIp])
+    @@index([timestamp, isBot])
+    @@index([timestamp, statusCode])
+    @@index([timestamp, logType])
+    @@index([sessionId, timestamp])
+    @@index([timestamp])
+
+    @@map("access_logs")
+}

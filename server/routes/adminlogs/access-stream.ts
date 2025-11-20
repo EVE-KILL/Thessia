@@ -1,3 +1,5 @@
+import prisma from "~/lib/prisma";
+
 export default defineEventHandler(async (event) => {
     // Get authentication cookie
     const cookieName = "evelogin";
@@ -11,7 +13,7 @@ export default defineEventHandler(async (event) => {
     }
 
     // Find user by cookie value
-    const user = await Users.findOne({ uniqueIdentifier: cookie });
+    const user = await prisma.user.findUnique({ where: { uniqueIdentifier: cookie } });
 
     if (!user) {
         throw createError({
@@ -21,7 +23,7 @@ export default defineEventHandler(async (event) => {
     }
 
     // Check if user is administrator
-    if (!user.administrator) {
+    if (user.role !== "admin") {
         throw createError({
             statusCode: 403,
             statusMessage: "Administrator access required",
@@ -34,8 +36,8 @@ export default defineEventHandler(async (event) => {
     const eventStream = createEventStream(event);
 
     // Set up variables for cleanup
-    let intervalId: NodeJS.Timeout | null = null;
-    let lastObjectId: any = null;
+    let intervalId: ReturnType<typeof setInterval> | null = null;
+    let lastLogId: number | null = null;
     let isStreamClosed = false;
 
     // Extract filters from query parameters
@@ -49,28 +51,28 @@ export default defineEventHandler(async (event) => {
         filters.hideUnderscoreUrls = String(query.hideUnderscoreUrls);
     if (query.logType) filters.logType = String(query.logType);
 
-    // Function to build MongoDB filter based on filters
-    const buildMongoFilter = () => {
-        const mongoFilter: any = {};
+    // Function to build Prisma filter based on filters
+    const buildPrismaFilter = () => {
+        const prismaFilter: any = {};
 
-        // Apply _id filter for new logs (greater than last seen _id)
-        if (lastObjectId) {
-            mongoFilter._id = { $gt: lastObjectId };
+        // Apply id filter for new logs (greater than last seen id)
+        if (lastLogId) {
+            prismaFilter.id = { gt: lastLogId };
         }
 
         // Apply search filter
         if (filters.search) {
-            mongoFilter.$or = [
-                { url: { $regex: filters.search, $options: "i" } },
-                { endpoint: { $regex: filters.search, $options: "i" } },
-                { clientIp: { $regex: filters.search, $options: "i" } },
-                { userAgent: { $regex: filters.search, $options: "i" } },
+            prismaFilter.OR = [
+                { url: { contains: filters.search, mode: "insensitive" } },
+                { endpoint: { contains: filters.search, mode: "insensitive" } },
+                { clientIp: { contains: filters.search, mode: "insensitive" } },
+                { userAgent: { contains: filters.search, mode: "insensitive" } },
             ];
         }
 
         // Apply method filter
         if (filters.method) {
-            mongoFilter.method = filters.method;
+            prismaFilter.method = filters.method;
         }
 
         // Apply status code filter
@@ -78,41 +80,41 @@ export default defineEventHandler(async (event) => {
             if (filters.statusCode.includes("x")) {
                 // Handle status code ranges like 2xx, 4xx
                 const statusPrefix = filters.statusCode.replace("x", "");
-                mongoFilter.statusCode = {
-                    $gte: parseInt(statusPrefix + "00"),
-                    $lt: parseInt(statusPrefix + "99") + 1,
+                prismaFilter.statusCode = {
+                    gte: parseInt(statusPrefix + "00"),
+                    lt: parseInt(statusPrefix + "99") + 1,
                 };
             } else {
-                mongoFilter.statusCode = parseInt(filters.statusCode);
+                prismaFilter.statusCode = parseInt(filters.statusCode);
             }
         }
 
         // Apply bot filter
         if (filters.isBot) {
-            mongoFilter.isBot = filters.isBot === "true";
+            prismaFilter.isBot = filters.isBot === "true";
         }
 
         // Apply API filter
         if (filters.apiFilter) {
             if (filters.apiFilter === "only") {
-                mongoFilter.isApiRequest = true;
+                prismaFilter.isApiRequest = true;
             } else if (filters.apiFilter === "exclude") {
-                mongoFilter.isApiRequest = { $ne: true };
+                prismaFilter.isApiRequest = { not: true };
             }
             // 'include' means no filter on isApiRequest
         }
 
         // Apply underscore URL filter
         if (filters.hideUnderscoreUrls === "true") {
-            mongoFilter.url = { $not: { $regex: "^/_" } };
+            prismaFilter.url = { not: { startsWith: "/_" } };
         }
 
         // Apply log type filter
         if (filters.logType) {
-            mongoFilter.logType = filters.logType;
+            prismaFilter.logType = filters.logType;
         }
 
-        return mongoFilter;
+        return prismaFilter;
     };
 
     // Function to format access log entry as nginx-style string
@@ -142,12 +144,10 @@ export default defineEventHandler(async (event) => {
             if (isStreamClosed) return;
 
             // Send initial batch of recent logs (last 50) with timeout
-            const recentLogs = await AccessLogs.find()
-                .sort({ _id: -1 }) // Sort by _id descending (newest first)
-                .limit(50)
-                .maxTimeMS(10000) // 10 second timeout for initial load
-                .lean()
-                .exec();
+            const recentLogs = await prisma.accessLog.findMany({
+                orderBy: { id: 'desc' },
+                take: 50,
+            });
 
             if (recentLogs.length > 0 && !isStreamClosed) {
                 // Send logs in chronological order (oldest first)
@@ -166,10 +166,9 @@ export default defineEventHandler(async (event) => {
                     }
                 }
 
-                // Update last _id to the most recent log (last in chronological array)
+                // Update last id to the most recent log (last in chronological array)
                 if (!isStreamClosed) {
-                    lastObjectId =
-                        chronologicalLogs[chronologicalLogs.length - 1]._id;
+                    lastLogId = chronologicalLogs[chronologicalLogs.length - 1].id;
                 }
             }
 
@@ -185,15 +184,13 @@ export default defineEventHandler(async (event) => {
                 }
 
                 try {
-                    const mongoFilter = buildMongoFilter();
+                    const prismaFilter = buildPrismaFilter();
 
-                    // Add timeout to MongoDB query to prevent hanging
-                    const newLogs = await AccessLogs.find(mongoFilter)
-                        .sort({ _id: 1 }) // Ascending order by _id for new logs
-                        .limit(100) // Limit to prevent overwhelming
-                        .maxTimeMS(5000) // 5 second timeout
-                        .lean()
-                        .exec();
+                    const newLogs = await prisma.accessLog.findMany({
+                        where: prismaFilter,
+                        orderBy: { id: 'asc' },
+                        take: 100,
+                    });
 
                     if (newLogs.length > 0 && !isStreamClosed) {
                         for (const log of newLogs) {
@@ -209,9 +206,9 @@ export default defineEventHandler(async (event) => {
                             }
                         }
 
-                        // Update last _id to the newest log processed
+                        // Update last id to the newest log processed
                         if (!isStreamClosed) {
-                            lastObjectId = newLogs[newLogs.length - 1]._id;
+                            lastLogId = newLogs[newLogs.length - 1].id;
                         }
                     }
                 } catch (error) {

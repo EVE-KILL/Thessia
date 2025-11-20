@@ -10,13 +10,12 @@ export class StatsService {
         entityId: number,
         days: number
     ): Promise<Stats | null> {
+        // Note: 'days' field is missing in Prisma schema.
+        // Assuming we just return the stats record for now.
         return await prisma.stats.findFirst({
             where: {
                 entity_type: entityType,
                 entity_id: entityId,
-                // Note: The old MongoDB model had a 'days' field,
-                // but the Prisma schema doesn't have this field.
-                // This might need schema adjustment or different logic
             },
         });
     }
@@ -57,17 +56,27 @@ export class StatsService {
             character_id?: number;
         }
     ): Promise<Stats> {
-        return await prisma.stats.upsert({
+        const existing = await prisma.stats.findFirst({
             where: {
-                id: -1, // This is a placeholder - we need a proper unique constraint
-            },
-            create: {
                 entity_type: entityType,
                 entity_id: entityId,
-                ...statsData,
             },
-            update: statsData,
         });
+
+        if (existing) {
+            return await prisma.stats.update({
+                where: { id: existing.id },
+                data: statsData,
+            });
+        } else {
+            return await prisma.stats.create({
+                data: {
+                    entity_type: entityType,
+                    entity_id: entityId,
+                    ...statsData,
+                },
+            });
+        }
     }
 
     /**

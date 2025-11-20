@@ -77,7 +77,7 @@ export default defineCachedEventHandler(
                         pow(coalesce(kv.z,0) - ${z}, 2)
                     ) as distance
                 FROM killmails km
-                JOIN killmail_victim kv ON kv.killmail_id = km.killmail_id
+                JOIN killmail_victims kv ON kv.killmail_id = km.killmail_id
                 WHERE
                     km.solar_system_id = ${systemId}
                     AND km.killmail_time >= ${timeThreshold}

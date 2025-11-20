@@ -1,13 +1,16 @@
 #!/usr/bin/env bun
 import { Command } from "commander";
+/** @TODO DELETE THIS WHEN REMOVING MONGODB **/
 import mongoose from "mongoose";
 import { initMongooseConnection } from "./server/helpers/Mongoose";
+/** @TODO DELETE THIS WHEN REMOVING MONGODB **/
 // Use the generated loader file (includes auto-imports)
 import { commands } from "./console/.loader";
 
 const program = new Command();
 
 // Create a connection flag
+/** @TODO DELETE THIS WHEN REMOVING MONGODB **/
 let mongooseConnected = false;
 
 async function ensureMongooseConnection() {
@@ -22,10 +25,13 @@ async function ensureMongooseConnection() {
     }
     return mongooseConnected;
 }
+/** @TODO DELETE THIS WHEN REMOVING MONGODB **/
 
 async function main() {
     // Initialize database connection at startup
+    /** @TODO DELETE THIS WHEN REMOVING MONGODB **/
     await ensureMongooseConnection();
+    /** @TODO DELETE THIS WHEN REMOVING MONGODB **/
 
     // Keep track of command metadata
     const commandsMetadata: { name: string; longRunning: boolean }[] = [];
@@ -89,11 +95,13 @@ async function main() {
 
     // If it's not a long-running command, clean up and exit
     if (!invokedCommand?.longRunning) {
+        /** @TODO DELETE THIS WHEN REMOVING MONGODB **/
         if (mongooseConnected) {
             await mongoose.disconnect();
             // Add a small delay to ensure disconnection completes
             await new Promise((resolve) => setTimeout(resolve, 1000));
         }
+        /** @TODO DELETE THIS WHEN REMOVING MONGODB **/
         process.exit(0);
     }
 }
