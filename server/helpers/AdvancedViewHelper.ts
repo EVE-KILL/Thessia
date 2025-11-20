@@ -1,18 +1,11 @@
-import { type ITranslation } from "../interfaces/ITranslation";
-import { InvGroups } from "../models/InvGroups";
-import { Killmails } from "../models/Killmails";
+import type { Prisma } from "@prisma/client";
+import prisma from "~/lib/prisma";
+import type { ITranslation } from "../interfaces/ITranslation";
 
-/**
- * Interface representing the output of advanced view statistics.
- * Based on ICampaignOutput but adapted for query-based filters.
- */
 export interface IAdvancedViewOutput {
-    // Query metadata
     query: Record<string, any>;
     totalKillmails: number;
-    isApproximate?: boolean; // Indicates if sampling was used
-
-    // Advanced view statistics
+    isApproximate?: boolean;
     totalKills: number;
     iskDestroyed: number;
     shipGroupStats: Array<{
@@ -20,8 +13,6 @@ export interface IAdvancedViewOutput {
         ship_group_name: string | ITranslation;
         killed: number;
     }>;
-
-    // Character statistics
     topKillersByCharacter: Array<{
         character_id: number;
         character_name: string;
@@ -37,22 +28,16 @@ export interface IAdvancedViewOutput {
         character_name: string;
         damageDone: number;
     }>;
-
-    // Corporation statistics
     topKillersByCorporation: Array<{
         corporation_id: number;
         corporation_name: string;
         kills: number;
     }>;
-
-    // Alliance statistics
     topKillersByAlliance: Array<{
         alliance_id: number;
         alliance_name: string;
         kills: number;
     }>;
-
-    // Most valuable kills
     mostValuableKills: Array<{
         killmail_id: number;
         total_value: number;
@@ -75,434 +60,303 @@ export interface IAdvancedViewOutput {
     }>;
 }
 
-/**
- * Get valid ship group IDs from InvGroups where category_id = 6 (Ships) and published = true
- */
-async function getValidShipGroupIds(): Promise<Set<number>> {
-    const shipGroups = await InvGroups.find(
-        { category_id: 6, published: true },
-        { group_id: 1 }
-    ).lean();
+function mapFilterToWhere(
+    filter: any,
+    depth: number = 0
+): Prisma.KillmailWhereInput {
+    if (!filter || typeof filter !== "object" || depth > 5) {
+        return {};
+    }
 
-    return new Set(shipGroups.map((group: any) => group.group_id));
-}
+    const where: Prisma.KillmailWhereInput = {};
 
-/**
- * Convert string dates in a query to proper Date objects for MongoDB
- */
-function normalizeQueryDates(query: Record<string, any>): Record<string, any> {
-    const normalizedQuery = JSON.parse(JSON.stringify(query)); // Deep clone
+    if (Array.isArray(filter.$and)) {
+        where.AND = filter.$and.map((f: any) => mapFilterToWhere(f, depth + 1));
+    }
 
-    function convertDates(obj: any): any {
-        if (obj && typeof obj === "object") {
-            if (Array.isArray(obj)) {
-                return obj.map(convertDates);
-            }
+    if (Array.isArray(filter.$or)) {
+        where.OR = filter.$or.map((f: any) => mapFilterToWhere(f, depth + 1));
+    }
 
-            const result: any = {};
-            for (const [key, value] of Object.entries(obj)) {
-                if (key === "kill_time" && value && typeof value === "object") {
-                    result[key] = {};
-                    for (const [op, dateValue] of Object.entries(
-                        value as any
-                    )) {
-                        if (typeof dateValue === "string") {
-                            result[key][op] = new Date(dateValue);
-                        } else {
-                            result[key][op] = dateValue;
-                        }
-                    }
-                } else if (typeof value === "object") {
-                    result[key] = convertDates(value);
-                } else {
-                    result[key] = value;
+    for (const [key, value] of Object.entries(filter)) {
+        if (key.startsWith("$")) continue;
+        switch (key) {
+            case "kill_time":
+                if (value && typeof value === "object") {
+                    where.killmail_time = {
+                        gte: value.$gte ? new Date(value.$gte) : undefined,
+                        lte: value.$lte ? new Date(value.$lte) : undefined,
+                    };
                 }
-            }
-            return result;
+                break;
+            case "system_id":
+                where.solar_system_id = Number(value);
+                break;
+            case "region_id":
+                where.region_id = Number(value);
+                break;
+            case "constellation_id":
+                where.constellation_id = Number(value);
+                break;
+            case "war_id":
+                where.war_id = Number(value);
+                break;
+            case "total_value":
+                if (value && typeof value === "object") {
+                    where.total_value = {
+                        gte:
+                            value.$gte !== undefined
+                                ? Number(value.$gte)
+                                : undefined,
+                        lte:
+                            value.$lte !== undefined
+                                ? Number(value.$lte)
+                                : undefined,
+                    } as any;
+                }
+                break;
+            case "victim.character_id":
+                where.victim = { character_id: Number(value) };
+                break;
+            case "victim.corporation_id":
+                where.victim = { corporation_id: Number(value) };
+                break;
+            case "victim.alliance_id":
+                where.victim = { alliance_id: Number(value) };
+                break;
+            case "victim.ship_id":
+                where.victim = { ship_type_id: Number(value) };
+                break;
+            case "attackers.character_id":
+                where.attackers = { some: { character_id: Number(value) } };
+                break;
+            case "attackers.corporation_id":
+                where.attackers = { some: { corporation_id: Number(value) } };
+                break;
+            case "attackers.alliance_id":
+                where.attackers = { some: { alliance_id: Number(value) } };
+                break;
+            default:
+                break;
         }
-        return obj;
     }
 
-    return convertDates(normalizedQuery);
+    return where;
 }
 
-/**
- * Generate advanced view statistics based on a MongoDB query.
- * Uses MongoDB aggregation pipelines for optimal performance.
- *
- * @param query - The MongoDB query object to filter killmails
- * @param requestedFacets - Optional array of facet names to generate (defaults to all facets)
- * @returns An object containing the advanced view statistics
- */
-async function generateAdvancedViewStats(
-    query: Record<string, any>,
-    requestedFacets?: string[] | null
-): Promise<IAdvancedViewOutput> {
-    const startTime = Date.now();
+async function hydrateNames<T extends number>(
+    ids: T[],
+    entity: "character" | "corporation" | "alliance"
+): Promise<Map<number, string>> {
+    if (ids.length === 0) return new Map();
 
-    // Normalize query dates to proper Date objects
-    const normalizedQuery = normalizeQueryDates(query);
-
-    // Initialize statistics
-    const stats: IAdvancedViewOutput = {
-        query,
-        totalKillmails: 0,
-        totalKills: 0,
-        iskDestroyed: 0,
-        shipGroupStats: [],
-        topKillersByCharacter: [],
-        topVictimsByCharacter: [],
-        topDamageDealersByCharacter: [],
-        topKillersByCorporation: [],
-        topKillersByAlliance: [],
-        mostValuableKills: [],
-        isApproximate: false,
-    };
-
-    // Get valid ship group IDs (category_id = 6, published = true)
-    const validShipGroupIds = await getValidShipGroupIds();
-
-    // Create aggregation pipeline for efficient statistics generation
-    const pipeline: any[] = [{ $match: normalizedQuery }];
-
-    // Define available facets
-    const availableFacets: Record<string, any> = {
-        totals: [
-            {
-                $group: {
-                    _id: null,
-                    totalKills: { $sum: 1 },
-                    iskDestroyed: { $sum: "$total_value" },
-                },
-            },
-        ],
-
-        shipStats: [
-            {
-                $match: {
-                    "victim.ship_group_id": {
-                        $in: Array.from(validShipGroupIds),
-                    },
-                },
-            },
-            {
-                $group: {
-                    _id: "$victim.ship_group_id",
-                    ship_group_name: { $first: "$victim.ship_group_name" },
-                    killed: { $sum: 1 },
-                },
-            },
-            { $sort: { killed: -1 } },
-            { $limit: 20 },
-            {
-                $project: {
-                    _id: 0,
-                    ship_group_id: "$_id",
-                    ship_group_name: 1,
-                    killed: 1,
-                },
-            },
-        ],
-
-        topKillersChar: [
-            {
-                $match: {
-                    "attackers.character_id": { $ne: 0 },
-                },
-            },
-            { $unwind: "$attackers" },
-            {
-                $match: {
-                    "attackers.character_id": { $ne: 0 },
-                },
-            },
-            {
-                $group: {
-                    _id: "$attackers.character_id",
-                    character_name: { $first: "$attackers.character_name" },
-                    kills: { $sum: 1 },
-                },
-            },
-            { $sort: { kills: -1 } },
-            { $limit: 10 },
-            {
-                $project: {
-                    _id: 0,
-                    character_id: "$_id",
-                    character_name: 1,
-                    kills: 1,
-                },
-            },
-        ],
-
-        topVictimsChar: [
-            {
-                $match: {
-                    "victim.character_id": { $ne: 0 },
-                },
-            },
-            {
-                $group: {
-                    _id: "$victim.character_id",
-                    character_name: { $first: "$victim.character_name" },
-                    losses: { $sum: 1 },
-                },
-            },
-            { $sort: { losses: -1 } },
-            { $limit: 10 },
-            {
-                $project: {
-                    _id: 0,
-                    character_id: "$_id",
-                    character_name: 1,
-                    losses: 1,
-                },
-            },
-        ],
-
-        topDamageChar: [
-            {
-                $match: {
-                    "attackers.character_id": { $ne: 0 },
-                },
-            },
-            { $unwind: "$attackers" },
-            {
-                $match: {
-                    "attackers.character_id": { $ne: 0 },
-                },
-            },
-            {
-                $group: {
-                    _id: "$attackers.character_id",
-                    character_name: { $first: "$attackers.character_name" },
-                    totalDamageValue: { $sum: "$total_value" },
-                    killCount: { $sum: 1 },
-                },
-            },
-            {
-                $addFields: {
-                    avgDamage: {
-                        $cond: [
-                            { $gt: ["$killCount", 0] },
-                            {
-                                $divide: ["$totalDamageValue", "$killCount"],
-                            },
-                            0,
-                        ],
-                    },
-                },
-            },
-            { $sort: { avgDamage: -1 } },
-            { $limit: 10 },
-            {
-                $project: {
-                    _id: 0,
-                    character_id: "$_id",
-                    character_name: 1,
-                    damageDone: { $round: ["$avgDamage"] },
-                },
-            },
-        ],
-
-        topKillersCorp: [
-            {
-                $match: {
-                    "attackers.corporation_id": { $ne: 0 },
-                },
-            },
-            { $unwind: "$attackers" },
-            {
-                $match: {
-                    "attackers.corporation_id": { $ne: 0 },
-                },
-            },
-            {
-                $group: {
-                    _id: {
-                        killmail_id: "$killmail_id",
-                        corporation_id: "$attackers.corporation_id",
-                    },
-                    corporation_name: {
-                        $first: "$attackers.corporation_name",
-                    },
-                },
-            },
-            {
-                $group: {
-                    _id: "$_id.corporation_id",
-                    corporation_name: { $first: "$corporation_name" },
-                    kills: { $sum: 1 },
-                },
-            },
-            { $sort: { kills: -1 } },
-            { $limit: 10 },
-            {
-                $project: {
-                    _id: 0,
-                    corporation_id: "$_id",
-                    corporation_name: 1,
-                    kills: 1,
-                },
-            },
-        ],
-
-        topKillersAlliance: [
-            {
-                $match: {
-                    "attackers.alliance_id": { $ne: 0 },
-                },
-            },
-            { $unwind: "$attackers" },
-            {
-                $match: {
-                    "attackers.alliance_id": { $ne: 0 },
-                },
-            },
-            {
-                $group: {
-                    _id: {
-                        killmail_id: "$killmail_id",
-                        alliance_id: "$attackers.alliance_id",
-                    },
-                    alliance_name: { $first: "$attackers.alliance_name" },
-                },
-            },
-            {
-                $group: {
-                    _id: "$_id.alliance_id",
-                    alliance_name: { $first: "$alliance_name" },
-                    kills: { $sum: 1 },
-                },
-            },
-            { $sort: { kills: -1 } },
-            { $limit: 10 },
-            {
-                $project: {
-                    _id: 0,
-                    alliance_id: "$_id",
-                    alliance_name: 1,
-                    kills: 1,
-                },
-            },
-        ],
-
-        mostValuable: [
-            { $sort: { total_value: -1 } },
-            { $limit: 15 }, // Get a few extra to allow for filtering
-            {
-                $addFields: {
-                    final_blow: {
-                        $arrayElemAt: [
-                            {
-                                $filter: {
-                                    input: "$attackers",
-                                    cond: {
-                                        $eq: ["$$this.final_blow", true],
-                                    },
-                                },
-                            },
-                            0,
-                        ],
-                    },
-                },
-            },
-        ],
-    };
-
-    // Build facets object based on requested facets or use all facets
-    const facetsToGenerate: Record<string, any> = {};
-
-    if (requestedFacets && requestedFacets.length > 0) {
-        // Only generate requested facets
-        for (const facetName of requestedFacets) {
-            if (availableFacets[facetName]) {
-                facetsToGenerate[facetName] = availableFacets[facetName];
-            }
-        }
-        // Always include totals if not explicitly requested (needed for basic stats)
-        if (!facetsToGenerate.totals) {
-            facetsToGenerate.totals = availableFacets.totals;
-        }
-    } else {
-        // Generate all facets
-        Object.assign(facetsToGenerate, availableFacets);
+    if (entity === "character") {
+        const rows = await prisma.character.findMany({
+            where: { character_id: { in: ids } },
+            select: { character_id: true, name: true },
+        });
+        return new Map(rows.map((r) => [r.character_id, r.name || ""]));
     }
 
-    // Use $facet to calculate multiple statistics in parallel
-    pipeline.push({
-        $facet: facetsToGenerate,
+    if (entity === "corporation") {
+        const rows = await prisma.corporation.findMany({
+            where: { corporation_id: { in: ids } },
+            select: { corporation_id: true, name: true },
+        });
+        return new Map(rows.map((r) => [r.corporation_id, r.name || ""]));
+    }
+
+    const rows = await prisma.alliance.findMany({
+        where: { alliance_id: { in: ids } },
+        select: { alliance_id: true, name: true },
     });
+    return new Map(rows.map((r) => [r.alliance_id, r.name || ""]));
+}
 
-    // Execute aggregation with extended timeout and disk usage for large datasets
-    const aggStartTime = Date.now();
-    const result = await Killmails.aggregate(pipeline)
-        .option({
-            allowDiskUse: true, // Allow disk usage for large aggregations
-        })
-        .exec();
-    const aggTime = Date.now() - aggStartTime;
+export default async function generateAdvancedViewStats(
+    query: Record<string, any>,
+    _facets: string[] = []
+): Promise<IAdvancedViewOutput> {
+    const where = mapFilterToWhere(query);
 
-    // Process aggregation results
-    const [aggregationResult] = result;
-
-    // Extract totals
-    const totals = aggregationResult.totals?.[0] || {
-        totalKills: 0,
-        iskDestroyed: 0,
-    };
-    stats.totalKillmails = totals.totalKills;
-    stats.totalKills = totals.totalKills;
-    stats.iskDestroyed = totals.iskDestroyed;
-
-    // Process ship group statistics
-    stats.shipGroupStats = aggregationResult.shipStats || [];
-
-    // Process character statistics
-    stats.topKillersByCharacter = aggregationResult.topKillersChar || [];
-
-    stats.topVictimsByCharacter = aggregationResult.topVictimsChar || [];
-
-    stats.topDamageDealersByCharacter = aggregationResult.topDamageChar || [];
-
-    // Process corporation statistics
-    stats.topKillersByCorporation = aggregationResult.topKillersCorp || [];
-
-    // Process alliance statistics
-    stats.topKillersByAlliance = aggregationResult.topKillersAlliance || [];
-
-    // Process most valuable kills
-    stats.mostValuableKills = (aggregationResult.mostValuable || []).map(
-        (killmail: any) => ({
-            killmail_id: killmail.killmail_id,
-            total_value: killmail.total_value,
-            victim: {
-                ship_id: killmail.victim?.ship_id || 0,
-                ship_name: killmail.victim?.ship_name || "Unknown",
-                character_id: killmail.victim?.character_id,
-                character_name: killmail.victim?.character_name,
-                corporation_id: killmail.victim?.corporation_id,
-                corporation_name: killmail.victim?.corporation_name,
-                alliance_id: killmail.victim?.alliance_id,
-                alliance_name: killmail.victim?.alliance_name,
+    const [totalKillmails, iskAggregate, mostValuable] = await Promise.all([
+        prisma.killmail.count({ where }),
+        prisma.killmail.aggregate({
+            where,
+            _sum: { total_value: true },
+        }),
+        prisma.killmail.findMany({
+            where,
+            orderBy: { total_value: "desc" },
+            include: {
+                victim: {
+                    include: {
+                        ship_type: { select: { name: true } },
+                        character: { select: { name: true } },
+                        corporation: { select: { name: true } },
+                        alliance: { select: { name: true } },
+                    },
+                },
+                attackers: {
+                    where: { final_blow: true },
+                    include: {
+                        ship_type: { select: { name: true } },
+                        character: { select: { name: true } },
+                    },
+                },
             },
-            final_blow: killmail.final_blow
-                ? {
-                      character_id: killmail.final_blow.character_id,
-                      character_name: killmail.final_blow.character_name,
-                      ship_id: killmail.final_blow.ship_id || 0,
-                      ship_name: killmail.final_blow.ship_name || "Unknown",
-                  }
-                : undefined,
-        })
+            take: 5,
+        }),
+    ]);
+
+    // Ship group stats (victim ship groups)
+    const shipGroups = await prisma.killmailVictim.groupBy({
+        by: ["ship_group_id"],
+        where: {
+            ship_group_id: { not: null },
+            killmail: where,
+        },
+        _count: { _all: true },
+        orderBy: { _count: { _all: "desc" } },
+        take: 10,
+    });
+    const shipGroupIds = shipGroups
+        .map((g) => g.ship_group_id)
+        .filter((id): id is number => id !== null);
+    const groupNames =
+        shipGroupIds.length > 0
+            ? await prisma.invGroup.findMany({
+                  where: { group_id: { in: shipGroupIds } },
+                  select: { group_id: true, group_name: true },
+              })
+            : [];
+    const groupNameMap = new Map(
+        groupNames.map((g) => [g.group_id, g.group_name || ""])
     );
 
-    const totalTime = Date.now() - startTime;
-    return stats;
+    // Top killers (attackers) by character/corp/alliance
+    const attackerBy = async (
+        field: "character_id" | "corporation_id" | "alliance_id"
+    ) => {
+        const rows = await prisma.killmailAttacker.groupBy({
+            by: [field],
+            where: {
+                killmail: where,
+                [field]: { not: null },
+            },
+            _count: { _all: true },
+            orderBy: { _count: { _all: "desc" } },
+            take: 10,
+        });
+        const ids = rows
+            .map((r) => r[field])
+            .filter((id): id is number => id !== null);
+        const nameMap = await hydrateNames(
+            ids,
+            field === "character_id"
+                ? "character"
+                : field === "corporation_id"
+                ? "corporation"
+                : "alliance"
+        );
+        return rows
+            .filter((r) => r[field] !== null)
+            .map((r) => ({
+                [`${field.replace("_id", "")}_id`]: r[field] as number,
+                [`${field.replace("_id", "")}_name`]:
+                    nameMap.get(r[field] as number) || "",
+                kills: r._count._all,
+            }));
+    };
+
+    const topKillersByCharacter = await attackerBy("character_id");
+    const topKillersByCorporation = await attackerBy("corporation_id");
+    const topKillersByAlliance = await attackerBy("alliance_id");
+
+    // Top victims by character
+    const victimGroups = await prisma.killmailVictim.groupBy({
+        by: ["character_id"],
+        where: { killmail: where, character_id: { not: null } },
+        _count: { _all: true },
+        orderBy: { _count: { _all: "desc" } },
+        take: 10,
+    });
+    const victimIds = victimGroups
+        .map((v) => v.character_id)
+        .filter((id): id is number => id !== null);
+    const victimNameMap = await hydrateNames(victimIds, "character");
+    const topVictimsByCharacter = victimGroups
+        .filter((v) => v.character_id !== null)
+        .map((v) => ({
+            character_id: v.character_id as number,
+            character_name: victimNameMap.get(v.character_id as number) || "",
+            losses: v._count._all,
+        }));
+
+    // Top damage dealers (attackers)
+    const damageGroup = await prisma.killmailAttacker.groupBy({
+        by: ["character_id"],
+        where: { killmail: where, character_id: { not: null } },
+        _sum: { damage_done: true },
+        orderBy: { _sum: { damage_done: "desc" } },
+        take: 10,
+    });
+    const dmgIds = damageGroup
+        .map((d) => d.character_id)
+        .filter((id): id is number => id !== null);
+    const dmgNameMap = await hydrateNames(dmgIds, "character");
+    const topDamageDealersByCharacter = damageGroup
+        .filter((d) => d.character_id !== null)
+        .map((d) => ({
+            character_id: d.character_id as number,
+            character_name: dmgNameMap.get(d.character_id as number) || "",
+            damageDone: Number(d._sum.damage_done || 0),
+        }));
+
+    const mostValuableKills =
+        mostValuable?.map((km) => {
+            const finalBlow = km.attackers?.[0];
+            return {
+                killmail_id: km.killmail_id,
+                total_value: km.total_value ? Number(km.total_value) : 0,
+                victim: {
+                    ship_id: km.victim?.ship_type_id || 0,
+                    ship_name: km.victim?.ship_type?.name || {},
+                    character_id: km.victim?.character_id || undefined,
+                    character_name: km.victim?.character?.name || undefined,
+                    corporation_id: km.victim?.corporation_id || undefined,
+                    corporation_name: km.victim?.corporation?.name || undefined,
+                    alliance_id: km.victim?.alliance_id || undefined,
+                    alliance_name: km.victim?.alliance?.name || undefined,
+                },
+                final_blow: finalBlow
+                    ? {
+                          character_id: finalBlow.character_id || undefined,
+                          character_name: finalBlow.character?.name || undefined,
+                          ship_id: finalBlow.ship_type_id || 0,
+                          ship_name: finalBlow.ship_type?.name || {},
+                      }
+                    : undefined,
+            };
+        }) || [];
+
+    return {
+        query,
+        totalKillmails,
+        totalKills: totalKillmails,
+        iskDestroyed: iskAggregate._sum.total_value
+            ? Number(iskAggregate._sum.total_value)
+            : 0,
+        shipGroupStats: shipGroups.map((g) => ({
+            ship_group_id: g.ship_group_id as number,
+            ship_group_name: groupNameMap.get(g.ship_group_id as number) || "",
+            killed: g._count._all,
+        })),
+        topKillersByCharacter: topKillersByCharacter as any,
+        topVictimsByCharacter,
+        topDamageDealersByCharacter,
+        topKillersByCorporation: topKillersByCorporation as any,
+        topKillersByAlliance: topKillersByAlliance as any,
+        mostValuableKills,
+    };
 }
-
-// Default export the function
-export default generateAdvancedViewStats;
-
-// Also export as named export for compatibility
-export { generateAdvancedViewStats };

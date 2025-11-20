@@ -1,4 +1,33 @@
-import { BattleService } from "~/server/services";
+import { BattleService, KillmailService } from "~/server/services";
+
+async function processBattleDataForFrontend(
+    battle: any,
+    includeKillmails: boolean
+) {
+    const killmailIds: number[] = Array.isArray(battle.killmail_ids)
+        ? battle.killmail_ids
+        : [];
+
+    const killmails = includeKillmails && killmailIds.length
+        ? await KillmailService.findByIds(killmailIds)
+        : [];
+
+    return {
+        battle_id: Number(battle.battle_id),
+        custom: battle.custom,
+        start_time: battle.start_time,
+        end_time: battle.end_time,
+        duration_ms: battle.duration_ms ? Number(battle.duration_ms) : null,
+        killmails_count: battle.killmails_count,
+        isk_destroyed: battle.isk_destroyed
+            ? Number(battle.isk_destroyed)
+            : 0,
+        systems: (battle.systems as any) || [],
+        sides: (battle.sides as any) || {},
+        killmail_ids: killmailIds,
+        killmails: includeKillmails ? killmails : undefined,
+    };
+}
 
 export default defineCachedEventHandler(
     async (event) => {

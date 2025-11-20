@@ -1,132 +1,94 @@
+import prisma from "~/lib/prisma";
+
+const TABLE_MAP: Record<string, string> = {
+    alliances: "alliances",
+    battles: "battles",
+    bloodlines: "bloodlines",
+    campaigns: "campaigns",
+    celestials: "celestials",
+    characterachievements: "character_achievements",
+    characters: "characters",
+    comments: "comments",
+    config: "config",
+    constellations: "constellations",
+    corporations: "corporations",
+    customprices: "custom_prices",
+    dscan: "dscan",
+    esilogs: "esi_logs",
+    factions: "factions",
+    historicalstats: "historical_stats",
+    invflags: "inv_flags",
+    invgroups: "inv_groups",
+    invtypes: "inv_types",
+    killmails: "killmails",
+    killmailsesi: "killmails_esi",
+    localscan: "local_scan",
+    prices: "prices",
+    races: "races",
+    regions: "regions",
+    savedquery: "saved_query",
+    solarsystems: "solar_systems",
+    stats: "stats",
+    users: "users",
+    wars: "wars",
+};
+
 export default defineEventHandler(async (event) => {
-    // Authenticate and verify admin privileges
     await requireAdminAuth(event);
 
-    // Get collection name from route params
-    const collectionName = getRouterParam(event, "collection");
+    const collectionName = getRouterParam(event, "collection")?.toLowerCase();
+    const table = collectionName ? TABLE_MAP[collectionName] : null;
 
-    if (!collectionName) {
+    if (!table) {
         throw createError({
-            statusCode: 400,
-            statusMessage: "Collection name is required",
+            statusCode: 404,
+            statusMessage: `Unknown collection '${collectionName}'`,
         });
     }
 
-    try {
-        // Get query parameters for pagination and filtering
-        const query = getQuery(event);
-        const page = Math.max(1, parseInt(query.page as string) || 1);
-        const limit = Math.min(
-            100,
-            Math.max(1, parseInt(query.limit as string) || 20)
-        );
-        const skip = (page - 1) * limit;
-        const sortField = (query.sort as string) || "_id";
-        const sortOrder = query.order === "desc" ? -1 : 1;
-        const searchQuery = (query.search as string) || "";
+    const query = getQuery(event);
+    const page = Math.max(1, parseInt(query.page as string) || 1);
+    const limit = Math.min(
+        100,
+        Math.max(1, parseInt(query.limit as string) || 20)
+    );
+    const skip = (page - 1) * limit;
+    const sortField = (query.sort as string) || "id";
+    const sortOrder = query.order === "desc" ? "DESC" : "ASC";
+    const searchQuery = (query.search as string) || "";
 
-        // Get the model based on collection name
-        // We need to map the lowercase collection name back to the proper model name
-        const modelNameMap: Record<string, any> = {
-            accesslogs: AccessLogs,
-            alliances: Alliances,
-            battles: Battles,
-            bloodlines: Bloodlines,
-            campaigns: Campaigns,
-            celestials: Celestials,
-            characterachievements: CharacterAchievements,
-            characters: Characters,
-            comments: Comments,
-            config: Config,
-            constellations: Constellations,
-            corporations: Corporations,
-            customprices: CustomPrices,
-            dscan: DScan,
-            esilogs: ESILogs,
-            factions: Factions,
-            historicalstats: HistoricalStats,
-            invflags: InvFlags,
-            invgroups: InvGroups,
-            invtypes: InvTypes,
-            killmails: Killmails,
-            killmailsesi: KillmailsESI,
-            localscan: LocalScan,
-            prices: Prices,
-            races: Races,
-            regions: Regions,
-            savedquery: SavedQuery,
-            solarsystems: SolarSystems,
-            stats: Stats,
-            users: Users,
-            wars: Wars,
-        };
-
-        const Model = modelNameMap[collectionName.toLowerCase()];
-        if (!Model) {
-            throw createError({
-                statusCode: 404,
-                statusMessage: `Unknown collection '${collectionName}'`,
-            });
-        }
-
-        // Build search filter if provided
-        let filter = {};
-        if (searchQuery) {
-            // Simple text search across string fields
-            // This is a basic implementation - you might want to customize per model
-            filter = {
-                $or: [
-                    { name: { $regex: searchQuery, $options: "i" } },
-                    { characterName: { $regex: searchQuery, $options: "i" } },
-                    { corporationName: { $regex: searchQuery, $options: "i" } },
-                    { allianceName: { $regex: searchQuery, $options: "i" } },
-                    { title: { $regex: searchQuery, $options: "i" } },
-                    { description: { $regex: searchQuery, $options: "i" } },
-                ],
-            };
-        }
-
-        // Get total count
-        const total = await Model.estimatedDocumentCount();
-
-        // Get paginated data
-        const sortOption = { [sortField]: sortOrder };
-        const documents = await Model.find(filter)
-            .sort(sortOption)
-            .skip(skip)
-            .limit(limit)
-            .lean();
-
-        // Calculate pagination info
-        const totalPages = Math.ceil(total / limit);
-        const hasNext = page < totalPages;
-        const hasPrev = page > 1;
-
-        return {
-            success: true,
-            data: documents,
-            pagination: {
-                page,
-                limit,
-                total,
-                totalPages,
-                hasNext,
-                hasPrev,
-            },
-            meta: {
-                collection: collectionName,
-                sortField,
-                sortOrder: sortOrder === 1 ? "asc" : "desc",
-                searchQuery,
-            },
-        };
-    } catch (error) {
-        cliLogger.error(
-            `Error fetching collection data for '${collectionName}': ${error}`
-        );
-        throw createError({
-            statusCode: 500,
-            statusMessage: `Failed to fetch data from collection '${collectionName}'`,
-        });
+    let whereClause = "";
+    if (searchQuery) {
+        whereClause = `WHERE cast(${sortField} as text) ILIKE '%${searchQuery}%'`;
     }
+
+    const rows = await prisma.$queryRawUnsafe(
+        `SELECT * FROM ${table} ${whereClause} ORDER BY ${sortField} ${sortOrder} OFFSET ${skip} LIMIT ${limit}`
+    );
+
+    const [{ count }] = await prisma.$queryRawUnsafe<
+        { count: string }[]
+    >(`SELECT count(*) as count FROM ${table} ${whereClause}`);
+
+    const total = Number(count || 0);
+    const totalPages = Math.ceil(total / limit);
+
+    return {
+        success: true,
+        data: rows,
+        pagination: {
+            page,
+            limit,
+            total,
+            totalPages,
+            hasNext: page < totalPages,
+            hasPrev: page > 1,
+        },
+        meta: {
+            collection: collectionName,
+            sortField,
+            sortOrder: sortOrder.toLowerCase(),
+            searchQuery,
+        },
+    };
 });

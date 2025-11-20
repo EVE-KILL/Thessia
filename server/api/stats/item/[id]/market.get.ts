@@ -1,5 +1,4 @@
-import { getCachedItemMarketData } from "../../../../helpers/RuntimeCache";
-import { SDEService } from "../../../../services/SDEService";
+import { PriceService, RegionService } from "~/server/services";
 
 /**
  * Item Market Stats API
@@ -21,10 +20,9 @@ export default defineCachedEventHandler(
 
             const typeIdNum = parseInt(typeId);
 
-            // Get cached market data
-            const { jitaPrice, recentPrices } = await getCachedItemMarketData(
-                typeIdNum
-            );
+            // Fetch market data directly from Postgres
+            const { jitaPrice, recentPrices } =
+                await PriceService.getItemMarketData(typeIdNum);
 
             // Extract cheapest price from array
             const cheapestPrice = recentPrices?.[0] || null;
@@ -42,9 +40,7 @@ export default defineCachedEventHandler(
             // Get region name for the cheapest price
             let cheapestRegionName = null;
             if (cheapestPrice?.region_id) {
-                const region = await SDEService.findRegionById(
-                    cheapestPrice.region_id
-                );
+                const region = await RegionService.findById(cheapestPrice.region_id);
                 cheapestRegionName = region?.region_name;
             }
 

@@ -1,12 +1,11 @@
-import { getCachedItem } from "./RuntimeCache";
+import { TypeService } from "~/server/services";
 
 /**
  * Checks if a given type_id belongs to a ship (category_id === 6)
- * Uses the RuntimeCache to efficiently lookup InvTypes data
  */
 export async function isShip(typeId: number): Promise<boolean> {
     try {
-        const invType = await getCachedItem(typeId);
+        const invType = await TypeService.findById(typeId);
         return invType?.category_id === 6;
     } catch (error) {
         console.error(`Error checking if type_id ${typeId} is a ship:`, error);

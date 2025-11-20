@@ -1,4 +1,22 @@
-import type { H3Event } from "h3";
+import {
+    type H3Event,
+    createError,
+    getCookie,
+    setResponseHeaders,
+} from "h3";
+import { UserService } from "../services";
+
+function mapUser(user: any) {
+    return {
+        ...user,
+        characterId: user.character_id,
+        characterName: user.character_name,
+        uniqueIdentifier: user.unique_identifier,
+        administrator: user.role === "admin",
+        canFetchCorporationKillmails: user.can_fetch_corporation_killmails,
+        esiActive: user.esi_active,
+    };
+}
 
 /**
  * Authenticates the user and returns the authenticated user document.
@@ -16,7 +34,7 @@ import type { H3Event } from "h3";
  * });
  * ```
  */
-export async function requireUserAuth(event: H3Event): Promise<IUserDocument> {
+export async function requireUserAuth(event: H3Event): Promise<any> {
     // Add cache-control headers to prevent caching
     setResponseHeaders(event, {
         "Cache-Control": "no-cache, no-store, must-revalidate",
@@ -36,7 +54,7 @@ export async function requireUserAuth(event: H3Event): Promise<IUserDocument> {
     }
 
     // Find user by cookie value
-    const user = await Users.findOne({ uniqueIdentifier: cookie });
+    const user = await UserService.findByUniqueIdentifier(cookie);
     if (!user) {
         throw createError({
             statusCode: 401,
@@ -44,7 +62,7 @@ export async function requireUserAuth(event: H3Event): Promise<IUserDocument> {
         });
     }
 
-    return user;
+    return mapUser(user);
 }
 
 /**

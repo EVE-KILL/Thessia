@@ -1,34 +1,65 @@
-import type { Model } from "mongoose";
+import prisma from "~/lib/prisma";
 
-/**
- * Define which collections are allowed for export and their respective models
- */
-const ALLOWED_COLLECTIONS: Record<string, Model<any>> = {
-    alliances: Alliances,
-    battles: Battles,
-    bloodlines: Bloodlines,
-    campaigns: Campaigns,
-    celestials: Celestials,
-    characterachievements: CharacterAchievements,
-    characters: Characters,
-    comments: Comments,
-    constellations: Constellations,
-    corporations: Corporations,
-    customprices: CustomPrices,
-    factions: Factions,
-    historicalstats: HistoricalStats,
-    invflags: InvFlags,
-    invgroups: InvGroups,
-    invtypes: InvTypes,
-    killmails: Killmails,
-    killmailsesi: KillmailsESI,
-    prices: Prices,
-    races: Races,
-    regions: Regions,
-    solarsystems: SolarSystems,
-    stats: Stats,
-    wars: Wars,
+const ALLOWED = [
+    "alliances",
+    "battles",
+    "bloodlines",
+    "campaigns",
+    "celestials",
+    "characterachievements",
+    "characters",
+    "comments",
+    "constellations",
+    "corporations",
+    "customprices",
+    "factions",
+    "historicalstats",
+    "invflags",
+    "invgroups",
+    "invtypes",
+    "killmails",
+    "killmailsesi",
+    "prices",
+    "races",
+    "regions",
+    "solarsystems",
+    "stats",
+    "wars",
+];
+
+const TABLE_MAP: Record<string, string> = {
+    alliances: "alliances",
+    battles: "battles",
+    bloodlines: "bloodlines",
+    campaigns: "campaigns",
+    celestials: "celestials",
+    characterachievements: "character_achievements",
+    characters: "characters",
+    comments: "comments",
+    constellations: "constellations",
+    corporations: "corporations",
+    customprices: "custom_prices",
+    factions: "factions",
+    historicalstats: "historical_stats",
+    invflags: "inv_flags",
+    invgroups: "inv_groups",
+    invtypes: "inv_types",
+    killmails: "killmails",
+    killmailsesi: "killmails_esi",
+    prices: "prices",
+    races: "races",
+    regions: "regions",
+    solarsystems: "solar_systems",
+    stats: "stats",
+    wars: "wars",
 };
+
+function getRateLimitForRequestSize(limit: number) {
+    return {
+        requestsPerSecond: Math.max(1, Math.floor(10000 / limit)),
+        maxBurstRequests: Math.min(10, Math.max(1, Math.floor(1000 / limit))),
+    };
+}
 
 export interface IExportCollectionInfo {
     collection: string;
@@ -41,15 +72,10 @@ export interface IExportCollectionInfo {
     };
 }
 
-/**
- * GET /api/export
- * Returns information about available collections for export
- */
 export default defineEventHandler(
     async (event): Promise<IExportCollectionInfo[]> => {
         const collections: IExportCollectionInfo[] = [];
 
-        // Define rate limit examples for documentation
         const rateLimitExamples = {
             "10000": getRateLimitForRequestSize(10000),
             "1000": getRateLimitForRequestSize(1000),
@@ -57,7 +83,6 @@ export default defineEventHandler(
             "10": getRateLimitForRequestSize(10),
         };
 
-        // Set informational headers
         setHeader(
             event,
             "X-Export-Rate-Limit-Info",
@@ -67,28 +92,26 @@ export default defineEventHandler(
         setHeader(event, "X-Export-Min-Limit", "1");
         setHeader(event, "X-Export-Default-Limit", "1000");
 
-        // Get estimated count for each allowed collection
-        for (const [collectionName, model] of Object.entries(
-            ALLOWED_COLLECTIONS
-        )) {
+        for (const collection of ALLOWED) {
+            const table = TABLE_MAP[collection];
+            let estimatedCount = 0;
             try {
-                const estimatedCount = await model.estimatedDocumentCount();
-                collections.push({
-                    collection: collectionName,
-                    estimatedCount,
-                    rateLimits: rateLimitExamples,
-                });
-            } catch (error) {
-                // If there's an error getting count, still include the collection but with 0 count
-                collections.push({
-                    collection: collectionName,
-                    estimatedCount: 0,
-                    rateLimits: rateLimitExamples,
-                });
+                const [{ count }] = await prisma.$queryRaw<{ count: bigint }[]>`
+                    SELECT reltuples::BIGINT as count
+                    FROM pg_class
+                    WHERE relname = ${table}
+                `;
+                estimatedCount = Number(count || 0);
+            } catch (_err) {
+                estimatedCount = 0;
             }
+            collections.push({
+                collection,
+                estimatedCount,
+                rateLimits: rateLimitExamples,
+            });
         }
 
-        // Sort by collection name for consistent ordering
         collections.sort((a, b) => a.collection.localeCompare(b.collection));
 
         return collections;

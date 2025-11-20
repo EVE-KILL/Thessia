@@ -1,5 +1,5 @@
+import prisma from "~/lib/prisma";
 import type { IMaintenanceState } from "../interfaces/IMaintenanceState";
-import { Config } from "../models/Config";
 
 // Global maintenance state cache
 let maintenanceState: IMaintenanceState = {
@@ -17,13 +17,16 @@ const CHECK_INTERVAL = 60 * 1000;
 async function fetchMaintenanceConfig(): Promise<void> {
     try {
         const [modeConfig, messageConfig] = await Promise.all([
-            Config.findOne({ key: "maintenance_mode" }),
-            Config.findOne({ key: "maintenance_message" }),
+            prisma.config.findUnique({ where: { key: "maintenance_mode" } }),
+            prisma.config.findUnique({ where: { key: "maintenance_message" } }),
         ]);
 
         maintenanceState.isEnabled =
-            (modeConfig as any)?.value === "true" || false;
-        maintenanceState.message = (messageConfig as any)?.value || "";
+            modeConfig?.value === true ||
+            modeConfig?.value === "true" ||
+            false;
+        maintenanceState.message =
+            (messageConfig?.value as string | undefined) || "";
         maintenanceState.lastChecked = new Date();
 
         if (maintenanceState.isEnabled) {

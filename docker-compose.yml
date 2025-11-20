@@ -39,14 +39,17 @@ services:
             - internet
         restart: unless-stopped
 
-    mongodb:
-        image: library/mongo:latest
-        container_name: mongodb
+    postgres:
+        image: postgres:16
+        container_name: postgres
+        environment:
+            POSTGRES_USER: postgres
+            POSTGRES_PASSWORD: postgres
+            POSTGRES_DB: thessia
         volumes:
-            - ./.data/mongo:/data/db
+            - ./.data/postgres:/var/lib/postgresql/data
         ports:
-            - 127.0.0.1:27017:27017
+            - 127.0.0.1:5432:5432
         networks:
             - internet
-        command: ["--directoryperdb"]
         restart: unless-stopped

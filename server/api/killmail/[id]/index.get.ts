@@ -1,3 +1,5 @@
+import { KillmailService } from "~/server/services";
+
 /**
  * Get a single killmail by ID
  * Cache the response for 1 hour since killmails are immutable once processed
@@ -27,11 +29,9 @@ export default defineCachedEventHandler(
                 });
             }
 
-            const killmail: IKillmail | null = await Killmails.findOne(
-                { killmail_id: Number(killmail_id) },
-                projection,
-                { hint: "killmail_id_hash_unique" }
-            ).lean();
+            const killmail = await KillmailService.findByIdWithFull(
+                Number(killmail_id)
+            );
 
             if (!killmail) {
                 throw createError({
@@ -40,7 +40,20 @@ export default defineCachedEventHandler(
                 });
             }
 
-            return killmail;
+            const serialized = JSON.parse(JSON.stringify(killmail));
+
+            if (fields) {
+                const filtered: Record<string, any> = {};
+                fields.split(",").forEach((field) => {
+                    const key = field.trim();
+                    if (key && key in serialized) {
+                        filtered[key] = serialized[key];
+                    }
+                });
+                return filtered;
+            }
+
+            return serialized;
         } catch (error: any) {
             if (error.statusCode) {
                 throw error;
@@ -75,10 +88,9 @@ export default defineCachedEventHandler(
 
                 // Quick check to see if killmail exists in database
                 // Only select _id field for performance
-                const killmail = await Killmails.findOne(
-                    { killmail_id: Number(killmail_id) },
-                    { _id: 1 }
-                ).lean();
+            const killmail = await KillmailService.findById(
+                Number(killmail_id)
+            );
 
                 // Bypass cache if killmail doesn't exist
                 // This prevents caching 404 responses for killmails that might be processed soon

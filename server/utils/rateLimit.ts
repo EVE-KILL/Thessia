@@ -1,4 +1,4 @@
-import { Config } from "../models/Config";
+import prisma from "~/lib/prisma";
 import type { IConfig } from "../interfaces/IConfig";
 
 /**
@@ -38,9 +38,9 @@ export function getRateLimitForRequestSize(limit: number): IRateLimitConfig {
  */
 export async function isIpWhitelisted(ip: string): Promise<boolean> {
     try {
-        const config = (await Config.findOne({
-            key: "export_ip_whitelist",
-        }).lean()) as IConfig | null;
+        const config = (await prisma.config.findUnique({
+            where: { key: "export_ip_whitelist" },
+        })) as IConfig | null;
         if (!config?.value) {
             return false;
         }

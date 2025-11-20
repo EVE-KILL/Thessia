@@ -1,3 +1,49 @@
+import prisma from "~/lib/prisma";
+
+const formatKillmail = (km: any) => {
+    const finalBlow = km.attackers?.find((a: any) => a.final_blow);
+    return {
+        killmail_id: km.killmail_id,
+        total_value: km.total_value ? Number(km.total_value) : 0,
+        system_id: km.solar_system_id,
+        system_name: km.solar_system?.system_name || "",
+        system_security: km.solar_system?.security || 0,
+        region_id: km.region_id || km.solar_system?.region_id || null,
+        region_name: km.region?.region_name || "",
+        kill_time: km.killmail_time,
+        attackerCount: km.attackers?.length || 0,
+        commentCount: 0,
+        is_npc: km.is_npc,
+        is_solo: km.is_solo,
+        victim: {
+            ship_id: km.victim?.ship_type_id || 0,
+            ship_name: km.victim?.ship_type?.name || {},
+            ship_group_name: km.victim?.ship_group?.group_name || {},
+            character_id: km.victim?.character_id || 0,
+            character_name: km.victim?.character?.name || "",
+            corporation_id: km.victim?.corporation_id || 0,
+            corporation_name: km.victim?.corporation?.name || "",
+            alliance_id: km.victim?.alliance_id || 0,
+            alliance_name: km.victim?.alliance?.name || "",
+            faction_id: km.victim?.faction_id || 0,
+            faction_name: km.victim?.faction?.name || "",
+        },
+        finalblow: finalBlow
+            ? {
+                  character_id: finalBlow.character_id || 0,
+                  character_name: finalBlow.character?.name || "",
+                  corporation_id: finalBlow.corporation_id || 0,
+                  corporation_name: finalBlow.corporation?.name || "",
+                  alliance_id: finalBlow.alliance_id || 0,
+                  alliance_name: finalBlow.alliance?.name || "",
+                  faction_id: finalBlow.faction_id || 0,
+                  faction_name: finalBlow.faction?.name || "",
+                  ship_group_name: finalBlow.ship_group?.group_name || {},
+              }
+            : null,
+    };
+};
+
 export default defineCachedEventHandler(
     async (event: any) => {
         const query = getQuery(event);
@@ -9,69 +55,56 @@ export default defineCachedEventHandler(
         if (limit < 1) limit = 1;
         if (limit > 1000) limit = 1000;
 
-        const mongoQuery = {
-            [`victim.${type}_id`]: id,
-        };
+        const idNum = Number(id);
+        const victimWhere =
+            type === "character"
+                ? { victim: { character_id: idNum } }
+                : type === "corporation"
+                ? { victim: { corporation_id: idNum } }
+                : { victim: { alliance_id: idNum } };
 
-        // Create cursor for streaming killmails
-        let cursor = Killmails.find(
-            mongoQuery,
-            { _id: 0, items: 0 },
-            {
-                sort: { kill_time: -1 },
-                skip: (page - 1) * limit,
-                limit: limit,
-            }
-        );
-
-        // Stream through killmails using cursor and format on-the-fly
-        const result: any[] = [];
-        for await (const killmail of cursor) {
-            const finalBlowAttacker = killmail.attackers.find(
-                (a: any) => a.final_blow
-            );
-
-            result.push({
-                killmail_id: killmail.killmail_id,
-                total_value: killmail.total_value,
-                system_id: killmail.system_id,
-                system_name: killmail.system_name,
-                system_security: killmail.system_security,
-                region_id: killmail.region_id,
-                region_name: killmail.region_name,
-                kill_time: killmail.kill_time,
-                attackerCount: killmail.attackers.length,
-                commentCount: 0,
-                is_npc: killmail.is_npc,
-                is_solo: killmail.is_solo,
+        const killmails = await prisma.killmail.findMany({
+            where: victimWhere,
+            orderBy: { killmail_time: "desc" },
+            take: limit,
+            skip: (page - 1) * limit,
+            include: {
+                solar_system: { select: { system_name: true, security: true, region_id: true } },
+                region: { select: { region_name: true } },
+                attackers: {
+                    select: {
+                        character_id: true,
+                        corporation_id: true,
+                        alliance_id: true,
+                        faction_id: true,
+                        final_blow: true,
+                        ship_group: { select: { group_name: true } },
+                        character: { select: { name: true } },
+                        corporation: { select: { name: true } },
+                        alliance: { select: { name: true } },
+                        faction: { select: { name: true } },
+                    },
+                },
                 victim: {
-                    ship_id: killmail.victim.ship_id,
-                    ship_name: killmail.victim.ship_name,
-                    ship_group_name: killmail.victim.ship_group_name,
-                    character_id: killmail.victim.character_id,
-                    character_name: killmail.victim.character_name,
-                    corporation_id: killmail.victim.corporation_id,
-                    corporation_name: killmail.victim.corporation_name,
-                    alliance_id: killmail.victim.alliance_id,
-                    alliance_name: killmail.victim.alliance_name,
-                    faction_id: killmail.victim.faction_id,
-                    faction_name: killmail.victim.faction_name,
+                    select: {
+                        character_id: true,
+                        corporation_id: true,
+                        alliance_id: true,
+                        faction_id: true,
+                        ship_type_id: true,
+                        ship_group_id: true,
+                        character: { select: { name: true } },
+                        corporation: { select: { name: true } },
+                        alliance: { select: { name: true } },
+                        faction: { select: { name: true } },
+                        ship_type: { select: { name: true } },
+                        ship_group: { select: { group_name: true } },
+                    },
                 },
-                finalblow: {
-                    character_id: finalBlowAttacker?.character_id,
-                    character_name: finalBlowAttacker?.character_name,
-                    corporation_id: finalBlowAttacker?.corporation_id,
-                    corporation_name: finalBlowAttacker?.corporation_name,
-                    alliance_id: finalBlowAttacker?.alliance_id,
-                    alliance_name: finalBlowAttacker?.alliance_name,
-                    faction_id: finalBlowAttacker?.faction_id,
-                    faction_name: finalBlowAttacker?.faction_name,
-                    ship_group_name: finalBlowAttacker?.ship_group_name,
-                },
-            });
-        }
+            },
+        });
 
-        return result;
+        return killmails.map(formatKillmail);
     },
     {
         maxAge: 30,

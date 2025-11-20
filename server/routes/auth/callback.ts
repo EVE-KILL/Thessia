@@ -37,23 +37,23 @@ export default defineEventHandler(async (event) => {
     const uniqueIdentifier = uuidv4();
 
     // Check if user already exists to preserve existing settings
-    const existingUser = await Users.findOne({
-        characterId: userData.characterId,
+    const existingUser = await prisma.user.findUnique({
+        where: { character_id: userData.characterId },
     });
 
     // Generate the payload we need to save in the database
     const payload: any = {
-        accessToken: accessToken,
-        dateExpiration: new Date(Date.now() + expiresIn * 1000),
-        refreshToken: refreshToken,
-        characterId: userData.characterId,
-        characterName: userData.characterName,
+        access_token: accessToken,
+        date_expiration: new Date(Date.now() + expiresIn * 1000),
+        refresh_token: refreshToken,
+        character_id: userData.characterId,
+        character_name: userData.characterName,
         scopes: userData.scopes,
-        tokenType: tokenType,
-        characterOwnerHash: userData.characterOwnerHash,
-        uniqueIdentifier: uniqueIdentifier,
-        lastChecked: new Date(),
-        canFetchCorporationKillmails: userData.scopes.includes(
+        token_type: tokenType,
+        character_owner_hash: userData.characterOwnerHash,
+        unique_identifier: uniqueIdentifier,
+        last_checked: new Date(),
+        can_fetch_corporation_killmails: userData.scopes.includes(
             "esi-killmails.read_corporation_killmails.v1"
         ),
         settings: existingUser?.settings || [],
@@ -82,21 +82,19 @@ export default defineEventHandler(async (event) => {
     }
 
     try {
-        if (existingUser) {
-            // Update existing user
-            await Users.updateOne(
-                { characterId: userData.characterId },
-                payload
-            );
-        } else {
-            // Create new user
-            const user = new Users(payload);
-            await user.save();
-        }
+        await prisma.user.upsert({
+            where: { character_id: userData.characterId },
+            update: payload,
+            create: {
+                ...payload,
+                role: existingUser?.role || "user",
+            },
+        });
     } catch (error) {
-        // Fallback to upsert
-        await Users.updateOne({ characterId: userData.characterId }, payload, {
-            upsert: true,
+        console.error("Failed to persist user login", error);
+        throw createError({
+            statusCode: 500,
+            statusMessage: "Failed to store user session",
         });
     }
 
@@ -112,3 +110,4 @@ export default defineEventHandler(async (event) => {
     // If all went well, redirect the user to the original URL
     return sendRedirect(event, decodedState.redirectUrl);
 });
+import prisma from "~/lib/prisma";

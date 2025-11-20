@@ -1,6 +1,6 @@
 import { generateCampaignStats } from "../helpers/CampaignsHelper";
 import { createQueue } from "../helpers/Queue";
-import { Campaigns } from "../models/Campaigns";
+import { CampaignService } from "../services";
 
 const campaignQueue = createQueue("campaign");
 
@@ -26,27 +26,21 @@ async function processCampaign(campaignId: string) {
 
     try {
         // Update campaign status to processing
-        await Campaigns.updateOne(
-            { campaign_id: campaignId },
-            {
-                processing_status: "processing",
-                processing_started_at: new Date(),
-            }
-        );
+        await CampaignService.updateByCampaignId(campaignId, {
+            processing_status: "processing",
+            processing_started_at: new Date(),
+        });
 
         // Generate the campaign stats (this is the heavy operation)
         campaignStats = await generateCampaignStats(campaignId);
 
         // Store the processed data in the campaign document
-        await Campaigns.updateOne(
-            { campaign_id: campaignId },
-            {
-                processed_data: campaignStats,
-                processing_status: "completed",
-                processing_completed_at: new Date(),
-                last_processed_at: new Date(),
-            }
-        );
+        await CampaignService.updateByCampaignId(campaignId, {
+            processed_data: campaignStats,
+            processing_status: "completed",
+            processing_completed_at: new Date(),
+            last_processed_at: new Date(),
+        });
 
         // Log cache invalidation (cache bypass logic handles real-time updates)
         console.log(
@@ -58,14 +52,11 @@ async function processCampaign(campaignId: string) {
         console.error(`Failed to process campaign ${campaignId}:`, error);
 
         // Update campaign status to failed
-        await Campaigns.updateOne(
-            { campaign_id: campaignId },
-            {
-                processing_status: "failed",
-                processing_error: error.message || "Unknown error",
-                processing_completed_at: new Date(),
-            }
-        );
+        await CampaignService.updateByCampaignId(campaignId, {
+            processing_status: "failed",
+            processing_error: error.message || "Unknown error",
+            processing_completed_at: new Date(),
+        });
 
         // Log cache invalidation (cache bypass logic handles real-time updates)
         console.log(

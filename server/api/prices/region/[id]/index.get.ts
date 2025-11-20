@@ -1,4 +1,4 @@
-import { getCachedPricesForRegion } from "../../../../helpers/RuntimeCache";
+import { PriceService } from "~/server/services";
 
 export default defineCachedEventHandler(
     async (event) => {
@@ -22,13 +22,15 @@ export default defineCachedEventHandler(
             date = new Date("2003-10-01");
         }
 
-        const prices: IPrice[] = await getCachedPricesForRegion(
-            regionId,
-            date || days,
-            !!date
-        );
+        const prices = await PriceService.findByRegionSince(regionId, date || days);
 
-        return prices;
+        return prices.map((price) => ({
+            ...price,
+            average: price.average !== null ? Number(price.average) : null,
+            highest: price.highest !== null ? Number(price.highest) : null,
+            lowest: price.lowest !== null ? Number(price.lowest) : null,
+            volume: price.volume !== null ? Number(price.volume) : null,
+        }));
     },
     {
         maxAge: 300,

@@ -1,3 +1,6 @@
+import type { Prisma } from "@prisma/client";
+import prisma from "~/lib/prisma";
+
 export default defineEventHandler(async (event) => {
     // Authenticate and verify admin privileges
     await requireAdminAuth(event);
@@ -22,60 +25,93 @@ export default defineEventHandler(async (event) => {
         );
         const skip = (pageNum - 1) * limitNum;
 
-        // Build MongoDB query
-        const mongoQuery: any = {};
+        // Build Prisma where clause
+        const where: Prisma.ApiKeyWhereInput = {};
 
         // Add search filter
         if (search && typeof search === "string" && search.trim() !== "") {
-            mongoQuery.$or = [
-                { name: { $regex: search.trim(), $options: "i" } },
-                { description: { $regex: search.trim(), $options: "i" } },
+            where.OR = [
+                { name: { contains: search.trim(), mode: "insensitive" } },
+                {
+                    description: {
+                        contains: search.trim(),
+                        mode: "insensitive",
+                    },
+                },
             ];
         }
 
         // Add active filter
         if (active === "true") {
-            mongoQuery.active = true;
+            where.active = true;
         } else if (active === "false") {
-            mongoQuery.active = false;
+            where.active = false;
         }
 
         // Build sort options
-        const sortOptions: any = {};
-        if (
-            typeof sortField === "string" &&
-            ["name", "createdAt", "lastUsed", "active"].includes(sortField)
-        ) {
-            sortOptions[sortField] = order === "desc" ? -1 : 1;
-        } else {
-            sortOptions.createdAt = -1; // Default sort
-        }
+        const sortMap: Record<string, string> = {
+            name: "name",
+            createdAt: "created_at",
+            lastUsed: "last_used",
+            active: "active",
+        };
+        const sortKey = sortMap[sortField as string] || "created_at";
+        const orderBy: Prisma.ApiKeyOrderByWithRelationInput = {
+            [sortKey]:
+                order === "asc" || order === "ASC" ? "asc" : ("desc" as const),
+        };
 
         // Execute queries
         const [apiKeys, totalCount] = await Promise.all([
-            ApiKeys.find(mongoQuery)
-                .sort(sortOptions)
-                .skip(skip)
-                .limit(limitNum)
-                .select("-key") // Don't return the actual API key for security
-                .lean(),
-            ApiKeys.countDocuments(mongoQuery),
+            prisma.apiKey.findMany({
+                where,
+                orderBy,
+                skip,
+                take: limitNum,
+                select: {
+                    id: true,
+                    name: true,
+                    description: true,
+                    active: true,
+                    last_used: true,
+                    created_at: true,
+                    created_by: true,
+                },
+            }),
+            prisma.apiKey.count({ where }),
         ]);
 
         // Get creator character names from Users
-        const creatorIds = [...new Set(apiKeys.map((key) => key.createdBy))];
-        const creators = await Users.find({ characterId: { $in: creatorIds } })
-            .select("characterId characterName")
-            .lean();
+        const creatorIds = [
+            ...new Set(
+                apiKeys
+                    .map((key) => key.created_by)
+                    .filter((id): id is number => id !== null)
+            ),
+        ];
+        const creators =
+            creatorIds.length > 0
+                ? await prisma.user.findMany({
+                      where: { id: { in: creatorIds } },
+                      select: {
+                          id: true,
+                          character_id: true,
+                          character_name: true,
+                      },
+                  })
+                : [];
 
         const creatorMap = new Map(
-            creators.map((c) => [c.characterId, c.characterName])
+            creators.map((c) => [c.id, c.character_name])
         );
 
         // Enhance api keys with creator names
         const enhancedApiKeys = apiKeys.map((key) => ({
             ...key,
-            createdByName: creatorMap.get(Number(key.createdBy)) || "Unknown",
+            createdByName:
+                creatorMap.get(Number(key.created_by)) ||
+                creatorMap.get(Number(key.created_by)) ||
+                "Unknown",
         }));
 
         return {

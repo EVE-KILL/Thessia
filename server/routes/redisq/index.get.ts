@@ -1,4 +1,4 @@
-import { ObjectId } from "mongodb";
+import prisma from "~/lib/prisma";
 
 /**
  * RedisQ-compatible endpoint for long-polling killmail delivery
@@ -29,27 +29,15 @@ export default defineEventHandler(async (event) => {
         // Mark client as active (expires in 3 hours)
         await redis.set(activeKey, "active", 10800);
 
-        // Get client's last position (ObjectId as string)
+        // Get client's last position (killmail_id as string)
         const lastPosition = await redis.get(positionKey);
-        let lastObjectId: ObjectId | null = null;
-
-        if (lastPosition) {
-            try {
-                lastObjectId = new ObjectId(lastPosition);
-            } catch {
-                // Invalid ObjectId, start fresh
-                lastObjectId = null;
-            }
-        }
+        const lastKillmailId = lastPosition ? Number(lastPosition) : null;
 
         // Try to get the next killmail immediately
-        let nextKillmail = await getNextKillmail(lastObjectId);
+        let nextKillmail = await getNextKillmail(lastKillmailId);
         if (nextKillmail) {
             // Update client position
-            await redis.set(
-                positionKey,
-                (nextKillmail._id as ObjectId).toString()
-            );
+            await redis.set(positionKey, `${nextKillmail.killmail_id}`);
             return formatRedisQResponse(nextKillmail);
         }
 
@@ -61,12 +49,9 @@ export default defineEventHandler(async (event) => {
         while (Date.now() - startTime < maxWaitTime) {
             await new Promise((resolve) => setTimeout(resolve, pollInterval));
 
-            nextKillmail = await getNextKillmail(lastObjectId);
+            nextKillmail = await getNextKillmail(lastKillmailId);
             if (nextKillmail) {
-                await redis.set(
-                    positionKey,
-                    (nextKillmail._id as ObjectId).toString()
-                );
+                await redis.set(positionKey, `${nextKillmail.killmail_id}`);
                 return await formatRedisQResponse(nextKillmail);
             }
         }
@@ -83,20 +68,26 @@ export default defineEventHandler(async (event) => {
  * Different from export API - we want NEWER killmails, not older ones
  */
 async function getNextKillmail(
-    afterObjectId: ObjectId | null
-): Promise<IKillmailDocument | null> {
+    afterKillmailId: number | null
+): Promise<any | null> {
     try {
-        // Build filter - if no position, get the newest killmail as starting point
-        // If we have a position, get killmails NEWER than that position (using $gt)
-        const filter: any = {};
-        if (afterObjectId) {
-            filter._id = { $gt: afterObjectId };
-        }
-
-        const killmail = await Killmails.findOne(filter, {
-            // Include items since we need them for value calculations
-            // Only exclude the most nested item details if needed for performance
-        }).sort({ _id: afterObjectId ? 1 : -1 }); // If no position, get newest. If position exists, get oldest of the newer ones.
+        const killmail = await prisma.killmail.findFirst({
+            where: afterKillmailId
+                ? { killmail_id: { gt: afterKillmailId } }
+                : undefined,
+            include: {
+                victim: true,
+                attackers: true,
+                items: {
+                    include: {
+                        child_items: true,
+                    },
+                },
+            },
+            orderBy: {
+                killmail_id: afterKillmailId ? "asc" : "desc",
+            },
+        });
 
         return killmail;
     } catch (error) {
@@ -109,9 +100,9 @@ async function getNextKillmail(
  * Format killmail in RedisQ-compatible format
  * Compatible with zKillboard RedisQ response structure
  */
-async function formatRedisQResponse(killmail: IKillmailDocument) {
+async function formatRedisQResponse(killmail: any) {
     // Get locationID (async) and calculate values (sync)
-    const locationID = await getLocationId(killmail.system_id);
+    const locationID = await getLocationId(killmail.solar_system_id);
     const droppedValue = calculateDroppedValue(killmail);
     const destroyedValue = calculateDestroyedValue(killmail);
 
@@ -120,23 +111,23 @@ async function formatRedisQResponse(killmail: IKillmailDocument) {
             killID: killmail.killmail_id,
             killmail: {
                 killmail_id: killmail.killmail_id,
-                killmail_time: killmail.kill_time,
-                solar_system_id: killmail.system_id,
+                killmail_time: killmail.killmail_time,
+                solar_system_id: killmail.solar_system_id,
                 victim: {
-                    ship_type_id: killmail.victim.ship_id,
-                    character_id: killmail.victim.character_id || 0,
-                    corporation_id: killmail.victim.corporation_id || 0,
-                    alliance_id: killmail.victim.alliance_id || 0,
-                    faction_id: killmail.victim.faction_id || 0,
-                    damage_taken: killmail.victim.damage_taken || 0,
+                    ship_type_id: killmail.victim?.ship_type_id || 0,
+                    character_id: killmail.victim?.character_id || 0,
+                    corporation_id: killmail.victim?.corporation_id || 0,
+                    alliance_id: killmail.victim?.alliance_id || 0,
+                    faction_id: killmail.victim?.faction_id || 0,
+                    damage_taken: killmail.victim?.damage_taken || 0,
                     position: {
-                        x: killmail.x || 0,
-                        y: killmail.y || 0,
-                        z: killmail.z || 0,
+                        x: killmail.victim?.x || 0,
+                        y: killmail.victim?.y || 0,
+                        z: killmail.victim?.z || 0,
                     },
                 },
-                attackers: killmail.attackers.map((attacker: any) => ({
-                    ship_type_id: attacker.ship_id || 0,
+                attackers: (killmail.attackers || []).map((attacker: any) => ({
+                    ship_type_id: attacker.ship_type_id || 0,
                     character_id: attacker.character_id || 0,
                     corporation_id: attacker.corporation_id || 0,
                     alliance_id: attacker.alliance_id || 0,
@@ -150,10 +141,14 @@ async function formatRedisQResponse(killmail: IKillmailDocument) {
             zkb: {
                 locationID,
                 hash: killmail.killmail_hash,
-                fittedValue: killmail.fitting_value || 0,
+                fittedValue: killmail.fitting_value
+                    ? Number(killmail.fitting_value)
+                    : 0,
                 droppedValue,
                 destroyedValue,
-                totalValue: killmail.total_value || 0,
+                totalValue: killmail.total_value
+                    ? Number(killmail.total_value)
+                    : 0,
                 points: 0,
                 npc: killmail.is_npc || false,
                 solo: killmail.is_solo || false,
@@ -163,8 +158,7 @@ async function formatRedisQResponse(killmail: IKillmailDocument) {
                     killmail.killmail_id +
                     "/" +
                     killmail.killmail_hash,
-                createdAt:
-                    killmail.createdAt?.toISOString() ||
+                createdAt: killmail.created_at?.toISOString?.() ||
                     new Date().toISOString(),
                 labels: [],
             },
@@ -173,10 +167,10 @@ async function formatRedisQResponse(killmail: IKillmailDocument) {
 }
 
 async function getLocationId(systemId: number): Promise<number> {
-    const celestial = await Celestials.findOne(
-        { solar_system_id: systemId },
-        { item_id: 1 }
-    ).lean();
+    const celestial = await prisma.celestial.findFirst({
+        where: { solar_system_id: systemId },
+        select: { item_id: true },
+    });
 
     return celestial ? celestial.item_id : 0;
 }
@@ -185,19 +179,20 @@ async function getLocationId(systemId: number): Promise<number> {
  * Calculate the total value of dropped items
  * Recursively processes nested items
  */
-function calculateDroppedValue(killmail: IKillmailDocument): number {
+function calculateDroppedValue(killmail: any): number {
     function calculateItemDroppedValue(items: any[]): number {
         return items.reduce((total, item) => {
             let itemValue = 0;
 
             // Add value of dropped quantity
-            if (item.qty_dropped && item.qty_dropped > 0) {
-                itemValue += (item.value || 0) * item.qty_dropped;
+            if (item.quantity_dropped && item.quantity_dropped > 0) {
+                itemValue +=
+                    Number(item.value || 0) * item.quantity_dropped;
             }
 
             // Recursively calculate nested items
-            if (item.items && item.items.length > 0) {
-                itemValue += calculateItemDroppedValue(item.items);
+            if (item.child_items && item.child_items.length > 0) {
+                itemValue += calculateItemDroppedValue(item.child_items);
             }
 
             return total + itemValue;
@@ -211,19 +206,20 @@ function calculateDroppedValue(killmail: IKillmailDocument): number {
  * Calculate the total value of destroyed items
  * Recursively processes nested items
  */
-function calculateDestroyedValue(killmail: IKillmailDocument): number {
+function calculateDestroyedValue(killmail: any): number {
     function calculateItemDestroyedValue(items: any[]): number {
         return items.reduce((total, item) => {
             let itemValue = 0;
 
             // Add value of destroyed quantity
-            if (item.qty_destroyed && item.qty_destroyed > 0) {
-                itemValue += (item.value || 0) * item.qty_destroyed;
+            if (item.quantity_destroyed && item.quantity_destroyed > 0) {
+                itemValue +=
+                    Number(item.value || 0) * item.quantity_destroyed;
             }
 
             // Recursively calculate nested items
-            if (item.items && item.items.length > 0) {
-                itemValue += calculateItemDestroyedValue(item.items);
+            if (item.child_items && item.child_items.length > 0) {
+                itemValue += calculateItemDestroyedValue(item.child_items);
             }
 
             return total + itemValue;

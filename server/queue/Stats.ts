@@ -2,7 +2,7 @@ import { cliLogger } from "../helpers/Logger";
 import { createQueue } from "../helpers/Queue";
 import { calculateAllStats } from "../helpers/Stats";
 import { IStatsDocument, StatsType } from "../interfaces/IStats";
-import { Stats } from "../models/Stats";
+import prisma from "~/lib/prisma";
 
 const statsQueue = createQueue("stats");
 
@@ -132,24 +132,6 @@ async function processStats(
     }
 
     const stats = await calculateAllStats(entityType, entityId, days);
-    const model = new Stats(stats);
-
-    try {
-        await model.save();
-    } catch (error) {
-        await Stats.updateOne({ type: entityType, id: entityId, days }, stats);
-    } finally {
-        await Stats.updateOne(
-            { type: entityType, id: entityId, days },
-            {
-                $set: {
-                    updatedAt: new Date(),
-                    needsUpdate: false, // Mark as no longer needing update
-                },
-            },
-            { upsert: true }
-        );
-    }
 
     return stats;
 }

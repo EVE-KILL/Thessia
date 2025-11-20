@@ -2,7 +2,9 @@ import {
     AllianceService,
     CharacterService,
     CorporationService,
+    UserService,
 } from "~/server/services";
+import prisma from "~/lib/prisma";
 
 export default defineEventHandler(async (event) => {
     // Authenticate and verify admin privileges
@@ -11,18 +13,8 @@ export default defineEventHandler(async (event) => {
     const query = getQuery(event);
     const searchTerm = (query.search as string) || "";
 
-    // Get all users with their basic info - TODO: Convert to UserService
-    const users = await Users.find(
-        {},
-        {
-            characterId: 1,
-            characterName: 1,
-            scopes: 1,
-            canFetchCorporationKillmails: 1,
-            administrator: 1,
-            esiActive: 1,
-        }
-    ).lean();
+    // Get all users with their basic info
+    const users = await UserService.findAll();
 
     // Get all unique character IDs
     const characterIds = users.map((user) => user.characterId);
@@ -57,36 +49,33 @@ export default defineEventHandler(async (event) => {
     ]);
 
     // Get total corporation counts per alliance
-    const allianceCorporationCounts = await Corporations.aggregate([
-        {
-            $match: {
-                alliance_id: { $in: allianceIds },
-            },
-        },
-        {
-            $group: {
-                _id: "$alliance_id",
-                totalCorporations: { $sum: 1 },
-            },
-        },
-    ]);
+    const allianceCorporationCounts =
+        allianceIds.length > 0
+            ? await prisma.corporation.groupBy({
+                  by: ["alliance_id"],
+                  where: { alliance_id: { in: allianceIds } },
+                  _count: { _all: true },
+              })
+            : [];
 
-    // Get all corporations in alliances (for missing corp calculations)
-    const allAllianceCorporations = await Corporations.find(
-        { alliance_id: { $in: allianceIds } },
-        {
-            corporation_id: 1,
-            name: 1,
-            alliance_id: 1,
-            member_count: 1,
-        }
-    ).lean();
+    const allAllianceCorporations =
+        allianceIds.length > 0
+            ? await prisma.corporation.findMany({
+                  where: { alliance_id: { in: allianceIds } },
+                  select: {
+                      corporation_id: true,
+                      name: true,
+                      alliance_id: true,
+                      member_count: true,
+                  },
+              })
+            : [];
 
     // Create alliance corporation count map
     const allianceCorpCountMap = new Map(
         allianceCorporationCounts.map((item) => [
-            item._id,
-            item.totalCorporations,
+            item.alliance_id,
+            item._count?._all || item._count || 0,
         ])
     );
 
@@ -301,26 +290,9 @@ export default defineEventHandler(async (event) => {
     const thirtyDaysAgo = new Date();
     thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
 
-    const newKillmailsResult = await ESILogs.aggregate([
-        {
-            $match: {
-                timestamp: { $gte: thirtyDaysAgo },
-                dataType: { $in: ["killmails", "corporation_killmails"] },
-                newItemsCount: { $gt: 0 },
-            },
-        },
-        {
-            $group: {
-                _id: null,
-                totalNewKillmails: { $sum: "$newItemsCount" },
-            },
-        },
-    ]);
-
-    const newKillmailsLast30Days =
-        newKillmailsResult.length > 0
-            ? newKillmailsResult[0].totalNewKillmails
-            : 0;
+    const newKillmailsLast30Days = await prisma.killmail.count({
+        where: { killmail_time: { gte: thirtyDaysAgo } },
+    });
 
     // Calculate summary statistics
     const activeUsers = userAnalytics.filter((user) => user.esiActive);

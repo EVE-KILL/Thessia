@@ -1,8 +1,8 @@
-import { getCachedPriceCount } from "../../helpers/RuntimeCache";
+import { PriceService } from "~/server/services";
 
 export default defineCachedEventHandler(
     async (event) => {
-        const count: number = await getCachedPriceCount();
+        const count: number = await PriceService.count();
         return { count: count };
     },
     {

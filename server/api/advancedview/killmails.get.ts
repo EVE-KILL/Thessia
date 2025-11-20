@@ -1,4 +1,6 @@
 import { createHash } from "crypto";
+import { KillmailService } from "~/server/services";
+import prisma from "~/lib/prisma";
 
 /**
  * Handle filter parameter - either a MongoDB filter object or advanced search filters
@@ -324,28 +326,13 @@ export default defineCachedEventHandler(
             // Ensure we always have a kill_time filter for optimal index usage
             mongoQuery = addDefaultTimeFilter(mongoQuery);
 
-            // Determine optimal index hint for the query
-            const sortOptions = { kill_time: -1 };
-            const hint = await determineOptimalIndexHint(
-                Killmails.collection,
-                mongoQuery,
-                sortOptions,
-                "[Killmails API]"
-            );
-
-            // Fetch killmails with pagination and index hint (with 30s timeout)
-            let killmailQuery = Killmails.find(mongoQuery)
-                .sort({ kill_time: -1 })
-                .skip(skip)
-                .limit(limit)
-                .maxTimeMS(30000); // 30 second timeout
-
-            // Apply index hint if we have one
-            if (hint) {
-                killmailQuery = killmailQuery.hint(hint);
-            }
-
-            const rawKillmails = await killmailQuery.lean();
+            // Fetch killmails with pagination
+            const [rawKillmails, totalKillmails] = await KillmailService.searchWithPagination({
+                filter: mongoQuery,
+                page,
+                limit,
+                sort: { field: "killmail_time", order: "desc" },
+            }).then((res) => [res.data, res.pagination.total]);
 
             // Transform killmails to match IKillList format (same as /api/killlist)
             const killmails = rawKillmails.map((killmail: any) => {
@@ -397,13 +384,6 @@ export default defineCachedEventHandler(
                 };
             });
 
-            // Get total count for pagination (also use the hint for counting, with timeout)
-            let countQuery =
-                Killmails.countDocuments(mongoQuery).maxTimeMS(30000); // 30 second timeout
-            if (hint) {
-                countQuery = countQuery.hint(hint);
-            }
-            const totalKillmails = await countQuery;
             const totalPages = Math.ceil(totalKillmails / limit);
 
             return {

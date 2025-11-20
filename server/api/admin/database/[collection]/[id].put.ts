@@ -1,131 +1,72 @@
+import prisma from "~/lib/prisma";
+
+const TABLE_MAP: Record<string, string> = {
+    alliances: "alliances",
+    battles: "battles",
+    bloodlines: "bloodlines",
+    campaigns: "campaigns",
+    celestials: "celestials",
+    characterachievements: "character_achievements",
+    characters: "characters",
+    comments: "comments",
+    config: "config",
+    constellations: "constellations",
+    corporations: "corporations",
+    customprices: "custom_prices",
+    dscan: "dscan",
+    esilogs: "esi_logs",
+    factions: "factions",
+    historicalstats: "historical_stats",
+    invflags: "inv_flags",
+    invgroups: "inv_groups",
+    invtypes: "inv_types",
+    killmails: "killmails",
+    killmailsesi: "killmails_esi",
+    localscan: "local_scan",
+    prices: "prices",
+    races: "races",
+    regions: "regions",
+    savedquery: "saved_query",
+    solarsystems: "solar_systems",
+    stats: "stats",
+    users: "users",
+    wars: "wars",
+};
+
 export default defineEventHandler(async (event) => {
-    // Authenticate and verify admin privileges
     await requireAdminAuth(event);
 
-    // Get collection name and document ID from route params
-    const collectionName = getRouterParam(event, "collection");
-    const documentId = getRouterParam(event, "id");
+    const collectionName = getRouterParam(event, "collection")?.toLowerCase();
+    const table = collectionName ? TABLE_MAP[collectionName] : null;
+    const id = getRouterParam(event, "id");
 
-    if (!collectionName) {
+    if (!table || !id) {
         throw createError({
             statusCode: 400,
-            statusMessage: "Collection name is required",
+            statusMessage: "Invalid collection or id",
         });
     }
 
-    if (!documentId) {
-        throw createError({
-            statusCode: 400,
-            statusMessage: "Document ID is required",
-        });
-    }
+    const body = await readBody(event);
 
     try {
-        // Get the request body with updated document data
-        const updateData = await readBody(event);
+        const fields = Object.keys(body);
+        const values = Object.values(body);
 
-        if (!updateData || typeof updateData !== "object") {
-            throw createError({
-                statusCode: 400,
-                statusMessage: "Valid update data is required",
-            });
-        }
+        const setClause = fields
+            .map((field, idx) => `${field} = ${JSON.stringify(values[idx])}`)
+            .join(", ");
 
-        // Get the model based on collection name using the same mapping as data.get.ts
-        const modelNameMap: Record<string, any> = {
-            accesslogs: AccessLogs,
-            alliances: Alliances,
-            battles: Battles,
-            bloodlines: Bloodlines,
-            campaigns: Campaigns,
-            celestials: Celestials,
-            characterachievements: CharacterAchievements,
-            characters: Characters,
-            comments: Comments,
-            config: Config,
-            constellations: Constellations,
-            corporations: Corporations,
-            customprices: CustomPrices,
-            dscan: DScan,
-            esilogs: ESILogs,
-            factions: Factions,
-            historicalstats: HistoricalStats,
-            invflags: InvFlags,
-            invgroups: InvGroups,
-            invtypes: InvTypes,
-            killmails: Killmails,
-            killmailsesi: KillmailsESI,
-            localscan: LocalScan,
-            prices: Prices,
-            races: Races,
-            regions: Regions,
-            savedquery: SavedQuery,
-            solarsystems: SolarSystems,
-            stats: Stats,
-            users: Users,
-            wars: Wars,
-        };
-
-        const Model = modelNameMap[collectionName.toLowerCase()];
-        if (!Model) {
-            throw createError({
-                statusCode: 404,
-                statusMessage: `Unknown collection '${collectionName}'`,
-            });
-        }
-
-        // Remove system fields that shouldn't be updated
-        const { _id, __v, createdAt, ...cleanUpdateData } = updateData;
-
-        // Add updatedAt timestamp
-        cleanUpdateData.updatedAt = new Date();
-
-        // Update the document
-        const updatedDocument = await Model.findByIdAndUpdate(
-            documentId,
-            cleanUpdateData,
-            {
-                new: true, // Return updated document
-                runValidators: true, // Run schema validation
-            }
-        ).lean();
-
-        if (!updatedDocument) {
-            throw createError({
-                statusCode: 404,
-                statusMessage: "Document not found",
-            });
-        }
-
-        return {
-            success: true,
-            document: updatedDocument,
-            message: "Document updated successfully",
-        };
-    } catch (error: any) {
-        cliLogger.error(
-            `Error updating document in '${collectionName}': ${error}`
+        await prisma.$executeRawUnsafe(
+            `UPDATE ${table} SET ${setClause} WHERE id = ${Number(id)}`
         );
 
-        // Handle validation errors
-        if (error?.name === "ValidationError") {
-            throw createError({
-                statusCode: 400,
-                statusMessage: `Validation error: ${error.message}`,
-            });
-        }
-
-        // Handle cast errors (invalid ObjectId, etc.)
-        if (error?.name === "CastError") {
-            throw createError({
-                statusCode: 400,
-                statusMessage: `Invalid data format: ${error.message}`,
-            });
-        }
-
-        throw createError({
-            statusCode: 500,
-            statusMessage: `Failed to update document in collection '${collectionName}'`,
-        });
+        return { success: true, message: "Document updated successfully" };
+    } catch (error) {
+        return {
+            success: false,
+            message: "Failed to update document",
+            error: error instanceof Error ? error.message : "Unknown error",
+        };
     }
 });

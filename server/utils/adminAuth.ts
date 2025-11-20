@@ -1,4 +1,22 @@
-import type { H3Event } from "h3";
+import {
+    type H3Event,
+    createError,
+    getCookie,
+    setResponseHeaders,
+} from "h3";
+import { UserService } from "../services";
+
+function mapUser(user: any) {
+    return {
+        ...user,
+        characterId: user.character_id,
+        characterName: user.character_name,
+        uniqueIdentifier: user.unique_identifier,
+        administrator: user.role === "admin",
+        canFetchCorporationKillmails: user.can_fetch_corporation_killmails,
+        esiActive: user.esi_active,
+    };
+}
 
 /**
  * Authenticates the user and verifies they have administrator privileges.
@@ -16,7 +34,7 @@ import type { H3Event } from "h3";
  * });
  * ```
  */
-export async function requireAdminAuth(event: H3Event): Promise<IUserDocument> {
+export async function requireAdminAuth(event: H3Event): Promise<any> {
     // Add cache-control headers to prevent caching
     setResponseHeaders(event, {
         "Cache-Control": "no-cache, no-store, must-revalidate",
@@ -36,7 +54,7 @@ export async function requireAdminAuth(event: H3Event): Promise<IUserDocument> {
     }
 
     // Find user by cookie value
-    const user = await Users.findOne({ uniqueIdentifier: cookie });
+    const user = await UserService.findByUniqueIdentifier(cookie);
     if (!user) {
         throw createError({
             statusCode: 401,
@@ -45,14 +63,14 @@ export async function requireAdminAuth(event: H3Event): Promise<IUserDocument> {
     }
 
     // Check if user is administrator
-    if (!user.administrator) {
+    if (user.role !== "admin") {
         throw createError({
             statusCode: 403,
             statusMessage: "Administrator access required",
         });
     }
 
-    return user;
+    return mapUser(user);
 }
 /**
  * Checks if the current user is an administrator without throwing errors.

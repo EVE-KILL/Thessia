@@ -1,7 +1,7 @@
 import { getCharacter, getCharacterHistory } from "../helpers/ESIData";
 import { cliLogger } from "../helpers/Logger";
 import { createQueue } from "../helpers/Queue";
-import { Corporations } from "../models/Corporations";
+import { CorporationService } from "../services";
 import { queueUpdateCorporation } from "../queue/Corporation";
 
 const characterQueue = createQueue("character");
@@ -93,9 +93,9 @@ async function updateCharacter(characterId: number) {
     // Check if the corporation exists, if not queue it for update
     if (characterData.corporation_id && characterData.corporation_id > 0) {
         try {
-            const corporation = await Corporations.findOne({
-                corporation_id: characterData.corporation_id,
-            });
+            const corporation = await CorporationService.findById(
+                characterData.corporation_id
+            );
 
             if (!corporation) {
                 await queueUpdateCorporation(characterData.corporation_id, 2); // Higher priority

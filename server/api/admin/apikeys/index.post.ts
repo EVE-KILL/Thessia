@@ -1,3 +1,5 @@
+import prisma from "~/lib/prisma";
+
 export default defineEventHandler(async (event) => {
     // Authenticate and verify admin privileges
     const adminUser = await requireAdminAuth(event);
@@ -16,7 +18,9 @@ export default defineEventHandler(async (event) => {
         }
 
         // Check if name already exists
-        const existingKey = await ApiKeys.findOne({ name: name.trim() });
+        const existingKey = await prisma.apiKey.findFirst({
+            where: { name: name.trim() },
+        });
         if (existingKey) {
             throw createError({
                 statusCode: 409,
@@ -29,15 +33,15 @@ export default defineEventHandler(async (event) => {
         const apiKey = crypto.randomBytes(32).toString("hex");
 
         // Create new API key
-        const newApiKey = new ApiKeys({
-            name: name.trim(),
-            key: apiKey,
-            description: description?.trim() || "",
-            active: true,
-            createdBy: adminUser.characterId,
+        const newApiKey = await prisma.apiKey.create({
+            data: {
+                name: name.trim(),
+                key: apiKey,
+                description: description?.trim() || "",
+                active: true,
+                created_by: adminUser.id || adminUser.characterId || 0,
+            },
         });
-
-        await newApiKey.save();
 
         // Return the new API key (including the key only this once)
         return {
@@ -47,9 +51,9 @@ export default defineEventHandler(async (event) => {
                 key: newApiKey.key, // Only returned on creation
                 description: newApiKey.description,
                 active: newApiKey.active,
-                createdBy: newApiKey.createdBy,
+                createdBy: newApiKey.created_by,
                 createdByName: adminUser.characterName,
-                createdAt: newApiKey.createdAt,
+                createdAt: newApiKey.created_at,
             },
             message: "API key created successfully",
         };
@@ -59,16 +63,8 @@ export default defineEventHandler(async (event) => {
             throw error;
         }
 
-        // Handle mongoose validation errors
-        if (error.name === "ValidationError") {
-            throw createError({
-                statusCode: 400,
-                statusMessage: "Validation error: " + error.message,
-            });
-        }
-
         // Handle duplicate key errors
-        if (error.code === 11000) {
+        if (error.code === "P2002") {
             throw createError({
                 statusCode: 409,
                 statusMessage: "API key name already exists",

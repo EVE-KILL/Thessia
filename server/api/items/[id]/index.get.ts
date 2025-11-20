@@ -1,5 +1,5 @@
-import { TypeService } from "~/server/services";
-import { getCachedPricesForType } from "../../../helpers/RuntimeCache";
+import prisma from "~/lib/prisma";
+import { PriceService, TypeService } from "~/server/services";
 
 /**
  * Optimized endpoint that fetches item details, recent killmails, and pricing data in a single request
@@ -46,75 +46,8 @@ export default defineCachedEventHandler(
                 1283, 1305, 1527, 1534, 1538, 1972, 2001, 4594,
             ];
 
-            // Execute all queries in parallel for maximum performance
-            const [item, killmails, prices] = await Promise.all([
-                // Get item details
-                TypeService.findById(typeId),
-
-                // Get recent killmails
-                (async () => {
-                    // First check if this is a ship type
-                    const type = await TypeService.findById(typeId);
-
-                    if (!type) return [];
-
-                    const typeGroupId = type.group_id;
-                    let queryCondition = {};
-
-                    if (typeGroupId && shipGroupIds.includes(typeGroupId)) {
-                        // If it's a ship, search for both victim.ship_id AND items.type_id
-                        // This catches both ships being destroyed and ships being transported as cargo
-                        queryCondition = {
-                            $or: [
-                                { "victim.ship_id": typeId },
-                                { "items.type_id": typeId },
-                            ],
-                        };
-                    } else {
-                        // For non-ship items, search for items.type_id only
-                        queryCondition = { "items.type_id": typeId };
-                    }
-
-                    return Killmails.find(queryCondition, {
-                        _id: 0,
-                        killmail_id: 1,
-                        kill_time: 1,
-                        total_value: 1,
-                        system_id: 1,
-                        system_name: 1,
-                        region_name: 1,
-                        "victim.ship_id": 1,
-                        "victim.ship_name": 1,
-                        "victim.ship_group_name": 1,
-                        "victim.character_id": 1,
-                        "victim.character_name": 1,
-                        "victim.corporation_id": 1,
-                        "victim.corporation_name": 1,
-                        "victim.alliance_id": 1,
-                        "victim.alliance_name": 1,
-                        "victim.faction_name": 1,
-                        "attackers.final_blow": 1,
-                        "attackers.character_id": 1,
-                        "attackers.character_name": 1,
-                        "attackers.corporation_id": 1,
-                        "attackers.corporation_name": 1,
-                        "attackers.alliance_id": 1,
-                        "attackers.alliance_name": 1,
-                        "attackers.faction_name": 1,
-                    })
-                        .sort({ kill_time: -1 })
-                        .limit(killmailLimit)
-                        .lean();
-                })(),
-
-                // Get pricing data using cached function
-                getCachedPricesForType(
-                    typeId,
-                    new Date(Date.now() - priceDays * 24 * 60 * 60 * 1000),
-                    true,
-                    regionId
-                ),
-            ]);
+            // Fetch the type once so we can build downstream queries
+            const item = await TypeService.findById(typeId);
 
             if (!item) {
                 throw createError({
@@ -122,6 +55,76 @@ export default defineCachedEventHandler(
                     statusMessage: "Item not found",
                 });
             }
+
+            const isShipType =
+                item.group_id !== null && shipGroupIds.includes(item.group_id);
+
+            // Build Prisma filter
+            const killmailWhere: any = isShipType
+                ? {
+                      OR: [
+                          { victim: { ship_type_id: typeId } },
+                          {
+                              items: {
+                                  some: {
+                                      item_type_id: typeId,
+                                  },
+                              },
+                          },
+                      ],
+                  }
+                : {
+                      items: {
+                          some: {
+                              item_type_id: typeId,
+                          },
+                      },
+                  };
+
+            // Execute remaining queries in parallel for maximum performance
+            const [killmails, prices] = await Promise.all([
+                prisma.killmail.findMany({
+                    where: killmailWhere,
+                    include: {
+                        victim: {
+                            include: {
+                                ship_type: { select: { name: true } },
+                                ship_group: { select: { group_name: true } },
+                                character: { select: { name: true } },
+                                corporation: { select: { name: true } },
+                                alliance: { select: { name: true } },
+                                faction: { select: { name: true } },
+                            },
+                        },
+                        attackers: {
+                            where: { final_blow: true },
+                            include: {
+                                character: { select: { name: true } },
+                                corporation: { select: { name: true } },
+                                alliance: { select: { name: true } },
+                                faction: { select: { name: true } },
+                                ship_group: { select: { group_name: true } },
+                            },
+                        },
+                        solar_system: {
+                            select: {
+                                system_name: true,
+                                security: true,
+                                region_id: true,
+                                region: { select: { region_name: true } },
+                            },
+                        },
+                        region: { select: { region_name: true } },
+                    },
+                    orderBy: { killmail_time: "desc" },
+                    take: killmailLimit,
+                }),
+                PriceService.findByTypeSince(
+                    typeId,
+                    new Date(Date.now() - priceDays * 24 * 60 * 60 * 1000),
+                    regionId
+                ),
+            ]);
 
             // Format killmails data
             const formattedKillmails = killmails.map((killmail) => {
@@ -132,33 +135,52 @@ export default defineCachedEventHandler(
 
                 return {
                     killmail_id: killmail.killmail_id,
-                    kill_time: killmail.kill_time,
-                    total_value: killmail.total_value,
-                    system_id: killmail.system_id,
-                    system_name: killmail.system_name,
-                    region_name: killmail.region_name,
+                    kill_time: killmail.killmail_time,
+                    total_value: killmail.total_value
+                        ? Number(killmail.total_value)
+                        : null,
+                    system_id: killmail.solar_system_id,
+                    system_name:
+                        killmail.solar_system?.system_name ||
+                        killmail.solar_system_id,
+                    region_name:
+                        killmail.region?.region_name ||
+                        killmail.solar_system?.region?.region_name ||
+                        null,
                     victim: {
-                        ship_id: killmail.victim.ship_id,
-                        ship_name: killmail.victim.ship_name,
-                        ship_group_name: killmail.victim.ship_group_name,
-                        character_id: killmail.victim.character_id,
-                        character_name: killmail.victim.character_name,
-                        corporation_id: killmail.victim.corporation_id,
-                        corporation_name: killmail.victim.corporation_name,
-                        alliance_id: killmail.victim.alliance_id,
-                        alliance_name: killmail.victim.alliance_name,
-                        faction_name: killmail.victim.faction_name,
+                        ship_id: killmail.victim?.ship_type_id || null,
+                        ship_name: killmail.victim?.ship_type?.name || {},
+                        ship_group_name:
+                            killmail.victim?.ship_group?.group_name || {},
+                        character_id: killmail.victim?.character_id || null,
+                        character_name:
+                            killmail.victim?.character?.name || undefined,
+                        corporation_id:
+                            killmail.victim?.corporation_id || null,
+                        corporation_name:
+                            killmail.victim?.corporation?.name || undefined,
+                        alliance_id: killmail.victim?.alliance_id || null,
+                        alliance_name:
+                            killmail.victim?.alliance?.name || undefined,
+                        faction_name:
+                            killmail.victim?.faction?.name || undefined,
                     },
                     finalblow: finalBlowAttacker
                         ? {
-                              character_id: finalBlowAttacker.character_id,
-                              character_name: finalBlowAttacker.character_name,
-                              corporation_id: finalBlowAttacker.corporation_id,
+                              character_id:
+                                  finalBlowAttacker.character_id || null,
+                              character_name:
+                                  finalBlowAttacker.character?.name || "",
+                              corporation_id:
+                                  finalBlowAttacker.corporation_id || null,
                               corporation_name:
-                                  finalBlowAttacker.corporation_name,
-                              alliance_id: finalBlowAttacker.alliance_id,
-                              alliance_name: finalBlowAttacker.alliance_name,
-                              faction_name: finalBlowAttacker.faction_name,
+                                  finalBlowAttacker.corporation?.name || "",
+                              alliance_id:
+                                  finalBlowAttacker.alliance_id || null,
+                              alliance_name:
+                                  finalBlowAttacker.alliance?.name || "",
+                              faction_name:
+                                  finalBlowAttacker.faction?.name || "",
                           }
                         : null,
                 };
@@ -167,7 +189,15 @@ export default defineCachedEventHandler(
             return {
                 item,
                 killmails: formattedKillmails,
-                prices,
+                prices: prices.map((price) => ({
+                    ...price,
+                    average:
+                        price.average !== null ? Number(price.average) : null,
+                    highest:
+                        price.highest !== null ? Number(price.highest) : null,
+                    lowest: price.lowest !== null ? Number(price.lowest) : null,
+                    volume: price.volume !== null ? Number(price.volume) : null,
+                })),
                 meta: {
                     killmailCount: formattedKillmails.length,
                     priceCount: prices.length,

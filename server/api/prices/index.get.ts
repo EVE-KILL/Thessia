@@ -1,12 +1,12 @@
-import { getCachedPriceAggregation } from "../../helpers/RuntimeCache";
+import { PriceService } from "~/server/services";
 
 export default defineCachedEventHandler(
     async (event) => {
-        const result = await getCachedPriceAggregation();
+        const result = await PriceService.getDailyAggregation();
 
         // Transform the result to the desired format
         const formattedResult = result.reduce((acc, item) => {
-            acc[item._id] = item.count;
+            acc[item.day] = item.count;
             return acc;
         }, {});
 

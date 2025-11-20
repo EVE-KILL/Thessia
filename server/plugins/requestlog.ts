@@ -6,7 +6,7 @@ import { nitroApp } from "nitropack/runtime/internal/app";
 const ACCESS_LOG_CONFIG = {
     bufferMaxSize: 1000,
     flushInterval: 1000,
-    enableDatabaseLogging: true,
+    enableDatabaseLogging: false,
 };
 
 // In-memory buffer for access logs
@@ -63,17 +63,10 @@ async function flushBuffer(): Promise<void> {
 
         if (logsToProcess.length === 0) return;
 
-        // Import the model dynamically to avoid import issues
-        const { AccessLogs } = await import("../models/AccessLogs");
-
-        // Bulk insert with unordered writes for better performance
-        await AccessLogs.insertMany(logsToProcess, {
-            ordered: false,
-            lean: true,
-        });
-
+        // Database logging has been disabled while Prisma replacement is implemented
+        // Discard buffered logs after reporting count
         cliLogger.debug(
-            `📝 Flushed ${logsToProcess.length} access log entries to database`
+            `📝 Discarded ${logsToProcess.length} access log entries (DB logging disabled)`
         );
     } catch (error) {
         cliLogger.error(`❌ Error flushing access logs to database: ${error}`);

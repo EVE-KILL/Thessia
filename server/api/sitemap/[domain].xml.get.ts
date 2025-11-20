@@ -1,4 +1,5 @@
 import { CustomDomainService } from "~/server/services";
+import prisma from "~/lib/prisma";
 
 /**
  * Dynamic sitemap generation for custom domains
@@ -178,34 +179,37 @@ async function getEntityRecentKillmails(
     entityId: number,
     limit: number = 100
 ) {
-    const matchStage: any = {};
+    const where =
+        entityType === "character"
+            ? {
+                  OR: [
+                      { victim: { character_id: entityId } },
+                      { attackers: { some: { character_id: entityId } } },
+                  ],
+              }
+            : entityType === "corporation"
+            ? {
+                  OR: [
+                      { victim: { corporation_id: entityId } },
+                      { attackers: { some: { corporation_id: entityId } } },
+                  ],
+              }
+            : {
+                  OR: [
+                      { victim: { alliance_id: entityId } },
+                      { attackers: { some: { alliance_id: entityId } } },
+                  ],
+              };
 
-    switch (entityType) {
-        case "character":
-            matchStage.$or = [
-                { "victim.character_id": entityId },
-                { "attackers.character_id": entityId },
-            ];
-            break;
-        case "corporation":
-            matchStage.$or = [
-                { "victim.corporation_id": entityId },
-                { "attackers.corporation_id": entityId },
-            ];
-            break;
-        case "alliance":
-            matchStage.$or = [
-                { "victim.alliance_id": entityId },
-                { "attackers.alliance_id": entityId },
-            ];
-            break;
-    }
-
-    return await Killmails.find(matchStage)
-        .sort({ killmail_date: -1 })
-        .limit(limit)
-        .select({ killmail_id: 1, killmail_date: 1 })
-        .lean();
+    return await prisma.killmail.findMany({
+        where,
+        orderBy: { killmail_time: "desc" },
+        take: limit,
+        select: {
+            killmail_id: true,
+            killmail_time: true,
+        },
+    });
 }
 
 /**

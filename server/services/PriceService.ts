@@ -312,4 +312,152 @@ export class PriceService {
     static async count(): Promise<number> {
         return await prisma.price.count();
     }
+
+    /**
+     * Get prices for a type since a given date (optionally scoped to a region)
+     */
+    static async findByTypeSince(
+        typeId: number,
+        since: Date,
+        regionId?: number
+    ) {
+        return await prisma.price.findMany({
+            where: {
+                type_id: typeId,
+                ...(regionId ? { region_id: regionId } : {}),
+                date: { gte: since },
+            },
+            orderBy: { date: "desc" },
+        });
+    }
+
+    /**
+     * Get prices for a region since a given date
+     */
+    static async findByRegionSince(regionId: number, since: Date) {
+        return await prisma.price.findMany({
+            where: {
+                region_id: regionId,
+                date: { gte: since },
+            },
+            orderBy: { date: "desc" },
+        });
+    }
+
+    /**
+     * Aggregate daily price counts (last N days)
+     */
+    static async getDailyAggregation(limit: number = 30) {
+        const rows = await prisma.$queryRaw<
+            { day: string; count: bigint | number }[]
+        >`
+            SELECT to_char(date::date, 'YYYY-MM-DD') as day, count(*) as count
+            FROM prices
+            GROUP BY day
+            ORDER BY day DESC
+            LIMIT ${limit}
+        `;
+
+        return rows.map((row) => ({
+            day: row.day,
+            count: Number(row.count || 0),
+        }));
+    }
+
+    /**
+     * Get market snapshot for an item:
+     * - Latest Jita price (region 10000002)
+     * - Cheapest recent price across all regions (last 7 days)
+     */
+    static async getItemMarketData(typeId: number) {
+        const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+
+        const [jitaPrice, recentPrices] = await Promise.all([
+            prisma.price.findFirst({
+                where: { type_id: typeId, region_id: 10000002 },
+                orderBy: { date: "desc" },
+                select: {
+                    average: true,
+                    highest: true,
+                    lowest: true,
+                    volume: true,
+                    order_count: true,
+                    date: true,
+                },
+            }),
+            prisma.price.findMany({
+                where: {
+                    type_id: typeId,
+                    date: { gte: sevenDaysAgo },
+                },
+                select: {
+                    average: true,
+                    region_id: true,
+                    date: true,
+                    volume: true,
+                    order_count: true,
+                },
+                orderBy: { average: "asc" },
+                take: 10,
+            }),
+        ]);
+
+        const normalizePrice = (price: any) =>
+            price
+                ? {
+                      ...price,
+                      average:
+                          price.average !== null ? Number(price.average) : null,
+                      highest:
+                          price.highest !== null ? Number(price.highest) : null,
+                      lowest:
+                          price.lowest !== null ? Number(price.lowest) : null,
+                      volume: price.volume !== null ? Number(price.volume) : null,
+                      order_count:
+                          price.order_count !== null
+                              ? Number(price.order_count)
+                              : null,
+                  }
+                : null;
+
+        return {
+            jitaPrice: normalizePrice(jitaPrice),
+            recentPrices: recentPrices.map(normalizePrice),
+        };
+    }
+
+    /**
+     * Get the latest price on or before a given date (defaults to Jita region)
+     */
+    static async getLatestPriceBefore(
+        typeId: number,
+        atDate: Date,
+        regionId: number = 10000002
+    ): Promise<number> {
+        // Exact date first, otherwise closest earlier
+        const price = await prisma.price.findFirst({
+            where: {
+                type_id: typeId,
+                region_id: regionId,
+                date: { lte: atDate },
+            },
+            orderBy: { date: "desc" },
+            select: { average: true },
+        });
+
+        if (price?.average !== null && price?.average !== undefined) {
+            return Number(price.average);
+        }
+
+        // Fallback to the latest overall for this type/region
+        const latest = await prisma.price.findFirst({
+            where: { type_id: typeId, region_id: regionId },
+            orderBy: { date: "desc" },
+            select: { average: true },
+        });
+
+        return latest?.average !== null && latest?.average !== undefined
+            ? Number(latest.average)
+            : 0.01;
+    }
 }

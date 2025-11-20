@@ -1,5 +1,8 @@
 import crypto from "node:crypto";
+import prisma from "~/lib/prisma";
+import { PriceService, TypeService } from "~/server/services";
 import formatIsk from "../../../utils/formatIsk";
+import type { IItem } from "~/server/interfaces/IKillmail";
 
 // Define types for better type safety (copied from main fitting API)
 interface IFittingSlots {
@@ -52,23 +55,37 @@ export default defineCachedEventHandler(
         const limit: number = Number(query.limit || 10);
 
         // Ship validation - check if ship is valid
-        const ship = await InvTypes.findOne(
-            { type_id: shipId },
-            { group_id: 1, name: 1 }
-        );
+        const ship = await TypeService.findById(shipId);
 
         if (!ship || !shipGroupIds.includes(ship.group_id)) {
             return { error: "Invalid ship type or ship not found" };
         }
 
         // Get killmails for this ship and generate fittings data
-        const killmails = await Killmails.find(
-            { "victim.ship_id": shipId },
-            { killmail_id: 1, killmail_hash: 1, items: 1, ship_value: 1 }
-        )
-            .sort({ kill_time: -1 })
-            .limit(1000)
-            .lean();
+        const killmails = await prisma.killmail.findMany({
+            where: {
+                victim: { ship_type_id: shipId },
+            },
+            orderBy: { killmail_time: "desc" },
+            take: 1000,
+            include: {
+                items: {
+                    where: { parent_item_id: null },
+                    include: {
+                        item_type: { select: { name: true, group_id: true } },
+                        group: { select: { group_name: true } },
+                        child_items: {
+                            include: {
+                                item_type: {
+                                    select: { name: true, group_id: true },
+                                },
+                                group: { select: { group_name: true } },
+                            },
+                        },
+                    },
+                },
+            },
+        });
 
         if (killmails.length === 0) {
             return [];
@@ -77,7 +94,7 @@ export default defineCachedEventHandler(
         // Process fittings and generate hashes
         const fittingResults = await Promise.all(
             killmails.map(async (killmail) => {
-                const items = killmail.items || [];
+                const items = mapKillmailItems(killmail.items || []);
                 const fitting = await generateFitting(items);
                 const fittingCost = await generateFittingCost(fitting);
                 const filteredFitting = pruneFittingForHash(fitting);
@@ -91,7 +108,9 @@ export default defineCachedEventHandler(
                     fitting,
                     fitting_cost: fittingCost,
                     fitting_hash: fittingHash,
-                    ship_value: killmail.ship_value,
+                    ship_value: killmail.ship_value
+                        ? Number(killmail.ship_value)
+                        : 0,
                 };
             })
         );
@@ -169,14 +188,12 @@ async function generateFittingCost(fitting: IFittingSlots): Promise<number> {
     let cost = 0;
     for (const slot in fitting) {
         for (const item of fitting[slot as keyof IFittingSlots]) {
-            const price = await Prices.findOne({
-                type_id: item.type_id,
-                region_id: 10000002,
-            }).sort({
-                date: -1,
-            });
+            const price = await PriceService.findByTypeAndRegion(
+                item.type_id,
+                10000002
+            );
             if (price?.average) {
-                cost += price.average * (item.qty_dropped + item.qty_destroyed);
+                cost += Number(price.average) * (item.qty_dropped + item.qty_destroyed);
             }
         }
     }
@@ -228,6 +245,22 @@ function pruneFittingForHash(fitting: IFittingSlots): any {
             .sort((a: any, b: any) => a.type_id - b.type_id);
     }
     return pruned;
+}
+
+function mapKillmailItems(items: any[]): IItem[] {
+    return items.map((item) => ({
+        type_id: item.item_type_id,
+        name: item.item_type?.name || "",
+        group_id: item.group_id || 0,
+        group_name: item.group?.group_name || "",
+        category_id: item.category_id || 0,
+        flag: item.flag,
+        qty_dropped: item.quantity_dropped,
+        qty_destroyed: item.quantity_destroyed,
+        singleton: item.singleton,
+        value: item.value ? Number(item.value) : 0,
+        items: item.child_items ? mapKillmailItems(item.child_items) : [],
+    }));
 }
 
 // SVG generation function

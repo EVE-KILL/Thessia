@@ -1,7 +1,7 @@
 import { AchievementService } from "../helpers/Achievements";
 import { cliLogger } from "../helpers/Logger";
 import { createQueue } from "../helpers/Queue";
-import { Characters } from "../models/Characters";
+import { CharacterService } from "../services";
 
 const achievementQueue = createQueue("achievement");
 
@@ -82,9 +82,7 @@ async function processAchievement(characterId: number) {
         );
 
         // Get character name from the database
-        const character = await Characters.findOne({
-            character_id: characterId,
-        });
+        const character = await CharacterService.findById(characterId);
         const characterName = (character as any)?.name || undefined;
 
         if (!character) {

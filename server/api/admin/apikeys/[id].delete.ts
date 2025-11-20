@@ -1,20 +1,25 @@
+import prisma from "~/lib/prisma";
+
 export default defineEventHandler(async (event) => {
     // Authenticate and verify admin privileges
     await requireAdminAuth(event);
 
     try {
         // Get the API key ID from route parameters
-        const keyId = getRouterParam(event, "id");
+        const keyIdParam = getRouterParam(event, "id");
 
-        if (!keyId) {
+        if (!keyIdParam || Number.isNaN(Number(keyIdParam))) {
             throw createError({
                 statusCode: 400,
                 statusMessage: "API key ID is required",
             });
         }
+        const keyId = Number(keyIdParam);
 
         // Find and delete the API key
-        const deletedKey = await ApiKeys.findOneAndDelete({ _id: keyId });
+        const deletedKey = await prisma.apiKey.delete({
+            where: { id: keyId },
+        });
 
         if (!deletedKey) {
             throw createError({
@@ -37,11 +42,10 @@ export default defineEventHandler(async (event) => {
             throw error;
         }
 
-        // Handle invalid ObjectId errors
-        if (error.name === "CastError") {
+        if (error.code === "P2025") {
             throw createError({
-                statusCode: 400,
-                statusMessage: "Invalid API key ID format",
+                statusCode: 404,
+                statusMessage: "API key not found",
             });
         }
 

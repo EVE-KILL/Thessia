@@ -1,12 +1,11 @@
-interface NearCoordinatesResult {
+import prisma from "~/lib/prisma";
+
+interface NearCoordinatesRow {
     killmail_id: number;
     distance: number;
     kill_time: Date;
     total_value: number;
-    victim: {
-        ship_id: number;
-        ship_name: { [key: string]: string };
-    };
+    victim_ship_id: number | null;
 }
 
 /**
@@ -66,57 +65,41 @@ export default defineCachedEventHandler(
             // Calculate the time threshold
             const timeThreshold = new Date(Date.now() - days * 86400 * 1000);
 
-            // First filter stage - use the optimized index to narrow down candidates
-            // This pre-filtering using the index significantly reduces the amount of data to process
-            const results: NearCoordinatesResult[] = await Killmails.aggregate([
-                {
-                    $match: {
-                        system_id: systemId,
-                        kill_time: { $gte: timeThreshold },
-                        // Use cube approximation for first filter (index-friendly)
-                        x: {
-                            $gt: x - distanceInMeters,
-                            $lt: x + distanceInMeters,
-                        },
-                        y: {
-                            $gt: y - distanceInMeters,
-                            $lt: y + distanceInMeters,
-                        },
-                        z: {
-                            $gt: z - distanceInMeters,
-                            $lt: z + distanceInMeters,
-                        },
-                    },
-                },
-                {
-                    $project: {
-                        killmail_id: 1,
-                        kill_time: 1,
-                        total_value: 1,
-                        victim: {
-                            ship_id: 1,
-                            ship_name: 1,
-                        },
-                        distance: {
-                            $sqrt: {
-                                $add: [
-                                    { $pow: [{ $subtract: ["$x", x] }, 2] },
-                                    { $pow: [{ $subtract: ["$y", y] }, 2] },
-                                    { $pow: [{ $subtract: ["$z", z] }, 2] },
-                                ],
-                            },
-                        },
-                    },
-                },
-                // Second filter stage - precise distance calculation
-                { $match: { distance: { $lt: distanceInMeters } } },
-                { $sort: { distance: 1 } }, // Sort by closest first
-                { $limit: Math.min(limit, 50) }, // Cap at 50 to prevent excessive results
-            ]).option({
-                hint: { system_id: -1, x: -1, y: -1, z: -1 }, // Use our spatial index
-            });
+            const results = await prisma.$queryRaw<NearCoordinatesRow[]>`
+                SELECT
+                    km.killmail_id,
+                    km.killmail_time as kill_time,
+                    COALESCE(km.total_value, 0) as total_value,
+                    kv.ship_type_id as victim_ship_id,
+                    sqrt(
+                        pow(coalesce(kv.x,0) - ${x}, 2) +
+                        pow(coalesce(kv.y,0) - ${y}, 2) +
+                        pow(coalesce(kv.z,0) - ${z}, 2)
+                    ) as distance
+                FROM killmails km
+                JOIN killmail_victim kv ON kv.killmail_id = km.killmail_id
+                WHERE
+                    km.solar_system_id = ${systemId}
+                    AND km.killmail_time >= ${timeThreshold}
+                    AND kv.x BETWEEN ${x - distanceInMeters} AND ${x + distanceInMeters}
+                    AND kv.y BETWEEN ${y - distanceInMeters} AND ${y + distanceInMeters}
+                    AND kv.z BETWEEN ${z - distanceInMeters} AND ${z + distanceInMeters}
+                ORDER BY distance ASC
+                LIMIT ${Math.min(limit, 50)}
+            `;
 
-            if (results.length === 0) {
+            const mapped = results.map((row) => ({
+                killmail_id: row.killmail_id,
+                distance: Number(row.distance),
+                kill_time: row.kill_time,
+                total_value: Number(row.total_value),
+                victim: {
+                    ship_id: row.victim_ship_id || 0,
+                    ship_name: {},
+                },
+            }));
+
+            if (mapped.length === 0) {
                 return {
                     results: [],
                     count: 0,
@@ -126,8 +109,8 @@ export default defineCachedEventHandler(
             }
 
             return {
-                results,
-                count: results.length,
+                results: mapped,
+                count: mapped.length,
             };
         } catch (error: any) {
             if (error.statusCode) {

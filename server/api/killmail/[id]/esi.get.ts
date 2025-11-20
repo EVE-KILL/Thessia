@@ -1,21 +1,16 @@
+import { KillmailService } from "~/server/services";
+
 export default defineCachedEventHandler(
     async (event) => {
-        const killmail_id = event.context.params?.id;
-        const now = new Date();
+        const killmail_id = Number(event.context.params?.id);
+        if (!killmail_id) {
+            throw createError({
+                statusCode: 400,
+                statusMessage: "Invalid killmail id",
+            });
+        }
 
-        // Only return killmails that are not delayed or have passed their delay time
-        const killmail: IESIKillmail | null = await KillmailsESI.findOne(
-            {
-                killmail_id: killmail_id,
-                $or: [
-                    { delayedUntil: { $exists: false } },
-                    { delayedUntil: null },
-                    { delayedUntil: { $lte: now } },
-                ],
-            },
-            { _id: 0 }
-        );
-
+        const killmail = await KillmailService.findByIdWithFull(killmail_id);
         return killmail;
     },
     {

@@ -1,5 +1,4 @@
-import { Celestials } from "../../../models/Celestials";
-import { Sovereignty } from "../../../models/Sovereignty";
+import prisma from "~/lib/prisma";
 import { FactionService, SystemService } from "../../../services";
 
 export default defineCachedEventHandler(
@@ -58,7 +57,8 @@ export default defineCachedEventHandler(
             ...system,
             constellation_name:
                 systemWithHierarchy.constellation?.constellation_name,
-            region_name: systemWithHierarchy.constellation?.region?.name,
+            region_name:
+                systemWithHierarchy.constellation?.region?.region_name,
             region_faction_id:
                 systemWithHierarchy.constellation?.region?.faction_id,
         };
@@ -72,19 +72,18 @@ export default defineCachedEventHandler(
         }
 
         // Get celestials in the system
-        const celestials = await Celestials.find(
-            { solar_system_id: system.system_id },
-            {
-                item_id: 1,
-                item_name: 1,
-                type_id: 1,
-                type_name: 1,
-                x: 1,
-                y: 1,
-                z: 1,
-                _id: 0,
-            }
-        ).lean();
+        const celestials = await prisma.celestial.findMany({
+            where: { solar_system_id: system.system_id },
+            select: {
+                item_id: true,
+                item_name: true,
+                type_id: true,
+                type_name: true,
+                x: true,
+                y: true,
+                z: true,
+            },
+        });
 
         enrichedSystem.celestials = celestials;
 
@@ -103,16 +102,15 @@ export default defineCachedEventHandler(
             const match = stargate.item_name?.match(/Stargate \(([^)]+)\)/);
             if (match) {
                 const destinationSystemName = match[1];
-                const destinationSystem = await SolarSystems.findOne(
-                    { system_name: destinationSystemName },
-                    {
-                        system_id: 1,
-                        system_name: 1,
-                        region_id: 1,
-                        constellation_id: 1,
-                        _id: 0,
-                    }
-                );
+                const destinationSystem = await prisma.solarSystem.findFirst({
+                    where: { system_name: destinationSystemName },
+                    select: {
+                        system_id: true,
+                        system_name: true,
+                        region_id: true,
+                        constellation_id: true,
+                    },
+                });
 
                 if (destinationSystem) {
                     // Check if this is a regional jump (different region)
@@ -136,13 +134,13 @@ export default defineCachedEventHandler(
         enrichedSystem.jump_connections = jumpConnections;
 
         // Add neighboring systems (same constellation)
-        const neighboringSystems = await SolarSystems.find(
-            {
+        const neighboringSystems = await prisma.solarSystem.findMany({
+            where: {
                 constellation_id: system.constellation_id,
-                system_id: { $ne: system.system_id }, // Exclude current system
+                system_id: { not: system.system_id },
             },
-            { system_id: 1, system_name: 1, security: 1, _id: 0 }
-        ).lean();
+            select: { system_id: true, system_name: true, security: true },
+        });
 
         enrichedSystem.neighboring_systems = neighboringSystems;
 
@@ -153,28 +151,30 @@ export default defineCachedEventHandler(
             let systemKills = null;
 
             // Get sovereignty from our database
-            const sovereigntyDoc = await Sovereignty.findOne(
-                { system_id: system.system_id },
-                { _id: 0, __v: 0, history: 0 } // Exclude unnecessary fields
-            ).lean();
+            const sovereigntyDoc = await prisma.sovereignty.findUnique({
+                where: { system_id: system.system_id },
+                include: {
+                    alliance: { select: { name: true } },
+                    corporation: { select: { name: true } },
+                },
+            });
 
             if (sovereigntyDoc) {
                 systemSovereignty = {
                     system_id: sovereigntyDoc.system_id,
                     alliance_id: sovereigntyDoc.alliance_id,
-                    alliance_name: sovereigntyDoc.alliance_name,
+                    alliance_name: sovereigntyDoc.alliance?.name,
                     corporation_id: sovereigntyDoc.corporation_id,
-                    corporation_name: sovereigntyDoc.corporation_name,
+                    corporation_name: sovereigntyDoc.corporation?.name,
                     faction_id: sovereigntyDoc.faction_id,
                     faction_name: undefined as string | undefined,
                 };
 
                 // Get faction name if faction_id exists
                 if (sovereigntyDoc.faction_id) {
-                    const sovereigntyFaction = await Factions.findOne(
-                        { faction_id: sovereigntyDoc.faction_id },
-                        { name: 1, _id: 0 }
-                    ).lean();
+                    const sovereigntyFaction = await FactionService.findById(
+                        sovereigntyDoc.faction_id
+                    );
                     if (sovereigntyFaction) {
                         systemSovereignty.faction_name =
                             sovereigntyFaction.name;
@@ -182,86 +182,40 @@ export default defineCachedEventHandler(
                 }
             }
 
-            // Get activity data from system document (this already exists in SolarSystems collection)
-            if (system.jumps_24h && system.jumps_24h.length > 0) {
-                // Get latest entry (1h data) and 24h cumulative
-                const latestJump =
-                    system.jumps_24h[system.jumps_24h.length - 1];
+            const activityData: any = systemWithHierarchy.activity || {};
 
-                // Calculate 24h cumulative by summing all entries from last 24 hours
-                const now = new Date();
-                const twentyFourHoursAgo = new Date(
-                    now.getTime() - 24 * 60 * 60 * 1000
-                );
+            systemJumps = {
+                system_id: system.system_id,
+                ship_jumps_1h: activityData.ship_jumps_1h || 0,
+                ship_jumps:
+                    activityData.ship_jumps ??
+                    activityData.jumps_24h ??
+                    activityData.total_ship_jumps ??
+                    0,
+            };
 
-                const jumps24h = system.jumps_24h
-                    .filter(
-                        (entry) =>
-                            new Date(entry.timestamp) >= twentyFourHoursAgo
-                    )
-                    .reduce((sum, entry) => sum + (entry.ship_jumps || 0), 0);
-
-                systemJumps = {
-                    system_id: system.system_id,
-                    ship_jumps_1h: latestJump.ship_jumps || 0,
-                    ship_jumps: jumps24h,
-                };
-            } else {
-                systemJumps = {
-                    system_id: system.system_id,
-                    ship_jumps_1h: 0,
-                    ship_jumps: 0,
-                };
-            }
-
-            if (system.kills_24h && system.kills_24h.length > 0) {
-                // Get latest entry (1h data) and 24h cumulative
-                const latestKill =
-                    system.kills_24h[system.kills_24h.length - 1];
-
-                // Calculate 24h cumulative by summing all entries from last 24 hours
-                const now = new Date();
-                const twentyFourHoursAgo = new Date(
-                    now.getTime() - 24 * 60 * 60 * 1000
-                );
-
-                const kills24h = system.kills_24h.filter(
-                    (entry) => new Date(entry.timestamp) >= twentyFourHoursAgo
-                );
-
-                const shipKills24h = kills24h.reduce(
-                    (sum, entry) => sum + (entry.ship_kills || 0),
-                    0
-                );
-                const npcKills24h = kills24h.reduce(
-                    (sum, entry) => sum + (entry.npc_kills || 0),
-                    0
-                );
-                const podKills24h = kills24h.reduce(
-                    (sum, entry) => sum + (entry.pod_kills || 0),
-                    0
-                );
-
-                systemKills = {
-                    system_id: system.system_id,
-                    ship_kills_1h: latestKill.ship_kills || 0,
-                    npc_kills_1h: latestKill.npc_kills || 0,
-                    pod_kills_1h: latestKill.pod_kills || 0,
-                    ship_kills: shipKills24h,
-                    npc_kills: npcKills24h,
-                    pod_kills: podKills24h,
-                };
-            } else {
-                systemKills = {
-                    system_id: system.system_id,
-                    ship_kills_1h: 0,
-                    npc_kills_1h: 0,
-                    pod_kills_1h: 0,
-                    ship_kills: 0,
-                    npc_kills: 0,
-                    pod_kills: 0,
-                };
-            }
+            const killsData: any = systemWithHierarchy.kills || {};
+            systemKills = {
+                system_id: system.system_id,
+                ship_kills_1h: killsData.ship_kills_1h || 0,
+                npc_kills_1h: killsData.npc_kills_1h || 0,
+                pod_kills_1h: killsData.pod_kills_1h || 0,
+                ship_kills:
+                    killsData.ship_kills ??
+                    killsData.total_ship_kills ??
+                    killsData.kills_24h ??
+                    0,
+                npc_kills:
+                    killsData.npc_kills ??
+                    killsData.total_npc_kills ??
+                    killsData.npc_kills_24h ??
+                    0,
+                pod_kills:
+                    killsData.pod_kills ??
+                    killsData.total_pod_kills ??
+                    killsData.pod_kills_24h ??
+                    0,
+            };
 
             enrichedSystem.sovereignty = systemSovereignty;
             enrichedSystem.jumps = systemJumps;

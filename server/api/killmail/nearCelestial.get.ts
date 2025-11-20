@@ -1,3 +1,5 @@
+import prisma from "~/lib/prisma";
+
 export default defineCachedEventHandler(
     async (event) => {
         const query = getQuery(event);
@@ -7,70 +9,41 @@ export default defineCachedEventHandler(
         );
         const days = Number.parseInt(query.days as string) || 1;
 
-        const celestial = await Celestials.findOne(
-            { item_id: celestialId },
-            {
-                _id: 0,
-            }
-        );
+        const celestial = await prisma.celestial.findUnique({
+            where: { item_id: celestialId },
+            select: {
+                item_id: true,
+                solar_system_id: true,
+                x: true,
+                y: true,
+                z: true,
+            },
+        });
         if (!celestial) {
             return { error: "Celestial not found" };
         }
 
-        const results = await Killmails.aggregate([
-            {
-                $match: {
-                    system_id: celestial.solar_system_id,
-                    x: {
-                        $gt: celestial.x - distanceInMeters,
-                        $lt: celestial.x + distanceInMeters,
-                    },
-                    y: {
-                        $gt: celestial.y - distanceInMeters,
-                        $lt: celestial.y + distanceInMeters,
-                    },
-                    z: {
-                        $gt: celestial.z - distanceInMeters,
-                        $lt: celestial.z + distanceInMeters,
-                    },
-                    kill_time: {
-                        $gte: new Date(Date.now() - days * 86400 * 1000),
-                    },
-                },
-            },
-            {
-                $project: {
-                    killmail_id: 1,
-                    distance: {
-                        $sqrt: {
-                            $add: [
-                                {
-                                    $pow: [
-                                        { $subtract: ["$x", celestial.x] },
-                                        2,
-                                    ],
-                                },
-                                {
-                                    $pow: [
-                                        { $subtract: ["$y", celestial.y] },
-                                        2,
-                                    ],
-                                },
-                                {
-                                    $pow: [
-                                        { $subtract: ["$z", celestial.z] },
-                                        2,
-                                    ],
-                                },
-                            ],
-                        },
-                    },
-                },
-            },
-            { $match: { distance: { $lt: distanceInMeters } } },
-            { $sort: { distance: -1 } },
-            { $limit: 10 },
-        ]);
+        const results = await prisma.$queryRaw<
+            { killmail_id: number; distance: number }[]
+        >`
+            SELECT
+                km.killmail_id,
+                sqrt(
+                    pow(coalesce(kv.x,0) - ${celestial.x}, 2) +
+                    pow(coalesce(kv.y,0) - ${celestial.y}, 2) +
+                    pow(coalesce(kv.z,0) - ${celestial.z}, 2)
+                ) as distance
+            FROM killmails km
+            JOIN killmail_victim kv ON kv.killmail_id = km.killmail_id
+            WHERE
+                km.solar_system_id = ${celestial.solar_system_id}
+                AND km.killmail_time >= (NOW() - interval '${days} days')
+                AND kv.x BETWEEN ${celestial.x - distanceInMeters} AND ${celestial.x + distanceInMeters}
+                AND kv.y BETWEEN ${celestial.y - distanceInMeters} AND ${celestial.y + distanceInMeters}
+                AND kv.z BETWEEN ${celestial.z - distanceInMeters} AND ${celestial.z + distanceInMeters}
+            ORDER BY distance ASC
+            LIMIT 10
+        `;
 
         return results;
     },

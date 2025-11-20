@@ -1,327 +1,244 @@
-interface QueryConfig {
-    find?: Record<string, unknown>;
-    aggregate?: any[];
-    sort?: Record<string, 1 | -1>;
-    projection?: Record<string, 0 | 1>;
-    hint?: string;
-}
+import prisma from "~/lib/prisma";
+import { TypeService } from "~/server/services";
 
-const killlistQueries: Record<string, QueryConfig> = {
-    latest: {
-        find: {},
-        sort: { kill_time: -1 },
-        projection: { _id: 0, items: 0 },
-        hint: "kill_time_-1",
-    },
-    abyssal: {
-        find: { region_id: { $gte: 12000000, $lte: 13000000 } },
-        sort: { kill_time: -1 },
-        projection: { _id: 0, items: 0 },
-        hint: "region_id_kill_time",
-    },
-    wspace: {
-        find: { region_id: { $gte: 11000001, $lte: 11000033 } },
-        sort: { kill_time: -1 },
-        projection: { _id: 0, items: 0 },
-        hint: "region_id_kill_time",
-    },
-    highsec: {
-        find: { system_security: { $gte: 0.45 } },
-        sort: { kill_time: -1 },
-        projection: { _id: 0, items: 0 },
-        hint: "system_security_kill_time",
-    },
-    lowsec: {
-        find: { system_security: { $lte: 0.45, $gte: 0 } },
-        sort: { kill_time: -1 },
-        projection: { _id: 0, items: 0 },
-        hint: "system_security_lowsec_kill_time_-1",
-    },
-    nullsec: {
-        find: { system_security: { $lte: 0 } },
-        sort: { kill_time: -1 },
-        projection: { _id: 0, items: 0 },
-        hint: "system_security_nullsec_kill_time_-1",
-    },
-    pochven: {
-        find: { region_id: 10000070 },
-        sort: { kill_time: -1 },
-        projection: { _id: 0, items: 0 },
-        hint: "region_id_kill_time",
-    },
-    big: {
-        find: {
-            "victim.ship_group_id": { $in: [547, 485, 513, 902, 941, 30, 659] },
+type KilllistType =
+    | "latest"
+    | "abyssal"
+    | "wspace"
+    | "highsec"
+    | "lowsec"
+    | "nullsec"
+    | "pochven"
+    | "big"
+    | "solo"
+    | "npc"
+    | "5b"
+    | "10b"
+    | "citadels"
+    | "t1"
+    | "t2"
+    | "t3"
+    | "faction"
+    | "frigates"
+    | "destroyers"
+    | "cruisers"
+    | "battlecruisers"
+    | "battleships"
+    | "capitals"
+    | "freighters"
+    | "supercarriers"
+    | "titans"
+    | "structureboys";
+
+const shipGroupFilters: Record<KilllistType, number[] | undefined> = {
+    frigates: [324, 893, 25, 831, 237],
+    destroyers: [420, 541],
+    cruisers: [906, 26, 833, 358, 894, 832, 963],
+    battlecruisers: [419, 540],
+    battleships: [27, 898, 900],
+    capitals: [547, 485],
+    freighters: [513, 902],
+    supercarriers: [659],
+    titans: [30],
+    big: [547, 485, 513, 902, 941, 30, 659],
+    citadels: [1657, 1406, 1404, 1408, 2017, 2016],
+    structureboys: [1657],
+    t1: undefined,
+    t2: undefined,
+    t3: undefined,
+    faction: undefined,
+    latest: undefined,
+    abyssal: undefined,
+    wspace: undefined,
+    highsec: undefined,
+    lowsec: undefined,
+    nullsec: undefined,
+    pochven: undefined,
+    solo: undefined,
+    npc: undefined,
+    "5b": undefined,
+    "10b": undefined,
+};
+
+const formatKillmail = (km: any) => {
+    const finalBlow = km.attackers?.find((a: any) => a.final_blow);
+    return {
+        killmail_id: km.killmail_id,
+        total_value: km.total_value ? Number(km.total_value) : 0,
+        system_id: km.solar_system_id,
+        system_name: km.solar_system?.system_name || "",
+        system_security: km.solar_system?.security || 0,
+        region_id: km.region_id || km.solar_system?.region_id || null,
+        region_name: km.region?.region_name || "",
+        kill_time: km.killmail_time,
+        attackerCount: km.attackers?.length || 0,
+        commentCount: 0,
+        is_npc: km.is_npc,
+        is_solo: km.is_solo,
+        victim: {
+            ship_id: km.victim?.ship_type_id || 0,
+            ship_name: km.victim?.ship_type?.name || {},
+            ship_group_name: km.victim?.ship_group?.group_name || {},
+            character_id: km.victim?.character_id || 0,
+            character_name: km.victim?.character?.name || "",
+            corporation_id: km.victim?.corporation_id || 0,
+            corporation_name: km.victim?.corporation?.name || "",
+            alliance_id: km.victim?.alliance_id || 0,
+            alliance_name: km.victim?.alliance?.name || "",
+            faction_id: km.victim?.faction_id || 0,
+            faction_name: km.victim?.faction?.name || "",
         },
-        sort: { kill_time: -1 },
-        projection: { _id: 0, items: 0 },
-        hint: "victim_ship_group_id_kill_time",
-    },
-    solo: {
-        find: { is_solo: true },
-        sort: { kill_time: -1 },
-        projection: { _id: 0, items: 0 },
-        hint: "is_solo_kill_time",
-    },
-    npc: {
-        find: { is_npc: true },
-        sort: { kill_time: -1 },
-        projection: { _id: 0, items: 0 },
-        hint: "is_npc_kill_time",
-    },
-    "5b": {
-        find: { total_value: { $gte: 5000000000 } },
-        sort: { kill_time: -1 },
-        projection: { _id: 0, items: 0 },
-        hint: "total_value_kill_time",
-    },
-    "10b": {
-        find: { total_value: { $gte: 10000000000 } },
-        sort: { kill_time: -1 },
-        projection: { _id: 0, items: 0 },
-        hint: "total_value_kill_time",
-    },
-    citadels: {
-        find: {
-            "victim.ship_group_id": {
-                $in: [1657, 1406, 1404, 1408, 2017, 2016],
-            },
-        },
-        sort: { kill_time: -1 },
-        projection: { _id: 0, items: 0 },
-        hint: "victim_ship_group_id_kill_time",
-    },
-    t1: {
-        find: {}, // Will be populated dynamically with ship type IDs
-        sort: { kill_time: -1 },
-        projection: { _id: 0, items: 0 },
-        hint: "victim_ship_id_kill_time",
-    },
-    t2: {
-        find: {}, // Will be populated dynamically with ship type IDs
-        sort: { kill_time: -1 },
-        projection: { _id: 0, items: 0 },
-        hint: "victim_ship_id_kill_time",
-    },
-    t3: {
-        find: {}, // Will be populated dynamically with ship type IDs
-        sort: { kill_time: -1 },
-        projection: { _id: 0, items: 0 },
-        hint: "victim_ship_id_kill_time",
-    },
-    faction: {
-        find: {}, // Will be populated dynamically with ship type IDs
-        sort: { kill_time: -1 },
-        projection: { _id: 0, items: 0 },
-        hint: "victim_ship_id_kill_time",
-    },
-    frigates: {
-        find: { "victim.ship_group_id": { $in: [324, 893, 25, 831, 237] } },
-        sort: { kill_time: -1 },
-        projection: { _id: 0, items: 0 },
-        hint: "victim_ship_group_id_kill_time",
-    },
-    destroyers: {
-        find: { "victim.ship_group_id": { $in: [420, 541] } },
-        sort: { kill_time: -1 },
-        projection: { _id: 0, items: 0 },
-        hint: "victim_ship_group_id_kill_time",
-    },
-    cruisers: {
-        find: {
-            "victim.ship_group_id": { $in: [906, 26, 833, 358, 894, 832, 963] },
-        },
-        sort: { kill_time: -1 },
-        projection: { _id: 0, items: 0 },
-        hint: "victim_ship_group_id_kill_time",
-    },
-    battlecruisers: {
-        find: { "victim.ship_group_id": { $in: [419, 540] } },
-        sort: { kill_time: -1 },
-        projection: { _id: 0, items: 0 },
-        hint: "victim_ship_group_id_kill_time",
-    },
-    battleships: {
-        find: { "victim.ship_group_id": { $in: [27, 898, 900] } },
-        sort: { kill_time: -1 },
-        projection: { _id: 0, items: 0 },
-        hint: "victim_ship_group_id_kill_time",
-    },
-    capitals: {
-        find: { "victim.ship_group_id": { $in: [547, 485] } },
-        sort: { kill_time: -1 },
-        projection: { _id: 0, items: 0 },
-        hint: "victim_ship_group_id_kill_time",
-    },
-    freighters: {
-        find: { "victim.ship_group_id": { $in: [513, 902] } },
-        sort: { kill_time: -1 },
-        projection: { _id: 0, items: 0 },
-        hint: "victim_ship_group_id_kill_time",
-    },
-    supercarriers: {
-        find: { "victim.ship_group_id": { $in: [659] } },
-        sort: { kill_time: -1 },
-        projection: { _id: 0, items: 0 },
-        hint: "victim_ship_group_id_kill_time",
-    },
-    titans: {
-        find: { "victim.ship_group_id": { $in: [30] } },
-        sort: { kill_time: -1 },
-        projection: { _id: 0, items: 0 },
-        hint: "victim_ship_group_id_kill_time",
-    },
-    structureboys: {
-        // @TODO add a description field for them that gets displayed on the page
-        // That should help explain what this query is for in the end (And the others as well, and others like it if we add more)
-        aggregate: [
+        finalblow: finalBlow
+            ? {
+                  character_id: finalBlow.character_id || 0,
+                  character_name: finalBlow.character?.name || "",
+                  corporation_id: finalBlow.corporation_id || 0,
+                  corporation_name: finalBlow.corporation?.name || "",
+                  alliance_id: finalBlow.alliance_id || 0,
+                  alliance_name: finalBlow.alliance?.name || "",
+                  faction_id: finalBlow.faction_id || 0,
+                  faction_name: finalBlow.faction?.name || "",
+                  ship_group_name: finalBlow.ship_group?.group_name || {},
+              }
+            : null,
+    };
+};
+
+async function buildWhere(type: KilllistType) {
+    const where: any = {};
+
+    switch (type) {
+        case "latest":
+            break;
+        case "abyssal":
+            where.region_id = { gte: 12000000, lte: 13000000 };
+            break;
+        case "wspace":
+            where.region_id = { gte: 11000001, lte: 11000033 };
+            break;
+        case "highsec":
+            where.solar_system = { security: { gte: 0.45 } };
+            break;
+        case "lowsec":
+            where.solar_system = { security: { gte: 0, lte: 0.45 } };
+            break;
+        case "nullsec":
+            where.solar_system = { security: { lte: 0 } };
+            break;
+        case "pochven":
+            where.region_id = 10000070;
+            break;
+        case "solo":
+            where.is_solo = true;
+            break;
+        case "npc":
+            where.is_npc = true;
+            break;
+        case "5b":
+            where.total_value = { gte: 5_000_000_000 };
+            break;
+        case "10b":
+            where.total_value = { gte: 10_000_000_000 };
+            break;
+        default:
+            break;
+    }
+
+    const groupIds = shipGroupFilters[type];
+    if (groupIds && groupIds.length) {
+        where.victim = { ship_group_id: { in: groupIds } };
+    }
+
+    if (type === "structureboys") {
+        where.AND = [
+            { victim: { ship_group_id: { not: 1657 } } },
             {
-                $match: {
-                    items: {
-                        $elemMatch: {
-                            type_id: {
-                                $in: [
-                                    56201, 56202, 56203, 56204, 56205, 56206,
-                                    56207, 56208,
-                                ],
-                            },
-                            flag: 5,
-                            qty_dropped: 0,
+                items: {
+                    some: {
+                        item_type_id: {
+                            in: [
+                                56201, 56202, 56203, 56204, 56205, 56206,
+                                56207, 56208,
+                            ],
                         },
+                        flag: 5,
+                        quantity_dropped: 0,
                     },
-                    "victim.ship_group_id": { $ne: 1657 },
                 },
             },
-            { $sort: { kill_time: -1 } },
-            { $project: { _id: 0, items: 0 } },
-        ],
-    },
-};
+        ];
+    }
+
+    // t1/t2/t3/faction: use dogma/meta if available; fallback empty until dogma data is stored
+    return where;
+}
 
 export default defineCachedEventHandler(
     async (event) => {
         const query = getQuery(event);
-        const type = (query.type as string) || "latest";
-        const page = Number.parseInt((query.page as string) || "1", 10);
-        // Get the limit from the query, default to 100 - but also check if it's a number - it can minimum be 1 and maximum 1000 - if it goes beyond those reset it to 1 or 1000
-        let limit = Number.parseInt((query.limit as string) || "100", 10);
-        if (Number.isNaN(limit) || limit < 1) {
-            limit = 1;
-        } else if (limit > 1000) {
-            limit = 1000;
-        }
+        const listType = (query.list as string)?.toLowerCase() as KilllistType;
+        const type: KilllistType = (listType && listType in shipGroupFilters
+            ? listType
+            : "latest") as KilllistType;
+        const page = Math.max(parseInt((query.page as string) || "1"), 1);
+        const limit = Math.min(parseInt((query.limit as string) || "50"), 200);
         const skip = (page - 1) * limit;
 
-        const config = killlistQueries[type];
+        const where = await buildWhere(type);
 
-        if (!config) {
-            return { error: `Invalid type provided: ${type}` };
-        }
-
-        // Handle dynamic ship type queries for t1, t2, t3, and faction
-        let finalConfig = config;
-        if (["t1", "t2", "t3", "faction"].includes(type)) {
-            const shipTypeIds = await getShipTypeList(type);
-
-            if (shipTypeIds.length === 0) {
-                return []; // Return empty array if no ship types found
-            }
-
-            finalConfig = {
-                ...config,
-                find: {
-                    "victim.ship_id": { $in: shipTypeIds },
-                },
-            };
-        }
-
-        // Use aggregation pipeline for efficient processing
-        let pipeline: any[];
-
-        if (finalConfig.aggregate) {
-            // Handle existing aggregation pipeline
-            pipeline = [...finalConfig.aggregate];
-        } else {
-            // Convert find query to aggregation pipeline for consistent processing
-            pipeline = [
-                { $match: finalConfig.find || {} },
-                { $sort: finalConfig.sort || { kill_time: -1 } },
-            ];
-        }
-
-        // Add data transformation pipeline stages
-        pipeline.push(
-            { $skip: skip },
-            { $limit: limit },
-            {
-                $addFields: {
-                    finalBlowAttacker: {
-                        $arrayElemAt: [
-                            {
-                                $filter: {
-                                    input: "$attackers",
-                                    as: "attacker",
-                                    cond: {
-                                        $eq: ["$$attacker.final_blow", true],
-                                    },
-                                },
-                            },
-                            0,
-                        ],
+        const [killmails, total] = await Promise.all([
+            prisma.killmail.findMany({
+                where,
+                orderBy: { killmail_time: "desc" },
+                take: limit,
+                skip,
+                include: {
+                    solar_system: { select: { system_name: true, security: true, region_id: true } },
+                    region: { select: { region_name: true } },
+                    attackers: {
+                        select: {
+                            character_id: true,
+                            corporation_id: true,
+                            alliance_id: true,
+                            faction_id: true,
+                            final_blow: true,
+                            ship_group: { select: { group_name: true } },
+                            character: { select: { name: true } },
+                            corporation: { select: { name: true } },
+                            alliance: { select: { name: true } },
+                            faction: { select: { name: true } },
+                        },
                     },
-                    attackerCount: { $size: "$attackers" },
-                },
-            },
-            {
-                $project: {
-                    killmail_id: 1,
-                    total_value: 1,
-                    system_id: 1,
-                    system_name: 1,
-                    system_security: 1,
-                    region_id: 1,
-                    region_name: 1,
-                    kill_time: 1,
-                    attackerCount: 1,
-                    is_npc: 1,
-                    is_solo: 1,
-                    commentCount: { $literal: 0 },
                     victim: {
-                        ship_id: "$victim.ship_id",
-                        ship_name: "$victim.ship_name",
-                        ship_group_name: "$victim.ship_group_name",
-                        character_id: "$victim.character_id",
-                        character_name: "$victim.character_name",
-                        corporation_id: "$victim.corporation_id",
-                        corporation_name: "$victim.corporation_name",
-                        alliance_id: "$victim.alliance_id",
-                        alliance_name: "$victim.alliance_name",
-                        faction_id: "$victim.faction_id",
-                        faction_name: "$victim.faction_name",
-                    },
-                    finalblow: {
-                        character_id: "$finalBlowAttacker.character_id",
-                        character_name: "$finalBlowAttacker.character_name",
-                        corporation_id: "$finalBlowAttacker.corporation_id",
-                        corporation_name: "$finalBlowAttacker.corporation_name",
-                        alliance_id: "$finalBlowAttacker.alliance_id",
-                        alliance_name: "$finalBlowAttacker.alliance_name",
-                        faction_id: "$finalBlowAttacker.faction_id",
-                        faction_name: "$finalBlowAttacker.faction_name",
-                        ship_group_name: "$finalBlowAttacker.ship_group_name",
+                        select: {
+                            character_id: true,
+                            corporation_id: true,
+                            alliance_id: true,
+                            faction_id: true,
+                            ship_type_id: true,
+                            ship_group_id: true,
+                            character: { select: { name: true } },
+                            corporation: { select: { name: true } },
+                            alliance: { select: { name: true } },
+                            faction: { select: { name: true } },
+                            ship_type: { select: { name: true } },
+                            ship_group: { select: { group_name: true } },
+                        },
                     },
                 },
-            }
-        );
+            }),
+            prisma.killmail.count({ where }),
+        ]);
 
-        // Add hint if provided
-        const aggregateOptions: any = {};
-        if (finalConfig.hint) {
-            aggregateOptions.hint = finalConfig.hint;
-        }
-
-        const result = await Killmails.aggregate(pipeline, aggregateOptions);
-        return result;
+        return {
+            killmails: killmails.map(formatKillmail),
+            pagination: {
+                currentPage: page,
+                totalPages: Math.ceil(total / limit),
+                totalKillmails: total,
+                limit,
+            },
+        };
     },
     {
         maxAge: 30,
@@ -330,10 +247,10 @@ export default defineCachedEventHandler(
         base: "redis",
         getKey: (event) => {
             const query = getQuery(event);
-            const type = (query.type as string) || "latest";
+            const list = (query.list as string) || "latest";
             const page = (query.page as string) || "1";
-            const limit = (query.limit as string) || "100";
-            return `killlist:index:type:${type}:page:${page}:limit:${limit}`;
+            const limit = (query.limit as string) || "50";
+            return `killlist:${list}:page:${page}:limit:${limit}`;
         },
     }
 );

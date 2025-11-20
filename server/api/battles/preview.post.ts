@@ -1,4 +1,4 @@
-import { KillmailService, SystemService, RegionService } from "~/server/services";
+import { KillmailService, SystemService, RegionService, CorporationService } from "~/server/services";
 
 interface Side {
     side_id: string;
@@ -162,10 +162,7 @@ async function prepareTeamsData(sides: Side[]) {
             .map((e) => e.id);
 
         // Query corporations to get alliance relationships
-        const corpDocs = await Corporations.find(
-            { corporation_id: { $in: corpIds } },
-            { corporation_id: 1, alliance_id: 1, name: 1 }
-        ).lean();
+        const corpDocs = await CorporationService.findByIds(corpIds);
 
         // Filter out corporations that belong to alliances already in this side
         // (they'll be included implicitly with their alliance)

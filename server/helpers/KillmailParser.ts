@@ -1,10 +1,85 @@
+import prisma from "~/lib/prisma";
+import { updateStatsOnKillmailProcessing } from "./Stats";
+import type {
+    IESIAttacker,
+    IESIKillmail,
+    IESIVictim,
+    IESIVictimItem,
+} from "../interfaces/IESIKillmail";
+import type { IKillmail } from "../interfaces/IKillmail";
+import type { ITranslation } from "../interfaces/ITranslation";
+import type { IItem, IVictim, IAttacker } from "../interfaces/IKillmail";
+import {
+    AllianceService,
+    CharacterService,
+    ConstellationService,
+    CorporationService,
+    FactionService,
+    PriceService,
+    RegionService,
+    SystemService,
+    TypeService,
+} from "~/server/services";
 import { queueAchievementProcessing } from "../queue/Achievement";
 
+// Simple helper wrappers around Prisma services (no caching layer)
+async function getInvType(typeId: number) {
+    return await TypeService.findById(typeId);
+}
+
+async function getInvGroup(groupId: number) {
+    return await prisma.invGroup.findUnique({ where: { group_id: groupId } });
+}
+
+async function getCharacter(characterId: number) {
+    return await CharacterService.findById(characterId);
+}
+
+async function getCorporation(corporationId: number) {
+    return await CorporationService.findById(corporationId);
+}
+
+async function getAlliance(allianceId: number) {
+    return await AllianceService.findById(allianceId);
+}
+
+async function getFaction(factionId: number) {
+    return await FactionService.findById(factionId);
+}
+
+async function getSolarSystem(systemId: number) {
+    return await SystemService.findById(systemId);
+}
+
+async function getConstellation(constellationId?: number | null) {
+    if (!constellationId) return null;
+    return await ConstellationService.findById(constellationId);
+}
+
+async function getRegion(regionId?: number | null) {
+    if (!regionId) return null;
+    return await RegionService.findById(regionId);
+}
+
+async function getPriceForType(typeId: number, at: Date) {
+    const custom = await prisma.customPrice.findFirst({
+        where: { type_id: typeId, date: { lte: at } },
+        orderBy: { date: "desc" },
+        select: { price: true },
+    });
+
+    if (custom?.price !== null && custom?.price !== undefined) {
+        return Number(custom.price);
+    }
+
+    return await PriceService.getLatestPriceBefore(typeId, at);
+}
+
+// Parse ESI killmail into normalized structure (still used by queue)
 async function parseKillmail(
     killmail: IESIKillmail,
     warId = 0
 ): Promise<Partial<IKillmail>> {
-    // Run independent tasks concurrently.
     const [top, victim, attackers, itemsData] = await Promise.all([
         generateTop(killmail, warId),
         processVictim(killmail.victim),
@@ -20,7 +95,6 @@ async function parseKillmail(
         items: itemsData,
     };
 
-    // After successfully parsing and constructing the killmail, update stats
     if (
         processedKillmail.killmail_id &&
         processedKillmail.kill_time &&
@@ -29,8 +103,6 @@ async function parseKillmail(
         processedKillmail.total_value !== undefined
     ) {
         await updateStatsOnKillmailProcessing(processedKillmail as IKillmail);
-
-        // Handle achievement updates for all characters involved
         await handleKillmailAchievementUpdates(
             processedKillmail.victim.character_id,
             processedKillmail.attackers
@@ -43,83 +115,61 @@ async function parseKillmail(
 }
 
 async function updateLastActive(killmail: IESIKillmail): Promise<void> {
-    const attackerTasks = killmail.attackers
-        .filter((attacker) => attacker.character_id)
-        .map(async (attacker) => {
-            const existing = await Characters.findOne(
-                { character_id: attacker.character_id },
-                { last_active: 1 }
-            );
-            if (
-                existing &&
-                existing.last_active < new Date(killmail.killmail_time)
-            ) {
-                return Characters.updateOne(
-                    { character_id: attacker.character_id },
-                    { last_active: killmail.killmail_time }
-                );
-            }
-        });
-    // Process victim update separately.
-    const victimTask = (async () => {
-        const existing = await Characters.findOne(
-            { character_id: killmail.victim.character_id },
-            { last_active: 1 }
-        );
-        if (
-            existing &&
-            existing.last_active < new Date(killmail.killmail_time)
-        ) {
-            return Characters.updateOne(
-                { character_id: killmail.victim.character_id },
-                { last_active: killmail.killmail_time }
-            );
-        }
-    })();
-    await Promise.all([...attackerTasks, victimTask]);
+    const killTime = new Date(killmail.killmail_time);
+    const actorIds = [
+        ...killmail.attackers
+            .map((a) => a.character_id || 0)
+            .filter((id) => id > 0),
+        killmail.victim.character_id || 0,
+    ].filter((id) => id > 0);
+
+    if (actorIds.length === 0) return;
+
+    await prisma.character.updateMany({
+        where: {
+            character_id: { in: actorIds },
+            OR: [{ last_active: null }, { last_active: { lt: killTime } }],
+        },
+        data: { last_active: killTime },
+    });
 }
 
 async function calculateKillValue(
     killmail: IESIKillmail
 ): Promise<{ item_value: number; ship_value: number; total_value: number }> {
     const shipTypeId = Number(killmail.victim.ship_type_id);
-    const shipGroupId = await InvTypes.findOne(
-        { type_id: shipTypeId },
-        { group_id: 1 }
-    );
-    let shipValue = 0;
-    // If the ship_group_id is 659 or 30 - we need to get the price from the blueprint (Supercarriers and Titans)
-    if (shipGroupId?.group_id === 659 || shipGroupId?.group_id === 30) {
-        // Check custom pricing first
-        shipValue = await customPrices(
-            shipTypeId,
-            new Date(killmail.killmail_time)
-        );
-        if (shipValue === 0) {
-            shipValue = await getPriceFromBlueprint(
-                shipTypeId,
-                new Date(killmail.killmail_time)
-            );
-        }
-    } else {
-        shipValue = await getCachedPrice(
-            shipTypeId,
-            new Date(killmail.killmail_time)
-        );
-    }
-    let itemValue = 0;
+    const ship = await getInvType(shipTypeId);
+    const shipGroup = ship?.group_id
+        ? await getInvGroup(ship.group_id)
+        : null;
 
+    let shipValue = 0;
+    if (shipGroup && (shipGroup.group_id === 659 || shipGroup.group_id === 30)) {
+        const custom = await prisma.customPrice.findFirst({
+            where: { type_id: shipTypeId },
+            orderBy: { date: "desc" },
+            select: { price: true },
+        });
+        shipValue = custom?.price ? Number(custom.price) : Number(ship?.base_price || 0);
+    } else {
+        shipValue = await getPriceForType(shipTypeId, new Date(killmail.killmail_time));
+    }
+
+    let itemValue = 0;
     for (const item of killmail.victim.items) {
         if (item.items) {
-            for (const cargoItem of item.items) {
+            for (const child of item.items) {
                 itemValue += await getItemValue(
-                    cargoItem,
+                    child,
                     new Date(killmail.killmail_time),
                     true
                 );
             }
         }
-        itemValue += await getItemValue(item, new Date(killmail.killmail_time));
+        itemValue += await getItemValue(
+            item,
+            new Date(killmail.killmail_time)
+        );
     }
 
     return {
@@ -137,15 +187,15 @@ async function getItemValue(
     const typeId = Number(item.item_type_id);
     const flag = item.flag;
 
-    const id = await getCachedItem(typeId);
-    const itemName: ITranslation = id?.name || { en: `Type ID ${typeId}` };
+    const invType = await getInvType(typeId);
+    const itemName: ITranslation = invType?.name || { en: `Type ID ${typeId}` };
 
     let price = 0;
 
     if (typeId === 33329 && flag === 89) {
         price = 0.01;
     } else {
-        price = await getCachedPrice(typeId, killTime);
+        price = await getPriceForType(typeId, killTime);
     }
 
     if (isCargo && itemName.en.includes("Blueprint")) {
@@ -167,7 +217,7 @@ async function generateTop(
     warId = 0
 ): Promise<Partial<IKillmail>> {
     const [solarSystem, killValue] = await Promise.all([
-        getCachedSolarSystem(killmail.solar_system_id),
+        getSolarSystem(killmail.solar_system_id),
         calculateKillValue(killmail),
     ]);
 
@@ -175,13 +225,19 @@ async function generateTop(
     let region = null;
     if (solarSystem) {
         [constellation, region] = await Promise.all([
-            getCachedConstellation(solarSystem.constellation_id),
-            getCachedRegion(solarSystem.region_id),
+            solarSystem.constellation_id
+                ? getConstellation(solarSystem.constellation_id)
+                : null,
+            solarSystem.region_id
+                ? getRegion(solarSystem.region_id)
+                : null,
         ]);
     }
+
     const x = killmail.victim?.position?.x || 0;
     const y = killmail.victim?.position?.y || 0;
     const z = killmail.victim?.position?.z || 0;
+
     return {
         killmail_id: killmail.killmail_id,
         killmail_hash: killmail.killmail_hash,
@@ -192,7 +248,7 @@ async function generateTop(
         constellation_id: solarSystem?.constellation_id || 0,
         constellation_name: constellation?.constellation_name || "",
         region_id: solarSystem?.region_id || 0,
-        region_name: region?.name || { en: "" },
+        region_name: (region as any)?.region_name || { en: "" },
         near: await getNear(
             Number(x),
             Number(y),
@@ -212,22 +268,23 @@ async function generateTop(
 }
 
 async function processVictim(victim: IESIVictim): Promise<IVictim> {
-    const ship = (await getCachedItem(Number(victim.ship_type_id))) || null;
+    const ship = (await getInvType(Number(victim.ship_type_id))) || null;
     const shipGroup = ship?.group_id
-        ? await getCachedInvGroup(ship.group_id)
+        ? await getInvGroup(ship.group_id)
         : null;
 
-    // Use cached character, corporation, alliance and faction lookups
-    const character = victim.character_id
-        ? await getCachedCharacter(victim.character_id)
-        : null;
-    const corporation = await getCachedCorporation(victim.corporation_id);
-    const alliance = victim.alliance_id
-        ? await getCachedAlliance(Number(victim.alliance_id))
-        : null;
-    const faction = victim.faction_id
-        ? await getCachedFaction(Number(victim.faction_id))
-        : null;
+    const [character, corporation, alliance, faction] = await Promise.all([
+        victim.character_id
+            ? getCharacter(victim.character_id)
+            : Promise.resolve(null),
+        getCorporation(victim.corporation_id),
+        victim.alliance_id
+            ? getAlliance(Number(victim.alliance_id))
+            : Promise.resolve(null),
+        victim.faction_id
+            ? getFaction(Number(victim.faction_id))
+            : Promise.resolve(null),
+    ]);
 
     return {
         ship_id: victim.ship_type_id || 0,
@@ -238,7 +295,7 @@ async function processVictim(victim: IESIVictim): Promise<IVictim> {
         character_id: victim.character_id || 0,
         character_name: character?.name || ship?.name.en || "",
         corporation_id: victim.corporation_id || 0,
-        corporation_name: corporation.name || "",
+        corporation_name: corporation?.name || "",
         alliance_id: victim.alliance_id || 0,
         alliance_name: alliance?.name || "",
         faction_id: victim.faction_id || 0,
@@ -256,39 +313,18 @@ async function getNear(
         return "";
     }
 
-    // This query remains here due to its complexity
-    const distance = 1000 * 3.086e16;
+    const celestials =
+        await prisma.$queryRaw<{ item_name: string }[]>`
+        SELECT item_name
+        FROM celestials
+        WHERE solar_system_id = ${solarSystemId}
+        ORDER BY
+            pow(x - ${x}, 2) + pow(y - ${y}, 2) + pow(z - ${z}, 2)
+        ASC
+        LIMIT 1
+    `;
 
-    const celestials = await Celestials.aggregate([
-        {
-            $match: {
-                solar_system_id: solarSystemId,
-                x: { $gt: x - distance, $lt: x + distance },
-                y: { $gt: y - distance, $lt: y + distance },
-                z: { $gt: z - distance, $lt: z + distance },
-            },
-        },
-        {
-            $project: {
-                item_id: 1,
-                item_name: 1,
-                distance: {
-                    $sqrt: {
-                        $add: [
-                            { $pow: [{ $subtract: ["$x", x] }, 2] },
-                            { $pow: [{ $subtract: ["$y", y] }, 2] },
-                            { $pow: [{ $subtract: ["$z", z] }, 2] },
-                        ],
-                    },
-                },
-            },
-        },
-        { $sort: { distance: 1 } },
-        { $limit: 1 },
-    ]);
-
-    const result = celestials?.[0]?.item_name || "";
-    return result;
+    return celestials?.[0]?.item_name || "";
 }
 
 async function isNPC(killmail: IESIKillmail): Promise<boolean> {
@@ -298,16 +334,16 @@ async function isNPC(killmail: IESIKillmail): Promise<boolean> {
         killmail.attackers.map(async (attacker) => {
             if (!attacker.ship_type_id) return false;
 
-            const ship = await getCachedItem(attacker.ship_type_id);
+            const ship = await getInvType(attacker.ship_type_id);
             if (!ship) return false;
 
-            // Use updated helper instead of direct DB call
-            const shipGroup = await getCachedInvGroup(ship.group_id);
+            const shipGroup = ship.group_id
+                ? await getInvGroup(ship.group_id)
+                : null;
             return shipGroup?.category_id === 11;
         })
     );
 
-    // Count NPC attackers based on resolved statuses
     const npcCount = npcStatuses.filter((isNpc) => isNpc).length;
     return attackerCount > 0 && npcCount > 0 && attackerCount === npcCount;
 }
@@ -333,28 +369,28 @@ async function processAttackers(
     return await Promise.all(
         attackers.map(async (attacker) => {
             const ship = attacker.ship_type_id
-                ? await getCachedItem(attacker.ship_type_id)
+                ? await getInvType(attacker.ship_type_id)
                 : attacker.weapon_type_id
-                ? await getCachedItem(attacker.weapon_type_id)
+                ? await getInvType(attacker.weapon_type_id)
                 : null;
             const weapon = attacker.weapon_type_id
-                ? await getCachedItem(attacker.weapon_type_id)
-                : await getCachedItem(attacker.ship_type_id);
+                ? await getInvType(attacker.weapon_type_id)
+                : await getInvType(attacker.ship_type_id);
 
             const shipGroup = ship?.group_id
-                ? await getCachedInvGroup(ship.group_id)
+                ? await getInvGroup(ship.group_id)
                 : null;
             const character = attacker.character_id
-                ? await getCachedCharacter(attacker.character_id)
+                ? await getCharacter(attacker.character_id)
                 : null;
             const corporation = attacker.corporation_id
-                ? await getCachedCorporation(attacker.corporation_id)
+                ? await getCorporation(attacker.corporation_id)
                 : null;
             const alliance = attacker.alliance_id
-                ? await getCachedAlliance(Number(attacker.alliance_id))
+                ? await getAlliance(Number(attacker.alliance_id))
                 : null;
             const faction = attacker.faction_id
-                ? await getCachedFaction(Number(attacker.faction_id))
+                ? await getFaction(Number(attacker.faction_id))
                 : null;
             return {
                 ship_id: attacker.ship_type_id || attacker.weapon_type_id || 0,
@@ -387,14 +423,14 @@ async function processItems(
     return await Promise.all(
         items.map(async (item) => {
             const type =
-                (await getCachedItem(Number(item.item_type_id))) || null;
+                (await getInvType(Number(item.item_type_id))) || null;
             const group = type?.group_id
-                ? await getCachedInvGroup(type.group_id)
+                ? await getInvGroup(type.group_id)
                 : null;
             const nestedItems = item.items
                 ? await processItems(item.items, killmail_date)
                 : [];
-            const value = await getCachedPrice(
+            const value = await getPriceForType(
                 Number(item.item_type_id),
                 killmail_date
             );
@@ -415,68 +451,53 @@ async function processItems(
     );
 }
 
-/**
- * Handle achievement processing for a character involved in a killmail
- * - If character doesn't exist in CharacterAchievements: Queue immediately
- * - If character exists: Set needs_processing = true
- */
 async function handleCharacterAchievementUpdate(
     characterId: number
 ): Promise<void> {
     if (!characterId || characterId <= 0) {
-        return; // Skip invalid character IDs
+        return;
     }
 
     try {
-        // Check if character already has achievement record
-        const existingRecord = await CharacterAchievements.exists({
-            character_id: characterId,
+        const existingRecord = await prisma.characterAchievements.findUnique({
+            where: { character_id: characterId },
+            select: { id: true },
         });
 
         if (!existingRecord) {
-            // Character doesn't exist - queue for immediate processing
-            await queueAchievementProcessing(characterId, 3); // Higher priority for new characters
+            await queueAchievementProcessing(characterId, 3);
         } else {
-            // Character exists - just mark as needing processing
-            await CharacterAchievements.updateOne(
-                { character_id: characterId },
-                { needs_processing: true }
-            );
+            await prisma.characterAchievements.update({
+                where: { character_id: characterId },
+                data: { needs_processing: true },
+            });
         }
     } catch (error) {
         console.error(
             `Failed to handle achievement update for character ${characterId}:`,
             error
         );
-        // Don't throw - we don't want achievement processing to break killmail processing
     }
 }
 
-/**
- * Handle achievement processing for all characters involved in a killmail
- */
 async function handleKillmailAchievementUpdates(
     victimCharacterId: number | undefined,
     attackerCharacterIds: number[]
 ): Promise<void> {
     const characterIds: number[] = [];
 
-    // Add victim if it's a valid character ID
     if (victimCharacterId && victimCharacterId > 0) {
         characterIds.push(victimCharacterId);
     }
 
-    // Add attackers with valid character IDs
     for (const attackerId of attackerCharacterIds) {
         if (attackerId && attackerId > 0) {
             characterIds.push(attackerId);
         }
     }
 
-    // Remove duplicates (in case same character appears multiple times)
     const uniqueCharacterIds = [...new Set(characterIds)];
 
-    // Process all characters concurrently
     await Promise.all(
         uniqueCharacterIds.map((characterId) =>
             handleCharacterAchievementUpdate(characterId)

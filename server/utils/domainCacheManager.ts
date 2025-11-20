@@ -3,8 +3,8 @@
  * Automatically invalidates caches when database changes are detected
  */
 
-import type { ICustomDomainDocument } from "../models/CustomDomains";
-import { CustomDomains } from "../models/CustomDomains";
+import type { CustomDomain } from "@prisma/client";
+import prisma from "~/lib/prisma";
 
 // In-memory cache for domain timestamps to detect changes
 const domainTimestampCache = new Map<string, Date>();
@@ -15,13 +15,14 @@ const domainTimestampCache = new Map<string, Date>();
  */
 export async function getDomainWithCacheCheck(
     domain: string
-): Promise<ICustomDomainDocument | null> {
+): Promise<CustomDomain | null> {
     try {
+        const normalizedDomain = domain.toLowerCase();
         // First, get the current updated_at timestamp from database
-        const timestampCheck = await CustomDomains.findOne(
-            { domain },
-            { updated_at: 1 }
-        ).lean();
+        const timestampCheck = await prisma.customDomain.findUnique({
+            where: { domain: normalizedDomain },
+            select: { updated_at: true },
+        });
 
         if (!timestampCheck) {
             // Domain doesn't exist, clear any cached timestamp
@@ -45,7 +46,9 @@ export async function getDomainWithCacheCheck(
         }
 
         // Now get the full domain configuration
-        const domainConfig = await CustomDomains.findOne({ domain }).lean();
+        const domainConfig = await prisma.customDomain.findUnique({
+            where: { domain: normalizedDomain },
+        });
         return domainConfig;
     } catch (error) {
         console.error(`Error in getDomainWithCacheCheck for ${domain}:`, error);

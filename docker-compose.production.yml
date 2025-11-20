@@ -15,7 +15,7 @@ services:
         networks:
             - internet
         environment:
-            MONGO_URI: "mongodb://mongodb:27017/thessia"
+            DATABASE_URL: "postgresql://postgres:postgres@postgres:5432/thessia?schema=public"
             REDIS_URI: "redis"
             REDIS_PORT: 6379
             REDIS_DB: 0
@@ -31,7 +31,7 @@ services:
         networks:
             - internet
         environment:
-            MONGO_URI: "mongodb://mongodb:27017/thessia"
+            DATABASE_URL: "postgresql://postgres:postgres@postgres:5432/thessia?schema=public"
             REDIS_URI: "redis"
             REDIS_PORT: 6379
             REDIS_DB: 0
@@ -47,7 +47,7 @@ services:
         networks:
             - internet
         environment:
-            MONGO_URI: "mongodb://mongodb:27017/thessia"
+            DATABASE_URL: "postgresql://postgres:postgres@postgres:5432/thessia?schema=public"
             REDIS_URI: "redis"
             REDIS_PORT: 6379
             REDIS_DB: 0
@@ -62,7 +62,7 @@ services:
         networks:
             - internet
         environment:
-            MONGO_URI: "mongodb://mongodb:27017/thessia"
+            DATABASE_URL: "postgresql://postgres:postgres@postgres:5432/thessia?schema=public"
             REDIS_URI: "redis"
             REDIS_PORT: 6379
             REDIS_DB: 0
@@ -78,7 +78,7 @@ services:
         networks:
             - internet
         environment:
-            MONGO_URI: "mongodb://mongodb:27017/thessia"
+            DATABASE_URL: "postgresql://postgres:postgres@postgres:5432/thessia?schema=public"
             REDIS_URI: "redis"
             REDIS_PORT: 6379
             REDIS_DB: 0
@@ -94,7 +94,7 @@ services:
         networks:
             - internet
         environment:
-            MONGO_URI: "mongodb://mongodb:27017/thessia"
+            DATABASE_URL: "postgresql://postgres:postgres@postgres:5432/thessia?schema=public"
             REDIS_URI: "redis"
             REDIS_PORT: 6379
             REDIS_DB: 0
@@ -110,7 +110,7 @@ services:
         networks:
             - internet
         environment:
-            MONGO_URI: "mongodb://mongodb:27017/thessia"
+            DATABASE_URL: "postgresql://postgres:postgres@postgres:5432/thessia?schema=public"
             REDIS_URI: "redis"
             REDIS_PORT: 6379
             REDIS_DB: 0
@@ -126,7 +126,7 @@ services:
         networks:
             - internet
         environment:
-            MONGO_URI: "mongodb://mongodb:27017/thessia"
+            DATABASE_URL: "postgresql://postgres:postgres@postgres:5432/thessia?schema=public"
             REDIS_URI: "redis"
             REDIS_PORT: 6379
             REDIS_DB: 0
@@ -142,7 +142,7 @@ services:
         networks:
             - internet
         environment:
-            MONGO_URI: "mongodb://mongodb:27017/thessia"
+            DATABASE_URL: "postgresql://postgres:postgres@postgres:5432/thessia?schema=public"
             REDIS_URI: "redis"
             REDIS_PORT: 6379
             REDIS_DB: 0
@@ -166,14 +166,17 @@ services:
             - internet
         restart: unless-stopped
 
-    mongodb:
-        image: library/mongo:latest
-        container_name: mongodb
+    postgres:
+        image: postgres:16
+        container_name: postgres
+        environment:
+            POSTGRES_USER: postgres
+            POSTGRES_PASSWORD: postgres
+            POSTGRES_DB: thessia
         volumes:
-            - ./.data/mongo:/data/db
+            - ./.data/postgres:/var/lib/postgresql/data
         ports:
-            - 127.0.0.1:27017:27017
+            - 127.0.0.1:5432:5432
         networks:
             - internet
-        command: ["--directoryperdb"]
         restart: unless-stopped

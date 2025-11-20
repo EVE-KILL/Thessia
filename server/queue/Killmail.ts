@@ -1,9 +1,7 @@
 import { fetchESIKillmail } from "../helpers/ESIData";
 import { parseKillmail } from "../helpers/KillmailParser";
 import { createQueue } from "../helpers/Queue";
-import type { IKillmail } from "../interfaces/IKillmail";
-import { Killmails } from "../models/Killmails";
-import { KillmailsESI } from "../models/KillmailsESI";
+import { KillmailService } from "../services";
 
 const killmailQueue = createQueue("killmail");
 
@@ -15,14 +13,11 @@ async function addKillmail(
 ) {
     await killmailQueue.add(
         "killmail",
-        { killmailId: killmailId, killmailHash: killmailHash, warId: warId },
+        { killmailId, killmailHash, warId },
         {
-            priority: priority,
+            priority,
             attempts: 10,
-            backoff: {
-                type: "fixed",
-                delay: 5000, // 5 seconds
-            },
+            backoff: { type: "fixed", delay: 5000 },
             removeOnComplete: 1000,
             removeOnFail: 5000,
         }
@@ -33,51 +28,26 @@ async function processKillmail(
     killmailId: number,
     killmailHash: string,
     warId = 0
-): Promise<Partial<IKillmail>> {
+) {
     const killmail = await fetchESIKillmail(killmailId, killmailHash);
 
-    // Validate the killmail data BEFORE saving to database
-    if (
-        killmail.error ||
-        !killmail.victim ||
-        typeof killmail.victim !== "object" ||
-        Object.keys(killmail.victim).length === 0 ||
-        !killmail.attackers ||
-        !Array.isArray(killmail.attackers) ||
-        killmail.attackers.length === 0
-    ) {
-        throw new Error(
-            `Error fetching killmail (KillmailID: ${killmailId}): ${
-                killmail.error ||
-                "Invalid killmail data - missing victim or attackers"
-            }`
-        );
-    }
+    // Create base record + victim/attackers
+    await KillmailService.createFromESI(killmail);
 
-    // Save the valid ESI killmail data to the database
-    const esiKillmail = new KillmailsESI(killmail);
-    try {
-        await esiKillmail.save();
-    } catch (error) {
-        await KillmailsESI.updateOne({ killmail_id: killmailId }, killmail);
-    }
-
+    // Enrich, update stats/achievements, and return normalized data
     const processedKillmail = await parseKillmail(killmail, warId);
-    const model = new Killmails(processedKillmail);
-    try {
-        await model.save();
-    } catch (error) {
-        await Killmails.updateOne(
-            { killmail_id: killmailId },
-            processedKillmail
-        );
-    } finally {
-        await KillmailsESI.updateOne(
-            { killmail_id: killmailId },
-            { $set: { processed: true } },
-            { upsert: true }
-        );
-    }
+
+    await KillmailService.enrichKillmail(killmailId, {
+        total_value: processedKillmail.total_value,
+        fitting_value: processedKillmail.fitting_value,
+        ship_value: processedKillmail.ship_value,
+        constellation_id: processedKillmail.constellation_id,
+        region_id: processedKillmail.region_id,
+        is_npc: processedKillmail.is_npc,
+        is_solo: processedKillmail.is_solo,
+        dna: processedKillmail.dna,
+        near: processedKillmail.near,
+    });
 
     return processedKillmail;
 }

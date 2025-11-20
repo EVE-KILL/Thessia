@@ -11,10 +11,12 @@ import type {
     IDomainContext,
     IEntityConfig,
 } from "../interfaces/ICustomDomain";
-import { Alliances } from "../models/Alliances";
-import { Characters } from "../models/Characters";
-import { Corporations } from "../models/Corporations";
-import { CustomDomains } from "../models/CustomDomains";
+import {
+    AllianceService,
+    CharacterService,
+    CorporationService,
+    CustomDomainService,
+} from "../services";
 
 // Cache for domain configurations to avoid database hits on every request
 const domainCache = new Map<string, any>();
@@ -74,32 +76,25 @@ async function getDomainConfig(domain: string) {
 
     // Fetch from database
     try {
-        // Always query by domain only - we'll check verification status later
-        const query = { domain: domain.toLowerCase() };
+        const config = await CustomDomainService.findByDomain(domain);
 
-        const config = await CustomDomains.findOne(query).select({
-            domain: 1,
-            entity_type: 1,
-            entity_id: 1,
-            entities: 1,
-            branding: 1,
-            navigation: 1,
-            page_config: 1,
-            features: 1,
-            verified: 1,
-            active: 1,
-            suspended: 1,
-            suspension_reason: 1,
-            expires_at: 1,
-            dashboard_template: 1,
-        });
-
-        // Convert Mongoose document to plain object and clean all serialization issues
-        let plainConfig = null;
-        if (config) {
-            const obj = config.toObject();
-            plainConfig = cleanForSerialization(obj);
-        }
+        // Normalize the config object to match legacy expectations
+        const plainConfig = config
+            ? cleanForSerialization({
+                  ...config,
+                  // Legacy compatibility shims
+                  entity_type: (config as any).entity_type,
+                  entity_id: (config as any).entity_id,
+                  page_config: (config as any).page_config,
+                  features: (config as any).features,
+                  suspended: (config as any).suspended || false,
+                  suspension_reason: (config as any).suspension_reason,
+                  expires_at: (config as any).expires_at
+                      ? new Date((config as any).expires_at)
+                      : null,
+                  entities: (config as any).entities || [],
+              })
+            : null;
 
         // Cache the result (including null results to avoid repeated DB queries)
         domainCache.set(cacheKey, {
@@ -122,26 +117,19 @@ async function getEntityData(entityType: string, entityId: number) {
         let entity = null;
         switch (entityType) {
             case "character":
-                entity = await Characters.findOne({ character_id: entityId });
+                entity = await CharacterService.findById(entityId);
                 break;
             case "corporation":
-                entity = await Corporations.findOne({
-                    corporation_id: entityId,
-                });
+                entity = await CorporationService.findById(entityId);
                 break;
             case "alliance":
-                entity = await Alliances.findOne({ alliance_id: entityId });
+                entity = await AllianceService.findById(entityId);
                 break;
             default:
                 return null;
         }
 
-        // Convert Mongoose document to plain object and clean all serialization issues
-        if (entity) {
-            const obj = entity.toObject();
-            return cleanForSerialization(obj);
-        }
-        return null;
+        return entity ? cleanForSerialization(entity) : null;
     } catch (error) {
         console.error(
             `Error fetching entity data for ${entityType}:${entityId}:`,

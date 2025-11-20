@@ -1,3 +1,5 @@
+import prisma from "~/lib/prisma";
+
 /**
  * Validates an API key and returns the associated key data if valid
  * @param apiKey - The API key to validate
@@ -17,10 +19,12 @@ export async function validateApiKey(apiKey: string): Promise<{
 
     try {
         // Find the API key in the database
-        const keyData = await ApiKeys.findOne({
-            key: apiKey.trim(),
-            active: true,
-        }).lean();
+        const keyData = await prisma.apiKey.findFirst({
+            where: {
+                key: apiKey.trim(),
+                active: true,
+            },
+        });
 
         if (!keyData) {
             return {
@@ -30,16 +34,19 @@ export async function validateApiKey(apiKey: string): Promise<{
         }
 
         // Update last used timestamp
-        await ApiKeys.updateOne({ _id: keyData._id }, { lastUsed: new Date() });
+        await prisma.apiKey.update({
+            where: { id: keyData.id },
+            data: { last_used: new Date() },
+        });
 
         return {
             valid: true,
             keyData: {
-                id: keyData._id,
+                id: keyData.id,
                 name: keyData.name,
                 description: keyData.description,
-                createdBy: keyData.createdBy,
-                createdAt: keyData.createdAt,
+                createdBy: keyData.created_by,
+                createdAt: keyData.created_at,
             },
         };
     } catch (error) {

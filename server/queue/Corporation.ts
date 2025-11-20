@@ -1,7 +1,7 @@
 import { getCorporation, getCorporationHistory } from "../helpers/ESIData";
 import { cliLogger } from "../helpers/Logger";
 import { createQueue } from "../helpers/Queue";
-import { Alliances } from "../models/Alliances";
+import { AllianceService } from "../services";
 import { queueUpdateAlliance } from "../queue/Alliance";
 
 const corporationQueue = createQueue("corporation");
@@ -81,9 +81,9 @@ async function updateCorporation(corporationId: number) {
     // Check if the alliance exists, if not queue it for update
     if (corporationData.alliance_id && corporationData.alliance_id > 0) {
         try {
-            const alliance = await Alliances.findOne({
-                alliance_id: corporationData.alliance_id,
-            });
+            const alliance = await AllianceService.findById(
+                corporationData.alliance_id
+            );
 
             if (!alliance) {
                 await queueUpdateAlliance(corporationData.alliance_id, 2); // Higher priority

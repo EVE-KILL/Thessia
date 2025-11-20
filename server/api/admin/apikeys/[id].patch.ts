@@ -1,17 +1,20 @@
+import prisma from "~/lib/prisma";
+
 export default defineEventHandler(async (event) => {
     // Authenticate and verify admin privileges
     await requireAdminAuth(event);
 
     try {
         // Get the API key ID from route parameters
-        const keyId = getRouterParam(event, "id");
+        const keyIdParam = getRouterParam(event, "id");
 
-        if (!keyId) {
+        if (!keyIdParam || Number.isNaN(Number(keyIdParam))) {
             throw createError({
                 statusCode: 400,
                 statusMessage: "API key ID is required",
             });
         }
+        const keyId = Number(keyIdParam);
 
         // Get request body
         const body = await readBody(event);
@@ -29,9 +32,11 @@ export default defineEventHandler(async (event) => {
             }
 
             // Check if name already exists (excluding current key)
-            const existingKey = await ApiKeys.findOne({
-                name: name.trim(),
-                _id: { $ne: keyId },
+            const existingKey = await prisma.apiKey.findFirst({
+                where: {
+                    name: name.trim(),
+                    id: { not: keyId },
+                },
             });
             if (existingKey) {
                 throw createError({
@@ -67,17 +72,19 @@ export default defineEventHandler(async (event) => {
         }
 
         // Find and update the API key
-        const updatedKey = await ApiKeys.findByIdAndUpdate(keyId, updateObj, {
-            new: true,
-            runValidators: true,
-        }).select("-key"); // Don't return the actual key
-
-        if (!updatedKey) {
-            throw createError({
-                statusCode: 404,
-                statusMessage: "API key not found",
-            });
-        }
+        const updatedKey = await prisma.apiKey.update({
+            where: { id: keyId },
+            data: updateObj,
+            select: {
+                id: true,
+                name: true,
+                description: true,
+                active: true,
+                last_used: true,
+                created_at: true,
+                created_by: true,
+            },
+        });
 
         return {
             success: true,
@@ -90,24 +97,15 @@ export default defineEventHandler(async (event) => {
             throw error;
         }
 
-        // Handle mongoose validation errors
-        if (error.name === "ValidationError") {
+        if (error.code === "P2025") {
             throw createError({
                 statusCode: 400,
-                statusMessage: "Validation error: " + error.message,
-            });
-        }
-
-        // Handle invalid ObjectId errors
-        if (error.name === "CastError") {
-            throw createError({
-                statusCode: 400,
-                statusMessage: "Invalid API key ID format",
+                statusMessage: "API key not found",
             });
         }
 
         // Handle duplicate key errors
-        if (error.code === 11000) {
+        if (error.code === "P2002") {
             throw createError({
                 statusCode: 409,
                 statusMessage: "API key name already exists",
