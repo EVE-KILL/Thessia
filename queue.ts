@@ -1,12 +1,15 @@
 #!/usr/bin/env bun
 import { Command } from "commander";
+/** @TODO DELETE THIS WHEN REMOVING MONGODB **/
 import { initMongooseConnection } from "./server/helpers/Mongoose";
+/** @TODO DELETE THIS WHEN REMOVING MONGODB **/
 // Use the generated loader file (includes auto-imports)
 import { queueJobs } from "./queue/.loader";
 
 const program = new Command();
 
 // Create a connection flag
+/** @TODO DELETE THIS WHEN REMOVING MONGODB **/
 let mongooseConnected = false;
 
 async function ensureMongooseConnection() {
@@ -23,10 +26,13 @@ async function ensureMongooseConnection() {
     }
     return mongooseConnected;
 }
+/** @TODO DELETE THIS WHEN REMOVING MONGODB **/
 
 async function main() {
     // Initialize database connection at startup
+    /** @TODO DELETE THIS WHEN REMOVING MONGODB **/
     await ensureMongooseConnection();
+    /** @TODO DELETE THIS WHEN REMOVING MONGODB **/
 
     // Register all queue jobs from the generated loader
     Object.entries(queueJobs).forEach(([name, jobModule]) => {

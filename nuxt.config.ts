@@ -96,7 +96,6 @@ export default defineNuxtConfig({
         imports: {
             autoImport: true,
             dirs: [
-                "server/models/**",
                 "server/helpers/**",
                 "server/interfaces/**",
                 "server/utils/**",
@@ -273,6 +272,12 @@ export default defineNuxtConfig({
 
     // Vite configuration
     vite: {
+        resolve: {
+            alias: {
+                ".prisma/client/index-browser":
+                    "./node_modules/.prisma/client/index-browser.js",
+            },
+        },
         build: {
             minify: process.env.NODE_ENV === "production" ? "terser" : false,
             sourcemap: true,

@@ -1,3 +1,4 @@
+/** @TODO DELETE THIS WHEN REMOVING MONGODB **/
 import mongoose from "mongoose";
 
 const mongoUri = process.env.MONGO_URI || "mongodb://192.168.10.10:30017/thessia";
@@ -18,3 +19,4 @@ async function initMongooseConnection() {
 initMongooseConnection();
 
 export { initMongooseConnection };
+/** @TODO DELETE THIS WHEN REMOVING MONGODB **/

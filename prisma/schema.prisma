@@ -259,6 +259,11 @@ model Battle {
     main_system_id Int?
     main_region_id Int?
 
+    // Involvement arrays
+    alliances_involved    Int[]    @default([])
+    corporations_involved Int[]    @default([])
+    characters_involved   Int[]    @default([])
+
     // JSON storage for complex nested data
     systems      Json // Full systems array with detailed metadata
     sides        Json // Full sides array with all complex nested structures
@@ -1279,4 +1284,35 @@ model KillmailItem {
     @@index([parent_item_id])
     @@index([flag])
     @@map("killmail_items")
+}
+
+// Access Logs
+model AccessLog {
+    id           Int      @id @default(autoincrement())
+    timestamp    DateTime
+    method       String
+    url          String
+    httpVersion  String
+    userAgent    String
+    clientIp     String
+    statusCode   Int?
+    responseTime Float?
+    responseSize Int?
+    referrer     String?
+    userId       Int?
+    endpoint     String?
+    isBot        Boolean  @default(false)
+    isApiRequest Boolean  @default(false)
+    logType      String   @default("server")
+    sessionId    String?
+
+    @@index([timestamp, endpoint])
+    @@index([timestamp, clientIp])
+    @@index([timestamp, isBot])
+    @@index([timestamp, statusCode])
+    @@index([timestamp, logType])
+    @@index([sessionId, timestamp])
+    @@index([timestamp])
+
+    @@map("access_logs")
 }
