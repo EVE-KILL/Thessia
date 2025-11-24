@@ -54,7 +54,7 @@
         "meilisearch": "^0.52.0",
         "micromark": "^4.0.2",
         "micromark-extension-gfm": "^3.0.0",
-        "mongoose": "^8.17.2",
+        "mongoose": "^9.0.0",
         "neo4j-driver": "^5.28.1",
         "node-gyp": "^11.4.1",
         "nuxt": "^4.0.3",
