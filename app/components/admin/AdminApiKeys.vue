@@ -304,6 +304,7 @@ interface ApiKeysResponse {
 }
 
 const { t } = useI18n();
+const toast = useToast();
 
 // Reactive state
 const searchQuery = ref("");
@@ -490,7 +491,7 @@ const toggleApiKeyStatus = async (apiKey: ApiKey) => {
 
 // Delete API Key
 const deleteApiKey = async (apiKey: ApiKey) => {
-    if (!confirm(t('admin.apiKeys.delete.confirm', { name: apiKey.name }))) {
+    if (!import.meta.client || !confirm(t('admin.apiKeys.delete.confirm', { name: apiKey.name }))) {
         return;
     }
 
@@ -504,6 +505,7 @@ const deleteApiKey = async (apiKey: ApiKey) => {
         }
     } catch (error: any) {
         console.error("Failed to delete API key:", error);
+        toast.add({ title: 'Failed to delete API key', color: 'red', icon: 'i-lucide-alert-circle' });
     }
 };
 
@@ -515,6 +517,7 @@ const closeSuccessModal = () => {
 };
 
 const copyApiKey = async () => {
+    if (!import.meta.client || !apiKeyInput.value) return;
     if (apiKeyInput.value) {
         try {
             await navigator.clipboard.writeText(newApiKey.value);

@@ -194,14 +194,11 @@ export default defineNuxtConfig({
     },
 
     // Ensure modern compatibility mode
-    compatibilityDate: "2024-11-01",
+    compatibilityDate: "2026-01-01",
 
     // Development tools
     devtools: {
-        enabled: process.env.NODE_ENV !== "production",
-        timeline: {
-            enabled: true,
-        },
+        enabled: false,
     },
 
     // Security module configuration
@@ -313,9 +310,21 @@ export default defineNuxtConfig({
                 "vue",
                 "vue-router",
                 "date-fns",
+                "date-fns/locale",
                 "@vueuse/core",
                 "dompurify",
                 "isomorphic-dompurify",
+                "micromark",
+                "micromark-extension-gfm",
+                "prismjs",
+                "prismjs/components/prism-bash",
+                "prismjs/components/prism-css",
+                "prismjs/components/prism-javascript",
+                "prismjs/components/prism-json",
+                "prismjs/components/prism-markdown",
+                "prismjs/components/prism-typescript",
+                "prismjs/components/prism-yaml",
+                "prismjs/components/prism-markup",
             ],
             exclude: [
                 "mongoose",

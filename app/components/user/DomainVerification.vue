@@ -228,15 +228,15 @@ const verificationToken = computed(() => {
 })
 
 const copyDnsRecord = async () => {
+    if (!import.meta.client) return
     const record = `_evekill-verification IN TXT "${verificationToken.value}"`
     await navigator.clipboard.writeText(record)
-    // Show toast notification
 }
 
 const copyCnameRecord = async () => {
+    if (!import.meta.client) return
     const record = `${props.domain.domain} IN CNAME c.eve-kill.com`
     await navigator.clipboard.writeText(record)
-    // Show toast notification
 }
 
 const verifyDns = async () => {

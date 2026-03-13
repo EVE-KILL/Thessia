@@ -398,6 +398,7 @@ const formatModalValue = (value: any): string => {
 };
 
 const copyToClipboard = async () => {
+    if (!import.meta.client) return
     try {
         await navigator.clipboard.writeText(formatModalValue(modalData.value.value));
         // You could add a toast notification here

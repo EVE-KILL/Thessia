@@ -11,6 +11,7 @@ const props = defineProps({
 
 // Composables
 const { t } = useI18n();
+const route = useRoute();
 const colorMode = useColorMode();
 const authStore = useAuthStore();
 const { isAuthenticated, currentUser, isLoading, hasError, errorMessage } = storeToRefs(authStore);
@@ -28,13 +29,13 @@ onMounted(() => {
 
 // Auth handlers
 const handleEveLogin = () => {
-    const currentPath = window.location.pathname;
+    const currentPath = route.fullPath;
     authStore.login(currentPath, undefined, killmailDelay.value);
     isDropdownOpen.value = false;
 };
 
 const handleBasicLogin = () => {
-    const currentPath = window.location.pathname;
+    const currentPath = route.fullPath;
     authStore.login(currentPath, ["publicData"]);
     isDropdownOpen.value = false;
 };
@@ -45,7 +46,7 @@ const handleLogout = () => {
 };
 
 const handleCustomizeLogin = () => {
-    const currentPath = window.location.pathname;
+    const currentPath = route.fullPath;
     const delayParam = killmailDelay.value > 0 ? `&delay=${killmailDelay.value}` : '';
     navigateTo(`/user/login?customize=true&redirect=${encodeURIComponent(currentPath)}${delayParam}`);
     isDropdownOpen.value = false;

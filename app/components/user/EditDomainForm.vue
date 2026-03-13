@@ -1047,8 +1047,10 @@ const previewTemplate = () => {
         description: state.dashboard_template.template_description || ''
     };
 
-    sessionStorage.setItem('dashboard_template_preview', JSON.stringify(templateData));
-    window.open(`/domain/dashboard/customizer?domain=${encodeURIComponent(state.domain)}&from=preview`, '_blank');
+    if (import.meta.client) {
+        sessionStorage.setItem('dashboard_template_preview', JSON.stringify(templateData));
+        window.open(`/domain/dashboard/customizer?domain=${encodeURIComponent(state.domain)}&from=preview`, '_blank');
+    }
 };
 
 const openTemplateEditor = () => {
@@ -1061,8 +1063,10 @@ const openTemplateEditor = () => {
         description: state.dashboard_template.template_description || ''
     };
 
-    sessionStorage.setItem('dashboard_template_edit', JSON.stringify(templateData));
-    window.open(`/domain/dashboard/customizer?domain=${encodeURIComponent(state.domain)}&from=editor`, '_blank');
+    if (import.meta.client) {
+        sessionStorage.setItem('dashboard_template_edit', JSON.stringify(templateData));
+        window.open(`/domain/dashboard/customizer?domain=${encodeURIComponent(state.domain)}&from=editor`, '_blank');
+    }
 };
 
 const formatDate = (dateString: string) => {

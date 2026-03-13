@@ -671,7 +671,7 @@ const handleCreateCampaign = async () => {
             if (data.value.campaign && data.value.campaign.id) {
                 // Short timeout to allow the toast to be shown before redirect
                 setTimeout(() => {
-                    window.location.href = `/campaigns/${data.value.campaign.id}`;
+                    navigateTo(`/campaigns/${data.value.campaign.id}`);
                 }, 1000);
             }
         }

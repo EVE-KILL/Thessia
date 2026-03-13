@@ -8,13 +8,11 @@ if (!mongoUri) {
 
 async function initMongooseConnection() {
   try {
-    await mongoose.connect(mongoUri);
+    await mongoose.connect(mongoUri, { autoIndex: false });
   } catch (error) {
     console.error("Error connecting to MongoDB", error);
     process.exit(1);
   }
 }
-
-initMongooseConnection();
 
 export { initMongooseConnection };

@@ -904,10 +904,10 @@ async function saveQuery() {
         }
         // If new, redirect to /query?id=<hash>
         if (!savedQueryId.value) {
-            window.location.href = `/query?id=${data.hash}`;
+            await navigateTo(`/query?id=${data.hash}`);
         } else {
             // If updating, just reload page
-            window.location.reload();
+            reloadNuxtApp();
         }
     } catch (err: any) {
         saveError.value = err.message || "Failed to save query.";

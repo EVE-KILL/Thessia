@@ -281,7 +281,8 @@ const confirmScale = async () => {
         refreshDeployments();
     } catch (err) {
         console.error('Failed to scale deployment:', err);
-        alert('Failed to scale deployment');
+        const toast = useToast();
+        toast.add({ title: 'Failed to scale deployment', color: 'red', icon: 'i-lucide-alert-circle' });
     } finally {
         scaleModal.value.loading = false;
     }

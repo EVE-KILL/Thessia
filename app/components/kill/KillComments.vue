@@ -193,6 +193,7 @@
 import { useI18n } from "vue-i18n";
 
 const { t } = useI18n();
+const toast = useToast();
 const authStore = useAuthStore();
 const { isAuthenticated, currentUser, isAdministrator } = storeToRefs(authStore);
 
@@ -449,9 +450,9 @@ async function submitReport() {
         });
 
         closeModal();
-        alert(t("comment.report_success"));
+        toast.add({ title: t("comment.report_success"), color: 'green', icon: 'i-lucide-check-circle' });
     } catch (err) {
-        alert(t("comment.report_error"));
+        toast.add({ title: t("comment.report_error"), color: 'red', icon: 'i-lucide-alert-circle' });
     } finally {
         isReporting.value = false;
     }
@@ -473,7 +474,7 @@ async function confirmDelete() {
 
         closeModal();
     } catch (err) {
-        alert(t("comment.delete_error"));
+        toast.add({ title: t("comment.delete_error"), color: 'red', icon: 'i-lucide-alert-circle' });
     } finally {
         isDeleting.value = false;
     }

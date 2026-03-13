@@ -385,6 +385,7 @@ const checkSSL = async () => {
 }
 
 const copyToClipboard = async (text: string) => {
+    if (!import.meta.client) return
     try {
         await navigator.clipboard.writeText(text)
         toast.add({

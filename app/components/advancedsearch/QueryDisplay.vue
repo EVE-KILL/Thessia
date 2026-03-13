@@ -104,7 +104,7 @@ const toggleExpanded = () => {
 }
 
 const copyQuery = async () => {
-    if (!props.query) return
+    if (!props.query || !import.meta.client) return
 
     try {
         await navigator.clipboard.writeText(JSON.stringify(props.query, null, 2))

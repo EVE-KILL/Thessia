@@ -765,7 +765,7 @@ const saveBattle = async () => {
 
         // Redirect to the newly created battle
         if (data.battle_id) {
-            window.location.href = `/battle/${data.battle_id}`;
+            await navigateTo(`/battle/${data.battle_id}`);
         } else {
             // Handle cases where battle_id might be missing, though API should always return it on success
             error.value = data.message || t('battleGenerator.errors.unknownError');

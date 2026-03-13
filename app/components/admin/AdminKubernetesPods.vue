@@ -357,12 +357,13 @@ const onContainerChange = async () => {
     await fetchLogs(logsModal.value.selectedContainer || undefined);
 };
 
+const toast = useToast();
+
 const restartPod = async (pod: Pod) => {
     const podName = pod.metadata?.name;
     if (!podName) return;
 
-    const confirmed = confirm(`Are you sure you want to restart pod "${podName}"?`);
-    if (!confirmed) return;
+    if (!import.meta.client || !confirm(`Are you sure you want to restart pod "${podName}"?`)) return;
 
     try {
         restartingPods.value.add(podName);
@@ -377,7 +378,7 @@ const restartPod = async (pod: Pod) => {
         }, 2000);
     } catch (err) {
         console.error('Failed to restart pod:', err);
-        alert('Failed to restart pod');
+        toast.add({ title: 'Failed to restart pod', color: 'red', icon: 'i-lucide-alert-circle' });
     } finally {
         restartingPods.value.delete(podName);
     }
